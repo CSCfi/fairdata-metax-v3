@@ -1,17 +1,8 @@
-# =============================================================================
-# DEPRECATION WARNING:
-#
-# The file `requirements.txt` does not influence the package dependencies and
-# will not be automatically created in the next version of PyScaffold (v4.x).
-#
-# Please have look at the docs for better alternatives
-# (`Dependency Management` section).
-# =============================================================================
-#
-# Add your pinned requirements so that they can be easily installed with:
-# pip install -r requirements.txt
-# Remember to also add them in setup.cfg but unpinned.
-# Example:
-# numpy==1.13.3
-# scipy==1.0
-django
+asgiref==3.5.0; python_version >= "3.7"
+django-model-utils==4.2.0
+django-split-settings==1.1.0; python_version >= "3.6" and python_version < "4.0"
+django==3.2.12; python_version >= "3.6"
+djangorestframework==3.13.1; python_version >= "3.6"
+python-dotenv==0.19.2; python_version >= "3.5"
+pytz==2021.3; python_version >= "3.6"
+sqlparse==0.4.2; python_version >= "3.6"
