@@ -1,7 +1,7 @@
 # .coveragerc to control coverage.py
 [run]
 branch = True
-source = metax_service
+source = src
 # omit = bad_file.py
 
 [paths]
@@ -26,3 +26,6 @@ exclude_lines =
     # Don't complain if non-runnable code isn't run:
     if 0:
     if __name__ == .__main__.:
+
+skip_covered: true
+skip_empty: true
