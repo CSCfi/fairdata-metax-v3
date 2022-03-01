@@ -16,6 +16,8 @@ First, install [pipx](https://github.com/pypa/pipx). Pipx is a system-wide Pytho
 
 #### Install Dependencies
 
+Tested with pip version 21.1.2
+
 With virtualenv activated, you can install dependencies with `poetry install`
 
 Alternatively you can use `pip install -r dev-requirements.txt` if you don't have Poetry installed. 
