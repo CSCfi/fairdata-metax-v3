@@ -16,7 +16,9 @@ First, install [pipx](https://github.com/pypa/pipx). Pipx is a system-wide Pytho
 
 #### Install Dependencies
 
-With virtualenv activated, you can install dependencies either with `pip install -r dev-requirements.txt` or `poetry install`, if you have poetry in the system path.
+With virtualenv activated, you can install dependencies with `poetry install`
+
+Alternatively you can use `pip install -r dev-requirements.txt` if you don't have Poetry installed. 
 
 ### Initial setup commands
 
@@ -41,7 +43,7 @@ Run pytest managed tests with `pytest` command. You can run tox tests with `tox`
 
 ### Building Sphinx documentation
 
-Build sphinx docs with command `make -C docs html`
+Run `make -C docs html` in project root folder.
 
 ## Managing dependencies with Poetry
 
