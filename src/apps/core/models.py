@@ -159,20 +159,20 @@ class DataCatalog(AbstractBaseModel):
         AccessRight, on_delete=models.SET_NULL, related_name="catalogs", null=True
     )
 
-    class DatasetSchemaChoices(models.TextChoices):
-        SCHEMA_IDA = "ida"
-        SCHEMA_ATT = "att"
-        SCHEMA_DRF = "drf"
+    class DatasetSchema(models.TextChoices):
+        IDA = "ida"
+        ATT = "att"
+        DRF = "drf"
 
     DATASET_SCHEMA_CHOICES = (
-        (DatasetSchemaChoices.SCHEMA_IDA, "IDA Schema"),
-        (DatasetSchemaChoices.SCHEMA_ATT, "ATT Schema"),
-        (DatasetSchemaChoices.SCHEMA_DRF, "DRF Schema"),
+        (DatasetSchema.IDA, "IDA Schema"),
+        (DatasetSchema.ATT, "ATT Schema"),
+        (DatasetSchema.DRF, "DRF Schema"),
     )
 
     research_dataset_schema = models.CharField(
         choices=DATASET_SCHEMA_CHOICES,
-        default=DatasetSchemaChoices.SCHEMA_IDA,
+        default=DatasetSchema.IDA,
         max_length=6,
     )
 
