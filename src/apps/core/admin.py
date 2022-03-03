@@ -12,40 +12,45 @@ from apps.core.models import (
 )
 
 
-@admin.register(DatasetLanguage)
-class DatasetLanguageAdmin(admin.ModelAdmin):
+class AbstractDatasetPropertyBaseAdmin(admin.ModelAdmin):
     list_filter = ("created", "modified")
+    exclude = ("is_removed", "removal_date")
+
+
+@admin.register(DatasetLanguage)
+class DatasetLanguageAdmin(AbstractDatasetPropertyBaseAdmin):
+    pass
 
 
 @admin.register(CatalogHomePage)
-class CatalogHomePageAdmin(admin.ModelAdmin):
-    list_filter = ("created", "modified")
+class CatalogHomePageAdmin(AbstractDatasetPropertyBaseAdmin):
+    pass
 
 
 @admin.register(DatasetPublisher)
-class DatasetPublisherAdmin(admin.ModelAdmin):
-    list_filter = ("created", "modified")
+class DatasetPublisherAdmin(AbstractDatasetPropertyBaseAdmin):
+    pass
 
 
 @admin.register(DatasetLicense)
-class DatasetLicenseAdmin(admin.ModelAdmin):
-    list_filter = ("created", "modified")
+class DatasetLicenseAdmin(AbstractDatasetPropertyBaseAdmin):
+    pass
 
 
 @admin.register(AccessType)
-class AccessTypeAdmin(admin.ModelAdmin):
-    list_filter = ("created", "modified")
+class AccessTypeAdmin(AbstractDatasetPropertyBaseAdmin):
+    pass
 
 
 @admin.register(AccessRight)
-class AccessRightsAdmin(admin.ModelAdmin):
-    list_filter = ("created", "modified")
+class AccessRightsAdmin(AbstractDatasetPropertyBaseAdmin):
+    pass
 
 
 @admin.register(DataCatalog)
-class DataCatalogAdmin(admin.ModelAdmin):
+class DataCatalogAdmin(AbstractDatasetPropertyBaseAdmin):
     list_display = (
-        "identifier",
+        "id",
         "dataset_versioning_enabled",
         "harvested",
         "research_dataset_schema",

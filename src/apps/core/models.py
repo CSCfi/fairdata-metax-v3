@@ -1,10 +1,6 @@
 from django.contrib.postgres.fields import HStoreField, ArrayField
 from django.db import models
-
-# Create your models here.
-from django.db import models
-
-# Create your models here.
+from django.utils import timezone
 from model_utils.models import TimeStampedModel, SoftDeletableModel
 
 
@@ -17,6 +13,13 @@ class AbstractBaseModel(TimeStampedModel, SoftDeletableModel):
      - is_removed
     """
 
+    removal_date = models.DateTimeField(null=True, blank=True)
+
+    def delete(self, using=None, soft=True, *args, **kwargs):
+        self.removal_date = timezone.now()
+        self.save()
+        super().delete(using=using, soft=soft, *args, **kwargs)
+
     class Meta:
         abstract = True
         get_latest_by = "modified"
@@ -24,14 +27,17 @@ class AbstractBaseModel(TimeStampedModel, SoftDeletableModel):
 
 
 class AbstractDatasetProperty(AbstractBaseModel):
-    """Base class for simple refdata fields with only identifier and title properties
+    """Base class for simple refdata fields with only id and title properties"""
 
-    """
-    identifier = models.URLField(max_length=512, primary_key=True)
-    title = HStoreField()
+    id = models.URLField(
+        max_length=512,
+        primary_key=True,
+        help_text="valid url to the property definition",
+    )
+    title = HStoreField(help_text='example: {"en":"title", "fi":"otsikko"}')
 
     def __str__(self):
-        return self.identifier
+        return self.id
 
     class Meta:
         abstract = True
@@ -85,7 +91,7 @@ class DatasetPublisher(AbstractBaseModel):
     https://www.w3.org/TR/vocab-dcat-3/#Property:resource_publisher
     """
 
-    name = HStoreField()
+    name = HStoreField(help_text='example: {"en": "name", "fi":"nimi"}')
     homepage = models.ManyToManyField(CatalogHomePage, related_name="publishers")
 
     def __str__(self):
@@ -101,7 +107,7 @@ class DatasetLicense(AbstractDatasetProperty):
     https://www.w3.org/TR/vocab-dcat-3/#Property:resource_license
     """
 
-    license = models.URLField(max_length=512)
+    license = models.URLField(max_length=512, help_text="valid url to the license")
 
 
 class AccessType(AbstractDatasetProperty):
@@ -126,13 +132,13 @@ class AccessRight(AbstractBaseModel):
     access_type = models.ForeignKey(
         AccessType, on_delete=models.SET_NULL, related_name="access_rights", null=True
     )
-    description = HStoreField()
+    description = HStoreField(help_text='example: {"en":"description", "fi":"kuvaus"}')
 
     def __str__(self):
         return str(next(iter(self.description.items())))
 
 
-class DataCatalog(AbstractBaseModel):
+class DataCatalog(AbstractDatasetProperty):
     """A curated collection of metadata about resources.
 
     RDF Class: dcat:Catalog
@@ -142,15 +148,14 @@ class DataCatalog(AbstractBaseModel):
     """
 
     # https://www.w3.org/TR/vocab-dcat-3/#Property:resource_identifier
-    identifier = models.CharField(
+    id = models.CharField(
         max_length=255,
         primary_key=True,
-        help_text="A unique identifier of the resource being described or cataloged.",
+        help_text="A unique id of the resource being described or cataloged.",
     )
 
     dataset_versioning_enabled = models.BooleanField(default=False)
     harvested = models.BooleanField(default=False)
-    title = HStoreField()
     language = models.ManyToManyField(DatasetLanguage, related_name="catalogs")
     publisher = models.ForeignKey(
         DatasetPublisher, on_delete=models.SET_NULL, related_name="catalogs", null=True
@@ -177,4 +182,4 @@ class DataCatalog(AbstractBaseModel):
     )
 
     def __str__(self):
-        return self.identifier
+        return self.id

@@ -21,7 +21,7 @@ def dataset_language() -> DatasetLanguage:
         "und": "Suomen kieli",
     }
     return DatasetLanguage(
-        identifier=identifier,
+        id=identifier,
         title=title,
     )
 
@@ -31,7 +31,7 @@ def catalog_homepage() -> CatalogHomePage:
     identifier = "https://www.fairdata.fi"
     title = {"fi": "Fairdata.fi", "en": "Fairdata.fi"}
 
-    return CatalogHomePage(identifier=identifier, title=title)
+    return CatalogHomePage(id=identifier, title=title)
 
 
 @pytest.fixture
@@ -53,14 +53,14 @@ def dataset_license() -> DatasetLicense:
     license = "https://creativecommons.org/publicdomain/zero/1.0/"
     identifier = "http://uri.suomi.fi/codelist/fairdata/license/code/CC0-1.0"
 
-    return DatasetLicense(title=title, identifier=identifier, license=license)
+    return DatasetLicense(title=title, id=identifier, license=license)
 
 
 @pytest.fixture
 def access_type() -> AccessType:
     identifier = "http://uri.suomi.fi/codelist/fairdata/access_type/code/open"
     title = {"en": "Open", "fi": "Avoin", "und": "Avoin"}
-    return AccessType(identifier=identifier, title=title)
+    return AccessType(id=identifier, title=title)
 
 
 @pytest.fixture
@@ -80,4 +80,4 @@ def data_catalog() -> DataCatalog:
         "fi": "Fairdata IDA-aineistot",
         "sv": "Fairdata forskningsdata",
     }
-    return DataCatalog(identifier=identifier, title=title)
+    return DataCatalog(id=identifier, title=title)

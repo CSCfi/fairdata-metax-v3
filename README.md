@@ -22,9 +22,23 @@ With virtualenv activated, you can install dependencies with `poetry install`
 
 Alternatively you can use `pip install -r dev-requirements.txt` if you don't have Poetry installed. 
 
+### Setup PostgreSQL docker container
+
+The following command will map new named PostgreSQL database container to localhost port 5452. It will generate the database, database user and password in the process:
+
+`docker run -d -p 5452:5432 --name metax-v3-postgres -v metax-v3-postgres:/var/lib/postgresql/data -e POSTGRES_USER=<db_user> -e POSTGRES_PASSWORD=<password> -e POSTGRES_DB=metax_db --restart=always  postgres:12`
+
+### Update Environmental Variables
+
+In the repository root, create `.env` file and add at least required variables from `.env.template` file.
+
 ### Initial setup commands
 
 In the repository root, run `python manage.py migrate`
+
+### Creating superuser
+
+In the repository root, run `python manage.py createsuperuser`
 
 
 ## Development operations
@@ -34,6 +48,10 @@ In the repository root, run `python manage.py migrate`
 Launch default development server with `python manage.py runserver <port-number>` e.g `python manage.py runserver 8002`
 
 You can use enchanted development server with `python manage.py runserver_plus <port-number>`
+
+### Accessing the admin panel
+
+When the development server is running, admin panel can be accessed from `localhost:<port>/admin`. Use the credentials generated in the _"Creating superuser"_ part of this readme.
 
 ### cli-tools
 

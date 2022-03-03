@@ -9,7 +9,8 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
-from os.path import join, normpath
+import os
+from os.path import join
 from pathlib import Path
 import sys
 
@@ -105,11 +106,11 @@ WSGI_APPLICATION = 'metax_service.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": "metax_db",
-        "USER": "metax_db_user",
-        "PASSWORD": "YMDLekQMqrVKcs3",
-        "HOST": "localhost",
-        "PORT": "5452",
+        "NAME": os.environ.get("POSTGRES_DATABASE_NAME"),
+        "USER": os.environ.get("POSTGRES_USER"),
+        "PASSWORD": os.environ.get("POSTGRES_PASS"),
+        "HOST": os.getenv("POSTGRES_HOST", default="localhost"),
+        "PORT": os.getenv("POSTGRES_PORT", default="5432")
     }
 }
 
