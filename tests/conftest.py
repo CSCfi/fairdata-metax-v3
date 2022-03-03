@@ -17,7 +17,8 @@ def pytest_collection_modifyitems(items):
     Pytest hook docs: https://docs.pytest.org/en/latest/how-to/writing_hook_functions.html
     """
     for item in items:
-        if "create" in item.nodeid:
-            # adds django_db marker on any test with 'create' on its name
+        if "create" in item.nodeid or "delete" in item.nodeid:
+            # adds django_db marker on any test with 'create' or 'delete' on its name
             item.add_marker(pytest.mark.django_db)
+
 
