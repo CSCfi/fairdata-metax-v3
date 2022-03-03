@@ -75,7 +75,7 @@ def access_rights() -> AccessRight:
 @pytest.fixture
 def access_rights_with_license_and_access_type(
     access_rights, access_type, dataset_license
-):
+) -> AccessRight:
     access_type.save()
     dataset_license.save()
     access_rights.license = dataset_license
@@ -98,7 +98,7 @@ def data_catalog() -> DataCatalog:
 @pytest.fixture
 def data_catalog_with_foreign_keys(
     dataset_language, dataset_publisher, access_rights, data_catalog
-):
+) -> DataCatalog:
     dataset_language.save()
     dataset_publisher.save()
     access_rights.save()
