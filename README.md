@@ -79,5 +79,10 @@ After any modification to `pyproject.toml`, re-generate requirements with `poetr
 
 `setup.cfg` is the main configuration file due to still incomplete support of `pyproject.toml` in several development tools.
 
+Database models are based on following specifications:
+https://joinup.ec.europa.eu/collection/semantic-interoperability-community-semic/solution/dcat-application-profile-data-portals-europe/release/210
+
+https://www.w3.org/TR/vocab-dcat-3/
+
 This project has been set up using PyScaffold 3.3.1. For details and usage
 information on PyScaffold see https://pyscaffold.org/.
