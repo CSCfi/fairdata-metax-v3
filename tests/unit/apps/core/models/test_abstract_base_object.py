@@ -1,6 +1,8 @@
 import pytest
 
-pytestmark = pytest.mark.parametrize("model", ["dataset_publisher", "access_rights"])
+pytestmark = pytest.mark.parametrize(
+    "model", ["dataset_publisher", "access_rights", "catalog_record"]
+)
 
 
 def test_create_base_model(model, abstract_base_object_factory):
