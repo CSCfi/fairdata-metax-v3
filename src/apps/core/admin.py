@@ -9,6 +9,7 @@ from apps.core.models import (
     AccessType,
     AccessRight,
     DataCatalog,
+    CatalogRecord,
 )
 
 
@@ -62,3 +63,12 @@ class DataCatalogAdmin(AbstractDatasetPropertyBaseAdmin):
         "created",
         "modified",
     )
+
+
+@admin.register(CatalogRecord)
+class CatalogRecordAdmin(AbstractDatasetPropertyBaseAdmin):
+    list_display = (
+        "id",
+        "data_catalog",
+    )
+    list_filter = ("created", "modified", "data_catalog")

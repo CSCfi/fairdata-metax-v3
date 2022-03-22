@@ -8,6 +8,7 @@ from apps.core.models import (
     AccessType,
     AccessRight,
     DataCatalog,
+    CatalogRecord,
 )
 
 
@@ -110,6 +111,12 @@ def data_catalog_with_foreign_keys(
 
 
 @pytest.fixture
+def catalog_record(data_catalog_with_foreign_keys) -> CatalogRecord:
+    identifier = "12345678-51d3-4c25-ad20-75aff8ca19d7"
+    return CatalogRecord(id=identifier, data_catalog=data_catalog_with_foreign_keys)
+
+
+@pytest.fixture
 def dataset_property_object_factory(
     dataset_language, dataset_license, catalog_homepage, access_type, data_catalog
 ):
@@ -129,11 +136,13 @@ def dataset_property_object_factory(
 
 
 @pytest.fixture
-def abstract_base_object_factory(dataset_publisher, access_rights):
+def abstract_base_object_factory(dataset_publisher, access_rights, catalog_record):
     def _abstract_base_object_factory(object_name):
         if object_name == "dataset_publisher":
             return dataset_publisher
         elif object_name == "access_rights":
             return access_rights
+        elif object_name == "catalog_record":
+            return catalog_record
 
     return _abstract_base_object_factory
