@@ -114,8 +114,6 @@ class DatasetLicense(AbstractDatasetProperty):
     https://www.w3.org/TR/vocab-dcat-3/#Property:resource_license
     """
 
-    license = models.URLField(max_length=512, help_text="valid url to the license")
-
 
 class AccessType(AbstractDatasetProperty):
     """Accessibility of the resource"""

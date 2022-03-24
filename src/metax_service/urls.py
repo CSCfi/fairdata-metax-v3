@@ -16,8 +16,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+from apps.core.core_urls import urlpatterns as core_urls
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('__debug__/', include('debug_toolbar.urls')),
-    path('reference_data/', include('refdata.urls'))
+    path('reference_data/', include('refdata.urls')),
+    path('rest/v3/', include(core_urls)),
 ]
