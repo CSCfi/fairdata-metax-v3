@@ -9,6 +9,7 @@ from apps.core.models import (
     AccessRight,
     DataCatalog,
     CatalogRecord,
+    DataStorage,
 )
 
 
@@ -115,6 +116,13 @@ def catalog_record(data_catalog_with_foreign_keys) -> CatalogRecord:
     identifier = "12345678-51d3-4c25-ad20-75aff8ca19d7"
     return CatalogRecord(id=identifier, data_catalog=data_catalog_with_foreign_keys)
 
+@pytest.fixture
+def data_storage() -> DataStorage:
+    identifier = "test-data-storage"
+    endpoint_url = "https://www.test-123456dcba.fi"
+    endpoint_description = "Test-Data-Storage that is used for testing files"
+    return DataStorage(id=identifier, endpoint_url=endpoint_url, endpoint_description=endpoint_description)
+
 
 @pytest.fixture
 def dataset_property_object_factory(
@@ -136,7 +144,7 @@ def dataset_property_object_factory(
 
 
 @pytest.fixture
-def abstract_base_object_factory(dataset_publisher, access_rights, catalog_record):
+def abstract_base_object_factory(dataset_publisher, access_rights, catalog_record, data_storage):
     def _abstract_base_object_factory(object_name):
         if object_name == "dataset_publisher":
             return dataset_publisher
@@ -144,5 +152,7 @@ def abstract_base_object_factory(dataset_publisher, access_rights, catalog_recor
             return access_rights
         elif object_name == "catalog_record":
             return catalog_record
+        elif object_name == "data_storage":
+            return data_storage
 
     return _abstract_base_object_factory
