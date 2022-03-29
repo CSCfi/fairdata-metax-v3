@@ -220,8 +220,7 @@ class DataStorage(AbstractBaseModel):
         help_text="A unique id of the data storage",
     )
 
-    endpoint_url = models.CharField(
-        max_length=255,
+    endpoint_url = models.URLField(
         help_text="The root location or primary endpoint of the service (a Web-resolvable IRI)."
     )
 

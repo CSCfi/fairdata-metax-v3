@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
                 ('is_removed', models.BooleanField(default=False)),
                 ('removal_date', models.DateTimeField(blank=True, null=True)),
                 ('id', models.CharField(help_text='A unique id of the data storage', max_length=255, primary_key=True, serialize=False)),
-                ('endpoint_url', models.CharField(help_text='The root location or primary endpoint of the service (a Web-resolvable IRI).', max_length=255)),
+                ('endpoint_url', models.URLField(help_text='The root location or primary endpoint of the service (a Web-resolvable IRI).')),
                 ('endpoint_description', models.TextField(help_text='A description of the services available via the end-points, including their operations, parameters etc.')),
             ],
             options={
