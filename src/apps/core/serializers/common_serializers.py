@@ -46,14 +46,6 @@ class DatasetLicenseModelSerializer(AbstractDatasetPropertyModelSerializer):
         model = DatasetLicense
         fields = AbstractDatasetPropertyModelSerializer.Meta.fields
 
-    def validate(self, attrs):
-        if 'title' not in attrs:
-            licence = DatasetLicense.objects.filter(id=attrs.get('id')).first()
-            if licence:
-                attrs['title'] = licence.title
-        data = serializers.Serializer.validate(self, attrs)
-        return data
-
 
 class DatasetPublisherModelSerializer(AbstractDatasetModelSerializer):
     homepage = CatalogHomePageModelSerializer(many=True)
@@ -67,17 +59,25 @@ class DatasetPublisherModelSerializer(AbstractDatasetModelSerializer):
         dataset_publisher = DatasetPublisher.objects.create(**validated_data)
         for page in homepages:
             page_created = CatalogHomePage.objects.create(**page)
-            # page_created.publishers.add(dataset_publisher)
             dataset_publisher.homepage.add(page_created)
+        return dataset_publisher
+
+    def update(self, instance, validated_data):
+        homepages = validated_data.pop('homepage')
+        dataset_publisher = DatasetPublisher.objects.update(**validated_data)
+        dataset_publisher.homepage.clear()
+        for homepage in homepages:
+            page, created = CatalogHomePage.objects.update_or_create(id=homepage.get('id'), defaults=homepage)
+            dataset_publisher.homepage.add(page)
         return dataset_publisher
 
 
 class AccessRightsModelSerializer(AbstractDatasetModelSerializer):
     license = DatasetLicenseModelSerializer(read_only=True, many=False)
     access_type = AccessTypeModelSerializer(read_only=True, many=False)
+
     class Meta:
         model = AccessRight
-        fields = "__all__"
-
+        fields = ('description', 'license', 'access_type')
 
 
