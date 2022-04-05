@@ -19,3 +19,8 @@ def check_datacatalog_is_created():
 @given("It should return 201 http code")
 def step_impl():
     raise NotImplementedError(u'STEP: And It should return 201 http code')
+
+
+@when("I post delete request to datacatalog REST-endpoint")
+def step_impl():
+    raise NotImplementedError(u'STEP: When I post delete request to datacatalog REST-endpoint')

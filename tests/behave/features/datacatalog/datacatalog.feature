@@ -7,3 +7,7 @@ Feature: Data catalog
     When I post a new DataCatalog to the datacatalog REST-endpoint
     Then New DataCatalog object is saved to database
     And It should return 201 http code
+
+  Scenario: Deleting DataCatalog
+    Given I'm an admin user
+    When I post delete request to datacatalog REST-endpoint
