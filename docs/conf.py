@@ -11,12 +11,19 @@ import os
 import sys
 import inspect
 import shutil
+import django
 
 # -- Path setup --------------------------------------------------------------
 
 __location__ = os.path.join(
     os.getcwd(), os.path.dirname(inspect.getfile(inspect.currentframe()))
 )
+__path__ = os.path.join(__location__, "../src")
+
+sys.path.insert(0, os.path.abspath(__path__))
+os.environ['DJANGO_SETTINGS_MODULE'] = 'metax_service.settings'
+django.setup()
+
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -37,7 +44,7 @@ except ImportError:
     from sphinx import apidoc
 
 output_dir = os.path.join(__location__, "api")
-module_dir = os.path.join(__location__, "../src/metax_service")
+module_dir = os.path.join(__location__, "../src/apps")
 try:
     shutil.rmtree(output_dir)
 except FileNotFoundError:
