@@ -6,6 +6,7 @@
 # :license: MIT
 import json
 
+from apps.core.managers.DataCatalog import DataCatalogManager
 from apps.core.models import DataCatalog, DatasetLicense, AccessType, AccessRight, DatasetPublisher, CatalogHomePage, \
     DatasetLanguage
 from apps.core.serializers.common_serializers import DatasetLicenseModelSerializer, AccessTypeModelSerializer, \
@@ -85,7 +86,11 @@ class DataCatalogView(GenericAPIView, DataCatalogEditor):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, request, *args, **kwargs):
-        data_catalogs = self.get_queryset()  # DataCatalog.objects.all()
+        data = {}
+        filter_header = self.request.META.get('HTTP_X_FILTER', None)
+        if filter_header:
+            data = json.loads(filter_header)
+        data_catalogs = DataCatalogManager().filter_catalogs(filter_data=data)
         serializer = DataCatalogSerializer(data_catalogs, many=True)
         return Response(serializer.data)
 
@@ -167,11 +172,8 @@ class DataCatalogViewByID(RetrieveUpdateDestroyAPIView, DataCatalogEditor):
         response_serializer = self.serializer_class(updated_catalog)
         return Response(response_serializer.data)
 
-
     def patch(self, request, *args, **kwargs):
-        catalog_id = kwargs['id']
-        datacatalog = get_object_or_404(DataCatalog, id=catalog_id)
-        # TODO patch operation
+        raise NotImplementedError('PATCH method not implemented yet')
 
     def delete(self, request, *args, **kwargs):
         catalog_id = kwargs['id']
