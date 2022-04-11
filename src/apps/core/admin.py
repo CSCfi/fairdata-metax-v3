@@ -11,6 +11,8 @@ from apps.core.models import (
     DataCatalog,
     CatalogRecord,
     DataStorage,
+    Distribution,
+    File,
 )
 
 
@@ -82,3 +84,15 @@ class DataStorageAdmin(AbstractDatasetPropertyBaseAdmin):
         "endpoint_description",
     )
     list_filter = ("created", "modified")
+
+@admin.register(Distribution)
+class DistributionAdmin(AbstractDatasetPropertyBaseAdmin):
+    pass
+
+@admin.register(File)
+class FileAdmin(AbstractDatasetPropertyBaseAdmin):
+    list_display = (
+        "file_name",
+        "file_path",
+    )
+    list_filter = ("file_storage", "date_frozen")
