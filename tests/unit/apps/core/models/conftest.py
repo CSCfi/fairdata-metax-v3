@@ -54,10 +54,9 @@ def dataset_license() -> DatasetLicense:
         "en": "Creative Commons CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",
         "und": "Creative Commons Yleismaailmallinen (CC0 1.0) Public Domain -lausuma",
     }
-    license = "https://creativecommons.org/publicdomain/zero/1.0/"
     identifier = "http://uri.suomi.fi/codelist/fairdata/license/code/CC0-1.0"
 
-    return DatasetLicense(title=title, id=identifier, license=license)
+    return DatasetLicense(title=title, id=identifier)
 
 
 @pytest.fixture

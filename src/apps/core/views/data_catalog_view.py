@@ -6,7 +6,10 @@
 # :license: MIT
 import json
 
-from apps.core.managers.DataCatalog import DataCatalogManager
+from django.core.validators import EMPTY_VALUES
+from rest_framework.pagination import PageNumberPagination
+
+from apps.core.managers.DataCatalog import DataCatalogManager, DataCatalogFilter
 from apps.core.models import DataCatalog, DatasetLicense, AccessType, AccessRight, DatasetPublisher, CatalogHomePage, \
     DatasetLanguage
 from apps.core.serializers.common_serializers import DatasetLicenseModelSerializer, AccessTypeModelSerializer, \
@@ -87,12 +90,24 @@ class DataCatalogView(GenericAPIView, DataCatalogEditor):
 
     def get(self, request, *args, **kwargs):
         data = {}
+        filter_url = request.GET
         filter_header = self.request.META.get('HTTP_X_FILTER', None)
+
+        if filter_url not in EMPTY_VALUES and filter_header not in EMPTY_VALUES:
+            return Response({"Error": "Only one filter set is allowed"}, status=status.HTTP_400_BAD_REQUEST)
+
         if filter_header:
             data = json.loads(filter_header)
-        data_catalogs = DataCatalogManager().filter_catalogs(filter_data=data)
-        serializer = DataCatalogSerializer(data_catalogs, many=True)
-        return Response(serializer.data)
+        else:
+            data = request.GET
+        filters = DataCatalogFilter()
+        filters.read_filters(data)
+        data_catalogs = DataCatalogManager().filter_catalogs(filter_data=filters)
+        paginator = PageNumberPagination()
+        paginator.page_size = data.get('page_size', 10)
+        paginated_catalogs = paginator.paginate_queryset(data_catalogs,request)
+        serializer = DataCatalogSerializer(paginated_catalogs, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
 
 class DataCatalogViewByID(RetrieveUpdateDestroyAPIView, DataCatalogEditor):

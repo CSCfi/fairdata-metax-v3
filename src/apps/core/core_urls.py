@@ -15,4 +15,5 @@ from apps.core.views.data_catalog_view import DataCatalogView, DataCatalogViewBy
 urlpatterns = ([
     re_path(r'datacatalog$', DataCatalogView.as_view(), name='datacatalog'),
     re_path(r'datacatalog/(?P<id>.+)', DataCatalogViewByID.as_view(), name='datacatalogbyid'),
+    path(r'datacatalog?', DataCatalogView.as_view(), name='datacatalog'),
     ])
