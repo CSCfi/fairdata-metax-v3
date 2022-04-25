@@ -140,7 +140,7 @@ def distribution() -> Distribution:
     return Distribution(id=identifier, title=title, access_url=access_url, download_url=download_url, byte_size=byte_size, checksum=checksum)
 
 @pytest.fixture
-def distribution_with_foreign_keys(dataset_license, access_rights, data_storage) -> Distribution:
+def distribution_with_foreign_keys(dataset_license, access_rights, data_storage, distribution) -> Distribution:
     dataset_license.save()
     access_rights.save()
     data_storage.save()
@@ -159,13 +159,6 @@ def file() -> File:
     date_uploaded = "2021-12-31 15:25:00+01"
     identifier = "12345678-51d3-4c25-ad20-75aff8ca19e7"
     return File(byte_size=byte_size, checksum=checksum, file_name=file_name, file_path=file_path, date_uploaded=date_uploaded, id=identifier)
-
-@pytest.fixture
-def file_with_foreign_keys(data_storage) -> File:
-    data_storage.save()
-    file.file_storage = data_storage
-    file.save()
-    return file
 
 @pytest.fixture
 def dataset_property_object_factory(

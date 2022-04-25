@@ -87,7 +87,7 @@ class DataStorageAdmin(AbstractDatasetPropertyBaseAdmin):
 
 @admin.register(Distribution)
 class DistributionAdmin(AbstractDatasetPropertyBaseAdmin):
-    pass
+    list_filter = ["access_service"]
 
 @admin.register(File)
 class FileAdmin(AbstractDatasetPropertyBaseAdmin):
@@ -95,4 +95,4 @@ class FileAdmin(AbstractDatasetPropertyBaseAdmin):
         "file_name",
         "file_path",
     )
-    list_filter = ("file_storage", "date_frozen")
+    list_filter = ["date_frozen"]
