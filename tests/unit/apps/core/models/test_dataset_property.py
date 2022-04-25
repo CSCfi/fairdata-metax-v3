@@ -8,6 +8,7 @@ pytestmark = pytest.mark.parametrize(
         "dataset_license",
         "access_type",
         "data_catalog",
+        "distribution",
     ],
 )
 
