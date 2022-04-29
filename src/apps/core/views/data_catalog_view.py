@@ -9,7 +9,7 @@ import json
 from django.core.validators import EMPTY_VALUES
 from rest_framework.pagination import PageNumberPagination
 
-from apps.core.managers.DataCatalog import DataCatalogManager, DataCatalogFilter
+from apps.core.managers.DataCatalog import DataCatalogManager, DataCatalogFilter, DataCatalogOrder
 from apps.core.models import DataCatalog, DatasetLicense, AccessType, AccessRight, DatasetPublisher, CatalogHomePage, \
     DatasetLanguage
 from apps.core.serializers.common_serializers import DatasetLicenseModelSerializer, AccessTypeModelSerializer, \
@@ -102,10 +102,12 @@ class DataCatalogView(GenericAPIView, DataCatalogEditor):
             data = request.GET
         filters = DataCatalogFilter()
         filters.read_filters(data)
-        data_catalogs = DataCatalogManager().filter_catalogs(filter_data=filters)
+        ordering = DataCatalogOrder()
+        ordering.read_order(data)
+        data_catalogs = DataCatalogManager().filter_catalogs(filter_data=filters, order_data=ordering.order)
         paginator = PageNumberPagination()
         paginator.page_size = data.get('page_size', 10)
-        paginated_catalogs = paginator.paginate_queryset(data_catalogs,request)
+        paginated_catalogs = paginator.paginate_queryset(data_catalogs, request)
         serializer = DataCatalogSerializer(paginated_catalogs, many=True)
         return paginator.get_paginated_response(serializer.data)
 
