@@ -50,4 +50,7 @@ MANIFEST
 # Per-project virtualenvs
 .venv*/
 *.sqlite3
+
+# Custom rules
 .env
+.scannerwork

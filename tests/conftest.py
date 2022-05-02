@@ -20,5 +20,5 @@ def pytest_collection_modifyitems(items):
         if "create" in item.nodeid or "delete" in item.nodeid:
             # adds django_db marker on any test with 'create' or 'delete' on its name
             item.add_marker(pytest.mark.django_db)
-
-
+        if "unit" in item.nodeid:
+            item.add_marker("unit")
