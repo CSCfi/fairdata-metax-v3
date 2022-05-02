@@ -103,7 +103,9 @@ class DataCatalogOrder:
 
 class DataCatalogManager(models.Manager):
 
-    def filter_catalogs(self, filter_data=None, order_data=['-created', ]):
+    def filter_catalogs(self, filter_data=None, order_data=None):
+        if order_data is None:
+            order_data = []
         filters = OrderedDict()
 
         if filter_data.title:
