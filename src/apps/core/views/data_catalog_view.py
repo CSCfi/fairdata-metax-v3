@@ -53,6 +53,22 @@ class DataCatalogView(GenericAPIView, DataCatalogEditor):
     serializer_class = DataCatalogSerializer
     queryset = DataCatalog.objects.all()
 
+    def _validate_access_rights(self, access_rights_data):
+        access_rights_serializer = AccessRightsModelSerializer(data=access_rights_data)
+        if access_rights_serializer.is_valid(raise_exception=True):
+            access_rights = access_rights_serializer.save()
+            license_data = access_rights_data.pop("license", None)
+            access_type_data = access_rights_data.pop("access_type", None)
+            access_rights.license = self.license_edit(license_data)
+            access_rights.access_type = self.access_type_edit(access_type_data)
+            access_rights.save()
+            return access_rights
+
+    def _validate_publisher(self, publisher_data):
+        publisher_serializer = DatasetPublisherModelSerializer(data=publisher_data)
+        if publisher_serializer.is_valid(raise_exception=True):
+            return publisher_serializer.save()
+
     def post(self, request, *args, **kwargs):
         data = request.data
         serializer = DataCatalogSerializer(data=data)
@@ -63,20 +79,10 @@ class DataCatalogView(GenericAPIView, DataCatalogEditor):
             access_rights = None
             publisher = None
             if access_rights_data:
-
-                access_rights_serializer = AccessRightsModelSerializer(data=access_rights_data)
-                if access_rights_serializer.is_valid(raise_exception=True):
-                    access_rights = access_rights_serializer.save()
-                    license_data = access_rights_data.pop("license", None)
-                    access_type_data = access_rights_data.pop("access_type", None)
-                    access_rights.license = self.license_edit(license_data)
-                    access_rights.access_type = self.access_type_edit(access_type_data)
-                    access_rights.save()
+                access_rights = self._validate_access_rights(access_rights_data)
 
             if publisher_data:
-                publisher_serializer = DatasetPublisherModelSerializer(data=publisher_data)
-                if publisher_serializer.is_valid(raise_exception=True):
-                    publisher = publisher_serializer.save()
+                publisher = self._validate_publisher(publisher_data)
 
             new_data_catalog = serializer.save(publisher=publisher, access_rights=access_rights)
 
