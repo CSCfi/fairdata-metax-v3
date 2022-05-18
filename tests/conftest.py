@@ -9,16 +9,19 @@
 """
 
 import pytest
-
+import factory.random
 
 def pytest_collection_modifyitems(items):
     """Pytest provided hook function
 
     Pytest hook docs: https://docs.pytest.org/en/latest/how-to/writing_hook_functions.html
     """
+    factory.random.reseed_random('metax-service')
     for item in items:
         if "create" in item.nodeid or "delete" in item.nodeid:
             # adds django_db marker on any test with 'create' or 'delete' on its name
             item.add_marker(pytest.mark.django_db)
+        if "behave" in item.nodeid:
+            item.add_marker(pytest.mark.behave)
         if "unit" in item.nodeid:
             item.add_marker("unit")
