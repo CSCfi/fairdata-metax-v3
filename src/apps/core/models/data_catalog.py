@@ -3,7 +3,7 @@ from django.contrib.postgres.fields import HStoreField
 from django.db import models
 
 
-class DataCatalog(AbstractDatasetProperty):
+class DataCatalog(AbstractBaseModel):
     """A curated collection of metadata about resources.
 
     RDF Class: dcat:Catalog
@@ -18,7 +18,7 @@ class DataCatalog(AbstractDatasetProperty):
         primary_key=True,
         help_text="A unique id of the resource being described or cataloged.",
     )
-
+    title = HStoreField(help_text='example: {"en":"title", "fi":"otsikko"}')
     dataset_versioning_enabled = models.BooleanField(default=False)
     harvested = models.BooleanField(default=False)
     language = models.ManyToManyField('DatasetLanguage', related_name="catalogs")
@@ -97,7 +97,7 @@ class DatasetPublisher(AbstractBaseModel):
     Source: DCAT Version 3, Draft 11,
     https://www.w3.org/TR/vocab-dcat-3/#Property:resource_publisher
     """
-
+    id = models.BigAutoField(primary_key=True)
     name = HStoreField(help_text='example: {"en": "name", "fi":"nimi"}')
     homepage = models.ManyToManyField(CatalogHomePage, related_name="publishers")
 

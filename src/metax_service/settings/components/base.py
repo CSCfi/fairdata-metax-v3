@@ -62,6 +62,7 @@ DEFAULT_APPS = [
 THIRD_PARTY_APPS = [
     'rest_framework',
     'django_extensions',
+    'drf_yasg',
 ]
 LOCAL_APPS = [
     "core.apps.CoreConfig",

@@ -13,8 +13,18 @@ pytestmark = pytest.mark.parametrize(
 )
 
 
-def test_create_dataset_property(dataset_property, dataset_property_object_factory):
-    obj = dataset_property_object_factory(dataset_property)
+@pytest.mark.parametrize("dataset_ref_property",
+                         ["dataset_language", "catalog_homepage", "dataset_license", "access_type"])
+def test_create_dataset_ref_property(dataset_property, dataset_ref_property, dataset_property_object_factory):
+    obj = dataset_property_object_factory(dataset_ref_property)
+    identifier = obj.url
+    obj.save()
+    assert obj.url == identifier
+
+
+@pytest.mark.parametrize("dataset_base_property", ["data_catalog", "distribution"])
+def test_create_dataset_property(dataset_property, dataset_base_property, dataset_property_object_factory):
+    obj = dataset_property_object_factory(dataset_base_property)
     identifier = obj.id
     obj.save()
     assert obj.id == identifier

@@ -29,9 +29,9 @@ class AbstractBaseModel(TimeStampedModel, SoftDeletableModel):
 class AbstractDatasetProperty(AbstractBaseModel):
     """Base class for simple refdata fields with only id and title properties"""
 
-    id = models.URLField(
+    id = models.BigAutoField(primary_key=True)
+    url = models.URLField(
         max_length=512,
-        primary_key=True,
         help_text="valid url to the property definition",
     )
     title = HStoreField(help_text='example: {"en":"title", "fi":"otsikko"}')

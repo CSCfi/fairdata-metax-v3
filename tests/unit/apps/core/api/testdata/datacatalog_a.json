@@ -11,7 +11,7 @@
                 "sv": "finska",
                 "und": "suomi"
             },
-            "id": "http://lexvo.org/id/iso639-3/fin"
+            "url": "http://lexvo.org/id/iso639-3/fin"
         }]
     ,
     "harvested": false,
@@ -25,7 +25,7 @@
                 "en": "Publisher organization website",
                 "fi": "Julkaisijaorganisaation kotisivu"
             },
-            "id": "http://www.testi.fi/"
+            "url": "http://www.testi.fi/"
         }]
 
     },
@@ -38,12 +38,12 @@
                     "fi": "Creative Commons Nimeä 4.0 Kansainvälinen (CC BY 4.0)",
                     "und": "Creative Commons Nimeä 4.0 Kansainvälinen (CC BY 4.0)"
                 },
-                "id": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0"
+                "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0"
             }
         ,
         "access_type":
             {
-                "id": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open",
+                "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open",
                 "title": {
                     "en": "Open",
                     "fi": "Avoin",

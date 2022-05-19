@@ -36,6 +36,13 @@ def datacatalog_c_json():
 
 
 @pytest.fixture
+def datacatalog_d_json():
+    with open(test_data_path + "datacatalog_d.json") as json_file:
+        data = json.load(json_file)
+    return data
+
+
+@pytest.fixture
 def datacatalog_put_json():
     with open(test_data_path + "datacatalog_put.json") as json_file:
         data = json.load(json_file)

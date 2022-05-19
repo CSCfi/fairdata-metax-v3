@@ -19,7 +19,7 @@ class AbstractDatasetModelSerializer(serializers.ModelSerializer):
 
 class AbstractDatasetPropertyModelSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = ("id", "title")
+        fields = ("id", "url", "title")
         abstract = True
 
 
@@ -52,7 +52,7 @@ class DatasetPublisherModelSerializer(AbstractDatasetModelSerializer):
 
     class Meta:
         model = DatasetPublisher
-        fields = ("name", "homepage")
+        fields = ("id", "name", "homepage")
 
     def create(self, validated_data):
         homepages = validated_data.pop('homepage')
@@ -65,19 +65,29 @@ class DatasetPublisherModelSerializer(AbstractDatasetModelSerializer):
     def update(self, instance, validated_data):
         homepages = validated_data.pop('homepage')
         dataset_publisher = DatasetPublisher.objects.update(**validated_data)
-        dataset_publisher.homepage.clear()
+        instance.homepage.clear()
         for homepage in homepages:
             page, created = CatalogHomePage.objects.update_or_create(id=homepage.get('id'), defaults=homepage)
-            dataset_publisher.homepage.add(page)
+            instance.homepage.add(page)
         return dataset_publisher
 
 
 class AccessRightsModelSerializer(AbstractDatasetModelSerializer):
-    license = DatasetLicenseModelSerializer(read_only=True, many=False)
-    access_type = AccessTypeModelSerializer(read_only=True, many=False)
+    license = DatasetLicenseModelSerializer(read_only=False, many=False)
+    access_type = AccessTypeModelSerializer(read_only=False, many=False)
 
     class Meta:
         model = AccessRight
         fields = ('description', 'license', 'access_type')
 
+    def update(self, instance, validated_data):
+        license_serializer = self.fields['license']
+        access_type_serializer = self.fields['access_type']
+        license_instance = instance.license
+        access_type_instance = instance.access_type
+        license_data = validated_data.pop('license', None)
+        access_type_data = validated_data.pop('access_type', None)
+        license_serializer.update(license_instance, license_data)
+        access_type_serializer.update(access_type_instance, access_type_data)
 
+        return super(AccessRightsModelSerializer, self).update(instance, validated_data)

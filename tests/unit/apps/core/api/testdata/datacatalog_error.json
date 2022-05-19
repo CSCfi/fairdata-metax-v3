@@ -6,7 +6,7 @@
             "fi": "Sisältää aineistoja testaus palvelusta"
         },
         "license": {
-            "id": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0",
+            "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0",
             "title": {
                 "en": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
                 "fi": "Creative Commons Nimeä 4.0 Kansainvälinen (CC BY 4.0)",
@@ -14,7 +14,7 @@
             }
         },
         "access_type": {
-            "id": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open",
+            "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open",
             "title": {
                 "en": "Open",
                 "fi": "Avoin",
@@ -29,7 +29,7 @@
         },
         "homepage": [
             {
-                "id": "http://www.julkaisija.fi/",
+                "url": "http://www.julkaisija.fi/",
                 "title": {
                     "en": "Publisher organization website",
                     "fi": "Julkaisijaorganisaation kotisivu"
@@ -39,7 +39,7 @@
     },
     "language": [
         {
-            "id": "http://lexvo.org/id/iso639-3/est",
+            "url": "http://lexvo.org/id/iso639-3/est",
             "title": {
                 "en": "Estonian",
                 "fi": "viron kieli",

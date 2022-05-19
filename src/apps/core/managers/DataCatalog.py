@@ -7,23 +7,23 @@ from apps.core.models import DataCatalog
 class DataCatalogFilter:
 
     def __init__(self, title=None, id=None, dataset_versioning_enabled=None, harvested=None,
-                 research_dataset_schema=None, access_rights_id=None, access_rights_description=None,
-                 access_type_id=None, access_type_title=None, publisher_id=None, publisher_name=None,
-                 publisher_homepage_id=None, publisher_homepage_title=None, language_id=None, language_title=None):
+                 research_dataset_schema=None, access_rights_url=None, access_rights_description=None,
+                 access_type_url=None, access_type_title=None, publisher_url=None, publisher_name=None,
+                 publisher_homepage_url=None, publisher_homepage_title=None, language_url=None, language_title=None):
         self.title = title
         self.id = id
         self.dataset_versioning_enabled = dataset_versioning_enabled
         self.harvested = harvested
         self.research_dataset_schema = research_dataset_schema
-        self.access_rights_id = access_rights_id
+        self.access_rights_url = access_rights_url
         self.access_rights_description = access_rights_description
-        self.access_type_id = access_type_id
+        self.access_type_url = access_type_url
         self.access_type_title = access_type_title
-        self.publisher_id = publisher_id
+        self.publisher_url = publisher_url
         self.publisher_name = publisher_name
-        self.publisher_homepage_id = publisher_homepage_id
+        self.publisher_homepage_url = publisher_homepage_url
         self.publisher_homepage_title = publisher_homepage_title
-        self.language_id = language_id
+        self.language_url = language_url
         self.language_title = language_title
 
     def read_filters(self, filter_data=None):
@@ -49,8 +49,8 @@ class DataCatalogFilter:
         if 'access_rights_description' in filter_data:
             self.access_rights_description = filter_data.get('access_rights_description')
 
-        if 'access_type_id' in filter_data:
-            self.access_type_id = filter_data.get('access_type_id')
+        if 'access_type_url' in filter_data:
+            self.access_type_url = filter_data.get('access_type_url')
 
         if 'access_type_title' in filter_data:
             self.access_type_title = filter_data.get('access_type_title')
@@ -58,14 +58,14 @@ class DataCatalogFilter:
         if 'publisher_name' in filter_data:
             self.publisher_name = filter_data.get('publisher_name')
 
-        if 'publisher_homepage_id' in filter_data:
-            self.publisher_homepage_id = filter_data.get('publisher_homepage_id')
+        if 'publisher_homepage_url' in filter_data:
+            self.publisher_homepage_url = filter_data.get('publisher_homepage_url')
 
         if 'publisher_homepage_title' in filter_data:
             self.publisher_homepage_title = filter_data.get('publisher_homepage_title')
 
-        if 'language_id' in filter_data:
-            self.language_id = filter_data.get('language_id')
+        if 'language_url' in filter_data:
+            self.language_url = filter_data.get('language_url')
 
         if 'language_title' in filter_data:
             self.language_title = filter_data.get('language_title')
@@ -76,10 +76,10 @@ class DataCatalogOrder:
     order_values = {'title': 'title', 'id': 'id', 'dataset_versioning_enabled': 'dataset_versioning_enabled',
                     'harvested': 'harvested', 'research_dataset_schema': 'research_dataset_schema',
                     'access_rights_description': 'access_rights__description',
-                    'access_type_id': 'access_rights__access_type__id',
+                    'access_type_url': 'access_rights__access_type__url',
                     'access_type_title': 'access_rights__access_type__title', 'publisher_name': 'publisher__name',
-                    'publisher_homepage_id': 'publisher__homepage__id',
-                    'publisher_homepage_title': 'publisher__homepage__title', 'language_id': 'language__id',
+                    'publisher_homepage_url': 'publisher__homepage__url',
+                    'publisher_homepage_title': 'publisher__homepage__title', 'language_url': 'language__url',
                     'language_title': 'language__title', 'created': 'created', 'modified': 'modified'}
 
     order = []
@@ -126,8 +126,8 @@ class DataCatalogManager(models.Manager):
         if filter_data.access_rights_description:
             filters['{0}__{1}'.format('access_rights__description', 'icontains')] = filter_data.access_rights_description
 
-        if filter_data.access_type_id:
-            filters['{0}__{1}'.format('access_rights__access_type__id', 'icontains')] = filter_data.access_type_id
+        if filter_data.access_type_url:
+            filters['{0}__{1}'.format('access_rights__access_type__url', 'icontains')] = filter_data.access_type_url
 
         if filter_data.access_type_title:
             filters['{0}__{1}'.format('access_rights__access_type__title', 'icontains')] = filter_data.access_type_title
@@ -135,14 +135,14 @@ class DataCatalogManager(models.Manager):
         if filter_data.publisher_name:
             filters['{0}__{1}'.format('publisher__name', 'icontains')] = filter_data.publisher_name
 
-        if filter_data.publisher_homepage_id:
-            filters['{0}__{1}'.format('publisher__homepage__id', 'icontains')] = filter_data.publisher_homepage_id
+        if filter_data.publisher_homepage_url:
+            filters['{0}__{1}'.format('publisher__homepage__url', 'icontains')] = filter_data.publisher_homepage_url
 
         if filter_data.publisher_homepage_title:
             filters['{0}__{1}'.format('publisher__homepage__title', 'icontains')] = filter_data.publisher_homepage_title
 
-        if filter_data.language_id:
-            filters['{0}__{1}'.format('language__id', 'icontains')] = filter_data.language_id
+        if filter_data.language_url:
+            filters['{0}__{1}'.format('language__url', 'icontains')] = filter_data.language_url
 
         if filter_data.language_title:
             filters['{0}__{1}'.format('language__title', 'icontains')] = filter_data.language_title

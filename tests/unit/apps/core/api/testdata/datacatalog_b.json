@@ -6,7 +6,7 @@
             "fi": "Sisältää aineistoja Repotronic-palvelusta"
         },
         "license": {
-            "id": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-2.0",
+            "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-2.0",
             "title": {
                 "en": "Creative Commons Attribution 2.0 Generic (CC BY 2.0)",
                 "fi": "Creative Commons Nimeä 2.0 Yleinen (CC BY 2.0)",
@@ -14,7 +14,7 @@
             }
         },
         "access_type": {
-            "id": "http://uri.suomi.fi/codelist/fairdata/access_type/code/embargo",
+            "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/embargo",
             "title": {
                 "en": "Embargo",
                 "fi": "Embargo",
@@ -29,7 +29,7 @@
         },
         "homepage": [
             {
-                "id": "http://www.uusitesti2.fi/",
+                "url": "http://www.uusitesti2.fi/",
                 "title": {
                     "en": "Publisher organization website",
                     "fi": "Julkaisijaorganisaation kotisivu"
@@ -39,7 +39,7 @@
     },
     "language": [
         {
-            "id": "http://lexvo.org/id/iso639-3/fin",
+            "url": "http://lexvo.org/id/iso639-3/fin",
             "title": {
                 "en": "Finnish",
                 "fi": "suomi",
