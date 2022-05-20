@@ -59,6 +59,17 @@ def test_change_datacatalog_to_minimal(client, datacatalog_a_json, datacatalog_d
 
 
 @pytest.mark.django_db
+def test_change_datacatalog_from_minimal(client, datacatalog_a_json, datacatalog_d_json):
+    _now = datetime.datetime.now()
+    url = reverse('datacatalog')
+    res1 = client.post(url, datacatalog_d_json, content_type='application/json')
+    url2 = reverse('datacatalogbyid', kwargs={'id': "urn:nbn:fi:att:data-catalog-testi"})
+    response = client.put(url2, datacatalog_a_json, content_type='application/json')
+    assert response.status_code == 200
+    assert response.data.get('language')[0].get('url') == "http://lexvo.org/id/iso639-3/fin"
+
+
+@pytest.mark.django_db
 def test_create_datacatalog_error(client, datacatalog_error_json):
     _now = datetime.datetime.now()
     url = reverse('datacatalog')
