@@ -3,11 +3,13 @@ import json
 import pytest
 import logging
 
+from django.urls import reverse
 from rest_framework.test import APIClient
 
 logger = logging.getLogger(__name__)
 
 test_data_path = os.path.dirname(os.path.abspath(__file__)) + "/testdata/"
+
 
 @pytest.fixture
 def api_client() -> APIClient:
@@ -55,3 +57,11 @@ def datacatalog_error_json():
     with open(test_data_path + "datacatalog_error.json") as json_file:
         data = json.load(json_file)
     return data
+
+@pytest.fixture
+def post_datacatalog_payloads_a_b_c(client, datacatalog_a_json, datacatalog_b_json, datacatalog_c_json):
+    url = reverse('datacatalog')
+    res1 = client.post(url, datacatalog_a_json, content_type='application/json')
+    res2 = client.post(url, datacatalog_b_json, content_type='application/json')
+    res3 = client.post(url, datacatalog_c_json, content_type='application/json')
+    return res1, res2, res3
