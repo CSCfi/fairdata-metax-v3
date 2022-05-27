@@ -25,26 +25,39 @@ from rest_framework import status
 from rest_framework.generics import GenericAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 
-oa_id = openapi.Parameter('id', in_=openapi.IN_HEADER, type=openapi.TYPE_STRING)
-title = openapi.Parameter('title', in_=openapi.IN_HEADER, type=openapi.TYPE_STRING)
-harvested = openapi.Parameter('harvested', in_=openapi.IN_HEADER, type=openapi.TYPE_BOOLEAN)
-dataset_versioning_enabled = openapi.Parameter('dataset_versioning_enabled', in_=openapi.IN_HEADER,
+oa_id = openapi.Parameter('id', in_=openapi.IN_QUERY, type=openapi.TYPE_STRING)
+title = openapi.Parameter('title', in_=openapi.IN_QUERY, type=openapi.TYPE_STRING)
+harvested = openapi.Parameter('harvested', in_=openapi.IN_QUERY, type=openapi.TYPE_BOOLEAN)
+dataset_versioning_enabled = openapi.Parameter('dataset_versioning_enabled', in_=openapi.IN_QUERY,
                                                type=openapi.TYPE_BOOLEAN)
-research_dataset_schema = openapi.Parameter('research_dataset_schema', in_=openapi.IN_HEADER, type=openapi.TYPE_STRING)
-access_rights_description = openapi.Parameter('access_rights_description', in_=openapi.IN_HEADER, type=openapi.TYPE_STRING)
-access_type_id = openapi.Parameter('access_type_id', in_=openapi.IN_HEADER, type=openapi.TYPE_STRING)
-access_type_title = openapi.Parameter('access_type_title', in_=openapi.IN_HEADER, type=openapi.TYPE_STRING)
-publisher_name = openapi.Parameter('publisher_name', in_=openapi.IN_HEADER, type=openapi.TYPE_STRING)
-publisher_homepage_id = openapi.Parameter('publisher_homepage_id', in_=openapi.IN_HEADER, type=openapi.TYPE_STRING)
-publisher_homepage_title = openapi.Parameter('publisher_homepage_title', in_=openapi.IN_HEADER, type=openapi.TYPE_STRING)
-language_id = openapi.Parameter('language_id', in_=openapi.IN_HEADER, type=openapi.TYPE_STRING)
-language_title = openapi.Parameter('language_title', in_=openapi.IN_HEADER, type=openapi.TYPE_STRING)
-
-filter_parameters = """Possible filter parameters are id, title, harvested, dataset_versioning_enabled, 
+research_dataset_schema = openapi.Parameter('research_dataset_schema', in_=openapi.IN_QUERY, type=openapi.TYPE_STRING)
+access_rights_description = openapi.Parameter('access_rights_description', in_=openapi.IN_QUERY, type=openapi.TYPE_STRING)
+access_type_id = openapi.Parameter('access_type_id', in_=openapi.IN_QUERY, type=openapi.TYPE_STRING)
+access_type_title = openapi.Parameter('access_type_title', in_=openapi.IN_QUERY, type=openapi.TYPE_STRING)
+publisher_name = openapi.Parameter('publisher_name', in_=openapi.IN_QUERY, type=openapi.TYPE_STRING)
+publisher_homepage_id = openapi.Parameter('publisher_homepage_id', in_=openapi.IN_QUERY, type=openapi.TYPE_STRING)
+publisher_homepage_title = openapi.Parameter('publisher_homepage_title', in_=openapi.IN_QUERY, type=openapi.TYPE_STRING)
+language_id = openapi.Parameter('language_id', in_=openapi.IN_QUERY, type=openapi.TYPE_STRING)
+language_title = openapi.Parameter('language_title', in_=openapi.IN_QUERY, type=openapi.TYPE_STRING)
+created = openapi.Parameter('created', in_=openapi.IN_QUERY, type=openapi.TYPE_STRING)
+modified = openapi.Parameter('modified', in_=openapi.IN_QUERY, type=openapi.TYPE_STRING)
+sorting = openapi.Parameter('sorting', in_=openapi.IN_QUERY, type=openapi.TYPE_STRING)
+page_size = openapi.Parameter('page_size', in_=openapi.IN_QUERY, type=openapi.TYPE_INTEGER)
+query_parameters = [oa_id, title, harvested, dataset_versioning_enabled, research_dataset_schema, access_rights_description,
+                    access_type_id, access_type_title, publisher_name, publisher_homepage_id, publisher_homepage_title,
+                    language_id, language_title, created, modified, sorting, page_size]
+filter_parameters = """This is an alternative way to pass the parameters. 
+                     Possible filter parameters are id, title, harvested, dataset_versioning_enabled, 
                      research_dataset_schema, access_rights_description, access_type_url, access_type_title, 
-                     publisher_name, publisher_homepage_url, publisher_homepage_title, language_url, language_title"""
-filter_schema = openapi.Parameter('x-filter', in_=openapi.IN_HEADER, type=openapi.TYPE_OBJECT, description=filter_parameters)
-
+                     publisher_name, publisher_homepage_url, publisher_homepage_title, language_url, language_title.
+                     The results can be sorted using the sorting parameter. The sort parameters are the same as for
+                     filtering, plus the values "created" and "modified". The result is descending by default. 
+                     The ascending order is obtained by adding ": asc" after the parameter.
+                     The page size can be specified with the page_size parameter. The default value is 10. 
+                     
+                     Example: {"language_title":"english", "sorting":"title:asc", "page_size":5}"""
+header_filter = openapi.Parameter('x-filter', in_=openapi.IN_HEADER, type=openapi.TYPE_OBJECT, description=filter_parameters)
+query_parameters.append(header_filter)
 
 class DataCatalogEditor:
 
@@ -84,7 +97,7 @@ class DataCatalogView(GenericAPIView, DataCatalogEditor):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @swagger_auto_schema(manual_parameters=[filter_schema])
+    @swagger_auto_schema(manual_parameters=query_parameters)
     def get(self, request, *args, **kwargs):
         data = {}
         filter_url = request.GET
