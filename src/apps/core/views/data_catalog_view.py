@@ -10,6 +10,7 @@ from django.core.validators import EMPTY_VALUES
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.viewsets import ModelViewSet
 
 from apps.core.managers.DataCatalog import DataCatalogManager, DataCatalogFilter, DataCatalogOrder
 from apps.core.models import DataCatalog, DatasetLicense, AccessType, AccessRight, DatasetPublisher, CatalogHomePage, \
@@ -59,6 +60,7 @@ filter_parameters = """This is an alternative way to pass the parameters.
 header_filter = openapi.Parameter('x-filter', in_=openapi.IN_HEADER, type=openapi.TYPE_OBJECT, description=filter_parameters)
 query_parameters.append(header_filter)
 
+
 class DataCatalogEditor:
 
     def license_edit(self, license_data):
@@ -84,11 +86,12 @@ class DataCatalogEditor:
             return None
 
 
-class DataCatalogView(GenericAPIView, DataCatalogEditor):
+class DataCatalogView(ModelViewSet, DataCatalogEditor):
     serializer_class = DataCatalogModelSerializer
     queryset = DataCatalog.objects.all()
+    lookup_field = 'id'
 
-    def post(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs):
         data = request.data
         serializer = DataCatalogModelSerializer(data=data)
         if serializer.is_valid():
@@ -98,7 +101,7 @@ class DataCatalogView(GenericAPIView, DataCatalogEditor):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @swagger_auto_schema(manual_parameters=query_parameters)
-    def get(self, request, *args, **kwargs):
+    def list(self, request, *args, **kwargs):
         data = {}
         filter_url = request.GET
         filter_header = self.request.META.get('HTTP_X_FILTER', None)
@@ -121,18 +124,13 @@ class DataCatalogView(GenericAPIView, DataCatalogEditor):
         serializer = self.serializer_class(paginated_catalogs, many=True)
         return paginator.get_paginated_response(serializer.data)
 
-
-class DataCatalogViewByID(RetrieveUpdateDestroyAPIView, DataCatalogEditor):
-    serializer_class = DataCatalogModelSerializer
-    queryset = DataCatalog.objects.all()
-
-    def get(self, request, *args, **kwargs):
+    def retrieve(self, request, *args, **kwargs):
         catalog_id = kwargs['id']
         datacatalog = get_object_or_404(DataCatalog, id=catalog_id)
         serializer = self.serializer_class(datacatalog)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def put(self, request, *args, **kwargs):
+    def update(self, request, *args, **kwargs):
         catalog_id = kwargs['id']
         data = request.data
         if catalog_id != data.get('id', None):
@@ -200,13 +198,8 @@ class DataCatalogViewByID(RetrieveUpdateDestroyAPIView, DataCatalogEditor):
         response_serializer = self.serializer_class(updated_catalog)
         return Response(response_serializer.data)
 
-    def patch(self, request, *args, **kwargs):
-        raise NotImplementedError('PATCH method not implemented yet')
-
-    def delete(self, request, *args, **kwargs):
+    def destroy(self, request, *args, **kwargs):
         catalog_id = kwargs['id']
         datacatalog = get_object_or_404(DataCatalog, id=catalog_id)
         datacatalog.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
