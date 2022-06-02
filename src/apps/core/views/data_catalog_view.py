@@ -5,12 +5,6 @@
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
 import json
-from collections import OrderedDict
-from django.core.validators import EMPTY_VALUES
-from drf_yasg import openapi
-from drf_yasg.utils import swagger_auto_schema
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.viewsets import ModelViewSet
 
 from apps.core.managers.DataCatalog import DataCatalogManager, DataCatalogFilter, DataCatalogOrder
 from apps.core.models import DataCatalog, DatasetLicense, AccessType, AccessRight, DatasetPublisher, CatalogHomePage, \
@@ -20,11 +14,17 @@ from apps.core.serializers.common_serializers import DatasetLicenseModelSerializ
 from apps.core.serializers.data_catalog_serializer import DataCatalogModelSerializer, DataCatalogUpdateSerializer
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.validators import EMPTY_VALUES
 from django.shortcuts import get_object_or_404
 
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+
 from rest_framework import status
-from rest_framework.generics import GenericAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet
 
 oa_id = openapi.Parameter('id', in_=openapi.IN_QUERY, type=openapi.TYPE_STRING)
 title = openapi.Parameter('title', in_=openapi.IN_QUERY, type=openapi.TYPE_STRING)
@@ -90,7 +90,9 @@ class DataCatalogView(ModelViewSet, DataCatalogEditor):
     serializer_class = DataCatalogModelSerializer
     queryset = DataCatalog.objects.all()
     lookup_field = 'id'
+    http_method_names = ["get", "post", "put", "delete"]
 
+    @swagger_auto_schema(responses={400: 'Validation error'})
     def create(self, request, *args, **kwargs):
         data = request.data
         serializer = DataCatalogModelSerializer(data=data)
@@ -100,7 +102,7 @@ class DataCatalogView(ModelViewSet, DataCatalogEditor):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @swagger_auto_schema(manual_parameters=query_parameters)
+    @swagger_auto_schema(manual_parameters=query_parameters, responses={400: 'Only one filter set is allowed'})
     def list(self, request, *args, **kwargs):
         data = {}
         filter_url = request.GET
@@ -124,12 +126,14 @@ class DataCatalogView(ModelViewSet, DataCatalogEditor):
         serializer = self.serializer_class(paginated_catalogs, many=True)
         return paginator.get_paginated_response(serializer.data)
 
+    @swagger_auto_schema(responses={404: 'Identifier not found'})
     def retrieve(self, request, *args, **kwargs):
         catalog_id = kwargs['id']
         datacatalog = get_object_or_404(DataCatalog, id=catalog_id)
         serializer = self.serializer_class(datacatalog)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @swagger_auto_schema(responses={400: 'Data catalog id missmatch', 404: 'Object not found'})
     def update(self, request, *args, **kwargs):
         catalog_id = kwargs['id']
         data = request.data
@@ -198,6 +202,7 @@ class DataCatalogView(ModelViewSet, DataCatalogEditor):
         response_serializer = self.serializer_class(updated_catalog)
         return Response(response_serializer.data)
 
+    @swagger_auto_schema(responses={404: 'Identifier not found'})
     def destroy(self, request, *args, **kwargs):
         catalog_id = kwargs['id']
         datacatalog = get_object_or_404(DataCatalog, id=catalog_id)

@@ -13,7 +13,7 @@ from rest_framework.routers import DefaultRouter
 from apps.core.views.data_catalog_view import DataCatalogView
 
 router = DefaultRouter(trailing_slash=False)
-router.register(r'datacatalog/?', DataCatalogView, basename="datacatalog")
+router.register(r'datacatalog?', DataCatalogView, basename="datacatalog")
 
 urlpatterns = ([
     path(r'', include(router.urls)),

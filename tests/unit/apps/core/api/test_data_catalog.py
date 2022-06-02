@@ -13,28 +13,28 @@ logger = logging.getLogger(__name__)
 
 @pytest.mark.django_db
 def test_create_datacatalog(client, datacatalog_a_json):
-    res = client.post('/rest/v3/datacatalog/', datacatalog_a_json, content_type='application/json')
+    res = client.post('/rest/v3/datacatalog', datacatalog_a_json, content_type='application/json')
     logger.info(str(res.data))
     assert res.status_code == 201
 
 @pytest.mark.django_db
 def test_create_minimal_datacatalog(client, datacatalog_d_json):
-    res = client.post('/rest/v3/datacatalog/', datacatalog_d_json, content_type='application/json')
+    res = client.post('/rest/v3/datacatalog', datacatalog_d_json, content_type='application/json')
     logger.info(str(res.data))
     assert res.status_code == 201
 
 @pytest.mark.django_db
 def test_create_datacatalog_twice(client, datacatalog_a_json):
     _now = datetime.datetime.now()
-    res1 = client.post('/rest/v3/datacatalog/', datacatalog_a_json, content_type='application/json')
+    res1 = client.post('/rest/v3/datacatalog', datacatalog_a_json, content_type='application/json')
     assert res1.status_code == 201
-    res2 = client.post('/rest/v3/datacatalog/', datacatalog_a_json, content_type='application/json')
+    res2 = client.post('/rest/v3/datacatalog', datacatalog_a_json, content_type='application/json')
     assert res2.status_code == 400
 
 @pytest.mark.django_db
 def test_change_datacatalog(client, datacatalog_c_json, datacatalog_put_json):
     _now = datetime.datetime.now()
-    res1 = client.post('/rest/v3/datacatalog/', datacatalog_c_json, content_type='application/json')
+    res1 = client.post('/rest/v3/datacatalog', datacatalog_c_json, content_type='application/json')
     response = client.put('/rest/v3/datacatalog/urn:nbn:fi:att:data-catalog-uusitesti', datacatalog_put_json, content_type='application/json')
     assert response.status_code == 200
     logger.info(str(response.data))
@@ -44,7 +44,7 @@ def test_change_datacatalog(client, datacatalog_c_json, datacatalog_put_json):
 @pytest.mark.django_db
 def test_change_datacatalog_to_minimal(client, datacatalog_a_json, datacatalog_d_json):
     _now = datetime.datetime.now()
-    res1 = client.post('/rest/v3/datacatalog/', datacatalog_a_json, content_type='application/json')
+    res1 = client.post('/rest/v3/datacatalog', datacatalog_a_json, content_type='application/json')
     response = client.put('/rest/v3/datacatalog/urn:nbn:fi:att:data-catalog-testi', datacatalog_d_json, content_type='application/json')
     assert response.status_code == 200
     logger.info(str(response.data))
@@ -54,7 +54,7 @@ def test_change_datacatalog_to_minimal(client, datacatalog_a_json, datacatalog_d
 @pytest.mark.django_db
 def test_change_datacatalog_from_minimal(client, datacatalog_a_json, datacatalog_d_json):
     _now = datetime.datetime.now()
-    res1 = client.post('/rest/v3/datacatalog/', datacatalog_d_json, content_type='application/json')
+    res1 = client.post('/rest/v3/datacatalog', datacatalog_d_json, content_type='application/json')
     response = client.put('/rest/v3/datacatalog/urn:nbn:fi:att:data-catalog-testi', datacatalog_a_json, content_type='application/json')
     assert response.status_code == 200
     assert response.data.get('language')[0].get('url') == "http://lexvo.org/id/iso639-3/fin"
@@ -63,13 +63,13 @@ def test_change_datacatalog_from_minimal(client, datacatalog_a_json, datacatalog
 @pytest.mark.django_db
 def test_create_datacatalog_error(client, datacatalog_error_json):
     _now = datetime.datetime.now()
-    res = client.post('/rest/v3/datacatalog/', datacatalog_error_json, content_type='application/json')
+    res = client.post('/rest/v3/datacatalog', datacatalog_error_json, content_type='application/json')
     assert res.status_code == 400
 
 
 @pytest.mark.django_db
 def test_list_datacatalogs(client, post_datacatalog_payloads_a_b_c):
-    response = client.get('/rest/v3/datacatalog/')
+    response = client.get('/rest/v3/datacatalog')
     catalogs = DataCatalog.available_objects.all()
     expected_data = DataCatalogModelSerializer(catalogs, many=True).data
     logger.info(str(response.data.get('results')))
