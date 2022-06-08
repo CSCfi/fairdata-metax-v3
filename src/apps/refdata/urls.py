@@ -1,4 +1,4 @@
-"""metax_service URL Configuration
+"""refdata URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/3.2/topics/http/urls/
@@ -13,11 +13,19 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
 from django.urls import path, include
 
+from apps.refdata.views import ReferenceDataViewSet
+from apps.refdata.models import FieldOfScience
+
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('__debug__/', include('debug_toolbar.urls')),
-    path('reference_data/', include('refdata.urls'))
+    path(
+        "field_of_science/",
+        ReferenceDataViewSet.as_view(
+            actions={"get": "list"},
+            queryset=FieldOfScience.available_objects.all(),
+            serializer_class=FieldOfScience.get_serializer(),
+        ),
+        name="field-of-science-list",
+    )
 ]
