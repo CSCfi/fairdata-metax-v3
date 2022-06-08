@@ -1,3 +1,4 @@
+import uuid
 from django.contrib.postgres.fields import HStoreField
 from django.db import models
 from django.utils import timezone
@@ -29,7 +30,7 @@ class AbstractBaseModel(TimeStampedModel, SoftDeletableModel):
 class AbstractDatasetProperty(AbstractBaseModel):
     """Base class for simple refdata fields with only id and title properties"""
 
-    id = models.BigAutoField(primary_key=True)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     url = models.URLField(
         max_length=512,
         help_text="valid url to the property definition",

@@ -1,3 +1,4 @@
+import uuid
 from .abstracts import AbstractBaseModel, AbstractDatasetProperty
 from django.contrib.postgres.fields import HStoreField
 from django.db import models
@@ -97,7 +98,7 @@ class DatasetPublisher(AbstractBaseModel):
     Source: DCAT Version 3, Draft 11,
     https://www.w3.org/TR/vocab-dcat-3/#Property:resource_publisher
     """
-    id = models.BigAutoField(primary_key=True)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = HStoreField(help_text='example: {"en": "name", "fi":"nimi"}')
     homepage = models.ManyToManyField(CatalogHomePage, related_name="publishers")
 
@@ -127,7 +128,7 @@ class AccessRight(AbstractBaseModel):
     Source: DCAT Version 3, Draft 11,
     https://www.w3.org/TR/vocab-dcat-3/#Property:resource_access_rights
     """
-
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     license = models.ForeignKey(
         DatasetLicense,
         on_delete=models.SET_NULL,
