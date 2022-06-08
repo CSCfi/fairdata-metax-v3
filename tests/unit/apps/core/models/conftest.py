@@ -12,6 +12,7 @@ from apps.core.models import (
     DataStorage,
     File,
     Distribution,
+    ResearchDataset,
 )
 
 
@@ -118,6 +119,48 @@ def catalog_record(data_catalog_with_foreign_keys) -> CatalogRecord:
     return CatalogRecord(id=identifier, data_catalog=data_catalog_with_foreign_keys)
 
 @pytest.fixture
+def research_dataset() -> ResearchDataset:
+    identifier = "12345678-51d3-4c25-ad20-75aff8ca37d7"
+    title = {
+        "en": "Title 2",
+        "fi": "Otsikko 2",
+        "sv": "Titel 2",
+    }
+    return ResearchDataset(id=identifier, title=title)
+
+@pytest.fixture
+def research_dataset_with_foreign_keys(access_rights, dataset_language, research_dataset, data_catalog_with_foreign_keys) -> ResearchDataset:
+    research_datasets = []
+    for i in range(4):
+        identifier = "12345678-51d3-4c25-ad20-75aff8ca3%s21" % i
+        title = {
+            "en": "Title 1%s" % i,
+            "fi": "Otsikko 1%s" % i,
+            "sv": "Titel 1%s" % i,
+        }
+        research_datasets.append(ResearchDataset(id=identifier, title=title))
+    data_catalog_with_foreign_keys.save()
+    access_rights.save()
+    dataset_language.save()
+    research_dataset.data_catalog = data_catalog_with_foreign_keys
+    research_dataset.access_right = access_rights
+    research_dataset.first = research_datasets[0]
+    research_dataset.last = research_datasets[1]
+    research_dataset.previous = research_datasets[2]
+    research_dataset.replaces = research_datasets[3]
+    research_dataset.first.data_catalog = data_catalog_with_foreign_keys
+    research_dataset.last.data_catalog = data_catalog_with_foreign_keys
+    research_dataset.previous.data_catalog = data_catalog_with_foreign_keys
+    research_dataset.replaces.data_catalog = data_catalog_with_foreign_keys
+    research_dataset.first.save()
+    research_dataset.last.save()
+    research_dataset.previous.save()
+    research_dataset.replaces.save()
+    research_dataset.save()
+    research_dataset.language.add(dataset_language)
+    return research_dataset
+
+@pytest.fixture
 def data_storage() -> DataStorage:
     identifier = "test-data-storage"
     endpoint_url = "https://www.test-123456dcba.fi"
@@ -139,13 +182,17 @@ def distribution() -> Distribution:
     return Distribution(id=identifier, title=title, access_url=access_url, download_url=download_url, byte_size=byte_size, checksum=checksum)
 
 @pytest.fixture
-def distribution_with_foreign_keys(dataset_license, access_rights, data_storage, distribution) -> Distribution:
+def distribution_with_foreign_keys(dataset_license, access_rights, data_storage, data_catalog_with_foreign_keys, research_dataset, distribution) -> Distribution:
     dataset_license.save()
     access_rights.save()
     data_storage.save()
+    data_catalog_with_foreign_keys.save()
+    research_dataset.data_catalog = data_catalog_with_foreign_keys
+    research_dataset.save()
     distribution.license = dataset_license
     distribution.access_rights = access_rights
     distribution.access_service = data_storage
+    distribution.dataset = research_dataset
     distribution.save()
     return distribution
 

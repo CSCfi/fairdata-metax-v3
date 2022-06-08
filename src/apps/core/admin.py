@@ -10,6 +10,7 @@ from apps.core.models import (
     AccessRight,
     DataCatalog,
     CatalogRecord,
+    ResearchDataset,
     DataStorage,
     Distribution,
     File,
@@ -75,6 +76,24 @@ class CatalogRecordAdmin(AbstractDatasetPropertyBaseAdmin):
         "data_catalog",
     )
     list_filter = ("created", "modified", "data_catalog")
+
+@admin.register(ResearchDataset)
+class ResearchDatasetAdmin(AbstractDatasetPropertyBaseAdmin):
+    list_display = (
+        "title",
+        "keyword",
+        "access_right",
+        "is_deprecated",
+    )
+    list_filter = (
+        "language",
+        "keyword",
+        "created",
+        "modified",
+        "is_removed",
+        "release_date",
+        "is_deprecated"
+    )
 
 @admin.register(DataStorage)
 class DataStorageAdmin(AbstractDatasetPropertyBaseAdmin):

@@ -1,5 +1,6 @@
 from .abstracts import AbstractBaseModel
 from .data_catalog import AccessRight, DatasetLicense
+from .catalog_record import ResearchDataset
 from .files import File
 from .services import DataStorage
 from django.contrib.postgres.fields import HStoreField
@@ -42,3 +43,9 @@ class Distribution(AbstractBaseModel):
     byte_size = models.BigIntegerField(default=0)
     checksum = models.TextField()
     files = models.ManyToManyField(File, related_query_name="distributions")
+    dataset = models.ForeignKey(
+        ResearchDataset,
+        on_delete=models.SET_NULL,
+        related_name="distributions",
+        null=True,
+    )
