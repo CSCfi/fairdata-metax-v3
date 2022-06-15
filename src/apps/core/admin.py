@@ -14,6 +14,7 @@ from apps.core.models import (
     DataStorage,
     Distribution,
     File,
+    Contract,
 )
 
 
@@ -115,3 +116,11 @@ class FileAdmin(AbstractDatasetPropertyBaseAdmin):
         "file_path",
     )
     list_filter = ["date_frozen"]
+
+@admin.register(Contract)
+class ContractAdmin(AbstractDatasetPropertyBaseAdmin):
+    list_display = (
+        "title",
+        "quota",
+    )
+    list_filter = ("valid_until", "created", "modified")

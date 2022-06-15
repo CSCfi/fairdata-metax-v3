@@ -1,5 +1,4 @@
 import pytest
-
 from apps.core.models import (
     DatasetLanguage,
     CatalogHomePage,
@@ -13,6 +12,7 @@ from apps.core.models import (
     File,
     Distribution,
     ResearchDataset,
+    Contract,
 )
 from apps.core import factories
 
@@ -76,6 +76,16 @@ def access_rights() -> AccessRight:
     }
     return factories.AccessRightFactory(description=description)
 
+@pytest.fixture
+def contract() -> Contract:
+    title = {
+        "en": "Title 5",
+        "fi": "Otsikko 5",
+        "sv": "Titel 5",
+    }
+    quota = 111204
+    valid_until = "2023-12-31 15:25:00+01"
+    return Contract(title=title, quota=quota, valid_until=valid_until)
 
 @pytest.fixture
 def data_catalog() -> DataCatalog:
@@ -128,6 +138,11 @@ def research_dataset_with_foreign_keys(
     research_dataset.language.add(dataset_language)
     return research_dataset
 
+@pytest.fixture
+def catalog_record(data_catalog, contract) -> CatalogRecord:
+    identifier = "12345678-51d3-4c25-ad20-75aff8ca19d7"
+    contract.save()
+    return CatalogRecord(id=identifier, data_catalog=data_catalog, contract=contract)
 
 @pytest.fixture
 def data_storage() -> DataStorage:
@@ -208,9 +223,7 @@ def dataset_property_object_factory(
 
 
 @pytest.fixture
-def abstract_base_object_factory(
-    dataset_publisher, access_rights, catalog_record, data_storage, file
-):
+def abstract_base_object_factory(dataset_publisher, access_rights, catalog_record, data_storage, file, contract):
     def _abstract_base_object_factory(object_name):
         if object_name == "dataset_publisher":
             return dataset_publisher
@@ -222,5 +235,7 @@ def abstract_base_object_factory(
             return data_storage
         elif object_name == "file":
             return file
+        elif object_name == "contract":
+            return contract
 
     return _abstract_base_object_factory

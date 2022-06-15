@@ -2,6 +2,7 @@ import uuid
 
 from .abstracts import AbstractBaseModel, AbstractDatasetProperty
 from .data_catalog import AccessRight, DataCatalog
+from .contract import Contract
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
 
@@ -20,6 +21,12 @@ class CatalogRecord(AbstractBaseModel):
         DataCatalog,
         on_delete=models.DO_NOTHING,
         related_name="records",
+    )
+    contract = models.ForeignKey(
+        Contract, 
+        on_delete=models.SET_NULL, 
+        related_name="records",
+        null=True,
     )
 
     def __str__(self):

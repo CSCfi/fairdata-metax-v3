@@ -1,5 +1,6 @@
 from .abstracts import AbstractBaseModel, AbstractDatasetProperty
 from .catalog_record import CatalogRecord, ResearchDataset
+from .contract import Contract
 from .data_catalog import (
     DataCatalog,
     DatasetLanguage,
