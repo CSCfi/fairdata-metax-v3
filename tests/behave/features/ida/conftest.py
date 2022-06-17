@@ -12,6 +12,7 @@ def ida_file_storage(ida_data_catalog):
     return factories.DataStorageFactory()
 
 
+@pytest.mark.stub
 @when("User freezes new files in IDA", target_fixture="ida_file_post_request")
 def post_ida_file():
     """This demonstrates dynamic fixture allocation in pytest-bdd.

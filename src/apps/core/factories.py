@@ -2,14 +2,18 @@ import factory
 from . import models
 from django.utils import timezone
 
+
 class AbstractDatasetPropertyFactory(factory.django.DjangoModelFactory):
     title = {"fi": "otsikko"}
-    id = factory.Sequence(lambda n: f"example.com/{n}")
+    url = factory.Sequence(lambda n: f"example.com/{n}")
 
-class DataCatalogFactory(AbstractDatasetPropertyFactory):
+
+class DataCatalogFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.DataCatalog
 
+    id = factory.Sequence(lambda n: f"urn:{n}")
+    title = {"fi": "datacatalogi"}
 
 class FileFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -18,10 +22,12 @@ class FileFactory(factory.django.DjangoModelFactory):
     date_uploaded = factory.LazyFunction(timezone.now)
 
 
-class DistributionFactory(AbstractDatasetPropertyFactory):
+class DistributionFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.Distribution
 
+    title = {"fi": "otsikko"}
+    id = factory.Sequence(lambda n: f"distribution{n}")
 
 class DataStorageFactory(factory.django.DjangoModelFactory):
     class Meta:

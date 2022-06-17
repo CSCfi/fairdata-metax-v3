@@ -4,11 +4,10 @@ Feature: Data catalog
   description, harvesting details, publisher, schema, publishing channels and if the data-catalog will support dataset
   versioning.
 
-  """Other User Stories
   Admin is able to modify data-catalog creation, editing and reading permissions with role based authentication scheme.
 
   User Stories retrieved 2022-05-17
-  """
+
 
   Scenario: Creating new DataCatalog
     Given Im an admin user

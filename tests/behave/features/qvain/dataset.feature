@@ -7,8 +7,6 @@ Feature: Datasets
   User defines dataset properties such as title, field of science, access type, actors, keywords, language,
   other identifiers and file location. User can save the dataset in draft or published state.
 
-
-  """Other User Stories
   Metax will save catalog-record with defined data-catalog, contract, creation date, user who created the dataset,
   dataset files and directories metadata, persistent identifier type, internal unique identifier, cumulative state,
   publishing state, preservation state, cumulation time range and access type.
@@ -24,7 +22,6 @@ Feature: Datasets
   with the catalog-record and their roles. Roles are managed with role based authorization framework.
 
   User Stories retrieved 2022-05-17
-  """
 
   Background:
     Given I have frozen files in IDA

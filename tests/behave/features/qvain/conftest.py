@@ -1,13 +1,17 @@
+from unittest.mock import MagicMock
+
 import pytest
 from django.utils import timezone
 from pytest_bdd import scenario, given, when, then
 
 from apps.core.factories import FileFactory, CatalogRecordFactory, DistributionFactory
+from apps.core.models import CatalogRecord
 
 
 @pytest.fixture
 @given("I have frozen files in IDA")
 def frozen_files_in_ida():
+    """When files are frozen in IDA, new File Model Objects are created for the IDA-project in Metax"""
     files = FileFactory.create_batch(3, date_frozen=timezone.now())
     return files
 
@@ -23,19 +27,27 @@ def frozen_distribution(frozen_files_in_ida):
     distribution.files.add(*frozen_files_in_ida)
     return distribution
 
+
+@pytest.mark.stub
 @when("I publish a new dataset in Qvain")
 def qvain_publish_request():
     """Makes API-Request to Dataset API with Dataset information
 
-    Returns: API Request Response from Qvain
+    Returns: API Request Response for Qvain
 
     """
-    raise NotImplementedError
+    request = MagicMock()
+    request.status_code = 201
+    return request
+
 
 @pytest.fixture
 @then("New Catalog Record is saved to database")
-def created_catalog_record(ida_data_catalog):
+def created_catalog_record(ida_data_catalog) -> CatalogRecord:
     """CatalogRecord is distinct object, separate from Dataset
+
+    TODO: CatalogRecord should be generated in the qvain_publish_request step instead of using CatalogRecordFactory
+    TODO: This step should do an assert instead of being a fixture
 
     Args:
         ida_data_catalog (): IDA DataCatalog
@@ -49,6 +61,7 @@ def created_catalog_record(ida_data_catalog):
 @then("The User is saved as creator to the Catalog Record")
 def catalog_record_creator():
     raise NotImplementedError
+
 
 @then("New Dataset is saved to database")
 def created_dataset():
