@@ -3,7 +3,14 @@ name = "fairdata-metax-service"
 version = "0.1.0"
 description = ""
 license = "GPL-2.0-only"
-authors = ["Pekka Tiainen <aptiaine@csc.fi>", "Toni Nurmi <tonurmi@csc.fi>"]
+authors = [
+    "Atro Himanen <atro.himanen@csc.fi>",
+    "Ismo Torvinen <ismo.torvinen@bearit.fi>",
+    "Jori Niemi <jori.niemi@bearit.fi>",
+    "Pekka Tiainen <aptiaine@csc.fi>",
+    "Sini Saarinen <sini.saarinen@csc.fi>",
+    "Toni Nurmi <tonurmi@csc.fi>"
+]
 readme = "README.md"
 packages = [{ include = "src" }]
 
