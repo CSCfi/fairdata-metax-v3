@@ -60,6 +60,7 @@ def created_catalog_record(ida_data_catalog) -> CatalogRecord:
 
 @then("The User is saved as creator to the Catalog Record")
 def catalog_record_creator():
+    """Should be implemented at the same time as user model"""
     raise NotImplementedError
 
 
