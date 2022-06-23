@@ -17,9 +17,10 @@ class Command(BaseCommand):
             url="http://fairdata.fi", title={"en": "fairdata", "fi": "fairdata"}
         )
         dataset_publisher_csc = factories.DatasetPublisherFactory(
-            name={"fi": "CSC"}
+            name={"fi": "CSC"},
+            homepages=(homepage_fairdata,)
         )
-        dataset_publisher_csc.homepage.add(homepage_fairdata)
+        #dataset_publisher_csc.homepage.add(homepage_fairdata)
         licence_cc_4_0 = factories.DatasetLicenseFactory(
             title={
                 "en": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
