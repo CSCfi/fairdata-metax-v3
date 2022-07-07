@@ -18,7 +18,6 @@ class AbstractBaseModel(TimeStampedModel, SoftDeletableModel):
 
     def delete(self, using=None, soft=True, *args, **kwargs):
         self.removal_date = timezone.now()
-        self.save()
         return super().delete(using=using, soft=soft, *args, **kwargs)
 
     class Meta:
