@@ -13,6 +13,7 @@ import os
 from os.path import join
 from pathlib import Path
 import sys
+import factory.random
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -189,3 +190,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#auth-user-model
 AUTH_USER_MODEL = "auth.User"
+
+FACTORY_BOY_RANDOM_SEED = factory.random.reseed_random('metax-service')
