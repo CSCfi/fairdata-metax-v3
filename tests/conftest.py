@@ -10,13 +10,16 @@
 
 import pytest
 import factory.random
+import django
+from django.conf import settings
 
 def pytest_collection_modifyitems(items):
     """Pytest provided hook function
 
     Pytest hook docs: https://docs.pytest.org/en/latest/how-to/writing_hook_functions.html
     """
-    factory.random.reseed_random('metax-service')
+    django.setup()
+    factory.random.reseed_random(settings.FACTORY_BOY_RANDOM_SEED)
     for item in items:
         if "create" in item.nodeid or "delete" in item.nodeid:
             # adds django_db marker on any test with 'create' or 'delete' on its name

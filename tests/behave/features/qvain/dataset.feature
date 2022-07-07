@@ -31,9 +31,8 @@ Feature: Datasets
   @publish
   Scenario: Publishing new dataset
     When I publish a new dataset in Qvain
-    Then New Catalog Record is saved to database
+    Then New published Dataset is saved to database
     And The User is saved as creator to the Catalog Record
-    And New Dataset is saved to database
     And New Distribution is derived from frozen files Distribution
     And The new Distribution is saved to database
     And The Dataset has persistent identifier
@@ -41,7 +40,7 @@ Feature: Datasets
   @draft
   Scenario: Saving draft of unpublished Dataset
     When I save an draft of unpublished dataset in Qvain
-    Then New Catalog Record is saved to database
+    Then New Research Dataset is saved to database
     And The User is saved as creator to the Catalog Record
     And New Distribution is derived from frozen files Distribution
     And The new Distribution is saved to database

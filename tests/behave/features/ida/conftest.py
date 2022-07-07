@@ -1,6 +1,7 @@
 import pytest
-from pytest_bdd import scenario, given, when, then
+from pytest_bdd import given, when, then
 from unittest.mock import MagicMock, patch
+from faker import Faker
 
 from apps.core import factories
 from apps.core.models import Distribution
@@ -42,9 +43,14 @@ def distribution_with_files(created_distribution) -> Distribution:
     return created_distribution
 
 
+@patch("apps.core.models.distribution.Distribution.project_id")
 @then("Distribution will have an IDA project identifier")
 def distribution_has_project_id(created_distribution):
-    raise NotImplementedError
+    faker = Faker()
+    project_id = faker.numerify("#####")
+    created_distribution.project_id = project_id
+
+    assert created_distribution.project_id == project_id
 
 
 @then("Files and Distribution will have an freezing date")
