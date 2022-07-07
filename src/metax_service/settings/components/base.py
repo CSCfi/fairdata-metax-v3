@@ -191,4 +191,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # https://docs.djangoproject.com/en/dev/ref/settings/#auth-user-model
 AUTH_USER_MODEL = "auth.User"
 
-FACTORY_BOY_RANDOM_SEED = factory.random.reseed_random('metax-service')
+FACTORY_BOY_RANDOM_SEED = "metax-service"
+
+factory.random.reseed_random(FACTORY_BOY_RANDOM_SEED)
