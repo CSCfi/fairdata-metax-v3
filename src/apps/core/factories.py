@@ -1,6 +1,10 @@
 import factory
+from faker import Faker
+
 from . import models
 from django.utils import timezone
+
+faker = Faker()
 
 
 class LanguageFactory(factory.django.DjangoModelFactory):
@@ -8,15 +12,11 @@ class LanguageFactory(factory.django.DjangoModelFactory):
         model = models.DatasetLanguage
         django_get_or_create = ("url",)
 
-    title = factory.Iterator(
-        [
-            {"en": "Finnish", "fi": "suomi", "sv": "finska", "und": "suomi"},
-            {"en": "Estonian", "fi": "viron kieli", "und": "viron kieli"},
-        ]
-    )
-    url = factory.Iterator(
-        ["http://lexvo.org/id/iso639-3/fin", "http://lexvo.org/id/iso639-3/est"]
-    )
+    title = factory.Dict({"en": factory.Sequence(lambda n: f"language-{n}")})
+
+    @factory.sequence
+    def url(self):
+        return f"https://language-webpage-{self}.fi"
 
 
 class CatalogHomePageFactory(factory.django.DjangoModelFactory):
@@ -24,8 +24,11 @@ class CatalogHomePageFactory(factory.django.DjangoModelFactory):
         model = models.CatalogHomePage
         django_get_or_create = ("url",)
 
-    title = factory.Sequence(lambda n: {"en": f"organization-{n}", "fi": f"organisaatio-{n}"})
-    url = factory.Sequence(lambda n: f"org-{n}.fi")
+    title = factory.Dict({"en": factory.Sequence(lambda n: f"catalog-homepage-{n}")})
+
+    @factory.sequence
+    def url(self):
+        return f"https://catalog-homepage-{self}.fi"
 
 
 class DatasetPublisherFactory(factory.django.DjangoModelFactory):
@@ -33,7 +36,7 @@ class DatasetPublisherFactory(factory.django.DjangoModelFactory):
         model = models.DatasetPublisher
         django_get_or_create = ("name",)
 
-    title = factory.Sequence(lambda n: {"en": f"organization-{n}", "fi": f"organisaatio-{n}"})
+    name = factory.Dict({"en": factory.Sequence(lambda n: f"dataset-publisher-{n}")})
 
     @factory.post_generation
     def homepages(self, create, extracted, **kwargs):
@@ -49,13 +52,23 @@ class DatasetLicenseFactory(factory.django.DjangoModelFactory):
         model = models.DatasetLicense
         django_get_or_create = ("url",)
 
+    title = factory.Dict({"en": factory.Sequence(lambda n: f"dataset-licence-{n}")})
+
+    @factory.sequence
+    def url(self):
+        return f"https://dataset-license-{self}.fi"
+
 
 class AccessTypeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.AccessType
         django_get_or_create = ("url",)
 
-    url = factory.Sequence(lambda n: f"example.com/{n}")
+    title = factory.Dict({"en": factory.Sequence(lambda n: f"dataset-access-type-{n}")})
+
+    @factory.sequence
+    def url(self):
+        return f"https://dataset-access-type-{self}.fi"
 
 
 class AccessRightFactory(factory.django.DjangoModelFactory):
@@ -66,36 +79,58 @@ class AccessRightFactory(factory.django.DjangoModelFactory):
     access_type = factory.SubFactory(AccessTypeFactory)
     license = factory.SubFactory(DatasetLicenseFactory)
 
+    description = factory.Dict({"en": factory.Faker("paragraph")})
+
 
 class DataCatalogFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.DataCatalog
-        django_get_or_create = ("title",)
+        django_get_or_create = ("id",)
 
-    id = factory.Sequence(lambda n: f"urn:{n}")
-    title = {"fi": "datacatalogi"}
+    @factory.sequence
+    def id(self):
+        return f"urn:data-catalog-{self}"
+
+    title = factory.Dict({"en": factory.Sequence(lambda n: f"data-catalog-{n}")})
+    publisher = factory.SubFactory(DatasetPublisherFactory)
+    access_rights = factory.SubFactory(AccessRightFactory)
+
+    @factory.post_generation
+    def languages(self, create, extracted, **kwargs):
+        if not create:
+            return
+        if extracted:
+            for language in extracted:
+                self.language.add(language)
 
 
 class FileFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.File
+        django_get_or_create = ("file_path",)
 
     date_uploaded = factory.LazyFunction(timezone.now)
+    file_name = factory.Faker("file_name")
+    file_format = factory.Faker("file_extension")
+    file_path = factory.Faker("file_path")
+    checksum = factory.Faker("md5")
+    project_identifier = factory.Faker("numerify", text="#######")
+    byte_size = factory.Faker("random_number")
 
+    @factory.post_generation
+    def file_format(self, create, extracted, **kwargs):
+        if not create:
+            return
 
-class DistributionFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = models.Distribution
-
-    title = {"fi": "otsikko"}
-    id = factory.Sequence(lambda n: f"distribution{n}")
+        self.file_name = str(self.file_path).split("/")[-1]
+        self.file_format = str(self.file_name).split(".")[-1]
 
 
 class DataStorageFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.DataStorage
 
-    id = factory.sequence(lambda n: f"service{n}")
+    id = factory.Dict({"en": factory.Sequence(lambda n: f"data-storage-{n}")})
 
 
 class CatalogRecordFactory(factory.django.DjangoModelFactory):
@@ -103,3 +138,32 @@ class CatalogRecordFactory(factory.django.DjangoModelFactory):
         model = models.CatalogRecord
 
     data_catalog = factory.SubFactory(DataCatalogFactory)
+
+
+class ResearchDatasetFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.ResearchDataset
+        django_get_or_create = ("title",)
+
+    data_catalog = factory.SubFactory(DataCatalogFactory)
+    title = factory.Dict({"en": factory.Sequence(lambda n: f"research-dataset-{n}")})
+
+
+class DistributionFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.Distribution
+        django_get_or_create = ("title",)
+
+    id = factory.Faker("uuid4")
+    title = factory.Dict({"en": factory.Sequence(lambda n: f"distribution-{n}")})
+    license = factory.SubFactory(DatasetLicenseFactory)
+    access_rights = factory.SubFactory(AccessRightFactory)
+    dataset = factory.SubFactory(ResearchDatasetFactory)
+
+    @factory.post_generation
+    def files(self, create, extracted, **kwargs):
+        if not create:
+            return
+        if extracted:
+            for file in extracted:
+                self.files.add(file)
