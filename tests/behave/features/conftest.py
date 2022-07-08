@@ -10,7 +10,7 @@ fake = faker.Faker()
 
 
 @pytest.fixture
-@given("IDA has its own DataCatalog")
+@given("IDA has its own data-catalog")
 def ida_data_catalog() -> DataCatalog:
     return factories.DataCatalogFactory(research_dataset_schema="ida")
 

@@ -33,16 +33,15 @@ Feature: IDA File metadata
   User Stories retrieved 2022-05-17
 
   Background:
-    Given IDA has its own DataCatalog
-    And IDA has its own DataStorage
+    Given IDA has its own data-catalog
+    And IDA has its own data-storage
 
   Scenario: IDA User freezes files
     When User freezes new files in IDA
-    Then new Distribution is saved to database
-    And Files are saved as part of Distribution
-    And Distribution will have an IDA project identifier
-    And Files and Distribution will have an freezing date
-    And Distribution will have IDA as DataStorage
+    Then a new distribution is created
+    And the distribution has the files associated with it
+    And distribution is associated with an IDA project
+    And API returns OK status
 
   Scenario: IDA user unfreezes files
     When User unfreezes file in IDA

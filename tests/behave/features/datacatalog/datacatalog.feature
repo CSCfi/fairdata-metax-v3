@@ -9,14 +9,16 @@ Feature: Data catalog
   User Stories retrieved 2022-05-17
 
 
-  Scenario: Creating new DataCatalog
-    Given Im an admin user
-    When I post a new DataCatalog to the datacatalog REST-endpoint
-    Then New DataCatalog object is saved to database
-    And It should return 201 http code
-    And New DataCatalog has publishing channels
-    And New DataCatalog has DataStorage
+  Scenario: Creating new data-catalog
+    Given the user has admin privileges
+    When the user submits new data-catalog
+    Then then new data-catalog is saved to database
+    And the user should get an OK create-response
 
-  Scenario: Deleting DataCatalog
-    Given Im an admin user
-    When I post delete request to datacatalog REST-endpoint
+
+  Scenario: Deleting data-catalog
+    Given the user has admin privileges
+    And there is an existing data-catalog
+    When the user removes the data-catalog
+    Then the data-catalog is soft deleted
+    And the user should get an OK delete-response

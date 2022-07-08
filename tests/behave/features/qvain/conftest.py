@@ -34,7 +34,7 @@ def mock_qvain_dataset_request(qvain_user, frozen_distribution):
 
 
 @pytest.fixture
-@given("I have frozen files in IDA")
+@given("user has frozen files in IDA")
 def frozen_files_in_ida():
     """When files are frozen in IDA, new File Model Objects are created for the IDA-project in Metax"""
     files = FileFactory.create_batch(3, date_frozen=timezone.now())
@@ -42,7 +42,7 @@ def frozen_files_in_ida():
 
 
 @pytest.fixture
-@given("There is distribution from the freeze")
+@given("there is distribution from the freeze")
 def frozen_distribution(frozen_files_in_ida):
     """Distribution generated from freeze action in IDA
 
@@ -55,7 +55,7 @@ def frozen_distribution(frozen_files_in_ida):
 
 @pytest.fixture
 @pytest.mark.stub
-@when("I publish a new dataset in Qvain")
+@when("user publishes a new dataset in Qvain")
 def qvain_publish_request(frozen_distribution, mock_qvain_dataset_request):
     """Makes API-Request to Dataset API with Dataset information
 
@@ -67,7 +67,7 @@ def qvain_publish_request(frozen_distribution, mock_qvain_dataset_request):
 
 
 @pytest.fixture
-@then("New published Dataset is saved to database")
+@then("new published dataset is created in IDA data-catalog with persistent identifier")
 def created_catalog_record(ida_data_catalog, qvain_publish_request) -> ResearchDataset:
     """CatalogRecord is distinct object, separate from Dataset
 
@@ -90,7 +90,7 @@ def created_catalog_record(ida_data_catalog, qvain_publish_request) -> ResearchD
 
 @pytest.mark.stub
 @patch("apps.core.models.CatalogRecord.creator")
-@then("The User is saved as creator to the Catalog Record")
+@then("the user is saved as creator to the dataset")
 def catalog_record_creator(qvain_publish_request):
     """Should be implemented at the same time as user model"""
 
@@ -100,7 +100,7 @@ def catalog_record_creator(qvain_publish_request):
 
 
 @pytest.fixture
-@then("New Distribution is derived from frozen files Distribution")
+@then("new distribution is created from the frozen files")
 def derived_distribution(frozen_distribution, qvain_publish_request):
     """Frozen distribution is generated when files are frozen in IDA
 
@@ -141,7 +141,7 @@ def dataset_has_persistent_id(created_catalog_record):
     assert created_catalog_record.persistent_identifier is not None
 
 
-@when("I save an draft of unpublished dataset in Qvain")
+@when("user saves a draft of unpublished dataset in Qvain")
 def qvain_draft_request(mock_qvain_dataset_request):
     return mock_qvain_dataset_request(status_code=201, published=False)
 
@@ -151,13 +151,13 @@ def dataset_has_no_persistent_id(created_catalog_record):
     assert created_catalog_record.persistent_identifier is None
 
 
-@when("I publish new version of dataset in Qvain")
+@when("user publishes new version of dataset in Qvain")
 def new_dataset_version_request(mock_qvain_dataset_request):
     return mock_qvain_dataset_request(status_code=200, published=True)
 
 
 @pytest.fixture
-@then("Edited Dataset is saved to database as current version")
+@then("edited dataset is saved as a new version of the dataset")
 def created_new_dataset_version(created_catalog_record):
     """Should test versioning of dataset
 
@@ -190,7 +190,7 @@ def created_new_dataset_version(created_catalog_record):
     return new_version
 
 
-@then("Previous Dataset version is still available as previous version")
+@then("previous dataset version is still available as previous version")
 def prev_dataset_exists(created_new_dataset_version, created_catalog_record):
     raise NotImplementedError
 
@@ -200,6 +200,6 @@ def current_dataset_has_prev_dataset_reference():
     raise NotImplementedError
 
 
-@then("New Research Dataset is saved to database")
+@then("new unpublished dataset is created without persistent identifier")
 def step_impl():
     raise NotImplementedError(u"STEP: Then New Research Dataset is saved to database")

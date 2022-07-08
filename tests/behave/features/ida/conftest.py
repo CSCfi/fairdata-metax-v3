@@ -8,7 +8,7 @@ from apps.core.models import Distribution
 
 
 @pytest.fixture
-@given("IDA has its own DataStorage")
+@given("IDA has its own data-storage")
 def ida_file_storage(ida_data_catalog):
     return factories.DataStorageFactory()
 
@@ -29,13 +29,13 @@ def post_ida_file():
 
 
 @pytest.fixture
-@then("new Distribution is saved to database")
+@then("a new distribution is created")
 def created_distribution(ida_file_storage) -> Distribution:
     return factories.DistributionFactory()
 
 
 @pytest.fixture
-@then("Files are saved as part of Distribution")
+@then("the distribution has the files associated with it")
 def distribution_with_files(created_distribution) -> Distribution:
     file1 = factories.FileFactory()
     file2 = factories.FileFactory()
@@ -44,7 +44,7 @@ def distribution_with_files(created_distribution) -> Distribution:
 
 
 @patch("apps.core.models.distribution.Distribution.project_id")
-@then("Distribution will have an IDA project identifier")
+@then("distribution is associated with an IDA project")
 def distribution_has_project_id(created_distribution):
     faker = Faker()
     project_id = faker.numerify("#####")
@@ -53,7 +53,7 @@ def distribution_has_project_id(created_distribution):
     assert created_distribution.project_id == project_id
 
 
-@then("Files and Distribution will have an freezing date")
+@then("API returns OK status")
 def files_have_freezing_date(distribution_with_files):
     raise NotImplementedError
 

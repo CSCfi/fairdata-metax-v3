@@ -24,31 +24,26 @@ Feature: Datasets
   User Stories retrieved 2022-05-17
 
   Background:
-    Given I have frozen files in IDA
-    And There is distribution from the freeze
-    And IDA has its own DataCatalog
+    Given user has frozen files in IDA
+    And there is distribution from the freeze
+    And IDA has its own data-catalog
 
   @publish
   Scenario: Publishing new dataset
-    When I publish a new dataset in Qvain
-    Then New published Dataset is saved to database
-    And The User is saved as creator to the Catalog Record
-    And New Distribution is derived from frozen files Distribution
-    And The new Distribution is saved to database
-    And The Dataset has persistent identifier
+    When user publishes a new dataset in Qvain
+    Then new published dataset is created in IDA data-catalog with persistent identifier
+    And the user is saved as creator to the dataset
+    And new distribution is created from the frozen files
 
   @draft
   Scenario: Saving draft of unpublished Dataset
-    When I save an draft of unpublished dataset in Qvain
-    Then New Research Dataset is saved to database
-    And The User is saved as creator to the Catalog Record
-    And New Distribution is derived from frozen files Distribution
-    And The new Distribution is saved to database
-    But The dataset does not have persistent identifier
+    When user saves a draft of unpublished dataset in Qvain
+    Then new unpublished dataset is created without persistent identifier
+    And the user is saved as creator to the dataset
+    And new distribution is created from the frozen files
 
   @publish @versioning
   Scenario: Publishing new version from dataset
-    When I publish new version of dataset in Qvain
-    Then Edited Dataset is saved to database as current version
-    And Previous Dataset version is still available as previous version
-    And Previous version is referenced in current version
+    When user publishes new version of dataset in Qvain
+    Then edited dataset is saved as a new version of the dataset
+    And previous dataset version is still available as previous version
