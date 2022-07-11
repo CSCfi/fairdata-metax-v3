@@ -1,34 +1,17 @@
 import json
 import logging
-from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
-from pytest_bdd import given, when, then, parsers
-from rest_framework.reverse import reverse
 
-from apps.core.models import DataCatalog, DataStorage
+from pytest_bdd import given
 
 from rest_framework.test import APIClient
-import faker
-
-fake = faker.Faker()
 
 logger = logging.getLogger(__name__)
 
 
 @pytest.fixture
 @given("the user has admin privileges")
-def admin_user():
-    user, created = get_user_model().objects.get_or_create(
-        username="test_admin", defaults={"password": fake.password()})
-    admin_group, created = Group.objects.get_or_create(name="admin")
-    user.groups.add(admin_group)
-    return user.save()
-
-
-@pytest.fixture
 def admin_client(admin_user):
     client = APIClient()
     client.force_authenticate(user=admin_user)

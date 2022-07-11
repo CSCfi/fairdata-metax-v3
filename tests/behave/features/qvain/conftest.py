@@ -1,7 +1,5 @@
 import logging
-from unittest.mock import MagicMock, patch
 
-import faker
 import pytest
 
 from django.forms import model_to_dict
@@ -13,24 +11,23 @@ from apps.core.factories import (
     DistributionFactory,
     ResearchDatasetFactory,
 )
-from apps.core.models import ResearchDataset
+from apps.core.models import ResearchDataset, Distribution, DataCatalog
 
 logger = logging.getLogger(__name__)
 
-fake = faker.Faker()
-
 
 @pytest.fixture
-def mock_qvain_dataset_request(qvain_user, frozen_distribution):
-    def _mock_qvain_dataset_request(status_code, published):
-        request = MagicMock()
-        request.status_code = status_code
+def mock_qvain_dataset_with_files_request(
+    qvain_user, frozen_distribution, mock_request
+):
+    def _mock_qvain_dataset_with_files_request(status_code, published):
+        request = mock_request(status_code)
         request.published = published
         request.user = qvain_user
         request.files = frozen_distribution.files.all()[:2]
         return request
 
-    return _mock_qvain_dataset_request
+    return _mock_qvain_dataset_with_files_request
 
 
 @pytest.fixture
@@ -43,38 +40,37 @@ def frozen_files_in_ida():
 
 @pytest.fixture
 @given("there is distribution from the freeze")
-def frozen_distribution(frozen_files_in_ida):
-    """Distribution generated from freeze action in IDA
-
-    It is still unclear if freeze action should generate new distribution every time
-    """
+def frozen_distribution(frozen_files_in_ida) -> Distribution:
+    """Distribution generated from freeze action in IDA"""
     distribution = DistributionFactory()
     distribution.files.add(*frozen_files_in_ida)
     return distribution
 
 
 @pytest.fixture
-@pytest.mark.stub
 @when("user publishes a new dataset in Qvain")
-def qvain_publish_request(frozen_distribution, mock_qvain_dataset_request):
+def qvain_publish_request(frozen_distribution, mock_qvain_dataset_with_files_request):
     """Makes API-Request to Dataset API with Dataset information
 
     Returns: API Request Response for Qvain
 
     """
-    request = mock_qvain_dataset_request(status_code=201, published=True)
+    request = mock_qvain_dataset_with_files_request(status_code=201, published=True)
     return request
 
 
 @pytest.fixture
 @then("new published dataset is created in IDA data-catalog with persistent identifier")
-def created_catalog_record(ida_data_catalog, qvain_publish_request) -> ResearchDataset:
-    """CatalogRecord is distinct object, separate from Dataset
+def published_dataset(
+    ida_data_catalog: DataCatalog, qvain_publish_request, faker
+) -> ResearchDataset:
+    """
 
     TODO: Research Dataset should be generated in the qvain_publish_request step instead of using Factory Class
     TODO: This step should do an assert instead of being a fixture
 
     Args:
+        qvain_publish_request (): Request object from Qvain
         ida_data_catalog (): IDA DataCatalog
 
     Returns: Research Dataset object
@@ -82,83 +78,22 @@ def created_catalog_record(ida_data_catalog, qvain_publish_request) -> ResearchD
     """
 
     dataset = ResearchDatasetFactory(
-        data_catalog=ida_data_catalog, release_date=timezone.now()
+        data_catalog=ida_data_catalog,
+        release_date=timezone.now(),
+        persistent_identifier=faker.uuid4(),
     )
     assert dataset.id is not None
     return dataset
 
 
-@pytest.mark.stub
-@patch("apps.core.models.CatalogRecord.creator")
-@then("the user is saved as creator to the dataset")
-def catalog_record_creator(qvain_publish_request):
-    """Should be implemented at the same time as user model"""
-
-    created_catalog_record.creator = qvain_publish_request.user
-
-    assert qvain_publish_request.user is created_catalog_record.creator
-
-
-@pytest.fixture
-@then("new distribution is created from the frozen files")
-def derived_distribution(frozen_distribution, qvain_publish_request):
-    """Frozen distribution is generated when files are frozen in IDA
-
-    If the dataset files are different from frozen distribution, new distribution should be created.
-    This new distribution would reference the frozen distribution. This is possible if Distribution object has
-    ForeignKey to self.
-
-    It is currently unclear if new distribution should be created for every freeze operation.
-    """
-    derived_distribution = DistributionFactory()
-    if set(frozen_distribution.files.all()) != set(qvain_publish_request.files.all()):
-        derived_distribution.files.set(
-            frozen_distribution.files.intersection(qvain_publish_request.files)
-        )
-    else:
-        derived_distribution.files.set(frozen_distribution.files.all())
-    assert (
-        frozen_distribution.files.intersection(qvain_publish_request.files).count()
-        == derived_distribution.files.count()
-    )
-    return derived_distribution
-
-
-@then("The new Distribution is saved to database")
-def created_distribution(derived_distribution, created_catalog_record):
-    derived_distribution.dataset = created_catalog_record
-    derived_distribution.save()
-
-    assert derived_distribution.id is not None
-
-
-@pytest.mark.stub
-@then("The Dataset has persistent identifier")
-def dataset_has_persistent_id(created_catalog_record):
-    created_catalog_record.persistent_identifier = fake.uuid4()
-    created_catalog_record.save()
-
-    assert created_catalog_record.persistent_identifier is not None
-
-
-@when("user saves a draft of unpublished dataset in Qvain")
-def qvain_draft_request(mock_qvain_dataset_request):
-    return mock_qvain_dataset_request(status_code=201, published=False)
-
-
-@then("The dataset does not have persistent identifier")
-def dataset_has_no_persistent_id(created_catalog_record):
-    assert created_catalog_record.persistent_identifier is None
-
-
 @when("user publishes new version of dataset in Qvain")
-def new_dataset_version_request(mock_qvain_dataset_request):
-    return mock_qvain_dataset_request(status_code=200, published=True)
+def new_dataset_version_request(mock_qvain_dataset_with_files_request):
+    return mock_qvain_dataset_with_files_request(status_code=200, published=True)
 
 
 @pytest.fixture
 @then("edited dataset is saved as a new version of the dataset")
-def created_new_dataset_version(created_catalog_record):
+def created_new_dataset_version(published_dataset):
     """Should test versioning of dataset
 
     Current very basic versioning scheme (Research Dataset has foreign keys next, first, last, and so on..)  is
@@ -172,34 +107,29 @@ def created_new_dataset_version(created_catalog_record):
     Returns: New instance of the Research Dataset with the modified fields
 
     """
-    original_fields = model_to_dict(created_catalog_record)
+    original_fields = model_to_dict(published_dataset)
     logger.info(original_fields)
     del original_fields["catalogrecord_ptr"]
     del original_fields["data_catalog"]
     del original_fields["language"]
     new_version = ResearchDataset(**original_fields)
-    new_version.data_catalog = created_catalog_record.data_catalog
+    new_version.data_catalog = published_dataset.data_catalog
     new_version.title = {"en": "new title"}
 
-    new_version.replaces = created_catalog_record
+    new_version.replaces = published_dataset
     new_version.save()
 
     # Loads RelatedObjectManager instead of foreign key object
-    # assert new_version.replaces == created_catalog_record
+    # assert new_version.replaces == published_dataset
 
     return new_version
 
 
 @then("previous dataset version is still available as previous version")
-def prev_dataset_exists(created_new_dataset_version, created_catalog_record):
+def prev_dataset_exists(created_new_dataset_version, published_dataset):
     raise NotImplementedError
 
 
 @then("Previous version is referenced in current version")
 def current_dataset_has_prev_dataset_reference():
     raise NotImplementedError
-
-
-@then("new unpublished dataset is created without persistent identifier")
-def step_impl():
-    raise NotImplementedError(u"STEP: Then New Research Dataset is saved to database")

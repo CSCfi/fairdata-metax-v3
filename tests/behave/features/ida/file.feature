@@ -37,7 +37,7 @@ Feature: IDA File metadata
     And IDA has its own data-storage
 
   Scenario: IDA User freezes files
-    When User freezes new files in IDA
+    When user freezes new files in IDA
     Then a new distribution is created
     And the distribution has the files associated with it
     And distribution is associated with an IDA project

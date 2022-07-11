@@ -9,9 +9,10 @@ from apps.core.models import DataCatalog
 def exists_datacatalog():
     return factories.DataCatalogFactory()
 
-@when("the user removes the data-catalog", target_fixture="request_result")
+
+@when("the user removes the data-catalog", target_fixture="datacatalog_delete_request")
 def remove_datacatalog(data_catalog, admin_client):
-    url = reverse("datacatalog-detail", kwargs={'id': data_catalog.id})
+    url = reverse("datacatalog-detail", kwargs={"id": data_catalog.id})
     response = admin_client.delete(url)
     return response
 
@@ -23,8 +24,8 @@ def soft_delete_datacatalog(data_catalog):
 
 
 @then("the user should get an OK delete-response")
-def ok_delete_response(request_result):
-    assert request_result.status_code == 204
+def ok_delete_response(datacatalog_delete_request):
+    assert datacatalog_delete_request.status_code == 204
 
 
 @pytest.mark.django_db

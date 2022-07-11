@@ -39,7 +39,6 @@ Feature: Datasets
   Scenario: Saving draft of unpublished Dataset
     When user saves a draft of unpublished dataset in Qvain
     Then new unpublished dataset is created without persistent identifier
-    And the user is saved as creator to the dataset
     And new distribution is created from the frozen files
 
   @publish @versioning

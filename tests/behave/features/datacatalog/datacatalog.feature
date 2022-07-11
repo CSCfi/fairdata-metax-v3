@@ -8,17 +8,17 @@ Feature: Data catalog
 
   User Stories retrieved 2022-05-17
 
+  Background:
+    Given the user has admin privileges
 
   Scenario: Creating new data-catalog
-    Given the user has admin privileges
     When the user submits new data-catalog
     Then then new data-catalog is saved to database
     And the user should get an OK create-response
 
 
   Scenario: Deleting data-catalog
-    Given the user has admin privileges
-    And there is an existing data-catalog
+    Given there is an existing data-catalog
     When the user removes the data-catalog
     Then the data-catalog is soft deleted
     And the user should get an OK delete-response

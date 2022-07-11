@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 @when(
     "the user submits new data-catalog",
-    target_fixture="request_result",
+    target_fixture="datacatalog_post_request",
 )
 def datacatalog_post_request(admin_client, datacatalog_json):
     url = reverse("datacatalog-list")
@@ -21,7 +21,7 @@ def datacatalog_post_request(admin_client, datacatalog_json):
 
 @pytest.fixture
 @then("then new data-catalog is saved to database")
-def check_datacatalog_is_created(request_result, datacatalog_json):
+def check_datacatalog_is_created(datacatalog_post_request, datacatalog_json):
     logger.info(f"datacatalog_json: {datacatalog_json}")
     payload = json.loads(datacatalog_json)
     assert DataCatalog.objects.filter(title=payload["title"]).count() == 1
@@ -29,8 +29,8 @@ def check_datacatalog_is_created(request_result, datacatalog_json):
 
 
 @then("the user should get an OK create-response")
-def step_impl(request_result):
-    assert request_result.status_code == 201
+def ok_create_response(datacatalog_post_request):
+    assert datacatalog_post_request.status_code == 201
 
 
 @pytest.mark.django_db
