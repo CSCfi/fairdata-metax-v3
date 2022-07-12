@@ -11,10 +11,10 @@ Feature: Datasets
   dataset files and directories metadata, persistent identifier type, internal unique identifier, cumulative state,
   publishing state, preservation state, cumulation time range and access type.
 
-  In case User has edited and published already existing published dataset, Metax will save new catalogrecord version
+  In case User has edited and published already existing published dataset, Metax will save new catalog-record version
   with reference to previous catalog-record object.
 
-  In case User has saved dataset in draft mode, Metax will not give persistent identifier and saves catalogrecord as
+  In case User has saved dataset in draft mode, Metax will not give persistent identifier and saves catalog-record as
   in draft state. If the draft is new version of published dataset, the draft will contain reference to published
   version of the dataset.
 

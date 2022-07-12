@@ -49,7 +49,7 @@ def frozen_distribution(frozen_files_in_ida) -> Distribution:
 
 @pytest.fixture
 @when("user publishes a new dataset in Qvain")
-def qvain_publish_request(frozen_distribution, mock_qvain_dataset_with_files_request):
+def qvain_publish_request(mock_qvain_dataset_with_files_request):
     """Makes API-Request to Dataset API with Dataset information
 
     Returns: API Request Response for Qvain
@@ -84,52 +84,3 @@ def published_dataset(
     )
     assert dataset.id is not None
     return dataset
-
-
-@when("user publishes new version of dataset in Qvain")
-def new_dataset_version_request(mock_qvain_dataset_with_files_request):
-    return mock_qvain_dataset_with_files_request(status_code=200, published=True)
-
-
-@pytest.fixture
-@then("edited dataset is saved as a new version of the dataset")
-def created_new_dataset_version(published_dataset):
-    """Should test versioning of dataset
-
-    Current very basic versioning scheme (Research Dataset has foreign keys next, first, last, and so on..)  is
-    probably going to be replaced with django-simple-history library. For some reason the foreign key relations work
-    funny when foreign key points to self AND the model has OneToOne relation. Solution could be to drop the
-    CatalogRecord entirely, as all of its fields can be in ResearchDataset Model.
-
-    Args:
-        created_catalog_record (): Research Dataset Object
-
-    Returns: New instance of the Research Dataset with the modified fields
-
-    """
-    original_fields = model_to_dict(published_dataset)
-    logger.info(original_fields)
-    del original_fields["catalogrecord_ptr"]
-    del original_fields["data_catalog"]
-    del original_fields["language"]
-    new_version = ResearchDataset(**original_fields)
-    new_version.data_catalog = published_dataset.data_catalog
-    new_version.title = {"en": "new title"}
-
-    new_version.replaces = published_dataset
-    new_version.save()
-
-    # Loads RelatedObjectManager instead of foreign key object
-    # assert new_version.replaces == published_dataset
-
-    return new_version
-
-
-@then("previous dataset version is still available as previous version")
-def prev_dataset_exists(created_new_dataset_version, published_dataset):
-    raise NotImplementedError
-
-
-@then("Previous version is referenced in current version")
-def current_dataset_has_prev_dataset_reference():
-    raise NotImplementedError

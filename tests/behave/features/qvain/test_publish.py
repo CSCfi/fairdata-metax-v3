@@ -4,11 +4,12 @@ import pytest
 from pytest_bdd import then, scenario
 
 from apps.core.factories import DistributionFactory
+from apps.core.models import Distribution
 
 
 @pytest.fixture
 @then("new distribution is created from the frozen files")
-def derived_distribution(frozen_distribution, qvain_publish_request):
+def derived_distribution(frozen_distribution, qvain_publish_request, published_dataset) -> Distribution:
     """Frozen distribution is generated when files are frozen in IDA
 
     If the dataset files are different from frozen distribution, new distribution should be created.
@@ -28,6 +29,8 @@ def derived_distribution(frozen_distribution, qvain_publish_request):
         frozen_distribution.files.intersection(qvain_publish_request.files).count()
         == derived_distribution.files.count()
     )
+    derived_distribution.dataset = published_dataset
+    derived_distribution.save()
     return derived_distribution
 
 
@@ -41,7 +44,9 @@ def catalog_record_creator(published_dataset, qvain_publish_request):
 
 
 @pytest.mark.django_db
-@pytest.mark.xfail(raises=NotImplementedError)
 @scenario("dataset.feature", "Publishing new dataset")
-def test_dataset_publish():
-    assert True
+def test_dataset_publish(derived_distribution, published_dataset, ida_data_catalog):
+    assert published_dataset.data_catalog == ida_data_catalog
+    assert derived_distribution.dataset == published_dataset
+    assert published_dataset.release_date is not None
+    assert published_dataset.persistent_identifier is not None
