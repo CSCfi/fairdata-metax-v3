@@ -8,9 +8,11 @@ from apps.core.models import ResearchDataset
 
 logger = logging.getLogger(__name__)
 
+
 @when("user publishes new version of dataset in Qvain")
 def new_dataset_version_request(mock_qvain_dataset_with_files_request):
     return mock_qvain_dataset_with_files_request(status_code=200, published=True)
+
 
 @pytest.fixture
 @then("edited dataset is saved as a new version of the dataset")
@@ -40,7 +42,6 @@ def created_new_dataset_version(published_dataset):
     new_version.save()
     published_dataset.save()
 
-
     return new_version
 
 
@@ -53,4 +54,7 @@ def prev_dataset_exists(created_new_dataset_version, published_dataset):
 @pytest.mark.django_db
 @scenario("dataset.feature", "Publishing new version from dataset")
 def test_dataset_new_version(created_new_dataset_version, published_dataset):
-    assert created_new_dataset_version.persistent_identifier == published_dataset.persistent_identifier
+    assert (
+        created_new_dataset_version.persistent_identifier
+        == published_dataset.persistent_identifier
+    )

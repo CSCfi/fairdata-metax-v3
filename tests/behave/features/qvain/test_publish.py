@@ -9,7 +9,9 @@ from apps.core.models import Distribution
 
 @pytest.fixture
 @then("new distribution is created from the frozen files")
-def derived_distribution(frozen_distribution, qvain_publish_request, published_dataset) -> Distribution:
+def derived_distribution(
+    frozen_distribution, qvain_publish_request, published_dataset
+) -> Distribution:
     """Frozen distribution is generated when files are frozen in IDA
 
     If the dataset files are different from frozen distribution, new distribution should be created.

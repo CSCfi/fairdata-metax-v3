@@ -8,16 +8,18 @@ logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        language_fi = factories.LanguageFactory()
-        homepage_fairdata = factories.CatalogHomePageFactory()
-        dataset_publisher_csc = factories.DatasetPublisherFactory(
-            homepages=(homepage_fairdata,)
-        )
+        language = factories.LanguageFactory()
+        homepage = factories.CatalogHomePageFactory()
+        dataset_publisher = factories.DatasetPublisherFactory(homepages=(homepage,))
         data_catalog = factories.DataCatalogFactory(
-            publisher=dataset_publisher_csc, languages=(language_fi,)
+            publisher=dataset_publisher, languages=(language,)
         )
         research_dataset = factories.ResearchDatasetFactory(data_catalog=data_catalog)
         files = factories.FileFactory.create_batch(3)
         distribution = factories.DistributionFactory(
             files=files, dataset=research_dataset
+        )
+        logger.info(
+            f"Created test objects: {language=}, {homepage=}, {dataset_publisher=}, {data_catalog=}, "
+            f"{research_dataset=}, {files=}, {distribution=}"
         )
