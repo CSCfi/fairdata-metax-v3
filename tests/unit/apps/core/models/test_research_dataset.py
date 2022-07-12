@@ -15,10 +15,14 @@ def test_delete_research_dataset_with_foreign_keys(research_dataset_with_foreign
     replaces = research_dataset_with_foreign_keys.replaces
     research_dataset_with_foreign_keys.delete()
     assert (
-        data_catalog.records.filter(id=research_dataset_with_foreign_keys.id).count() == 0
+        data_catalog.records.filter(id=research_dataset_with_foreign_keys.id).count()
+        == 0
     )
     assert (
-        access_right.research_datasets.filter(id=research_dataset_with_foreign_keys.id).count() == 0
+        access_right.research_datasets.filter(
+            id=research_dataset_with_foreign_keys.id
+        ).count()
+        == 0
     )
     # assert (
     #     language.research_datasets.filter(id=research_dataset_with_foreign_keys.id).count() == 0
@@ -29,9 +33,8 @@ def test_delete_research_dataset_with_foreign_keys(research_dataset_with_foreign
     assert (
         last.first_version.filter(id=research_dataset_with_foreign_keys.id).count() == 0
     )
+    assert previous.next.filter(id=research_dataset_with_foreign_keys.id).count() == 0
     assert (
-        previous.next.filter(id=research_dataset_with_foreign_keys.id).count() == 0
-    )
-    assert (
-        replaces.replaced_by.filter(id=research_dataset_with_foreign_keys.id).count() == 0
+        replaces.replaced_by.filter(id=research_dataset_with_foreign_keys.id).count()
+        == 0
     )

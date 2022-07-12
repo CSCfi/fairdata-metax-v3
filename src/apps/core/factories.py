@@ -130,7 +130,7 @@ class DataStorageFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.DataStorage
 
-    id = factory.Dict({"en": factory.Sequence(lambda n: f"data-storage-{n}")})
+    id = factory.Sequence(lambda n: f"data-storage-{n}")
 
 
 class CatalogRecordFactory(factory.django.DjangoModelFactory):
@@ -159,6 +159,7 @@ class DistributionFactory(factory.django.DjangoModelFactory):
     license = factory.SubFactory(DatasetLicenseFactory)
     access_rights = factory.SubFactory(AccessRightFactory)
     dataset = factory.SubFactory(ResearchDatasetFactory)
+    access_service = factory.SubFactory(DataStorageFactory)
 
     @factory.post_generation
     def files(self, create, extracted, **kwargs):
