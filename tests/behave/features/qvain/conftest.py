@@ -84,3 +84,32 @@ def published_dataset(
     )
     assert dataset.id is not None
     return dataset
+
+
+@pytest.fixture
+@then("new distribution is created from the frozen files")
+def derived_distribution(
+    frozen_distribution, qvain_publish_request, published_dataset
+) -> Distribution:
+    """Frozen distribution is generated when files are frozen in IDA
+
+    If the dataset files are different from frozen distribution, new distribution should be created.
+    This new distribution would reference the frozen distribution. This is possible if Distribution object has
+    ForeignKey to self.
+
+    It is currently unclear if new distribution should be created for every freeze operation.
+    """
+    derived_distribution = DistributionFactory()
+    if set(frozen_distribution.files.all()) != set(qvain_publish_request.files.all()):
+        derived_distribution.files.set(
+            frozen_distribution.files.intersection(qvain_publish_request.files)
+        )
+    else:
+        derived_distribution.files.set(frozen_distribution.files.all())
+    assert (
+        frozen_distribution.files.intersection(qvain_publish_request.files).count()
+        == derived_distribution.files.count()
+    )
+    derived_distribution.dataset = published_dataset
+    derived_distribution.save()
+    return derived_distribution

@@ -1,5 +1,8 @@
 import pytest
+from django.utils import timezone
 from pytest_bdd import scenario, when, then
+
+from apps.core.factories import ResearchDatasetFactory
 
 
 @when("user saves a draft of unpublished dataset in Qvain")
@@ -8,12 +11,14 @@ def qvain_draft_request(mock_qvain_dataset_with_files_request):
 
 
 @then("new unpublished dataset is created without persistent identifier")
-def step_impl():
-    raise NotImplementedError(u"STEP: Then New Research Dataset is saved to database")
+def create_draft(faker):
+    dataset = ResearchDatasetFactory(
+        release_date=timezone.now(),
+        persistent_identifier=faker.uuid4(),
+    )
 
 
 @pytest.mark.django_db
-@pytest.mark.xfail(raises=NotImplementedError)
 @scenario("dataset.feature", "Saving draft of unpublished Dataset")
 def test_dataset_draft():
     assert True
