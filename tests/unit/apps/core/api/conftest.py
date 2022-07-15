@@ -61,8 +61,10 @@ def datacatalog_error_json():
 
 @pytest.fixture
 def post_datacatalog_payloads_a_b_c(client, datacatalog_a_json, datacatalog_b_json, datacatalog_c_json):
+    logger.info(__name__)
     url = '/rest/v3/datacatalog'
     res1 = client.post(url, datacatalog_a_json, content_type='application/json')
     res2 = client.post(url, datacatalog_b_json, content_type='application/json')
     res3 = client.post(url, datacatalog_c_json, content_type='application/json')
+    logger.info(f"{res1=}, {res2=}, {res3=}")
     return res1, res2, res3

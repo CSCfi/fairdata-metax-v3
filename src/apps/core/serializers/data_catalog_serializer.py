@@ -5,22 +5,27 @@
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
 import logging
-from rest_framework.serializers import ModelSerializer
 
-from apps.core.models import DataCatalog, DatasetLicense, AccessType, DatasetPublisher, AccessRight, CatalogHomePage, \
-    DatasetLanguage
-from apps.core.serializers.common_serializers import AccessRightsModelSerializer, DatasetPublisherModelSerializer, \
-    DatasetLanguageModelSerializer, AbstractDatasetPropertyModelSerializer
+from apps.core import models
+from apps.core.serializers.common_serializers import (
+    AccessRightsModelSerializer,
+    DatasetPublisherModelSerializer,
+    DatasetLanguageModelSerializer,
+    AbstractDatasetPropertyModelSerializer,
+)
 
 logger = logging.getLogger(__name__)
-# class DataCatalogSerializer(ModelSerializer):
-#     access_rights = AccessRightsModelSerializer(read_only=True)
-#     publisher = DatasetPublisherModelSerializer(read_only=True)
-#     language = DatasetLanguageModelSerializer(read_only=True, many=True)
-#
-#     class Meta:
-#         model = DataCatalog
-#         fields = ('id', 'access_rights', 'publisher', 'language', 'title', 'dataset_versioning_enabled', 'harvested', 'research_dataset_schema')
+
+
+def pop_and_update_or_create_instance(serializer, instance, field_name, validated_data):
+    data = validated_data.pop(field_name)
+    if instance is not None:
+        serializer.update(instance, data)
+    else:
+        new_serializer = serializer.__class__(data=data)
+        if new_serializer.is_valid(raise_exception=True):
+            new_serializer.save()
+
 
 class DataCatalogModelSerializer(AbstractDatasetPropertyModelSerializer):
     access_rights = AccessRightsModelSerializer(required=False)
@@ -28,9 +33,17 @@ class DataCatalogModelSerializer(AbstractDatasetPropertyModelSerializer):
     language = DatasetLanguageModelSerializer(required=False, many=True)
 
     class Meta(AbstractDatasetPropertyModelSerializer.Meta):
-        model = DataCatalog
-        fields = ('id', 'access_rights', 'publisher', 'language', 'title', 'dataset_versioning_enabled', 'harvested',
-                  'research_dataset_schema')
+        model = models.DataCatalog
+        fields = (
+            "id",
+            "access_rights",
+            "publisher",
+            "language",
+            "title",
+            "dataset_versioning_enabled",
+            "harvested",
+            "research_dataset_schema",
+        )
 
     def create(self, validated_data):
         access_type = None
@@ -51,33 +64,72 @@ class DataCatalogModelSerializer(AbstractDatasetPropertyModelSerializer):
             access_type_data = access_rights_data.pop("access_type", None)
 
         if license_data:
-            datacatalog_license, license_created = DatasetLicense.objects.get_or_create(url=license_data.get("url"), defaults=license_data)
+            datacatalog_license, license_created = models.DatasetLicense.objects.get_or_create(
+                url=license_data.get("url"), defaults=license_data
+            )
         if access_type_data:
-            access_type, access_type_created = AccessType.objects.get_or_create(url=access_type_data.get("url"), defaults=access_type_data)
+            access_type, access_type_created = models.AccessType.objects.get_or_create(
+                url=access_type_data.get("url"), defaults=access_type_data
+            )
         if publisher_data:
-            publisher = DatasetPublisher.objects.create(name=publisher_data.get('name'))
+            publisher = models.DatasetPublisher.objects.create(name=publisher_data.get("name"))
         if access_rights_data:
-            access_rights = AccessRight.objects.create(license=datacatalog_license, access_type=access_type, **access_rights_data)
-        new_datacatalog = DataCatalog.objects.create(access_rights=access_rights, publisher=publisher, **validated_data)
+            access_rights = models.AccessRight.objects.create(
+                license=datacatalog_license,
+                access_type=access_type,
+                **access_rights_data,
+            )
+        new_datacatalog = models.DataCatalog.objects.create(
+            access_rights=access_rights, publisher=publisher, **validated_data
+        )
 
         for page in homepages_data:
             logger.info(f"{page=}")
-            homepage, created = CatalogHomePage.objects.get_or_create(url=page.get('url'), defaults=page)
+            homepage, created = models.CatalogHomePage.objects.get_or_create(
+                url=page.get("url"), defaults=page
+            )
             publisher.homepage.add(homepage)
         for lang in language_data:
-            language_created, created = DatasetLanguage.objects.get_or_create(url=lang.get('url'), defaults=lang)
+            language_created, created = models.DatasetLanguage.objects.get_or_create(
+                url=lang.get("url"), defaults=lang
+            )
             new_datacatalog.language.add(language_created)
 
         return new_datacatalog
 
+    def update(self, instance, validated_data):
+        access_rights_serializer = self.fields["access_rights"]
+        access_rights_instance = instance.access_rights
 
-class DataCatalogUpdateSerializer(ModelSerializer):
-    access_rights = AccessRightsModelSerializer(read_only=True)
-    publisher = DatasetPublisherModelSerializer(read_only=True)
-    language = DatasetLanguageModelSerializer(read_only=True, many=True)
+        publisher_serializer = self.fields["publisher"]
+        publisher_instance = instance.publisher
 
-    class Meta:
-        model = DataCatalog
-        fields = ('id', 'access_rights', 'publisher', 'language', 'title', 'dataset_versioning_enabled', 'harvested',
-                  'research_dataset_schema')
-        read_only_fields = ['id', ]
+        if validated_data.get("access_rights"):
+            pop_and_update_or_create_instance(
+                access_rights_serializer,
+                access_rights_instance,
+                "access_rights",
+                validated_data,
+            )
+
+        if validated_data.get("publisher"):
+            pop_and_update_or_create_instance(
+                publisher_serializer, publisher_instance, "publisher", validated_data
+            )
+
+        if validated_data.get("language"):
+            language_data = validated_data.pop("language")
+            instance.language.clear()
+            for language in language_data:
+                lang, created = models.DatasetLanguage.objects.update_or_create(
+                    url=language.get("url"), defaults=language
+                )
+                instance.language.add(lang)
+
+        for validated_field in validated_data.keys():
+            setattr(
+                instance,
+                validated_field,
+                validated_data.get(validated_field, getattr(instance, validated_field)),
+            )
+        return super().update(instance, validated_data)

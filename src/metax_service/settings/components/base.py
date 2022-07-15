@@ -63,6 +63,7 @@ THIRD_PARTY_APPS = [
     'rest_framework',
     'django_extensions',
     'drf_yasg',
+    'django_filters',
 ]
 LOCAL_APPS = [
     "core.apps.CoreConfig",

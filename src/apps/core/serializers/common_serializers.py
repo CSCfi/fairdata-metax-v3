@@ -6,6 +6,7 @@
 # :license: MIT
 from django.core.validators import EMPTY_VALUES
 from rest_framework import serializers
+from virtualenv.app_data import read_only
 
 from apps.core.models import DatasetLanguage, CatalogHomePage, DatasetPublisher, DatasetLicense, AccessType, AccessRight
 
@@ -78,7 +79,7 @@ class AccessRightsModelSerializer(AbstractDatasetModelSerializer):
 
     class Meta:
         model = AccessRight
-        fields = ('description', 'license', 'access_type')
+        fields = ("id", 'description', 'license', 'access_type')
 
     def create(self, validated_data):
         catalog_license = None
@@ -105,4 +106,4 @@ class AccessRightsModelSerializer(AbstractDatasetModelSerializer):
         license_serializer.update(license_instance, license_data)
         access_type_serializer.update(access_type_instance, access_type_data)
 
-        return super(AccessRightsModelSerializer, self).update(instance, validated_data)
+        return super().update(instance, validated_data)
