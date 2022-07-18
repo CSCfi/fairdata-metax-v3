@@ -27,6 +27,16 @@ class AbstractBaseModel(TimeStampedModel, SoftDeletableModel):
     )
 
     def delete(self, using=None, soft=True, *args, **kwargs):
+        """Override delete method to add removal_date
+
+        Args:
+            using ():
+            soft (bool): is the instance soft deleted
+
+        Returns:
+            (int): count of deleted objects
+
+        """
         self.removal_date = timezone.now()
         return super().delete(using=using, soft=soft, *args, **kwargs)
 
@@ -37,7 +47,12 @@ class AbstractBaseModel(TimeStampedModel, SoftDeletableModel):
 
 
 class AbstractDatasetProperty(AbstractBaseModel):
-    """Base class for simple refdata fields with only id and title properties"""
+    """Base class for simple refdata fields with only id and title properties
+
+    Attributes:
+        title (HstoreField): property title
+        url (models.URLField): property url
+    """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     url = models.URLField(

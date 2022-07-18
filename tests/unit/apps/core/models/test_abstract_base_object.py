@@ -6,6 +6,15 @@ pytestmark = pytest.mark.parametrize(
 
 
 def test_create_base_model(model, abstract_base_object_factory):
+    """
+
+    Args:
+        model (): Django Model with direct inheritance from AbstractBaseModel
+        abstract_base_object_factory ():
+
+    Returns:
+
+    """
     obj = abstract_base_object_factory(model)
     assert obj.id is not None
 

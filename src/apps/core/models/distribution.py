@@ -15,6 +15,20 @@ class Distribution(AbstractBaseModel):
 
     Source: DCAT Version 3, Draft 11,
     https://www.w3.org/TR/vocab-dcat-3/#Class:Distribution
+
+    Attributes:
+        title (HStoreField): Title of the distribution
+        description (models.CharField): Description of the distribution
+        release_date (models.DateTimeField): Release date of the distribution
+        license (models.ForeignKey): License of the distribution
+        access_rights (models.ForeignKey): Access rights of the distribution
+        access_url (models.URLField): The landing page of the distribution
+        access_service (models.ForeignKey): Service that provides the distribution files
+        download_url (models.URLField): Direct download link for the distribution resources
+        byte_size (models.BigIntegerField): Total size of the distribution in bytes
+        checksum (models.TextField): The file-integrity checksum of the distribution
+        files (models.ManyToManyField): Files associated with the distribution
+        dataset (models.ForeignKey): The dataset providing the distribution
     """
 
     id = models.CharField(

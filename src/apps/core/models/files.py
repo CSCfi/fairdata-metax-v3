@@ -7,6 +7,18 @@ from .abstracts import AbstractBaseModel
 
 
 class File(AbstractBaseModel):
+    """
+
+    Attributes:
+        byte_size (models.BigIntegerField): The size of the file in bytes
+        checksum (models.TextField): The file-integrity checksum of the file
+        date_frozen (models.DateTimeField): The date when the file was frozen in IDA
+        file_format (models.CharField): The file-format of the file
+        file_name (models.TextField): The name of the file
+        file_path (models.TextField): The path of the file
+        date_uploaded (models.DateTimeField): The date when the file was uploaded to IDA
+        project_identifier (models.CharField): The IDA project identifier
+    """
 
     byte_size = models.BigIntegerField(default=0)
     checksum = models.TextField()

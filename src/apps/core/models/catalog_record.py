@@ -14,8 +14,7 @@ class CatalogRecord(AbstractBaseModel):
 
     RDF Class: dcat:CatalogRecord
 
-    Source: DCAT Version 3, Draft 11,
-    https://www.w3.org/TR/vocab-dcat-3/#Class:Catalog_Record
+    Source: [DCAT Version 3, Draft 11](https://www.w3.org/TR/vocab-dcat-3/#Class:Catalog_Record)
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

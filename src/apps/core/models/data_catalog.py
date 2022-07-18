@@ -13,6 +13,16 @@ class DataCatalog(AbstractBaseModel):
 
     Source: DCAT Version 3, Draft 11,
     https://www.w3.org/TR/vocab-dcat-3/#Class:Catalog
+
+    Attributes:
+        title (HStoreField): catalog title
+        dataset_versioning_enabled (models.BooleanField): does the catalog have versioning enabled
+        harvested (models.BooleanField): are the catalog resources harvested from some other sources
+        language (models.ManyToManyField): default language of the catalog
+        publisher (models.ForeignKey): publisher of the cataloged resources
+        access_rights (models.ForeignKey): default access rights for the cataloged resources
+        research_dataset_schema (models.CharField): the schema which the catalog resources comply to
+
     """
 
     # https://www.w3.org/TR/vocab-dcat-3/#Property:resource_identifier
@@ -62,15 +72,18 @@ class DatasetLanguage(AbstractDatasetProperty):
     This refers to the natural language used for textual metadata (i.e. titles, descriptions, etc)
     of a cataloged resource (i.e. dataset or service) or the textual values of a dataset distribution
 
-    Note: Repeat this property if the resource is available in multiple languages.
+    Note:
+        Repeat this property if the resource is available in multiple languages.
 
-    Note: The value(s) provided for members of a catalog (i.e. dataset or service)
-    override the value(s) provided for the catalog if they conflict.
+    Note:
+        The value(s) provided for members of a catalog (i.e. dataset or service)
+        override the value(s) provided for the catalog if they conflict.
 
-    Note: If representations of a dataset are available for each language separately,
-    define an instance of dcat:Distribution for each language and describe the specific language of each
-    distribution using dcterms:language (i.e. the dataset will have multiple dcterms:language values and
-    each distribution will have just one as the value of its dcterms:language property).
+    Note:
+        If representations of a dataset are available for each language separately,
+        define an instance of dcat:Distribution for each language and describe the specific language of each
+        distribution using dcterms:language (i.e. the dataset will have multiple dcterms:language values and
+        each distribution will have just one as the value of its dcterms:language property).
 
     DRF Property: dcterms:language
 
@@ -82,26 +95,33 @@ class DatasetLanguage(AbstractDatasetProperty):
 class CatalogHomePage(AbstractDatasetProperty):
     """A homepage of the catalog (a public Web document usually available in HTML).
 
-    Note: foaf:homepage is an inverse functional property (IFP) which means that it MUST be unique and precisely
-    identify the Web-page for the resource. This property indicates the canonical Web-page,
-    which might be helpful in cases where there is more than one Web-page about the resource.
-
     RDF Property: foaf:homepage
 
     Source: DCAT Version 3, Draft 11,
     https://www.w3.org/TR/vocab-dcat-3/#Property:catalog_homepage
+
+    Note:
+        foaf:homepage is an inverse functional property (IFP) which means that it MUST be unique and precisely
+        identify the Web-page for the resource. This property indicates the canonical Web-page, which might be helpful
+        in cases where there is more than one Web-page about the resource.
+
     """
 
 
 class DatasetPublisher(AbstractBaseModel):
     """The entity responsible for making the item available.
 
-    Note: Resources of type foaf:Agent are recommended as values for this property.
+    Note:
+        Resources of type foaf:Agent are recommended as values for this property.
 
     RDF Property: dcterms:publisher
 
     Source: DCAT Version 3, Draft 11,
     https://www.w3.org/TR/vocab-dcat-3/#Property:resource_publisher
+
+    Attributes:
+        name (HStoreField): the name of the publisher organization
+        homepage (models.ManyToManyField): webpage of the publisher
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -136,6 +156,11 @@ class AccessRight(AbstractBaseModel):
 
     Source: DCAT Version 3, Draft 11,
     https://www.w3.org/TR/vocab-dcat-3/#Property:resource_access_rights
+
+    Attributes:
+        license (models.ForeignKey): Resource license
+        access_type (models.ForeignKey): Resource Access Type
+        description (HStoreField): description of the access rights
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
