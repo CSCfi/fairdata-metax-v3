@@ -34,15 +34,18 @@ Feature: Datasets
     And new published dataset is created in IDA data-catalog with persistent identifier
     And the user is saved as creator to the dataset
     And new distribution is created from the frozen files
+    Then published dataset exists with persistent identifier and new distribution
+    And the dataset has a creator
 
   @draft
   Scenario: Saving draft of unpublished Dataset
     When user saves a draft of unpublished dataset in Qvain
     And new unpublished dataset is created without persistent identifier
     And new distribution is created from the frozen files
+    Then the dataset exists in draft state
 
   @publish @versioning
   Scenario: Publishing new version from dataset
     When user publishes new version of dataset in Qvain
-    Then edited dataset is saved as a new version of the dataset
-    And previous dataset version is still available as previous version
+    And edited dataset is saved as a new version of the dataset
+    Then previous dataset version is still available as previous version

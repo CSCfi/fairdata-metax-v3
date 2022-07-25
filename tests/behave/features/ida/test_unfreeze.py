@@ -29,6 +29,7 @@ def mark_files_deleted():
 
     return datasets, file_id
 
+
 @pytest.fixture
 @when("datasets with the deleted file are marked as deprecated")
 def deprecate_dataset(mark_files_deleted):
@@ -42,6 +43,7 @@ def deprecate_dataset(mark_files_deleted):
 @then("API returns OK-delete status")
 def delete_ok(user_unfreeze_request):
     assert user_unfreeze_request.status_code == 204
+
 
 @pytest.mark.django_db
 @scenario("file.feature", "IDA user unfreezes files")

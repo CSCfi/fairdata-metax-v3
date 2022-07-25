@@ -20,11 +20,10 @@ def datacatalog_post_request(admin_client, datacatalog_json):
 
 
 @pytest.fixture
-@then("then new data-catalog is saved to database")
+@when("new data-catalog is saved to database")
 def check_datacatalog_is_created(datacatalog_post_request, datacatalog_json):
     logger.info(f"datacatalog_json: {datacatalog_json}")
     payload = json.loads(datacatalog_json)
-    assert DataCatalog.objects.filter(title=payload["title"]).count() == 1
     return DataCatalog.objects.get(title=payload["title"])
 
 
@@ -35,5 +34,6 @@ def ok_create_response(datacatalog_post_request):
 
 @pytest.mark.django_db
 @scenario("datacatalog.feature", "Creating new data-catalog")
-def test_datacatalog():
-    assert True
+def test_datacatalog(datacatalog_json):
+    payload = json.loads(datacatalog_json)
+    assert DataCatalog.objects.filter(title=payload["title"]).count() == 1

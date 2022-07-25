@@ -15,7 +15,7 @@ def new_dataset_version_request(mock_qvain_dataset_with_files_request):
 
 
 @pytest.fixture
-@then("edited dataset is saved as a new version of the dataset")
+@when("edited dataset is saved as a new version of the dataset")
 def created_new_dataset_version(published_dataset):
     """Tests versioning in dataset
 

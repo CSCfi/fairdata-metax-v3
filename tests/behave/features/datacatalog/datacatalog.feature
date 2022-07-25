@@ -13,8 +13,8 @@ Feature: Data catalog
 
   Scenario: Creating new data-catalog
     When the user submits new data-catalog
-    Then then new data-catalog is saved to database
-    And the user should get an OK create-response
+    And new data-catalog is saved to database
+    Then the user should get an OK create-response
 
 
   Scenario: Deleting data-catalog

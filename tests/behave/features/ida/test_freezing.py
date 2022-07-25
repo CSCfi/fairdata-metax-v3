@@ -10,6 +10,7 @@ from apps.core.models import Distribution
 
 logger = logging.getLogger(__name__)
 
+
 @pytest.mark.stub
 @when("user freezes new files in IDA", target_fixture="ida_file_post_request")
 def post_ida_file(mock_request):
