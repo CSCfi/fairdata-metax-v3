@@ -13,6 +13,14 @@ logger = logging.getLogger(__name__)
 @pytest.fixture
 @given("the user has admin privileges")
 def admin_client(admin_user):
+    """
+
+    Args:
+        admin_user (): pytest-django fixture with admin privileges
+
+    Returns:
+
+    """
     client = APIClient()
     client.force_authenticate(user=admin_user)
     return client

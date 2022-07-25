@@ -66,8 +66,9 @@ def published_dataset(
 ) -> ResearchDataset:
     """
 
-    TODO: Research Dataset should be generated in the qvain_publish_request step instead of using Factory Class
-    TODO: This step should do an assert instead of being a fixture
+    TODO:
+        * Research Dataset should be generated in the qvain_publish_request step instead of using Factory Class
+        * This step should do an assert instead of being a fixture
 
     Args:
         qvain_publish_request (): Request object from Qvain
@@ -82,7 +83,6 @@ def published_dataset(
         release_date=timezone.now(),
         persistent_identifier=faker.uuid4(),
     )
-    assert dataset.id is not None
     return dataset
 
 
@@ -106,10 +106,6 @@ def derived_distribution(
         )
     else:
         derived_distribution.files.set(frozen_distribution.files.all())
-    assert (
-        frozen_distribution.files.intersection(qvain_publish_request.files).count()
-        == derived_distribution.files.count()
-    )
     derived_distribution.dataset = published_dataset
     derived_distribution.save()
     return derived_distribution

@@ -12,7 +12,7 @@ def qvain_draft_request(mock_qvain_dataset_with_files_request):
 
 @pytest.fixture
 @when("new unpublished dataset is created without persistent identifier")
-def create_draft(faker):
+def created_draft():
     dataset = ResearchDatasetFactory(
         persistent_identifier=None,
     )
@@ -20,9 +20,9 @@ def create_draft(faker):
 
 
 @then("the dataset exists in draft state")
-def is_draft_dataset(create_draft):
-    assert create_draft.persistent_identifier is None
-    assert create_draft.release_date is None
+def is_draft_dataset(created_draft):
+    assert created_draft.persistent_identifier is None
+    assert created_draft.release_date is None
 
 
 @pytest.mark.django_db

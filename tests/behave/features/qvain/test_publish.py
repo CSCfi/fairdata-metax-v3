@@ -7,15 +7,33 @@ from pytest_bdd import then, scenario, when
 @pytest.fixture
 @when("the user is saved as creator to the dataset")
 def catalog_record_creator(published_dataset, qvain_publish_request):
-    """Should be implemented at the same time as user model"""
+    """
+
+    Args:
+        published_dataset ():
+        qvain_publish_request ():
+
+    Returns:
+
+    """
     published_dataset.creator = Mock()
     published_dataset.creator = qvain_publish_request.user
+    return published_dataset
 
 
 @then("published dataset exists with persistent identifier and new distribution")
 def published_dataset_with_distribution(
     published_dataset, derived_distribution, frozen_distribution, qvain_publish_request
 ):
+    """
+
+    Args:
+        published_dataset ():
+        derived_distribution ():
+        frozen_distribution ():
+        qvain_publish_request ():
+
+    """
     assert published_dataset.persistent_identifier is not None
     assert (
         frozen_distribution.files.intersection(qvain_publish_request.files).count()
@@ -27,6 +45,16 @@ def published_dataset_with_distribution(
 def dataset_has_creator(
     catalog_record_creator, qvain_publish_request, published_dataset
 ):
+    """
+
+    Args:
+        catalog_record_creator ():
+        qvain_publish_request ():
+        published_dataset ():
+
+    Returns:
+
+    """
     assert qvain_publish_request.user is published_dataset.creator
 
 

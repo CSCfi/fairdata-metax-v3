@@ -30,6 +30,10 @@ Feature file contains the Gherkin language syntax and should be done first. Cucu
 
 All three files can find each other automatically if they are in the same directory level.
 
+## When should BDD tests be written
+
+BDD-tests represent user stories and business logic of the application as a whole. Every user story and feature should have BDD tests. In essence JIRA-epics are also candidates for BDD-tests. BDD-tests are maintained by the developers and should be updated whenever there is a new major feature implemented. BDD-tests are **not** replacements for unittests, as they are slower and the scope is more holistic. 
+
 ### Gherkin style guide
 
 > 1. Focus a feature on customer needs.
@@ -54,6 +58,10 @@ All three files can find each other automatically if they are in the same direct
 > 20. Limit the length of tag names.
 > 
 > *source: [BDD 101: Writing Good Gherkin](https://automationpanda.com/2017/01/30/bdd-101-writing-good-gherkin/)*
+
+### Step function naming and separation
+
+Name *when* steps like you would name normal pytest fixtures: as description of the object they create. Name *then* steps as conditional checks. *When* steps include all the actions in the feature, while *then* steps test the resulting state of the feature. 
 
 ### Generating boilerplate files with pytest-bdd
 
