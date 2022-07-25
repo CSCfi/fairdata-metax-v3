@@ -1,11 +1,11 @@
 from unittest.mock import patch
 
 import pytest
-from pytest_bdd import then, scenario
+from pytest_bdd import then, scenario, when
 
 
 @patch("apps.core.models.CatalogRecord.creator")
-@then("the user is saved as creator to the dataset")
+@when("the user is saved as creator to the dataset")
 def catalog_record_creator(published_dataset, qvain_publish_request):
     """Should be implemented at the same time as user model"""
     published_dataset.creator = qvain_publish_request.user

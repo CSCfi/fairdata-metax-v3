@@ -10,7 +10,7 @@ def qvain_draft_request(mock_qvain_dataset_with_files_request):
     return mock_qvain_dataset_with_files_request(status_code=201, published=False)
 
 
-@then("new unpublished dataset is created without persistent identifier")
+@when("new unpublished dataset is created without persistent identifier")
 def create_draft(faker):
     dataset = ResearchDatasetFactory(
         release_date=timezone.now(),

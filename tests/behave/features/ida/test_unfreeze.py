@@ -1,7 +1,6 @@
 from unittest.mock import MagicMock
 
 import pytest
-from django.forms import model_to_dict
 from django.utils import timezone
 from pytest_bdd import when, then, scenario
 
@@ -9,15 +8,16 @@ from apps.core import factories
 from apps.core.models import File
 
 
-@when("User unfreezes file in IDA")
+@pytest.fixture
+@when("user unfreezes file in IDA")
 def user_unfreeze_request():
     request = MagicMock()
-    request.status_code = 200
+    request.status_code = 204
     return request
 
 
 @pytest.fixture
-@then("The file is marked as deleted")
+@when("the file is marked as deleted")
 def mark_files_deleted():
     file = factories.FileFactory(date_frozen=timezone.now())
     factories.DistributionFactory(files=[file])
@@ -27,21 +27,26 @@ def mark_files_deleted():
     datasets = [x.dataset for x in distributions]
     file.delete()
 
-    assert File.available_objects.filter(id=file_id).count() == 0
+    return datasets, file_id
 
-    return datasets
-
-
-@then("Any Dataset with the file is marked as deprecated")
+@pytest.fixture
+@when("datasets with the deleted file are marked as deprecated")
 def deprecate_dataset(mark_files_deleted):
-    for dataset in mark_files_deleted:
+    datasets, file_id = mark_files_deleted
+    for dataset in datasets:
         dataset.is_deprecated = True
         dataset.save()
-    for dataset in mark_files_deleted:
-        assert dataset.is_deprecated is True
+    return datasets, file_id
 
+
+@then("API returns OK-delete status")
+def delete_ok(user_unfreeze_request):
+    assert user_unfreeze_request.status_code == 204
 
 @pytest.mark.django_db
 @scenario("file.feature", "IDA user unfreezes files")
-def test_file_unfreeze():
-    assert True
+def test_file_unfreeze(deprecate_dataset):
+    datasets, file_id = deprecate_dataset
+    for dataset in datasets:
+        assert dataset.is_deprecated is True
+    assert File.available_objects.filter(id=file_id).count() == 0

@@ -60,7 +60,7 @@ def qvain_publish_request(mock_qvain_dataset_with_files_request):
 
 
 @pytest.fixture
-@then("new published dataset is created in IDA data-catalog with persistent identifier")
+@when("new published dataset is created in IDA data-catalog with persistent identifier")
 def published_dataset(
     ida_data_catalog: DataCatalog, qvain_publish_request, faker
 ) -> ResearchDataset:
@@ -87,7 +87,7 @@ def published_dataset(
 
 
 @pytest.fixture
-@then("new distribution is created from the frozen files")
+@when("new distribution is created from the frozen files")
 def derived_distribution(
     frozen_distribution, qvain_publish_request, published_dataset
 ) -> Distribution:

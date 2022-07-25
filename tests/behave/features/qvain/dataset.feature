@@ -31,14 +31,14 @@ Feature: Datasets
   @publish
   Scenario: Publishing new dataset
     When user publishes a new dataset in Qvain
-    Then new published dataset is created in IDA data-catalog with persistent identifier
+    And new published dataset is created in IDA data-catalog with persistent identifier
     And the user is saved as creator to the dataset
     And new distribution is created from the frozen files
 
   @draft
   Scenario: Saving draft of unpublished Dataset
     When user saves a draft of unpublished dataset in Qvain
-    Then new unpublished dataset is created without persistent identifier
+    And new unpublished dataset is created without persistent identifier
     And new distribution is created from the frozen files
 
   @publish @versioning

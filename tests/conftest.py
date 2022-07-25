@@ -13,6 +13,16 @@ import factory.random
 import django
 from django.conf import settings
 
+
+@pytest.fixture(scope='session', autouse=True)
+def faker_session_locale():
+    return ['en_US']
+
+
+@pytest.fixture(scope='session', autouse=True)
+def faker_seed():
+    return settings.FACTORY_BOY_RANDOM_SEED
+
 def pytest_collection_modifyitems(items):
     """Pytest provided hook function
 
@@ -26,5 +36,6 @@ def pytest_collection_modifyitems(items):
             item.add_marker(pytest.mark.django_db)
         if "behave" in item.nodeid:
             item.add_marker(pytest.mark.behave)
+            item.add_marker(pytest.mark.django_db)
         if "unit" in item.nodeid:
             item.add_marker("unit")

@@ -38,12 +38,13 @@ Feature: IDA File metadata
 
   Scenario: IDA User freezes files
     When user freezes new files in IDA
-    Then a new distribution is created
+    And a new distribution is created
     And the distribution has the files associated with it
     And distribution is associated with an IDA project
-    And API returns OK status
+    Then API returns OK status
 
   Scenario: IDA user unfreezes files
-    When User unfreezes file in IDA
-    Then The file is marked as deleted
-    Then Any Dataset with the file is marked as deprecated
+    When user unfreezes file in IDA
+    And the file is marked as deleted
+    And datasets with the deleted file are marked as deprecated
+    Then API returns OK-delete status

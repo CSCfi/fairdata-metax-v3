@@ -69,7 +69,7 @@ def datacatalog_json():
                 },
                 "description": {
                     "en": "Contains datasets from Repotronic service",
-                    "fi": "Sisältää aineistoja Repotronic-palvelusta",
+                    "fi": "Sisältää aineistoja Reportronic-palvelusta",
                 },
             },
             "dataset_versioning_enabled": False,
