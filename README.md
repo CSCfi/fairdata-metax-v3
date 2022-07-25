@@ -34,7 +34,13 @@ In the repository root, create `.env` file and add at least required variables f
 
 ### Initial setup commands
 
-In the repository root, run `python manage.py migrate`
+In the repository root, run 
+
+```bash
+python manage.py migrate
+mkdir static
+python manage.py collectstatic --no-input 
+```
 
 ### Creating superuser
 

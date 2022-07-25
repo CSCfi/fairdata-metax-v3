@@ -54,3 +54,4 @@ MANIFEST
 # Custom rules
 .env
 .scannerwork
+staticfiles/*
