@@ -25,6 +25,8 @@ class AbstractDatasetModelSerializer(serializers.ModelSerializer):
 
 
 class AbstractDatasetPropertyModelSerializer(serializers.ModelSerializer):
+    title = serializers.JSONField()
+
     class Meta:
         fields = ("id", "url", "title")
         abstract = True
@@ -56,6 +58,7 @@ class DatasetLicenseModelSerializer(AbstractDatasetPropertyModelSerializer):
 
 class DatasetPublisherModelSerializer(AbstractDatasetModelSerializer):
     homepage = CatalogHomePageModelSerializer(many=True)
+    name = serializers.JSONField()
 
     class Meta:
         model = DatasetPublisher
@@ -84,6 +87,7 @@ class DatasetPublisherModelSerializer(AbstractDatasetModelSerializer):
 class AccessRightsModelSerializer(AbstractDatasetModelSerializer):
     license = DatasetLicenseModelSerializer(read_only=False, many=False)
     access_type = AccessTypeModelSerializer(read_only=False, many=False)
+    description = serializers.JSONField()
 
     class Meta:
         model = AccessRight
