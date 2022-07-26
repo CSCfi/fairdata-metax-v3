@@ -11,9 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.fixture
-@when(
-    "the user submits new data-catalog",
-)
+@when("the user submits new data-catalog")
 def datacatalog_post_request(admin_client, datacatalog_json):
     """
 
