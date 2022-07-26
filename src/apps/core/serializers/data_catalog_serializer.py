@@ -17,8 +17,7 @@ from apps.core.serializers.common_serializers import (
 logger = logging.getLogger(__name__)
 
 
-def pop_and_update_or_create_instance(serializer, instance, field_name, validated_data):
-    data = validated_data.pop(field_name)
+def update_or_create_instance(serializer, instance, data):
     if instance is not None:
         serializer.update(instance, data)
     else:
@@ -79,17 +78,16 @@ class DataCatalogModelSerializer(AbstractDatasetPropertyModelSerializer):
         publisher_serializer = self.fields["publisher"]
         publisher_instance = instance.publisher
 
-        if validated_data.get("access_rights"):
-            pop_and_update_or_create_instance(
+        if access_rights_data := validated_data.pop("access_rights", None):
+            update_or_create_instance(
                 access_rights_serializer,
                 access_rights_instance,
-                "access_rights",
-                validated_data,
+                access_rights_data,
             )
 
-        if validated_data.get("publisher"):
-            pop_and_update_or_create_instance(
-                publisher_serializer, publisher_instance, "publisher", validated_data
+        if publisher_data := validated_data.pop("publisher", None):
+            update_or_create_instance(
+                publisher_serializer, publisher_instance, publisher_data
             )
 
         if validated_data.get("language"):
