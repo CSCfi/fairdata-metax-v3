@@ -13,7 +13,8 @@ from apps.core.models import File
 def user_unfreeze_request():
     request = MagicMock()
     request.status_code = 204
-    return request
+    yield request
+    raise NotImplementedError
 
 
 @pytest.fixture
@@ -46,6 +47,7 @@ def delete_ok(user_unfreeze_request):
 
 
 @pytest.mark.django_db
+@pytest.mark.xfail(raises=NotImplementedError)
 @scenario("file.feature", "IDA user unfreezes files")
 def test_file_unfreeze(deprecate_dataset):
     datasets, file_id = deprecate_dataset

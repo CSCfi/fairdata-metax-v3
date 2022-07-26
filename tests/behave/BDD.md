@@ -63,6 +63,10 @@ BDD-tests represent user stories and business logic of the application as a whol
 
 Name *when* steps like you would name normal pytest fixtures: as description of the object they create. Name *then* steps as conditional checks. *When* steps include all the actions in the feature, while *then* steps test the resulting state of the feature. 
 
+### Mocking unimplemented features
+
+When mocking features for BDD-tests, you can make a fixture `yield` its return value, and raise `NotImplementedError` on teardown code. All code after yield line is considered teardown in *pytest*.
+
 ### Generating boilerplate files with pytest-bdd
 
 pytest-bdd library can generate the feature and step files:

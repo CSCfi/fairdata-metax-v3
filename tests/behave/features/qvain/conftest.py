@@ -27,7 +27,8 @@ def mock_qvain_dataset_with_files_request(
         request.files = frozen_distribution.files.all()[:2]
         return request
 
-    return _mock_qvain_dataset_with_files_request
+    yield _mock_qvain_dataset_with_files_request
+    raise NotImplementedError
 
 
 @pytest.fixture
@@ -56,7 +57,8 @@ def qvain_publish_request(mock_qvain_dataset_with_files_request):
 
     """
     request = mock_qvain_dataset_with_files_request(status_code=201, published=True)
-    return request
+    yield request
+    raise NotImplementedError
 
 
 @pytest.fixture
@@ -83,7 +85,8 @@ def published_dataset(
         release_date=timezone.now(),
         persistent_identifier=faker.uuid4(),
     )
-    return dataset
+    yield dataset
+    raise NotImplementedError
 
 
 @pytest.fixture

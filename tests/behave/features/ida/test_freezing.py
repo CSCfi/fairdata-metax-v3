@@ -11,10 +11,10 @@ from apps.core.models import Distribution
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.stub
-@when("user freezes new files in IDA", target_fixture="ida_file_post_request")
+@pytest.fixture
+@when("user freezes new files in IDA")
 def post_ida_file(mock_request):
-    """This demonstrates dynamic fixture allocation in pytest-bdd.
+    """
 
     TODO:
         * should be replaced with real request object when Files-API is ready
@@ -22,7 +22,10 @@ def post_ida_file(mock_request):
     Returns: Mocked request object
 
     """
-    return mock_request(201)
+
+    yield mock_request(201)
+    raise NotImplementedError
+
 
 
 @pytest.fixture
@@ -43,7 +46,7 @@ def created_distribution(ida_file_storage) -> Distribution:
 @pytest.fixture
 @when("the distribution has the files associated with it")
 def distribution_with_files(created_distribution) -> Distribution:
-    """
+    """Ensure files are associated with the distribution
 
     Args:
         created_distribution (Distribution): Distribution from freezing action on IDA
@@ -61,7 +64,7 @@ def distribution_with_files(created_distribution) -> Distribution:
 @pytest.fixture
 @when("distribution is associated with an IDA project")
 def distribution_with_project_id(distribution_with_files):
-    """
+    """Ensure Distribution has IDA project id association
 
     Args:
         distribution_with_files (): Distribution from freezing action on IDA
@@ -73,13 +76,15 @@ def distribution_with_project_id(distribution_with_files):
     distribution_with_files.project_id = Mock()
     distribution_with_files.project_id = project_id
 
-    # assert created_distribution.project_id == project_id
+
     logger.info(f"{project_id=}")
-    return distribution_with_files, project_id
+
+    yield distribution_with_files, project_id
+    raise NotImplementedError
 
 
 @then("API returns OK status")
-def files_have_freezing_date(ida_file_post_request):
+def files_have_freezing_date(post_ida_file):
     """
 
     Args:
@@ -88,11 +93,13 @@ def files_have_freezing_date(ida_file_post_request):
     Returns:
 
     """
-    assert ida_file_post_request.status_code == 201
-    return ida_file_post_request.status_code
+    assert post_ida_file.status_code == 201
 
 
+
+@pytest.mark.xfail(raises=NotImplementedError)
 @scenario("file.feature", "IDA User freezes files")
 def test_file_freeze(distribution_with_project_id):
     distribution, project_id = distribution_with_project_id
+    logger.info(f"{distribution=}, {project_id=}")
     assert distribution.project_id == project_id

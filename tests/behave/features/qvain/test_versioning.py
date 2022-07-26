@@ -11,7 +11,8 @@ logger = logging.getLogger(__name__)
 
 @when("user publishes new version of dataset in Qvain")
 def new_dataset_version_request(mock_qvain_dataset_with_files_request):
-    return mock_qvain_dataset_with_files_request(status_code=200, published=True)
+    yield mock_qvain_dataset_with_files_request(status_code=200, published=True)
+    raise NotImplementedError
 
 
 @pytest.fixture
@@ -23,7 +24,7 @@ def created_new_dataset_version(published_dataset):
     probably going to be replaced with django-simple-history library.
 
     Args:
-        created_catalog_record (): Research Dataset Object
+        published_dataset (): Research Dataset Object
 
     Returns: New instance of the Research Dataset with the modified fields
 
@@ -52,6 +53,7 @@ def prev_dataset_exists(created_new_dataset_version, published_dataset):
 
 
 @pytest.mark.django_db
+@pytest.mark.xfail(raises=NotImplementedError)
 @scenario("dataset.feature", "Publishing new version from dataset")
 def test_dataset_new_version(created_new_dataset_version, published_dataset):
     assert (
