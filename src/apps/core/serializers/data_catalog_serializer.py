@@ -50,16 +50,14 @@ class DataCatalogModelSerializer(AbstractDatasetPropertyModelSerializer):
         access_rights = None
 
         language_data = validated_data.pop("language", [])
-        publisher_data = validated_data.pop("publisher", None)
-        access_rights_data = validated_data.pop("access_rights", None)
 
         publisher_serializer = self.fields["publisher"]
         access_rights_serializer = self.fields["access_rights"]
 
-        if access_rights_data:
+        if access_rights_data := validated_data.pop("access_rights", None):
             access_rights = access_rights_serializer.create(access_rights_data)
 
-        if publisher_data:
+        if publisher_data := validated_data.pop("publisher", None):
             publisher = publisher_serializer.create(publisher_data)
 
         new_datacatalog = models.DataCatalog.objects.create(
