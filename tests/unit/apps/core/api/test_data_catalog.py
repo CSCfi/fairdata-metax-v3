@@ -2,11 +2,8 @@ import datetime
 import logging
 import pytest
 
-from django.urls import reverse
-from icecream import ic
-
 from apps.core.models import DataCatalog
-from apps.core.serializers.data_catalog_serializer import DataCatalogModelSerializer
+
 
 
 logger = logging.getLogger(__name__)

@@ -46,49 +46,26 @@ class DataCatalogModelSerializer(AbstractDatasetPropertyModelSerializer):
         )
 
     def create(self, validated_data):
-        access_type = None
         publisher = None
         access_rights = None
-        datacatalog_license = None
-        homepages_data = []
-        license_data = None
-        access_type_data = None
-        logger.info(f"{validated_data=}")
+
         language_data = validated_data.pop("language", [])
         publisher_data = validated_data.pop("publisher", None)
         access_rights_data = validated_data.pop("access_rights", None)
-        if publisher_data:
-            homepages_data = publisher_data.pop("homepage", [])
-        if access_rights_data:
-            license_data = access_rights_data.pop("license", None)
-            access_type_data = access_rights_data.pop("access_type", None)
 
-        if license_data:
-            datacatalog_license, license_created = models.DatasetLicense.objects.get_or_create(
-                url=license_data.get("url"), defaults=license_data
-            )
-        if access_type_data:
-            access_type, access_type_created = models.AccessType.objects.get_or_create(
-                url=access_type_data.get("url"), defaults=access_type_data
-            )
-        if publisher_data:
-            publisher = models.DatasetPublisher.objects.create(name=publisher_data.get("name"))
+        publisher_serializer = self.fields["publisher"]
+        access_rights_serializer = self.fields["access_rights"]
+
         if access_rights_data:
-            access_rights = models.AccessRight.objects.create(
-                license=datacatalog_license,
-                access_type=access_type,
-                **access_rights_data,
-            )
+            access_rights = access_rights_serializer.create(access_rights_data)
+
+        if publisher_data:
+            publisher = publisher_serializer.create(publisher_data)
+
         new_datacatalog = models.DataCatalog.objects.create(
             access_rights=access_rights, publisher=publisher, **validated_data
         )
 
-        for page in homepages_data:
-            logger.info(f"{page=}")
-            homepage, created = models.CatalogHomePage.objects.get_or_create(
-                url=page.get("url"), defaults=page
-            )
-            publisher.homepage.add(homepage)
         for lang in language_data:
             language_created, created = models.DatasetLanguage.objects.get_or_create(
                 url=lang.get("url"), defaults=lang
