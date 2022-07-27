@@ -4,9 +4,11 @@
 #
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
+import json
+import logging
+
 from django.core.validators import EMPTY_VALUES
 from rest_framework import serializers
-from virtualenv.app_data import read_only
 
 from apps.core.models import (
     DatasetLanguage,
@@ -17,6 +19,8 @@ from apps.core.models import (
     AccessRight,
 )
 
+logger = logging.getLogger(__name__)
+
 
 class AbstractDatasetModelSerializer(serializers.ModelSerializer):
     class Meta:
@@ -25,11 +29,17 @@ class AbstractDatasetModelSerializer(serializers.ModelSerializer):
 
 
 class AbstractDatasetPropertyModelSerializer(serializers.ModelSerializer):
-    title = serializers.JSONField()
 
     class Meta:
         fields = ("id", "url", "title")
         abstract = True
+
+    def to_representation(self, instance):
+        if isinstance(instance.title, str):
+            instance.title = json.loads(instance.title)
+        representation = super().to_representation(instance)
+
+        return representation
 
 
 class DatasetLanguageModelSerializer(AbstractDatasetPropertyModelSerializer):
@@ -58,7 +68,6 @@ class DatasetLicenseModelSerializer(AbstractDatasetPropertyModelSerializer):
 
 class DatasetPublisherModelSerializer(AbstractDatasetModelSerializer):
     homepage = CatalogHomePageModelSerializer(many=True)
-    name = serializers.JSONField()
 
     class Meta:
         model = DatasetPublisher
@@ -82,6 +91,14 @@ class DatasetPublisherModelSerializer(AbstractDatasetModelSerializer):
             )
             instance.homepage.add(page)
         return dataset_publisher
+
+    def to_representation(self, instance):
+        logger.info(f"{instance.name=}")
+        if isinstance(instance.name, str):
+            instance.name = json.loads(instance.name)
+        representation = super().to_representation(instance)
+
+        return representation
 
 
 class AccessRightsModelSerializer(AbstractDatasetModelSerializer):
@@ -123,3 +140,10 @@ class AccessRightsModelSerializer(AbstractDatasetModelSerializer):
         access_type_serializer.update(access_type_instance, access_type_data)
 
         return super().update(instance, validated_data)
+
+    def to_representation(self, instance):
+        if isinstance(instance.description, str):
+            instance.description = json.loads(instance.description)
+        representation = super().to_representation(instance)
+
+        return representation
