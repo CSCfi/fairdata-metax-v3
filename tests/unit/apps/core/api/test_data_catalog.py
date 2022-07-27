@@ -4,8 +4,6 @@ import pytest
 
 from apps.core.models import DataCatalog
 
-
-
 logger = logging.getLogger(__name__)
 
 
