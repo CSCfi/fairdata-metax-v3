@@ -1,7 +1,4 @@
 from .common_views import PublisherViewSet, AccessRightsViewSet, DatasetLanguageViewSet
 from .data_catalog_view import (
     DataCatalogView,
-    NestedPublisherViewSet,
-    NestedAccessRightsViewSet,
-    NestedDatasetLanguagesViewSet,
 )
