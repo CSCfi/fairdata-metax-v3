@@ -1,3 +1,4 @@
+import json
 import uuid
 from .abstracts import AbstractBaseModel, AbstractDatasetProperty
 from django.contrib.postgres.fields import HStoreField
@@ -103,7 +104,10 @@ class DatasetPublisher(AbstractBaseModel):
     homepage = models.ManyToManyField(CatalogHomePage, related_name="publishers")
 
     def __str__(self):
-        return str(next(iter(self.name.items())))
+        name = self.name
+        if isinstance(name, str):
+            name = json.loads(name)
+        return str(next(iter(name.items())))
 
 
 class DatasetLicense(AbstractDatasetProperty):
@@ -141,4 +145,7 @@ class AccessRight(AbstractBaseModel):
     description = HStoreField(help_text='example: {"en":"description", "fi":"kuvaus"}')
 
     def __str__(self):
-        return str(next(iter(self.description.items())))
+        description = self.description
+        if isinstance(description, str):
+            description = json.loads(description)
+        return str(next(iter(description.items())))
