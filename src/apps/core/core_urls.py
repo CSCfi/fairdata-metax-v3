@@ -10,7 +10,7 @@ from django.conf.urls.static import static
 from django.urls import include, path, re_path
 from rest_framework.routers import DefaultRouter
 
-from apps.core.views.data_catalog_view import DataCatalogView
+from apps.core.views import DataCatalogView
 
 router = DefaultRouter(trailing_slash=False)
 router.register(r'datacatalog/?', DataCatalogView, basename="datacatalog")

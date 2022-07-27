@@ -8,7 +8,7 @@ from rest_framework import viewsets
 
 from apps.core.models import DataCatalog
 
-from apps.core.serializers.data_catalog_serializer import DataCatalogModelSerializer
+from apps.core.serializers import DataCatalogModelSerializer
 
 
 from django_filters import rest_framework as filters
