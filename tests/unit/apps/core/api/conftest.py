@@ -3,7 +3,6 @@ import json
 import pytest
 import logging
 
-from django.urls import reverse
 from rest_framework.test import APIClient
 
 logger = logging.getLogger(__name__)
