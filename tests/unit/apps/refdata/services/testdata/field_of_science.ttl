@@ -1,0 +1,87 @@
+# Field of Science test data extracted frwom https://finto.fi/okm-tieteenala/
+# Contains ta111 Mathematics and its subfields.
+
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix okm: <http://www.yso.fi/onto/okm-tieteenala/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix yso: <http://www.yso.fi/onto/yso/> .
+
+okm:ta111 a skos:Concept ;
+    skos:broader okm:ta1 ;
+    skos:inScheme okm:conceptscheme ;
+    skos:notation "111" ;
+    skos:prefLabel "Mathematics"@en,
+        "Matematiikka"@fi,
+        "Matematik"@sv ;
+    skos:scopeNote "Matematiikka, soveltava matematiikka ja todennäköisyyslaskenta"@fi .
+
+okm:ta112 a skos:Concept ;
+    skos:broader okm:ta1 ;
+    skos:inScheme okm:conceptscheme ;
+    skos:notation "112" ;
+    skos:prefLabel "Statistics and probability"@en,
+        "Tilastotiede"@fi,
+        "Statistik"@sv ;
+    skos:scopeNote "Sisältää tilastollisten menetelmien tutkimuksen, mutta ei soveltavan tilastotieteen tutkimusta, joka luokitellaan kuuluvaksi kulloiseenkin sovellusalueeseen (taloustiede, sosiologia jne.)"@fi .
+
+okm:ta113 a skos:Concept ;
+    skos:broader okm:ta1 ;
+    skos:inScheme okm:conceptscheme ;
+    skos:notation "113" ;
+    skos:prefLabel "Computer and information sciences"@en,
+        "Tietojenkäsittely ja informaatiotieteet"@fi,
+        "Data- och informationsvetenskap"@sv ;
+    skos:scopeNote "Tietojenkäsittelyoppi, informaatiotieteet ja bioinformatiikka (laitteistokehitys luokkaan 213, yhteiskunnallinen näkökulma luokkaan 518)"@fi .
+
+okm:ta114 a skos:Concept ;
+    skos:broader okm:ta1 ;
+    skos:inScheme okm:conceptscheme ;
+    skos:notation "114" ;
+    skos:prefLabel "Physical sciences"@en,
+        "Fysiikka"@fi,
+        "Fysik"@sv ;
+    skos:scopeNote "Atomi- ja molekyylifysiikka ja kemiallinen fysiikka (atomi- ja molekyylifysiikkaan sisältyvät törmäykset, vuorovaikutus säteilyn kanssa, magneettinen resonanssi, Mössbauer-ilmiö), tiiviin aineen fysiikka (ml. aiempi kiinteän olomuodon fysiikka, suprajohtavuus), hiukkasten ja kenttien fysiikka, ydinfysiikka, nestefysiikka ja plasmafysiikka (ml. pinta-fysiikka), optiikka (ml. laserja kvanttioptiikka), akustiikka"@fi .
+
+okm:ta115 a skos:Concept ;
+    skos:broader okm:ta1 ;
+    skos:inScheme okm:conceptscheme ;
+    skos:notation "115" ;
+    skos:prefLabel "Astronomy, Space science"@en,
+        "Avaruustieteet ja tähtitiede"@fi,
+        "Rymdvetenskap och astronomi"@sv .
+
+okm:ta116 a skos:Concept ;
+    skos:broader okm:ta1 ;
+    skos:inScheme okm:conceptscheme ;
+    skos:notation "116" ;
+    skos:prefLabel "Chemical sciences"@en,
+        "Kemia"@fi,
+        "Kemi"@sv ;
+    skos:scopeNote "Orgaaninen kemia, epäorgaaninen kemia ja säteilykemia, fysikaalinen kemia, polymeeritiede, sähkökemia (kuiva-kennot, akut ja paristot, polttokennot, korroosiometallit, elektrolyysi), kolloidikemia, analyyttinen kemia"@fi .
+
+
+okm:conceptscheme a skos:ConceptScheme ;
+    rdfs:label "Korkeakoulujen tutkimustiedonkeruussa käytettävä tieteenalaluokitus"@fi ;
+    dc:creator "Opetus- ja kulttuuriministeriö"@fi ;
+    dc:description "Tieteenalaluokitusta käytetään OKM:n tutkimus- ja kehittämistoimintaa koskevissa tilastoissa. Tilastokeskuksen vuonna 2007 käyttöönottamaa tieteenalaluokitusta uudistettiin vuonna 2010 jakamalla luokkia pienempiin ja aikaisempaa tarkoituksenmukaisempiin kokonaisuuksiin. Tieteenalaluokitus perustuu OECD:n T&K-toiminnan tilastoinnin tueksi julkaiseman Frascati-Manualin FOS-luokitteluun."@fi ;
+    dc:publisher "National Library of Finland"@en,
+        "Kansalliskirjasto"@fi,
+        "Nationalbiblioteket i Finland"@sv ;
+    dc:title "Korkeakoulujen tutkimustiedonkeruussa käytettävä tieteenalaluokitus"@fi ;
+    dct:language <http://lexvo.org/id/iso639-3/fin> ;
+    skos:hasTopConcept okm:ta1,
+        okm:ta2,
+        okm:ta3,
+        okm:ta4,
+        okm:ta5,
+        okm:ta6,
+        okm:ta9 ;
+    foaf:homepage <https://confluence.csc.fi/pages/viewpage.action?pageId=38502967> .
+

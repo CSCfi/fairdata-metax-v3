@@ -14,18 +14,17 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 
-from apps.refdata.views import ReferenceDataViewSet
-from apps.refdata.models import FieldOfScience
+from apps.refdata.views import get_viewset_for_model
+from apps.refdata.models import FieldOfScience, Language, Keyword, Location
 
-urlpatterns = [
-    path(
-        "field_of_science/",
-        ReferenceDataViewSet.as_view(
-            actions={"get": "list"},
-            queryset=FieldOfScience.available_objects.all(),
-            serializer_class=FieldOfScience.get_serializer(),
-        ),
-        name="field-of-science-list",
-    )
-]
+
+router = DefaultRouter(trailing_slash=False)
+router.register("field_of_science/?", get_viewset_for_model(FieldOfScience))
+router.register("language/?", get_viewset_for_model(Language))
+router.register("keyword/?", get_viewset_for_model(Keyword))
+router.register("location/?", get_viewset_for_model(Location))
+
+
+urlpatterns = [path("", include(router.urls))]

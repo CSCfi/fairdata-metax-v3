@@ -29,6 +29,10 @@ class AbstractConcept(AbstractBaseModel):
     is_reference_data = models.BooleanField(default=False)
 
     class Meta:
+        indexes = [
+            models.Index(fields=["is_reference_data"]),
+            models.Index(fields=["url"]),
+        ]
         abstract = True
         get_latest_by = "modified"
         ordering = ["created"]
@@ -57,13 +61,29 @@ class AbstractConcept(AbstractBaseModel):
         class BaseSerializer(serializers.ModelSerializer):
             class Meta:
                 model = cls
-                fields = ("id", "url", "in_scheme", "pref_label", "broader", "narrower")
+                ref_name = f"{cls.__name__}Model"
+                fields = (
+                    "id",
+                    "url",
+                    "in_scheme",
+                    "pref_label",
+                    "broader",
+                    "narrower",
+                    *getattr(cls, "serializer_extra_fields", ()),
+                )
 
         return BaseSerializer
 
-    def __str__(self):
+    def get_label(self):
         pref_label = self.pref_label or {}
-        return f"<{self.__class__.__name__} {self.id}: {pref_label.get('en')}>"
+        return (
+            pref_label.get("en")
+            or pref_label.get("fi")
+            or next(iter(pref_label.values()), "")
+        )
+
+    def __str__(self):
+        return f"<{self.__class__.__name__} {self.id}: {self.get_label()}>"
 
 
 class FieldOfScience(AbstractConcept):
@@ -71,3 +91,16 @@ class FieldOfScience(AbstractConcept):
         verbose_name = "field of science"
         verbose_name_plural = "fields of science"
         constraints = AbstractConcept.Meta.constraints
+
+
+class Language(AbstractConcept):
+    pass
+
+
+class Keyword(AbstractConcept):
+    pass
+
+
+class Location(AbstractConcept):
+    as_wkt = models.TextField(default="", blank=True)
+    serializer_extra_fields = ("as_wkt",)

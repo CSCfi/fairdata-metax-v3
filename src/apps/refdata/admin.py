@@ -1,8 +1,9 @@
 from django import forms
+from django.db.models import F, Case, When
 from django.contrib import admin
 from pkg_resources import require
 
-from apps.refdata.models import FieldOfScience
+from apps.refdata.models import FieldOfScience, Language, Keyword, Location
 
 
 class ReferenceDataAdminForm(forms.ModelForm):
@@ -15,17 +16,43 @@ class ReferenceDataAdminForm(forms.ModelForm):
 
 class AbstractConceptAdmin(admin.ModelAdmin):
     form = ReferenceDataAdminForm
+    search_fields = ("url", "pref_label")
     list_display = ("id", "url", "label_en", "broader_concept")
+    ordering = ["url"]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related("broader", "narrower")
 
     @admin.display(description="broader")
     def broader_concept(self, obj):
-        return [parent.pref_label.get("en") for parent in obj.broader.all()]
+        return [parent.get_label() for parent in obj.broader.all()]
 
-    @admin.display(description="pref_label")
+    @admin.display(
+        description="pref_label",
+        ordering=Case(  # allow sorting by label, prioritize English if available
+            When(pref_label__en__isnull=False, then="pref_label__en"),
+            default="pref_label__fi",
+        ),
+    )
     def label_en(self, obj):
-        return obj.pref_label.get("en") or next(iter(obj.pref_label.values()), "")
+        return obj.get_label()
 
 
 @admin.register(FieldOfScience)
 class FieldOfScienceReferenceDataAdmin(AbstractConceptAdmin):
-    ordering = ["url"]
+    pass
+
+
+@admin.register(Language)
+class LanguageReferenceDataAdmin(AbstractConceptAdmin):
+    pass
+
+
+@admin.register(Keyword)
+class KeywordReferenceDataAdmin(AbstractConceptAdmin):
+    pass
+
+
+@admin.register(Location)
+class LocationReferenceDataAdmin(AbstractConceptAdmin):
+    pass

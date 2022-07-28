@@ -1,0 +1,103 @@
+# Location test data extracted from https://finto.fi/yso-paikat/
+# Contains the following locations:
+# - Central Finland
+#   - Pihtipudas
+#     - Elämäjärvi
+#     - Kolima
+
+
+@prefix allars: <http://www.yso.fi/onto/allars/> .
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix iso-thes: <http://purl.org/iso25964/skos-thes#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix pnr: <http://paikkatiedot.fi/so/1000772/> .
+@prefix rdau: <http://rdaregistry.info/Elements/u/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix wd: <http://www.wikidata.org/entity/> .
+@prefix wgs84: <http://www.w3.org/2003/01/geo/wgs84_pos#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix ysa: <http://www.yso.fi/onto/ysa/> .
+@prefix yso: <http://www.yso.fi/onto/yso/> .
+@prefix yso-meta: <http://www.yso.fi/onto/yso-meta/2007-03-02/> .
+
+
+yso:p148834 a skos:Concept ;
+    dc:source "Location information source: Place Name Register of the National Land Survey of Finland."@en,
+        "Maanmittauslaitoksen paikannimirekisteri; tyyppitieto: Kylä, kaupunginosa tai kulmakunta"@fi,
+        "Sijaintitietojen lähde: Maanmittauslaitoksen paikannimirekisteri."@fi,
+        "Källa för positionsinformation: Lantmäteriverkets ortnamnsregister."@sv ;
+    dct:created "2006-10-26"^^xsd:date ;
+    dct:modified "2017-01-23T10:42:01+02:00"^^xsd:dateTime ;
+    iso-thes:broaderPartitive yso:p105630 ;
+    wgs84:lat "63.47401" ;
+    wgs84:long "25.66784" ;
+    skos:broader yso:p105630 ;
+    skos:closeMatch pnr:10167559,
+        wd:Q5368645 ;
+    skos:exactMatch allars:Y47924,
+        ysa:Y148834 ;
+    skos:inScheme yso:places ;
+    skos:prefLabel "Elämäjärvi"@en,
+        "Elämäjärvi (Pihtipudas)"@fi,
+        "Elämäjärvi (Pihtipudas)"@sv .
+
+yso:p109185 a skos:Concept ;
+    dc:source "Location information source: Place Name Register of the National Land Survey of Finland."@en,
+        "Maanmittauslaitoksen paikannimirekisteri; tyyppitieto: Vakavesi"@fi,
+        "Sijaintitietojen lähde: Maanmittauslaitoksen paikannimirekisteri."@fi,
+        "Källa för positionsinformation: Lantmäteriverkets ortnamnsregister."@sv ;
+    dct:created "1995-09-06"^^xsd:date ;
+    dct:modified "2017-01-23T10:40:29+02:00"^^xsd:dateTime ;
+    iso-thes:broaderPartitive yso:p105630 ;
+    wgs84:lat "63.30445" ;
+    wgs84:long "25.72952" ;
+    skos:broader yso:p105630 ;
+    skos:closeMatch pnr:10386534,
+        wd:Q1779173 ;
+    skos:exactMatch allars:Y32457,
+        ysa:Y109185 ;
+    skos:inScheme yso:places ;
+    skos:prefLabel "Kolima"@en,
+        "Kolima"@fi,
+        "Kolima"@sv .
+
+yso:p105630
+  skos:narrower yso:p148834, yso:p109185 ;
+  wgs84:long "25.57461" ;
+  skos:closeMatch <http://paikkatiedot.fi/so/1000772/10386054>, wd:Q979846 ;
+  iso-thes:narrowerPartitive yso:p148834, yso:p109185 ;
+  dct:modified "2017-01-23T10:42:01+02:00"^^xsd:dateTime ;
+  dc:source "Källa för positionsinformation: Lantmäteriverkets ortnamnsregister."@sv, "Maanmittauslaitoksen paikannimirekisteri; tyyppitieto: Kunta, maaseutu"@fi, "Sijaintitietojen lähde: Maanmittauslaitoksen paikannimirekisteri."@fi, "Location information source: Place Name Register of the National Land Survey of Finland."@en ;
+  skos:inScheme yso:places ;
+  skos:exactMatch ysa:Y105630, allars:Y33549 ;
+  a skos:Concept ;
+  dct:created "1991-05-07"^^xsd:date ;
+  skos:broader yso:p94207 ;
+  iso-thes:broaderPartitive yso:p94207 ;
+  wgs84:lat "63.37033" ;
+  skos:prefLabel "Pihtipudas"@fi, "Pihtipudas"@sv, "Pihtipudas"@en .
+
+yso:p94207 a skos:Concept ;
+    dc:source "Location information source: Place Name Register of the National Land Survey of Finland."@en,
+        "Maanmittauslaitoksen paikannimirekisteri; tyyppitieto: Maakunta"@fi,
+        "Sijaintitietojen lähde: Maanmittauslaitoksen paikannimirekisteri."@fi,
+        "Källa för positionsinformation: Lantmäteriverkets ortnamnsregister."@sv ;
+    dct:created "1990-05-18"^^xsd:date ;
+    dct:modified "2017-02-20T13:05:34+02:00"^^xsd:dateTime ;
+    iso-thes:narrowerPartitive yso:p105630 ;
+    wgs84:lat "62.24050" ;
+    wgs84:long "25.76877" ;
+    skos:closeMatch pnr:10899571,
+        wd:Q5697 ;
+    skos:exactMatch allars:Y32317,
+        ysa:Y94207 ;
+    skos:inScheme yso:places ;
+    skos:narrower yso:p105630 ;
+    skos:prefLabel "Central Finland"@en,
+        "Keski-Suomi"@fi,
+        "Mellersta Finland"@sv .
+
+yso:places a skos:ConceptScheme .

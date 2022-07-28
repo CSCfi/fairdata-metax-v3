@@ -18,6 +18,7 @@ ENV = environ["DJANGO_ENV"]
 
 base_settings = [
     "components/base.py",
+    "components/refdata.py",
     "environments/{0}.py".format(ENV),
 ]
 # Include settings:
