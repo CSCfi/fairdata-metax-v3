@@ -1,7 +1,6 @@
 import uuid
 
 from .abstracts import AbstractBaseModel
-from .services import DataStorage
 from django.db import models
 
 

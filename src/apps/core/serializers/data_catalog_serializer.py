@@ -96,6 +96,7 @@ class DataCatalogModelSerializer(AbstractDatasetPropertyModelSerializer):
             update_or_create_instance(
                 publisher_serializer, publisher_instance, publisher_data
             )
+
         if language_data := validated_data.pop("language", None):
             instance.language.clear()
             languages = self.get_or_create_languages(language_data)

@@ -5,8 +5,7 @@
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
 
-from django.conf import settings
-from django.conf.urls.static import static
+
 from django.urls import include, path, re_path
 from rest_framework.routers import DefaultRouter
 
