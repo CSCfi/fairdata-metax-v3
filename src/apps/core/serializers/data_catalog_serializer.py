@@ -102,10 +102,4 @@ class DataCatalogModelSerializer(AbstractDatasetPropertyModelSerializer):
             languages = self.get_or_create_languages(language_data)
             instance.language.add(*languages)
 
-        for validated_field in validated_data.keys():
-            setattr(
-                instance,
-                validated_field,
-                validated_data.get(validated_field, getattr(instance, validated_field)),
-            )
         return super().update(instance, validated_data)
