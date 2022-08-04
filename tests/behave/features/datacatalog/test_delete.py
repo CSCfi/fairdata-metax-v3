@@ -27,7 +27,7 @@ def remove_datacatalog(data_catalog, admin_client):
     Returns: Response object
 
     """
-    url = reverse("datacatalog-detail", kwargs={"id": data_catalog.id})
+    url = reverse("datacatalog-detail", kwargs={"pk": data_catalog.id})
     response = admin_client.delete(url)
     return response
 
