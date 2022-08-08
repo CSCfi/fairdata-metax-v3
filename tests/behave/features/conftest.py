@@ -19,7 +19,7 @@ def qvain_user(faker):
     user, created = get_user_model().objects.get_or_create(
         username="test_user", password=faker.password()
     )
-    return
+    return user
 
 
 @pytest.fixture
