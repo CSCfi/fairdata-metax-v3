@@ -9,10 +9,11 @@
 from django.urls import include, path, re_path
 from rest_framework.routers import DefaultRouter
 
-from apps.core.views import DataCatalogView
+from apps.core.views import DataCatalogView, DatasetLanguageViewSet
 
 router = DefaultRouter(trailing_slash=False)
 router.register(r'datacatalog', DataCatalogView, basename="datacatalog")
+router.register(r'datasetlanguage', DatasetLanguageViewSet, basename="datasetlanguage")
 
 urlpatterns = ([
     path(r'', include(router.urls)),

@@ -47,6 +47,12 @@ class DatasetLanguageModelSerializer(AbstractDatasetPropertyModelSerializer):
         model = DatasetLanguage
         fields = AbstractDatasetPropertyModelSerializer.Meta.fields
 
+    def create(self, validated_data):
+        language_created, created = DatasetLanguage.objects.get_or_create(
+            url=validated_data.get("url"), defaults=validated_data
+        )
+        return language_created
+
 
 class CatalogHomePageModelSerializer(AbstractDatasetPropertyModelSerializer):
     class Meta:
