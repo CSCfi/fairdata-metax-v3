@@ -18,6 +18,6 @@ router.register(r'datastorage', DataStorageView, basename="datastorage")
 router.register(r'datasetlanguage', DatasetLanguageViewSet, basename="datasetlanguage")
 router.register(r'publisher', PublisherViewSet, basename="publisher")
 
-urlpatterns = ([
-    path(r'', include(router.urls)),
-    ])
+urlpatterns = [
+    path(r"", include(router.urls)),
+]

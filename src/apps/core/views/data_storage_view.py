@@ -20,14 +20,16 @@ class DataStorageFilter(filters.FilterSet):
 
     id = filters.CharFilter(max_length=255, lookup_expr="icontains")
 
-    endpoint_url = filters.CharFilter(
-        max_length=255, lookup_expr="icontains"
-    )
+    endpoint_url = filters.CharFilter(max_length=255, lookup_expr="icontains")
 
-    endpoint_description = filters.CharFilter(
-        max_length=255, lookup_expr="icontains"
+    endpoint_description = filters.CharFilter(max_length=255, lookup_expr="icontains")
+    ordering = filters.OrderingFilter(
+        fields=(
+            ("created", "created"),
+            ("modified", "modified"),
+            ("endpoint_description", "endpoint_description"),
+        )
     )
-    ordering = filters.OrderingFilter(fields=(("created", "created"), ("modified", "modified"), ("endpoint_description", "endpoint_description"),))
 
 
 @method_decorator(
