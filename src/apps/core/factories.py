@@ -5,6 +5,7 @@ from . import models
 
 faker = Faker()
 
+
 class ContractFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.Contract
@@ -14,6 +15,7 @@ class ContractFactory(factory.django.DjangoModelFactory):
     title = factory.Dict({"en": factory.Sequence(lambda n: f"contract-{n}")})
     quota = factory.Faker("random_number")
     valid_until = factory.LazyFunction(timezone.now)
+
 
 class LanguageFactory(factory.django.DjangoModelFactory):
     class Meta:
