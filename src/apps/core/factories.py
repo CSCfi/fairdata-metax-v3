@@ -1,11 +1,19 @@
 import factory
 from faker import Faker
-
-from . import models
 from django.utils import timezone
+from . import models
 
 faker = Faker()
 
+class ContractFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.Contract
+        django_get_or_create = ("url",)
+
+    url = factory.Sequence(lambda n: f"contract-{n}")
+    title = factory.Dict({"en": factory.Sequence(lambda n: f"contract-{n}")})
+    quota = factory.Faker("random_number")
+    valid_until = factory.LazyFunction(timezone.now)
 
 class LanguageFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -129,6 +137,7 @@ class FileFactory(factory.django.DjangoModelFactory):
 class DataStorageFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.DataStorage
+        django_get_or_create = ("id",)
 
     id = factory.Sequence(lambda n: f"data-storage-{n}")
 
@@ -138,6 +147,7 @@ class CatalogRecordFactory(factory.django.DjangoModelFactory):
         model = models.CatalogRecord
 
     data_catalog = factory.SubFactory(DataCatalogFactory)
+    contract = factory.SubFactory(ContractFactory)
 
 
 class ResearchDatasetFactory(factory.django.DjangoModelFactory):
@@ -147,6 +157,7 @@ class ResearchDatasetFactory(factory.django.DjangoModelFactory):
 
     data_catalog = factory.SubFactory(DataCatalogFactory)
     title = factory.Dict({"en": factory.Sequence(lambda n: f"research-dataset-{n}")})
+    contract = factory.SubFactory(ContractFactory)
 
 
 class DistributionFactory(factory.django.DjangoModelFactory):

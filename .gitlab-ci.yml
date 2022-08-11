@@ -25,7 +25,7 @@ unittests:
   script:
     - pip install -r dev-requirements.txt
     - python manage.py migrate
-    - pytest -m unit --cov-report xml --cov-report term:skip-covered
+    - pytest --cov-report xml --cov-report term:skip-covered
   artifacts:
     reports:
       coverage_report:

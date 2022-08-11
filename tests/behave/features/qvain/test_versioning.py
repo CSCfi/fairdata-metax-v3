@@ -34,6 +34,7 @@ def created_new_dataset_version(published_dataset):
     del original_fields["catalogrecord_ptr"]
     del original_fields["data_catalog"]
     del original_fields["language"]
+    del original_fields["contract"]
     new_version = ResearchDataset(**original_fields)
     new_version.data_catalog = published_dataset.data_catalog
     new_version.title = {"en": "new title"}
