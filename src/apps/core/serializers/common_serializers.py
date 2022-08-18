@@ -7,6 +7,8 @@
 import json
 import logging
 
+from uuid import UUID
+
 from django.core.validators import EMPTY_VALUES
 from rest_framework import serializers
 
@@ -40,6 +42,17 @@ class AbstractDatasetPropertyModelSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
 
         return representation
+
+    def to_internal_value(self, data):
+        internal_value = super().to_internal_value(data)
+        if "id" in data:
+            try:
+                UUID(data.get("id"))
+                internal_value["id"] = data.get("id")
+            except ValueError:
+                raise serializers.ValidationError("id: {} is not valid UUID".format(data.get("id")))
+
+        return internal_value
 
 
 class DatasetLanguageModelSerializer(AbstractDatasetPropertyModelSerializer):
@@ -89,14 +102,15 @@ class DatasetPublisherModelSerializer(AbstractDatasetModelSerializer):
 
     def update(self, instance, validated_data):
         homepages = validated_data.pop("homepage")
-        dataset_publisher = DatasetPublisher.objects.update(**validated_data)
+        instance.name = validated_data.get("name", instance.name)
+        instance.save()
         instance.homepage.clear()
         for homepage in homepages:
             page, created = CatalogHomePage.objects.update_or_create(
                 id=homepage.get("id"), defaults=homepage
             )
             instance.homepage.add(page)
-        return dataset_publisher
+        return instance
 
     def to_representation(self, instance):
         logger.info(f"{instance.name=}")
