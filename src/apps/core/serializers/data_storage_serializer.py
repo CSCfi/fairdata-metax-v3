@@ -8,9 +8,6 @@ import logging
 from rest_framework.serializers import ModelSerializer
 
 from apps.core.models.services import DataStorage
-from apps.core.serializers.common_serializers import (
-    AbstractDatasetPropertyModelSerializer,
-)
 
 logger = logging.getLogger(__name__)
 
