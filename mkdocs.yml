@@ -2,41 +2,6 @@ site_name: Fairdata Metax Docs
 
 theme:
   name: "material"
-
-nav:
-- Home: index.md
-- 'Reference':
-    - reference/index.md
-    - 'Applications':
-        - reference/apps/index.md
-        - 'Core':
-           - reference/apps/core/index.md
-           - reference/apps/core/models.md
-           - reference/apps/core/views.md
-    - 'Django Views' : reference/django-views.md
-    - 'Django Serializers' : reference/django-serializers.md
-    - 'Unit Tests' : reference/unit-tests.md
-    - 'Tests':
-        - 'Unit':
-            - 'Apps/Core':
-                - 'Models':
-                    - 'Fixtures': reference/tests/unit/core/models/core-model-fixtures.md
-                    - 'Abstract Base Object': reference/tests/unit/core/models/abstract-base-object.md
-        - 'Behavioral':
-            - reference/tests/behave/BDD.md
-            - 'Features':
-                - 'Data Catalog':
-                    - 'Fixtures': reference/tests/behave/features/data-catalog/data-catalog-fixtures.md
-
-- 'Developer Guide':
-    - developer-guide/index.md
-    - 'Installation': developer-guide/install.md
-    - 'Dependencies': developer-guide/dependencies-index.md
-    - 'Managing Dependencies': developer-guide/dependencies.md
-- 'User Guide':
-    - user-guide/index.md
-    - 'Quick Start': user-guide/quickstart.md
-
 plugins:
 - search
 - mkdocstrings:
