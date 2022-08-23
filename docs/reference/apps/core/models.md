@@ -1,4 +1,4 @@
-# Django Models
+# models
 
 ## Abstract Models
 

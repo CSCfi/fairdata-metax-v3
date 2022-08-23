@@ -32,6 +32,7 @@ mkdocs-section-index = "^0.3.4"
 rdflib = "^6.1.1"
 django-filter = "^22.1"
 factory-boy = "^3.2.1"
+mkdocs-print-site-plugin = "^2.3.4"
 inflection = "^0.5.1"
 djangorestframework-simplejwt = {extras = ["crypto"], version = "^5.2.2"}
 

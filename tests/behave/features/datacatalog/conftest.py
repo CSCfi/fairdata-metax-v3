@@ -31,7 +31,8 @@ def datacatalog_json():
     """
 
     Returns: json-object with DataCatalog POST-Request payload
-    TODO: Should unify payload generation in tests
+    TODO:
+        Should unify payload generation in tests
 
     """
     data = json.dumps(
