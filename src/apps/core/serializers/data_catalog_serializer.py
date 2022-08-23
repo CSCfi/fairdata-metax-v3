@@ -13,7 +13,7 @@ from apps.core.serializers import (
     DatasetLanguageModelSerializer,
     AbstractDatasetPropertyModelSerializer,
 )
-
+from rest_framework import serializers
 logger = logging.getLogger(__name__)
 
 
@@ -26,12 +26,12 @@ def update_or_create_instance(serializer, instance, data):
             new_serializer.save()
 
 
-class DataCatalogModelSerializer(AbstractDatasetPropertyModelSerializer):
+class DataCatalogModelSerializer(serializers.ModelSerializer):
     access_rights = AccessRightsModelSerializer(required=False)
     publisher = DatasetPublisherModelSerializer(required=False)
     language = DatasetLanguageModelSerializer(required=False, many=True)
 
-    class Meta(AbstractDatasetPropertyModelSerializer.Meta):
+    class Meta:
         model = DataCatalog
         fields = (
             "id",
@@ -42,6 +42,7 @@ class DataCatalogModelSerializer(AbstractDatasetPropertyModelSerializer):
             "dataset_versioning_enabled",
             "harvested",
             "research_dataset_schema",
+            "url"
         )
 
     @staticmethod

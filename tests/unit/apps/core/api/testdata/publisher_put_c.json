@@ -1,0 +1,15 @@
+{
+    "name": {
+        "en": "Publisher C with new page",
+        "fi": "Julkaisija C uudella sivulla"
+    },
+    "homepage": [
+        {
+            "url": "http://uusi.c.publisher.xyz/",
+            "title": {
+                "en": "Publisher new C website",
+                "fi": "Julkaisijan uusi C kotisivu"
+            }
+        }
+    ]
+}

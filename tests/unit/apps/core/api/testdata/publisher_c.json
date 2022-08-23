@@ -1,0 +1,15 @@
+{
+    "name": {
+        "en": "Publisher C",
+        "fi": "Julkaisija C"
+    },
+    "homepage": [
+        {
+            "url": "http://c.publisher.yyy/",
+            "title": {
+                "en": "Publisher C website",
+                "fi": "Julkaisijan C kotisivu"
+            }
+        }
+    ]
+}

@@ -1,0 +1,15 @@
+{
+    "name": {
+        "en": "Publisher A",
+        "fi": "Julkaisija A"
+    },
+    "homepage": [
+        {
+            "url": "http://a.publisher.zyx/",
+            "title": {
+                "en": "Publisher A website",
+                "fi": "Julkaisijan A kotisivu"
+            }
+        }
+    ]
+}

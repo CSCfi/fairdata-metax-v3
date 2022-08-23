@@ -129,3 +129,58 @@ def post_dataset_language_payloads(
     res4 = client.post(url, dataset_language_spa_json, content_type="application/json")
     logger.info(f"{res1=}, {res2=}, {res3=}, {res4=}")
     return res1, res2, res3, res4
+
+
+@pytest.fixture
+def publisher_a_json():
+    with open(test_data_path + "publisher_a.json") as json_file:
+        data = json.load(json_file)
+    return data
+
+
+@pytest.fixture
+def publisher_b_json():
+    with open(test_data_path + "publisher_b.json") as json_file:
+        data = json.load(json_file)
+    return data
+
+
+@pytest.fixture
+def publisher_c_json():
+    with open(test_data_path + "publisher_c.json") as json_file:
+        data = json.load(json_file)
+    return data
+
+
+@pytest.fixture
+def publisher_d_json():
+    with open(test_data_path + "publisher_d.json") as json_file:
+        data = json.load(json_file)
+    return data
+
+
+@pytest.fixture
+def publisher_error_json():
+    with open(test_data_path + "publisher_error.json") as json_file:
+        data = json.load(json_file)
+    return data
+
+
+@pytest.fixture
+def publisher_put_c_json():
+    with open(test_data_path + "publisher_put_c.json") as json_file:
+        data = json.load(json_file)
+
+    return data
+
+
+@pytest.fixture
+def post_publisher_payloads_a_b_c_d(client, publisher_a_json, publisher_b_json, publisher_c_json, publisher_d_json):
+    logger.info(__name__)
+    url = '/rest/v3/publisher'
+    res1 = client.post(url, publisher_a_json, content_type='application/json')
+    res2 = client.post(url, publisher_b_json, content_type='application/json')
+    res3 = client.post(url, publisher_c_json, content_type='application/json')
+    res4 = client.post(url, publisher_d_json, content_type='application/json')
+    logger.info(f"{res1=}, {res2=}, {res3=}, {res4=}")
+    return res1, res2, res3, res4
