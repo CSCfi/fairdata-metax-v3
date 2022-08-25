@@ -32,7 +32,7 @@ def test_create_language_twice(client, dataset_language_spa_json):
 
 
 @pytest.mark.django_db
-def test_create_datacatalog_error(client, dataset_language_error_json):
+def test_create_language_error(client, dataset_language_error_json):
     response = client.post(
         "/rest/v3/datasetlanguage", dataset_language_error_json, content_type="application/json"
     )
@@ -117,3 +117,33 @@ def test_delete_language_by_id(client, post_dataset_languages):
     delete_result = client.delete("/rest/v3/datasetlanguage/{id}".format(id=results[0].get("id")))
     assert delete_result.status_code == 204
     assert language_count - 1 == DatasetLanguage.available_objects.all().count()
+
+
+@pytest.mark.django_db
+def test_list_languages_with_simple_ordering(client, post_dataset_languages):
+    url = "/rest/v3/datasetlanguage?ordering=created"
+    res = client.get(url)
+    assert res.status_code == 200
+    results = res.data.get("results")
+    assert results[0].get("url") == "http://lexvo.org/id/iso639-3/est"
+
+    url = "/rest/v3/datasetlanguage?ordering=-created"
+    res = client.get(url)
+    assert res.status_code == 200
+    results = res.data.get("results")
+    assert results[0].get("url") == "http://lexvo.org/id/iso639-3/spa"
+
+
+@pytest.mark.django_db
+def test_list_languages_with_complex_ordering(client, post_dataset_languages):
+    url = "/rest/v3/datasetlanguage?ordering=url,created"
+    res = client.get(url)
+    assert res.status_code == 200
+    results = res.data.get("results")
+    assert results[0].get("title").get("fi") == "Viron kieli"
+
+    url = "/rest/v3/datasetlanguage?ordering=-url,created"
+    res = client.get(url)
+    assert res.status_code == 200
+    results = res.data.get("results")
+    assert results[0].get("title").get("fi") == "Ruotsin kieli"
