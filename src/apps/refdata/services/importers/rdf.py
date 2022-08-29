@@ -1,14 +1,11 @@
-from django.core.serializers import serialize
-from django.db import transaction
-from django.db.models import prefetch_related_objects
 import logging
-from time import sleep, time
+from time import sleep
 import requests
 
 from apps.refdata.services.importers.common import BaseDataImporter
 
 from rdflib import RDF, Graph
-from rdflib.namespace import SKOS, Namespace
+from rdflib.namespace import SKOS, OWL, Namespace
 
 _logger = logging.getLogger(__name__)
 
@@ -25,7 +22,7 @@ class RemoteRDFReferenceDataImporter(BaseDataImporter):
                 sleep_time *= exp_backoff_multiplier  # exponential backoff
 
             try:
-                _logger.info("Fetching data from url " + self.source)
+                _logger.info(f"Fetching data from url {self.source}")
                 response = requests.get(self.source)
                 response.raise_for_status()
                 return response
@@ -44,96 +41,30 @@ class RemoteRDFReferenceDataImporter(BaseDataImporter):
         )
         return graph
 
-    def process_fields(self, graph, concept, obj):
-        obj.in_scheme = graph.value(concept, SKOS.inScheme)
-        obj.pref_label = {
-            literal.language: str(literal)
-            for literal in graph.objects(concept, SKOS.prefLabel)
+    def data_item_from_graph_concept(self, graph, concept):
+        item = {
+            "url": str(concept),
+            "in_scheme": graph.value(concept, SKOS.inScheme),
+            "pref_label": {
+                literal.language: str(literal)
+                for literal in graph.objects(concept, SKOS.prefLabel)
+            },
+            "broader": [str(parent) for parent in graph.objects(concept, SKOS.broader)],
+            "same_as": [str(same) for same in graph.objects(concept, OWL.sameAs)],
         }
+        # consider items without label deprecated
+        item["is_removed"] = len(item["pref_label"]) == 0
 
-        # consider objects without label deprecated
-        if len(obj.pref_label) == 0:
-            obj.is_removed = True
-        else:
-            obj.is_removed = False
+        return item
 
-    def create_or_update_objects(self, graph, objects_by_url):
-        new_object_count = 0
-        existing_object_count = 0
-        deprecated_object_count = 0
-
-        # create or update objects
-        for concept in graph.subjects(RDF.type, SKOS.Concept):
-            url = str(concept)
-            obj = objects_by_url.get(url)
-            is_new = not obj
-            if is_new:
-                obj = self.model(url=url, is_reference_data=True)
-                objects_by_url[url] = obj
-
-            self.process_fields(graph, concept, obj)
-            obj.save()
-
-            if is_new:
-                new_object_count += 1
-            else:
-                existing_object_count += 1
-            if obj.is_removed:
-                deprecated_object_count += 1
-
-        return {
-            "new": new_object_count,
-            "existing": existing_object_count,
-            "deprecated": deprecated_object_count,
-        }
-
-    def create_relationships(self, graph, objects_by_url):
-        """Create hierarchical relationships between graph objects."""
-        prefetch_related_objects(list(objects_by_url.values()), "broader", "narrower")
-
-        # clear any previously existing children
-        for concept in graph.subjects(RDF.type, SKOS.Concept):
-            url = str(concept)
-            obj = objects_by_url.get(url)
-            if obj.narrower.count() > 0:
-                obj.narrower.clear()
-
-        # set parent relations, which will also assign parents' children
-        for concept in graph.subjects(RDF.type, SKOS.Concept):
-            url = str(concept)
-            obj = objects_by_url.get(url)
-            parent_urls = [
-                str(parent) for parent in graph.objects(concept, SKOS.broader)
-            ]
-            broader = [
-                objects_by_url[parent_url]
-                for parent_url in parent_urls
-                if parent_url in objects_by_url
-            ]
-            if len(broader) > 0 or obj.broader.count() > 0:
-                obj.broader.set(broader)
-
-    @transaction.atomic
-    def save(self, graph):
-        _logger.info("Extracting relevant data from the parsed data")
-
-        # keep track of existing and new refdata objects by url
-        all_reference_objects = self.model.all_objects.filter(is_reference_data=True)
-        objects_by_url = {object.url: object for object in all_reference_objects}
-
-        counts = self.create_or_update_objects(graph, objects_by_url)
-        self.create_relationships(graph, objects_by_url)
-        _logger.info(
-            f"Created {counts['new']} new objects, "
-            f"updated {counts['existing']} existing objects "
-            f"({counts['deprecated']} deprecated)"
-        )
-
-    def load(self):
+    def get_data(self):
         response = self.fetch()
         graph = self.parse(response)
-        if graph:
-            self.save(graph)
+
+        data = []
+        for concept in graph.subjects(RDF.type, SKOS.Concept):
+            data.append(self.data_item_from_graph_concept(graph, concept))
+        return data
 
 
 class FintoImporter(RemoteRDFReferenceDataImporter):
@@ -146,13 +77,12 @@ class FintoLocationImporter(FintoImporter):
     # rdflib included WGS namespace doesn't work for Finto because it uses https URLs
     WGS = Namespace("http://www.w3.org/2003/01/geo/wgs84_pos#")
 
-    def process_fields(self, graph, concept, obj):
-        """Process fieds"""
-        super().process_fields(graph, concept, obj)
-
+    def data_item_from_graph_concept(self, graph, concept):
+        data_item = super().data_item_from_graph_concept(graph, concept)
         long = graph.value(concept, self.WGS.long)
         lat = graph.value(concept, self.WGS.lat)
         wkt = ""
         if not (long is None or lat is None):
             wkt = f"POINT({long} {lat})"
-        obj.as_wkt = wkt
+        data_item["as_wkt"] = wkt
+        return data_item

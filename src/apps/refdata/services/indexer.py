@@ -2,6 +2,11 @@ from django.conf import settings
 from django.apps import apps
 
 from apps.refdata.services.importers.rdf import FintoImporter, FintoLocationImporter
+from apps.refdata.services.importers.local import (
+    LocalJSONImporter,
+    LocalJSONFileFormatVersionImporter,
+    LocalJSONLicenseImporter,
+)
 
 
 def index(types=None):
@@ -9,6 +14,9 @@ def index(types=None):
     importers = {
         "Finto": FintoImporter,
         "FintoLocation": FintoLocationImporter,
+        "LocalJSON": LocalJSONImporter,
+        "LocalJSONFileFormatVersion": LocalJSONFileFormatVersionImporter,
+        "LocalJSONLicense": LocalJSONLicenseImporter,
     }
 
     if not types:
@@ -21,7 +29,10 @@ def index(types=None):
         importer = importers[conf["importer"]]
         model = apps.get_model(conf["model"])
         source = conf["source"]
-        reference_data_sources[typ] = importer(model=model, source=source)
+        scheme = conf.get("scheme")
+        reference_data_sources[typ] = importer(
+            model=model, source=source, scheme=scheme
+        )
 
     for typ in types:
         reference_data_sources[typ].load()

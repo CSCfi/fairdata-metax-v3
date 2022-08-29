@@ -15,16 +15,18 @@ Including another URLconf
 """
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+import inflection
 
 from apps.refdata.views import get_viewset_for_model
-from apps.refdata.models import FieldOfScience, Language, Keyword, Location
-
+from apps.refdata.models import reference_data_models
 
 router = DefaultRouter(trailing_slash=False)
-router.register("field_of_science/?", get_viewset_for_model(FieldOfScience))
-router.register("language/?", get_viewset_for_model(Language))
-router.register("keyword/?", get_viewset_for_model(Keyword))
-router.register("location/?", get_viewset_for_model(Location))
 
+for model in reference_data_models:
+    underscored = inflection.underscore(model.__name__)  # e.g. field_of_science
+    router.register(
+        underscored,
+        get_viewset_for_model(model),
+    )
 
 urlpatterns = [path("", include(router.urls))]

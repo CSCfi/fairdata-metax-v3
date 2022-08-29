@@ -3,7 +3,7 @@ from django.db.models import F, Case, When
 from django.contrib import admin
 from pkg_resources import require
 
-from apps.refdata.models import FieldOfScience, Language, Keyword, Location
+from apps.refdata.models import reference_data_models
 
 
 class ReferenceDataAdminForm(forms.ModelForm):
@@ -38,21 +38,5 @@ class AbstractConceptAdmin(admin.ModelAdmin):
         return obj.get_label()
 
 
-@admin.register(FieldOfScience)
-class FieldOfScienceReferenceDataAdmin(AbstractConceptAdmin):
-    pass
-
-
-@admin.register(Language)
-class LanguageReferenceDataAdmin(AbstractConceptAdmin):
-    pass
-
-
-@admin.register(Keyword)
-class KeywordReferenceDataAdmin(AbstractConceptAdmin):
-    pass
-
-
-@admin.register(Location)
-class LocationReferenceDataAdmin(AbstractConceptAdmin):
-    pass
+for model in reference_data_models:
+    admin.register(model)(AbstractConceptAdmin)

@@ -25,7 +25,9 @@ class AbstractConcept(AbstractBaseModel):
         symmetrical=False,
         blank=True,
     )
-    same_as = ArrayField(models.CharField(max_length=255), default=list, blank=True)
+    same_as = ArrayField(
+        models.CharField(max_length=255), default=list, blank=True
+    )  # owl:sameAs
     is_reference_data = models.BooleanField(default=False)
 
     class Meta:
@@ -61,7 +63,10 @@ class AbstractConcept(AbstractBaseModel):
         class BaseSerializer(serializers.ModelSerializer):
             class Meta:
                 model = cls
-                ref_name = f"{cls.__name__}Model"
+
+                # ref_name is used as model name in swagger
+                ref_name = getattr(cls, "serializer_ref_name", "ConceptModel")
+
                 fields = (
                     "id",
                     "url",
@@ -69,6 +74,7 @@ class AbstractConcept(AbstractBaseModel):
                     "pref_label",
                     "broader",
                     "narrower",
+                    # include fields defined in model.serializer_extra_fields
                     *getattr(cls, "serializer_extra_fields", ()),
                 )
 
@@ -104,3 +110,105 @@ class Keyword(AbstractConcept):
 class Location(AbstractConcept):
     as_wkt = models.TextField(default="", blank=True)
     serializer_extra_fields = ("as_wkt",)
+    serializer_ref_name = "LocationModel"
+
+
+class AccessType(AbstractConcept):
+    pass
+
+
+class ContributorRole(AbstractConcept):
+    pass
+
+
+class ContributorType(AbstractConcept):
+    pass
+
+
+class EventOutcome(AbstractConcept):
+    pass
+
+
+class FileFormatVersion(AbstractConcept):
+    file_format = models.CharField(max_length=255)
+    format_version = models.CharField(max_length=255, default="", blank=True)
+    serializer_extra_fields = ("file_format", "format_version")
+    serializer_ref_name = "FileFormatVersionModel"
+
+
+class FileType(AbstractConcept):
+    pass
+
+
+class FunderType(AbstractConcept):
+    pass
+
+
+class IdentifierType(AbstractConcept):
+    pass
+
+
+class License(AbstractConcept):
+    license = models.URLField(
+        max_length=255,
+        help_text="URL for user-readable license text.",
+        default="",
+        blank=True,
+    )
+    serializer_extra_fields = ("license",)
+    serializer_ref_name = "LicenseModel"
+
+
+class LifecycleEvent(AbstractConcept):
+    pass
+
+
+class PreservationEvent(AbstractConcept):
+    pass
+
+
+class RelationType(AbstractConcept):
+    pass
+
+
+class ResearchInfra(AbstractConcept):
+    pass
+
+
+class ResourceType(AbstractConcept):
+    pass
+
+
+class RestrictionGrounds(AbstractConcept):
+    class Meta:
+        verbose_name = "restriction grounds"
+        verbose_name_plural = "restriction grounds"
+        constraints = AbstractConcept.Meta.constraints
+
+
+class UseCategory(AbstractConcept):
+    pass
+
+
+reference_data_models = [
+    AccessType,
+    ContributorRole,
+    ContributorType,
+    EventOutcome,
+    FieldOfScience,
+    FileFormatVersion,
+    FileType,
+    FunderType,
+    IdentifierType,
+    Keyword,
+    Language,
+    License,
+    LifecycleEvent,
+    Location,
+    PreservationEvent,
+    RelationType,
+    ResearchInfra,
+    ResourceType,
+    RestrictionGrounds,
+    UseCategory,
+]

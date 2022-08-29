@@ -6,30 +6,34 @@ from os import path
 from requests import request
 from apps.refdata.models import FieldOfScience, Location
 
-from apps.refdata.services.importers import FintoLocationImporter
+from apps.refdata.services.importers import FintoImporter, FintoLocationImporter
 
 data_sources = {
     "field_of_science": "testdata/field_of_science.ttl",
     "location": "testdata/location.ttl",
 }
 
-data = {}
-for key, filename in data_sources.items():
-    with open(path.join(path.dirname(__file__), filename), 'rb') as f:
-        data[key] = f.read()
+
+@pytest.fixture(scope="session")
+def mock_finto_data():
+    data = {}
+    for key, filename in data_sources.items():
+        with open(path.join(path.dirname(__file__), filename), "rb") as f:
+            data[key] = f.read()
+    return data
 
 
 @pytest.fixture
-def finto(requests_mock):
+def finto(requests_mock, mock_finto_data):
     """Mock finto service"""
     requests_mock.get(
         "https://finto-mock/field_of_science.ttl",
-        content=data["field_of_science"],
+        content=mock_finto_data["field_of_science"],
         headers={"content-type": "text/turtle"},
     )
     requests_mock.get(
         "https://finto-mock/location.ttl",
-        content=data["location"],
+        content=mock_finto_data["location"],
         headers={"content-type": "text/turtle"},
     )
 
@@ -38,7 +42,7 @@ pytestmark = pytest.mark.django_db
 
 
 def test_import_finto(finto):
-    importer = FintoLocationImporter(
+    importer = FintoImporter(
         model=FieldOfScience,
         source="https://finto-mock/field_of_science.ttl",
     )
