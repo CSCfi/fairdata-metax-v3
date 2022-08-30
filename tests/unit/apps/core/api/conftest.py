@@ -59,12 +59,14 @@ def datacatalog_error_json():
 
 
 @pytest.fixture
-def post_datacatalog_payloads_a_b_c(client, datacatalog_a_json, datacatalog_b_json, datacatalog_c_json):
+def post_datacatalog_payloads_a_b_c(
+    client, datacatalog_a_json, datacatalog_b_json, datacatalog_c_json
+):
     logger.info(__name__)
-    url = '/rest/v3/datacatalog'
-    res1 = client.post(url, datacatalog_a_json, content_type='application/json')
-    res2 = client.post(url, datacatalog_b_json, content_type='application/json')
-    res3 = client.post(url, datacatalog_c_json, content_type='application/json')
+    url = "/rest/v3/datacatalog"
+    res1 = client.post(url, datacatalog_a_json, content_type="application/json")
+    res2 = client.post(url, datacatalog_b_json, content_type="application/json")
+    res3 = client.post(url, datacatalog_c_json, content_type="application/json")
     logger.info(f"{res1=}, {res2=}, {res3=}")
     return res1, res2, res3
 
@@ -112,12 +114,18 @@ def dataset_language_error_json():
 
 
 @pytest.fixture
-def post_dataset_languages(client, dataset_language_est_json, dataset_language_fin_json, dataset_language_spa_json, dataset_language_swe_json):
+def post_dataset_language_payloads(
+    client,
+    dataset_language_est_json,
+    dataset_language_fin_json,
+    dataset_language_spa_json,
+    dataset_language_swe_json,
+):
     logger.info(__name__)
-    url = '/rest/v3/datasetlanguage'
-    res1 = client.post(url, dataset_language_est_json, content_type='application/json')
-    res2 = client.post(url, dataset_language_fin_json, content_type='application/json')
-    res3 = client.post(url, dataset_language_swe_json, content_type='application/json')
-    res4 = client.post(url, dataset_language_spa_json, content_type='application/json')
+    url = "/rest/v3/datasetlanguage"
+    res1 = client.post(url, dataset_language_est_json, content_type="application/json")
+    res2 = client.post(url, dataset_language_fin_json, content_type="application/json")
+    res3 = client.post(url, dataset_language_swe_json, content_type="application/json")
+    res4 = client.post(url, dataset_language_spa_json, content_type="application/json")
     logger.info(f"{res1=}, {res2=}, {res3=}, {res4=}")
     return res1, res2, res3, res4

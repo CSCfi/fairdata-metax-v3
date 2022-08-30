@@ -40,7 +40,7 @@ def test_create_language_error(client, dataset_language_error_json):
 
 
 @pytest.mark.django_db
-def test_list_languages(client, post_dataset_languages):
+def test_list_languages(client, post_dataset_language_payloads):
     response = client.get("/rest/v3/datasetlanguage")
     logger.info(f"{response.data=}")
     language_count = DatasetLanguage.available_objects.all().count()
@@ -59,7 +59,7 @@ def test_list_languages(client, post_dataset_languages):
 )
 
 @pytest.mark.django_db
-def test_list_languages_with_filter(client, post_dataset_languages, language_filter, filter_value, filter_result):
+def test_list_languages_with_filter(client, post_dataset_language_payloads, language_filter, filter_value, filter_result):
     url = "/rest/v3/datasetlanguage?{0}={1}".format(language_filter, filter_value)
     logger.info(url)
     response = client.get(url)
@@ -69,7 +69,7 @@ def test_list_languages_with_filter(client, post_dataset_languages, language_fil
 
 
 @pytest.mark.django_db
-def test_list_languages_with_page_size(client, post_dataset_languages):
+def test_list_languages_with_page_size(client, post_dataset_language_payloads):
     url = "/rest/v3/datasetlanguage?{0}={1}".format("page_size", 2)
     logger.info(url)
     response = client.get(url)
@@ -99,7 +99,7 @@ def test_change_language(client, dataset_language_fin_json, dataset_language_put
 
 
 @pytest.mark.django_db
-def test_get_language_by_id(client, post_dataset_languages):
+def test_get_language_by_id(client, post_dataset_language_payloads):
     response = client.get("/rest/v3/datasetlanguage")
     results = response.data.get("results")
     for result in results:
@@ -109,7 +109,7 @@ def test_get_language_by_id(client, post_dataset_languages):
 
 
 @pytest.mark.django_db
-def test_delete_language_by_id(client, post_dataset_languages):
+def test_delete_language_by_id(client, post_dataset_language_payloads):
     response = client.get("/rest/v3/datasetlanguage")
     language_count = DatasetLanguage.available_objects.all().count()
     assert response.data.get("count") == language_count
@@ -120,7 +120,7 @@ def test_delete_language_by_id(client, post_dataset_languages):
 
 
 @pytest.mark.django_db
-def test_list_languages_with_simple_ordering(client, post_dataset_languages):
+def test_list_languages_with_simple_ordering(client, post_dataset_language_payloads):
     url = "/rest/v3/datasetlanguage?ordering=created"
     res = client.get(url)
     assert res.status_code == 200
@@ -135,7 +135,7 @@ def test_list_languages_with_simple_ordering(client, post_dataset_languages):
 
 
 @pytest.mark.django_db
-def test_list_languages_with_complex_ordering(client, post_dataset_languages):
+def test_list_languages_with_complex_ordering(client, post_dataset_language_payloads):
     url = "/rest/v3/datasetlanguage?ordering=url,created"
     res = client.get(url)
     assert res.status_code == 200
