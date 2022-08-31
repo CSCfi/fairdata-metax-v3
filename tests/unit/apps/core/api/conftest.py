@@ -130,7 +130,6 @@ def post_dataset_language_payloads(
     logger.info(f"{res1=}, {res2=}, {res3=}, {res4=}")
     return res1, res2, res3, res4
 
-
 @pytest.fixture
 def publisher_a_json():
     with open(test_data_path + "publisher_a.json") as json_file:
@@ -244,3 +243,41 @@ def post_access_rights_payloads(
     res4 = client.post(url, access_right_delta_json, content_type="application/json")
     logger.info(f"{res1=}, {res2=}, {res3=}, {res4=}")
     return res1, res2, res3, res4
+
+@pytest.fixture
+def datastorage_a_json():
+    with open(test_data_path + "datastorage_a.json") as json_file:
+        data = json.load(json_file)
+    return data
+
+@pytest.fixture
+def datastorage_b_json():
+    with open(test_data_path + "datastorage_b.json") as json_file:
+        data = json.load(json_file)
+    return data
+
+@pytest.fixture
+def datastorage_c_json():
+    with open(test_data_path + "datastorage_c.json") as json_file:
+        data = json.load(json_file)
+    return data
+
+@pytest.fixture
+def datastorage_a_updated_json():
+    with open(test_data_path + "datastorage_a_updated.json") as json_file:
+        data = json.load(json_file)
+    return data
+
+@pytest.fixture
+def datastorage_a_invalid_json():
+    with open(test_data_path + "datastorage_a_invalid.json") as json_file:
+        data = json.load(json_file)
+    return data
+
+@pytest.fixture
+def post_datastorage_payloads_a_b_c(client, datastorage_a_json, datastorage_b_json, datastorage_c_json):
+    url = '/rest/v3/datastorage'
+    res1 = client.post(url, datastorage_a_json, content_type='application/json')
+    res2 = client.post(url, datastorage_b_json, content_type='application/json')
+    res3 = client.post(url, datastorage_c_json, content_type='application/json')
+    return res1, res2, res3

@@ -9,3 +9,4 @@ from .common_serializers import (
     AccessRightsModelSerializer,
 )
 from .data_catalog_serializer import DataCatalogModelSerializer
+from .data_storage_serializer import DataStorageModelSerializer

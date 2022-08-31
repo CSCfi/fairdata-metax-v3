@@ -1,0 +1,5 @@
+{
+	"id": "test-data-storage-c",
+	"endpoint_url": "http://test.url.csc.fic",
+	"endpoint_description": "This is another test data storage"
+}
