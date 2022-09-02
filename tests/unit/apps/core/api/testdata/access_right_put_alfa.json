@@ -1,0 +1,22 @@
+{
+    "description": {
+        "en": "Contains datasets from CHANGED service",
+        "fi": "Sisältää aineistoja MUUTETTU-palvelusta"
+    },
+    "license": {
+        "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-9.0",
+        "title": {
+            "en": "Creative Commons Attribution 9.0 Generic (CC BY 9.0)",
+            "fi": "Creative Commons Nimeä 9.0 Yleinen (CC BY 9.0)",
+            "und": "Creative Commons Nimeä 9.0 Yleinen (CC BY 9.0)"
+        }
+    },
+    "access_type": {
+        "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/restricted",
+        "title": {
+            "en": "Restricted",
+            "fi": "Saatavuutta rajoitettu",
+            "und": "Restricted"
+        }
+    }
+}

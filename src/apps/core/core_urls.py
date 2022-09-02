@@ -9,9 +9,10 @@
 from django.urls import include, path, re_path
 from rest_framework.routers import DefaultRouter
 
-from apps.core.views import DataCatalogView, DatasetLanguageViewSet, PublisherViewSet
+from apps.core.views import AccessRightsViewSet, DataCatalogView, DatasetLanguageViewSet, PublisherViewSet
 
 router = DefaultRouter(trailing_slash=False)
+router.register(r'accessright', AccessRightsViewSet, basename="accessright")
 router.register(r'datacatalog', DataCatalogView, basename="datacatalog")
 router.register(r'datasetlanguage', DatasetLanguageViewSet, basename="datasetlanguage")
 router.register(r'publisher', PublisherViewSet, basename="publisher")

@@ -1,0 +1,22 @@
+{
+    "description": {
+        "en": "Contains datasets from Delta service",
+        "fi": "Sisältää aineistoja Delta-palvelusta"
+    },
+    "license": {
+        "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC0-1.0",
+        "title": {
+            "en": "Creative Commons CC0 1.0 Universal (CC0 1.0) Public Domain",
+            "fi": "Creative Commons Yleismaailmallinen (CC0 1.0) Public Domain",
+            "und": "Creative Commons Yleismaailmallinen (CC0 1.0) Public Domain"
+        }
+    },
+    "access_type": {
+        "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open",
+        "title": {
+            "en": "Open",
+            "fi": "Avoin",
+            "und": "Avoin"
+        }
+    }
+}

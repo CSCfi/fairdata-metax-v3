@@ -3,7 +3,7 @@ from drf_yasg.utils import swagger_auto_schema
 from django_filters import rest_framework as filters
 from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
-from apps.core.models import DatasetLanguage
+from apps.core.models import DatasetLanguage, AccessRight
 from apps.core.models.data_catalog import DatasetPublisher
 from apps.core.serializers import (
     DatasetPublisherModelSerializer,
@@ -65,8 +65,66 @@ class PublisherViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post", "put", "delete"]
 
 
+class AccessRightsFilter(filters.FilterSet):
+    class Meta:
+        model = AccessRight
+        fields = ("description", "access_type_url", "access_type_title", "license_url", "license_title")
+
+    description = filters.CharFilter(
+        field_name="description__values",
+        max_length=255,
+        lookup_expr="icontains",
+        label="description",
+    )
+
+    access_type_url = filters.CharFilter(
+        field_name="access_type__url",
+        max_length=512,
+        lookup_expr="icontains",
+        label="access_type_url",
+    )
+
+    access_type_title = filters.CharFilter(
+        field_name="access_type__title__values",
+        max_length=255,
+        lookup_expr="icontains",
+        label="access_type_title",
+    )
+
+    license_url = filters.CharFilter(
+        field_name="license__url",
+        max_length=512,
+        lookup_expr="icontains",
+        label="license_url",
+    )
+
+    license_title = filters.CharFilter(
+        field_name="license__title__values",
+        max_length=255,
+        lookup_expr="icontains",
+        label="license_title",
+    )
+
+    ordering = filters.OrderingFilter(
+        fields=(
+            ("created", "created"),
+            ("modified", "modified"),
+            ("description__values", "description"),
+            ("access_type__url", "access_type_url"),
+            ("access_type__title__values", "access_type_title"),
+            ("license__url", "license_url"),
+            ("license__title__values", "license_title")
+        )
+    )
+
+
 class AccessRightsViewSet(viewsets.ModelViewSet):
     serializer_class = AccessRightsModelSerializer
+    queryset = AccessRight.objects.all()
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = AccessRightsFilter
+    pagination_class = StandardResultsSetPagination
+    http_method_names = ["get", "post", "put", "delete"]
 
 
 class DatasetLanguageFilter(filters.FilterSet):
