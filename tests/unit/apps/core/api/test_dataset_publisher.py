@@ -131,31 +131,22 @@ def test_delete_publisher_by_id(client, post_publisher_payloads_a_b_c_d):
     assert publisher_count - 1 == DatasetPublisher.available_objects.all().count()
 
 
-@pytest.mark.django_db
-def test_list_publishers_with_simple_ordering(client, post_publisher_payloads_a_b_c_d):
-    url = "/rest/v3/publisher?ordering=created"
-    res = client.get(url)
-    assert res.status_code == 200
-    results = res.data.get("results")
-    assert results[0].get("name").get("en") == "Publisher A"
-
-    url = "/rest/v3/publisher?ordering=-created"
-    res = client.get(url)
-    assert res.status_code == 200
-    results = res.data.get("results")
-    assert results[0].get("name").get("en") == "Publisher D"
+@pytest.mark.parametrize(
+    "publisher_order, order_result",
+    [
+        ("created", "Publisher A"),
+        ("-created", "Publisher D"),
+        ("url,created", "Publisher D"),
+        ("-url,created", "Publisher C"),
+    ],
+)
 
 
 @pytest.mark.django_db
-def test_list_publishers_with_complex_ordering(client, post_publisher_payloads_a_b_c_d):
-    url = "/rest/v3/publisher?ordering=url,created"
+def test_list_publishers_with_ordering(client, post_publisher_payloads_a_b_c_d, publisher_order, order_result):
+    url = "/rest/v3/publisher?ordering={0}".format(publisher_order)
     res = client.get(url)
     assert res.status_code == 200
     results = res.data.get("results")
-    assert results[0].get("name").get("en") == "Publisher D"
+    assert results[0].get("name").get("en") == order_result
 
-    url = "/rest/v3/publisher?ordering=-url,created"
-    res = client.get(url)
-    assert res.status_code == 200
-    results = res.data.get("results")
-    assert results[0].get("name").get("en") == "Publisher C"
