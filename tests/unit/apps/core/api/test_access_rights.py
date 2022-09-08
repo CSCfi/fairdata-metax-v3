@@ -141,42 +141,36 @@ def test_delete_access_right_by_id(client, post_access_rights_payloads):
     assert access_rights_count == AccessRight.all_objects.all().count()
 
 
+@pytest.mark.parametrize(
+    "access_right_order, param1, param2, order_result",
+    [
+        ("created", "description", "en", "Contains datasets from Alfa service"),
+        ("-created", "description", "en", "Contains datasets from Delta service"),
+        (
+            "access_type_url,created",
+            "access_type",
+            "url",
+            "http://uri.suomi.fi/codelist/fairdata/access_type/code/embargo",
+        ),
+        (
+            "-access_type_url,created",
+            "access_type",
+            "url",
+            "http://uri.suomi.fi/codelist/fairdata/access_type/code/restricted",
+        ),
+    ],
+)
 @pytest.mark.django_db
-def test_list_access_rights_with_simple_ordering(client, post_access_rights_payloads):
-    url = "/rest/v3/accessright?ordering=created"
+def test_list_access_rights_with_ordering(
+    client,
+    post_access_rights_payloads,
+    access_right_order,
+    param1,
+    param2,
+    order_result,
+):
+    url = "/rest/v3/accessright?ordering={}".format(access_right_order)
     res = client.get(url)
     assert res.status_code == 200
     results = res.data.get("results")
-    assert (
-        results[0].get("description").get("en") == "Contains datasets from Alfa service"
-    )
-
-    url = "/rest/v3/accessright?ordering=-created"
-    res = client.get(url)
-    assert res.status_code == 200
-    results = res.data.get("results")
-    assert (
-        results[0].get("description").get("en")
-        == "Contains datasets from Delta service"
-    )
-
-
-@pytest.mark.django_db
-def test_list_access_rights_with_complex_ordering(client, post_access_rights_payloads):
-    url = "/rest/v3/accessright?ordering=access_type_url,created"
-    res = client.get(url)
-    assert res.status_code == 200
-    results = res.data.get("results")
-    assert (
-        results[0].get("access_type").get("url")
-        == "http://uri.suomi.fi/codelist/fairdata/access_type/code/embargo"
-    )
-
-    url = "/rest/v3/accessright?ordering=-access_type_url,created"
-    res = client.get(url)
-    assert res.status_code == 200
-    results = res.data.get("results")
-    assert (
-        results[0].get("access_type").get("url")
-        == "http://uri.suomi.fi/codelist/fairdata/access_type/code/restricted"
-    )
+    assert results[0].get(param1).get(param2) == order_result
