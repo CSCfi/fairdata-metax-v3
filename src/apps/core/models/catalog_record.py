@@ -1,5 +1,7 @@
 import uuid
 
+from django.conf import settings
+
 from .abstracts import AbstractBaseModel, AbstractDatasetProperty
 from .data_catalog import AccessRight, DataCatalog
 from .contract import Contract
@@ -46,8 +48,12 @@ class ResearchDataset(CatalogRecord, AbstractDatasetProperty):
     release_date = models.DateTimeField(null=True, blank=True)
     description = models.CharField(max_length=255, null=True, blank=True)
     keyword = ArrayField(models.CharField(max_length=255), default=list, blank=True)
-    other_identifiers = ArrayField(models.CharField(max_length=255), default=list, blank=True)
-    language = models.ManyToManyField('DatasetLanguage', related_name="research_datasets")
+    other_identifiers = ArrayField(
+        models.CharField(max_length=255), default=list, blank=True
+    )
+    language = models.ManyToManyField(
+        "DatasetLanguage", related_name="research_datasets"
+    )
     access_right = models.ForeignKey(
         AccessRight,
         on_delete=models.SET_NULL,

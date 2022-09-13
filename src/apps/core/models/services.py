@@ -1,5 +1,7 @@
-from .abstracts import AbstractBaseModel
 from django.db import models
+from django.conf import settings
+
+from .abstracts import AbstractBaseModel
 
 
 class DataStorage(AbstractBaseModel):

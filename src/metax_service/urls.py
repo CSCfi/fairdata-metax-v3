@@ -22,23 +22,34 @@ from apps.core.core_urls import urlpatterns as core_urls
 
 
 schema_view = get_schema_view(
-   openapi.Info(
-      title="Metax Service",
-      default_version='v3',
-      description="Metadata storage for Finnish research data",
-      license=openapi.License(name="GNU GPLv2 License"),
-   ),
-   public=True,
-   permission_classes=[permissions.AllowAny],
+    openapi.Info(
+        title="Metax Service",
+        default_version="v3",
+        description="Metadata storage for Finnish research data",
+        license=openapi.License(name="GNU GPLv2 License"),
+    ),
+    public=True,
+    permission_classes=[permissions.AllowAny],
 )
 
 
 urlpatterns = [
-    re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
-    re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    re_path(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-    path('admin/', admin.site.urls),
-    path('__debug__/', include('debug_toolbar.urls')),
-    path('reference_data/', include('refdata.urls')),
-    path('rest/v3/', include(core_urls)),
+    re_path(
+        r"^swagger(?P<format>\.json|\.yaml)$",
+        schema_view.without_ui(cache_timeout=0),
+        name="schema-json",
+    ),
+    re_path(
+        r"^swagger/$",
+        schema_view.with_ui("swagger", cache_timeout=0),
+        name="schema-swagger-ui",
+    ),
+    re_path(
+        r"^redoc/$", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"
+    ),
+    path("admin/", admin.site.urls),
+    path("__debug__/", include("debug_toolbar.urls")),
+    path("reference_data/", include("refdata.urls")),
+    path("rest/v3/", include(core_urls)),
+    path("token/", include("users.urls")),
 ]

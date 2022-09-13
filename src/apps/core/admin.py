@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.auth import get_user_model
 
 # Register your models here.
 from apps.core.models import (
@@ -78,6 +79,7 @@ class CatalogRecordAdmin(AbstractDatasetPropertyBaseAdmin):
     )
     list_filter = ("created", "modified", "data_catalog")
 
+
 @admin.register(ResearchDataset)
 class ResearchDatasetAdmin(AbstractDatasetPropertyBaseAdmin):
     list_display = (
@@ -93,8 +95,9 @@ class ResearchDatasetAdmin(AbstractDatasetPropertyBaseAdmin):
         "modified",
         "is_removed",
         "release_date",
-        "is_deprecated"
+        "is_deprecated",
     )
+
 
 @admin.register(DataStorage)
 class DataStorageAdmin(AbstractDatasetPropertyBaseAdmin):
@@ -105,9 +108,11 @@ class DataStorageAdmin(AbstractDatasetPropertyBaseAdmin):
     )
     list_filter = ("created", "modified")
 
+
 @admin.register(Distribution)
 class DistributionAdmin(AbstractDatasetPropertyBaseAdmin):
     list_filter = ["access_service"]
+
 
 @admin.register(File)
 class FileAdmin(AbstractDatasetPropertyBaseAdmin):
@@ -124,3 +129,6 @@ class ContractAdmin(AbstractDatasetPropertyBaseAdmin):
         "quota",
     )
     list_filter = ("valid_until", "created", "modified")
+
+
+admin.site.register(get_user_model())

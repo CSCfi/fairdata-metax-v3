@@ -1,3 +1,4 @@
+from django.conf import settings
 from .abstracts import AbstractBaseModel
 from .data_catalog import AccessRight, DatasetLicense
 from .catalog_record import ResearchDataset
@@ -15,6 +16,7 @@ class Distribution(AbstractBaseModel):
     Source: DCAT Version 3, Draft 11,
     https://www.w3.org/TR/vocab-dcat-3/#Class:Distribution
     """
+
     id = models.CharField(
         max_length=255,
         primary_key=True,

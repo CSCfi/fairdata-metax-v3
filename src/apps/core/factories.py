@@ -1,9 +1,9 @@
 import factory
-from faker import Faker
 from django.utils import timezone
 from . import models
 
-faker = Faker()
+from apps.users.factories import MetaxUserFactory
+from . import models
 
 
 class ContractFactory(factory.django.DjangoModelFactory):
@@ -104,6 +104,7 @@ class DataCatalogFactory(factory.django.DjangoModelFactory):
     title = factory.Dict({"en": factory.Sequence(lambda n: f"data-catalog-{n}")})
     publisher = factory.SubFactory(DatasetPublisherFactory)
     access_rights = factory.SubFactory(AccessRightFactory)
+    system_creator = factory.SubFactory(MetaxUserFactory)
 
     @factory.post_generation
     def languages(self, create, extracted, **kwargs):
@@ -160,6 +161,7 @@ class ResearchDatasetFactory(factory.django.DjangoModelFactory):
     data_catalog = factory.SubFactory(DataCatalogFactory)
     title = factory.Dict({"en": factory.Sequence(lambda n: f"research-dataset-{n}")})
     contract = factory.SubFactory(ContractFactory)
+    system_creator = factory.SubFactory(MetaxUserFactory)
 
 
 class DistributionFactory(factory.django.DjangoModelFactory):

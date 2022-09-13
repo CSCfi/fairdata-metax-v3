@@ -1,4 +1,7 @@
 import uuid
+
+from apps.core.helpers import get_technical_metax_user
+from django.conf import settings
 from django.contrib.postgres.fields import HStoreField
 from django.db import models
 from django.utils import timezone
@@ -15,6 +18,13 @@ class AbstractBaseModel(TimeStampedModel, SoftDeletableModel):
     """
 
     removal_date = models.DateTimeField(null=True, blank=True)
+    system_creator = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        default=get_technical_metax_user,
+        related_name="%(app_label)s_%(class)ss",
+        null=True,
+    )
 
     def delete(self, using=None, soft=True, *args, **kwargs):
         self.removal_date = timezone.now()

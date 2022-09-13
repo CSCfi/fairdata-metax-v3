@@ -5,6 +5,7 @@ import pytest
 from django.forms import model_to_dict
 from django.utils import timezone
 from pytest_bdd import given, when, then
+from apps.users.factories import MetaxUserFactory
 
 from apps.core.factories import (
     FileFactory,
@@ -112,3 +113,10 @@ def derived_distribution(
     derived_distribution.dataset = published_dataset
     derived_distribution.save()
     return derived_distribution
+
+@pytest.fixture
+def qvain_user(faker):
+    user = MetaxUserFactory(
+        username="test_user", password=faker.password()
+    )
+    return user

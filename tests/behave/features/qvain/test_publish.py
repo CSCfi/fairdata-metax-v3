@@ -6,7 +6,7 @@ from pytest_bdd import then, scenario, when
 
 @pytest.fixture
 @when("the user is saved as creator to the dataset")
-def catalog_record_creator(published_dataset, qvain_publish_request):
+def catalog_record_creator(published_dataset, qvain_publish_request, qvain_user):
     """Ensure dataset has the right creator
 
     Args:
@@ -16,8 +16,7 @@ def catalog_record_creator(published_dataset, qvain_publish_request):
     Returns:
 
     """
-    published_dataset.creator = Mock()
-    published_dataset.creator = qvain_publish_request.user
+    published_dataset.system_creator = qvain_user
     yield published_dataset
     raise NotImplementedError
 
@@ -56,7 +55,7 @@ def dataset_has_creator(
     Returns:
 
     """
-    assert qvain_publish_request.user is published_dataset.creator
+    assert qvain_publish_request.user is published_dataset.system_creator
 
 
 @pytest.mark.django_db

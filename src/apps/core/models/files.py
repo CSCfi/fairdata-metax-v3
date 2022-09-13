@@ -1,7 +1,9 @@
 import uuid
 
-from .abstracts import AbstractBaseModel
+from django.conf import settings
 from django.db import models
+
+from .abstracts import AbstractBaseModel
 
 
 class File(AbstractBaseModel):
