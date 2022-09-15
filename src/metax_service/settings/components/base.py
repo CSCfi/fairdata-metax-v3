@@ -71,6 +71,7 @@ LOCAL_APPS = [
     "users.apps.UsersConfig",
     "core.apps.CoreConfig",
     "refdata.apps.ReferenceDataConfig",
+    "actors.apps.ActorsConfig"
 ]
 
 INSTALLED_APPS = DEFAULT_APPS + THIRD_PARTY_APPS + LOCAL_APPS

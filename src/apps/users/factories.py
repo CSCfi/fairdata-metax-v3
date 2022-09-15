@@ -1,4 +1,3 @@
-from zipapp import create_archive
 import factory
 from faker import Faker
 from .models import MetaxUser
