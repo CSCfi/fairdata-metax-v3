@@ -47,6 +47,7 @@ pytest-bdd = "^5.0.0"
 icecream = "^2.1.2"
 pytest-mock = "^3.7.0"
 requests-mock = "^1.9.3"
+pymdown-extensions = "^9.7"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

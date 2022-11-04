@@ -58,8 +58,9 @@ def is_response_create_ok(datacatalog_post_request):
     assert datacatalog_post_request.status_code == 201
 
 
-@pytest.mark.django_db
+
 @scenario("datacatalog.feature", "Creating new data-catalog")
+@pytest.mark.django_db
 def test_datacatalog(datacatalog_json, datacatalog_from_post_request):
     """
 

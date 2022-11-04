@@ -1,3 +1,8 @@
+- [Developer Guide](developer-guide/index.md)
+    - [Contributing](developer-guide/contributing/index.md)
+        - developer-guide/contributing/*
+    - [Dependencies](developer-guide/dependencies/index.md)
+        - developer-guide/dependencies/*
 - [Reference](reference/index.md)
     - [apps.core](reference/apps/core/index.md)
         - reference/apps/core/*
