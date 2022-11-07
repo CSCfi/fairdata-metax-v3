@@ -5,9 +5,10 @@ The repository has three main folders that are docs/, tests/ and src/. Django Pr
 # Apps folders
 
 All apps have the following Python modules in their top-level upon creation: 
-- models 
-- admin 
-* views 
-* tests 
-* apps 
-* migrations
+
+- models
+- admin
+- views 
+- tests 
+- apps 
+- migrations
