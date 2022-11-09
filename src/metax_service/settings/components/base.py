@@ -63,6 +63,8 @@ DEFAULT_APPS = [
 THIRD_PARTY_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
+    "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     "django_extensions",
     "drf_yasg",
     "django_filters",
@@ -71,7 +73,7 @@ LOCAL_APPS = [
     "users.apps.UsersConfig",
     "core.apps.CoreConfig",
     "refdata.apps.ReferenceDataConfig",
-    "actors.apps.ActorsConfig"
+    "actors.apps.ActorsConfig",
 ]
 
 INSTALLED_APPS = DEFAULT_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -198,6 +200,7 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.BasicAuthentication",
         "rest_framework.authentication.SessionAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ]
 }
 

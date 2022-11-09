@@ -10,3 +10,8 @@ METAX_SUPERUSER = {
     "email": os.getenv("METAX_USER_EMAIL", default="it-support@csc.fi"),
     "password": os.getenv("METAX_USER_PASSWORD", default=default_password),
 }
+
+SIMPLE_JWT = {
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+}

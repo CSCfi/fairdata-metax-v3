@@ -50,7 +50,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("__debug__/", include("debug_toolbar.urls")),
     path("reference_data/", include("refdata.urls")),
-    path('actors/', include('actors.urls')),
+    path("actors/", include("actors.urls")),
     path("rest/v3/", include(core_urls)),
-    path("token/", include("users.urls")),
+    path("auth/", include("users.urls")),
 ]

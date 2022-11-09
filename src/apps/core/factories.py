@@ -1,6 +1,5 @@
 import factory
 from django.utils import timezone
-from . import models
 
 from apps.users.factories import MetaxUserFactory
 from . import models
