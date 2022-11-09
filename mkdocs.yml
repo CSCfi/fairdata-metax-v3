@@ -11,9 +11,14 @@ plugins:
 - literate-nav:
     nav_file: SUMMARY.md
 - section-index
-- print-site:
-    add_to_navigation: true
 markdown_extensions:
   - def_list
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
   - pymdownx.tasklist:
       custom_checkbox: true
