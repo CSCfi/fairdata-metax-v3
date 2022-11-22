@@ -5,15 +5,14 @@
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
 import logging
+from rest_framework import serializers
 
-from apps.core.models import DataCatalog, DatasetLanguage
+from apps.core.models import DataCatalog, Language
 from apps.core.serializers import (
     AccessRightsModelSerializer,
     DatasetPublisherModelSerializer,
-    DatasetLanguageModelSerializer,
-    AbstractDatasetPropertyModelSerializer,
 )
-from rest_framework import serializers
+
 logger = logging.getLogger(__name__)
 
 
@@ -29,7 +28,7 @@ def update_or_create_instance(serializer, instance, data):
 class DataCatalogModelSerializer(serializers.ModelSerializer):
     access_rights = AccessRightsModelSerializer(required=False)
     publisher = DatasetPublisherModelSerializer(required=False)
-    language = DatasetLanguageModelSerializer(required=False, many=True)
+    language = Language.get_serializer()(required=False, many=True)
 
     class Meta:
         model = DataCatalog
@@ -41,19 +40,9 @@ class DataCatalogModelSerializer(serializers.ModelSerializer):
             "title",
             "dataset_versioning_enabled",
             "harvested",
-            "research_dataset_schema",
-            "url"
+            "dataset_schema",
+            "url",
         )
-
-    @staticmethod
-    def get_or_create_languages(language_data):
-        languages = []
-        for lang in language_data:
-            language_created, created = DatasetLanguage.objects.get_or_create(
-                url=lang.get("url"), defaults=lang
-            )
-            languages.append(language_created)
-        return languages
 
     def create(self, validated_data):
         publisher = None
@@ -62,7 +51,9 @@ class DataCatalogModelSerializer(serializers.ModelSerializer):
         language_data = validated_data.pop("language", [])
 
         publisher_serializer: DatasetPublisherModelSerializer = self.fields["publisher"]
-        access_rights_serializer: AccessRightsModelSerializer = self.fields["access_rights"]
+        access_rights_serializer: AccessRightsModelSerializer = self.fields[
+            "access_rights"
+        ]
 
         if access_rights_data := validated_data.pop("access_rights", None):
             access_rights = access_rights_serializer.create(access_rights_data)
@@ -74,7 +65,9 @@ class DataCatalogModelSerializer(serializers.ModelSerializer):
             access_rights=access_rights, publisher=publisher, **validated_data
         )
 
-        languages = self.get_or_create_languages(language_data)
+        languages = [
+            Language.objects.get(url=lang.get("url")) for lang in language_data
+        ]
         new_datacatalog.language.add(*languages)
 
         return new_datacatalog
@@ -98,9 +91,10 @@ class DataCatalogModelSerializer(serializers.ModelSerializer):
                 publisher_serializer, publisher_instance, publisher_data
             )
 
-        if language_data := validated_data.pop("language", None):
-            instance.language.clear()
-            languages = self.get_or_create_languages(language_data)
-            instance.language.add(*languages)
+        language_data = validated_data.pop("language", [])
+        languages = [
+            Language.objects.get(url=lang.get("url")) for lang in language_data
+        ]
+        instance.language.set(languages)
 
         return super().update(instance, validated_data)

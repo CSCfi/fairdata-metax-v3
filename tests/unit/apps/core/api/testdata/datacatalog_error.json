@@ -53,5 +53,5 @@
     },
     "dataset_versioning_enabled": true,
     "harvested": true,
-    "research_dataset_schema": "virhe"
+    "dataset_schema": "virhe"
 }

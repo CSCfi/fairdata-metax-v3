@@ -1,35 +1,22 @@
 import pytest
 from apps.core.models import (
-    DatasetLanguage,
+    Language,
     CatalogHomePage,
     DatasetPublisher,
-    DatasetLicense,
+    License,
     AccessType,
-    AccessRight,
+    AccessRights,
     DataCatalog,
     CatalogRecord,
     DataStorage,
     File,
+    FieldOfScience,
+    Keyword,
     Distribution,
-    ResearchDataset,
+    Dataset,
     Contract,
 )
 from apps.core import factories
-
-
-@pytest.fixture
-def dataset_language() -> DatasetLanguage:
-    identifier = "http://lexvo.org/id/iso639-3/fin"
-    title = {
-        "en": "Finnish language",
-        "fi": "Suomen kieli",
-        "sv": "finska",
-        "und": "Suomen kieli",
-    }
-    return factories.LanguageFactory(
-        url=identifier,
-        title=title,
-    )
 
 
 @pytest.fixture
@@ -50,31 +37,72 @@ def dataset_publisher() -> DatasetPublisher:
 
 
 @pytest.fixture
-def dataset_license() -> DatasetLicense:
-    title = {
+def access_rights() -> AccessRights:
+    description = {
+        "en": "Datasets stored in the IDA service",
+        "fi": "IDA-palvelussa säilytettävät aineistot",
+    }
+    return factories.AccessRightsFactory(description=description)
+
+
+@pytest.fixture
+def access_type() -> AccessType:
+    identifier = "http://uri.suomi.fi/codelist/fairdata/access_type/code/open"
+    pref_label = {"en": "Open", "fi": "Avoin", "und": "Avoin"}
+    return factories.AccessTypeFactory(url=identifier, pref_label=pref_label)
+
+
+@pytest.fixture
+def field_of_science() -> FieldOfScience:
+    return factories.FieldOfScienceFactory(
+        url="http://lexvo.org/id/iso639-3/fin",
+        pref_label={
+            "en": "Finnish",
+            "fi": "Suomen kieli",
+            "sv": "finska",
+            "und": "Finnish",
+        },
+    )
+
+
+@pytest.fixture
+def keyword() -> Keyword:
+    return factories.KeywordFactory(
+        url="http://www.yso.fi/onto/koko/p1",
+        pref_label={
+            "en": "data systems designers",
+            "fi": "atk-suunnittelijat",
+            "sv": "adb-planerare",
+        },
+    )
+
+
+@pytest.fixture
+def language() -> Language:
+    identifier = "http://lexvo.org/id/iso639-3/fin"
+    pref_label = {
+        "en": "Finnish",
+        "fi": "Suomen kieli",
+        "sv": "finska",
+        "und": "Finnish",
+    }
+    return factories.LanguageFactory(
+        url=identifier,
+        pref_label=pref_label,
+    )
+
+
+@pytest.fixture
+def license() -> License:
+    pref_label = {
         "fi": "Creative Commons Yleismaailmallinen (CC0 1.0) Public Domain -lausuma",
         "en": "Creative Commons CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",
         "und": "Creative Commons Yleismaailmallinen (CC0 1.0) Public Domain -lausuma",
     }
     identifier = "http://uri.suomi.fi/codelist/fairdata/license/code/CC0-1.0"
 
-    return factories.DatasetLicenseFactory(title=title, url=identifier)
+    return factories.LicenseFactory(pref_label=pref_label, url=identifier)
 
-
-@pytest.fixture
-def access_type() -> AccessType:
-    identifier = "http://uri.suomi.fi/codelist/fairdata/access_type/code/open"
-    title = {"en": "Open", "fi": "Avoin", "und": "Avoin"}
-    return factories.AccessTypeFactory(url=identifier, title=title)
-
-
-@pytest.fixture
-def access_rights() -> AccessRight:
-    description = {
-        "en": "Datasets stored in the IDA service",
-        "fi": "IDA-palvelussa säilytettävät aineistot",
-    }
-    return factories.AccessRightFactory(description=description)
 
 @pytest.fixture
 def contract() -> Contract:
@@ -87,16 +115,6 @@ def contract() -> Contract:
     valid_until = "2023-12-31 15:25:00+01"
     return Contract(title=title, quota=quota, valid_until=valid_until)
 
-@pytest.fixture
-def data_catalog() -> DataCatalog:
-    identifier = "urn:nbn:fi:att:data-catalog-ida"
-    title = {
-        "en": "Fairdata IDA datasets",
-        "fi": "Fairdata IDA-aineistot",
-        "sv": "Fairdata forskningsdata",
-    }
-    return factories.DataCatalogFactory(id=identifier, title=title)
-
 
 @pytest.fixture
 def catalog_record(data_catalog) -> CatalogRecord:
@@ -105,44 +123,48 @@ def catalog_record(data_catalog) -> CatalogRecord:
 
 
 @pytest.fixture
-def research_dataset() -> ResearchDataset:
+def dataset() -> Dataset:
     identifier = "12345678-51d3-4c25-ad20-75aff8ca37d7"
     title = {
         "en": "Title 2",
         "fi": "Otsikko 2",
         "sv": "Titel 2",
     }
-    return factories.ResearchDatasetFactory(id=identifier, title=title)
+    return factories.DatasetFactory(id=identifier, title=title)
 
 
 @pytest.fixture
-def research_dataset_with_foreign_keys(
-    access_rights, dataset_language, research_dataset, data_catalog
-) -> ResearchDataset:
-    research_datasets = list(factories.ResearchDatasetFactory.create_batch(4))
-    research_dataset.data_catalog = data_catalog
-    research_dataset.access_right = access_rights
-    research_dataset.first = research_datasets[0]
-    research_dataset.last = research_datasets[1]
-    research_dataset.previous = research_datasets[2]
-    research_dataset.replaces = research_datasets[3]
-    research_dataset.first.data_catalog = data_catalog
-    research_dataset.last.data_catalog = data_catalog
-    research_dataset.previous.data_catalog = data_catalog
-    research_dataset.replaces.data_catalog = data_catalog
-    research_dataset.first.save()
-    research_dataset.last.save()
-    research_dataset.previous.save()
-    research_dataset.replaces.save()
-    research_dataset.save()
-    research_dataset.language.add(dataset_language)
-    return research_dataset
+def dataset_with_foreign_keys(
+    access_rights, language, field_of_science, keyword, dataset, data_catalog
+) -> Dataset:
+    datasets = list(factories.DatasetFactory.create_batch(4))
+    dataset.data_catalog = data_catalog
+    dataset.access_rights = access_rights
+    dataset.first = datasets[0]
+    dataset.last = datasets[1]
+    dataset.previous = datasets[2]
+    dataset.replaces = datasets[3]
+    dataset.first.data_catalog = data_catalog
+    dataset.last.data_catalog = data_catalog
+    dataset.previous.data_catalog = data_catalog
+    dataset.replaces.data_catalog = data_catalog
+    dataset.first.save()
+    dataset.last.save()
+    dataset.previous.save()
+    dataset.replaces.save()
+    dataset.save()
+    dataset.language.add(language)
+    dataset.field_of_science.add(field_of_science)
+    dataset.theme.add(keyword)
+    return dataset
+
 
 @pytest.fixture
 def catalog_record(data_catalog, contract) -> CatalogRecord:
     identifier = "12345678-51d3-4c25-ad20-75aff8ca19d7"
     contract.save()
     return CatalogRecord(id=identifier, data_catalog=data_catalog, contract=contract)
+
 
 @pytest.fixture
 def data_storage() -> DataStorage:
@@ -198,22 +220,13 @@ def file() -> File:
 
 @pytest.fixture
 def dataset_property_object_factory(
-    dataset_language,
-    dataset_license,
     catalog_homepage,
-    access_type,
     data_catalog,
     distribution,
 ):
     def _dataset_property_object_factory(object_name):
-        if object_name == "dataset_language":
-            return dataset_language
-        elif object_name == "dataset_license":
-            return dataset_license
-        elif object_name == "catalog_homepage":
+        if object_name == "catalog_homepage":
             return catalog_homepage
-        elif object_name == "access_type":
-            return access_type
         elif object_name == "data_catalog":
             return data_catalog
         elif object_name == "distribution":
@@ -223,7 +236,9 @@ def dataset_property_object_factory(
 
 
 @pytest.fixture
-def abstract_base_object_factory(dataset_publisher, access_rights, catalog_record, data_storage, file, contract):
+def abstract_base_object_factory(
+    dataset_publisher, access_rights, catalog_record, data_storage, file, contract
+):
     def _abstract_base_object_factory(object_name):
         if object_name == "dataset_publisher":
             return dataset_publisher

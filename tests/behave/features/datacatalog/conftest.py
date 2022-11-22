@@ -6,6 +6,9 @@ import pytest
 from pytest_bdd import given
 
 from rest_framework.test import APIClient
+from apps.core import factories
+
+from apps.core.models.concepts import AccessType, Language, License
 
 logger = logging.getLogger(__name__)
 
@@ -40,12 +43,6 @@ def datacatalog_json():
             "title": {"en": "Testing catalog", "fi": "Testi katalogi"},
             "language": [
                 {
-                    "title": {
-                        "en": "Finnish",
-                        "fi": "suomi",
-                        "sv": "finska",
-                        "und": "suomi",
-                    },
                     "url": "http://lexvo.org/id/iso639-3/fin",
                 }
             ],
@@ -64,17 +61,13 @@ def datacatalog_json():
             },
             "id": "urn:nbn:fi:att:data-catalog-testi",
             "access_rights": {
-                "license": {
-                    "title": {
-                        "en": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
-                        "fi": "Creative Commons Nimeä 4.0 Kansainvälinen (CC BY 4.0)",
-                        "und": "Creative Commons Nimeä 4.0 Kansainvälinen (CC BY 4.0)",
-                    },
-                    "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0",
-                },
+                "license": [
+                    {
+                        "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC0-1.0",
+                    }
+                ],
                 "access_type": {
                     "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open",
-                    "title": {"en": "Open", "fi": "Avoin", "und": "Avoin"},
                 },
                 "description": {
                     "en": "Contains datasets from Repotronic service",
@@ -82,7 +75,7 @@ def datacatalog_json():
                 },
             },
             "dataset_versioning_enabled": False,
-            "research_dataset_schema": "att",
+            "dataset_schema": "att",
         }
     )
     return data

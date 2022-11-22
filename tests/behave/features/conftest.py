@@ -11,7 +11,7 @@ from apps.core.models import DataCatalog
 @pytest.fixture
 @given("IDA has its own data-catalog")
 def ida_data_catalog() -> DataCatalog:
-    return factories.DataCatalogFactory(research_dataset_schema="ida")
+    return factories.DataCatalogFactory(dataset_schema="ida")
 
 
 @pytest.fixture

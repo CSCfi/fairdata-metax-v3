@@ -4,13 +4,9 @@
 
 ### :::src.apps.core.views.PublisherViewSet
 
-## AccessRightsViewSet
+## DatasetViewSet
 
-### :::src.apps.core.views.AccessRightsViewSet
-
-## DatasetLanguageViewSet
-
-### :::src.apps.core.views.DatasetLanguageViewSet
+### :::src.apps.core.views.DatasetViewSet
 
 ## DataCatalogView
 

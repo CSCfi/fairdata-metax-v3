@@ -3,14 +3,16 @@
         "en": "Contains datasets from Alfa service",
         "fi": "Sisältää aineistoja Alfa-palvelusta"
     },
-    "license": {
-        "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-2.0",
-        "title": {
-            "en": "Creative Commons Attribution 2.0 Generic (CC BY 2.0)",
-            "fi": "Creative Commons Nimeä 2.0 Yleinen (CC BY 2.0)",
-            "und": "Creative Commons Nimeä 2.0 Yleinen (CC BY 2.0)"
+    "license": [
+        {
+            "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-2.0",
+            "title": {
+                "en": "Creative Commons Attribution 2.0 Generic (CC BY 2.0)",
+                "fi": "Creative Commons Nimeä 2.0 Yleinen (CC BY 2.0)",
+                "und": "Creative Commons Nimeä 2.0 Yleinen (CC BY 2.0)"
+            }
         }
-    },
+    ],
     "access_type": {
         "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/restricted",
         "title": {

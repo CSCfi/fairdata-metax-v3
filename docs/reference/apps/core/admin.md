@@ -4,10 +4,6 @@
 
 ### :::src.apps.core.admin.AbstractDatasetPropertyBaseAdmin
 
-## DatasetLanguageAdmin
-
-### :::src.apps.core.admin.DatasetLanguageAdmin
-
 ## CatalogHomePageAdmin
 
 ### :::src.apps.core.admin.CatalogHomePageAdmin
@@ -15,14 +11,6 @@
 ## DatasetPublisherAdmin
 
 ### :::src.apps.core.admin.DatasetPublisherAdmin
-
-## DatasetLicenseAdmin
-
-### :::src.apps.core.admin.DatasetLicenseAdmin
-
-## AccessTypeAdmin
-
-### :::src.apps.core.admin.AccessTypeAdmin
 
 ## AccessRightsAdmin
 
@@ -36,9 +24,9 @@
 
 ### :::src.apps.core.admin.CatalogRecordAdmin
 
-## ResearchDatasetAdmin
+## DatasetAdmin
 
-### :::src.apps.core.admin.ResearchDatasetAdmin
+### :::src.apps.core.admin.DatasetAdmin
 
 ## DataStorageAdmin
 

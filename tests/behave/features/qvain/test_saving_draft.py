@@ -2,9 +2,8 @@ import logging
 
 import pytest
 from pytest_bdd import scenario, when, then
-import warnings
 
-from apps.core.factories import ResearchDatasetFactory
+from apps.core.factories import DatasetFactory
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +17,7 @@ def qvain_draft_request(mock_qvain_dataset_with_files_request, recwarn):
 @pytest.fixture
 @when("new unpublished dataset is created without persistent identifier")
 def created_draft():
-    dataset = ResearchDatasetFactory(
+    dataset = DatasetFactory(
         persistent_identifier=None,
     )
     yield dataset
@@ -29,7 +28,7 @@ def created_draft():
 def is_draft_dataset(created_draft):
     logger.info(__name__)
     assert created_draft.persistent_identifier is None
-    assert created_draft.release_date is None
+    assert created_draft.issued is None
 
 
 @pytest.mark.django_db

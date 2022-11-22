@@ -4,6 +4,18 @@
 
 ### :::tests.unit.apps.core.api.conftest.api_client
 
+## api_client
+
+### :::tests.unit.apps.core.api.conftest.api_client
+
+## dataset_a_json
+
+### :::tests.unit.apps.core.api.conftest.dataset_a_json
+
+## dataset_b_json
+
+### :::tests.unit.apps.core.api.conftest.dataset_b_json
+
 ## datacatalog_a_json
 
 ### :::tests.unit.apps.core.api.conftest.datacatalog_a_json
@@ -31,34 +43,6 @@
 ## post_datacatalog_payloads_a_b_c
 
 ### :::tests.unit.apps.core.api.conftest.post_datacatalog_payloads_a_b_c
-
-## dataset_language_fin_json
-
-### :::tests.unit.apps.core.api.conftest.dataset_language_fin_json
-
-## dataset_language_est_json
-
-### :::tests.unit.apps.core.api.conftest.dataset_language_est_json
-
-## dataset_language_spa_json
-
-### :::tests.unit.apps.core.api.conftest.dataset_language_spa_json
-
-## dataset_language_swe_json
-
-### :::tests.unit.apps.core.api.conftest.dataset_language_swe_json
-
-## dataset_language_put_fin_json
-
-### :::tests.unit.apps.core.api.conftest.dataset_language_put_fin_json
-
-## dataset_language_error_json
-
-### :::tests.unit.apps.core.api.conftest.dataset_language_error_json
-
-## post_dataset_language_payloads
-
-### :::tests.unit.apps.core.api.conftest.post_dataset_language_payloads
 
 ## publisher_a_json
 
@@ -111,10 +95,6 @@
 ## dataset_access_right_error_json
 
 ### :::tests.unit.apps.core.api.conftest.dataset_access_right_error_json
-
-## post_access_rights_payloads
-
-### :::tests.unit.apps.core.api.conftest.post_access_rights_payloads
 
 ## datastorage_a_json
 

@@ -28,7 +28,7 @@ def published_dataset_with_distribution(
     """
 
     Args:
-        published_dataset (ResearchDataset): Research Dataset to be published
+        published_dataset (Dataset): Research Dataset to be published
         derived_distribution (): User chosen files to include to distribution
         frozen_distribution (): Original Distribution from the freeze action on IDA
         qvain_publish_request (): Publish API-request
@@ -50,7 +50,7 @@ def dataset_has_creator(
     Args:
         catalog_record_creator ():
         qvain_publish_request (): publish API-request
-        published_dataset (ResearchDataset):
+        published_dataset (Dataset):
 
     Returns:
 
@@ -64,4 +64,4 @@ def dataset_has_creator(
 def test_dataset_publish(derived_distribution, published_dataset, ida_data_catalog):
     assert published_dataset.data_catalog == ida_data_catalog
     assert derived_distribution.dataset == published_dataset
-    assert published_dataset.release_date is not None
+    assert published_dataset.issued is not None

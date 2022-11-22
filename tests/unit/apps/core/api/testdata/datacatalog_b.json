@@ -5,14 +5,11 @@
             "en": "Contains datasets from Repotronic service",
             "fi": "Sisältää aineistoja Repotronic-palvelusta"
         },
-        "license": {
-            "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-2.0",
-            "title": {
-                "en": "Creative Commons Attribution 2.0 Generic (CC BY 2.0)",
-                "fi": "Creative Commons Nimeä 2.0 Yleinen (CC BY 2.0)",
-                "und": "Creative Commons Nimeä 2.0 Yleinen (CC BY 2.0)"
+        "license": [
+            {
+                "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC0-1.0"
             }
-        },
+        ],
         "access_type": {
             "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/embargo",
             "title": {
@@ -39,13 +36,7 @@
     },
     "language": [
         {
-            "url": "http://lexvo.org/id/iso639-3/fin",
-            "title": {
-                "en": "Finnish",
-                "fi": "suomi",
-                "sv": "finska",
-                "und": "suomi"
-            }
+            "url": "http://lexvo.org/id/iso639-3/fin"
         }
     ],
     "title": {
@@ -54,5 +45,5 @@
     },
     "dataset_versioning_enabled": false,
     "harvested": false,
-    "research_dataset_schema": "att"
+    "dataset_schema": "att"
 }

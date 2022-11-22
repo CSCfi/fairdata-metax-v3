@@ -12,7 +12,9 @@ logger = logging.getLogger(__name__)
 
 @pytest.fixture
 @when("the user submits new data-catalog")
-def datacatalog_post_request(admin_client, datacatalog_json):
+def datacatalog_post_request(
+    admin_client, datacatalog_json, reference_data
+):
     """
 
     Args:

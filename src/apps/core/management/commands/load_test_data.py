@@ -16,14 +16,14 @@ class Command(BaseCommand):
             publisher=dataset_publisher, languages=(language,)
         )
         logger.info(f"{data_catalog=}")
-        research_dataset = factories.ResearchDatasetFactory(data_catalog=data_catalog)
-        logger.info(f"{research_dataset=}")
+        dataset = factories.DatasetFactory(data_catalog=data_catalog)
+        logger.info(f"{dataset=}")
         files = factories.FileFactory.create_batch(3)
         distribution = factories.DistributionFactory(
-            files=files, dataset=research_dataset
+            files=files, dataset=dataset
         )
         logger.info(
             f"Created test objects: {language=}, {homepage=}, {dataset_publisher=}, {data_catalog=}, "
-            f"{research_dataset=}, {files=}, {distribution=}"
+            f"{dataset=}, {files=}, {distribution=}"
         )
         self.stdout.write("test objects created successfully")

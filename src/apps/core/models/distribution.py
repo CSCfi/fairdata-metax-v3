@@ -1,9 +1,10 @@
 from django.conf import settings
 from .abstracts import AbstractBaseModel
-from .data_catalog import AccessRight, DatasetLicense
-from .catalog_record import ResearchDataset
+from .data_catalog import AccessRights
+from .catalog_record import Dataset
 from .files import File
 from .services import DataStorage
+from .concepts import License
 from django.contrib.postgres.fields import HStoreField
 from django.db import models
 
@@ -38,15 +39,19 @@ class Distribution(AbstractBaseModel):
     )
     title = HStoreField(help_text='example: {"en":"title", "fi":"otsikko"}')
     description = models.CharField(max_length=200, blank=True, null=True)
-    release_date = models.DateTimeField(null=True, blank=True)
+    issued = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Date of formal issuance (e.g., publication) of the resource.",
+    )
     license = models.ForeignKey(
-        DatasetLicense,
+        License,
         on_delete=models.SET_NULL,
         related_name="distributions",
         null=True,
     )
     access_rights = models.ForeignKey(
-        AccessRight, on_delete=models.SET_NULL, related_name="distributions", null=True
+        AccessRights, on_delete=models.SET_NULL, related_name="distributions", null=True
     )
     access_url = models.URLField()
     access_service = models.ForeignKey(
@@ -60,7 +65,7 @@ class Distribution(AbstractBaseModel):
     checksum = models.TextField()
     files = models.ManyToManyField(File, related_query_name="distributions")
     dataset = models.ForeignKey(
-        ResearchDataset,
+        Dataset,
         on_delete=models.SET_NULL,
         related_name="distributions",
         null=True,

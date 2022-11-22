@@ -10,9 +10,9 @@ from apps.users.factories import MetaxUserFactory
 from apps.core.factories import (
     FileFactory,
     DistributionFactory,
-    ResearchDatasetFactory,
+    DatasetFactory,
 )
-from apps.core.models import ResearchDataset, Distribution, DataCatalog
+from apps.core.models import Dataset, Distribution, DataCatalog
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +66,7 @@ def qvain_publish_request(mock_qvain_dataset_with_files_request):
 @when("new published dataset is created in IDA data-catalog with persistent identifier")
 def published_dataset(
     ida_data_catalog: DataCatalog, qvain_publish_request, faker
-) -> ResearchDataset:
+) -> Dataset:
     """
 
     TODO:
@@ -81,9 +81,9 @@ def published_dataset(
 
     """
 
-    dataset = ResearchDatasetFactory(
+    dataset = DatasetFactory(
         data_catalog=ida_data_catalog,
-        release_date=timezone.now(),
+        issued=timezone.now(),
         persistent_identifier=faker.uuid4(),
     )
     yield dataset

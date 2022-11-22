@@ -5,57 +5,40 @@
     },
     "language": [
         {
-            "title": {
-                "en": "Finnish",
-                "fi": "suomi",
-                "sv": "finska",
-                "und": "suomi"
-            },
             "url": "http://lexvo.org/id/iso639-3/fin"
-        }]
-    ,
+        }
+    ],
     "harvested": false,
     "publisher": {
         "name": {
             "en": "Testing",
             "fi": "Testi"
         },
-        "homepage": [{
-            "title": {
-                "en": "Publisher organization website",
-                "fi": "Julkaisijaorganisaation kotisivu"
-            },
-            "url": "http://www.testi.fi/"
-        }]
-
+        "homepage": [
+            {
+                "title": {
+                    "en": "Publisher organization website",
+                    "fi": "Julkaisijaorganisaation kotisivu"
+                },
+                "url": "http://www.testi.fi/"
+            }
+        ]
     },
     "id": "urn:nbn:fi:att:data-catalog-testi",
     "access_rights": {
-        "license":
+        "license": [
             {
-                "title": {
-                    "en": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
-                    "fi": "Creative Commons Nimeä 4.0 Kansainvälinen (CC BY 4.0)",
-                    "und": "Creative Commons Nimeä 4.0 Kansainvälinen (CC BY 4.0)"
-                },
-                "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0"
+                "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC0-1.0"
             }
-        ,
-        "access_type":
-            {
-                "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open",
-                "title": {
-                    "en": "Open",
-                    "fi": "Avoin",
-                    "und": "Avoin"
-                }
-            }
-        ,
+        ],
+        "access_type": {
+            "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open"
+        },
         "description": {
             "en": "Contains datasets from Repotronic service",
             "fi": "Sisältää aineistoja Repotronic-palvelusta"
         }
     },
     "dataset_versioning_enabled": false,
-    "research_dataset_schema": "att"
+    "dataset_schema": "att"
 }

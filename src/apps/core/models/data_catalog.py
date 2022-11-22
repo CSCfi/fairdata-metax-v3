@@ -4,6 +4,7 @@ from django.conf import settings
 from .abstracts import AbstractBaseModel, AbstractDatasetProperty
 from django.contrib.postgres.fields import HStoreField
 from django.db import models
+from apps.core.models.concepts import AccessType, Language, License
 
 
 class DataCatalog(AbstractBaseModel):
@@ -34,7 +35,7 @@ class DataCatalog(AbstractBaseModel):
     title = HStoreField(help_text='example: {"en":"title", "fi":"otsikko"}')
     dataset_versioning_enabled = models.BooleanField(default=False)
     harvested = models.BooleanField(default=False)
-    language = models.ManyToManyField("DatasetLanguage", related_name="catalogs")
+    language = models.ManyToManyField(Language, related_name="catalogs")
     publisher = models.ForeignKey(
         "DatasetPublisher",
         on_delete=models.SET_NULL,
@@ -42,7 +43,7 @@ class DataCatalog(AbstractBaseModel):
         null=True,
     )
     access_rights = models.ForeignKey(
-        "AccessRight", on_delete=models.SET_NULL, related_name="catalogs", null=True
+        "AccessRights", on_delete=models.SET_NULL, related_name="catalogs", null=True
     )
 
     class DatasetSchema(models.TextChoices):
@@ -56,7 +57,7 @@ class DataCatalog(AbstractBaseModel):
         (DatasetSchema.DRF, "DRF Schema"),
     )
 
-    research_dataset_schema = models.CharField(
+    dataset_schema = models.CharField(
         choices=DATASET_SCHEMA_CHOICES,
         default=DatasetSchema.IDA,
         max_length=6,
@@ -64,32 +65,6 @@ class DataCatalog(AbstractBaseModel):
 
     def __str__(self):
         return self.id
-
-
-class DatasetLanguage(AbstractDatasetProperty):
-    """A language of the item.
-
-    This refers to the natural language used for textual metadata (i.e. titles, descriptions, etc)
-    of a cataloged resource (i.e. dataset or service) or the textual values of a dataset distribution
-
-    Note:
-        Repeat this property if the resource is available in multiple languages.
-
-    Note:
-        The value(s) provided for members of a catalog (i.e. dataset or service)
-        override the value(s) provided for the catalog if they conflict.
-
-    Note:
-        If representations of a dataset are available for each language separately,
-        define an instance of dcat:Distribution for each language and describe the specific language of each
-        distribution using dcterms:language (i.e. the dataset will have multiple dcterms:language values and
-        each distribution will have just one as the value of its dcterms:language property).
-
-    DRF Property: dcterms:language
-
-    Source: DCAT Version 3, Draft 11,
-    https://www.w3.org/TR/vocab-dcat-3/#Property:resource_language
-    """
 
 
 class CatalogHomePage(AbstractDatasetProperty):
@@ -135,21 +110,7 @@ class DatasetPublisher(AbstractBaseModel):
         return str(next(iter(name.items())))
 
 
-class DatasetLicense(AbstractDatasetProperty):
-    """A legal document under which the resource is made available.
-
-    RFD Property: dcterms:license
-
-    Source: DCAT Version 3, Draft 11,
-    https://www.w3.org/TR/vocab-dcat-3/#Property:resource_license
-    """
-
-
-class AccessType(AbstractDatasetProperty):
-    """Accessibility of the resource"""
-
-
-class AccessRight(AbstractBaseModel):
+class AccessRights(AbstractBaseModel):
     """Information about who can access the resource or an indication of its security status.
 
     RFD Property: dcterms:accessRights
@@ -164,19 +125,25 @@ class AccessRight(AbstractBaseModel):
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    license = models.ForeignKey(
-        DatasetLicense,
-        on_delete=models.SET_NULL,
+    license = models.ManyToManyField(
+        License,
         related_name="access_rights",
-        null=True,
     )
     access_type = models.ForeignKey(
         AccessType, on_delete=models.SET_NULL, related_name="access_rights", null=True
     )
-    description = HStoreField(help_text='example: {"en":"description", "fi":"kuvaus"}')
+    description = HStoreField(
+        help_text='example: {"en":"description", "fi":"kuvaus"}', null=True, blank=True
+    )
+
+    class Meta:
+        verbose_name_plural = "Access rights"
 
     def __str__(self):
         description = self.description
         if isinstance(description, str):
             description = json.loads(description)
-        return str(next(iter(description.items())))
+        if description:
+            return str(next(iter(description.items())))
+        else:
+            return self.access_type.pref_label.get("en", "access rights")

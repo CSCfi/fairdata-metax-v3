@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.mark.django_db
-def test_create_datacatalog(client, datacatalog_a_json):
+def test_create_datacatalog(client, datacatalog_a_json, reference_data):
     res = client.post(
         "/rest/v3/datacatalog", datacatalog_a_json, content_type="application/json"
     )
@@ -17,7 +17,9 @@ def test_create_datacatalog(client, datacatalog_a_json):
 
 
 @pytest.mark.django_db
-def test_create_minimal_datacatalog(client, datacatalog_d_json):
+def test_create_minimal_datacatalog(
+    client, datacatalog_d_json, reference_data
+):
     res = client.post(
         "/rest/v3/datacatalog", datacatalog_d_json, content_type="application/json"
     )
@@ -26,7 +28,9 @@ def test_create_minimal_datacatalog(client, datacatalog_d_json):
 
 
 @pytest.mark.django_db
-def test_create_datacatalog_twice(client, datacatalog_a_json):
+def test_create_datacatalog_twice(
+    client, datacatalog_a_json, reference_data
+):
     _now = datetime.datetime.now()
     res1 = client.post(
         "/rest/v3/datacatalog", datacatalog_a_json, content_type="application/json"
@@ -39,7 +43,12 @@ def test_create_datacatalog_twice(client, datacatalog_a_json):
 
 
 @pytest.mark.django_db
-def test_change_datacatalog(client, datacatalog_c_json, datacatalog_put_json):
+def test_change_datacatalog(
+    client,
+    datacatalog_c_json,
+    datacatalog_put_json,
+    reference_data,
+):
     _now = datetime.datetime.now()
     res1 = client.post(
         "/rest/v3/datacatalog", datacatalog_c_json, content_type="application/json"
@@ -49,13 +58,16 @@ def test_change_datacatalog(client, datacatalog_c_json, datacatalog_put_json):
         datacatalog_put_json,
         content_type="application/json",
     )
+    print("DATA", response.data)
     assert response.status_code == 200
     logger.info(str(response.data))
     assert len(response.data.get("language")) == 2
 
 
 @pytest.mark.django_db
-def test_change_datacatalog_to_minimal(client, datacatalog_a_json, datacatalog_d_json):
+def test_change_datacatalog_to_minimal(
+    client, datacatalog_a_json, datacatalog_d_json, reference_data
+):
     _now = datetime.datetime.now()
     res1 = client.post(
         "/rest/v3/datacatalog", datacatalog_a_json, content_type="application/json"
@@ -70,9 +82,8 @@ def test_change_datacatalog_to_minimal(client, datacatalog_a_json, datacatalog_d
 
 @pytest.mark.django_db
 def test_change_datacatalog_from_minimal(
-    client, datacatalog_a_json, datacatalog_d_json
+    client, datacatalog_a_json, datacatalog_d_json, reference_data
 ):
-    _now = datetime.datetime.now()
     res1 = client.post(
         "/rest/v3/datacatalog", datacatalog_d_json, content_type="application/json"
     )
@@ -90,8 +101,9 @@ def test_change_datacatalog_from_minimal(
 
 
 @pytest.mark.django_db
-def test_create_datacatalog_error(client, datacatalog_error_json):
-    _now = datetime.datetime.now()
+def test_create_datacatalog_error(
+    client, datacatalog_error_json, reference_data
+):
     res = client.post(
         "/rest/v3/datacatalog", datacatalog_error_json, content_type="application/json"
     )
@@ -99,7 +111,9 @@ def test_create_datacatalog_error(client, datacatalog_error_json):
 
 
 @pytest.mark.django_db
-def test_list_datacatalogs(client, post_datacatalog_payloads_a_b_c):
+def test_list_datacatalogs(
+    client, post_datacatalog_payloads_a_b_c,
+):
     response = client.get("/rest/v3/datacatalog")
     logger.info(f"{response.data=}")
     catalog_count = DataCatalog.available_objects.all().count()
@@ -111,7 +125,7 @@ def test_list_datacatalogs(client, post_datacatalog_payloads_a_b_c):
     "catalog_filter, filter_value, filter_result",
     [
         ("harvested", True, 1),
-        ("research_dataset_schema", "att", 3),
+        ("dataset_schema", "att", 3),
         ("dataset_versioning_enabled", True, 1),
         ("dataset_versioning_enabled", False, 2),
         ("title__values", "katalogi", 3),
@@ -119,13 +133,13 @@ def test_list_datacatalogs(client, post_datacatalog_payloads_a_b_c):
         ("id", "nbn:fi:att", 3),
         ("access_rights__description__values", "repo", 2),
         ("access_rights__access_type__url", "fairdata", 3),
-        ("access_rights__access_type__title__values", "open", 2),
+        ("access_rights__access_type__pref_label__values", "open", 2),
         ("publisher__name", "testi", 3),
         ("publisher__homepage__url", ".fi", 3),
         ("publisher__homepage__title__values", "website", 3),
         ("language__url", "lexvo.org", 3),
-        ("language__title__values", "viro", 1),
-        ("language__title__values", "saami", 0),
+        ("language__pref_label__values", "englannin kieli", 1),
+        ("language__pref_label__values", "saami", 0),
     ],
 )
 @pytest.mark.django_db

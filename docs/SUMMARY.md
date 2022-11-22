@@ -6,7 +6,8 @@
 - [Reference](reference/index.md)
     - [apps.core](reference/apps/core/index.md)
         - reference/apps/core/*
-    - tests
+    - [tests](reference/tests/index.md)
+        - reference/tests/*.md
         - [unit.apps.core.models](reference/tests/unit/core/models/index.md)
             - reference/tests/unit/core/models/*
         - [unit.apps.core.api](reference/tests/unit/core/api/index.md)

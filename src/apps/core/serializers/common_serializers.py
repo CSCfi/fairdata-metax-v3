@@ -13,13 +13,12 @@ from django.core.validators import EMPTY_VALUES
 from rest_framework import serializers
 
 from apps.core.models import (
-    DatasetLanguage,
     CatalogHomePage,
     DatasetPublisher,
-    DatasetLicense,
-    AccessType,
-    AccessRight,
+    AccessRights,
 )
+from apps.core.models.concepts import License, AccessType
+
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +30,6 @@ class AbstractDatasetModelSerializer(serializers.ModelSerializer):
 
 
 class AbstractDatasetPropertyModelSerializer(serializers.ModelSerializer):
-
     class Meta:
         fields = ("id", "url", "title")
         abstract = True
@@ -50,38 +48,16 @@ class AbstractDatasetPropertyModelSerializer(serializers.ModelSerializer):
                 UUID(data.get("id"))
                 internal_value["id"] = data.get("id")
             except ValueError:
-                raise serializers.ValidationError("id: {} is not valid UUID".format(data.get("id")))
+                raise serializers.ValidationError(
+                    "id: {} is not a valid UUID".format(data.get("id"))
+                )
 
         return internal_value
-
-
-class DatasetLanguageModelSerializer(AbstractDatasetPropertyModelSerializer):
-    class Meta:
-        model = DatasetLanguage
-        fields = AbstractDatasetPropertyModelSerializer.Meta.fields
-
-    def create(self, validated_data):
-        language_created, created = DatasetLanguage.objects.get_or_create(
-            url=validated_data.get("url"), defaults=validated_data
-        )
-        return language_created
 
 
 class CatalogHomePageModelSerializer(AbstractDatasetPropertyModelSerializer):
     class Meta:
         model = CatalogHomePage
-        fields = AbstractDatasetPropertyModelSerializer.Meta.fields
-
-
-class AccessTypeModelSerializer(AbstractDatasetPropertyModelSerializer):
-    class Meta:
-        model = AccessType
-        fields = AbstractDatasetPropertyModelSerializer.Meta.fields
-
-
-class DatasetLicenseModelSerializer(AbstractDatasetPropertyModelSerializer):
-    class Meta:
-        model = DatasetLicense
         fields = AbstractDatasetPropertyModelSerializer.Meta.fields
 
 
@@ -122,42 +98,46 @@ class DatasetPublisherModelSerializer(AbstractDatasetModelSerializer):
 
 
 class AccessRightsModelSerializer(AbstractDatasetModelSerializer):
-    license = DatasetLicenseModelSerializer(read_only=False, many=False)
-    access_type = AccessTypeModelSerializer(read_only=False, many=False)
-    description = serializers.JSONField()
+    license = License.get_serializer()(required=False, read_only=False, many=True)
+    access_type = AccessType.get_serializer()(
+        required=False, read_only=False, many=False
+    )
+    description = serializers.JSONField(required=False)
 
     class Meta:
-        model = AccessRight
+        model = AccessRights
         fields = ("id", "description", "license", "access_type")
 
     def create(self, validated_data):
-        catalog_license = None
         access_type = None
-        license_data = validated_data.pop("license")
-        access_type_data = validated_data.pop("access_type")
-        if license_data not in EMPTY_VALUES:
-            catalog_license, license_created = DatasetLicense.objects.get_or_create(
-                url=license_data.get("url"), defaults=license_data
-            )
+        access_type_data = validated_data.pop("access_type", None)
         if access_type_data not in EMPTY_VALUES:
-            access_type, access_type_created = AccessType.objects.get_or_create(
-                url=access_type_data.get("url"), defaults=access_type_data
-            )
+            access_type = AccessType.objects.get(url=access_type_data.get("url"))
 
-        access_rights = AccessRight.objects.create(
-            license=catalog_license, access_type=access_type, **validated_data
+        license_data = validated_data.pop("license", [])
+        licenses = [
+            License.objects.get(url=license.get("url")) for license in license_data
+        ]
+
+        access_rights = AccessRights.objects.create(
+            access_type=access_type, **validated_data
         )
+        access_rights.license.set(licenses)
+
         return access_rights
 
     def update(self, instance, validated_data):
-        license_serializer = self.fields["license"]
-        access_type_serializer = self.fields["access_type"]
-        license_instance = instance.license
-        access_type_instance = instance.access_type
-        license_data = validated_data.pop("license", None)
+        access_type = None
         access_type_data = validated_data.pop("access_type", None)
-        license_serializer.update(license_instance, license_data)
-        access_type_serializer.update(access_type_instance, access_type_data)
+        if access_type_data not in EMPTY_VALUES:
+            access_type = AccessType.objects.get(url=access_type_data.get("url"))
+        instance.access_type = access_type
+
+        license_data = validated_data.pop("license", [])
+        licenses = [
+            License.objects.get(url=license.get("url")) for license in license_data
+        ]
+        instance.license.set(licenses)
 
         return super().update(instance, validated_data)
 

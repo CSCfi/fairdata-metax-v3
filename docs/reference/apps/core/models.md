@@ -16,10 +16,6 @@
 
 #### :::src.apps.core.models.DataCatalog
 
-### DatasetLanguage
-
-#### :::src.apps.core.models.DatasetLanguage
-
 ### CatalogHomePage
 
 #### :::src.apps.core.models.CatalogHomePage
@@ -28,26 +24,22 @@
 
 #### :::src.apps.core.models.DatasetPublisher
 
-### DatasetLicense
-
-#### :::src.apps.core.models.DatasetLicense
-
 ### AccessType
 
 #### :::src.apps.core.models.AccessType
 
 ### AccessRights
 
-#### :::src.apps.core.models.AccessRight
+#### :::src.apps.core.models.AccessRights
 
 ## Catalog Record
 ### CatalogRecord
 
 #### :::src.apps.core.models.CatalogRecord
 
-### ResearchDataset
+### Dataset
 
-#### :::src.apps.core.models.ResearchDataset
+#### :::src.apps.core.models.Dataset
 
 ## Distribution, Files and Services
 
@@ -62,3 +54,21 @@
 ### FileStorage
 
 #### :::src.apps.core.models.DataStorage
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# !!!!

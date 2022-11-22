@@ -1,4 +1,7 @@
-from .common_views import PublisherViewSet, AccessRightsViewSet, DatasetLanguageViewSet
+from .common_views import (
+    PublisherViewSet,
+    DatasetViewSet,
+)
 from .data_catalog_view import (
     DataCatalogView,
 )

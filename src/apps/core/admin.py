@@ -3,15 +3,12 @@ from django.contrib.auth import get_user_model
 
 # Register your models here.
 from apps.core.models import (
-    DatasetLanguage,
     CatalogHomePage,
     DatasetPublisher,
-    DatasetLicense,
-    AccessType,
-    AccessRight,
+    AccessRights,
     DataCatalog,
     CatalogRecord,
-    ResearchDataset,
+    Dataset,
     DataStorage,
     Distribution,
     File,
@@ -24,11 +21,6 @@ class AbstractDatasetPropertyBaseAdmin(admin.ModelAdmin):
     exclude = ("is_removed", "removal_date")
 
 
-@admin.register(DatasetLanguage)
-class DatasetLanguageAdmin(AbstractDatasetPropertyBaseAdmin):
-    pass
-
-
 @admin.register(CatalogHomePage)
 class CatalogHomePageAdmin(AbstractDatasetPropertyBaseAdmin):
     pass
@@ -39,17 +31,7 @@ class DatasetPublisherAdmin(AbstractDatasetPropertyBaseAdmin):
     pass
 
 
-@admin.register(DatasetLicense)
-class DatasetLicenseAdmin(AbstractDatasetPropertyBaseAdmin):
-    pass
-
-
-@admin.register(AccessType)
-class AccessTypeAdmin(AbstractDatasetPropertyBaseAdmin):
-    pass
-
-
-@admin.register(AccessRight)
+@admin.register(AccessRights)
 class AccessRightsAdmin(AbstractDatasetPropertyBaseAdmin):
     pass
 
@@ -60,12 +42,12 @@ class DataCatalogAdmin(AbstractDatasetPropertyBaseAdmin):
         "id",
         "dataset_versioning_enabled",
         "harvested",
-        "research_dataset_schema",
+        "dataset_schema",
     )
     list_filter = (
         "dataset_versioning_enabled",
         "harvested",
-        "research_dataset_schema",
+        "dataset_schema",
         "created",
         "modified",
     )
@@ -80,12 +62,12 @@ class CatalogRecordAdmin(AbstractDatasetPropertyBaseAdmin):
     list_filter = ("created", "modified", "data_catalog")
 
 
-@admin.register(ResearchDataset)
-class ResearchDatasetAdmin(AbstractDatasetPropertyBaseAdmin):
+@admin.register(Dataset)
+class DatasetAdmin(AbstractDatasetPropertyBaseAdmin):
     list_display = (
         "title",
         "keyword",
-        "access_right",
+        "access_rights",
         "is_deprecated",
     )
     list_filter = (
@@ -94,7 +76,7 @@ class ResearchDatasetAdmin(AbstractDatasetPropertyBaseAdmin):
         "created",
         "modified",
         "is_removed",
-        "release_date",
+        "issued",
         "is_deprecated",
     )
 
@@ -121,6 +103,7 @@ class FileAdmin(AbstractDatasetPropertyBaseAdmin):
         "file_path",
     )
     list_filter = ["date_frozen"]
+
 
 @admin.register(Contract)
 class ContractAdmin(AbstractDatasetPropertyBaseAdmin):

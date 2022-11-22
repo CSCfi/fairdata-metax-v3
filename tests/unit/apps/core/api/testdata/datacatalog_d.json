@@ -6,5 +6,5 @@
     "harvested": false,
     "id": "urn:nbn:fi:att:data-catalog-testi",
     "dataset_versioning_enabled": false,
-    "research_dataset_schema": "att"
+    "dataset_schema": "att"
 }

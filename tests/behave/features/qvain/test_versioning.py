@@ -4,7 +4,7 @@ import pytest
 from django.forms import model_to_dict
 from pytest_bdd import scenario, when, then
 
-from apps.core.models import ResearchDataset
+from apps.core.models import Dataset
 from apps.users.models import MetaxUser
 
 logger = logging.getLogger(__name__)
@@ -30,6 +30,7 @@ def created_new_dataset_version(published_dataset):
     Returns: New instance of the Research Dataset with the modified fields
 
     """
+    raise NotImplementedError
     original_fields = model_to_dict(published_dataset)
     logger.info(original_fields)
     del original_fields["catalogrecord_ptr"]
@@ -37,7 +38,7 @@ def created_new_dataset_version(published_dataset):
     del original_fields["language"]
     del original_fields["contract"]
     del original_fields["system_creator"]
-    new_version = ResearchDataset(**original_fields)
+    new_version = Dataset(**original_fields)
     new_version.data_catalog = published_dataset.data_catalog
     new_version.title = {"en": "new title"}
 

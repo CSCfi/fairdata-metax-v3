@@ -1,9 +1,5 @@
 # fixtures
 
-## dataset_language
-
-### :::tests.unit.apps.core.models.conftest.dataset_language
-
 ## catalog_homepage
 
 ### :::tests.unit.apps.core.models.conftest.catalog_homepage
@@ -12,37 +8,49 @@
 
 ### :::tests.unit.apps.core.models.conftest.dataset_publisher
 
-## dataset_license
+## access_rights
 
-### :::tests.unit.apps.core.models.conftest.dataset_license
+### :::tests.unit.apps.core.models.conftest.access_rights
 
 ## access_type
 
 ### :::tests.unit.apps.core.models.conftest.access_type
 
-## access_rights
+## field_of_science
 
-### :::tests.unit.apps.core.models.conftest.access_rights
+### :::tests.unit.apps.core.models.conftest.field_of_science
+
+## keyword
+
+### :::tests.unit.apps.core.models.conftest.keyword
+
+## language
+
+### :::tests.unit.apps.core.models.conftest.language
+
+## license
+
+### :::tests.unit.apps.core.models.conftest.license
 
 ## contract
 
 ### :::tests.unit.apps.core.models.conftest.contract
 
-## data_catalog
-
-### :::tests.unit.apps.core.models.conftest.data_catalog
-
 ## catalog_record
 
 ### :::tests.unit.apps.core.models.conftest.catalog_record
 
-## research_dataset
+## dataset
 
-### :::tests.unit.apps.core.models.conftest.research_dataset
+### :::tests.unit.apps.core.models.conftest.dataset
 
-## research_dataset_with_foreign_keys
+## dataset_with_foreign_keys
 
-### :::tests.unit.apps.core.models.conftest.research_dataset_with_foreign_keys
+### :::tests.unit.apps.core.models.conftest.dataset_with_foreign_keys
+
+## catalog_record
+
+### :::tests.unit.apps.core.models.conftest.catalog_record
 
 ## data_storage
 

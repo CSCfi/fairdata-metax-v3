@@ -5,21 +5,13 @@
             "en": "Contains datasets from testing service",
             "fi": "Sisältää aineistoja testaus palvelusta"
         },
-        "license": {
-            "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-2.0",
-            "title": {
-                "en": "Creative Commons Attribution 2.0 Generic (CC BY 2.0)",
-                "fi": "Creative Commons Nimeä 2.0 Yleinen (CC BY 2.0)",
-                "und": "Creative Commons Nimeä 2.0 Yleinen (CC BY 2.0)"
+        "license": [
+            {
+                "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC0-1.0"
             }
-        },
+        ],
         "access_type": {
-            "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/embargo",
-            "title": {
-                "en": "Embargo",
-                "fi": "Embargo",
-                "und": "Embargo"
-            }
+            "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open"
         }
     },
     "publisher": {
@@ -39,21 +31,10 @@
     },
     "language": [
         {
-            "url": "http://lexvo.org/id/iso639-3/est",
-            "title": {
-                "en": "Estonian",
-                "fi": "viron kieli",
-                "und": "viron kieli"
-            }
+            "url": "http://lexvo.org/id/iso639-3/fin"
         },
         {
-            "url": "http://lexvo.org/id/iso639-3/fin",
-            "title": {
-                "en": "Finnish",
-                "fi": "suomi",
-                "sv": "finska",
-                "und": "suomi"
-            }
+            "url": "http://lexvo.org/id/iso639-3/eng"
         }
     ],
     "title": {
@@ -62,5 +43,5 @@
     },
     "dataset_versioning_enabled": true,
     "harvested": true,
-    "research_dataset_schema": "ida"
+    "dataset_schema": "ida"
 }

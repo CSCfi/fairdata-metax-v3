@@ -1,5 +1,3 @@
-import uuid
-
 from .abstracts import AbstractDatasetProperty
 from django.db import models
 

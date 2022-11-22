@@ -9,14 +9,18 @@
 from django.urls import include, path, re_path
 from rest_framework.routers import DefaultRouter
 
-from apps.core.views import AccessRightsViewSet, DataCatalogView, DataStorageView, DatasetLanguageViewSet, PublisherViewSet
+from apps.core.views import (
+    DataCatalogView,
+    DataStorageView,
+    PublisherViewSet,
+    DatasetViewSet,
+)
 
 router = DefaultRouter(trailing_slash=False)
-router.register(r'accessright', AccessRightsViewSet, basename="accessright")
-router.register(r'datacatalog', DataCatalogView, basename="datacatalog")
-router.register(r'datastorage', DataStorageView, basename="datastorage")
-router.register(r'datasetlanguage', DatasetLanguageViewSet, basename="datasetlanguage")
-router.register(r'publisher', PublisherViewSet, basename="publisher")
+router.register(r"datacatalog", DataCatalogView, basename="datacatalog")
+router.register(r"dataset", DatasetViewSet, basename="dataset")
+router.register(r"datastorage", DataStorageView, basename="storage")
+router.register(r"publisher", PublisherViewSet, basename="publisher")
 
 urlpatterns = [
     path(r"", include(router.urls)),

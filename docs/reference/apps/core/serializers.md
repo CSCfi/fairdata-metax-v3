@@ -8,21 +8,9 @@
 
 ### :::src.apps.core.serializers.AbstractDatasetPropertyModelSerializer
 
-## DatasetLanguageModelSerializer
-
-### :::src.apps.core.serializers.DatasetLanguageModelSerializer
-
 ## CatalogHomePageModelSerializer
 
 ### :::src.apps.core.serializers.CatalogHomePageModelSerializer
-
-## AccessTypeModelSerializer
-
-### :::src.apps.core.serializers.AccessTypeModelSerializer
-
-## DatasetLicenseModelSerializer
-
-### :::src.apps.core.serializers.DatasetLicenseModelSerializer
 
 ## DatasetPublisherModelSerializer
 

@@ -89,10 +89,11 @@ class AbstractConcept(AbstractBaseModel):
         )
 
     def __str__(self):
-        return f"<{self.__class__.__name__} {self.id}: {self.get_label()}>"
+        return f"{self.id}: {self.get_label()}"
 
 
 class FieldOfScience(AbstractConcept):
+    # TODO: Add codes (skos:notation)
     class Meta:
         verbose_name = "field of science"
         verbose_name_plural = "fields of science"

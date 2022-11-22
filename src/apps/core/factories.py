@@ -16,18 +16,6 @@ class ContractFactory(factory.django.DjangoModelFactory):
     valid_until = factory.LazyFunction(timezone.now)
 
 
-class LanguageFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = models.DatasetLanguage
-        django_get_or_create = ("url",)
-
-    title = factory.Dict({"en": factory.Sequence(lambda n: f"language-{n}")})
-
-    @factory.sequence
-    def url(self):
-        return f"https://language-webpage-{self}.fi"
-
-
 class CatalogHomePageFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.CatalogHomePage
@@ -56,38 +44,83 @@ class DatasetPublisherFactory(factory.django.DjangoModelFactory):
                 self.homepage.add(homepage)
 
 
-class DatasetLicenseFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = models.DatasetLicense
-        django_get_or_create = ("url",)
-
-    title = factory.Dict({"en": factory.Sequence(lambda n: f"dataset-licence-{n}")})
-
-    @factory.sequence
-    def url(self):
-        return f"https://dataset-license-{self}.fi"
-
-
 class AccessTypeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.AccessType
         django_get_or_create = ("url",)
 
-    title = factory.Dict({"en": factory.Sequence(lambda n: f"dataset-access-type-{n}")})
+    pref_label = factory.Dict(
+        {"en": factory.Sequence(lambda n: f"dataset-access-type-{n}")}
+    )
 
     @factory.sequence
     def url(self):
         return f"https://dataset-access-type-{self}.fi"
 
 
-class AccessRightFactory(factory.django.DjangoModelFactory):
+class FieldOfScienceFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = models.AccessRight
+        model = models.FieldOfScience
+        django_get_or_create = ("url",)
+
+    pref_label = factory.Dict(
+        {"en": factory.Sequence(lambda n: f"dataset-field-of-science-{n}")}
+    )
+
+    @factory.sequence
+    def url(self):
+        return f"https://dataset-field-of-science-{self}.fi"
+
+
+class KeywordFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.Keyword
+        django_get_or_create = ("url",)
+
+    pref_label = factory.Dict(
+        {"en": factory.Sequence(lambda n: f"dataset-keyword-{n}")}
+    )
+
+    @factory.sequence
+    def url(self):
+        return f"https://dataset-keyword-{self}.fi"
+
+
+class LanguageFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.Language
+        django_get_or_create = ("url",)
+
+    pref_label = factory.Dict(
+        {"en": factory.Sequence(lambda n: f"dataset-language-{n}")}
+    )
+
+    @factory.sequence
+    def url(self):
+        return f"https://dataset-language-{self}.fi"
+
+
+class LicenseFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.License
+        django_get_or_create = ("url",)
+
+    pref_label = factory.Dict(
+        {"en": factory.Sequence(lambda n: f"dataset-license-{n}")}
+    )
+
+    @factory.sequence
+    def url(self):
+        return f"https://dataset-license-{self}.fi"
+
+
+class AccessRightsFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.AccessRights
         django_get_or_create = ("description",)
 
     access_type = factory.SubFactory(AccessTypeFactory)
-    license = factory.SubFactory(DatasetLicenseFactory)
-
+    license = factory.RelatedFactory(LicenseFactory)  # create single license
     description = factory.Dict({"en": factory.Faker("paragraph")})
 
 
@@ -102,7 +135,7 @@ class DataCatalogFactory(factory.django.DjangoModelFactory):
 
     title = factory.Dict({"en": factory.Sequence(lambda n: f"data-catalog-{n}")})
     publisher = factory.SubFactory(DatasetPublisherFactory)
-    access_rights = factory.SubFactory(AccessRightFactory)
+    access_rights = factory.SubFactory(AccessRightsFactory)
     system_creator = factory.SubFactory(MetaxUserFactory)
 
     @factory.post_generation
@@ -152,9 +185,9 @@ class CatalogRecordFactory(factory.django.DjangoModelFactory):
     contract = factory.SubFactory(ContractFactory)
 
 
-class ResearchDatasetFactory(factory.django.DjangoModelFactory):
+class DatasetFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = models.ResearchDataset
+        model = models.Dataset
         django_get_or_create = ("title",)
 
     data_catalog = factory.SubFactory(DataCatalogFactory)
@@ -170,9 +203,9 @@ class DistributionFactory(factory.django.DjangoModelFactory):
 
     id = factory.Faker("uuid4")
     title = factory.Dict({"en": factory.Sequence(lambda n: f"distribution-{n}")})
-    license = factory.SubFactory(DatasetLicenseFactory)
-    access_rights = factory.SubFactory(AccessRightFactory)
-    dataset = factory.SubFactory(ResearchDatasetFactory)
+    license = factory.SubFactory(LicenseFactory)
+    access_rights = factory.SubFactory(AccessRightsFactory)
+    dataset = factory.SubFactory(DatasetFactory)
     access_service = factory.SubFactory(DataStorageFactory)
 
     @factory.post_generation

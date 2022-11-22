@@ -1,0 +1,36 @@
+{
+  "data_catalog": "urn:nbn:fi:att:data-catalog-ida",
+  "issued": "2022-10-31T20:00Z",
+  "title": {
+    "en": "Test dataset b"
+  },
+  "description": {
+    "en": "Test dataset desc b",
+    "fi": "Test dataset kuvaus b"
+  },
+  "language": [
+    {
+      "url": "http://lexvo.org/id/iso639-3/fin"
+    }
+  ],
+  "theme": [
+    {
+      "url": "http://www.yso.fi/onto/koko/p1"
+    }
+  ],
+  "field_of_science": [
+    {
+      "url": "http://www.yso.fi/onto/okm-tieteenala/ta112"
+    }
+  ],
+  "access_rights": {
+    "access_type": {
+      "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/restricted"
+    },
+    "license": [
+      {
+        "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0"
+      }
+    ]
+  }
+}

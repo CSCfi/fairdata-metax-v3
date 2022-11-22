@@ -22,7 +22,7 @@ class DataCatalogFilter(filters.FilterSet):
         fields = (
             "dataset_versioning_enabled",
             "harvested",
-            "research_dataset_schema",
+            "dataset_schema",
         )
 
     title__values = filters.CharFilter(
@@ -44,10 +44,10 @@ class DataCatalogFilter(filters.FilterSet):
     access_rights__access_type__url = filters.CharFilter(
         max_length=255, lookup_expr="icontains"
     )
-    access_rights__access_type__title__values = filters.CharFilter(
+    access_rights__access_type__pref_label__values = filters.CharFilter(
         max_length=255,
         lookup_expr="icontains",
-        label="access rights access type title contains",
+        label="access rights access type preferred label contains",
     )
     publisher__homepage__title__values = filters.CharFilter(
         max_length=255,
@@ -55,8 +55,8 @@ class DataCatalogFilter(filters.FilterSet):
         label="publisher homepage title contains",
     )
     language__url = filters.CharFilter(max_length=255, lookup_expr="icontains")
-    language__title__values = filters.CharFilter(
-        max_length=255, lookup_expr="icontains", label="language title contains"
+    language__pref_label__values = filters.CharFilter(
+        max_length=255, lookup_expr="icontains", label="language preferred label contains"
     )
     ordering = filters.OrderingFilter(fields=("created", "created"))
 

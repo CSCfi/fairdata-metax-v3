@@ -3,10 +3,7 @@ import pytest
 pytestmark = pytest.mark.parametrize(
     "dataset_property",
     [
-        "dataset_language",
         "catalog_homepage",
-        "dataset_license",
-        "access_type",
         "data_catalog",
         "distribution",
     ],
@@ -15,7 +12,7 @@ pytestmark = pytest.mark.parametrize(
 
 @pytest.mark.parametrize(
     "dataset_ref_property",
-    ["dataset_language", "catalog_homepage", "dataset_license", "access_type"],
+    ["catalog_homepage"],
 )
 def test_create_dataset_ref_property(
     dataset_property, dataset_ref_property, dataset_property_object_factory

@@ -16,17 +16,21 @@
 
 ### :::src.apps.core.factories.DatasetPublisherFactory
 
-## DatasetLicenseFactory
+## LicenseFactory
 
-### :::src.apps.core.factories.DatasetLicenseFactory
+### :::src.apps.core.factories.LicenseFactory
 
 ## AccessTypeFactory
 
 ### :::src.apps.core.factories.AccessTypeFactory
 
-## AccessRightFactory
+## LicenseFactory
 
-### :::src.apps.core.factories.AccessRightFactory
+### :::src.apps.core.factories.LicenseFactory
+
+## AccessRightsFactory
+
+### :::src.apps.core.factories.AccessRightsFactory
 
 ## DataCatalogFactory
 
@@ -44,9 +48,9 @@
 
 ### :::src.apps.core.factories.CatalogRecordFactory
 
-## ResearchDatasetFactory
+## DatasetFactory
 
-### :::src.apps.core.factories.ResearchDatasetFactory
+### :::src.apps.core.factories.DatasetFactory
 
 ## DistributionFactory
 

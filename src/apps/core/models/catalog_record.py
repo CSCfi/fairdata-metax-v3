@@ -1,12 +1,11 @@
 import uuid
 
-from django.conf import settings
-
-from .abstracts import AbstractBaseModel, AbstractDatasetProperty
-from .data_catalog import AccessRight, DataCatalog
+from .abstracts import AbstractBaseModel
+from .data_catalog import AccessRights, DataCatalog
 from .contract import Contract
 from django.db import models
-from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.fields import ArrayField, HStoreField
+from apps.core.models.concepts import Keyword, Language, FieldOfScience
 
 
 class CatalogRecord(AbstractBaseModel):
@@ -24,8 +23,8 @@ class CatalogRecord(AbstractBaseModel):
         related_name="records",
     )
     contract = models.ForeignKey(
-        Contract, 
-        on_delete=models.SET_NULL, 
+        Contract,
+        on_delete=models.SET_NULL,
         related_name="records",
         null=True,
     )
@@ -34,7 +33,7 @@ class CatalogRecord(AbstractBaseModel):
         return str(self.id)
 
 
-class ResearchDataset(CatalogRecord, AbstractDatasetProperty):
+class Dataset(CatalogRecord, AbstractBaseModel):
     """A collection of data available for access or download in one or many representations.
 
     RDF Class: dcat:Dataset
@@ -44,19 +43,32 @@ class ResearchDataset(CatalogRecord, AbstractDatasetProperty):
     """
 
     persistent_identifier = models.CharField(max_length=255, null=True, blank=True)
-    release_date = models.DateTimeField(null=True, blank=True)
-    description = models.CharField(max_length=255, null=True, blank=True)
+    issued = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Date of formal issuance (e.g., publication) of the resource.",
+    )
+    title = HStoreField(help_text='example: {"en":"title", "fi":"otsikko"}')
+    description = HStoreField(max_length=255, null=True, blank=True)
+
     keyword = ArrayField(models.CharField(max_length=255), default=list, blank=True)
     other_identifiers = ArrayField(
         models.CharField(max_length=255), default=list, blank=True
     )
     language = models.ManyToManyField(
-        "DatasetLanguage", related_name="research_datasets"
+        Language, related_name="datasets", blank=True
     )
-    access_right = models.ForeignKey(
-        AccessRight,
+    theme = models.ManyToManyField(
+        Keyword, related_name="datasets", blank=True
+    )
+    field_of_science = models.ManyToManyField(
+        FieldOfScience, related_name="datasets", blank=True
+    )
+
+    access_rights = models.ForeignKey(
+        AccessRights,
         on_delete=models.SET_NULL,
-        related_name="research_datasets",
+        related_name="datasets",
         null=True,
     )
     is_deprecated = models.BooleanField(default=False)
@@ -90,3 +102,8 @@ class ResearchDataset(CatalogRecord, AbstractDatasetProperty):
         blank=True,
         related_name="replaced_by",
     )
+
+    def delete(self, *args, **kwargs):
+        if self.access_rights:
+            self.access_rights.delete(*args, **kwargs)
+        return super().delete(*args, **kwargs)
