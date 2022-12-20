@@ -6,6 +6,7 @@ from .contract import Contract
 from django.db import models
 from django.contrib.postgres.fields import ArrayField, HStoreField
 from apps.core.models.concepts import Keyword, Language, FieldOfScience
+from simple_history.models import HistoricalRecords
 
 
 class CatalogRecord(AbstractBaseModel):
@@ -28,6 +29,7 @@ class CatalogRecord(AbstractBaseModel):
         related_name="records",
         null=True,
     )
+    history = HistoricalRecords()
 
     def __str__(self):
         return str(self.id)
@@ -102,6 +104,7 @@ class Dataset(CatalogRecord, AbstractBaseModel):
         blank=True,
         related_name="replaced_by",
     )
+    history = HistoricalRecords(m2m_fields=(language, theme, field_of_science))
 
     def delete(self, *args, **kwargs):
         if self.access_rights:

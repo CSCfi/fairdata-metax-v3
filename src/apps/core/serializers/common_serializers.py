@@ -71,21 +71,24 @@ class DatasetPublisherModelSerializer(AbstractDatasetModelSerializer):
     def create(self, validated_data):
         homepages = validated_data.pop("homepage")
         dataset_publisher = DatasetPublisher.objects.create(**validated_data)
+        pages = []
         for page in homepages:
             page_created = CatalogHomePage.objects.create(**page)
-            dataset_publisher.homepage.add(page_created)
+            pages.append(page_created)
+        dataset_publisher.homepage.set(pages)
         return dataset_publisher
 
     def update(self, instance, validated_data):
         homepages = validated_data.pop("homepage")
         instance.name = validated_data.get("name", instance.name)
         instance.save()
-        instance.homepage.clear()
+        pages = []
         for homepage in homepages:
             page, created = CatalogHomePage.objects.update_or_create(
                 id=homepage.get("id"), defaults=homepage
             )
-            instance.homepage.add(page)
+            pages.append(page)
+        instance.homepage.set(pages)
         return instance
 
     def to_representation(self, instance):

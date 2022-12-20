@@ -2,6 +2,7 @@ import uuid
 
 from django.conf import settings
 from django.db import models
+from simple_history.models import HistoricalRecords
 
 from .abstracts import AbstractBaseModel
 
@@ -29,3 +30,4 @@ class File(AbstractBaseModel):
     date_uploaded = models.DateTimeField()
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     project_identifier = models.CharField(max_length=200, null=True, blank=True)
+    history = HistoricalRecords()

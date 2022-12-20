@@ -1,4 +1,5 @@
 from django.db import models
+from simple_history.models import HistoricalRecords
 
 from .abstracts import AbstractBaseModel
 
@@ -24,3 +25,4 @@ class DataStorage(AbstractBaseModel):
     endpoint_description = models.TextField(
         help_text="A description of the services available via the end-points, including their operations, parameters etc."
     )
+    history = HistoricalRecords()

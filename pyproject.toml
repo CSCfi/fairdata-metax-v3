@@ -33,6 +33,7 @@ django-filter = "^22.1"
 factory-boy = "^3.2.1"
 inflection = "^0.5.1"
 djangorestframework-simplejwt = {extras = ["crypto"], version = "^5.2.2"}
+django-simple-history = "^3.2.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.0.1"

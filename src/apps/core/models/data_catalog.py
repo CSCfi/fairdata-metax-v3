@@ -5,6 +5,7 @@ from .abstracts import AbstractBaseModel, AbstractDatasetProperty
 from django.contrib.postgres.fields import HStoreField
 from django.db import models
 from apps.core.models.concepts import AccessType, Language, License
+from simple_history.models import HistoricalRecords
 
 
 class DataCatalog(AbstractBaseModel):
@@ -62,6 +63,7 @@ class DataCatalog(AbstractBaseModel):
         default=DatasetSchema.IDA,
         max_length=6,
     )
+    history = HistoricalRecords(m2m_fields=(language,))
 
     def __str__(self):
         return self.id
@@ -81,6 +83,7 @@ class CatalogHomePage(AbstractDatasetProperty):
         in cases where there is more than one Web-page about the resource.
 
     """
+    history = HistoricalRecords()
 
 
 class DatasetPublisher(AbstractBaseModel):
@@ -102,6 +105,7 @@ class DatasetPublisher(AbstractBaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = HStoreField(help_text='example: {"en": "name", "fi":"nimi"}')
     homepage = models.ManyToManyField(CatalogHomePage, related_name="publishers")
+    history = HistoricalRecords(m2m_fields=(homepage,))
 
     def __str__(self):
         name = self.name
@@ -135,6 +139,7 @@ class AccessRights(AbstractBaseModel):
     description = HStoreField(
         help_text='example: {"en":"description", "fi":"kuvaus"}', null=True, blank=True
     )
+    history = HistoricalRecords(m2m_fields=(license,))
 
     class Meta:
         verbose_name_plural = "Access rights"

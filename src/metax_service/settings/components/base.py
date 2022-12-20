@@ -68,6 +68,7 @@ THIRD_PARTY_APPS = [
     "django_extensions",
     "drf_yasg",
     "django_filters",
+    'simple_history',
 ]
 LOCAL_APPS = [
     "users.apps.UsersConfig",
@@ -86,6 +87,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'simple_history.middleware.HistoryRequestMiddleware',
 ]
 
 ROOT_URLCONF = "metax_service.urls"

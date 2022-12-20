@@ -1,4 +1,6 @@
 from django.conf import settings
+from simple_history.models import HistoricalRecords
+
 from .abstracts import AbstractBaseModel
 from .data_catalog import AccessRights
 from .catalog_record import Dataset
@@ -70,3 +72,4 @@ class Distribution(AbstractBaseModel):
         related_name="distributions",
         null=True,
     )
+    history = HistoricalRecords(m2m_fields=(files,))

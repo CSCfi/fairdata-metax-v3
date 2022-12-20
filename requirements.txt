@@ -10,6 +10,7 @@ cryptography==38.0.3 ; python_full_version >= "3.8.10" and python_full_version <
 django-extensions==3.2.1 ; python_full_version >= "3.8.10" and python_full_version < "4.0.0"
 django-filter==22.1 ; python_full_version >= "3.8.10" and python_full_version < "4.0.0"
 django-model-utils==4.2.0 ; python_full_version >= "3.8.10" and python_full_version < "4.0.0"
+django-simple-history==3.2.0 ; python_full_version >= "3.8.10" and python_full_version < "4.0.0"
 django-split-settings==1.2.0 ; python_full_version >= "3.8.10" and python_version < "4.0"
 django==3.2.16 ; python_full_version >= "3.8.10" and python_full_version < "4.0.0"
 djangorestframework-simplejwt[crypto]==5.2.2 ; python_full_version >= "3.8.10" and python_full_version < "4.0.0"
