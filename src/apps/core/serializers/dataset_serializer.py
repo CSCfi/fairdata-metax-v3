@@ -10,7 +10,7 @@ from apps.core.models import (
     Dataset,
 )
 from apps.core.serializers.common_serializers import AccessRightsModelSerializer
-from apps.core.models.concepts import FieldOfScience, Keyword, Language
+from apps.core.models.concepts import FieldOfScience, Theme, Language
 from rest_framework import serializers
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class DatasetSerializer(serializers.ModelSerializer):
     access_rights = AccessRightsModelSerializer(required=False)
     language = Language.get_serializer()(required=False, many=True)
-    theme = Keyword.get_serializer()(required=False, many=True)
+    theme = Theme.get_serializer()(required=False, many=True)
     field_of_science = FieldOfScience.get_serializer()(required=False, many=True)
 
     class Meta:
@@ -67,7 +67,7 @@ class DatasetSerializer(serializers.ModelSerializer):
             Language.objects.get(url=lang.get("url")) for lang in language_data
         ]
         theme_data = validated_data.pop("theme", [])
-        themes = [Keyword.objects.get(url=theme.get("url")) for theme in theme_data]
+        themes = [Theme.objects.get(url=theme.get("url")) for theme in theme_data]
 
         field_of_science_data = validated_data.pop("field_of_science", [])
         fields_of_science = [
@@ -98,7 +98,7 @@ class DatasetSerializer(serializers.ModelSerializer):
         ]
 
         theme_data = validated_data.pop("theme", [])
-        themes = [Keyword.objects.get(url=theme.get("url")) for theme in theme_data]
+        themes = [Theme.objects.get(url=theme.get("url")) for theme in theme_data]
 
         field_of_science_data = validated_data.pop("field_of_science", [])
         fields_of_science = [

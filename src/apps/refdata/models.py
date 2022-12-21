@@ -104,7 +104,7 @@ class Language(AbstractConcept):
     pass
 
 
-class Keyword(AbstractConcept):
+class Theme(AbstractConcept):
     pass
 
 
@@ -201,7 +201,7 @@ reference_data_models = [
     FileType,
     FunderType,
     IdentifierType,
-    Keyword,
+    Theme,
     Language,
     License,
     LifecycleEvent,

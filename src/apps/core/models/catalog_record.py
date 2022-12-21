@@ -5,8 +5,10 @@ from .data_catalog import AccessRights, DataCatalog
 from .contract import Contract
 from django.db import models
 from django.contrib.postgres.fields import ArrayField, HStoreField
-from apps.core.models.concepts import Keyword, Language, FieldOfScience
+
+from apps.core.models.concepts import Theme, Language, FieldOfScience
 from simple_history.models import HistoricalRecords
+
 
 
 class CatalogRecord(AbstractBaseModel):
@@ -61,7 +63,7 @@ class Dataset(CatalogRecord, AbstractBaseModel):
         Language, related_name="datasets", blank=True
     )
     theme = models.ManyToManyField(
-        Keyword, related_name="datasets", blank=True
+        Theme, related_name="datasets", blank=True
     )
     field_of_science = models.ManyToManyField(
         FieldOfScience, related_name="datasets", blank=True

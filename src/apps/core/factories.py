@@ -72,18 +72,18 @@ class FieldOfScienceFactory(factory.django.DjangoModelFactory):
         return f"https://dataset-field-of-science-{self}.fi"
 
 
-class KeywordFactory(factory.django.DjangoModelFactory):
+class ThemeFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = models.Keyword
+        model = models.Theme
         django_get_or_create = ("url",)
 
     pref_label = factory.Dict(
-        {"en": factory.Sequence(lambda n: f"dataset-keyword-{n}")}
+        {"en": factory.Sequence(lambda n: f"dataset-theme-{n}")}
     )
 
     @factory.sequence
     def url(self):
-        return f"https://dataset-keyword-{self}.fi"
+        return f"https://dataset-theme-{self}.fi"
 
 
 class LanguageFactory(factory.django.DjangoModelFactory):

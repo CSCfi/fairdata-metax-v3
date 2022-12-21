@@ -49,7 +49,7 @@ class Language(ConceptProxyMixin, refdata.Language):
     """
 
 
-class Keyword(ConceptProxyMixin, refdata.Keyword):
+class Theme(ConceptProxyMixin, refdata.Theme):
     """Keyword from KOKO ontology."""
 
 

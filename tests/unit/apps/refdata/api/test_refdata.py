@@ -2,7 +2,7 @@ from uuid import UUID
 import pytest
 import inflection
 
-from apps.refdata.models import FieldOfScience, Keyword, Language, Location
+from apps.refdata.models import FieldOfScience, Theme, Language, Location
 
 pytestmark = pytest.mark.parametrize(
     "model",
@@ -10,7 +10,7 @@ pytestmark = pytest.mark.parametrize(
         FieldOfScience,
         Language,
         Location,
-        Keyword,
+        Theme,
     ],
 )
 

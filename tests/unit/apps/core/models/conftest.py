@@ -11,7 +11,7 @@ from apps.core.models import (
     DataStorage,
     File,
     FieldOfScience,
-    Keyword,
+    Theme,
     Distribution,
     Dataset,
     Contract,
@@ -66,8 +66,8 @@ def field_of_science() -> FieldOfScience:
 
 
 @pytest.fixture
-def keyword() -> Keyword:
-    return factories.KeywordFactory(
+def keyword() -> Theme:
+    return factories.ThemeFactory(
         url="http://www.yso.fi/onto/koko/p1",
         pref_label={
             "en": "data systems designers",

@@ -7,7 +7,7 @@ from .data_catalog import (
     CatalogHomePage,
     AccessRights,
 )
-from .concepts import AccessType, FieldOfScience, Keyword, Language, License
+from .concepts import AccessType, FieldOfScience, Theme, Language, License
 from .distribution import Distribution
 from .files import File
 from .services import DataStorage

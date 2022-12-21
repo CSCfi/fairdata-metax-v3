@@ -142,12 +142,12 @@ def field_of_science_reference_data():
 
 
 @pytest.fixture
-def keyword_reference_data():
+def theme_reference_data():
     common_args = {
         "in_scheme": "http://www.yso.fi/onto/koko/",
         "is_reference_data": True,
     }
-    factories.KeywordFactory(
+    factories.ThemeFactory(
         url="http://www.yso.fi/onto/koko/p1",
         pref_label={
             "en": "data systems designers",
@@ -156,7 +156,7 @@ def keyword_reference_data():
         },
         **common_args,
     )
-    keyword = factories.KeywordFactory(
+    keyword = factories.ThemeFactory(
         url="http://www.yso.fi/onto/koko/p10",
         pref_label={
             "en": "test subjects (persons)",
@@ -165,7 +165,7 @@ def keyword_reference_data():
         },
         **common_args,
     )
-    broader_keyword = factories.KeywordFactory(
+    broader_keyword = factories.ThemeFactory(
         url="http://www.yso.fi/onto/koko/p37018",
         pref_label={
             "en": "role related to action",
@@ -175,7 +175,7 @@ def keyword_reference_data():
         **common_args,
     )
     keyword.broader.set([broader_keyword])
-    factories.KeywordFactory(
+    factories.ThemeFactory(
         url="http://www.yso.fi/onto/koko/p36817",
         pref_label={
             "en": "testing",
@@ -254,7 +254,7 @@ def license_reference_data():
 def reference_data(
     access_type_reference_data,
     field_of_science_reference_data,
-    keyword_reference_data,
+    theme_reference_data,
     language_reference_data,
     license_reference_data,
 ):

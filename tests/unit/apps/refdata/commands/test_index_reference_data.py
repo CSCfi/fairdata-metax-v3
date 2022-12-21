@@ -7,7 +7,7 @@ from django.core.management.base import CommandError
 
 from apps.refdata.models import (
     FieldOfScience,
-    Keyword,
+    Theme,
     Location,
     AccessType,
     License,
@@ -20,10 +20,10 @@ TEST_DATA_SOURCES = {
         "importer": "Finto",
         "source": "https://testdata/field_of_science",
     },
-    "keyword": {
-        "model": "refdata.Keyword",
+    "theme": {
+        "model": "refdata.Theme",
         "importer": "Finto",
-        "source": "https://testdata/keyword",
+        "source": "https://testdata/theme",
     },
     "location": {
         "model": "refdata.Location",
@@ -79,8 +79,8 @@ def test_import_all(mock_importers):
                 scheme=None,
             ),
             call(
-                model=Keyword,
-                source=TEST_DATA_SOURCES["keyword"]["source"],
+                model=Theme,
+                source=TEST_DATA_SOURCES["theme"]["source"],
                 scheme=None,
             ),
         ]

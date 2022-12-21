@@ -14,8 +14,8 @@ FINTO_REFERENCE_DATA_SOURCES = {
         "importer": "FintoLocation",
         "source": "https://finto.fi/rest/v1/yso-paikat/data",
     },
-    "keyword": {
-        "model": "refdata.Keyword",
+    "theme": {
+        "model": "refdata.Theme",
         "importer": "Finto",
         "source": "https://finto.fi/rest/v1/koko/data",
     },
