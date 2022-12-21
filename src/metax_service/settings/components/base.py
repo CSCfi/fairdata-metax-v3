@@ -14,6 +14,7 @@ from os.path import join
 from pathlib import Path
 import sys
 import factory.random
+from django.utils.translation import gettext_lazy as _
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -88,6 +89,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     'simple_history.middleware.HistoryRequestMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
 ]
 
 ROOT_URLCONF = "metax_service.urls"
@@ -173,7 +175,8 @@ LOGGING = {
 
 
 LANGUAGE_CODE = "en-us"
-
+LANGUAGES = (("en-us", _("English")), ("fi", _("Finnish")))
+LOCALE_PATHS = (os.path.join(APPS_DIR, "core/locale"),)
 TIME_ZONE = "Europe/Helsinki"
 
 USE_I18N = True

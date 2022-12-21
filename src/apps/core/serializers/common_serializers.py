@@ -10,6 +10,7 @@ import logging
 from uuid import UUID
 
 from django.core.validators import EMPTY_VALUES
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from apps.core.models import (
@@ -49,7 +50,7 @@ class AbstractDatasetPropertyModelSerializer(serializers.ModelSerializer):
                 internal_value["id"] = data.get("id")
             except ValueError:
                 raise serializers.ValidationError(
-                    "id: {} is not a valid UUID".format(data.get("id"))
+                    _("id: {} is not valid UUID").format(data.get("id"))
                 )
 
         return internal_value
