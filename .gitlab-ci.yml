@@ -7,43 +7,13 @@ include:
     ref: master
     file:
       - /templates/test/test-jobs.yaml
+      - /templates/test/metax-v3-tests.yaml
 
 # ------------------------
 
 unittests:
   stage: test
-  tags:
-    - docker
-  image:
-    name: python:3.8
-  services:
-    - postgres:12
-  variables:
-    POSTGRES_USER: metax_user
-    POSTGRES_PASSWORD: password
-    POSTGRES_PASS: password
-    POSTGRES_DB: metax_db
-    POSTGRES_DATABASE_NAME: metax_db
-    POSTGRES_PORT: 5432
-    POSTGRES_HOST: postgres
-  before_script:
-    - echo -e "\e[0Ksection_start:`date +%s`:dependency_section[collapsed=true]\r\e[0KInstalling dependencies"
-    # ------------------------
-    - /usr/local/bin/python -m pip install --upgrade pip
-    - pip install -r dev-requirements.txt
-    # ------------------------
-    - echo -e "\e[0Ksection_end:`date +%s`:dependency_section\r\e[0K"
-
-  script:
-    - python manage.py migrate
-    - pytest --cov-report xml --cov-report term:skip-covered
-  artifacts:
-    reports:
-      coverage_report:
-        coverage_format: cobertura
-        path: coverage.xml
-    paths:
-      - coverage.xml
+  extends: .metax-unittests
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
 
@@ -52,6 +22,7 @@ sonarqube:
   needs:
     - job: unittests
       artifacts: true
+      optional: true
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-
+    - if: $CI_COMMIT_BRANCH =~ /^(master)$/ && $CI_PIPELINE_SOURCE !~ /^(web)$/
