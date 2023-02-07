@@ -1,0 +1,229 @@
+{
+  "id": 1,
+  "identifier": "eac9675c-6fc1-4876-ab95-dd65ec6bf58e",
+  "data_catalog": {
+    "id": 3,
+    "identifier": "urn:nbn:fi:att:data-catalog-harvest-fsd"
+  },
+  "deprecated": false,
+  "metadata_owner_org": "aalto.fi",
+  "metadata_provider_org": "aalto.fi",
+  "metadata_provider_user": "harvest@fairdata.fi",
+  "research_dataset": {
+    "title": {
+      "en": "Research Dataset",
+      "fi": "Tutkimusaineisto"
+    },
+    "creator": [
+      {
+        "name": "Mysterious Person",
+        "@type": "Person",
+        "member_of": {
+          "name": {
+            "en": "Aalto University"
+          },
+          "@type": "Organization"
+        }
+      },
+      {
+        "name": "Teppo Testaaja",
+        "@type": "Person",
+        "member_of": {
+          "name": {
+            "en": "Aalto University"
+          },
+          "@type": "Organization"
+        }
+      },
+      {
+        "name": {
+          "en": "Aalto University"
+        },
+        "@type": "Organization"
+      }
+    ],
+    "keyword": [
+      "keyword1",
+      "keyword2"
+    ],
+    "spatial": [
+      {
+        "place_uri": {
+          "in_scheme": "http://www.yso.fi/onto/yso/places",
+          "identifier": "http://www.yso.fi/onto/yso/p94426",
+          "pref_label": {
+            "en": "Finland",
+            "fi": "Suomi",
+            "sv": "Finland",
+            "und": "Suomi"
+          }
+        },
+        "geographic_name": "Finland"
+      }
+    ],
+    "language": [
+      {
+        "title": {
+          "en": "Finnish",
+          "fi": "suomi",
+          "sv": "finska",
+          "und": "suomi"
+        },
+        "identifier": "http://lexvo.org/id/iso639-3/fin"
+      },
+      {
+        "title": {
+          "en": "English",
+          "fi": "englanti",
+          "sv": "engelska",
+          "und": "englanti"
+        },
+        "identifier": "http://lexvo.org/id/iso639-3/eng"
+      }
+    ],
+    "modified": "2018-07-24T00:00:00-00:00",
+    "temporal": [
+      {
+        "end_date": "2006-05-31T23:59:59-00:00",
+        "start_date": "2006-05-10T00:00:00-00:00"
+      }
+    ],
+    "publisher": {
+      "name": {
+        "fi": "Fairdata"
+      },
+      "@type": "Organization",
+      "homepage": {
+        "title": {
+          "en": "Publisher website",
+          "fi": "Julkaisijan kotisivu"
+        },
+        "identifier": "fairdata.fi"
+      }
+    },
+    "provenance": [
+      {
+        "title": {
+          "en": "Collection"
+        },
+        "temporal": {
+          "end_date": "2006-05-31T23:59:59-00:00",
+          "start_date": "2006-05-10T00:00:00-00:00"
+        },
+        "variable": [
+          {
+            "pref_label": {
+              "en": "the Åland Islands",
+              "fi": "Ahvenanmaa"
+            }
+          }
+        ],
+        "description": {
+          "en": "Contains the date(s) when the data were collected."
+        }
+      },
+      {
+        "title": {
+          "en": "Production"
+        },
+        "temporal": {
+          "end_date": "2007-05-21T23:59:59-00:00",
+          "start_date": "2007-05-21T00:00:00-00:00"
+        },
+        "description": {
+          "en": "Date when the data collection were produced (not distributed or archived)"
+        }
+      }
+    ],
+    "description": {
+      "en": "english lorem ipsum",
+      "fi": "finnish kuvaus ipsum"
+    },
+    "access_rights": {
+      "license": [
+        {
+          "title": {
+            "en": "Other (Not Open)",
+            "fi": "Muu (Ei avoin)",
+            "und": "Muu (Ei avoin)"
+          },
+          "identifier": "http://uri.suomi.fi/codelist/fairdata/license/code/other-closed",
+          "description": {
+            "en": "The dataset is (B) available for research, teaching and study.",
+            "fi": "Aineisto on käytettävissä (B) tutkimukseen, opetukseen ja opiskeluun."
+          }
+        }
+      ],
+      "access_type": {
+        "in_scheme": "http://uri.suomi.fi/codelist/fairdata/access_type",
+        "identifier": "http://uri.suomi.fi/codelist/fairdata/access_type/code/restricted",
+        "pref_label": {
+          "en": "Restricted use",
+          "fi": "Saatavuutta rajoitettu",
+          "und": "Saatavuutta rajoitettu"
+        }
+      },
+      "restriction_grounds": [
+        {
+          "in_scheme": "http://uri.suomi.fi/codelist/fairdata/restriction_grounds",
+          "identifier": "http://uri.suomi.fi/codelist/fairdata/restriction_grounds/code/education",
+          "pref_label": {
+            "en": "Restricted access for teaching or studying based on contract",
+            "fi": "Saatavuutta rajoitettu sopimuksen perusteella opetukseen ja opiskeluun",
+            "sv": "Begränsad åtkomst på bas av kontrakt ändast för undervisning och studier",
+            "und": "Saatavuutta rajoitettu sopimuksen perusteella opetukseen ja opiskeluun"
+          }
+        },
+        {
+          "in_scheme": "http://uri.suomi.fi/codelist/fairdata/restriction_grounds",
+          "identifier": "http://uri.suomi.fi/codelist/fairdata/restriction_grounds/code/research",
+          "pref_label": {
+            "en": "Restriced access for research based on contract",
+            "fi": "Saatavuutta rajoitettu sopimuksen perusteella vain tutkimuskäyttöön",
+            "sv": "Begränsad åtkomst på bas av kontrakt ändast för forskningsändamål",
+            "und": "Saatavuutta rajoitettu sopimuksen perusteella vain tutkimuskäyttöön"
+          }
+        }
+      ]
+    },
+    "field_of_science": [
+      {
+        "in_scheme": "http://www.yso.fi/onto/okm-tieteenala/conceptscheme",
+        "identifier": "http://www.yso.fi/onto/okm-tieteenala/ta5",
+        "pref_label": {
+          "en": "Social sciences",
+          "fi": "YHTEISKUNTATIETEET",
+          "sv": "Samhällsvetenskaper",
+          "und": "YHTEISKUNTATIETEET"
+        }
+      }
+    ],
+    "other_identifier": [
+      {
+        "type": {
+          "in_scheme": "http://uri.suomi.fi/codelist/fairdata/identifier_type",
+          "identifier": "http://uri.suomi.fi/codelist/fairdata/identifier_type/code/urn",
+          "pref_label": {
+            "en": "Uniform Resource Name (URN)",
+            "und": "Uniform Resource Name (URN)"
+          }
+        },
+        "notation": "urn:nbn:fi:csc-kata20141222160532727336"
+      }
+    ],
+    "preferred_identifier": "urn:nbn:fi:fsd:T-FSD2251",
+    "total_files_byte_size": 0,
+    "metadata_version_identifier": "32454754-e752-471f-94b3-74843f4415c6"
+  },
+  "preservation_state": 0,
+  "state": "published",
+  "cumulative_state": 0,
+  "api_meta": {
+    "version": 1
+  },
+  "date_modified": "2022-03-08T04:13:34+02:00",
+  "date_created": "2018-06-19T15:08:52+03:00",
+  "service_modified": "etsin",
+  "service_created": "etsin",
+  "removed": false
+}

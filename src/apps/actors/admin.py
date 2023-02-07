@@ -2,7 +2,7 @@ from django import forms
 from django.db.models import F, Case, When
 from django.contrib import admin
 from pkg_resources import require
-from apps.actors.models import Organization
+from apps.actors.models import Organization, Actor
 
 
 class OrganizationAdminForm(forms.ModelForm):
@@ -38,3 +38,11 @@ class OrganizationAdmin(admin.ModelAdmin):
     )
     def label_en(self, obj):
         return obj.get_label()
+
+
+@admin.register(Actor)
+class ActorAdmin(admin.ModelAdmin):
+    list_display = (
+        "user",
+        "organization",
+    )

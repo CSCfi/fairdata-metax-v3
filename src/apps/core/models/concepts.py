@@ -1,3 +1,4 @@
+from django.contrib.postgres.fields import HStoreField
 from apps.refdata import models as refdata
 
 
@@ -53,7 +54,7 @@ class Theme(ConceptProxyMixin, refdata.Theme):
     """Keyword from KOKO ontology."""
 
 
-class License(ConceptProxyMixin, refdata.License):
+class License(refdata.License):
     """A legal document under which the resource is made available.
 
     RFD Property: dcterms:license
@@ -62,9 +63,27 @@ class License(ConceptProxyMixin, refdata.License):
     https://www.w3.org/TR/vocab-dcat-3/#Property:resource_license
     """
 
+    description = HStoreField(blank=True, null=True)
+
+    class Meta:
+        """Overwrite refdata objects Meta class by defining an empty one"""
+        pass
+
 
 class FieldOfScience(ConceptProxyMixin, refdata.FieldOfScience):
     """Field of Science classification of resource.
 
     Source: https://finto.fi/okm-tieteenala/en/
     """
+
+
+class LifecycleEvent(ConceptProxyMixin, refdata.LifecycleEvent):
+    """Lifecycle event of the resource."""
+
+
+class EventOutcome(ConceptProxyMixin, refdata.EventOutcome):
+    """Event outcome of the resource."""
+
+
+class IdentifierType(ConceptProxyMixin, refdata.IdentifierType):
+    """Identifier type of the resource."""

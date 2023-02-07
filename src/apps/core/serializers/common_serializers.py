@@ -101,8 +101,19 @@ class DatasetPublisherModelSerializer(AbstractDatasetModelSerializer):
         return representation
 
 
+class LicenseModelSerializer(serializers.ModelSerializer):
+    """Custom serializer for License that does not require pref_label
+
+    Conforms use case where AccessRights object can be created with only url-field in license
+
+    """
+    class Meta:
+        model = License
+        fields = ("url", )
+
+
 class AccessRightsModelSerializer(AbstractDatasetModelSerializer):
-    license = License.get_serializer()(required=False, read_only=False, many=True)
+    license = LicenseModelSerializer(required=False, read_only=False, many=True)
     access_type = AccessType.get_serializer()(
         required=False, read_only=False, many=False
     )

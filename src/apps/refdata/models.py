@@ -150,13 +150,6 @@ class IdentifierType(AbstractConcept):
 
 
 class License(AbstractConcept):
-    license = models.URLField(
-        max_length=255,
-        help_text="URL for user-readable license text.",
-        default="",
-        blank=True,
-    )
-    serializer_extra_fields = ("license",)
     serializer_ref_name = "LicenseModel"
 
 

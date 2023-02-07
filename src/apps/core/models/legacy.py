@@ -1,0 +1,605 @@
+import logging
+
+from collections import namedtuple
+from typing import List, Dict
+
+from deepdiff import DeepDiff
+
+from django.db import models
+from django.utils.dateparse import parse_datetime
+from django.contrib.auth import get_user_model
+
+from .provenance import ProvenanceVariable, Provenance
+from .files import File, Checksum
+from .contract import Contract
+from .concepts import (
+    License,
+    AccessType,
+    Language,
+    IdentifierType,
+    FieldOfScience,
+    EventOutcome,
+    LifecycleEvent,
+)
+from .catalog_record import (
+    Dataset,
+    DatasetActor,
+    Temporal,
+    Spatial,
+    OtherIdentifier,
+    MetadataProvider,
+    DatasetProject,
+)
+from .data_catalog import AccessRights, DataCatalog, AccessRightsRestrictionGrounds
+from apps.actors.models import Actor, Organization
+from apps.users.models import MetaxUser
+from apps.core.helpers import parse_iso_dates_in_nested_dict
+from apps.refdata.models import FunderType
+
+logger = logging.getLogger(__name__)
+
+PreparedInstances = namedtuple(
+    "PreparedInstances", "access_rights, data_catalog, contract, metadata_owner"
+)
+PostProcessedInstances = namedtuple(
+    "PostProcessedInstances",
+    "languages, spatial, creators, files, temporal, other_identifiers, field_of_science, provenance, publisher, projects",
+)
+
+
+class LegacyDataset(Dataset):
+    """Migrated V1 and V2 Datasets
+
+    Stores legacy dataset json fields and derives v3 dataset fields from them using signals.
+
+    Attributes:
+        dataset_json (models.JSONField): V1/V2 dataset json from legacy metax dataset API
+        contract_json (models.JSONField): Contract json for which the dataset is under
+        files_json (models.JSONField): Files attached to the dataset trough dataset/files API in v2
+    """
+
+    dataset_json = models.JSONField()
+    contract_json = models.JSONField(null=True, blank=True)
+    files_json = models.JSONField(null=True, blank=True)
+
+    @property
+    def legacy_identifier(self):
+        """Legacy database primary key"""
+        return self.dataset_json["identifier"]
+
+    @property
+    def legacy_persistent_identifier(self):
+        """Resolvable persistent identifier like DOI or URN"""
+        return self.legacy_research_dataset.get("preferred_identifier")
+
+    @property
+    def metadata_provider_user(self):
+        return self.dataset_json["metadata_provider_user"]
+
+    @property
+    def metadata_provider_org(self):
+        if org := self.dataset_json.get("metadata_provider_org"):
+            return org
+        else:
+            return self.dataset_json["metadata_owner_org"]
+
+    @property
+    def legacy_research_dataset(self):
+        return self.dataset_json["research_dataset"]
+
+    @property
+    def legacy_access_rights(self):
+        return self.legacy_research_dataset["access_rights"]
+
+    @property
+    def legacy_access_type(self):
+        return self.legacy_access_rights["access_type"]
+
+    @property
+    def legacy_license(self):
+        return self.legacy_access_rights["license"]
+
+    @property
+    def legacy_data_catalog(self):
+        return self.dataset_json["data_catalog"]
+
+    @property
+    def legacy_languages(self):
+        return self.legacy_research_dataset["language"]
+
+    @property
+    def legacy_field_of_science(self):
+        return self.legacy_research_dataset["field_of_science"]
+
+    @property
+    def legacy_spatial(self):
+        return self._flatten_nested_ref_data_object(
+            "spatial", "place_uri", additional_keys=["full_address", "geographic_name"]
+        )
+
+    @property
+    def legacy_other_identifiers(self):
+        other_ids = self._flatten_nested_ref_data_object(
+            "other_identifier", "type", additional_keys=["notation"]
+        )
+        return other_ids
+
+    @property
+    def legacy_contract(self):
+        if self.contract_json:
+            return self.contract_json["contract_json"]
+
+    def _flatten_nested_ref_data_object(
+        self, ref_data_name: str, top_level_key_name: str, additional_keys: List = None
+    ) -> List[Dict]:
+        """Removes top-level object name-field from json structure.
+
+        Examples:
+             {obj: { field: value } becomes { field: value }
+
+        Args:
+            ref_data_name (str):
+            top_level_key_name (str):
+            additional_keys (List): additional fields to put on the root level of the object
+
+        Returns:
+
+        """
+        if ref_data := self.legacy_research_dataset.get(ref_data_name):
+            obj_list = []
+            for obj in ref_data:
+                flatten_obj = {**obj[top_level_key_name]}
+                if additional_keys:
+                    for key in additional_keys:
+                        flatten_obj[key] = obj.get(key)
+                obj_list.append(flatten_obj)
+            return obj_list
+
+    @classmethod
+    def parse_temporal_timestamps(cls, legacy_temporal):
+        start_date = parse_datetime(legacy_temporal["start_date"])
+        end_date = parse_datetime(legacy_temporal["end_date"])
+        return start_date, end_date
+
+    def convert_root_level_fields(self):
+        """
+        Convert catalog_record top level fields to new Dataset format
+        Returns:
+
+        """
+        self.is_deprecated = self.dataset_json["deprecated"]
+        self.cumulation_started = self.dataset_json.get("date_cumulation_started")
+        self.cumulation_ended = self.dataset_json.get("date_cumulation_ended")
+        self.last_cumulative_addition = self.dataset_json.get(
+            "date_last_cumulative_addition"
+        )
+        self.cumulative_state = self.dataset_json.get("cumulative_state")
+        self.previous = self.dataset_json.get("previous_dataset_version")
+        self.created = self.dataset_json.get("date_created")
+
+        if modified := self.legacy_research_dataset.get("modified"):
+            self.modified = modified
+        elif modified := self.dataset_json.get("date_modified"):
+            self.modified = modified
+        else:
+            self.modified = self.created
+
+        if user_modified := self.dataset_json.get("user_modified"):
+            user, created = get_user_model().objects.get_or_create(
+                username=user_modified
+            )
+            self.last_modified_by = user
+
+        self.preservation_state = self.dataset_json["preservation_state"]
+        self.preservation_identifier = self.dataset_json.get("preservation_identifier")
+        self.state = self.dataset_json["state"]
+
+    def convert_research_dataset_fields(self):
+        """Convert simple research_dataset fields to v3 model
+
+        Returns:
+
+        """
+        self.title = self.legacy_research_dataset["title"]
+        self.persistent_identifier = self.legacy_persistent_identifier
+        self.release_date = self.legacy_research_dataset.get("issued")
+        self.description = self.legacy_research_dataset["description"]
+
+        if issued := self.legacy_research_dataset.get("issued"):
+            self.issued = issued
+
+        if "keyword" in self.legacy_research_dataset:
+            self.keyword = self.legacy_research_dataset["keyword"]
+
+    def attach_access_rights(self) -> AccessRights:
+        description = self.legacy_access_rights.get("description", None)
+
+        # license objects
+        licenses_list = self.legacy_license
+        license_objects = []
+        for lic in licenses_list:
+            identifier = lic["identifier"]
+            license_instance, created = License.objects.get_or_create(
+                url=identifier,
+                defaults={
+                    "url": identifier,
+                    "pref_label": lic["title"],
+                    "description": lic.get("description"),
+                },
+            )
+            license_objects.append(license_instance)
+
+        # access-type object
+        access_type, at_created = AccessType.objects.get_or_create(
+            url=self.legacy_access_type["identifier"],
+            defaults={
+                "url": self.legacy_access_type["identifier"],
+                "in_scheme": self.legacy_access_type["in_scheme"],
+                "pref_label": self.legacy_access_type["pref_label"],
+            },
+        )
+
+        access_rights = AccessRights(
+            access_type=access_type,
+            description=description,
+        )
+        access_rights.save()
+        for res_grounds in self.legacy_access_rights.get("restriction_grounds", []):
+            rg, rg_created = AccessRightsRestrictionGrounds.objects.get_or_create(
+                url=res_grounds["identifier"],
+                pref_label=res_grounds["pref_label"],
+                in_scheme=res_grounds["in_scheme"],
+                access_rights=access_rights,
+            )
+            logger.info(f"restriction_grounds={rg}, created={rg_created}")
+        self.access_rights = access_rights
+        self.access_rights.license.set(license_objects)
+        return access_rights
+
+    def attach_data_catalog(self) -> DataCatalog:
+        if hasattr(self, "data_catalog"):
+            return self.data_catalog
+        catalog_id = self.legacy_data_catalog["identifier"]
+        catalog, created = DataCatalog.objects.get_or_create(
+            id=catalog_id, defaults={"id": catalog_id, "title": {"und": catalog_id}}
+        )
+        self.data_catalog = catalog
+        return catalog
+
+    def attach_metadata_owner(self) -> Actor:
+        """Creates new Actor-object from metadata-owner field, that is usually CSC-username"""
+        metadata_user, user_created = MetaxUser.objects.get_or_create(
+            username=self.metadata_provider_user
+        )
+        metadata_owner, owner_created = MetadataProvider.objects.get_or_create(
+            user=metadata_user, organization=self.metadata_provider_org
+        )
+        self.metadata_owner = metadata_owner
+        return metadata_owner
+
+    def attach_ref_data_list(
+        self,
+        legacy_property_name: str,
+        target_many_to_many_field: str,
+        ref_data_model,
+        pref_label_key_name: str = "pref_label",
+    ):
+        """Method to extract ref-data type lists from dataset_json
+
+        Args:
+            legacy_property_name (str): LegacyDataset Class Property method that provides the json field
+            target_many_to_many_field (str): ManyToManyField name that will be populated
+            ref_data_model (): refdata App Model to use
+            pref_label_key_name (str): Some refdata models have different name for pref_label
+
+        Returns:
+
+        """
+        obj_list = []
+        for obj in getattr(self, legacy_property_name):
+            instance, created = ref_data_model.objects.get_or_create(
+                url=obj["identifier"],
+                defaults={
+                    "url": obj["identifier"],
+                    "pref_label": obj[pref_label_key_name],
+                },
+            )
+            if obj.get("in_scheme"):
+                instance.in_scheme = obj["in_scheme"]
+                instance.save()
+            obj_list.append(instance)
+
+        # django-simple-history really does not like if trying to access m2m fields from inheritance child-instance.
+        # using self.dataset instead of self in order to pass the proper owner of m2m fields to it.
+        getattr(self.dataset, target_many_to_many_field).set(obj_list)
+        return obj_list
+
+    def attach_spatial(self) -> List[Spatial]:
+        if spatial_data := self.legacy_spatial:
+            obj_list = []
+            for location in spatial_data:
+                obj, created = Spatial.objects.get_or_create(
+                    in_scheme=location["in_scheme"],
+                    url=location["identifier"],
+                    pref_label=location["pref_label"],
+                    full_address=location.get("full_address"),
+                    geographic_name=location.get("geographic_name"),
+                    dataset=self,
+                )
+                obj_list.append(obj)
+            return obj_list
+
+    def attach_temporal(self):
+        records = []
+        if temporal := self.legacy_research_dataset.get("temporal"):
+            for record in temporal:
+                start_date, end_date = self.parse_temporal_timestamps(record)
+                instance, created = Temporal.objects.get_or_create(
+                    dataset=self,
+                    start_date=start_date,
+                    end_date=end_date,
+                    provenance=None,
+                )
+                records.append(instance)
+        return records
+
+    def attach_other_identifiers(self):
+        records = []
+        if other_ids := self.legacy_other_identifiers:
+            for other_id in other_ids:
+                id_type, id_type_created = IdentifierType.objects.get_or_create(
+                    in_scheme=other_id["in_scheme"],
+                    url=other_id["identifier"],
+                    defaults={"pref_label": other_id["pref_label"]},
+                )
+                instance, created = OtherIdentifier.objects.get_or_create(
+                    dataset=self,
+                    notation=other_id["notation"],
+                    defaults={"identifier_type": id_type},
+                )
+                records.append(instance)
+        self.other_identifiers.set(records)
+        return records
+
+    def attach_contract(self) -> Contract:
+        if self.legacy_contract:
+            contract, created = Contract.objects.get_or_create(
+                quota=self.legacy_contract["quota"],
+                valid_from=self.legacy_contract["validity"]["start_date"],
+                description=self.legacy_contract["description"],
+                title={"fi": self.legacy_contract["title"]},
+                url=self.legacy_contract["identifier"],
+            )
+            self.contract = contract
+            return contract
+
+    def attach_actor(self, actor_role):
+
+        actors_data = self.legacy_research_dataset[actor_role]
+
+        # In case of publisher, actor is dictionary instead of list
+        if isinstance(actors_data, dict):
+            actors_data = [actors_data]
+
+        actors = []
+        for actor in actors_data:
+            dataset_actor = DatasetActor.get_instance_from_v2_dictionary(
+                actor, self, actor_role
+            )
+            actors.append(dataset_actor)
+
+        return actors
+
+    def attach_files(self):
+        file_objects = []
+        if files := self.files_json:
+            for f in files:
+                file_id = f["identifier"]
+                file_checksum = None
+                if checksum := f["checksum"]:
+                    checked = parse_datetime(checksum["checked"])
+                    file_checksum, checksum_created = Checksum.objects.get_or_create(
+                        date_checked=checked,
+                        hash_value=checksum["value"],
+                        algorithm=checksum["algorithm"],
+                    )
+                new_file, created = File.objects.get_or_create(
+                    v2_identifier=file_id,
+                    defaults={
+                        "byte_size": f["byte_size"],
+                        "file_name": f["file_name"],
+                        "file_path": f["file_path"],
+                        "file_format": f["file_format"],
+                        "date_uploaded": f["file_uploaded"],
+                        "v2_identifier": f["identifier"],
+                    },
+                )
+                if file_checksum:
+                    new_file.checksum = file_checksum
+                file_objects.append(new_file)
+        self.files.set(file_objects)
+        return file_objects
+
+    def attach_provenance(self):
+        """
+
+        Returns: object list
+
+        """
+        obj_list = []
+        if provenance_data := self.legacy_research_dataset.get("provenance"):
+            for data in provenance_data:
+                provenance, provenance_created = Provenance.objects.get_or_create(
+                    title=data["title"], description=data["description"], dataset=self
+                )
+                logger.info(f"{provenance=}, created={provenance_created}")
+                if spatial_data := data.get("spatial"):
+                    place_uri = spatial_data["place_uri"]
+                    spatial, spatial_created = Spatial.objects.get_or_create(
+                        full_address=spatial_data.get("full_address"),
+                        geographic_name=spatial_data.get("geographic_name"),
+                        in_scheme=place_uri["in_scheme"],
+                        url=place_uri["identifier"],
+                        pref_label=place_uri["pref_label"],
+                    )
+                    logger.info(f"{spatial=}, created={spatial_created}")
+                    provenance.spatial = spatial
+                if temporal_data := data.get("temporal"):
+                    start_date, end_date = self.parse_temporal_timestamps(temporal_data)
+                    temporal, temporal_created = Temporal.objects.get_or_create(
+                        start_date=start_date,
+                        end_date=end_date,
+                        provenance=provenance,
+                        dataset=None,
+                    )
+                    logger.info(f"{temporal=}, created={temporal_created}")
+                if variables := data.get("variable"):
+                    for var in variables:
+                        (
+                            variable,
+                            variable_created,
+                        ) = ProvenanceVariable.objects.get_or_create(
+                            pref_label=var["pref_label"],
+                            provenance=provenance,
+                            representation=var.get("representation"),
+                        )
+                if event_outcome_data := data.get("event_outcome"):
+                    event_outcome, created = EventOutcome.objects.get_or_create(
+                        in_scheme=event_outcome_data["in_scheme"],
+                        url=event_outcome_data["identifier"],
+                        pref_label=event_outcome_data["pref_label"],
+                    )
+                    provenance.event_outcome = event_outcome
+                if lifecycle_event_data := data.get("lifecycle_event"):
+                    lifecycle_event, created = LifecycleEvent.objects.get_or_create(
+                        in_scheme=lifecycle_event_data["in_scheme"],
+                        url=lifecycle_event_data["identifier"],
+                        pref_label=lifecycle_event_data["pref_label"],
+                    )
+                    provenance.lifecycle_event = lifecycle_event
+                associated_with_objs = []
+                if was_associated_with := data.get("was_associated_with"):
+                    for actor_data in was_associated_with:
+                        actor = DatasetActor.get_instance_from_v2_dictionary(
+                            actor_data, self, "provenance"
+                        )
+                        associated_with_objs.append(actor)
+
+                provenance.is_associated_with.set(associated_with_objs)
+                if data.get("outcome_description"):
+                    provenance.outcome_description = data.get("outcome_description")
+
+                provenance.save()
+                obj_list.append(provenance)
+        return obj_list
+
+    def attach_projects(self):
+        obj_list = []
+        if project_data := self.legacy_research_dataset.get("is_output_of"):
+            for data in project_data:
+                project, created = DatasetProject.objects.get_or_create(
+                    name=data["name"],
+                    project_identifier=data["identifier"],
+                    funder_identifier=data.get("funder_identifier"),
+                )
+                funder_type, created = FunderType.objects.get_or_create(
+                    in_scheme=data["funder_type"]["in_scheme"],
+                    url=data["funder_type"]["identifier"],
+                    pref_label=data["funder_type"]["pref_label"],
+                )
+                project.funder_type = funder_type
+                funders = []
+                participants = []
+                for funder in data.get("has_funding_agency", []):
+                    org = Organization.get_instance_from_v2_dictionary(funder)
+                    funders.append(org)
+                for participant in data.get("source_organization", []):
+                    org = Organization.get_instance_from_v2_dictionary(participant)
+                    participants.append(org)
+                project.funding_agency.set(funders)
+                project.participating_organization.set(participants)
+                project.save()
+                obj_list.append(project)
+        return obj_list
+
+    def prepare_dataset_for_v3(self) -> PreparedInstances:
+        """Define fields and related objects that can be set before save
+
+        Returns:
+            PreparedInstances: Created objects
+
+        """
+        self.convert_root_level_fields()
+        self.convert_research_dataset_fields()
+
+        access_rights = self.attach_access_rights()
+        data_catalog = self.attach_data_catalog()
+        contract = self.attach_contract()
+        metadata_owner = self.attach_metadata_owner()
+
+        access_rights.save()
+        data_catalog.save()
+
+        if contract:
+            contract.save()
+
+        return PreparedInstances(
+            access_rights=access_rights,
+            data_catalog=data_catalog,
+            contract=contract,
+            metadata_owner=metadata_owner,
+        )
+
+    def post_process_dataset_for_v3(self) -> PostProcessedInstances:
+        """Define fields and related objects that can be set after save
+
+        These are ManyToMany and reverse ForeignKey fields
+
+        Returns:
+            PostProcessedInstances: Created objects
+        """
+
+        return PostProcessedInstances(
+            languages=self.attach_ref_data_list(
+                legacy_property_name="legacy_languages",
+                target_many_to_many_field="language",
+                ref_data_model=Language,
+                pref_label_key_name="title",
+            ),
+            spatial=self.attach_spatial(),
+            creators=self.attach_actor("creator"),
+            publisher=self.attach_actor("publisher"),
+            files=self.attach_files(),
+            temporal=self.attach_temporal(),
+            other_identifiers=self.attach_other_identifiers(),
+            field_of_science=self.attach_ref_data_list(
+                legacy_property_name="legacy_field_of_science",
+                target_many_to_many_field="field_of_science",
+                ref_data_model=FieldOfScience,
+            ),
+            provenance=self.attach_provenance(),
+            projects=self.attach_projects(),
+        )
+
+    def check_compatability(self) -> Dict:
+        v3_version = parse_iso_dates_in_nested_dict(self.as_v2_dataset())
+        v2_version = parse_iso_dates_in_nested_dict(self.dataset_json)
+        diff = DeepDiff(
+            v2_version,
+            v3_version,
+            ignore_order=True,
+            exclude_paths=[
+                "identifier",
+                "id",
+                "api_meta",
+                "service_modified",
+                "service_created",
+                "root['data_catalog']['id']",
+                "root['research_dataset']['metadata_version_identifier']",
+                "root['dataset_version_set']",
+                "date_modified",
+            ],
+            truncate_datetime="day",
+        )
+        logger.info(f"diff={diff.to_json()}")
+        return eval(diff.to_json())

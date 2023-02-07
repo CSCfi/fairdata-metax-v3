@@ -146,6 +146,13 @@ class DataCatalogFactory(factory.django.DjangoModelFactory):
             for language in extracted:
                 self.language.add(language)
 
+class ChecsumFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.Checksum
+
+    hash_value = factory.Faker("md5")
+    algorithm = "md5"
+    date_checked = factory.LazyFunction(timezone.now)
 
 class FileFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -156,7 +163,7 @@ class FileFactory(factory.django.DjangoModelFactory):
     file_name = factory.Faker("file_name")
     file_format = factory.Faker("file_extension")
     file_path = factory.Faker("file_path")
-    checksum = factory.Faker("md5")
+    checksum = factory.SubFactory(ChecsumFactory)
     project_identifier = factory.Faker("numerify", text="#######")
     byte_size = factory.Faker("random_number")
 

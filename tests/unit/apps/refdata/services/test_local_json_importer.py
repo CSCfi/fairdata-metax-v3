@@ -52,7 +52,6 @@ def test_import_local_json_license(local_ref_data_importer):
         "fi": "Creative Commons Nimeä 4.0 Kansainvälinen (CC BY 4.0)",
     }
     assert ccby.same_as == ["https://creativecommons.org/licenses/by/4.0/"]
-    assert ccby.license == "https://creativecommons.org/licenses/by/4.0/"
 
 
 def test_import_local_json_file_format(local_ref_data_importer):

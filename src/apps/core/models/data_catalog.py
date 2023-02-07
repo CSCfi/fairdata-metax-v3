@@ -1,7 +1,10 @@
 import json
 import uuid
-from django.conf import settings
-from .abstracts import AbstractBaseModel, AbstractDatasetProperty
+from .abstracts import (
+    AbstractBaseModel,
+    AbstractDatasetProperty,
+    AbstractFreeformConcept,
+)
 from django.contrib.postgres.fields import HStoreField
 from django.db import models
 from apps.core.models.concepts import AccessType, Language, License
@@ -23,8 +26,7 @@ class DataCatalog(AbstractBaseModel):
         language (models.ManyToManyField): default language of the catalog
         publisher (models.ForeignKey): publisher of the cataloged resources
         access_rights (models.ForeignKey): default access rights for the cataloged resources
-        research_dataset_schema (models.CharField): the schema which the catalog resources comply to
-
+        dataset_schema (models.CharField): the schema which the catalog resources comply to
     """
 
     # https://www.w3.org/TR/vocab-dcat-3/#Property:resource_identifier
@@ -123,9 +125,9 @@ class AccessRights(AbstractBaseModel):
     https://www.w3.org/TR/vocab-dcat-3/#Property:resource_access_rights
 
     Attributes:
-        license (models.ForeignKey): Resource license
-        access_type (models.ForeignKey): Resource Access Type
-        description (HStoreField): description of the access rights
+        license(models.ManyToManyField): ManyToMany relation to License
+        access_type(AccessType): AccessType ForeignKey relation
+        description(HStoreField): Description of the access rights
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -152,3 +154,15 @@ class AccessRights(AbstractBaseModel):
             return str(next(iter(description.items())))
         else:
             return self.access_type.pref_label.get("en", "access rights")
+
+
+class AccessRightsRestrictionGrounds(AbstractFreeformConcept):
+    """Justification for the restriction of a dataset.
+
+    Attributes:
+        access_rights(AccessRights): AccessRights ForeignKey relation
+    """
+
+    access_rights = models.ForeignKey(
+        AccessRights, on_delete=models.CASCADE, related_name="restriction_grounds"
+    )

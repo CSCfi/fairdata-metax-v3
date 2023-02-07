@@ -1,9 +1,9 @@
 from uuid import UUID
-from django.db import IntegrityError
+
+from django.conf import settings
 import pytest
 from os import path
 
-from requests import request
 from apps.refdata.models import FieldOfScience, Location
 
 from apps.refdata.services.importers import FintoImporter, FintoLocationImporter

@@ -55,16 +55,16 @@ class Distribution(AbstractBaseModel):
     access_rights = models.ForeignKey(
         AccessRights, on_delete=models.SET_NULL, related_name="distributions", null=True
     )
-    access_url = models.URLField()
+    access_url = models.URLField(null=True, blank=True)
     access_service = models.ForeignKey(
         DataStorage,
         on_delete=models.SET_NULL,
         related_name="distributions",
         null=True,
     )
-    download_url = models.URLField()
+    download_url = models.URLField(null=True, blank=True)
     byte_size = models.BigIntegerField(default=0)
-    checksum = models.TextField()
+    checksum = models.TextField(null=True, blank=True)
     files = models.ManyToManyField(File, related_query_name="distributions")
     dataset = models.ForeignKey(
         Dataset,

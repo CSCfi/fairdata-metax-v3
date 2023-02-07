@@ -1,0 +1,33 @@
+[
+  {
+    "identifier": "639b1b350f72a466624227f50077",
+    "checksum": {
+      "checked": "2022-12-15T13:03:50Z",
+      "value": "ac56ea40671eae4eaa1659f8f991e10b85af57f1c890e926c486a7026107f1b3",
+      "algorithm": "SHA-256"
+    },
+    "open_access": true,
+    "file_modified": "2019-08-19T12:49:10+03:00",
+    "file_frozen": "2022-12-15T15:03:49+02:00",
+    "user_created": "fd_tonurmi@cscuserid",
+    "file_path": "/2017-Scrum-Guide-US.pdf",
+    "id": 21445,
+    "parent_directory": {
+      "identifier": "a14044676fd139d49f8028afb1b26bb1",
+      "id": 2522
+    },
+    "file_format": "pdf",
+    "project_identifier": "fd_tonurmi_project",
+    "date_created": "2022-12-15T15:03:51+02:00",
+    "pas_compatible": true,
+    "file_uploaded": "2022-12-15T15:03:51+02:00",
+    "file_name": "2017-Scrum-Guide-US.pdf",
+    "removed": false,
+    "service_created": "ida",
+    "file_storage": {
+      "identifier": "pid:urn:storageidentifier1",
+      "id": 1
+    },
+    "byte_size": 595968
+  }
+]

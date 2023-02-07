@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from simple_history.admin import SimpleHistoryAdmin
+
 # Register your models here.
 from apps.core.models import (
     CatalogHomePage,
@@ -13,6 +14,16 @@ from apps.core.models import (
     Distribution,
     File,
     Contract,
+    LegacyDataset,
+    Provenance,
+    DatasetActor,
+    Temporal,
+    Spatial,
+    OtherIdentifier,
+    DatasetProject,
+    AccessRightsRestrictionGrounds,
+    Checksum,
+    MetadataProvider,
 )
 
 
@@ -36,6 +47,11 @@ class AccessRightsAdmin(AbstractDatasetPropertyBaseAdmin):
     pass
 
 
+@admin.register(AccessRightsRestrictionGrounds)
+class AccessRightsRestrictionGroundsAdmin(admin.ModelAdmin):
+    pass
+
+
 @admin.register(DataCatalog)
 class DataCatalogAdmin(AbstractDatasetPropertyBaseAdmin):
     list_display = (
@@ -51,6 +67,11 @@ class DataCatalogAdmin(AbstractDatasetPropertyBaseAdmin):
         "created",
         "modified",
     )
+
+
+@admin.register(MetadataProvider)
+class MetadataProviderAdmin(admin.ModelAdmin):
+    list_display = ("user", "organization")
 
 
 @admin.register(CatalogRecord)
@@ -81,6 +102,62 @@ class DatasetAdmin(AbstractDatasetPropertyBaseAdmin):
     )
 
 
+@admin.register(DatasetActor)
+class DatasetActorAdmin(admin.ModelAdmin):
+    list_display = ("role", "user", "organization")
+
+
+@admin.register(Temporal)
+class TemporalAdmin(admin.ModelAdmin):
+    list_display = ("start_date", "end_date")
+
+
+@admin.register(Provenance)
+class ProvenanceAdmin(admin.ModelAdmin):
+    list_display = ("title",)
+
+
+@admin.register(Spatial)
+class SpatialAdmin(admin.ModelAdmin):
+    list_display = ("full_address", "geographic_name")
+
+
+@admin.register(OtherIdentifier)
+class OtherIdentifierAdmin(admin.ModelAdmin):
+    list_display = ("notation", "dataset")
+
+
+@admin.register(DatasetProject)
+class DatasetProjectAdmin(admin.ModelAdmin):
+    list_display = ("name", )
+
+
+@admin.register(LegacyDataset)
+class LegacyDatasetAdmin(DatasetAdmin):
+    fields = (
+        "dataset_json",
+        "contract_json",
+        "title",
+        "data_catalog",
+        "access_rights",
+        "keyword",
+        "is_deprecated",
+        "created",
+        "modified",
+        "issued",
+    )
+    readonly_fields = (
+        "title",
+        "data_catalog",
+        "created",
+        "modified",
+        "issued",
+        "access_rights",
+        "keyword",
+        "is_deprecated",
+    )
+
+
 @admin.register(DataStorage)
 class DataStorageAdmin(AbstractDatasetPropertyBaseAdmin):
     list_display = (
@@ -103,6 +180,11 @@ class FileAdmin(AbstractDatasetPropertyBaseAdmin):
         "file_path",
     )
     list_filter = ["date_frozen"]
+
+
+@admin.register(Checksum)
+class CheckSumAdmin(admin.ModelAdmin):
+    list_display = ("hash_value",)
 
 
 @admin.register(Contract)

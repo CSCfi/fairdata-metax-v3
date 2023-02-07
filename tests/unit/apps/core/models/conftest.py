@@ -112,8 +112,8 @@ def contract() -> Contract:
         "sv": "Titel 5",
     }
     quota = 111204
-    valid_until = "2023-12-31 15:25:00+01"
-    return Contract(title=title, quota=quota, valid_until=valid_until)
+    valid_from = "2023-12-31 15:25:00+01"
+    return Contract(title=title, quota=quota, valid_until=valid_from)
 
 
 @pytest.fixture
@@ -203,14 +203,12 @@ def distribution() -> Distribution:
 @pytest.fixture
 def file() -> File:
     byte_size = 999
-    checksum = "ABC-123456"
     file_name = "awesome_file_name"
     file_path = "/project_x/path/file.pdf"
     date_uploaded = "2021-12-31 15:25:00+01"
     identifier = "12345678-51d3-4c25-ad20-75aff8ca19e7"
     return factories.FileFactory(
         byte_size=byte_size,
-        checksum=checksum,
         file_name=file_name,
         file_path=file_path,
         date_uploaded=date_uploaded,

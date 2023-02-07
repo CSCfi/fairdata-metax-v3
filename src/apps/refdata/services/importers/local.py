@@ -58,6 +58,4 @@ class LocalJSONLicenseImporter(LocalJSONImporter):
 
     def data_item_from_json(self, json_item):
         item = super().data_item_from_json(json_item)
-        if item.get("same_as"):
-            item["license"] = item["same_as"][0]
         return item
