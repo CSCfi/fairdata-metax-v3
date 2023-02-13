@@ -4,16 +4,67 @@ from unittest.mock import patch, Mock
 import pytest
 from django.utils import timezone
 from pytest_bdd import when, then, scenario
+from rest_framework.reverse import reverse
 
 from apps.core import factories
 from apps.core.models import Distribution
+from apps.files.models import StorageProject
 
 logger = logging.getLogger(__name__)
 
 
 @pytest.fixture
-@when("user freezes new files in IDA")
-def post_ida_file(mock_request):
+def project_identifier():
+    return "project_x"
+
+
+@pytest.fixture
+def files_json(ida_file_storage, project_identifier):
+    return [
+        {
+            "file_path": "/data/1.csv",
+            "date_uploaded": "2022-11-13T12:34:00Z",
+            "file_modified": "2022-11-13T12:34:00Z",
+            "project_identifier": project_identifier,
+            "file_storage": ida_file_storage.id,
+            "byte_size": 1024,
+            "checksum": {
+                "value": "123",
+                "algorithm": "MD5",
+                "checked": "2022-11-13T12:34:00Z",
+            },
+        },
+        {
+            "file_path": "/data/2.csv",
+            "date_uploaded": "2022-11-13T12:34:00Z",
+            "file_modified": "2022-11-13T12:34:00Z",
+            "project_identifier": project_identifier,
+            "file_storage": ida_file_storage.id,
+            "byte_size": 1024,
+            "checksum": {
+                "value": "123",
+                "algorithm": "MD5",
+                "checked": "2022-11-13T12:34:00Z",
+            },
+        },
+        {
+            "file_path": "/data/3.csv",
+            "date_uploaded": "2022-11-13T12:34:00Z",
+            "file_modified": "2022-11-13T12:34:00Z",
+            "project_identifier": project_identifier,
+            "file_storage": ida_file_storage.id,
+            "byte_size": 1024,
+            "checksum": {
+                "value": "123",
+                "algorithm": "MD5",
+                "checked": "2022-11-13T12:34:00Z",
+            },
+        },
+    ]
+
+
+@when("user freezes new files in IDA", target_fixture="file_response")
+def post_ida_file(admin_client, files_json):
     """
 
     TODO:
@@ -23,14 +74,12 @@ def post_ida_file(mock_request):
 
     """
 
-    yield mock_request(201)
-    raise NotImplementedError
+    url = reverse("files-list")
+    return admin_client.post(url, files_json, content_type="application/json")
 
 
-
-@pytest.fixture
-@when("a new distribution is created")
-def created_distribution(ida_file_storage) -> Distribution:
+@then("a new storage project is created", target_fixture="created_storage_project")
+def created_storage_project(ida_file_storage, project_identifier) -> StorageProject:
     """
 
     Args:
@@ -40,12 +89,13 @@ def created_distribution(ida_file_storage) -> Distribution:
         Distribution: Distribution from freezing action on IDA
 
     """
-    return factories.DistributionFactory(access_service=ida_file_storage)
+    return StorageProject.available_objects.get(
+        file_storage=ida_file_storage, project_identifier=project_identifier
+    )
 
 
-@pytest.fixture
-@when("the distribution has the files associated with it")
-def distribution_with_files(created_distribution) -> Distribution:
+@then("the storage project has the files associated with it")
+def storage_project(created_storage_project, files_json) -> StorageProject:
     """Ensure files are associated with the distribution
 
     Args:
@@ -55,51 +105,24 @@ def distribution_with_files(created_distribution) -> Distribution:
         Distribution: Frozen Distribution with files
 
     """
-    file1 = factories.FileFactory(date_frozen=timezone.now())
-    file2 = factories.FileFactory(date_frozen=timezone.now())
-    created_distribution.files.add(file1, file2)
-    return created_distribution
-
-
-@pytest.fixture
-@when("distribution is associated with an IDA project")
-def distribution_with_project_id(distribution_with_files):
-    """Ensure Distribution has IDA project id association
-
-    Args:
-        distribution_with_files (): Distribution from freezing action on IDA
-
-    Returns:
-
-    """
-    project_id = 35669
-    distribution_with_files.project_id = Mock()
-    distribution_with_files.project_id = project_id
-
-
-    logger.info(f"{project_id=}")
-
-    yield distribution_with_files, project_id
-    raise NotImplementedError
+    file_paths = set(f["file_path"] for f in files_json)
+    created_paths = set(f.file_path for f in created_storage_project.files.all())
+    assert created_paths == file_paths
 
 
 @then("API returns OK status")
-def files_have_freezing_date(post_ida_file):
+def files_ok_response(file_response):
     """
 
     Args:
-        ida_file_post_request (): POST-request object from IDA to Files API
+        file_response (): response to POST from IDA to Files API
 
     Returns:
 
     """
-    assert post_ida_file.status_code == 201
+    assert file_response.status_code == 201
 
 
-
-@pytest.mark.xfail(raises=NotImplementedError)
 @scenario("file.feature", "IDA User freezes files")
-def test_file_freeze(distribution_with_project_id):
-    distribution, project_id = distribution_with_project_id
-    logger.info(f"{distribution=}, {project_id=}")
-    assert distribution.project_id == project_id
+def test_file_freeze():
+    pass

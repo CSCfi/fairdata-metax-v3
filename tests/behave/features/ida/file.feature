@@ -1,5 +1,5 @@
 # Created by tonurmi at 12.5.2022
-@file @ida @distribution
+@file @ida
 Feature: IDA File metadata
   User is able to upload files to the IDA-service, freeze them, and once frozen, select frozen files for inclusion in a
   dataset in the Qvain-service.
@@ -38,10 +38,9 @@ Feature: IDA File metadata
 
   Scenario: IDA User freezes files
     When user freezes new files in IDA
-    And a new distribution is created
-    And the distribution has the files associated with it
-    And distribution is associated with an IDA project
-    Then API returns OK status
+    Then a new storage project is created
+    And the storage project has the files associated with it
+    And API returns OK status
 
   Scenario: IDA user unfreezes files
     When user unfreezes file in IDA

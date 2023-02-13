@@ -2,6 +2,7 @@ import factory
 from django.utils import timezone
 
 from apps.users.factories import MetaxUserFactory
+from apps.files.factories import FileStorageFactory, FileFactory, StorageProjectFactory
 from . import models
 
 
@@ -77,9 +78,7 @@ class ThemeFactory(factory.django.DjangoModelFactory):
         model = models.Theme
         django_get_or_create = ("url",)
 
-    pref_label = factory.Dict(
-        {"en": factory.Sequence(lambda n: f"dataset-theme-{n}")}
-    )
+    pref_label = factory.Dict({"en": factory.Sequence(lambda n: f"dataset-theme-{n}")})
 
     @factory.sequence
     def url(self):
@@ -146,43 +145,6 @@ class DataCatalogFactory(factory.django.DjangoModelFactory):
             for language in extracted:
                 self.language.add(language)
 
-class ChecsumFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = models.Checksum
-
-    hash_value = factory.Faker("md5")
-    algorithm = "md5"
-    date_checked = factory.LazyFunction(timezone.now)
-
-class FileFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = models.File
-        django_get_or_create = ("file_path",)
-
-    date_uploaded = factory.LazyFunction(timezone.now)
-    file_name = factory.Faker("file_name")
-    file_format = factory.Faker("file_extension")
-    file_path = factory.Faker("file_path")
-    checksum = factory.SubFactory(ChecsumFactory)
-    project_identifier = factory.Faker("numerify", text="#######")
-    byte_size = factory.Faker("random_number")
-
-    @factory.post_generation
-    def file_format(self, create, extracted, **kwargs):
-        if not create:
-            return
-
-        self.file_name = str(self.file_path).split("/")[-1]
-        self.file_format = str(self.file_name).split(".")[-1]
-
-
-class DataStorageFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = models.DataStorage
-        django_get_or_create = ("id",)
-
-    id = factory.Sequence(lambda n: f"data-storage-{n}")
-
 
 class CatalogRecordFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -213,7 +175,7 @@ class DistributionFactory(factory.django.DjangoModelFactory):
     license = factory.SubFactory(LicenseFactory)
     access_rights = factory.SubFactory(AccessRightsFactory)
     dataset = factory.SubFactory(DatasetFactory)
-    access_service = factory.SubFactory(DataStorageFactory)
+    access_service = factory.SubFactory(FileStorageFactory)
 
     @factory.post_generation
     def files(self, create, extracted, **kwargs):

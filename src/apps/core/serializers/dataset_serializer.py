@@ -82,9 +82,7 @@ class DatasetSerializer(serializers.ModelSerializer):
         if access_rights_data := validated_data.pop("access_rights", None):
             access_rights = access_rights_serializer.create(access_rights_data)
 
-        dataset = Dataset.objects.create(
-            **validated_data, access_rights=access_rights
-        )
+        dataset = Dataset.objects.create(**validated_data, access_rights=access_rights)
 
         dataset.language.set(languages)
         dataset.theme.set(themes)

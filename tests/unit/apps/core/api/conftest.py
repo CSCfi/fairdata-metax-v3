@@ -4,9 +4,6 @@ import pytest
 import logging
 
 from rest_framework.test import APIClient
-from apps.core import factories
-
-from apps.refdata.models import License
 
 logger = logging.getLogger(__name__)
 
@@ -156,39 +153,3 @@ def access_right_put_alfa_json():
 @pytest.fixture
 def dataset_access_right_error_json():
     return load_test_json("access_right_error.json")
-
-
-@pytest.fixture
-def datastorage_a_json():
-    return load_test_json("datastorage_a.json")
-
-
-@pytest.fixture
-def datastorage_b_json():
-    return load_test_json("datastorage_b.json")
-
-
-@pytest.fixture
-def datastorage_c_json():
-    return load_test_json("datastorage_c.json")
-
-
-@pytest.fixture
-def datastorage_a_updated_json():
-    return load_test_json("datastorage_a_updated.json")
-
-
-@pytest.fixture
-def datastorage_a_invalid_json():
-    return load_test_json("datastorage_a_invalid.json")
-
-
-@pytest.fixture
-def post_datastorage_payloads_a_b_c(
-    client, datastorage_a_json, datastorage_b_json, datastorage_c_json
-):
-    url = "/rest/v3/datastorage"
-    res1 = client.post(url, datastorage_a_json, content_type="application/json")
-    res2 = client.post(url, datastorage_b_json, content_type="application/json")
-    res3 = client.post(url, datastorage_c_json, content_type="application/json")
-    return res1, res2, res3

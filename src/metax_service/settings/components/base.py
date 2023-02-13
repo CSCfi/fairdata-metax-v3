@@ -69,16 +69,18 @@ THIRD_PARTY_APPS = [
     "django_extensions",
     "drf_yasg",
     "django_filters",
-    'simple_history',
+    "simple_history",
 ]
 LOCAL_APPS = [
     "users.apps.UsersConfig",
     "core.apps.CoreConfig",
     "refdata.apps.ReferenceDataConfig",
     "actors.apps.ActorsConfig",
+    "files.apps.FilesConfig",
 ]
 
 INSTALLED_APPS = DEFAULT_APPS + THIRD_PARTY_APPS + LOCAL_APPS
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -88,8 +90,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    'simple_history.middleware.HistoryRequestMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
+    "simple_history.middleware.HistoryRequestMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
 ]
 
 ROOT_URLCONF = "metax_service.urls"
@@ -206,6 +208,10 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ]
+}
+
+SWAGGER_SETTINGS = {
+    "DEEP_LINKING": True  # Automatically update URL fragment with current operation in Swagger UI
 }
 
 FACTORY_BOY_RANDOM_SEED = "metax-service"

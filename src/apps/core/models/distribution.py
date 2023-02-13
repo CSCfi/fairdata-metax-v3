@@ -1,11 +1,10 @@
-from django.conf import settings
 from simple_history.models import HistoricalRecords
 
 from .abstracts import AbstractBaseModel
 from .data_catalog import AccessRights
 from .catalog_record import Dataset
-from .files import File
-from .services import DataStorage
+from apps.files.models.file import File
+from apps.files.models.file_storage import FileStorage
 from .concepts import License
 from django.contrib.postgres.fields import HStoreField
 from django.db import models
@@ -57,7 +56,7 @@ class Distribution(AbstractBaseModel):
     )
     access_url = models.URLField(null=True, blank=True)
     access_service = models.ForeignKey(
-        DataStorage,
+        FileStorage,
         on_delete=models.SET_NULL,
         related_name="distributions",
         null=True,

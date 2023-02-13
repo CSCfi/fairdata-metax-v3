@@ -9,7 +9,6 @@ from django.utils.translation import gettext as _
 from django.db import models
 from django.contrib.postgres.fields import ArrayField, HStoreField
 
-from .files import File
 from .abstracts import AbstractBaseModel
 from .data_catalog import AccessRights, DataCatalog, DatasetPublisher
 from .contract import Contract
@@ -19,6 +18,7 @@ from .concepts import (
     FieldOfScience,
     IdentifierType,
 )
+from apps.files.models import File
 from simple_history.models import HistoricalRecords
 from apps.refdata import models as refdata
 
@@ -38,7 +38,6 @@ class MetadataProvider(AbstractBaseModel):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     organization = models.CharField(max_length=512)
-
 
 class CatalogRecord(AbstractBaseModel):
     """A record in a catalog, describing the registration of a single resource.

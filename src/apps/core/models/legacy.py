@@ -10,7 +10,6 @@ from django.utils.dateparse import parse_datetime
 from django.contrib.auth import get_user_model
 
 from .provenance import ProvenanceVariable, Provenance
-from .files import File, Checksum
 from .contract import Contract
 from .concepts import (
     License,
@@ -35,6 +34,8 @@ from apps.actors.models import Actor, Organization
 from apps.users.models import MetaxUser
 from apps.core.helpers import parse_iso_dates_in_nested_dict
 from apps.refdata.models import FunderType
+from apps.files.models import File, FileStorage
+from apps.files.serializers.file_serializer import get_or_create_storage_project
 
 logger = logging.getLogger(__name__)
 
@@ -396,22 +397,28 @@ class LegacyDataset(Dataset):
             for f in files:
                 file_id = f["identifier"]
                 file_checksum = None
-                if checksum := f["checksum"]:
-                    checked = parse_datetime(checksum["checked"])
-                    file_checksum, checksum_created = Checksum.objects.get_or_create(
-                        date_checked=checked,
-                        hash_value=checksum["value"],
-                        algorithm=checksum["algorithm"],
-                    )
+                checksum = f.get("checksum", {})
+
+                file_storage, created = FileStorage.objects.get_or_create(
+                    id=f["file_storage"]["identifier"]
+                )
+                storage_project = get_or_create_storage_project(
+                    project_identifier=f["project_identifier"],
+                    file_storage_id=file_storage.id,
+                )
+
                 new_file, created = File.objects.get_or_create(
                     v2_identifier=file_id,
                     defaults={
+                        "checksum_value": checksum.get("value"),
+                        "checksum_algorithm": checksum.get("algorithm"),
+                        "checksum_checked": parse_datetime(checksum.get("checked")),
                         "byte_size": f["byte_size"],
-                        "file_name": f["file_name"],
                         "file_path": f["file_path"],
-                        "file_format": f["file_format"],
-                        "date_uploaded": f["file_uploaded"],
+                        "date_uploaded": f["date_uploaded"],
+                        "file_modified": f["file_modified"],
                         "v2_identifier": f["identifier"],
+                        "storage_project": storage_project,
                     },
                 )
                 if file_checksum:

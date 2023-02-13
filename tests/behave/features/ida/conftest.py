@@ -13,11 +13,11 @@ def ida_file_storage(ida_data_catalog):
         ida_data_catalog (): IDA-catalog instance
 
     TODO:
-        * Associate IDA-catalog with DataStorage on Model level
+        * Associate IDA-catalog with FileStorage on Model level
 
 
 
     Returns:
 
     """
-    return factories.DataStorageFactory()
+    return factories.FileStorageFactory(id="urn:nbn:fi:att:file-storage-ida")

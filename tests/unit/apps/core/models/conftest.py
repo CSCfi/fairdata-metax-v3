@@ -8,13 +8,15 @@ from apps.core.models import (
     AccessRights,
     DataCatalog,
     CatalogRecord,
-    DataStorage,
-    File,
     FieldOfScience,
     Theme,
     Distribution,
     Dataset,
     Contract,
+)
+from apps.files.models import (
+    FileStorage,
+    File,
 )
 from apps.core import factories
 
@@ -167,11 +169,11 @@ def catalog_record(data_catalog, contract) -> CatalogRecord:
 
 
 @pytest.fixture
-def data_storage() -> DataStorage:
+def file_storage() -> FileStorage:
     identifier = "test-data-storage"
     endpoint_url = "https://www.test-123456dcba.fi"
     endpoint_description = "Test-Data-Storage that is used for testing files"
-    return factories.DataStorageFactory(
+    return factories.FileStorageFactory(
         id=identifier,
         endpoint_url=endpoint_url,
         endpoint_description=endpoint_description,
@@ -203,14 +205,16 @@ def distribution() -> Distribution:
 @pytest.fixture
 def file() -> File:
     byte_size = 999
-    file_name = "awesome_file_name"
+    checksum = "ABC-123456"
     file_path = "/project_x/path/file.pdf"
     date_uploaded = "2021-12-31 15:25:00+01"
+    file_modified = "2021-12-31 12:25:00+01"
     identifier = "12345678-51d3-4c25-ad20-75aff8ca19e7"
     return factories.FileFactory(
         byte_size=byte_size,
-        file_name=file_name,
+        checksum_value=checksum,
         file_path=file_path,
+        file_modified=file_modified,
         date_uploaded=date_uploaded,
         id=identifier,
     )
@@ -235,7 +239,7 @@ def dataset_property_object_factory(
 
 @pytest.fixture
 def abstract_base_object_factory(
-    dataset_publisher, access_rights, catalog_record, data_storage, file, contract
+    dataset_publisher, access_rights, catalog_record, file_storage, file, contract
 ):
     def _abstract_base_object_factory(object_name):
         if object_name == "dataset_publisher":
@@ -244,8 +248,8 @@ def abstract_base_object_factory(
             return access_rights
         elif object_name == "catalog_record":
             return catalog_record
-        elif object_name == "data_storage":
-            return data_storage
+        elif object_name == "file_storage":
+            return file_storage
         elif object_name == "file":
             return file
         elif object_name == "contract":

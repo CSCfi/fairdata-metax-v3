@@ -5,7 +5,7 @@ from django.utils import timezone
 from pytest_bdd import when, then, scenario
 
 from apps.core import factories
-from apps.core.models import File
+from apps.files.models import File
 
 
 @pytest.fixture

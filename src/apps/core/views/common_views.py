@@ -3,13 +3,11 @@ from drf_yasg.utils import swagger_auto_schema
 from django_filters import rest_framework as filters
 from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
+
 from apps.core.models import AccessRights
-from apps.core.models.catalog_record import Dataset
 from apps.core.models.data_catalog import DatasetPublisher
 from apps.core.serializers import (
     DatasetPublisherModelSerializer,
-    AccessRightsModelSerializer,
-    DatasetSerializer,
 )
 
 logger = logging.getLogger(__name__)
@@ -117,28 +115,3 @@ class AccessRightsFilter(filters.FilterSet):
             ("license__pref_label__values", "license_pref_label"),
         )
     )
-
-
-class DatasetFilter(filters.FilterSet):
-    title = filters.CharFilter(
-        field_name="title__values",
-        max_length=512,
-        lookup_expr="icontains",
-        label="title",
-    )
-
-    ordering = filters.OrderingFilter(
-        fields=(
-            ("created", "created"),
-            ("modified", "modified"),
-        )
-    )
-
-
-class DatasetViewSet(viewsets.ModelViewSet):
-    serializer_class = DatasetSerializer
-    queryset = Dataset.objects.all()
-    filter_backends = (filters.DjangoFilterBackend,)
-    filterset_class = DatasetFilter
-    pagination_class = StandardResultsSetPagination
-    http_method_names = ["get", "post", "put", "delete"]

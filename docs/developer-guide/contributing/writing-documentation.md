@@ -8,7 +8,7 @@ MKDocs library is used for writing user- and developer documentation. MkDocs con
 
 ### Literal-nav
 
-`docs/SUMMARY.md` is the main navigation file, that uses [literate-nav](https://oprypin.github.io/mkdocs-literate-nav/) extensions for building the navigation tree. 
+`docs/SUMMARY.md` is the main navigation file, that uses [literate-nav](https://oprypin.github.io/mkdocs-literate-nav/) extensions for building the navigation tree.
 
 !!! warning
 
@@ -21,6 +21,14 @@ MKDocs library is used for writing user- and developer documentation. MkDocs con
 ### Mkdocs Material
 
 [Mkdocs Material](https://squidfunk.github.io/mkdocs-material/) gives many useful [widgets and elements](https://squidfunk.github.io/mkdocs-material/reference/) that can be used as part of documentation.
+
+## Generating source code reference files
+
+To update the source code reference files in `docs/reference/`, remove the existing reference files and run the generation script:
+
+```bash
+python generate_reference.py
+```
 
 ## Running Mkdocs development server
 

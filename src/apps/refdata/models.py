@@ -94,10 +94,9 @@ class AbstractConcept(AbstractBaseModel):
 
 class FieldOfScience(AbstractConcept):
     # TODO: Add codes (skos:notation)
-    class Meta:
+    class Meta(AbstractConcept.Meta):
         verbose_name = "field of science"
         verbose_name_plural = "fields of science"
-        constraints = AbstractConcept.Meta.constraints
 
 
 class Language(AbstractConcept):
@@ -174,10 +173,9 @@ class ResourceType(AbstractConcept):
 
 
 class RestrictionGrounds(AbstractConcept):
-    class Meta:
+    class Meta(AbstractConcept.Meta):
         verbose_name = "restriction grounds"
         verbose_name_plural = "restriction grounds"
-        constraints = AbstractConcept.Meta.constraints
 
 
 class UseCategory(AbstractConcept):

@@ -39,7 +39,7 @@ deepdiff = "^6.2.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.0.1"
-pytest-cov = "^3.0.0"
+pytest-cov = "^4.0.0"
 django-debug-toolbar = "^3.2.4"
 pytest-django = "^4.5.2"
 tox = "^3.24.5"

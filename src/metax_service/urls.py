@@ -52,5 +52,6 @@ urlpatterns = [
     path("reference_data/", include("refdata.urls")),
     path("actors/", include("actors.urls")),
     path("rest/v3/", include(core_urls)),
+    path("rest/v3/", include("files.urls")),
     path("auth/", include("users.urls")),
 ]

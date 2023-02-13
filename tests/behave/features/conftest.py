@@ -1,5 +1,7 @@
 from unittest.mock import MagicMock
 
+import os
+import json
 import pytest
 from django.contrib.auth import get_user_model
 from pytest_bdd import given
@@ -7,6 +9,18 @@ from pytest_bdd import given
 from apps.core import factories
 from apps.core.models import DataCatalog
 
+
+test_data_path = os.path.dirname(os.path.abspath(__file__)) + "/testdata/"
+
+
+def load_test_json(filename):
+    with open(test_data_path + filename) as json_file:
+        data = json.load(json_file)
+    return data
+
+@pytest.fixture
+def ida_files_json():
+    return load_test_json("ida_files.json")
 
 @pytest.fixture
 @given("IDA has its own data-catalog")

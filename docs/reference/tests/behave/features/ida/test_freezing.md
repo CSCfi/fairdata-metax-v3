@@ -1,25 +1,30 @@
 # test_freezing
 
+## project_identifier
+
+### :::tests.behave.features.ida.test_freezing.project_identifier
+
+## files_json
+
+### :::tests.behave.features.ida.test_freezing.files_json
+
 ## post_ida_file
 
 ### :::tests.behave.features.ida.test_freezing.post_ida_file
 
-## created_distribution
+## created_storage_project
 
-### :::tests.behave.features.ida.test_freezing.created_distribution
+### :::tests.behave.features.ida.test_freezing.created_storage_project
 
-## distribution_with_files
+## storage_project
 
-### :::tests.behave.features.ida.test_freezing.distribution_with_files
+### :::tests.behave.features.ida.test_freezing.storage_project
 
-## distribution_with_project_id
+## files_ok_response
 
-### :::tests.behave.features.ida.test_freezing.distribution_with_project_id
-
-## files_have_freezing_date
-
-### :::tests.behave.features.ida.test_freezing.files_have_freezing_date
+### :::tests.behave.features.ida.test_freezing.files_ok_response
 
 ## test_file_freeze
 
 ### :::tests.behave.features.ida.test_freezing.test_file_freeze
+

@@ -10,9 +10,7 @@ from apps.core.models import (
     DataCatalog,
     CatalogRecord,
     Dataset,
-    DataStorage,
     Distribution,
-    File,
     Contract,
     LegacyDataset,
     Provenance,
@@ -22,7 +20,6 @@ from apps.core.models import (
     OtherIdentifier,
     DatasetProject,
     AccessRightsRestrictionGrounds,
-    Checksum,
     MetadataProvider,
 )
 
@@ -129,7 +126,7 @@ class OtherIdentifierAdmin(admin.ModelAdmin):
 
 @admin.register(DatasetProject)
 class DatasetProjectAdmin(admin.ModelAdmin):
-    list_display = ("name", )
+    list_display = ("name",)
 
 
 @admin.register(LegacyDataset)
@@ -158,33 +155,9 @@ class LegacyDatasetAdmin(DatasetAdmin):
     )
 
 
-@admin.register(DataStorage)
-class DataStorageAdmin(AbstractDatasetPropertyBaseAdmin):
-    list_display = (
-        "id",
-        "endpoint_url",
-        "endpoint_description",
-    )
-    list_filter = ("created", "modified")
-
-
 @admin.register(Distribution)
 class DistributionAdmin(AbstractDatasetPropertyBaseAdmin):
     list_filter = ["access_service"]
-
-
-@admin.register(File)
-class FileAdmin(AbstractDatasetPropertyBaseAdmin):
-    list_display = (
-        "file_name",
-        "file_path",
-    )
-    list_filter = ["date_frozen"]
-
-
-@admin.register(Checksum)
-class CheckSumAdmin(admin.ModelAdmin):
-    list_display = ("hash_value",)
 
 
 @admin.register(Contract)
