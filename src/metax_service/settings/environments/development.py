@@ -7,6 +7,7 @@ ALLOWED_HOSTS = [
     "0.0.0.0",  # noqa: S104
     "127.0.0.1",
     "[::1]",
+    "metax.localdomain",
 ]
 INTERNAL_IPS = [
     "127.0.0.1",
