@@ -51,7 +51,7 @@ class File(AbstractBaseModel):
     storage_project = models.ForeignKey(
         StorageProject, related_name="files", on_delete=models.CASCADE
     )
-    is_pas_compatible = models.BooleanField(default=True)
+    is_pas_compatible = models.BooleanField(default=None, null=True)
 
     @property
     def file_path(self) -> str:
