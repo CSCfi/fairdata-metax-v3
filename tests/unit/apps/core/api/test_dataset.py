@@ -28,6 +28,29 @@ def test_create_dataset_invalid_catalog(client, dataset_a_json):
     assert response.status_code == 400
 
 
+@pytest.mark.parametrize(
+    "value,expected_error",
+    [
+        ([{"url": "non_existent"}], "Entries not found for given URLs: non_existent"),
+        ([{"foo": "bar"}], "'url' field must be defined for each object in the list"),
+        (["FI"], "Each item in the list must be an object with the field 'url'"),
+        ("FI", 'Expected a list of items but got type "str".'),
+    ],
+)
+def test_create_dataset_invalid_language(client, dataset_a_json, value, expected_error):
+    """
+    Try creating a dataset with an improperly formatted 'language' field.
+    Each error case has a corresponding error message.
+    """
+    dataset_a_json["language"] = value
+
+    response = client.post(
+        "/rest/v3/dataset", dataset_a_json, content_type="application/json"
+    )
+    assert response.status_code == 400
+    assert response.json()["language"] == [expected_error]
+
+
 @pytest.mark.django_db
 def test_delete_dataset(client, dataset_a_json, data_catalog, reference_data):
     res = client.post("/rest/v3/dataset", dataset_a_json, content_type="application/json")
