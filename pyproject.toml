@@ -56,3 +56,4 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.black]
 force-exclude = "migrations/"
+line-length = 100

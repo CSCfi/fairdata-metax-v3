@@ -1,14 +1,16 @@
 import json
 import uuid
-from .abstracts import (
+
+from django.contrib.postgres.fields import HStoreField
+from django.db import models
+from simple_history.models import HistoricalRecords
+
+from apps.common.models import (
     AbstractBaseModel,
     AbstractDatasetProperty,
     AbstractFreeformConcept,
 )
-from django.contrib.postgres.fields import HStoreField
-from django.db import models
 from apps.core.models.concepts import AccessType, Language, License
-from simple_history.models import HistoricalRecords
 
 
 class DataCatalog(AbstractBaseModel):
@@ -85,6 +87,7 @@ class CatalogHomePage(AbstractDatasetProperty):
         in cases where there is more than one Web-page about the resource.
 
     """
+
     history = HistoricalRecords()
 
 

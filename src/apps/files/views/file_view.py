@@ -94,12 +94,13 @@ class FileViewSet(CreateListModelMixin, viewsets.ModelViewSet):
     serializer_class = FileSerializer
     pagination_class = FilePagination
     filterset_class = FileFilterSet
-    filter_backends = (filters.DjangoFilterBackend,)
     http_method_names = ["get", "post", "patch", "put", "delete"]
     queryset = File.objects.prefetch_related("storage_project")
 
     @swagger_auto_schema(query_serializer=FileCreateQueryParamsSerializer)
-    def create(self, *args, **kwargs): # TODO: Instead of this, use separate actions for bulk operations
+    def create(
+        self, *args, **kwargs
+    ):  # TODO: Instead of this, use separate actions for bulk operations
         return super().create(*args, **kwargs)
 
     # TODO: Bulk update, bulk patch, bulk delete

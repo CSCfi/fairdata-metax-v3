@@ -8,9 +8,15 @@ from django.db.models import Sum
 from django.utils.translation import gettext as _
 from django.db import models
 from django.contrib.postgres.fields import ArrayField, HStoreField
+from simple_history.models import HistoricalRecords
 
-from .abstracts import AbstractBaseModel
-from .data_catalog import AccessRights, DataCatalog, DatasetPublisher
+from apps.refdata import models as refdata
+from apps.common.models import AbstractBaseModel
+from apps.actors.models import Actor, Organization
+from apps.files.models import File
+from apps.core.mixins import V2DatasetMixin
+
+from .data_catalog import AccessRights, DataCatalog
 from .contract import Contract
 from .concepts import (
     Theme,
@@ -18,12 +24,6 @@ from .concepts import (
     FieldOfScience,
     IdentifierType,
 )
-from apps.files.models import File
-from simple_history.models import HistoricalRecords
-from apps.refdata import models as refdata
-
-from apps.actors.models import Actor, Organization
-from ..mixins import V2DatasetMixin
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +38,7 @@ class MetadataProvider(AbstractBaseModel):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     organization = models.CharField(max_length=512)
+
 
 class CatalogRecord(AbstractBaseModel):
     """A record in a catalog, describing the registration of a single resource.

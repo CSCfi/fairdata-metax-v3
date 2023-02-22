@@ -1,8 +1,3 @@
-from .abstracts import (
-    AbstractBaseModel,
-    AbstractDatasetProperty,
-    AbstractFreeformConcept,
-)
 from .catalog_record import (
     CatalogRecord,
     MetadataProvider,

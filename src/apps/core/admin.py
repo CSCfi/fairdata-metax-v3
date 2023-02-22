@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth import get_user_model
-from simple_history.admin import SimpleHistoryAdmin
+
+from apps.common.admin import AbstractDatasetPropertyBaseAdmin
 
 # Register your models here.
 from apps.core.models import (
@@ -22,11 +23,6 @@ from apps.core.models import (
     AccessRightsRestrictionGrounds,
     MetadataProvider,
 )
-
-
-class AbstractDatasetPropertyBaseAdmin(SimpleHistoryAdmin):
-    list_filter = ("created", "modified")
-    exclude = ("is_removed", "removal_date")
 
 
 @admin.register(CatalogHomePage)

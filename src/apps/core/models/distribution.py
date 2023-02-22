@@ -1,13 +1,15 @@
+from django.conf import settings
+from django.contrib.postgres.fields import HStoreField
+from django.db import models
 from simple_history.models import HistoricalRecords
 
-from .abstracts import AbstractBaseModel
+from apps.common.models import AbstractBaseModel
+
 from .data_catalog import AccessRights
 from .catalog_record import Dataset
 from apps.files.models.file import File
 from apps.files.models.file_storage import FileStorage
 from .concepts import License
-from django.contrib.postgres.fields import HStoreField
-from django.db import models
 
 
 class Distribution(AbstractBaseModel):

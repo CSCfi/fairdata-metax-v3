@@ -5,6 +5,7 @@ from django.utils import timezone
 from pytest_bdd import when, then, scenario
 
 from apps.core import factories
+from apps.files.factories import FileFactory
 from apps.files.models import File
 
 
@@ -20,7 +21,7 @@ def user_unfreeze_request():
 @pytest.fixture
 @when("the file is marked as deleted")
 def mark_files_deleted():
-    file = factories.FileFactory(date_frozen=timezone.now())
+    file = FileFactory(date_frozen=timezone.now())
     factories.DistributionFactory(files=[file])
     file_id = file.id
 

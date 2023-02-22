@@ -1,14 +1,7 @@
-# This file is part of the Metax API service
-#
-# Copyright 2017-2023 Ministry of Education and Culture, Finland
-#
-# :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
-# :license: MIT
-
 from django.db import models
 from simple_history.models import HistoricalRecords
 
-from apps.core.models.abstracts import AbstractBaseModel
+from apps.common.models import AbstractBaseModel
 
 
 class FileStorage(AbstractBaseModel):

@@ -11,7 +11,7 @@ from django.db.models.functions import Concat
 from django.db.models import prefetch_related_objects
 from django.utils.translation import gettext_lazy as _
 
-from apps.core.helpers import get_technical_metax_user
+from apps.common.helpers import get_technical_metax_user
 from apps.files.models.file_storage import FileStorage
 from apps.files.models.file import File, StorageProject, checksum_algorithm_choices
 from .fields import (

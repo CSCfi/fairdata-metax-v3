@@ -56,7 +56,9 @@ class DataCatalogFilter(filters.FilterSet):
     )
     language__url = filters.CharFilter(max_length=255, lookup_expr="icontains")
     language__pref_label__values = filters.CharFilter(
-        max_length=255, lookup_expr="icontains", label="language preferred label contains"
+        max_length=255,
+        lookup_expr="icontains",
+        label="language preferred label contains",
     )
     ordering = filters.OrderingFilter(fields=("created", "created"))
 
@@ -68,5 +70,4 @@ class DataCatalogFilter(filters.FilterSet):
 class DataCatalogView(viewsets.ModelViewSet):
     serializer_class = DataCatalogModelSerializer
     queryset = DataCatalog.objects.all()
-    filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = DataCatalogFilter

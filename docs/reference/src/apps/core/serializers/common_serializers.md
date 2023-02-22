@@ -1,13 +1,5 @@
 # common_serializers
 
-## AbstractDatasetModelSerializer
-
-### :::src.apps.core.serializers.common_serializers.AbstractDatasetModelSerializer
-
-## AbstractDatasetPropertyModelSerializer
-
-### :::src.apps.core.serializers.common_serializers.AbstractDatasetPropertyModelSerializer
-
 ## CatalogHomePageModelSerializer
 
 ### :::src.apps.core.serializers.common_serializers.CatalogHomePageModelSerializer

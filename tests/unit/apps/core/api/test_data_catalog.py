@@ -17,9 +17,7 @@ def test_create_datacatalog(client, datacatalog_a_json, reference_data):
 
 
 @pytest.mark.django_db
-def test_create_minimal_datacatalog(
-    client, datacatalog_d_json, reference_data
-):
+def test_create_minimal_datacatalog(client, datacatalog_d_json, reference_data):
     res = client.post(
         "/rest/v3/datacatalog", datacatalog_d_json, content_type="application/json"
     )
@@ -28,9 +26,7 @@ def test_create_minimal_datacatalog(
 
 
 @pytest.mark.django_db
-def test_create_datacatalog_twice(
-    client, datacatalog_a_json, reference_data
-):
+def test_create_datacatalog_twice(client, datacatalog_a_json, reference_data):
     _now = datetime.datetime.now()
     res1 = client.post(
         "/rest/v3/datacatalog", datacatalog_a_json, content_type="application/json"
@@ -101,9 +97,7 @@ def test_change_datacatalog_from_minimal(
 
 
 @pytest.mark.django_db
-def test_create_datacatalog_error(
-    client, datacatalog_error_json, reference_data
-):
+def test_create_datacatalog_error(client, datacatalog_error_json, reference_data):
     res = client.post(
         "/rest/v3/datacatalog", datacatalog_error_json, content_type="application/json"
     )
@@ -112,13 +106,14 @@ def test_create_datacatalog_error(
 
 @pytest.mark.django_db
 def test_list_datacatalogs(
-    client, post_datacatalog_payloads_a_b_c,
+    client,
+    post_datacatalog_payloads_a_b_c,
 ):
     response = client.get("/rest/v3/datacatalog")
     logger.info(f"{response.data=}")
     catalog_count = DataCatalog.available_objects.all().count()
     assert response.status_code == 200
-    assert len(response.data) == catalog_count
+    assert response.data.get("count") == catalog_count
 
 
 @pytest.mark.parametrize(
@@ -151,19 +146,19 @@ def test_list_datacatalogs_with_filter(
     response = client.get(url)
     logger.info(response.data)
     assert response.status_code == 200
-    assert len(response.data) == filter_result
+    assert response.data.get("count") == filter_result
 
 
 @pytest.mark.django_db
 def test_list_datacatalogs_with_ordering(client, post_datacatalog_payloads_a_b_c):
     url = "/rest/v3/datacatalog?ordering=created"
     response = client.get(url)
-    results = response.data
+    results = response.data.get("results")
     assert response.status_code == 200
     assert results[0].get("id") == "urn:nbn:fi:att:data-catalog-testi"
     url = "/rest/v3/datacatalog?ordering=-created"
     response = client.get(url)
-    results = response.data
+    results = response.data.get("results")
     assert response.status_code == 200
     assert results[0].get("id") == "urn:nbn:fi:att:data-catalog-uusitesti"
 

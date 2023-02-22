@@ -8,15 +8,21 @@
         - [serializers](src/apps/actors/serializers.md)
         - [services.organization_indexer](src/apps/actors/services/organization_indexer.md)
         - [views](src/apps/actors/views.md)
+    - common
+        - [admin](src/apps/common/admin.md)
+        - [apps](src/apps/common/apps.md)
+        - [helpers](src/apps/common/helpers.md)
+        - [models](src/apps/common/models.md)
+        - [pagination](src/apps/common/pagination.md)
+        - [serializers](src/apps/common/serializers.md)
+        - [views](src/apps/common/views.md)
     - core
         - [admin](src/apps/core/admin.md)
         - [apps](src/apps/core/apps.md)
         - [factories](src/apps/core/factories.md)
-        - [helpers](src/apps/core/helpers.md)
         - [management.commands.load_test_data](src/apps/core/management/commands/load_test_data.md)
         - [mixins](src/apps/core/mixins.md)
         - models
-            - [abstracts](src/apps/core/models/abstracts.md)
             - [catalog_record](src/apps/core/models/catalog_record.md)
             - [concepts](src/apps/core/models/concepts.md)
             - [contract](src/apps/core/models/contract.md)

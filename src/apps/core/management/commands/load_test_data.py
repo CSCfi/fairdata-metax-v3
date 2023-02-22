@@ -2,6 +2,7 @@ import logging
 
 from django.core.management.base import BaseCommand
 from apps.core import factories
+from apps.files.factories import FileFactory
 
 logger = logging.getLogger(__name__)
 
@@ -18,10 +19,8 @@ class Command(BaseCommand):
         logger.info(f"{data_catalog=}")
         dataset = factories.DatasetFactory(data_catalog=data_catalog)
         logger.info(f"{dataset=}")
-        files = factories.FileFactory.create_batch(3)
-        distribution = factories.DistributionFactory(
-            files=files, dataset=dataset
-        )
+        files = FileFactory.create_batch(3)
+        distribution = factories.DistributionFactory(files=files, dataset=dataset)
         logger.info(
             f"Created test objects: {language=}, {homepage=}, {dataset_publisher=}, {data_catalog=}, "
             f"{dataset=}, {files=}, {distribution=}"

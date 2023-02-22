@@ -72,6 +72,7 @@ THIRD_PARTY_APPS = [
     "simple_history",
 ]
 LOCAL_APPS = [
+    "common.apps.CommonConfig",
     "users.apps.UsersConfig",
     "core.apps.CoreConfig",
     "refdata.apps.ReferenceDataConfig",
@@ -207,7 +208,9 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.BasicAuthentication",
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
-    ]
+    ],
+    "DEFAULT_PAGINATION_CLASS": "apps.common.pagination.OffsetPagination",
+    "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
 }
 
 SWAGGER_SETTINGS = {

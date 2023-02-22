@@ -3,7 +3,6 @@ from django_filters import rest_framework as filters
 from rest_framework import viewsets, exceptions
 from drf_yasg.utils import swagger_auto_schema
 
-from .common_views import StandardResultsSetPagination
 from apps.core.models.catalog_record import Dataset
 from apps.core.serializers import DatasetSerializer
 from apps.files.models import StorageProject
@@ -37,8 +36,6 @@ class DatasetViewSet(viewsets.ModelViewSet):
     serializer_class = DatasetSerializer
     queryset = Dataset.objects.all()
     filterset_class = DatasetFilter
-    filter_backends = (filters.DjangoFilterBackend,)
-    pagination_class = StandardResultsSetPagination
     http_method_names = ["get", "post", "put", "delete"]
 
 

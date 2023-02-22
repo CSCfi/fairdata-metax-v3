@@ -1,6 +1,7 @@
-from .abstracts import AbstractDatasetProperty
 from django.db import models
 from simple_history.models import HistoricalRecords
+
+from apps.common.models import AbstractDatasetProperty
 
 
 class Contract(AbstractDatasetProperty):

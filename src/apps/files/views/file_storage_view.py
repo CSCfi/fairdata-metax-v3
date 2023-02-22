@@ -35,5 +35,4 @@ class FileStorageFilter(filters.FilterSet):
 class FileStorageView(viewsets.ModelViewSet):
     serializer_class = FileStorageModelSerializer
     queryset = FileStorage.objects.all()
-    filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = FileStorageFilter

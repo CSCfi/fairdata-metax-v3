@@ -7,12 +7,14 @@
 import json
 import logging
 
-from uuid import UUID
-
 from django.core.validators import EMPTY_VALUES
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
+from apps.common.serializers import (
+    AbstractDatasetPropertyModelSerializer,
+    AbstractDatasetModelSerializer,
+)
 from apps.core.models import (
     CatalogHomePage,
     DatasetPublisher,
@@ -22,38 +24,6 @@ from apps.core.models.concepts import License, AccessType
 
 
 logger = logging.getLogger(__name__)
-
-
-class AbstractDatasetModelSerializer(serializers.ModelSerializer):
-    class Meta:
-        fields = "__all__"
-        abstract = True
-
-
-class AbstractDatasetPropertyModelSerializer(serializers.ModelSerializer):
-    class Meta:
-        fields = ("id", "url", "title")
-        abstract = True
-
-    def to_representation(self, instance):
-        if isinstance(instance.title, str):
-            instance.title = json.loads(instance.title)
-        representation = super().to_representation(instance)
-
-        return representation
-
-    def to_internal_value(self, data):
-        internal_value = super().to_internal_value(data)
-        if "id" in data:
-            try:
-                UUID(data.get("id"))
-                internal_value["id"] = data.get("id")
-            except ValueError:
-                raise serializers.ValidationError(
-                    _("id: {} is not valid UUID").format(data.get("id"))
-                )
-
-        return internal_value
 
 
 class CatalogHomePageModelSerializer(AbstractDatasetPropertyModelSerializer):
@@ -107,9 +77,10 @@ class LicenseModelSerializer(serializers.ModelSerializer):
     Conforms use case where AccessRights object can be created with only url-field in license
 
     """
+
     class Meta:
         model = License
-        fields = ("url", )
+        fields = ("url",)
 
 
 class AccessRightsModelSerializer(AbstractDatasetModelSerializer):

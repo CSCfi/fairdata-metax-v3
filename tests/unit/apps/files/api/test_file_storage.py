@@ -124,7 +124,7 @@ def test_filter_filestorage(
         "/rest/v3/filestorages?{0}={1}".format(storage_filter, filter_value)
     )
     assert res.status_code == 200
-    assert len(res.data) == filter_result
+    assert res.data.get("count") == filter_result
 
 
 @pytest.mark.django_db
@@ -134,12 +134,12 @@ def test_list_filestorages_with_simple_ordering(
     url = "/rest/v3/filestorages?ordering=created"
     res = client.get(url)
     assert res.status_code == 200
-    assert res.data[0].get("id") == "test-data-storage-a"
+    assert res.data.get("results")[0].get("id") == "test-data-storage-a"
 
     url = "/rest/v3/filestorages?ordering=-created"
     res = client.get(url)
     assert res.status_code == 200
-    assert res.data[0].get("id") == "test-data-storage-c"
+    assert res.data.get("results")[0].get("id") == "test-data-storage-c"
 
 
 @pytest.mark.django_db
@@ -149,9 +149,9 @@ def test_list_filestorages_with_complex_ordering(
     url = "/rest/v3/filestorages?ordering=endpoint_description,created"
     res = client.get(url)
     assert res.status_code == 200
-    assert res.data[1].get("id") == "test-data-storage-a"
+    assert res.data.get("results")[1].get("id") == "test-data-storage-a"
 
     url = "/rest/v3/filestorages?ordering=endpoint_description,-created"
     res = client.get(url)
     assert res.status_code == 200
-    assert res.data[1].get("id") == "test-data-storage-b"
+    assert res.data.get("results")[1].get("id") == "test-data-storage-b"

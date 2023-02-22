@@ -2,8 +2,9 @@ from django.contrib.postgres.fields import HStoreField
 from django.db import models
 from django.utils.translation import gettext as _
 
+from apps.common.models import AbstractBaseModel, AbstractFreeformConcept
+
 from .catalog_record import Spatial, DatasetActor, Dataset
-from .abstracts import AbstractBaseModel, AbstractFreeformConcept
 from .concepts import LifecycleEvent, EventOutcome
 
 
@@ -38,9 +39,7 @@ class Provenance(AbstractBaseModel):
     outcome_description = HStoreField(
         help_text=_('example: {"en":"successfully collected",}'), null=True, blank=True
     )
-    is_associated_with = models.ManyToManyField(
-        DatasetActor, related_name="provenance"
-    )
+    is_associated_with = models.ManyToManyField(DatasetActor, related_name="provenance")
     dataset = models.ForeignKey(
         Dataset, on_delete=models.CASCADE, related_name="provenance"
     )

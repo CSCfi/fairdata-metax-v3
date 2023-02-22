@@ -8,10 +8,10 @@ from pytest_bdd import given, when, then
 from apps.users.factories import MetaxUserFactory
 
 from apps.core.factories import (
-    FileFactory,
     DistributionFactory,
     DatasetFactory,
 )
+from apps.files.factories import FileFactory
 from apps.core.models import Dataset, Distribution, DataCatalog
 
 logger = logging.getLogger(__name__)
@@ -114,9 +114,8 @@ def derived_distribution(
     derived_distribution.save()
     return derived_distribution
 
+
 @pytest.fixture
 def qvain_user(faker):
-    user = MetaxUserFactory(
-        username="test_user", password=faker.password()
-    )
+    user = MetaxUserFactory(username="test_user", password=faker.password())
     return user

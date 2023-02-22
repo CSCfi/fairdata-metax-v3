@@ -74,8 +74,10 @@ def test_list_publishers_with_filter(
 
 
 @pytest.mark.django_db
-def test_list_publishers_with_page_size(client, post_publisher_payloads_a_b_c_d):
-    url = "/rest/v3/publisher?{0}={1}".format("page_size", 2)
+def test_list_publishers_with_offset_pagination(
+    client, post_publisher_payloads_a_b_c_d
+):
+    url = "/rest/v3/publisher?{0}={1}".format("limit", 2)
     logger.info(url)
     response = client.get(url)
     logger.info(f"{response.data=}")
@@ -140,13 +142,12 @@ def test_delete_publisher_by_id(client, post_publisher_payloads_a_b_c_d):
         ("-url,created", "Publisher C"),
     ],
 )
-
-
 @pytest.mark.django_db
-def test_list_publishers_with_ordering(client, post_publisher_payloads_a_b_c_d, publisher_order, order_result):
+def test_list_publishers_with_ordering(
+    client, post_publisher_payloads_a_b_c_d, publisher_order, order_result
+):
     url = "/rest/v3/publisher?ordering={0}".format(publisher_order)
     res = client.get(url)
     assert res.status_code == 200
     results = res.data.get("results")
     assert results[0].get("name").get("en") == order_result
-

@@ -19,6 +19,7 @@ from apps.files.models import (
     File,
 )
 from apps.core import factories
+from apps.files.factories import FileFactory
 
 
 @pytest.fixture
@@ -210,7 +211,7 @@ def file() -> File:
     date_uploaded = "2021-12-31 15:25:00+01"
     file_modified = "2021-12-31 12:25:00+01"
     identifier = "12345678-51d3-4c25-ad20-75aff8ca19e7"
-    return factories.FileFactory(
+    return FileFactory(
         byte_size=byte_size,
         checksum_value=checksum,
         file_path=file_path,

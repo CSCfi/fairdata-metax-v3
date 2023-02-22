@@ -1,9 +1,5 @@
 # admin
 
-## AbstractDatasetPropertyBaseAdmin
-
-### :::src.apps.core.admin.AbstractDatasetPropertyBaseAdmin
-
 ## CatalogHomePageAdmin
 
 ### :::src.apps.core.admin.CatalogHomePageAdmin

@@ -1,10 +1,10 @@
 import uuid
+from rest_framework import serializers
+
 from django.db import models
 from django.contrib.postgres.fields import HStoreField, ArrayField
 
-from rest_framework import serializers
-
-from apps.core.models.abstracts import AbstractBaseModel
+from apps.common.models import AbstractBaseModel
 
 
 class AbstractConcept(AbstractBaseModel):

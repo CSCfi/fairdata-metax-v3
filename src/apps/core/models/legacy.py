@@ -32,7 +32,7 @@ from .catalog_record import (
 from .data_catalog import AccessRights, DataCatalog, AccessRightsRestrictionGrounds
 from apps.actors.models import Actor, Organization
 from apps.users.models import MetaxUser
-from apps.core.helpers import parse_iso_dates_in_nested_dict
+from apps.common.helpers import parse_iso_dates_in_nested_dict
 from apps.refdata.models import FunderType
 from apps.files.models import File, FileStorage
 from apps.files.serializers.file_serializer import get_or_create_storage_project

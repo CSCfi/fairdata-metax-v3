@@ -6,8 +6,7 @@ from django.db import models
 from django.contrib.postgres.fields import HStoreField
 from django.conf import settings
 
-from apps.core.models.abstracts import AbstractBaseModel
-from apps.users.models import MetaxUser
+from apps.common.models import AbstractBaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -126,6 +125,7 @@ class Actor(AbstractBaseModel):
         user(MetaxUser): Person if any associated with this actor.
         organization(Organization): Organization if any associated with this actor.
     """
+
     user = models.ForeignKey(
         get_user_model(),
         related_name="actor_users",

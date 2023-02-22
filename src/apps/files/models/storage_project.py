@@ -9,7 +9,7 @@ import uuid
 
 from django.db import models
 
-from apps.core.models.abstracts import AbstractBaseModel
+from apps.common.models import AbstractBaseModel
 from .file_storage import FileStorage
 
 

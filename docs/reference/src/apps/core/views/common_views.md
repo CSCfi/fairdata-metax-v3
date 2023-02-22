@@ -1,9 +1,5 @@
 # common_views
 
-## StandardResultsSetPagination
-
-### :::src.apps.core.views.common_views.StandardResultsSetPagination
-
 ## DatasetPublisherFilter
 
 ### :::src.apps.core.views.common_views.DatasetPublisherFilter
@@ -15,4 +11,12 @@
 ## AccessRightsFilter
 
 ### :::src.apps.core.views.common_views.AccessRightsFilter
+
+## DatasetFilter
+
+### :::src.apps.core.views.common_views.DatasetFilter
+
+## DatasetViewSet
+
+### :::src.apps.core.views.common_views.DatasetViewSet
 

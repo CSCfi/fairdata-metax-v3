@@ -1,12 +1,5 @@
 from rest_framework import viewsets
-from rest_framework.pagination import PageNumberPagination
 from django_filters import rest_framework as filters
-
-
-class ReferenceDataPagination(PageNumberPagination):
-    page_size = 100
-    page_size_query_param = "page_size"
-    max_page_size = 1000
 
 
 def get_filter_for_model(model):
@@ -38,6 +31,7 @@ def get_filter_for_model(model):
                 ("pref_label__values", "pref_label"),
             )
         )
+
     return ReferenceDataFilter
 
 
@@ -49,8 +43,6 @@ def get_viewset_for_model(model):
         queryset = model.available_objects.filter(
             is_reference_data=True
         ).prefetch_related("broader", "narrower")
-        filter_backends = (filters.DjangoFilterBackend,)
         filterset_class = get_filter_for_model(model)
-        pagination_class = ReferenceDataPagination
 
     return ReferenceDataViewSet

@@ -20,9 +20,9 @@
 
 ### :::tests.unit.apps.core.api.test_dataset_publisher.test_list_publishers_with_filter
 
-## test_list_publishers_with_page_size
+## test_list_publishers_with_offset_pagination
 
-### :::tests.unit.apps.core.api.test_dataset_publisher.test_list_publishers_with_page_size
+### :::tests.unit.apps.core.api.test_dataset_publisher.test_list_publishers_with_offset_pagination
 
 ## test_change_publisher
 
