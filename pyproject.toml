@@ -66,3 +66,6 @@ profile = "black"
 src_paths = ["src", "test"]
 known_third_party = ["django", "djangorestframework"]
 line_length = 100
+extend_skip_glob = ["*/migrations/*"]
+combine_as_imports = true
+group_by_package = true
