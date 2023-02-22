@@ -7,12 +7,12 @@
 
 
 from django.utils.decorators import method_decorator
+from django_filters import rest_framework as filters
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets
 
 from apps.files.models import FileStorage
 from apps.files.serializers import FileStorageModelSerializer
-from django_filters import rest_framework as filters
 
 
 class FileStorageFilter(filters.FilterSet):

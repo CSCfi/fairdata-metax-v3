@@ -1,6 +1,6 @@
 import logging
-import pytest
 
+import pytest
 from tests.utils import assert_nested_subdict
 
 logger = logging.getLogger(__name__)

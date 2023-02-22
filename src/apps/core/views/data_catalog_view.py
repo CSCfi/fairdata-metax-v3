@@ -5,15 +5,12 @@
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
 from django.utils.decorators import method_decorator
+from django_filters import rest_framework as filters
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets
 
 from apps.core.models import DataCatalog
-
 from apps.core.serializers import DataCatalogModelSerializer
-
-
-from django_filters import rest_framework as filters
 
 
 class DataCatalogFilter(filters.FilterSet):

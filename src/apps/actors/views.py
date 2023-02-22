@@ -1,7 +1,6 @@
-from rest_framework import viewsets
-from rest_framework import generics
-from rest_framework.response import Response
 from django_filters import rest_framework as filters
+from rest_framework import generics, viewsets
+from rest_framework.response import Response
 
 from apps.actors.models import Organization
 from apps.actors.serializers import OrganizationSerializer

@@ -8,10 +8,11 @@
     - https://docs.pytest.org/en/stable/writing_plugins.html
 """
 
-import pytest
-import factory.random
 import django
+import factory.random
+import pytest
 from django.conf import settings
+
 from apps.core import factories
 from apps.core.models.data_catalog import DataCatalog
 

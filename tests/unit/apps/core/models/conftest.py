@@ -1,25 +1,23 @@
 import pytest
-from apps.core.models import (
-    Language,
-    CatalogHomePage,
-    DatasetPublisher,
-    License,
-    AccessType,
-    AccessRights,
-    DataCatalog,
-    CatalogRecord,
-    FieldOfScience,
-    Theme,
-    Distribution,
-    Dataset,
-    Contract,
-)
-from apps.files.models import (
-    FileStorage,
-    File,
-)
+
 from apps.core import factories
+from apps.core.models import (
+    AccessRights,
+    AccessType,
+    CatalogHomePage,
+    CatalogRecord,
+    Contract,
+    DataCatalog,
+    Dataset,
+    DatasetPublisher,
+    Distribution,
+    FieldOfScience,
+    Language,
+    License,
+    Theme,
+)
 from apps.files.factories import FileFactory
+from apps.files.models import File, FileStorage
 
 
 @pytest.fixture

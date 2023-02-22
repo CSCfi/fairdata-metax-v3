@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib.postgres.fields import HStoreField
 from django.db import models
 from django.utils import timezone
-from model_utils.models import TimeStampedModel, SoftDeletableModel
+from model_utils.models import SoftDeletableModel, TimeStampedModel
 
 
 class AbstractBaseModel(TimeStampedModel, SoftDeletableModel):

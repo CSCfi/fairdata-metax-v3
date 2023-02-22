@@ -5,23 +5,23 @@ from apps.common.admin import AbstractDatasetPropertyBaseAdmin
 
 # Register your models here.
 from apps.core.models import (
-    CatalogHomePage,
-    DatasetPublisher,
     AccessRights,
-    DataCatalog,
-    CatalogRecord,
-    Dataset,
-    Distribution,
-    Contract,
-    LegacyDataset,
-    Provenance,
-    DatasetActor,
-    Temporal,
-    Spatial,
-    OtherIdentifier,
-    DatasetProject,
     AccessRightsRestrictionGrounds,
+    CatalogHomePage,
+    CatalogRecord,
+    Contract,
+    DataCatalog,
+    Dataset,
+    DatasetActor,
+    DatasetProject,
+    DatasetPublisher,
+    Distribution,
+    LegacyDataset,
     MetadataProvider,
+    OtherIdentifier,
+    Provenance,
+    Spatial,
+    Temporal,
 )
 
 

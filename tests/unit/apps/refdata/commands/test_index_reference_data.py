@@ -1,17 +1,17 @@
-import pytest
 from unittest.mock import call
 
-from django.test import override_settings
+import pytest
 from django.core.management import call_command
 from django.core.management.base import CommandError
+from django.test import override_settings
 
 from apps.refdata.models import (
-    FieldOfScience,
-    Theme,
-    Location,
     AccessType,
-    License,
+    FieldOfScience,
     FileFormatVersion,
+    License,
+    Location,
+    Theme,
 )
 
 TEST_DATA_SOURCES = {

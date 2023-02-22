@@ -1,7 +1,7 @@
 import logging
 
 import pytest
-from pytest_bdd import scenario, when, then
+from pytest_bdd import scenario, then, when
 
 from apps.core.factories import DatasetFactory
 

@@ -1,8 +1,9 @@
 from uuid import UUID
-import pytest
-import inflection
 
-from apps.refdata.models import FieldOfScience, Theme, Language, Location
+import inflection
+import pytest
+
+from apps.refdata.models import FieldOfScience, Language, Location, Theme
 
 pytestmark = pytest.mark.parametrize(
     "model",

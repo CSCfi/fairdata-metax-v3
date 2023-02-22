@@ -1,8 +1,9 @@
 from uuid import UUID
-from django.db import IntegrityError
-import pytest
 
-from apps.refdata.models import FieldOfScience, Theme, Language, Location
+import pytest
+from django.db import IntegrityError
+
+from apps.refdata.models import FieldOfScience, Language, Location, Theme
 
 pytestmark = pytest.mark.parametrize(
     "model",

@@ -1,4 +1,5 @@
 from django.contrib.postgres.fields import HStoreField
+
 from apps.refdata import models as refdata
 
 

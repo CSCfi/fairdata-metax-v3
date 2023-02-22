@@ -1,8 +1,6 @@
 import pytest
-
 from tests.utils import assert_nested_subdict
 
-import pytest
 from apps.core import factories
 from apps.files.factories import create_project_with_files
 

@@ -1,6 +1,7 @@
 import logging
 
 from django.core.management.base import BaseCommand
+
 from apps.core import factories
 from apps.files.factories import FileFactory
 

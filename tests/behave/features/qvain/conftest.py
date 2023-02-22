@@ -1,18 +1,14 @@
 import logging
 
 import pytest
-
 from django.forms import model_to_dict
 from django.utils import timezone
-from pytest_bdd import given, when, then
-from apps.users.factories import MetaxUserFactory
+from pytest_bdd import given, then, when
 
-from apps.core.factories import (
-    DistributionFactory,
-    DatasetFactory,
-)
+from apps.core.factories import DatasetFactory, DistributionFactory
+from apps.core.models import DataCatalog, Dataset, Distribution
 from apps.files.factories import FileFactory
-from apps.core.models import Dataset, Distribution, DataCatalog
+from apps.users.factories import MetaxUserFactory
 
 logger = logging.getLogger(__name__)
 

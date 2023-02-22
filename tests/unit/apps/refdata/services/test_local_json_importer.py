@@ -1,13 +1,12 @@
-from django.conf import settings
 import pytest
-
+from django.conf import settings
 from requests import request
-from apps.refdata.models import AccessType, License, FileFormatVersion
 
+from apps.refdata.models import AccessType, FileFormatVersion, License
 from apps.refdata.services.importers import (
+    LocalJSONFileFormatVersionImporter,
     LocalJSONImporter,
     LocalJSONLicenseImporter,
-    LocalJSONFileFormatVersionImporter,
 )
 
 pytestmark = pytest.mark.django_db

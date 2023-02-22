@@ -1,8 +1,7 @@
+import json
 import logging
 
 from apps.refdata.services.importers.common import BaseDataImporter
-
-import json
 
 _logger = logging.getLogger(__name__)
 

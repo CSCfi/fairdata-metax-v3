@@ -4,8 +4,8 @@ from django.utils.translation import gettext as _
 
 from apps.common.models import AbstractBaseModel, AbstractFreeformConcept
 
-from .catalog_record import Spatial, DatasetActor, Dataset
-from .concepts import LifecycleEvent, EventOutcome
+from .catalog_record import Dataset, DatasetActor, Spatial
+from .concepts import EventOutcome, LifecycleEvent
 
 
 class Provenance(AbstractBaseModel):

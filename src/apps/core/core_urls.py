@@ -9,12 +9,8 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from apps.core.views import (
-    DataCatalogView,
-    PublisherViewSet,
-    DatasetViewSet,
-)
-from apps.core.views.dataset_view import DatasetFilesViewSet, DatasetDirectoryViewSet
+from apps.core.views import DataCatalogView, DatasetViewSet, PublisherViewSet
+from apps.core.views.dataset_view import DatasetDirectoryViewSet, DatasetFilesViewSet
 
 router = DefaultRouter(trailing_slash=False)
 router.register(r"datacatalog", DataCatalogView, basename="datacatalog")

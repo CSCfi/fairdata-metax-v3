@@ -1,41 +1,40 @@
 import logging
-
 from collections import namedtuple
-from typing import List, Dict
+from typing import Dict, List
 
 from deepdiff import DeepDiff
-
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils.dateparse import parse_datetime
-from django.contrib.auth import get_user_model
 
-from .provenance import ProvenanceVariable, Provenance
-from .contract import Contract
-from .concepts import (
-    License,
-    AccessType,
-    Language,
-    IdentifierType,
-    FieldOfScience,
-    EventOutcome,
-    LifecycleEvent,
-)
+from apps.actors.models import Actor, Organization
+from apps.common.helpers import parse_iso_dates_in_nested_dict
+from apps.files.models import File, FileStorage
+from apps.files.serializers.file_serializer import get_or_create_storage_project
+from apps.refdata.models import FunderType
+from apps.users.models import MetaxUser
+
 from .catalog_record import (
     Dataset,
     DatasetActor,
-    Temporal,
-    Spatial,
-    OtherIdentifier,
-    MetadataProvider,
     DatasetProject,
+    MetadataProvider,
+    OtherIdentifier,
+    Spatial,
+    Temporal,
 )
-from .data_catalog import AccessRights, DataCatalog, AccessRightsRestrictionGrounds
-from apps.actors.models import Actor, Organization
-from apps.users.models import MetaxUser
-from apps.common.helpers import parse_iso_dates_in_nested_dict
-from apps.refdata.models import FunderType
-from apps.files.models import File, FileStorage
-from apps.files.serializers.file_serializer import get_or_create_storage_project
+from .concepts import (
+    AccessType,
+    EventOutcome,
+    FieldOfScience,
+    IdentifierType,
+    Language,
+    License,
+    LifecycleEvent,
+)
+from .contract import Contract
+from .data_catalog import AccessRights, AccessRightsRestrictionGrounds, DataCatalog
+from .provenance import Provenance, ProvenanceVariable
 
 logger = logging.getLogger(__name__)
 

@@ -1,6 +1,7 @@
-from rest_framework import fields, exceptions
-from django.utils.dateparse import parse_datetime, parse_date
 from collections import OrderedDict
+
+from django.utils.dateparse import parse_date, parse_datetime
+from rest_framework import exceptions, fields
 
 
 def _values_eql(a, b):

@@ -4,26 +4,21 @@ from typing import Dict, List
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.postgres.fields import ArrayField, HStoreField
+from django.db import models
 from django.db.models import Sum
 from django.utils.translation import gettext as _
-from django.db import models
-from django.contrib.postgres.fields import ArrayField, HStoreField
 from simple_history.models import HistoricalRecords
 
-from apps.refdata import models as refdata
-from apps.common.models import AbstractBaseModel
 from apps.actors.models import Actor, Organization
-from apps.files.models import File
+from apps.common.models import AbstractBaseModel
 from apps.core.mixins import V2DatasetMixin
+from apps.files.models import File
+from apps.refdata import models as refdata
 
-from .data_catalog import AccessRights, DataCatalog
+from .concepts import FieldOfScience, IdentifierType, Language, Theme
 from .contract import Contract
-from .concepts import (
-    Theme,
-    Language,
-    FieldOfScience,
-    IdentifierType,
-)
+from .data_catalog import AccessRights, DataCatalog
 
 logger = logging.getLogger(__name__)
 

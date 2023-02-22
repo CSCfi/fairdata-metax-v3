@@ -1,5 +1,5 @@
-from urllib import parse
 import copy
+from urllib import parse
 
 
 def remove_query_param(url, *params):

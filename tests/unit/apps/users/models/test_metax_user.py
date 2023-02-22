@@ -1,6 +1,7 @@
-from sre_constants import SUCCESS
-import pytest
 import logging
+from sre_constants import SUCCESS
+
+import pytest
 
 from apps.users.models import MetaxUser
 

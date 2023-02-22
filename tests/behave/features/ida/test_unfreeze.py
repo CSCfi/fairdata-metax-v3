@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from django.utils import timezone
-from pytest_bdd import when, then, scenario
+from pytest_bdd import scenario, then, when
 
 from apps.core import factories
 from apps.files.factories import FileFactory

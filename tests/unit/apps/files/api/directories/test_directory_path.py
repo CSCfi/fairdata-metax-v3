@@ -1,5 +1,4 @@
 import pytest
-
 from tests.utils import assert_nested_subdict
 
 

@@ -12,16 +12,11 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from apps.common.serializers import (
-    AbstractDatasetPropertyModelSerializer,
     AbstractDatasetModelSerializer,
+    AbstractDatasetPropertyModelSerializer,
 )
-from apps.core.models import (
-    CatalogHomePage,
-    DatasetPublisher,
-    AccessRights,
-)
-from apps.core.models.concepts import License, AccessType
-
+from apps.core.models import AccessRights, CatalogHomePage, DatasetPublisher
+from apps.core.models.concepts import AccessType, License
 
 logger = logging.getLogger(__name__)
 

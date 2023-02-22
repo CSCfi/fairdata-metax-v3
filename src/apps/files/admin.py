@@ -1,10 +1,10 @@
 from django.contrib import admin
-from django.forms import TextInput
 from django.db.models import TextField
+from django.forms import TextInput
 from simple_history.admin import SimpleHistoryAdmin
 
 # Register your models here.
-from apps.files.models import FileStorage, StorageProject, File
+from apps.files.models import File, FileStorage, StorageProject
 
 
 class AbstractDatasetPropertyBaseAdmin(SimpleHistoryAdmin):

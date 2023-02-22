@@ -1,8 +1,9 @@
 from django import forms
-from django.db.models import F, Case, When
 from django.contrib import admin
+from django.db.models import Case, F, When
 from pkg_resources import require
-from apps.actors.models import Organization, Actor
+
+from apps.actors.models import Actor, Organization
 
 
 class OrganizationAdminForm(forms.ModelForm):

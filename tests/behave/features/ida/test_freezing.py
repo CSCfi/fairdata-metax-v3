@@ -1,9 +1,9 @@
 import logging
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import pytest
 from django.utils import timezone
-from pytest_bdd import when, then, scenario
+from pytest_bdd import scenario, then, when
 from rest_framework.reverse import reverse
 
 from apps.core import factories

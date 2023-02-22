@@ -1,5 +1,6 @@
-import pytest
 import logging
+
+import pytest
 from rest_framework.test import APIClient
 
 from apps.users.models import MetaxUser

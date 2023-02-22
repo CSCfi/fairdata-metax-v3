@@ -1,7 +1,7 @@
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import pytest
-from pytest_bdd import then, scenario, when
+from pytest_bdd import scenario, then, when
 
 
 @pytest.fixture

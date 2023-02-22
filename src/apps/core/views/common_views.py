@@ -1,13 +1,12 @@
 import logging
-from drf_yasg.utils import swagger_auto_schema
+
 from django_filters import rest_framework as filters
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets
+
 from apps.core.models import AccessRights, Dataset
 from apps.core.models.data_catalog import DatasetPublisher
-from apps.core.serializers import (
-    DatasetPublisherModelSerializer,
-    DatasetSerializer,
-)
+from apps.core.serializers import DatasetPublisherModelSerializer, DatasetSerializer
 
 logger = logging.getLogger(__name__)
 

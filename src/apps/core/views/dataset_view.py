@@ -1,16 +1,14 @@
 import logging
+
 from django_filters import rest_framework as filters
-from rest_framework import viewsets, exceptions
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework import exceptions, viewsets
 
 from apps.core.models.catalog_record import Dataset
 from apps.core.serializers import DatasetSerializer
 from apps.files.models import StorageProject
 from apps.files.serializers import DirectorySerializer
-from apps.files.views.directory_view import (
-    DirectoryViewSet,
-    DirectoryCommonQueryParams,
-)
+from apps.files.views.directory_view import DirectoryCommonQueryParams, DirectoryViewSet
 from apps.files.views.file_view import FileCommonFilterset, FileViewSet
 
 logger = logging.getLogger(__name__)

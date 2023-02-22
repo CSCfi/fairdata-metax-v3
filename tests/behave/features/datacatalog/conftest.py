@@ -2,12 +2,10 @@ import json
 import logging
 
 import pytest
-
 from pytest_bdd import given
-
 from rest_framework.test import APIClient
-from apps.core import factories
 
+from apps.core import factories
 from apps.core.models.concepts import AccessType, Language, License
 
 logger = logging.getLogger(__name__)

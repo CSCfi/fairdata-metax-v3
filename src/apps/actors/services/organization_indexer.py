@@ -1,11 +1,11 @@
-import logging
 import csv
+import logging
 
 from django.conf import settings
 from django.db import transaction
 
-from metax_service.settings.components.actors import ORGANIZATION_SCHEME
 from apps.actors.models import Organization
+from metax_service.settings.components.actors import ORGANIZATION_SCHEME
 
 _logger = logging.getLogger(__name__)
 

@@ -5,13 +5,11 @@
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
 import logging
+
 from rest_framework import serializers
 
 from apps.core.models import DataCatalog, Language
-from apps.core.serializers import (
-    AccessRightsModelSerializer,
-    DatasetPublisherModelSerializer,
-)
+from apps.core.serializers import AccessRightsModelSerializer, DatasetPublisherModelSerializer
 
 logger = logging.getLogger(__name__)
 

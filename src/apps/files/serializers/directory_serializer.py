@@ -7,8 +7,9 @@
 
 from rest_framework import serializers
 
+from apps.files.helpers import remove_hidden_fields, replace_query_path
+
 from .file_serializer import FileSerializer
-from apps.files.helpers import replace_query_path, remove_hidden_fields
 
 
 class ContextStorageProjectMixin(serializers.Serializer):

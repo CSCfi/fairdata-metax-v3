@@ -6,12 +6,11 @@
 # :license: MIT
 import logging
 
-from apps.core.models import (
-    Dataset,
-)
-from apps.core.serializers.common_serializers import AccessRightsModelSerializer
-from apps.core.models.concepts import FieldOfScience, Theme, Language
 from rest_framework import serializers
+
+from apps.core.models import Dataset
+from apps.core.models.concepts import FieldOfScience, Language, Theme
+from apps.core.serializers.common_serializers import AccessRightsModelSerializer
 
 logger = logging.getLogger(__name__)
 

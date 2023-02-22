@@ -1,8 +1,7 @@
 import pytest
-
 from rest_framework.fields import DateTimeField, UUIDField
-
 from tests.utils import assert_nested_subdict
+
 from apps.files import factories
 from apps.files.serializers import FileSerializer
 

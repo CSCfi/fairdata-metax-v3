@@ -1,14 +1,13 @@
+import json
+import os
 from unittest.mock import MagicMock
 
-import os
-import json
 import pytest
 from django.contrib.auth import get_user_model
 from pytest_bdd import given
 
 from apps.core import factories
 from apps.core.models import DataCatalog
-
 
 test_data_path = os.path.dirname(os.path.abspath(__file__)) + "/testdata/"
 

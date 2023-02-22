@@ -6,20 +6,17 @@
 # :license: MIT
 
 from collections import Counter
-from rest_framework import serializers
-from django.db.models.functions import Concat
+
 from django.db.models import prefetch_related_objects
+from django.db.models.functions import Concat
 from django.utils.translation import gettext_lazy as _
+from rest_framework import serializers
 
 from apps.common.helpers import get_technical_metax_user
-from apps.files.models.file_storage import FileStorage
 from apps.files.models.file import File, StorageProject, checksum_algorithm_choices
-from .fields import (
-    FileNameField,
-    FilePathField,
-    DirectoryPathField,
-    ListValidChoicesField,
-)
+from apps.files.models.file_storage import FileStorage
+
+from .fields import DirectoryPathField, FileNameField, FilePathField, ListValidChoicesField
 
 
 def get_storage_project_or_none(project_identifier, file_storage_id):

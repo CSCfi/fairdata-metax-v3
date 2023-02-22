@@ -1,5 +1,6 @@
-import pytest
 import logging
+
+import pytest
 from rest_framework.test import force_authenticate
 
 logger = logging.getLogger(__name__)

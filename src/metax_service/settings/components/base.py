@@ -10,9 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 import os
+import sys
 from os.path import join
 from pathlib import Path
-import sys
+
 import factory.random
 from django.utils.translation import gettext_lazy as _
 

@@ -1,7 +1,6 @@
 import pytest
-
-from django.test import override_settings
 from django.core.management import call_command
+from django.test import override_settings
 
 from apps.actors.models import Organization
 

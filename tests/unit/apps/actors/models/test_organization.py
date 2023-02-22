@@ -1,5 +1,6 @@
-from django.db import IntegrityError
 import pytest
+from django.db import IntegrityError
+
 from apps.actors.factories import OrganizationFactory
 
 

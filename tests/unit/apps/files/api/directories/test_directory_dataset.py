@@ -1,6 +1,6 @@
 import pytest
-
 from tests.utils import assert_nested_subdict
+
 from apps.core import factories
 
 

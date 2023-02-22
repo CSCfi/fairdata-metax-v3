@@ -1,8 +1,8 @@
-import os
 import json
-import pytest
 import logging
+import os
 
+import pytest
 from rest_framework.test import APIClient
 
 logger = logging.getLogger(__name__)

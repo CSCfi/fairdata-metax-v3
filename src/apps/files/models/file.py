@@ -6,12 +6,13 @@
 # :license: MIT
 
 import uuid
-from django.db import models
 from typing import Dict
 
-from apps.common.models import AbstractBaseModel
-from .storage_project import StorageProject
+from django.db import models
 
+from apps.common.models import AbstractBaseModel
+
+from .storage_project import StorageProject
 
 checksum_algorithm_choices = (
     ("SHA-256", "SHA-256"),

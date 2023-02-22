@@ -1,10 +1,10 @@
 import logging
 import uuid
 
-from django.contrib.auth import get_user_model
-from django.db import models
-from django.contrib.postgres.fields import HStoreField
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.contrib.postgres.fields import HStoreField
+from django.db import models
 
 from apps.common.models import AbstractBaseModel
 

@@ -9,11 +9,7 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from apps.files.views import (
-    FileStorageView,
-    FileViewSet,
-    DirectoryViewSet,
-)
+from apps.files.views import DirectoryViewSet, FileStorageView, FileViewSet
 
 router = DefaultRouter(trailing_slash=False)
 router.register(r"filestorages", FileStorageView, basename="storage")

@@ -1,12 +1,12 @@
-from django.conf import settings
 from django.apps import apps
+from django.conf import settings
 
-from apps.refdata.services.importers.rdf import FintoImporter, FintoLocationImporter
 from apps.refdata.services.importers.local import (
-    LocalJSONImporter,
     LocalJSONFileFormatVersionImporter,
+    LocalJSONImporter,
     LocalJSONLicenseImporter,
 )
+from apps.refdata.services.importers.rdf import FintoImporter, FintoLocationImporter
 
 
 def index(types=None):

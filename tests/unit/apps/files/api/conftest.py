@@ -1,7 +1,8 @@
-import os
 import json
-import pytest
 import logging
+import os
+
+import pytest
 
 from apps.files import factories
 

@@ -6,22 +6,18 @@
 # :license: MIT
 
 
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework import viewsets, serializers
-from rest_framework.pagination import LimitOffsetPagination
-from drf_yasg.utils import swagger_auto_schema
-
-from django_filters import rest_framework as filters
-from django.db.models.functions import Concat
-from django.db.models import Q, F
 from django.contrib.postgres.aggregates import ArrayAgg
+from django.db.models import F, Q
+from django.db.models.functions import Concat
+from django_filters import rest_framework as filters
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import serializers, viewsets
+from rest_framework.decorators import action
+from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.response import Response
 
 from apps.files.models.file import File
-from apps.files.serializers.file_serializer import (
-    FileSerializer,
-    FileCreateQueryParamsSerializer,
-)
+from apps.files.serializers.file_serializer import FileCreateQueryParamsSerializer, FileSerializer
 
 
 class FilePagination(LimitOffsetPagination):

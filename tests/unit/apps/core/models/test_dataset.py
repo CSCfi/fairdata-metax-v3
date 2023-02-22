@@ -1,4 +1,5 @@
 from os import access
+
 import pytest
 
 from apps.core.models.data_catalog import AccessRights

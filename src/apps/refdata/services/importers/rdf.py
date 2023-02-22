@@ -1,11 +1,11 @@
 import logging
 from time import sleep
+
 import requests
+from rdflib import RDF, Graph
+from rdflib.namespace import OWL, SKOS, Namespace
 
 from apps.refdata.services.importers.common import BaseDataImporter
-
-from rdflib import RDF, Graph
-from rdflib.namespace import SKOS, OWL, Namespace
 
 _logger = logging.getLogger(__name__)
 
