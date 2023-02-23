@@ -64,5 +64,6 @@ def prev_dataset_exists(created_new_dataset_version, published_dataset):
 @scenario("dataset.feature", "Publishing new version from dataset")
 def test_dataset_new_version(created_new_dataset_version, published_dataset):
     assert (
-        created_new_dataset_version.persistent_identifier == published_dataset.persistent_identifier
+        created_new_dataset_version.persistent_identifier
+        == published_dataset.persistent_identifier
     )

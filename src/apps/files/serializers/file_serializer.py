@@ -77,7 +77,11 @@ def validate_path_conflicts(storage_project, file_paths):
     )
     if conflicts:
         raise serializers.ValidationError(
-            {"file_path": _("File with path already exists: {paths}").format(paths=list(conflicts))}
+            {
+                "file_path": _("File with path already exists: {paths}").format(
+                    paths=list(conflicts)
+                )
+            }
         )
 
 

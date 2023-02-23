@@ -45,7 +45,8 @@ class RemoteRDFReferenceDataImporter(BaseDataImporter):
             "url": str(concept),
             "in_scheme": graph.value(concept, SKOS.inScheme),
             "pref_label": {
-                literal.language: str(literal) for literal in graph.objects(concept, SKOS.prefLabel)
+                literal.language: str(literal)
+                for literal in graph.objects(concept, SKOS.prefLabel)
             },
             "broader": [str(parent) for parent in graph.objects(concept, SKOS.broader)],
             "same_as": [str(same) for same in graph.objects(concept, OWL.sameAs)],

@@ -31,7 +31,9 @@ class Provenance(AbstractBaseModel):
     lifecycle_event = models.ForeignKey(
         LifecycleEvent, on_delete=models.CASCADE, null=True, blank=True
     )
-    event_outcome = models.ForeignKey(EventOutcome, on_delete=models.CASCADE, null=True, blank=True)
+    event_outcome = models.ForeignKey(
+        EventOutcome, on_delete=models.CASCADE, null=True, blank=True
+    )
     outcome_description = HStoreField(
         help_text=_('example: {"en":"successfully collected",}'), null=True, blank=True
     )

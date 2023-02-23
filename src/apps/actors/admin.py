@@ -9,7 +9,9 @@ from apps.actors.models import Actor, Organization
 class OrganizationAdminForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["parent"].queryset = self.fields["parent"].queryset.exclude(id=self.instance.id)
+        self.fields["parent"].queryset = self.fields["parent"].queryset.exclude(
+            id=self.instance.id
+        )
 
 
 @admin.register(Organization)
