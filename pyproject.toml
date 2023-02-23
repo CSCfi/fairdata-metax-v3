@@ -59,13 +59,13 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.black]
 force-exclude = "migrations/"
-line-length = 100
+line-length = 99
 
 [tool.isort]
 profile = "black"
 src_paths = ["src", "test"]
 known_third_party = ["django", "djangorestframework"]
-line_length = 100
+line_length = 99
 extend_skip_glob = ["*/migrations/*"]
 combine_as_imports = true
 group_by_package = true
