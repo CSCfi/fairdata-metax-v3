@@ -26,7 +26,9 @@ Alternatively you can use `pip install -r dev-requirements.txt` if you don't hav
 
 The following command will map new named PostgreSQL database container to localhost port 5452. It will generate the database, database user and password in the process:
 
-`docker run -d -p 5452:5432 --name metax-v3-postgres -v metax-v3-postgres:/var/lib/postgresql/data -e POSTGRES_USER=<db_user> -e POSTGRES_PASSWORD=<password> -e POSTGRES_DB=metax_db --restart=always  postgres:12`
+```bash
+docker run -d -p 5452:5432 --name metax-v3-postgres -v metax-v3-postgres:/var/lib/postgresql/data -e POSTGRES_USER=<db_user> -e POSTGRES_PASSWORD=<password> -e POSTGRES_DB=metax_db --restart=always  postgres:12`
+```
 
 ### Update Environmental Variables
 
@@ -67,18 +69,65 @@ Show all available management commands with `python manage.py --help` and all se
 
 Run pytest managed tests with `pytest` command. You can run tox tests with `tox` command.
 
-### Building Sphinx documentation
+### Building MkDocs documentation
 
-Run `make -C docs html` in project root folder.
+Running development server:
+
+```bash
+# port can be defined freely
+mkdocs serve -a localhost:8005
+```
+
+Building for production:
+
+```bash
+mkdocs build
+```
 
 ## Managing dependencies with Poetry
 
-* Developer dependencies can be added with command `poetry add -D <package>`
-* Application dependencies can be added with command `poetry add <package>`
-* All dependencies can be updated with command `poetry update`
-* Dependencies can be removed with `poetry remove (-D) <package>`
+### Adding developer dependencies 
 
-After any modification to `pyproject.toml`, re-generate requirements with `poetry export --without-hashes -o requirements.txt` and `poetry export --dev --without-hashes -o dev-requirements.txt` 
+```bash
+poetry add -D <package>
+```
+
+### Adding application dependencies
+
+```bash
+poetry add <package>
+```
+
+### Updating all dependencies
+
+```bash
+poetry update
+```
+
+### Removing dependencies
+
+```bash
+poetry remove (-D) <package>
+```
+
+### Renegerating requirements.txt files
+
+After any modification to `pyproject.toml`, re-generate requirements with 
+```bash
+poetry export --without-hashes -o requirements.txt
+``` 
+and 
+```bash
+poetry export --dev --without-hashes -o dev-requirements.txt 
+```
+
+## Formatting code
+
+Black formatter and isort are used for code formatting. You can ignore formatting commits by configuring git:
+
+```bash
+git config blame.ignoreRevsFile .git-blame-ignore-revs
+```
 
 
 ## Notes
