@@ -110,7 +110,7 @@ poetry update
 poetry remove (-D) <package>
 ```
 
-### Renegerating requirements.txt files
+### Regenerating requirements.txt files
 
 After any modification to `pyproject.toml`, re-generate requirements with 
 ```bash
