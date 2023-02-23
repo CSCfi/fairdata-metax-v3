@@ -6,9 +6,7 @@ from apps.actors.models import Organization
 class ChildOrganizationSerializer(serializers.ModelSerializer):
     """Serialize child organization tree without repeating parent organization."""
 
-    children = serializers.SerializerMethodField(
-        read_only=True, method_name="get_children"
-    )
+    children = serializers.SerializerMethodField(read_only=True, method_name="get_children")
 
     def get_children(self, obj):
         serializer = ChildOrganizationSerializer(instance=obj.children.all(), many=True)

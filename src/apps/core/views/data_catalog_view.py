@@ -22,25 +22,19 @@ class DataCatalogFilter(filters.FilterSet):
             "dataset_schema",
         )
 
-    title__values = filters.CharFilter(
-        max_length=255, lookup_expr="icontains", label="title"
-    )
+    title__values = filters.CharFilter(max_length=255, lookup_expr="icontains", label="title")
     id = filters.CharFilter(max_length=255, lookup_expr="icontains")
     publisher__name__values = filters.CharFilter(
         max_length=255, lookup_expr="icontains", label="publisher name contains"
     )
 
-    publisher__homepage__url = filters.CharFilter(
-        max_length=255, lookup_expr="icontains"
-    )
+    publisher__homepage__url = filters.CharFilter(max_length=255, lookup_expr="icontains")
     access_rights__description__values = filters.CharFilter(
         max_length=255,
         lookup_expr="icontains",
         label="access rights description contains",
     )
-    access_rights__access_type__url = filters.CharFilter(
-        max_length=255, lookup_expr="icontains"
-    )
+    access_rights__access_type__url = filters.CharFilter(max_length=255, lookup_expr="icontains")
     access_rights__access_type__pref_label__values = filters.CharFilter(
         max_length=255,
         lookup_expr="icontains",

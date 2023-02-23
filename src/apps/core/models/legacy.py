@@ -170,9 +170,7 @@ class LegacyDataset(Dataset):
         self.is_deprecated = self.dataset_json["deprecated"]
         self.cumulation_started = self.dataset_json.get("date_cumulation_started")
         self.cumulation_ended = self.dataset_json.get("date_cumulation_ended")
-        self.last_cumulative_addition = self.dataset_json.get(
-            "date_last_cumulative_addition"
-        )
+        self.last_cumulative_addition = self.dataset_json.get("date_last_cumulative_addition")
         self.cumulative_state = self.dataset_json.get("cumulative_state")
         self.previous = self.dataset_json.get("previous_dataset_version")
         self.created = self.dataset_json.get("date_created")
@@ -185,9 +183,7 @@ class LegacyDataset(Dataset):
             self.modified = self.created
 
         if user_modified := self.dataset_json.get("user_modified"):
-            user, created = get_user_model().objects.get_or_create(
-                username=user_modified
-            )
+            user, created = get_user_model().objects.get_or_create(username=user_modified)
             self.last_modified_by = user
 
         self.preservation_state = self.dataset_json["preservation_state"]
@@ -374,7 +370,6 @@ class LegacyDataset(Dataset):
             return contract
 
     def attach_actor(self, actor_role):
-
         actors_data = self.legacy_research_dataset[actor_role]
 
         # In case of publisher, actor is dictionary instead of list
@@ -383,9 +378,7 @@ class LegacyDataset(Dataset):
 
         actors = []
         for actor in actors_data:
-            dataset_actor = DatasetActor.get_instance_from_v2_dictionary(
-                actor, self, actor_role
-            )
+            dataset_actor = DatasetActor.get_instance_from_v2_dictionary(actor, self, actor_role)
             actors.append(dataset_actor)
 
         return actors

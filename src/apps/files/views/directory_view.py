@@ -135,9 +135,7 @@ class DirectoryViewSet(viewsets.ViewSet):
                 exclude_args["datasets"] = dataset
             else:
                 filter_args["datasets"] = dataset
-        filter_args = {
-            key: value for (key, value) in filter_args.items() if value is not None
-        }
+        filter_args = {key: value for (key, value) in filter_args.items() if value is not None}
 
         return File.available_objects.filter(**filter_args).exclude(**exclude_args)
 
@@ -166,9 +164,7 @@ class DirectoryViewSet(viewsets.ViewSet):
                 )
             )
         if "project_identifier" in used_fields:
-            files = files.annotate(
-                project_identifier=F("storage_project__project_identifier")
-            )
+            files = files.annotate(project_identifier=F("storage_project__project_identifier"))
         if "file_storage" in used_fields:
             files = files.annotate(file_storage=F("storage_project__file_storage"))
         return files

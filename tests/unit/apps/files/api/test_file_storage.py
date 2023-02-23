@@ -12,22 +12,16 @@ logger = logging.getLogger(__name__)
 
 @pytest.mark.django_db
 def test_create_filestorage(client, filestorage_a_json):
-    res = client.post(
-        "/rest/v3/filestorages", filestorage_a_json, content_type="application/json"
-    )
+    res = client.post("/rest/v3/filestorages", filestorage_a_json, content_type="application/json")
     assert res.status_code == 201
 
 
 @pytest.mark.django_db
 def test_create_filestorage_twice(client, filestorage_a_json):
-    res = client.post(
-        "/rest/v3/filestorages", filestorage_a_json, content_type="application/json"
-    )
+    res = client.post("/rest/v3/filestorages", filestorage_a_json, content_type="application/json")
     assert res.status_code == 201
 
-    res = client.post(
-        "/rest/v3/filestorages", filestorage_a_json, content_type="application/json"
-    )
+    res = client.post("/rest/v3/filestorages", filestorage_a_json, content_type="application/json")
     assert res.status_code == 400
     assert "file storage with this id already exists" in str(res.data["id"])
 
@@ -35,9 +29,7 @@ def test_create_filestorage_twice(client, filestorage_a_json):
 @pytest.mark.django_db
 def test_delete_filestorage(client, filestorage_a_json):
     ds_id = filestorage_a_json["id"]
-    res = client.post(
-        "/rest/v3/filestorages", filestorage_a_json, content_type="application/json"
-    )
+    res = client.post("/rest/v3/filestorages", filestorage_a_json, content_type="application/json")
     assert res.status_code == 201
 
     res = client.delete(f"/rest/v3/filestorages/{ds_id}")
@@ -50,9 +42,7 @@ def test_delete_filestorage(client, filestorage_a_json):
 @pytest.mark.django_db
 def test_update_filestorage(client, filestorage_a_json, filestorage_a_updated_json):
     ds_id = filestorage_a_json["id"]
-    res = client.post(
-        "/rest/v3/filestorages", filestorage_a_json, content_type="application/json"
-    )
+    res = client.post("/rest/v3/filestorages", filestorage_a_json, content_type="application/json")
     assert res.status_code == 201
 
     res = client.put(
@@ -65,13 +55,9 @@ def test_update_filestorage(client, filestorage_a_json, filestorage_a_updated_js
 
 
 @pytest.mark.django_db
-def test_update_invalid_filestorage(
-    client, filestorage_a_json, filestorage_a_invalid_json
-):
+def test_update_invalid_filestorage(client, filestorage_a_json, filestorage_a_invalid_json):
     ds_id = filestorage_a_json["id"]
-    res = client.post(
-        "/rest/v3/filestorages", filestorage_a_json, content_type="application/json"
-    )
+    res = client.post("/rest/v3/filestorages", filestorage_a_json, content_type="application/json")
     assert res.status_code == 201
 
     res = client.put(
@@ -86,9 +72,7 @@ def test_update_invalid_filestorage(
 @pytest.mark.django_db
 def test_get_single_filestorage(client, filestorage_a_json):
     ds_id = filestorage_a_json["id"]
-    res = client.post(
-        "/rest/v3/filestorages", filestorage_a_json, content_type="application/json"
-    )
+    res = client.post("/rest/v3/filestorages", filestorage_a_json, content_type="application/json")
     assert res.status_code == 201
 
     res = client.get(f"/rest/v3/filestorages/{ds_id}")
@@ -97,9 +81,7 @@ def test_get_single_filestorage(client, filestorage_a_json):
 
 @pytest.mark.django_db
 def test_get_list_filestorage(client, filestorage_a_json):
-    res = client.post(
-        "/rest/v3/filestorages", filestorage_a_json, content_type="application/json"
-    )
+    res = client.post("/rest/v3/filestorages", filestorage_a_json, content_type="application/json")
     assert res.status_code == 201
 
     res = client.get("/rest/v3/filestorages")
@@ -119,17 +101,13 @@ def test_get_list_filestorage(client, filestorage_a_json):
 def test_filter_filestorage(
     client, post_filestorage_payloads_a_b_c, storage_filter, filter_value, filter_result
 ):
-    res = client.get(
-        "/rest/v3/filestorages?{0}={1}".format(storage_filter, filter_value)
-    )
+    res = client.get("/rest/v3/filestorages?{0}={1}".format(storage_filter, filter_value))
     assert res.status_code == 200
     assert res.data.get("count") == filter_result
 
 
 @pytest.mark.django_db
-def test_list_filestorages_with_simple_ordering(
-    client, post_filestorage_payloads_a_b_c
-):
+def test_list_filestorages_with_simple_ordering(client, post_filestorage_payloads_a_b_c):
     url = "/rest/v3/filestorages?ordering=created"
     res = client.get(url)
     assert res.status_code == 200
@@ -142,9 +120,7 @@ def test_list_filestorages_with_simple_ordering(
 
 
 @pytest.mark.django_db
-def test_list_filestorages_with_complex_ordering(
-    client, post_filestorage_payloads_a_b_c
-):
+def test_list_filestorages_with_complex_ordering(client, post_filestorage_payloads_a_b_c):
     url = "/rest/v3/filestorages?ordering=endpoint_description,created"
     res = client.get(url)
     assert res.status_code == 200

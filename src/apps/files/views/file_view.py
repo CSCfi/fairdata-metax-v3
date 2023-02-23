@@ -122,9 +122,7 @@ class FileViewSet(CreateListModelMixin, viewsets.ModelViewSet):
         had no corresponding values (i.e. with `keys=files`, this returns only files that belong to a dataset).
         """
 
-        params_serializer = FilesDatasetsQueryParamsSerializer(
-            data=self.request.query_params
-        )
+        params_serializer = FilesDatasetsQueryParamsSerializer(data=self.request.query_params)
         params_serializer.is_valid(raise_exception=True)
         params = params_serializer.validated_data
 
@@ -139,14 +137,12 @@ class FileViewSet(CreateListModelMixin, viewsets.ModelViewSet):
             queryset = files.values(key=F("id")).exclude(datasets__id=None)
             if not params["keysonly"]:
                 queryset = queryset.annotate(
-                    values=ArrayAgg(
-                        "datasets__id", filter=Q(datasets__is_deprecated=False)
-                    )
+                    values=ArrayAgg("datasets__id", filter=Q(datasets__is_deprecated=False))
                 )
         else:  # keys are datasets
-            datasets = File.datasets.rel.related_model.available_objects.filter(
-                id__in=ids
-            ).filter(is_deprecated=False)
+            datasets = File.datasets.rel.related_model.available_objects.filter(id__in=ids).filter(
+                is_deprecated=False
+            )
             queryset = datasets.values(key=F("id")).exclude(files__id=None)
             if not params["keysonly"]:
                 queryset = queryset.annotate(values=ArrayAgg("files__id"))

@@ -27,16 +27,12 @@ class File(AbstractBaseModel):
     # File id is provided by external service
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     # TODO: use external identifier in APIs
-    v2_identifier = models.CharField(
-        max_length=200, null=True
-    )  # External service identifier
+    v2_identifier = models.CharField(max_length=200, null=True)  # External service identifier
     file_name = models.TextField()
     directory_path = models.TextField(db_index=True)
     byte_size = models.BigIntegerField(default=0)
 
-    checksum_algorithm = models.CharField(
-        choices=checksum_algorithm_choices, max_length=200
-    )
+    checksum_algorithm = models.CharField(choices=checksum_algorithm_choices, max_length=200)
     checksum_checked = models.DateTimeField()
     checksum_value = models.TextField()
 

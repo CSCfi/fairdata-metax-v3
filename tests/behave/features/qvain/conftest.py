@@ -14,9 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.fixture
-def mock_qvain_dataset_with_files_request(
-    qvain_user, frozen_distribution, mock_request
-):
+def mock_qvain_dataset_with_files_request(qvain_user, frozen_distribution, mock_request):
     def _mock_qvain_dataset_with_files_request(status_code, published):
         request = mock_request(status_code)
         request.published = published
@@ -60,9 +58,7 @@ def qvain_publish_request(mock_qvain_dataset_with_files_request):
 
 @pytest.fixture
 @when("new published dataset is created in IDA data-catalog with persistent identifier")
-def published_dataset(
-    ida_data_catalog: DataCatalog, qvain_publish_request, faker
-) -> Dataset:
+def published_dataset(ida_data_catalog: DataCatalog, qvain_publish_request, faker) -> Dataset:
     """
 
     TODO:

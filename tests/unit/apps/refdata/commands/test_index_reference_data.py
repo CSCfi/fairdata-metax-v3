@@ -55,16 +55,12 @@ TEST_DATA_SOURCES = {
 def mock_importers(mocker):
     return {
         "Finto": mocker.patch("apps.refdata.services.indexer.FintoImporter"),
-        "FintoLocation": mocker.patch(
-            "apps.refdata.services.indexer.FintoLocationImporter"
-        ),
+        "FintoLocation": mocker.patch("apps.refdata.services.indexer.FintoLocationImporter"),
         "LocalJSON": mocker.patch("apps.refdata.services.indexer.LocalJSONImporter"),
         "LocalJSONFileFormatVersion": mocker.patch(
             "apps.refdata.services.indexer.LocalJSONFileFormatVersionImporter"
         ),
-        "LocalJSONLicense": mocker.patch(
-            "apps.refdata.services.indexer.LocalJSONLicenseImporter"
-        ),
+        "LocalJSONLicense": mocker.patch("apps.refdata.services.indexer.LocalJSONLicenseImporter"),
     }
 
 

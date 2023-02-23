@@ -42,9 +42,7 @@ def published_dataset_with_distribution(
 
 
 @then("the dataset has a creator")
-def dataset_has_creator(
-    catalog_record_creator, qvain_publish_request, published_dataset
-):
+def dataset_has_creator(catalog_record_creator, qvain_publish_request, published_dataset):
     """
 
     Args:

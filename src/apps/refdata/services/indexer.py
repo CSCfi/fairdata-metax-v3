@@ -30,9 +30,7 @@ def index(types=None):
         model = apps.get_model(conf["model"])
         source = conf["source"]
         scheme = conf.get("scheme")
-        reference_data_sources[typ] = importer(
-            model=model, source=source, scheme=scheme
-        )
+        reference_data_sources[typ] = importer(model=model, source=source, scheme=scheme)
 
     for typ in types:
         reference_data_sources[typ].load()

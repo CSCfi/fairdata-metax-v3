@@ -63,7 +63,6 @@ def test_dataset_files(client, dataset_with_files):
 
 @pytest.mark.django_db
 def test_dataset_directories(client, dataset_with_files):
-
     res = client.get(
         f"/rest/v3/dataset/{dataset_with_files.id}/directories",
         {

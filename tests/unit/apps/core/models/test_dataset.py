@@ -32,9 +32,7 @@ def test_delete_dataset_with_foreign_keys(dataset_with_foreign_keys):
 
     assert not data_catalog.records.filter(id=dataset_with_foreign_keys.id).exists()
     assert not language.datasets.filter(id=dataset_with_foreign_keys.id).exists()
-    assert not field_of_science.datasets.filter(
-        id=dataset_with_foreign_keys.id
-    ).exists()
+    assert not field_of_science.datasets.filter(id=dataset_with_foreign_keys.id).exists()
     assert not theme.datasets.filter(id=dataset_with_foreign_keys.id).exists()
     assert not first.last_version.filter(id=dataset_with_foreign_keys.id).exists()
     assert not last.first_version.filter(id=dataset_with_foreign_keys.id).exists()

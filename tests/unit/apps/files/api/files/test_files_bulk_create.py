@@ -40,17 +40,13 @@ def files_some_already_exist():
         FileSerializer(
             factories.FileFactory.create(storage_project=project)
         ).data,  # already created
-        FileSerializer(
-            factories.FileFactory.build(storage_project=project)
-        ).data,  # new file
+        FileSerializer(factories.FileFactory.build(storage_project=project)).data,  # new file
     ]
     return files
 
 
 @pytest.mark.django_db
-def test_files_create_bulk_error_some_files_already_exist(
-    client, files_some_already_exist
-):
+def test_files_create_bulk_error_some_files_already_exist(client, files_some_already_exist):
     res = client.post(
         "/rest/v3/files",
         files_some_already_exist,
@@ -61,9 +57,7 @@ def test_files_create_bulk_error_some_files_already_exist(
 
 
 @pytest.mark.django_db
-def test_files_create_bulk_ignore_already_exists_errors(
-    client, files_some_already_exist
-):
+def test_files_create_bulk_ignore_already_exists_errors(client, files_some_already_exist):
     res = client.post(
         "/rest/v3/files?ignore_already_exists_errors=true",
         files_some_already_exist,

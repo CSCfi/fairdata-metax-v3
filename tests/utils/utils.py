@@ -62,9 +62,7 @@ def assert_nested_subdict(
         # if either is non-dict, check equality and return
         if not (isinstance(sub_value, dict) and isinstance(full_value, dict)):
             if not _values_eql(full_value, sub_value):
-                raise AssertionError(
-                    f"Different values for {path}: {sub_value} != {full_value}"
-                )
+                raise AssertionError(f"Different values for {path}: {sub_value} != {full_value}")
             return
 
         # both are dicts, check keys and recurse
@@ -72,16 +70,12 @@ def assert_nested_subdict(
             missing_from_sub = set(full_value) - set(sub_value)
             if len(missing_from_sub) > 0:
                 print(missing_from_sub)
-                raise AssertionError(
-                    f"Keys missing from sub dict: {', '.join(missing_from_sub)}"
-                )
+                raise AssertionError(f"Keys missing from sub dict: {', '.join(missing_from_sub)}")
 
         for key, inner_sub_value in sub_value.items():
             key_path = f"{path}.{key}" if path else key
             if key not in full_value:
-                raise AssertionError(
-                    f"Value missing from full dict: {key_path}={inner_sub_value}"
-                )
+                raise AssertionError(f"Value missing from full dict: {key_path}={inner_sub_value}")
             inner_full_value = full_value[key]
             recurse(
                 sub_value=inner_sub_value,

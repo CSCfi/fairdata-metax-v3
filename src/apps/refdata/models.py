@@ -25,9 +25,7 @@ class AbstractConcept(AbstractBaseModel):
         symmetrical=False,
         blank=True,
     )
-    same_as = ArrayField(
-        models.CharField(max_length=255), default=list, blank=True
-    )  # owl:sameAs
+    same_as = ArrayField(models.CharField(max_length=255), default=list, blank=True)  # owl:sameAs
     is_reference_data = models.BooleanField(default=False)
 
     class Meta:
@@ -82,11 +80,7 @@ class AbstractConcept(AbstractBaseModel):
 
     def get_label(self):
         pref_label = self.pref_label or {}
-        return (
-            pref_label.get("en")
-            or pref_label.get("fi")
-            or next(iter(pref_label.values()), "")
-        )
+        return pref_label.get("en") or pref_label.get("fi") or next(iter(pref_label.values()), "")
 
     def __str__(self):
         return f"{self.id}: {self.get_label()}"

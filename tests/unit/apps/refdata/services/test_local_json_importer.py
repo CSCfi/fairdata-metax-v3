@@ -14,9 +14,7 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture
 def local_ref_data_importer():
-    def _local_ref_data_importer(
-        importer_class, data_source: str, model, source=None, scheme=None
-    ):
+    def _local_ref_data_importer(importer_class, data_source: str, model, source=None, scheme=None):
         data_source = settings.LOCAL_REFERENCE_DATA_SOURCES[data_source]
         return importer_class(
             model=model,

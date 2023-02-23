@@ -53,9 +53,7 @@ class BaseDataImporter(ReferenceDataImporterInterface):
         """Assign fields to object from dict."""
 
         obj.in_scheme = self.scheme or data_item.get("in_scheme", "")
-        obj.is_removed = data_item.get(
-            "is_removed", False
-        )  # 'unremove' changed objects
+        obj.is_removed = data_item.get("is_removed", False)  # 'unremove' changed objects
 
         for field, value in data_item.items():
             if field in {"url", "in_scheme", "broader", "narrower"}:

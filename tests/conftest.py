@@ -65,9 +65,7 @@ def access_type_reference_data():
     factories.AccessTypeFactory(
         url="http://uri.suomi.fi/codelist/fairdata/access_type/code/open",
         pref_label={"fi": "Avoin", "en": "Open"},
-        same_as=[
-            "http://publications.europa.eu/resource/authority/access-right/PUBLIC"
-        ],
+        same_as=["http://publications.europa.eu/resource/authority/access-right/PUBLIC"],
         **common_args,
     )
     factories.AccessTypeFactory(
@@ -76,9 +74,7 @@ def access_type_reference_data():
             "fi": "Vaatii kirjautumisen Fairdata-palvelussa",
             "en": "Requires login in Fairdata service",
         },
-        same_as=[
-            "http://publications.europa.eu/resource/authority/access-right/RESTRICTED"
-        ],
+        same_as=["http://publications.europa.eu/resource/authority/access-right/RESTRICTED"],
         **common_args,
     )
     factories.AccessTypeFactory(
@@ -87,25 +83,19 @@ def access_type_reference_data():
             "fi": "Vaatii luvan hakemista Fairdata-palvelussa",
             "en": "Requires applying permission in Fairdata service",
         },
-        same_as=[
-            "http://publications.europa.eu/resource/authority/access-right/RESTRICTED"
-        ],
+        same_as=["http://publications.europa.eu/resource/authority/access-right/RESTRICTED"],
         **common_args,
     )
     factories.AccessTypeFactory(
         url="http://uri.suomi.fi/codelist/fairdata/access_type/code/restricted",
         pref_label={"fi": "Saatavuutta rajoitettu", "en": "Restricted use"},
-        same_as=[
-            "http://publications.europa.eu/resource/authority/access-right/RESTRICTED"
-        ],
+        same_as=["http://publications.europa.eu/resource/authority/access-right/RESTRICTED"],
         **common_args,
     )
     factories.AccessTypeFactory(
         url="http://uri.suomi.fi/codelist/fairdata/access_type/code/embargo",
         pref_label={"fi": "Embargo", "en": "Embargo"},
-        same_as=[
-            "http://publications.europa.eu/resource/authority/access-right/NON_PUBLIC"
-        ],
+        same_as=["http://publications.europa.eu/resource/authority/access-right/NON_PUBLIC"],
         **common_args,
     )
 

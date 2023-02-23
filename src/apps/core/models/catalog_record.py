@@ -149,9 +149,7 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
     keyword = ArrayField(models.CharField(max_length=255), default=list, blank=True)
     language = models.ManyToManyField(Language, related_name="datasets", blank=True)
     theme = models.ManyToManyField(Theme, related_name="datasets", blank=True)
-    field_of_science = models.ManyToManyField(
-        FieldOfScience, related_name="datasets", blank=True
-    )
+    field_of_science = models.ManyToManyField(FieldOfScience, related_name="datasets", blank=True)
 
     access_rights = models.ForeignKey(
         AccessRights,
@@ -270,9 +268,7 @@ class DatasetActor(Actor):
         )
         return dataset_actor
 
-    dataset = models.ForeignKey(
-        Dataset, related_name="actors", on_delete=models.CASCADE
-    )
+    dataset = models.ForeignKey(Dataset, related_name="actors", on_delete=models.CASCADE)
 
     class RoleChoices(models.TextChoices):
         CREATOR = "creator", _("Creator")

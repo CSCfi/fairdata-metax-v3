@@ -49,9 +49,7 @@ class OrganizationIndexer:
 
         url = f"{settings.ORGANIZATION_BASE_URI}{org_code}"
         parent_url = (
-            f"{settings.ORGANIZATION_BASE_URI}{parent_org_code}"
-            if parent_org_code
-            else None
+            f"{settings.ORGANIZATION_BASE_URI}{parent_org_code}" if parent_org_code else None
         )
         org = {
             "url": url,
@@ -72,9 +70,7 @@ class OrganizationIndexer:
                 org = self.row_to_dict(row)
                 if orgs_dict.get(org["url"]):
                     label = org.get("pref_label", {}).get("en")
-                    _logger.warning(
-                        f"Duplicate ogranization URL, skipping: {org['url']} {label}"
-                    )
+                    _logger.warning(f"Duplicate ogranization URL, skipping: {org['url']} {label}")
                 else:
                     orgs_dict[org["url"]] = org
         return orgs_dict

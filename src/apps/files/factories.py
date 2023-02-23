@@ -89,9 +89,7 @@ def create_file_tree(storage_project, file_paths, file_args={}) -> list:
     return files
 
 
-def create_project_with_files(
-    *args, project_identifier=None, file_storage=None, **kwargs
-) -> dict:
+def create_project_with_files(*args, project_identifier=None, file_storage=None, **kwargs) -> dict:
     """Create a storage project and add files to it.
 
     Passes arguments to create_file_tree.
@@ -102,7 +100,7 @@ def create_project_with_files(
             "file_storage__id": file_storage,
             "project_identifier": project_identifier,
         }.items()
-        if value is not None # remove "None" values so defaults will be used instead
+        if value is not None  # remove "None" values so defaults will be used instead
     }
     project = StorageProjectFactory(**project_args)
 

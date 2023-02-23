@@ -108,11 +108,7 @@ class Organization(AbstractBaseModel):
 
     def get_label(self):
         pref_label = self.pref_label or {}
-        return (
-            pref_label.get("en")
-            or pref_label.get("fi")
-            or next(iter(pref_label.values()), "")
-        )
+        return pref_label.get("en") or pref_label.get("fi") or next(iter(pref_label.values()), "")
 
     def __str__(self):
         return f"<{self.__class__.__name__} {self.id}: {self.get_label()}>"

@@ -10,9 +10,7 @@ logger = logging.getLogger(__name__)
 
 @pytest.mark.django_db
 def test_create_publisher(client, publisher_a_json):
-    res = client.post(
-        "/rest/v3/publisher", publisher_a_json, content_type="application/json"
-    )
+    res = client.post("/rest/v3/publisher", publisher_a_json, content_type="application/json")
     logger.info(f"{res.data=}")
     assert res.status_code == 201
 
@@ -20,14 +18,10 @@ def test_create_publisher(client, publisher_a_json):
 @pytest.mark.django_db
 def test_create_publisher_twice(client, publisher_b_json):
     _now = datetime.datetime.now()
-    res1 = client.post(
-        "/rest/v3/publisher", publisher_b_json, content_type="application/json"
-    )
+    res1 = client.post("/rest/v3/publisher", publisher_b_json, content_type="application/json")
     assert res1.status_code == 201
     logger.info(f"{res1.data=}")
-    res2 = client.post(
-        "/rest/v3/publisher", publisher_b_json, content_type="application/json"
-    )
+    res2 = client.post("/rest/v3/publisher", publisher_b_json, content_type="application/json")
     assert res2.status_code == 201
     assert res1.data.get("id") != res2.data.get("id")
 
@@ -75,9 +69,7 @@ def test_list_publishers_with_filter(
 
 
 @pytest.mark.django_db
-def test_list_publishers_with_offset_pagination(
-    client, post_publisher_payloads_a_b_c_d
-):
+def test_list_publishers_with_offset_pagination(client, post_publisher_payloads_a_b_c_d):
     url = "/rest/v3/publisher?{0}={1}".format("limit", 2)
     logger.info(url)
     response = client.get(url)
@@ -89,9 +81,7 @@ def test_list_publishers_with_offset_pagination(
 @pytest.mark.django_db
 def test_change_publisher(client, publisher_c_json, publisher_put_c_json):
     _now = datetime.datetime.now()
-    res1 = client.post(
-        "/rest/v3/publisher", publisher_c_json, content_type="application/json"
-    )
+    res1 = client.post("/rest/v3/publisher", publisher_c_json, content_type="application/json")
     publisher_created = DatasetPublisher.objects.get(id=res1.data.get("id"))
     assert publisher_created.name["en"] == "Publisher C"
     response = client.put(
@@ -114,9 +104,7 @@ def test_get_publisher_by_id(client, post_publisher_payloads_a_b_c_d):
     response = client.get("/rest/v3/publisher")
     results = response.data.get("results")
     for result in results:
-        publisher_by_id = client.get(
-            "/rest/v3/publisher/{id}".format(id=result.get("id"))
-        )
+        publisher_by_id = client.get("/rest/v3/publisher/{id}".format(id=result.get("id")))
         assert response.status_code == 200
         assert publisher_by_id.data.get("name") == result.get("name")
 
@@ -127,9 +115,7 @@ def test_delete_publisher_by_id(client, post_publisher_payloads_a_b_c_d):
     publisher_count = DatasetPublisher.available_objects.all().count()
     assert response.data.get("count") == publisher_count
     results = response.data.get("results")
-    delete_result = client.delete(
-        "/rest/v3/publisher/{id}".format(id=results[0].get("id"))
-    )
+    delete_result = client.delete("/rest/v3/publisher/{id}".format(id=results[0].get("id")))
     assert delete_result.status_code == 204
     assert publisher_count - 1 == DatasetPublisher.available_objects.all().count()
 

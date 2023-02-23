@@ -80,9 +80,7 @@ class LicenseModelSerializer(serializers.ModelSerializer):
 
 class AccessRightsModelSerializer(AbstractDatasetModelSerializer):
     license = LicenseModelSerializer(required=False, read_only=False, many=True)
-    access_type = AccessType.get_serializer()(
-        required=False, read_only=False, many=False
-    )
+    access_type = AccessType.get_serializer()(required=False, read_only=False, many=False)
     description = serializers.JSONField(required=False)
 
     class Meta:
@@ -96,13 +94,9 @@ class AccessRightsModelSerializer(AbstractDatasetModelSerializer):
             access_type = AccessType.objects.get(url=access_type_data.get("url"))
 
         license_data = validated_data.pop("license", [])
-        licenses = [
-            License.objects.get(url=license.get("url")) for license in license_data
-        ]
+        licenses = [License.objects.get(url=license.get("url")) for license in license_data]
 
-        access_rights = AccessRights.objects.create(
-            access_type=access_type, **validated_data
-        )
+        access_rights = AccessRights.objects.create(access_type=access_type, **validated_data)
         access_rights.license.set(licenses)
 
         return access_rights
@@ -115,9 +109,7 @@ class AccessRightsModelSerializer(AbstractDatasetModelSerializer):
         instance.access_type = access_type
 
         license_data = validated_data.pop("license", [])
-        licenses = [
-            License.objects.get(url=license.get("url")) for license in license_data
-        ]
+        licenses = [License.objects.get(url=license.get("url")) for license in license_data]
         instance.license.set(licenses)
 
         return super().update(instance, validated_data)

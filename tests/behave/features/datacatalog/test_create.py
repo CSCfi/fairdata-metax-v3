@@ -12,9 +12,7 @@ logger = logging.getLogger(__name__)
 
 @pytest.fixture
 @when("the user submits new data-catalog")
-def datacatalog_post_request(
-    admin_client, datacatalog_json, reference_data
-):
+def datacatalog_post_request(admin_client, datacatalog_json, reference_data):
     """
 
     Args:
@@ -30,9 +28,7 @@ def datacatalog_post_request(
 
 @pytest.fixture
 @when("new data-catalog is saved to database")
-def datacatalog_from_post_request(
-    datacatalog_post_request, datacatalog_json
-) -> DataCatalog:
+def datacatalog_from_post_request(datacatalog_post_request, datacatalog_json) -> DataCatalog:
     """
 
     Args:
@@ -58,7 +54,6 @@ def is_response_create_ok(datacatalog_post_request):
 
     """
     assert datacatalog_post_request.status_code == 201
-
 
 
 @scenario("datacatalog.feature", "Creating new data-catalog")

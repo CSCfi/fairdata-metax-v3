@@ -51,9 +51,7 @@ class AccessTypeFactory(factory.django.DjangoModelFactory):
         model = models.AccessType
         django_get_or_create = ("url",)
 
-    pref_label = factory.Dict(
-        {"en": factory.Sequence(lambda n: f"dataset-access-type-{n}")}
-    )
+    pref_label = factory.Dict({"en": factory.Sequence(lambda n: f"dataset-access-type-{n}")})
 
     @factory.sequence
     def url(self):
@@ -65,9 +63,7 @@ class FieldOfScienceFactory(factory.django.DjangoModelFactory):
         model = models.FieldOfScience
         django_get_or_create = ("url",)
 
-    pref_label = factory.Dict(
-        {"en": factory.Sequence(lambda n: f"dataset-field-of-science-{n}")}
-    )
+    pref_label = factory.Dict({"en": factory.Sequence(lambda n: f"dataset-field-of-science-{n}")})
 
     @factory.sequence
     def url(self):
@@ -91,9 +87,7 @@ class LanguageFactory(factory.django.DjangoModelFactory):
         model = models.Language
         django_get_or_create = ("url",)
 
-    pref_label = factory.Dict(
-        {"en": factory.Sequence(lambda n: f"dataset-language-{n}")}
-    )
+    pref_label = factory.Dict({"en": factory.Sequence(lambda n: f"dataset-language-{n}")})
 
     @factory.sequence
     def url(self):
@@ -105,9 +99,7 @@ class LicenseFactory(factory.django.DjangoModelFactory):
         model = models.License
         django_get_or_create = ("url",)
 
-    pref_label = factory.Dict(
-        {"en": factory.Sequence(lambda n: f"dataset-license-{n}")}
-    )
+    pref_label = factory.Dict({"en": factory.Sequence(lambda n: f"dataset-license-{n}")})
 
     @factory.sequence
     def url(self):

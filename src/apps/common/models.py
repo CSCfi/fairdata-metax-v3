@@ -79,9 +79,7 @@ class AbstractFreeformConcept(AbstractDatasetProperty):
         in_scheme (models.URLField): scheme of the concept
     """
 
-    title = HStoreField(
-        help_text='example: {"en":"title", "fi":"otsikko"}', blank=True, null=True
-    )
+    title = HStoreField(help_text='example: {"en":"title", "fi":"otsikko"}', blank=True, null=True)
     representation = models.URLField(blank=True, null=True)
     pref_label = HStoreField(blank=True, null=True)
     description = HStoreField(blank=True, null=True)

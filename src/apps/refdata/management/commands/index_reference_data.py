@@ -17,7 +17,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-
         types = options["types"] or self.type_choices
 
         if len(types) != len(set(types)):
@@ -25,8 +24,6 @@ class Command(BaseCommand):
 
         unknown = set(types) - set(self.type_choices)
         if len(unknown) != 0:
-            raise CommandError(
-                f"Unknown types: {sorted(unknown)}, available: {self.type_choices}"
-            )
+            raise CommandError(f"Unknown types: {sorted(unknown)}, available: {self.type_choices}")
 
         return indexer.index(types=types)

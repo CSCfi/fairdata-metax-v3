@@ -23,9 +23,7 @@ class Provenance(AbstractBaseModel):
     """
 
     title = HStoreField(help_text=_('example: {"en":"title", "fi":"otsikko"}'))
-    description = HStoreField(
-        help_text=_('example: {"en":"description", "fi": "kuvaus"}')
-    )
+    description = HStoreField(help_text=_('example: {"en":"description", "fi": "kuvaus"}'))
     # Making foreign-key unique same as OneToOneField
     spatial = models.ForeignKey(
         Spatial, on_delete=models.CASCADE, null=True, blank=True, unique=True
@@ -33,19 +31,13 @@ class Provenance(AbstractBaseModel):
     lifecycle_event = models.ForeignKey(
         LifecycleEvent, on_delete=models.CASCADE, null=True, blank=True
     )
-    event_outcome = models.ForeignKey(
-        EventOutcome, on_delete=models.CASCADE, null=True, blank=True
-    )
+    event_outcome = models.ForeignKey(EventOutcome, on_delete=models.CASCADE, null=True, blank=True)
     outcome_description = HStoreField(
         help_text=_('example: {"en":"successfully collected",}'), null=True, blank=True
     )
     is_associated_with = models.ManyToManyField(DatasetActor, related_name="provenance")
-    dataset = models.ForeignKey(
-        Dataset, on_delete=models.CASCADE, related_name="provenance"
-    )
+    dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE, related_name="provenance")
 
 
 class ProvenanceVariable(AbstractFreeformConcept):
-    provenance = models.ForeignKey(
-        Provenance, on_delete=models.CASCADE, related_name="variables"
-    )
+    provenance = models.ForeignKey(Provenance, on_delete=models.CASCADE, related_name="variables")

@@ -11,9 +11,7 @@ class ConceptProxyMixin:
         """Make non-url fields read-only"""
         serializer_class = super(ConceptProxyMixin, cls).get_serializer()
         serializer_class.Meta.extra_kwargs = {
-            field: {"read_only": True}
-            for field in serializer_class.Meta.fields
-            if field != "url"
+            field: {"read_only": True} for field in serializer_class.Meta.fields if field != "url"
         }
         return serializer_class
 
@@ -68,6 +66,7 @@ class License(refdata.License):
 
     class Meta:
         """Overwrite refdata objects Meta class by defining an empty one"""
+
         pass
 
 

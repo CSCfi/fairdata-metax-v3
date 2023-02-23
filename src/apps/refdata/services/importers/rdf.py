@@ -16,7 +16,6 @@ class RemoteRDFReferenceDataImporter(BaseDataImporter):
     def fetch(self, sleep_time=1, num_retries=7, exp_backoff_multiplier=1.5):
         error = None
         for _ in range(num_retries):
-
             if error:
                 sleep(sleep_time)  # wait before trying to fetch the data again
                 sleep_time *= exp_backoff_multiplier  # exponential backoff
@@ -46,8 +45,7 @@ class RemoteRDFReferenceDataImporter(BaseDataImporter):
             "url": str(concept),
             "in_scheme": graph.value(concept, SKOS.inScheme),
             "pref_label": {
-                literal.language: str(literal)
-                for literal in graph.objects(concept, SKOS.prefLabel)
+                literal.language: str(literal) for literal in graph.objects(concept, SKOS.prefLabel)
             },
             "broader": [str(parent) for parent in graph.objects(concept, SKOS.broader)],
             "same_as": [str(same) for same in graph.objects(concept, OWL.sameAs)],

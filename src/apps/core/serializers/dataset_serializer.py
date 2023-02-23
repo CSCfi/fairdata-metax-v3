@@ -62,21 +62,16 @@ class DatasetSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         language_data = validated_data.pop("language", [])
-        languages = [
-            Language.objects.get(url=lang.get("url")) for lang in language_data
-        ]
+        languages = [Language.objects.get(url=lang.get("url")) for lang in language_data]
         theme_data = validated_data.pop("theme", [])
         themes = [Theme.objects.get(url=theme.get("url")) for theme in theme_data]
 
         field_of_science_data = validated_data.pop("field_of_science", [])
         fields_of_science = [
-            FieldOfScience.objects.get(url=field.get("url"))
-            for field in field_of_science_data
+            FieldOfScience.objects.get(url=field.get("url")) for field in field_of_science_data
         ]
 
-        access_rights_serializer: AccessRightsModelSerializer = self.fields[
-            "access_rights"
-        ]
+        access_rights_serializer: AccessRightsModelSerializer = self.fields["access_rights"]
         access_rights = None
         if access_rights_data := validated_data.pop("access_rights", None):
             access_rights = access_rights_serializer.create(access_rights_data)
@@ -90,22 +85,17 @@ class DatasetSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         language_data = validated_data.pop("language", [])
-        languages = [
-            Language.objects.get(url=lang.get("url")) for lang in language_data
-        ]
+        languages = [Language.objects.get(url=lang.get("url")) for lang in language_data]
 
         theme_data = validated_data.pop("theme", [])
         themes = [Theme.objects.get(url=theme.get("url")) for theme in theme_data]
 
         field_of_science_data = validated_data.pop("field_of_science", [])
         fields_of_science = [
-            FieldOfScience.objects.get(url=field.get("url"))
-            for field in field_of_science_data
+            FieldOfScience.objects.get(url=field.get("url")) for field in field_of_science_data
         ]
 
-        access_rights_serializer: AccessRightsModelSerializer = self.fields[
-            "access_rights"
-        ]
+        access_rights_serializer: AccessRightsModelSerializer = self.fields["access_rights"]
         access_rights = None
         if access_rights_data := validated_data.pop("access_rights", None):
             access_rights = access_rights_serializer.create(access_rights_data)

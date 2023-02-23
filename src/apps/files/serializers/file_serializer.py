@@ -53,9 +53,9 @@ def validate_path_conflicts(storage_project, file_paths):
     if len(repeated) > 0:
         raise serializers.ValidationError(
             {
-                "file_path": _(
-                    "Cannot create multiple files with same path: {paths}"
-                ).format(paths=repeated)
+                "file_path": _("Cannot create multiple files with same path: {paths}").format(
+                    paths=repeated
+                )
             }
         )
 
@@ -77,11 +77,7 @@ def validate_path_conflicts(storage_project, file_paths):
     )
     if conflicts:
         raise serializers.ValidationError(
-            {
-                "file_path": _("File with path already exists: {paths}").format(
-                    paths=list(conflicts)
-                )
-            }
+            {"file_path": _("File with path already exists: {paths}").format(paths=list(conflicts))}
         )
 
 
@@ -96,9 +92,7 @@ class FileListSerializer(serializers.ListSerializer):
         value = data[0][field]
         for item in data[1:]:
             if value != item[field]:
-                raise serializers.ValidationError(
-                    {field: "All files should have same value."}
-                )
+                raise serializers.ValidationError({field: "All files should have same value."})
 
     def _get_params(self):
         params_serializer = FileCreateQueryParamsSerializer(
@@ -175,10 +169,7 @@ class CreateOnlyFieldsMixin:
 
     def update(self, instance, validated_data):
         for field in self.create_only_fields:
-            if (
-                field in validated_data
-                and getattr(instance, field) != validated_data[field]
-            ):
+            if field in validated_data and getattr(instance, field) != validated_data[field]:
                 raise serializers.ValidationError(
                     {field: "Changing field value after creation is not allowed"}
                 )

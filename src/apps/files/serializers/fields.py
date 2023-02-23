@@ -29,9 +29,7 @@ class ListValidChoicesField(serializers.ChoiceField):
     def __init__(self, *args, **kwargs):
         choices = kwargs.get("choices", [])
         kwargs["error_messages"] = {
-            "invalid_choice": serializers.ChoiceField.default_error_messages[
-                "invalid_choice"
-            ]
+            "invalid_choice": serializers.ChoiceField.default_error_messages["invalid_choice"]
             + " "
             + _("Valid choices are: {choices}").format(choices=[c[0] for c in choices]),
             **kwargs.get("error_messages", {}),
@@ -49,9 +47,7 @@ optional_slash_directory_path_regex = (
 
 
 class FileNameField(serializers.RegexField):
-    default_error_messages = {
-        "invalid": _("Expected file name to not contain slashes.")
-    }
+    default_error_messages = {"invalid": _("Expected file name to not contain slashes.")}
 
     def __init__(self, *args, **kwargs):
         kwargs["trim_whitespace"] = False
@@ -59,9 +55,7 @@ class FileNameField(serializers.RegexField):
 
 
 class FilePathField(serializers.RegexField):
-    default_error_messages = {
-        "invalid": _("Expected file path to be in format '/path/file'.")
-    }
+    default_error_messages = {"invalid": _("Expected file path to be in format '/path/file'.")}
 
     def __init__(self, *args, **kwargs):
         kwargs["trim_whitespace"] = False
@@ -69,9 +63,7 @@ class FilePathField(serializers.RegexField):
 
 
 class DirectoryPathField(serializers.RegexField):
-    default_error_messages = {
-        "invalid": _("Expected directory path to be in format /path/.")
-    }
+    default_error_messages = {"invalid": _("Expected directory path to be in format /path/.")}
 
     def __init__(self, *args, **kwargs):
         kwargs["trim_whitespace"] = False

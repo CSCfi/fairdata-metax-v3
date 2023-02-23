@@ -67,9 +67,7 @@ def assert_query_results(client, model):
     def do_query(query, expected_labels):
         url = get_model_url(model)
         resp = client.get(url, query)
-        assert [
-            obj["pref_label"]["en"] for obj in resp.data["results"]
-        ] == expected_labels
+        assert [obj["pref_label"]["en"] for obj in resp.data["results"]] == expected_labels
 
     return do_query
 

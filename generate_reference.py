@@ -22,9 +22,7 @@ def get_ast(path):
 def get_node_items(node):
     """Get names of functions and classes in AST node."""
     return list(
-        f.name
-        for f in node
-        if isinstance(f, ast.FunctionDef) or isinstance(f, ast.ClassDef)
+        f.name for f in node if isinstance(f, ast.FunctionDef) or isinstance(f, ast.ClassDef)
     )
 
 
@@ -106,9 +104,7 @@ def module_tree(modules):
                 for child in children:
                     child["parent"] = parent
                 if parent:
-                    parent["children"] = [
-                        c for c in parent["children"] if c is not module
-                    ]
+                    parent["children"] = [c for c in parent["children"] if c is not module]
                     parent["children"].extend(children)
         modules = [
             module for module in modules if not module.get("skip")

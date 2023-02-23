@@ -17,9 +17,11 @@ def load_test_json(filename):
         data = json.load(json_file)
     return data
 
+
 @pytest.fixture
 def ida_files_json():
     return load_test_json("ida_files.json")
+
 
 @pytest.fixture
 @given("IDA has its own data-catalog")

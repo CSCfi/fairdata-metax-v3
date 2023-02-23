@@ -55,12 +55,8 @@ def test_directory_field_values(client, file_tree_b):
                         "value": "f00f",
                     },
                     "date_frozen": file_tree_b["files"]["/rootfile.txt"].date_frozen,
-                    "file_modified": file_tree_b["files"][
-                        "/rootfile.txt"
-                    ].file_modified,
-                    "date_uploaded": file_tree_b["files"][
-                        "/rootfile.txt"
-                    ].date_uploaded,
+                    "file_modified": file_tree_b["files"]["/rootfile.txt"].file_modified,
+                    "date_uploaded": file_tree_b["files"]["/rootfile.txt"].date_uploaded,
                     "created": file_tree_b["files"]["/rootfile.txt"].created,
                     "modified": file_tree_b["files"]["/rootfile.txt"].modified,
                 }
@@ -121,9 +117,7 @@ def test_directory_all_directory_fields(client, file_tree_b):
         "/rest/v3/directories",
         {
             "pagination": False,
-            "directory_fields": ",".join(
-                DirectoryCommonQueryParams.allowed_directory_fields
-            ),
+            "directory_fields": ",".join(DirectoryCommonQueryParams.allowed_directory_fields),
             **file_tree_b["params"],
         },
     )
@@ -144,6 +138,4 @@ def test_directory_all_file_fields(client, file_tree_b):
         },
     )
     assert res.status_code == 200
-    assert set(res.data["files"][0]) == set(
-        DirectoryCommonQueryParams.allowed_file_fields
-    )
+    assert set(res.data["files"][0]) == set(DirectoryCommonQueryParams.allowed_file_fields)

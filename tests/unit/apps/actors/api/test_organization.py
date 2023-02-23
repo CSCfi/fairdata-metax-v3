@@ -63,9 +63,7 @@ def check_org_trees(organization_tree):
 
 @pytest.mark.django_db
 def test_get_org_list(check_org_trees):
-    check_org_trees(
-        None, {"0": {}, "1": {"1-2": {"1-2-3": {}, "1-2-4": {}}, "1-5": {}}}
-    )
+    check_org_trees(None, {"0": {}, "1": {"1-2": {"1-2-3": {}, "1-2-4": {}}, "1-5": {}}})
 
 
 @pytest.mark.django_db

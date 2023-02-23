@@ -59,9 +59,7 @@ class SubDirectorySerializer(BaseDirectorySerializer):
 
 
 class ParentDirectorySerializer(BaseDirectorySerializer):
-    parent_url = serializers.SerializerMethodField(
-        read_only=True, method_name="get_parent_url"
-    )
+    parent_url = serializers.SerializerMethodField(read_only=True, method_name="get_parent_url")
 
     def get_parent_url(self, obj):
         """Get url for navigating to parent of current directory."""
