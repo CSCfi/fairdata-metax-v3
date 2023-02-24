@@ -28,7 +28,7 @@ APPS_DIR = join(BASE_DIR, "apps")
 sys.path.append(APPS_DIR)
 
 # collect static files here
-STATIC_ROOT = join(ROOT_DIR, "staticfiles")
+STATIC_ROOT = os.environ.get("STATIC_ROOT", join(ROOT_DIR, "staticfiles"))
 
 # collect media files here
 MEDIA_ROOT = join(ROOT_DIR, "media")
@@ -42,14 +42,16 @@ STATICFILES_DIRS = [
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-+#ohm#9qx8+2gc28g6%r8iww^8f&yye_)^-&=3x51kzw$&svk("
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-+#ohm#9qx8+2gc28g6%r8iww^8f&yye_)^-&=3x51kzw$&svk(")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", False)
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1"]
-
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', "localhost,0.0.0.0,127.0.0.1,[::1]").split(', ')
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
 
 # Application definition
 
