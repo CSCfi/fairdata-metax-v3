@@ -14,6 +14,7 @@ from rest_framework import serializers
 from apps.common.serializers import (
     AbstractDatasetModelSerializer,
     AbstractDatasetPropertyModelSerializer,
+    URLReferencedModelListField,
 )
 from apps.core.models import AccessRights, CatalogHomePage, DatasetPublisher
 from apps.core.models.concepts import AccessType, License
@@ -79,8 +80,14 @@ class LicenseModelSerializer(serializers.ModelSerializer):
 
 
 class AccessRightsModelSerializer(AbstractDatasetModelSerializer):
-    license = LicenseModelSerializer(required=False, read_only=False, many=True)
-    access_type = AccessType.get_serializer()(required=False, read_only=False, many=False)
+    license = URLReferencedModelListField(
+        child=LicenseModelSerializer(required=False),
+        read_only=False,
+        required=False
+    )
+    access_type = AccessType.get_serializer()(
+        required=False, read_only=False, many=False
+    )
     description = serializers.JSONField(required=False)
 
     class Meta:
@@ -93,8 +100,7 @@ class AccessRightsModelSerializer(AbstractDatasetModelSerializer):
         if access_type_data not in EMPTY_VALUES:
             access_type = AccessType.objects.get(url=access_type_data.get("url"))
 
-        license_data = validated_data.pop("license", [])
-        licenses = [License.objects.get(url=license.get("url")) for license in license_data]
+        licenses = validated_data.pop("license", [])
 
         access_rights = AccessRights.objects.create(access_type=access_type, **validated_data)
         access_rights.license.set(licenses)
@@ -108,8 +114,7 @@ class AccessRightsModelSerializer(AbstractDatasetModelSerializer):
             access_type = AccessType.objects.get(url=access_type_data.get("url"))
         instance.access_type = access_type
 
-        license_data = validated_data.pop("license", [])
-        licenses = [License.objects.get(url=license.get("url")) for license in license_data]
+        licenses = validated_data.pop("license", [])
         instance.license.set(licenses)
 
         return super().update(instance, validated_data)

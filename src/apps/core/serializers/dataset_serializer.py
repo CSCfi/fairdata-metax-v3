@@ -61,15 +61,9 @@ class DatasetSerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data):
-        language_data = validated_data.pop("language", [])
-        languages = [Language.objects.get(url=lang.get("url")) for lang in language_data]
-        theme_data = validated_data.pop("theme", [])
-        themes = [Theme.objects.get(url=theme.get("url")) for theme in theme_data]
-
-        field_of_science_data = validated_data.pop("field_of_science", [])
-        fields_of_science = [
-            FieldOfScience.objects.get(url=field.get("url")) for field in field_of_science_data
-        ]
+        languages = validated_data.pop("language", [])
+        themes = validated_data.pop("theme", [])
+        fields_of_science = validated_data.pop("field_of_science", [])
 
         access_rights_serializer: AccessRightsModelSerializer = self.fields["access_rights"]
         access_rights = None
@@ -84,16 +78,9 @@ class DatasetSerializer(serializers.ModelSerializer):
         return dataset
 
     def update(self, instance, validated_data):
-        language_data = validated_data.pop("language", [])
-        languages = [Language.objects.get(url=lang.get("url")) for lang in language_data]
-
-        theme_data = validated_data.pop("theme", [])
-        themes = [Theme.objects.get(url=theme.get("url")) for theme in theme_data]
-
-        field_of_science_data = validated_data.pop("field_of_science", [])
-        fields_of_science = [
-            FieldOfScience.objects.get(url=field.get("url")) for field in field_of_science_data
-        ]
+        languages = validated_data.pop("language", [])
+        themes = validated_data.pop("theme", [])
+        fields_of_science = validated_data.pop("field_of_science", [])
 
         access_rights_serializer: AccessRightsModelSerializer = self.fields["access_rights"]
         access_rights = None

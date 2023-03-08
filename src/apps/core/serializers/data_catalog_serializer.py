@@ -46,7 +46,7 @@ class DataCatalogModelSerializer(serializers.ModelSerializer):
         publisher = None
         access_rights = None
 
-        language_data = validated_data.pop("language", [])
+        languages = validated_data.pop("language", [])
 
         publisher_serializer: DatasetPublisherModelSerializer = self.fields["publisher"]
         access_rights_serializer: AccessRightsModelSerializer = self.fields["access_rights"]
@@ -60,8 +60,6 @@ class DataCatalogModelSerializer(serializers.ModelSerializer):
         new_datacatalog: DataCatalog = DataCatalog.objects.create(
             access_rights=access_rights, publisher=publisher, **validated_data
         )
-
-        languages = [Language.objects.get(url=lang.get("url")) for lang in language_data]
         new_datacatalog.language.add(*languages)
 
         return new_datacatalog
@@ -83,8 +81,7 @@ class DataCatalogModelSerializer(serializers.ModelSerializer):
         if publisher_data := validated_data.pop("publisher", None):
             update_or_create_instance(publisher_serializer, publisher_instance, publisher_data)
 
-        language_data = validated_data.pop("language", [])
-        languages = [Language.objects.get(url=lang.get("url")) for lang in language_data]
+        languages = validated_data.pop("language", [])
         instance.language.set(languages)
 
         return super().update(instance, validated_data)

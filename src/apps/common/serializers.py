@@ -14,6 +14,52 @@ from rest_framework import serializers
 logger = logging.getLogger(__name__)
 
 
+class URLReferencedModelListField(serializers.ListField):
+    """Custom serializer for a model list.
+
+    Allows user to represent targets using the 'url' key.
+
+    The 'child' parameter in 'serializers.ListField' is used for serializing
+    the list in the response.
+    """
+
+    def to_representation(self, manager):
+        return [self.child.to_representation(entry) for entry in manager.all()]
+
+    def to_internal_value(self, data):
+        if not isinstance(data, list) or isinstance(data, (str, dict)):
+            self.fail("not_a_list", input_type=type(data).__name__)
+
+        if data and hasattr(data[0], "url"):
+            # The list of entries has already been converted into model
+            # instances
+            return data
+
+        try:
+            urls = set(entry["url"] for entry in data)
+        except KeyError:
+            raise serializers.ValidationError(
+                "'url' field must be defined for each object in the list"
+            )
+        except TypeError:
+            raise serializers.ValidationError(
+                "Each item in the list must be an object with the field 'url'"
+            )
+
+        model = self.child.Meta.model
+        entries = list(model.objects.filter(url__in=urls))
+
+        retrieved_urls = set(entry.url for entry in entries)
+        missing_urls = urls - retrieved_urls
+
+        if missing_urls:
+            raise serializers.ValidationError(
+                "Entries not found for given URLs: {}".format(", ".join(missing_urls))
+            )
+
+        return entries
+
+
 class AbstractDatasetModelSerializer(serializers.ModelSerializer):
     class Meta:
         fields = "__all__"

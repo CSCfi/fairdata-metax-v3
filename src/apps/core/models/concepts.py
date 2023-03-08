@@ -1,5 +1,6 @@
 from django.contrib.postgres.fields import HStoreField
 
+from apps.common.serializers import URLReferencedModelListField
 from apps.refdata import models as refdata
 
 
@@ -13,6 +14,7 @@ class ConceptProxyMixin:
         serializer_class.Meta.extra_kwargs = {
             field: {"read_only": True} for field in serializer_class.Meta.fields if field != "url"
         }
+        serializer_class.Meta.list_serializer_class = URLReferencedModelListField
         return serializer_class
 
     class Meta:
