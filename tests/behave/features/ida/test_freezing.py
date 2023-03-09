@@ -7,7 +7,6 @@ from pytest_bdd import scenario, then, when
 from rest_framework.reverse import reverse
 
 from apps.core import factories
-from apps.core.models import Distribution
 from apps.files.models import StorageProject
 
 logger = logging.getLogger(__name__)
@@ -86,7 +85,7 @@ def created_storage_project(ida_file_storage, project_identifier) -> StorageProj
         ida_file_storage (FileStorage): FileStorage instance
 
     Returns:
-        Distribution: Distribution from freezing action on IDA
+        StorageProject: Dataset StorageProject
 
     """
     return StorageProject.available_objects.get(
@@ -96,13 +95,13 @@ def created_storage_project(ida_file_storage, project_identifier) -> StorageProj
 
 @then("the storage project has the files associated with it")
 def storage_project(created_storage_project, files_json) -> StorageProject:
-    """Ensure files are associated with the distribution
+    """Ensure files are associated with the storage project
 
     Args:
-        created_distribution (Distribution): Distribution from freezing action on IDA
+        created_storage_project (StorageProject): StorageProject from freezing action on IDA
 
     Returns:
-        Distribution: Frozen Distribution with files
+        StorageProject: StorageProject with files
 
     """
     file_paths = set(f["file_path"] for f in files_json)

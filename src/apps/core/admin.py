@@ -15,7 +15,6 @@ from apps.core.models import (
     DatasetActor,
     DatasetProject,
     DatasetPublisher,
-    Distribution,
     LegacyDataset,
     MetadataProvider,
     OtherIdentifier,
@@ -149,11 +148,6 @@ class LegacyDatasetAdmin(DatasetAdmin):
         "keyword",
         "is_deprecated",
     )
-
-
-@admin.register(Distribution)
-class DistributionAdmin(AbstractDatasetPropertyBaseAdmin):
-    list_filter = ["access_service"]
 
 
 @admin.register(Contract)

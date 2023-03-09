@@ -1,7 +1,7 @@
 
 
 # Created by tonurmi at 16.5.2022
-@dataset @ida @qvain @datacatalog @distribution @catalogrecord
+@dataset @ida @qvain @datacatalog @catalogrecord
 Feature: Datasets
   User is able to create new catalog-record by creating new dataset using Qvain-service user-interface.
   User defines dataset properties such as title, field of science, access type, actors, keywords, language,
@@ -25,7 +25,6 @@ Feature: Datasets
 
   Background:
     Given user has frozen files in IDA
-    And there is distribution from the freeze
     And IDA has its own data-catalog
 
   @publish
@@ -33,15 +32,13 @@ Feature: Datasets
     When user publishes a new dataset in Qvain
     And new published dataset is created in IDA data-catalog with persistent identifier
     And the user is saved as creator to the dataset
-    And new distribution is created from the frozen files
-    Then published dataset exists with persistent identifier and new distribution
+    Then published dataset exists with persistent identifier
     And the dataset has a creator
 
   @draft
   Scenario: Saving draft of unpublished Dataset
     When user saves a draft of unpublished dataset in Qvain
     And new unpublished dataset is created without persistent identifier
-    And new distribution is created from the frozen files
     Then the dataset exists in draft state
 
   @publish @versioning

@@ -21,9 +21,8 @@ class Command(BaseCommand):
         dataset = factories.DatasetFactory(data_catalog=data_catalog)
         logger.info(f"{dataset=}")
         files = FileFactory.create_batch(3)
-        distribution = factories.DistributionFactory(files=files, dataset=dataset)
         logger.info(
             f"Created test objects: {language=}, {homepage=}, {dataset_publisher=}, {data_catalog=}, "
-            f"{dataset=}, {files=}, {distribution=}"
+            f"{dataset=}, {files=}"
         )
         self.stdout.write("test objects created successfully")

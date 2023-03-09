@@ -27,7 +27,6 @@
             - [concepts](src/apps/core/models/concepts.md)
             - [contract](src/apps/core/models/contract.md)
             - [data_catalog](src/apps/core/models/data_catalog.md)
-            - [distribution](src/apps/core/models/distribution.md)
             - [legacy](src/apps/core/models/legacy.md)
             - [provenance](src/apps/core/models/provenance.md)
         - serializers
@@ -115,7 +114,6 @@
                 - [test_data_catalog](tests/unit/apps/core/models/test_data_catalog.md)
                 - [test_dataset](tests/unit/apps/core/models/test_dataset.md)
                 - [test_dataset_property](tests/unit/apps/core/models/test_dataset_property.md)
-                - [test_distribution](tests/unit/apps/core/models/test_distribution.md)
                 - [test_publisher](tests/unit/apps/core/models/test_publisher.md)
         - files
             - api

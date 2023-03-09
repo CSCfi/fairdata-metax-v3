@@ -17,6 +17,5 @@ from .data_catalog import (
     DataCatalog,
     DatasetPublisher,
 )
-from .distribution import Distribution
 from .legacy import LegacyDataset
 from .provenance import Provenance, ProvenanceVariable

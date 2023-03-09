@@ -48,7 +48,3 @@
 
 ### :::src.apps.core.factories.DatasetFactory
 
-## DistributionFactory
-
-### :::src.apps.core.factories.DistributionFactory
-

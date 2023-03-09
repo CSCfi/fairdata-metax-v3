@@ -10,7 +10,6 @@ from apps.core.models import (
     DataCatalog,
     Dataset,
     DatasetPublisher,
-    Distribution,
     FieldOfScience,
     Language,
     License,
@@ -180,28 +179,6 @@ def file_storage() -> FileStorage:
 
 
 @pytest.fixture
-def distribution() -> Distribution:
-    identifier = "abcd1234"
-    title = {
-        "en": "Title",
-        "fi": "Otsikko",
-        "sv": "Titel",
-    }
-    access_url = "https://www.test123321abc.fi"
-    download_url = "https://www.test321123abc.fi"
-    byte_size = 999999
-    checksum = "ABC-12345"
-    return factories.DistributionFactory(
-        id=identifier,
-        title=title,
-        access_url=access_url,
-        download_url=download_url,
-        byte_size=byte_size,
-        checksum=checksum,
-    )
-
-
-@pytest.fixture
 def file() -> File:
     byte_size = 999
     checksum = "ABC-123456"
@@ -223,15 +200,12 @@ def file() -> File:
 def dataset_property_object_factory(
     catalog_homepage,
     data_catalog,
-    distribution,
 ):
     def _dataset_property_object_factory(object_name):
         if object_name == "catalog_homepage":
             return catalog_homepage
         elif object_name == "data_catalog":
             return data_catalog
-        elif object_name == "distribution":
-            return distribution
 
     return _dataset_property_object_factory
 

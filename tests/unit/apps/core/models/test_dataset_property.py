@@ -5,7 +5,6 @@ pytestmark = pytest.mark.parametrize(
     [
         "catalog_homepage",
         "data_catalog",
-        "distribution",
     ],
 )
 
@@ -22,7 +21,7 @@ def test_create_dataset_ref_property(
     assert obj.url == identifier
 
 
-@pytest.mark.parametrize("dataset_base_property", ["data_catalog", "distribution"])
+@pytest.mark.parametrize("dataset_base_property", ["data_catalog"])
 def test_create_dataset_property(
     dataset_property, dataset_base_property, dataset_property_object_factory
 ):

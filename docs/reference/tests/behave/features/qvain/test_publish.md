@@ -4,9 +4,9 @@
 
 ### :::tests.behave.features.qvain.test_publish.catalog_record_creator
 
-## published_dataset_with_distribution
+## published_dataset
 
-### :::tests.behave.features.qvain.test_publish.published_dataset_with_distribution
+### :::tests.behave.features.qvain.test_publish.published_dataset
 
 ## dataset_has_creator
 

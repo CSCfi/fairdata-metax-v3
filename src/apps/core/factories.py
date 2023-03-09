@@ -156,24 +156,3 @@ class DatasetFactory(factory.django.DjangoModelFactory):
     title = factory.Dict({"en": factory.Sequence(lambda n: f"research-dataset-{n}")})
     contract = factory.SubFactory(ContractFactory)
     system_creator = factory.SubFactory(MetaxUserFactory)
-
-
-class DistributionFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = models.Distribution
-        django_get_or_create = ("title",)
-
-    id = factory.Faker("uuid4")
-    title = factory.Dict({"en": factory.Sequence(lambda n: f"distribution-{n}")})
-    license = factory.SubFactory(LicenseFactory)
-    access_rights = factory.SubFactory(AccessRightsFactory)
-    dataset = factory.SubFactory(DatasetFactory)
-    access_service = factory.SubFactory(FileStorageFactory)
-
-    @factory.post_generation
-    def files(self, create, extracted, **kwargs):
-        if not create:
-            return
-        if extracted:
-            for file in extracted:
-                self.files.add(file)

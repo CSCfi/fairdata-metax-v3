@@ -60,10 +60,6 @@
 
 ### :::src.apps.core.admin.LegacyDatasetAdmin
 
-## DistributionAdmin
-
-### :::src.apps.core.admin.DistributionAdmin
-
 ## ContractAdmin
 
 ### :::src.apps.core.admin.ContractAdmin

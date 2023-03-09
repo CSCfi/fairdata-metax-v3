@@ -56,10 +56,6 @@
 
 ### :::tests.unit.apps.core.models.conftest.file_storage
 
-## distribution
-
-### :::tests.unit.apps.core.models.conftest.distribution
-
 ## file
 
 ### :::tests.unit.apps.core.models.conftest.file

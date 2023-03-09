@@ -29,7 +29,7 @@ class Language(ConceptProxyMixin, refdata.Language):
     """A language of the item.
 
     This refers to the natural language used for textual metadata (i.e. titles, descriptions, etc)
-    of a cataloged resource (i.e. dataset or service) or the textual values of a dataset distribution
+    of a cataloged resource (i.e. dataset or service) or the textual values of a dataset
 
     Note:
         Repeat this property if the resource is available in multiple languages.
@@ -37,12 +37,6 @@ class Language(ConceptProxyMixin, refdata.Language):
     Note:
         The value(s) provided for members of a catalog (i.e. dataset or service)
         override the value(s) provided for the catalog if they conflict.
-
-    Note:
-        If representations of a dataset are available for each language separately,
-        define an instance of dcat:Distribution for each language and describe the specific language of each
-        distribution using dcterms:language (i.e. the dataset will have multiple dcterms:language values and
-        each distribution will have just one as the value of its dcterms:language property).
 
     DRF Property: dcterms:language
 
