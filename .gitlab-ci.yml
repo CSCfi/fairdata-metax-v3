@@ -1,6 +1,22 @@
----
+workflow:
+  name: '$PIPELINE_NAME'
+  rules:
+    - if: $CI_PIPELINE_SOURCE =~ /^(web)$/
+      variables:
+        PIPELINE_NAME: 'Manual pipeline to $GITLAB_ENV'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      variables:
+        PIPELINE_NAME: 'MR pipeline'
+    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
+      variables:
+        PIPELINE_NAME: 'Commit pipeline'
+
+# ------------------------
+
 stages:
   - test
+  - deploy
+  - post-deploy
 
 include:
   - project: fairdata/fairdata-ci
@@ -16,6 +32,44 @@ unittests:
   extends: .metax-unittests
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+prepare-service:
+  stage: deploy
+  environment: $GITLAB_ENV
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
+  script:
+    - ansible-playbook -i $ANSIBLE_INVENTORY ${PLAYBOOKS_ROOT}/metax-service/v3/metax-deploy.yaml --vault-id $ANSIBLE_VAULT_FILE --tags "all-python-tasks,all-user-folder-tasks,all-os-packages-tasks"
+
+deploy-service:
+  stage: deploy
+  environment: $GITLAB_ENV
+  needs:
+    - job: prepare-service
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
+  script:
+    - ansible-playbook -i $ANSIBLE_INVENTORY ${PLAYBOOKS_ROOT}/metax-service/v3/metax-deploy.yaml --vault-id $ANSIBLE_VAULT_FILE --tags "all-repository-tasks,all-pip-dependency-tasks,selected-django-tasks,django-migrate,collect-static,all-systemd-tasks,all-nginx-tasks"
+
+test-deployment:
+  stage: deploy
+  environment: $GITLAB_ENV
+  needs:
+    - job: deploy-service
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
+  script:
+    - ansible-playbook -i $ANSIBLE_INVENTORY ${PLAYBOOKS_ROOT}/metax-service/v3/metax-deploy.yaml --vault-id $ANSIBLE_VAULT_FILE --tags "selected-django-tasks,run-unittests"
+
+post-deployment-tasks:
+  stage: deploy
+  environment: $GITLAB_ENV
+  needs:
+    - job: deploy-service
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
+  script:
+    - ansible-playbook -i $ANSIBLE_INVENTORY ${PLAYBOOKS_ROOT}/metax-service/v3/metax-deploy.yaml --vault-id $ANSIBLE_VAULT_FILE --tags "selected-django-tasks,create-superusers,index-organizations,index-refdata"
 
 sonarqube:
   extends: .sonarqube-job
