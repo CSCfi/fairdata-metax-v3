@@ -45,7 +45,7 @@ def dataset_with_files(file_tree):
 
 @pytest.mark.django_db
 def test_dataset_files(client, dataset_with_files):
-    res = client.get(f"/rest/v3/dataset/{dataset_with_files.id}/files")
+    res = client.get(f"/rest/v3/datasets/{dataset_with_files.id}/files")
     assert res.status_code == 200
     assert_nested_subdict(
         {
@@ -64,7 +64,7 @@ def test_dataset_files(client, dataset_with_files):
 @pytest.mark.django_db
 def test_dataset_directories(client, dataset_with_files):
     res = client.get(
-        f"/rest/v3/dataset/{dataset_with_files.id}/directories",
+        f"/rest/v3/datasets/{dataset_with_files.id}/directories",
         {
             "pagination": False,
             "path": "/dir2/",
@@ -95,7 +95,7 @@ def test_dataset_directories(client, dataset_with_files):
 def test_dataset_directories_no_files(client, dataset_with_files):
     another_dataset = factories.DatasetFactory()
     res = client.get(
-        f"/rest/v3/dataset/{another_dataset.id}/directories",
+        f"/rest/v3/datasets/{another_dataset.id}/directories",
         {
             "pagination": False,
         },

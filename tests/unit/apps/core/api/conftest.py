@@ -70,7 +70,7 @@ def post_datacatalog_payloads_a_b_c(
     reference_data,
 ):
     logger.info(__name__)
-    url = "/rest/v3/datacatalog"
+    url = "/rest/v3/datacatalogs"
     res1 = client.post(url, datacatalog_a_json, content_type="application/json")
     res2 = client.post(url, datacatalog_b_json, content_type="application/json")
     res3 = client.post(url, datacatalog_c_json, content_type="application/json")
@@ -116,7 +116,7 @@ def post_publisher_payloads_a_b_c_d(
     client, publisher_a_json, publisher_b_json, publisher_c_json, publisher_d_json
 ):
     logger.info(__name__)
-    url = "/rest/v3/publisher"
+    url = "/rest/v3/publishers"
     res1 = client.post(url, publisher_a_json, content_type="application/json")
     res2 = client.post(url, publisher_b_json, content_type="application/json")
     res3 = client.post(url, publisher_c_json, content_type="application/json")

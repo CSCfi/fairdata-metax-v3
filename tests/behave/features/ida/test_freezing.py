@@ -73,7 +73,7 @@ def post_ida_file(admin_client, files_json):
 
     """
 
-    url = reverse("files-list")
+    url = reverse("file-list")
     return admin_client.post(url, files_json, content_type="application/json")
 
 

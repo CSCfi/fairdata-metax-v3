@@ -13,19 +13,19 @@ from apps.core.views import DataCatalogView, DatasetViewSet, PublisherViewSet
 from apps.core.views.dataset_view import DatasetDirectoryViewSet, DatasetFilesViewSet
 
 router = DefaultRouter(trailing_slash=False)
-router.register(r"datacatalog", DataCatalogView, basename="datacatalog")
-router.register(r"dataset", DatasetViewSet, basename="dataset")
+router.register(r"datacatalogs?", DataCatalogView, basename="datacatalog")
+router.register(r"datasets?", DatasetViewSet, basename="dataset")
 router.register(
-    r"dataset/(?P<dataset_id>[^/.]+)/files",
+    r"datasets?/(?P<dataset_id>[^/.]+)/files",
     DatasetFilesViewSet,
     basename="dataset_files",
 )
 router.register(
-    r"dataset/(?P<dataset_id>[^/.]+)/directories",
+    r"datasets?/(?P<dataset_id>[^/.]+)/directories",
     DatasetDirectoryViewSet,
     basename="dataset_directories",
 )
-router.register(r"publisher", PublisherViewSet, basename="publisher")
+router.register(r"publishers?", PublisherViewSet, basename="publisher")
 
 urlpatterns = [
     path(r"", include(router.urls)),
