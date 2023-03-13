@@ -47,11 +47,15 @@ unittests:
 
 prepare-service:
   extends: .prepare-service-play
+  tags:
+  - shell
   rules:
     - if: $CI_COMMIT_BRANCH =~ /^(master)$/
 
 deploy-service:
   extends: .deploy-service-play
+  tags:
+  - shell
   needs:
     - job: prepare-service
   rules:
@@ -59,6 +63,8 @@ deploy-service:
 
 test-deployment:
   extends: .test-deployment-play
+  tags:
+  - shell
   needs:
     - job: deploy-service
   rules:
@@ -66,6 +72,8 @@ test-deployment:
 
 post-deployment-tasks:
   extends: .post-deployment-tasks-play
+  tags:
+  - shell
   needs:
     - job: deploy-service
   rules:
