@@ -24,6 +24,8 @@ include:
     file:
       - /templates/test/test-jobs.yaml
       - /templates/test/metax-v3-tests.yaml
+      - templates/deploy/metax-service-deploy-jobs.yaml
+
 
 # ------------------------
 
@@ -34,42 +36,30 @@ unittests:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
 
 prepare-service:
-  stage: deploy
-  environment: $GITLAB_ENV
+  extends: .prepare-service-play
   rules:
     - if: $CI_COMMIT_BRANCH =~ /^(master)$/
-  script:
-    - ansible-playbook -i $ANSIBLE_INVENTORY ${PLAYBOOKS_ROOT}/metax-service/v3/metax-deploy.yaml --vault-id $ANSIBLE_VAULT_FILE --tags "all-python-tasks,all-user-folder-tasks,all-os-packages-tasks"
 
 deploy-service:
-  stage: deploy
-  environment: $GITLAB_ENV
+  extends: .deploy-service-play
   needs:
     - job: prepare-service
   rules:
     - if: $CI_COMMIT_BRANCH =~ /^(master)$/
-  script:
-    - ansible-playbook -i $ANSIBLE_INVENTORY ${PLAYBOOKS_ROOT}/metax-service/v3/metax-deploy.yaml --vault-id $ANSIBLE_VAULT_FILE --tags "all-repository-tasks,all-pip-dependency-tasks,selected-django-tasks,django-migrate,collect-static,all-systemd-tasks,all-nginx-tasks"
 
 test-deployment:
-  stage: deploy
-  environment: $GITLAB_ENV
+  extends: .test-deployment-play
   needs:
     - job: deploy-service
   rules:
     - if: $CI_COMMIT_BRANCH =~ /^(master)$/
-  script:
-    - ansible-playbook -i $ANSIBLE_INVENTORY ${PLAYBOOKS_ROOT}/metax-service/v3/metax-deploy.yaml --vault-id $ANSIBLE_VAULT_FILE --tags "selected-django-tasks,run-unittests"
 
 post-deployment-tasks:
-  stage: deploy
-  environment: $GITLAB_ENV
+  extends: .post-deployment-tasks-play
   needs:
     - job: deploy-service
   rules:
     - if: $CI_COMMIT_BRANCH =~ /^(master)$/
-  script:
-    - ansible-playbook -i $ANSIBLE_INVENTORY ${PLAYBOOKS_ROOT}/metax-service/v3/metax-deploy.yaml --vault-id $ANSIBLE_VAULT_FILE --tags "selected-django-tasks,create-superusers,index-organizations,index-refdata"
 
 sonarqube:
   extends: .sonarqube-job
