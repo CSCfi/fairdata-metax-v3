@@ -13,6 +13,16 @@ workflow:
 
 # ------------------------
 
+variables:
+  GITLAB_ENV:
+    description: 'Which environment do you want to deploy to?'
+    value: 'staging'
+    options:
+      - 'staging'
+      - 'test'
+      - 'demo'
+      - 'stable'
+
 stages:
   - test
   - deploy
