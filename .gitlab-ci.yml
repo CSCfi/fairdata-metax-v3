@@ -24,7 +24,7 @@ include:
     file:
       - /templates/test/test-jobs.yaml
       - /templates/test/metax-v3-tests.yaml
-      - templates/deploy/metax-service-deploy-jobs.yaml
+      - /templates/deploy/metax-service-deploy-jobs.yaml
 
 
 # ------------------------
