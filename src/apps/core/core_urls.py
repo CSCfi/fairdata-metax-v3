@@ -9,8 +9,13 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from apps.core.views import DataCatalogView, DatasetViewSet, PublisherViewSet
-from apps.core.views.dataset_view import DatasetDirectoryViewSet, DatasetFilesViewSet
+from apps.core.views import (
+    DataCatalogView,
+    PublisherViewSet,
+    DatasetViewSet,
+    MetadataProviderViewSet,
+)
+from apps.core.views.dataset_view import DatasetFilesViewSet, DatasetDirectoryViewSet
 
 router = DefaultRouter(trailing_slash=False)
 router.register(r"datacatalogs?", DataCatalogView, basename="datacatalog")
@@ -25,6 +30,7 @@ router.register(
     DatasetDirectoryViewSet,
     basename="dataset_directories",
 )
+router.register(r"metadata-providers?", MetadataProviderViewSet, basename="metadata-provider")
 router.register(r"publishers?", PublisherViewSet, basename="publisher")
 
 urlpatterns = [

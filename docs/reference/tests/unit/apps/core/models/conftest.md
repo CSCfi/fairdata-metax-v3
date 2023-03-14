@@ -8,6 +8,10 @@
 
 ### :::tests.unit.apps.core.models.conftest.dataset_publisher
 
+## metadata_provider
+
+### :::tests.unit.apps.core.models.conftest.metadata_provider
+
 ## access_rights
 
 ### :::tests.unit.apps.core.models.conftest.access_rights

@@ -24,6 +24,14 @@ def get_technical_metax_user():
         obj.save()
     return obj.id
 
+def update_or_create_instance(serializer, instance, data):
+    if instance is not None:
+        serializer.update(instance, data)
+    else:
+        new_serializer = serializer.__class__(data=data)
+        if new_serializer.is_valid(raise_exception=True):
+            new_serializer.save()
+
 
 def parse_iso_dates_in_nested_dict(d: Dict) -> Dict:
     """Recursive function to parse ISO dates to datetime objects in nested dictionaries

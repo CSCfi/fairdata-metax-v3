@@ -8,19 +8,11 @@ import logging
 
 from rest_framework import serializers
 
+from apps.common.helpers import update_or_create_instance
 from apps.core.models import DataCatalog, Language
 from apps.core.serializers import AccessRightsModelSerializer, DatasetPublisherModelSerializer
 
 logger = logging.getLogger(__name__)
-
-
-def update_or_create_instance(serializer, instance, data):
-    if instance is not None:
-        serializer.update(instance, data)
-    else:
-        new_serializer = serializer.__class__(data=data)
-        if new_serializer.is_valid(raise_exception=True):
-            new_serializer.save()
 
 
 class DataCatalogModelSerializer(serializers.ModelSerializer):

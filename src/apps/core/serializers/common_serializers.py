@@ -11,13 +11,20 @@ from django.core.validators import EMPTY_VALUES
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
+from apps.common.helpers import update_or_create_instance
+from apps.core.models import (
+    CatalogHomePage,
+    DatasetPublisher,
+    AccessRights,
+    MetadataProvider,
+)
+from apps.core.models.concepts import License, AccessType
+from apps.users.models import MetaxUser
 from apps.common.serializers import (
     AbstractDatasetModelSerializer,
     AbstractDatasetPropertyModelSerializer,
     URLReferencedModelListField,
 )
-from apps.core.models import AccessRights, CatalogHomePage, DatasetPublisher
-from apps.core.models.concepts import AccessType, License
 
 logger = logging.getLogger(__name__)
 
@@ -81,13 +88,9 @@ class LicenseModelSerializer(serializers.ModelSerializer):
 
 class AccessRightsModelSerializer(AbstractDatasetModelSerializer):
     license = URLReferencedModelListField(
-        child=LicenseModelSerializer(required=False),
-        read_only=False,
-        required=False
+        child=LicenseModelSerializer(required=False), read_only=False, required=False
     )
-    access_type = AccessType.get_serializer()(
-        required=False, read_only=False, many=False
-    )
+    access_type = AccessType.get_serializer()(required=False, read_only=False, many=False)
     description = serializers.JSONField(required=False)
 
     class Meta:
@@ -125,3 +128,40 @@ class AccessRightsModelSerializer(AbstractDatasetModelSerializer):
         representation = super().to_representation(instance)
 
         return representation
+
+
+class MetaxUserModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MetaxUser
+        fields = ("id", "username", "email", "first_name", "last_name")
+
+
+class MetadataProviderModelSerializer(AbstractDatasetModelSerializer):
+    user = MetaxUserModelSerializer()
+
+    class Meta:
+        model = MetadataProvider
+        fields = ("id", "user", "organization")
+
+    def create(self, validated_data):
+        user = None
+
+        user_serializer: MetaxUserModelSerializer = self.fields["user"]
+
+        if user_data := validated_data.pop("user", None):
+            user = user_serializer.create(user_data)
+
+        new_metadata_provider: MetadataProvider = MetadataProvider.objects.create(
+            user=user, **validated_data
+        )
+
+        return new_metadata_provider
+
+    def update(self, instance, validated_data):
+        user_serializer = self.fields["user"]
+        user_instance = instance.user
+
+        if user_data := validated_data.pop("user", None):
+            update_or_create_instance(user_serializer, user_instance, user_data)
+
+        return super().update(instance, validated_data)

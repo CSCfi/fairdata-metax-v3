@@ -153,3 +153,42 @@ def access_right_put_alfa_json():
 @pytest.fixture
 def dataset_access_right_error_json():
     return load_test_json("access_right_error.json")
+
+@pytest.fixture
+def metadata_provider_a_json():
+    return load_test_json("metadata_provider_a.json")
+
+
+@pytest.fixture
+def metadata_provider_b_json():
+    return load_test_json("metadata_provider_b.json")
+
+
+@pytest.fixture
+def metadata_provider_c_json():
+    return load_test_json("metadata_provider_c.json")
+
+@pytest.fixture
+def metadata_provider_d_json():
+    return load_test_json("metadata_provider_d.json")
+
+@pytest.fixture
+def metadata_provider_error_json():
+    return load_test_json("metadata_provider_error.json")
+
+@pytest.fixture
+def metadata_provider_put_c_json():
+    return load_test_json("metadata_provider_put_c.json")
+
+@pytest.fixture
+def post_metadata_provider_payloads_a_b_c_d(
+    client, metadata_provider_a_json, metadata_provider_b_json, metadata_provider_c_json, metadata_provider_d_json
+):
+    logger.info(__name__)
+    url = "/rest/v3/metadata-provider"
+    res1 = client.post(url, metadata_provider_a_json, content_type="application/json")
+    res2 = client.post(url, metadata_provider_b_json, content_type="application/json")
+    res3 = client.post(url, metadata_provider_c_json, content_type="application/json")
+    res4 = client.post(url, metadata_provider_d_json, content_type="application/json")
+    logger.info(f"{res1=}, {res2=}, {res3=}, {res4=}")
+    return res1, res2, res3, res4

@@ -97,6 +97,7 @@
             - [api.test_organization](tests/unit/apps/actors/api/test_organization.md)
             - [commands.test_index_organizations](tests/unit/apps/actors/commands/test_index_organizations.md)
             - [models.test_organization](tests/unit/apps/actors/models/test_organization.md)
+        - [conftest](tests/unit/apps/conftest.md)
         - core
             - [adapters.test_adapters](tests/unit/apps/core/adapters/test_adapters.md)
             - api
@@ -105,6 +106,7 @@
                 - [test_dataset](tests/unit/apps/core/api/test_dataset.md)
                 - [test_dataset_files](tests/unit/apps/core/api/test_dataset_files.md)
                 - [test_dataset_publisher](tests/unit/apps/core/api/test_dataset_publisher.md)
+                - [test_metadata_provider](tests/unit/apps/core/api/test_metadata_provider.md)
             - [management.test_load_test_data](tests/unit/apps/core/management/test_load_test_data.md)
             - models
                 - [conftest](tests/unit/apps/core/models/conftest.md)
@@ -114,6 +116,7 @@
                 - [test_data_catalog](tests/unit/apps/core/models/test_data_catalog.md)
                 - [test_dataset](tests/unit/apps/core/models/test_dataset.md)
                 - [test_dataset_property](tests/unit/apps/core/models/test_dataset_property.md)
+                - [test_metadata_provider](tests/unit/apps/core/models/test_metadata_provider.md)
                 - [test_publisher](tests/unit/apps/core/models/test_publisher.md)
         - files
             - api

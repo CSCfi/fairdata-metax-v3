@@ -454,10 +454,7 @@ class LegacyDataset(Dataset):
                     logger.info(f"{temporal=}, created={temporal_created}")
                 if variables := data.get("variable"):
                     for var in variables:
-                        (
-                            variable,
-                            variable_created,
-                        ) = ProvenanceVariable.objects.get_or_create(
+                        (variable, variable_created,) = ProvenanceVariable.objects.get_or_create(
                             pref_label=var["pref_label"],
                             provenance=provenance,
                             representation=var.get("representation"),

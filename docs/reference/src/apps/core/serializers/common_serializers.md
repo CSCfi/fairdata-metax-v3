@@ -16,3 +16,11 @@
 
 ### :::src.apps.core.serializers.common_serializers.AccessRightsModelSerializer
 
+## MetaxUserModelSerializer
+
+### :::src.apps.core.serializers.common_serializers.MetaxUserModelSerializer
+
+## MetadataProviderModelSerializer
+
+### :::src.apps.core.serializers.common_serializers.MetadataProviderModelSerializer
+

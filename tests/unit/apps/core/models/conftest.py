@@ -13,6 +13,7 @@ from apps.core.models import (
     FieldOfScience,
     Language,
     License,
+    MetadataProvider,
     Theme,
 )
 from apps.files.factories import FileFactory
@@ -35,6 +36,10 @@ def dataset_publisher() -> DatasetPublisher:
     }
     return factories.DatasetPublisherFactory(name=name)
 
+@pytest.fixture
+def metadata_provider() -> MetadataProvider:
+    organization = "Awesome Organization"
+    return factories.MetadataProviderFactory(organization=organization)
 
 @pytest.fixture
 def access_rights() -> AccessRights:
@@ -212,7 +217,7 @@ def dataset_property_object_factory(
 
 @pytest.fixture
 def abstract_base_object_factory(
-    dataset_publisher, access_rights, catalog_record, file_storage, file, contract
+    dataset_publisher, access_rights, catalog_record, file_storage, file, contract, metadata_provider
 ):
     def _abstract_base_object_factory(object_name):
         if object_name == "dataset_publisher":
@@ -227,5 +232,7 @@ def abstract_base_object_factory(
             return file
         elif object_name == "contract":
             return contract
+        elif object_name == "metadata_provider":
+            return metadata_provider
 
     return _abstract_base_object_factory

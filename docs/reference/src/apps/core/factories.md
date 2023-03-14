@@ -48,3 +48,7 @@
 
 ### :::src.apps.core.factories.DatasetFactory
 
+## MetadataProviderFactory
+
+### :::src.apps.core.factories.MetadataProviderFactory
+

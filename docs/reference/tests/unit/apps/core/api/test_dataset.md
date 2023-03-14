@@ -12,6 +12,10 @@
 
 ### :::tests.unit.apps.core.api.test_dataset.test_create_dataset_invalid_catalog
 
+## test_create_dataset_invalid_language
+
+### :::tests.unit.apps.core.api.test_dataset.test_create_dataset_invalid_language
+
 ## test_delete_dataset
 
 ### :::tests.unit.apps.core.api.test_dataset.test_delete_dataset

@@ -6,7 +6,13 @@ from rest_framework import viewsets
 
 from apps.core.models import AccessRights, Dataset
 from apps.core.models.data_catalog import DatasetPublisher
-from apps.core.serializers import DatasetPublisherModelSerializer, DatasetSerializer
+from apps.core.models.catalog_record import MetadataProvider
+from apps.core.serializers import (
+    DatasetPublisherModelSerializer,
+    MetadataProviderModelSerializer,
+    DatasetSerializer,
+)
+from apps.common.views import StandardResultsSetPagination
 
 logger = logging.getLogger(__name__)
 
@@ -105,6 +111,56 @@ class AccessRightsFilter(filters.FilterSet):
             ("license__pref_label__values", "license_pref_label"),
         )
     )
+
+
+class MetadataProviderFilter(filters.FilterSet):
+    organization = filters.CharFilter(
+        field_name="organization",
+        max_length=512,
+        lookup_expr="icontains",
+        label="organization",
+    )
+
+    user_first_name = filters.CharFilter(
+        field_name="user__first_name",
+        max_length=150,
+        lookup_expr="icontains",
+        label="user_first_name",
+    )
+
+    user_last_name = filters.CharFilter(
+        field_name="user__last_name",
+        max_length=150,
+        lookup_expr="icontains",
+        label="user_last_name",
+    )
+
+    user_email = filters.CharFilter(
+        field_name="user__email",
+        max_length=254,
+        lookup_expr="icontains",
+        label="user_email",
+    )
+
+    ordering = filters.OrderingFilter(
+        fields=(
+            ("created", "created"),
+            ("modified", "modified"),
+            ("organization", "organization"),
+            ("user__first_name", "user_first_name"),
+            ("user__last_name", "user_last_name"),
+            ("user__email", "user_email"),
+        )
+    )
+
+
+class MetadataProviderViewSet(viewsets.ModelViewSet):
+    serializer_class = MetadataProviderModelSerializer
+    queryset = MetadataProvider.objects.all()
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = MetadataProviderFilter
+    pagination_class = StandardResultsSetPagination
+    http_method_names = ["get", "post", "put", "delete"]
 
 
 class DatasetFilter(filters.FilterSet):

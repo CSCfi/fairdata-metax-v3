@@ -96,3 +96,31 @@
 
 ### :::tests.unit.apps.core.api.conftest.dataset_access_right_error_json
 
+## metadata_provider_a_json
+
+### :::tests.unit.apps.core.api.conftest.metadata_provider_a_json
+
+## metadata_provider_b_json
+
+### :::tests.unit.apps.core.api.conftest.metadata_provider_b_json
+
+## metadata_provider_c_json
+
+### :::tests.unit.apps.core.api.conftest.metadata_provider_c_json
+
+## metadata_provider_d_json
+
+### :::tests.unit.apps.core.api.conftest.metadata_provider_d_json
+
+## metadata_provider_error_json
+
+### :::tests.unit.apps.core.api.conftest.metadata_provider_error_json
+
+## metadata_provider_put_c_json
+
+### :::tests.unit.apps.core.api.conftest.metadata_provider_put_c_json
+
+## post_metadata_provider_payloads_a_b_c_d
+
+### :::tests.unit.apps.core.api.conftest.post_metadata_provider_payloads_a_b_c_d
+

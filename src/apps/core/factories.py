@@ -156,3 +156,11 @@ class DatasetFactory(factory.django.DjangoModelFactory):
     title = factory.Dict({"en": factory.Sequence(lambda n: f"research-dataset-{n}")})
     contract = factory.SubFactory(ContractFactory)
     system_creator = factory.SubFactory(MetaxUserFactory)
+
+
+class MetadataProviderFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.MetadataProvider
+
+    user = factory.SubFactory(MetaxUserFactory)
+    system_creator = factory.SubFactory(MetaxUserFactory)
