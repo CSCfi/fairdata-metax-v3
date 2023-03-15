@@ -23,7 +23,18 @@ def test_files_get(client, file_tree_a):
         file_tree_a["params"],
         content_type="application/json",
     )
-    assert res.json()["count"] == 16
+    assert res.data["count"] == 16
+
+
+@pytest.mark.django_db
+def test_files_get_no_dataset(client, file_tree_a):
+    res = client.get(
+        "/rest/v3/files",
+        file_tree_a["params"],
+        content_type="application/json",
+    )
+    # no dataset parameter, dataset_metadata should not be included
+    assert "dataset_metadata" not in res.data["results"][0]
 
 
 @pytest.mark.django_db

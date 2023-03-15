@@ -20,9 +20,9 @@
 
 ### :::src.apps.core.factories.FieldOfScienceFactory
 
-## ThemeFactory
+## FileTypeFactory
 
-### :::src.apps.core.factories.ThemeFactory
+### :::src.apps.core.factories.FileTypeFactory
 
 ## LanguageFactory
 
@@ -31,6 +31,14 @@
 ## LicenseFactory
 
 ### :::src.apps.core.factories.LicenseFactory
+
+## ThemeFactory
+
+### :::src.apps.core.factories.ThemeFactory
+
+## UseCategoryFactory
+
+### :::src.apps.core.factories.UseCategoryFactory
 
 ## AccessRightsFactory
 

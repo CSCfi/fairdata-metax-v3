@@ -1,6 +1,9 @@
 import copy
 from urllib import parse
 
+from django.conf import settings
+from django.utils.module_loading import import_string
+
 
 def remove_query_param(url, *params):
     """Remove parameter from query string."""
@@ -36,3 +39,34 @@ def remove_hidden_fields(fields, visible):
         for field_name in set(fields) - set(visible):
             fields.pop(field_name)
     return fields
+
+
+def get_attr_or_item(obj, key):
+    """Return value for attribute. If not found, get item with key. Return None if not found."""
+    if hasattr(obj, key):
+        return getattr(obj, key)
+    try:
+        return obj[key]
+    except (KeyError, IndexError, TypeError):
+        pass
+    return None
+
+
+# Helpers for getting File and Directory metadata models and serializers
+# from configuration instead of importing them directly from another app.
+
+
+def get_file_metadata_model():
+    return import_string(settings.DATASET_FILE_METADATA_MODELS["file"])
+
+
+def get_directory_metadata_model():
+    return import_string(settings.DATASET_FILE_METADATA_MODELS["directory"])
+
+
+def get_file_metadata_serializer():
+    return import_string(settings.DATASET_FILE_METADATA_SERIALIZERS["file"])
+
+
+def get_directory_metadata_serializer():
+    return import_string(settings.DATASET_FILE_METADATA_SERIALIZERS["directory"])

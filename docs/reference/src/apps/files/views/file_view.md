@@ -24,6 +24,10 @@
 
 ### :::src.apps.files.views.file_view.FilesDatasetsBodySerializer
 
+## BaseFileViewSet
+
+### :::src.apps.files.views.file_view.BaseFileViewSet
+
 ## FileViewSet
 
 ### :::src.apps.files.views.file_view.FileViewSet

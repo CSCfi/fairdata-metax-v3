@@ -174,7 +174,7 @@ LOGGING = {
             "level": "DEBUG",
             "class": "logging.StreamHandler",
             "formatter": "verbose",
-        }
+        },
     },
     "root": {"level": "INFO", "handlers": ["console"]},
 }
@@ -218,9 +218,21 @@ REST_FRAMEWORK = {
 }
 
 SWAGGER_SETTINGS = {
-    "DEEP_LINKING": True  # Automatically update URL fragment with current operation in Swagger UI
+    "DEEP_LINKING": True,  # Automatically update URL fragment with current operation in Swagger UI
 }
 
 FACTORY_BOY_RANDOM_SEED = "metax-service"
 
 factory.random.reseed_random(FACTORY_BOY_RANDOM_SEED)
+
+
+# Allow access to dataset file metadata models and serializers
+# without depending explicitly on the core app
+DATASET_FILE_METADATA_MODELS = {
+    "file": "apps.core.models.file_metadata.DatasetFileMetadata",
+    "directory": "apps.core.models.file_metadata.DatasetDirectoryMetadata",
+}
+DATASET_FILE_METADATA_SERIALIZERS = {
+    "file": "apps.core.serializers.file_metadata_serializer.FileMetadataSerializer",
+    "directory": "apps.core.serializers.file_metadata_serializer.DirectoryMetadataSerializer",
+}

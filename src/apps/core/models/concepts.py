@@ -83,3 +83,11 @@ class EventOutcome(ConceptProxyMixin, refdata.EventOutcome):
 
 class IdentifierType(ConceptProxyMixin, refdata.IdentifierType):
     """Identifier type of the resource."""
+
+
+class UseCategory(ConceptProxyMixin, refdata.UseCategory):
+    """Use category type of the resource."""
+
+
+class FileType(ConceptProxyMixin, refdata.FileType):
+    """File type type of the resource."""

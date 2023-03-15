@@ -8,7 +8,7 @@ from .catalog_record import (
     Spatial,
     Temporal,
 )
-from .concepts import AccessType, FieldOfScience, Language, License, Theme
+from .concepts import AccessType, FieldOfScience, FileType, Language, License, Theme, UseCategory
 from .contract import Contract
 from .data_catalog import (
     AccessRights,
@@ -17,5 +17,6 @@ from .data_catalog import (
     DataCatalog,
     DatasetPublisher,
 )
+from .file_metadata import DatasetDirectoryMetadata, DatasetFileMetadata
 from .legacy import LegacyDataset
 from .provenance import Provenance, ProvenanceVariable

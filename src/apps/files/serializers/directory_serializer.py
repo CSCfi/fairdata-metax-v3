@@ -7,7 +7,11 @@
 
 from rest_framework import serializers
 
-from apps.files.helpers import remove_hidden_fields, replace_query_path
+from apps.files.helpers import (
+    get_directory_metadata_serializer,
+    remove_hidden_fields,
+    replace_query_path,
+)
 
 from .file_serializer import FileSerializer
 
@@ -40,6 +44,19 @@ class BaseDirectorySerializer(ContextStorageProjectMixin, serializers.Serializer
     byte_size = serializers.IntegerField()  # total byte size including subdirectories
     created = serializers.DateTimeField(default=None)  # first file creation time
     modified = serializers.DateTimeField(default=None)  # most recent file modification
+
+    dataset_metadata = serializers.SerializerMethodField(read_only=True)
+
+    def get_dataset_metadata(self, obj):
+        if "directory_metadata" in self.context:
+            if metadata := self.context["directory_metadata"].get(obj["directory_path"]):
+                return get_directory_metadata_serializer()(metadata).data
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        if "directory_metadata" not in self.context:
+            rep.pop("dataset_metadata", None)
+        return rep
 
 
 class SubDirectorySerializer(BaseDirectorySerializer):

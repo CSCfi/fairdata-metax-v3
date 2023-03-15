@@ -1,24 +1,27 @@
 import logging
 import uuid
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.db import models
-from django.db.models import Sum
+from django.db.models import Count, Sum
+from django.db.models.functions import Coalesce
+from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 from simple_history.models import HistoricalRecords
 
 from apps.actors.models import Actor, Organization
 from apps.common.models import AbstractBaseModel
 from apps.core.mixins import V2DatasetMixin
-from apps.files.models import File
+from apps.files.models import File, FileStorage, StorageProject
 from apps.refdata import models as refdata
 
 from .concepts import FieldOfScience, IdentifierType, Language, Theme
 from .contract import Contract
 from .data_catalog import AccessRights, DataCatalog
+from .file_metadata import DatasetDirectoryMetadata, DatasetFileMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -215,13 +218,74 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         help_text="Cumulative state",
     )
 
+    added_files_count: Optional[int] = None  # files added in request
+
+    removed_files_count: Optional[int] = None  # files removed in request
+
+    skip_files_m2m_changed = False  # enable to skip signal handler on file change
+
+    @cached_property
+    def total_files_aggregates(self) -> dict:
+        return self.files.aggregate(
+            total_files_count=Count("*"), total_files_byte_size=Coalesce(Sum("byte_size"), 0)
+        )
+
     @property
     def total_files_byte_size(self) -> int:
-        if not self.files.exists():
-            return 0
-        else:
-            aggr = self.files.aggregate(Sum("byte_size"))
-            return aggr.get("byte_size__sum") or 0
+        return self.total_files_aggregates["total_files_byte_size"]
+
+    @property
+    def total_files_count(self) -> int:
+        return self.total_files_aggregates["total_files_count"]
+
+    @cached_property
+    def storage_project(self) -> Optional[StorageProject]:
+        """StorageProject is not currently stored in model and has to be determined from files."""
+        if (
+            file := self.dataset.files.only("storage_project")
+            .select_related("storage_project")
+            .first()
+        ):
+            return file.storage_project
+
+    @property
+    def project_identifier(self) -> Optional[str]:
+        if proj := self.storage_project:
+            return proj.project_identifier
+
+    @property
+    def file_storage(self) -> Optional[FileStorage]:
+        if proj := self.storage_project:
+            return proj.file_storage
+
+    def clear_cached_file_properties(self):
+        """Clear cached file properties after changes to dataset files."""
+        for prop in ["total_files_aggregates", "storage_project"]:
+            try:
+                delattr(self, prop)
+            except AttributeError:
+                logger.info(f"No property {prop} in cache.")
+
+    def remove_unused_file_metadata(self):
+        """Remove file and directory metadata for files and directories not in dataset."""
+
+        # remove metadata for files not in dataset
+        unused_file_metadata = DatasetFileMetadata.objects.filter(dataset=self).exclude(
+            file__datasets=self
+        )
+        unused_file_metadata.delete()
+
+        # remove metadata for directories not in dataset
+        storage_projects = StorageProject.objects.filter(
+            datasetdirectorymetadata__in=self.directory_metadata.all()
+        )
+        # only one storage project is expected but this works with multiple
+        for storage_project in storage_projects:
+            dataset_directory_paths = storage_project.get_directory_paths(dataset=self)
+            unused_directory_metadata = DatasetDirectoryMetadata.objects.filter(
+                storage_project=storage_project
+            ).exclude(directory_path__in=dataset_directory_paths)
+            unused_directory_metadata.delete()
 
     def delete(self, *args, **kwargs):
         if self.access_rights:

@@ -13,6 +13,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from apps.common.helpers import get_technical_metax_user
+from apps.files.helpers import get_file_metadata_serializer
 from apps.files.models.file import File, StorageProject, checksum_algorithm_choices
 from apps.files.models.file_storage import FileStorage
 
@@ -199,6 +200,19 @@ class FileSerializer(CreateOnlyFieldsMixin, serializers.ModelSerializer):
     file_name = FileNameField(read_only=True)
     directory_path = DirectoryPathField(read_only=True)
 
+    dataset_metadata = serializers.SerializerMethodField()
+
+    def get_dataset_metadata(self, obj):
+        if "file_metadata" in self.context:
+            if metadata := self.context["file_metadata"].get(obj.id):
+                return get_file_metadata_serializer()(metadata).data
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        if "file_metadata" not in self.context:
+            rep.pop("dataset_metadata", None)
+        return rep
+
     def validate(self, data):
         if not (self.parent and self.parent.many):
             if storage_project := get_storage_project_or_none(
@@ -229,6 +243,7 @@ class FileSerializer(CreateOnlyFieldsMixin, serializers.ModelSerializer):
             "date_uploaded",
             "created",
             "modified",
+            "dataset_metadata",
         ]
 
     def create(self, validated_data):

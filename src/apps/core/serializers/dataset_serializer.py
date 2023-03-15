@@ -1,6 +1,6 @@
 # This file is part of the Metax API service
 #
-# Copyright 2017-2022 Ministry of Education and Culture, Finland
+# Copyright 2017-2023 Ministry of Education and Culture, Finland
 #
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
@@ -12,6 +12,8 @@ from apps.core.models import Dataset
 from apps.core.models.concepts import FieldOfScience, Language, Theme
 from apps.core.serializers.common_serializers import AccessRightsModelSerializer
 
+from .dataset_files_serializer import DatasetFilesSerializer
+
 logger = logging.getLogger(__name__)
 
 
@@ -20,6 +22,7 @@ class DatasetSerializer(serializers.ModelSerializer):
     language = Language.get_serializer()(required=False, many=True)
     theme = Theme.get_serializer()(required=False, many=True)
     field_of_science = FieldOfScience.get_serializer()(required=False, many=True)
+    files = DatasetFilesSerializer(required=False)
 
     class Meta:
         model = Dataset
@@ -33,6 +36,7 @@ class DatasetSerializer(serializers.ModelSerializer):
             "data_catalog",
             "access_rights",
             "field_of_science",
+            "files",
             # read only
             "id",
             "first",
@@ -60,6 +64,12 @@ class DatasetSerializer(serializers.ModelSerializer):
             "modified",
         )
 
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        if not instance.storage_project:  # remove files dict from response if no files exist
+            rep.pop("files", None)
+        return rep
+
     def create(self, validated_data):
         languages = validated_data.pop("language", [])
         themes = validated_data.pop("theme", [])
@@ -70,11 +80,18 @@ class DatasetSerializer(serializers.ModelSerializer):
         if access_rights_data := validated_data.pop("access_rights", None):
             access_rights = access_rights_serializer.create(access_rights_data)
 
+        files_data = validated_data.pop("files", None)
+
         dataset = Dataset.objects.create(**validated_data, access_rights=access_rights)
 
         dataset.language.set(languages)
         dataset.theme.set(themes)
         dataset.field_of_science.set(fields_of_science)
+
+        if files_data:
+            files_serializer: DatasetFilesSerializer = self.fields["files"]
+            files_serializer.update(dataset.files, files_data)
+
         return dataset
 
     def update(self, instance, validated_data):
@@ -88,9 +105,16 @@ class DatasetSerializer(serializers.ModelSerializer):
             access_rights = access_rights_serializer.create(access_rights_data)
         instance.access_rights = access_rights
 
+        files_data = validated_data.pop("files", None)
+
         super().update(instance, validated_data)
 
         instance.language.set(languages)
         instance.theme.set(themes)
         instance.field_of_science.set(fields_of_science)
+
+        if files_data:
+            files_serializer: DatasetFilesSerializer = self.fields["files"]
+            files_serializer.update(instance.files, files_data)
+
         return instance

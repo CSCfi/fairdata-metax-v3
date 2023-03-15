@@ -1,46 +1,9 @@
+"""Tests for listing dataset files with /dataset/<id>/files endpoint."""
+
 import pytest
 from tests.utils import assert_nested_subdict
 
 from apps.core import factories
-from apps.files.factories import create_project_with_files
-
-
-@pytest.fixture
-def file_tree() -> dict:
-    return create_project_with_files(
-        file_paths=[
-            "/dir1/file.csv",
-            "/dir2/a.txt",
-            "/dir2/b.txt",
-            "/dir2/c.txt",
-            "/dir2/subdir/file1.txt",
-            "/dir2/subdir/file2.txt",
-            "/dir3/file.pdf",
-            "/rootfile.txt",
-        ],
-        file_args={"*": {"byte_size": 1024}},
-    )
-
-
-@pytest.fixture
-def dataset_with_files(file_tree):
-    dataset = factories.DatasetFactory()
-    dataset.files.set(
-        [
-            file_tree["files"]["/dir1/file.csv"],
-            file_tree["files"]["/dir2/a.txt"],
-            file_tree["files"]["/dir2/b.txt"],
-            file_tree["files"]["/dir2/subdir/file1.txt"],
-        ]
-    )
-    unrelated_dataset = factories.DatasetFactory()
-    unrelated_dataset.files.set(
-        [  # this should not affect the first dataset at all
-            file_tree["files"]["/dir1/file.csv"],
-            file_tree["files"]["/dir2/b.txt"],
-        ]
-    )
-    return dataset
 
 
 @pytest.mark.django_db

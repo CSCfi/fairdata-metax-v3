@@ -6,6 +6,7 @@
 # :license: MIT
 
 
+from django import forms
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.db.models import F, Q
 from django.db.models.functions import Concat
@@ -16,6 +17,7 @@ from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 
+from apps.files.helpers import get_file_metadata_model
 from apps.files.models.file import File
 from apps.files.serializers.file_serializer import FileCreateQueryParamsSerializer, FileSerializer
 
@@ -39,7 +41,7 @@ class FileCommonFilterset(filters.FilterSet):
         lookup_expr="icontains",
     )
     directory_path = filters.CharFilter(
-        lookup_expr="istarts_with",
+        lookup_expr="istartswith",
     )
     file_path = filters.CharFilter(method="file_path_filter")
 
@@ -74,10 +76,9 @@ class FileFilterSet(FileCommonFilterset):
         fields = ()
 
 
-files_datasets_key_choices = (("files", "files"), ("datasets", "datasets"))
-
-
 class FilesDatasetsQueryParamsSerializer(serializers.Serializer):
+    files_datasets_key_choices = (("files", "files"), ("datasets", "datasets"))
+
     keys = serializers.ChoiceField(choices=files_datasets_key_choices, default="files")
     keysonly = serializers.BooleanField(default=False)
 
@@ -86,12 +87,54 @@ class FilesDatasetsBodySerializer(serializers.ListSerializer):
     child = serializers.CharField()
 
 
-class FileViewSet(CreateListModelMixin, viewsets.ModelViewSet):
+class BaseFileViewSet(viewsets.ModelViewSet):
+    """Basic read-only files view."""
+
     serializer_class = FileSerializer
     pagination_class = FilePagination
     filterset_class = FileFilterSet
-    http_method_names = ["get", "post", "patch", "put", "delete"]
+    http_method_names = ["get"]
     queryset = File.objects.prefetch_related("storage_project")
+
+    def get_serializer(self, instance=None, *args, **kwargs):
+        """Modified get_serializer that passes instance to get_serializer_context."""
+        serializer_class = self.get_serializer_class()
+        kwargs.setdefault("context", self.get_serializer_context(instance))
+        return serializer_class(instance, *args, **kwargs)
+
+    def get_serializer_context(self, instance):
+        """Add dataset file metadata to serializer context when listing files."""
+        context = super().get_serializer_context()
+        if self.request.method != "GET":
+            return context
+
+        # Get dataset id from kwargs (i.e. from url) or query parameters
+        dataset_id = self.kwargs.get("dataset_id")
+        if not dataset_id:
+            dataset_id = forms.CharField(required=False).clean(
+                self.request.query_params.get("dataset")
+            )
+
+        if dataset_id:
+            # Convert single instance to list
+            files = instance
+            if not isinstance(files, list):
+                files = [files]
+
+            # Get file metadata objects as dict by file id
+            file_metadata = (
+                get_file_metadata_model()
+                .objects.filter(dataset_id=dataset_id)
+                .prefetch_related("file_type")
+                .distinct("file_id")
+                .in_bulk([f.id for f in files], field_name="file_id")
+            )
+            context["file_metadata"] = file_metadata
+        return context
+
+
+class FileViewSet(CreateListModelMixin, BaseFileViewSet):
+    http_method_names = ["get", "post", "patch", "put", "delete"]
 
     @swagger_auto_schema(query_serializer=FileCreateQueryParamsSerializer)
     def create(

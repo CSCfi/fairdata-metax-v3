@@ -36,6 +36,14 @@
 
 ### :::tests.conftest.license_reference_data
 
+## file_type_reference_data
+
+### :::tests.conftest.file_type_reference_data
+
+## use_category_reference_data
+
+### :::tests.conftest.use_category_reference_data
+
 ## reference_data
 
 ### :::tests.conftest.reference_data

@@ -36,3 +36,11 @@
 
 ### :::src.apps.core.models.concepts.IdentifierType
 
+## UseCategory
+
+### :::src.apps.core.models.concepts.UseCategory
+
+## FileType
+
+### :::src.apps.core.models.concepts.FileType
+

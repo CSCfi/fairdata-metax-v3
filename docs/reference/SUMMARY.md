@@ -27,12 +27,15 @@
             - [concepts](src/apps/core/models/concepts.md)
             - [contract](src/apps/core/models/contract.md)
             - [data_catalog](src/apps/core/models/data_catalog.md)
+            - [file_metadata](src/apps/core/models/file_metadata.md)
             - [legacy](src/apps/core/models/legacy.md)
             - [provenance](src/apps/core/models/provenance.md)
         - serializers
             - [common_serializers](src/apps/core/serializers/common_serializers.md)
             - [data_catalog_serializer](src/apps/core/serializers/data_catalog_serializer.md)
+            - [dataset_files_serializer](src/apps/core/serializers/dataset_files_serializer.md)
             - [dataset_serializer](src/apps/core/serializers/dataset_serializer.md)
+            - [file_metadata_serializer](src/apps/core/serializers/file_metadata_serializer.md)
         - [signals](src/apps/core/signals.md)
         - views
             - [common_views](src/apps/core/views/common_views.md)
@@ -92,60 +95,66 @@
             - [test_saving_draft](tests/behave/features/qvain/test_saving_draft.md)
             - [test_versioning](tests/behave/features/qvain/test_versioning.md)
     - [conftest](tests/conftest.md)
-    - unit.apps
-        - actors
-            - [api.test_organization](tests/unit/apps/actors/api/test_organization.md)
-            - [commands.test_index_organizations](tests/unit/apps/actors/commands/test_index_organizations.md)
-            - [models.test_organization](tests/unit/apps/actors/models/test_organization.md)
-        - [conftest](tests/unit/apps/conftest.md)
-        - core
-            - [adapters.test_adapters](tests/unit/apps/core/adapters/test_adapters.md)
-            - api
-                - [conftest](tests/unit/apps/core/api/conftest.md)
-                - [test_data_catalog](tests/unit/apps/core/api/test_data_catalog.md)
-                - [test_dataset](tests/unit/apps/core/api/test_dataset.md)
-                - [test_dataset_files](tests/unit/apps/core/api/test_dataset_files.md)
-                - [test_dataset_publisher](tests/unit/apps/core/api/test_dataset_publisher.md)
-                - [test_metadata_provider](tests/unit/apps/core/api/test_metadata_provider.md)
-            - [management.test_load_test_data](tests/unit/apps/core/management/test_load_test_data.md)
-            - models
-                - [conftest](tests/unit/apps/core/models/conftest.md)
-                - [test_abstract_base_object](tests/unit/apps/core/models/test_abstract_base_object.md)
-                - [test_access_rights](tests/unit/apps/core/models/test_access_rights.md)
-                - [test_contract](tests/unit/apps/core/models/test_contract.md)
-                - [test_data_catalog](tests/unit/apps/core/models/test_data_catalog.md)
-                - [test_dataset](tests/unit/apps/core/models/test_dataset.md)
-                - [test_dataset_property](tests/unit/apps/core/models/test_dataset_property.md)
-                - [test_metadata_provider](tests/unit/apps/core/models/test_metadata_provider.md)
-                - [test_publisher](tests/unit/apps/core/models/test_publisher.md)
-        - files
-            - api
-                - [conftest](tests/unit/apps/files/api/conftest.md)
-                - directories
-                    - [test_directory_dataset](tests/unit/apps/files/api/directories/test_directory_dataset.md)
-                    - [test_directory_fields](tests/unit/apps/files/api/directories/test_directory_fields.md)
-                    - [test_directory_include_parent](tests/unit/apps/files/api/directories/test_directory_include_parent.md)
-                    - [test_directory_ordering](tests/unit/apps/files/api/directories/test_directory_ordering.md)
-                    - [test_directory_pagination](tests/unit/apps/files/api/directories/test_directory_pagination.md)
-                    - [test_directory_path](tests/unit/apps/files/api/directories/test_directory_path.md)
-                    - [test_directory_storage_project](tests/unit/apps/files/api/directories/test_directory_storage_project.md)
-                - files
-                    - [conftest](tests/unit/apps/files/api/files/conftest.md)
-                    - [test_files_bulk_create](tests/unit/apps/files/api/files/test_files_bulk_create.md)
-                    - [test_files_create](tests/unit/apps/files/api/files/test_files_create.md)
-                    - [test_files_datasets](tests/unit/apps/files/api/files/test_files_datasets.md)
-                    - [test_files_list](tests/unit/apps/files/api/files/test_files_list.md)
-                - [test_file_storage](tests/unit/apps/files/api/test_file_storage.md)
-            - [serializers.test_fields](tests/unit/apps/files/serializers/test_fields.md)
-        - refdata
-            - [api.test_refdata](tests/unit/apps/refdata/api/test_refdata.md)
-            - [commands.test_index_reference_data](tests/unit/apps/refdata/commands/test_index_reference_data.md)
-            - [models.test_concept](tests/unit/apps/refdata/models/test_concept.md)
-            - services
-                - [test_finto_importer](tests/unit/apps/refdata/services/test_finto_importer.md)
-                - [test_local_json_importer](tests/unit/apps/refdata/services/test_local_json_importer.md)
-        - users
-            - [api.test_user_token](tests/unit/apps/users/api/test_user_token.md)
-            - [conftest](tests/unit/apps/users/conftest.md)
-            - [models.test_metax_user](tests/unit/apps/users/models/test_metax_user.md)
+    - unit
+        - apps
+            - actors
+                - [api.test_organization](tests/unit/apps/actors/api/test_organization.md)
+                - [commands.test_index_organizations](tests/unit/apps/actors/commands/test_index_organizations.md)
+                - [models.test_organization](tests/unit/apps/actors/models/test_organization.md)
+            - [conftest](tests/unit/apps/conftest.md)
+            - core
+                - [adapters.test_adapters](tests/unit/apps/core/adapters/test_adapters.md)
+                - api
+                    - [conftest](tests/unit/apps/core/api/conftest.md)
+                    - dataset_files
+                        - [conftest](tests/unit/apps/core/api/dataset_files/conftest.md)
+                        - [test_dataset_files_list](tests/unit/apps/core/api/dataset_files/test_dataset_files_list.md)
+                        - [test_dataset_files_update](tests/unit/apps/core/api/dataset_files/test_dataset_files_update.md)
+                        - [test_dataset_with_files](tests/unit/apps/core/api/dataset_files/test_dataset_with_files.md)
+                    - [test_data_catalog](tests/unit/apps/core/api/test_data_catalog.md)
+                    - [test_dataset](tests/unit/apps/core/api/test_dataset.md)
+                    - [test_dataset_publisher](tests/unit/apps/core/api/test_dataset_publisher.md)
+                    - [test_metadata_provider](tests/unit/apps/core/api/test_metadata_provider.md)
+                - [management.test_load_test_data](tests/unit/apps/core/management/test_load_test_data.md)
+                - models
+                    - [conftest](tests/unit/apps/core/models/conftest.md)
+                    - [test_abstract_base_object](tests/unit/apps/core/models/test_abstract_base_object.md)
+                    - [test_access_rights](tests/unit/apps/core/models/test_access_rights.md)
+                    - [test_contract](tests/unit/apps/core/models/test_contract.md)
+                    - [test_data_catalog](tests/unit/apps/core/models/test_data_catalog.md)
+                    - [test_dataset](tests/unit/apps/core/models/test_dataset.md)
+                    - [test_dataset_property](tests/unit/apps/core/models/test_dataset_property.md)
+                    - [test_metadata_provider](tests/unit/apps/core/models/test_metadata_provider.md)
+                    - [test_publisher](tests/unit/apps/core/models/test_publisher.md)
+            - files
+                - api
+                    - [conftest](tests/unit/apps/files/api/conftest.md)
+                    - directories
+                        - [test_directory_dataset](tests/unit/apps/files/api/directories/test_directory_dataset.md)
+                        - [test_directory_fields](tests/unit/apps/files/api/directories/test_directory_fields.md)
+                        - [test_directory_include_parent](tests/unit/apps/files/api/directories/test_directory_include_parent.md)
+                        - [test_directory_ordering](tests/unit/apps/files/api/directories/test_directory_ordering.md)
+                        - [test_directory_pagination](tests/unit/apps/files/api/directories/test_directory_pagination.md)
+                        - [test_directory_path](tests/unit/apps/files/api/directories/test_directory_path.md)
+                        - [test_directory_storage_project](tests/unit/apps/files/api/directories/test_directory_storage_project.md)
+                    - files
+                        - [conftest](tests/unit/apps/files/api/files/conftest.md)
+                        - [test_files_bulk_create](tests/unit/apps/files/api/files/test_files_bulk_create.md)
+                        - [test_files_create](tests/unit/apps/files/api/files/test_files_create.md)
+                        - [test_files_datasets](tests/unit/apps/files/api/files/test_files_datasets.md)
+                        - [test_files_list](tests/unit/apps/files/api/files/test_files_list.md)
+                    - [test_file_storage](tests/unit/apps/files/api/test_file_storage.md)
+                - [serializers.test_fields](tests/unit/apps/files/serializers/test_fields.md)
+            - refdata
+                - [api.test_refdata](tests/unit/apps/refdata/api/test_refdata.md)
+                - [commands.test_index_reference_data](tests/unit/apps/refdata/commands/test_index_reference_data.md)
+                - [models.test_concept](tests/unit/apps/refdata/models/test_concept.md)
+                - services
+                    - [test_finto_importer](tests/unit/apps/refdata/services/test_finto_importer.md)
+                    - [test_local_json_importer](tests/unit/apps/refdata/services/test_local_json_importer.md)
+            - users
+                - [api.test_user_token](tests/unit/apps/users/api/test_user_token.md)
+                - [conftest](tests/unit/apps/users/conftest.md)
+                - [models.test_metax_user](tests/unit/apps/users/models/test_metax_user.md)
+        - [swagger.test_swagger](tests/unit/swagger/test_swagger.md)
     - [utils.utils](tests/utils/utils.md)

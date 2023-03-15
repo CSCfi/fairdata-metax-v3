@@ -1,15 +1,23 @@
+# This file is part of the Metax API service
+#
+# Copyright 2017-2023 Ministry of Education and Culture, Finland
+#
+# :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
+# :license: MIT
+
 import logging
 
 from django_filters import rest_framework as filters
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import exceptions, viewsets
+from rest_framework.response import Response
 
 from apps.core.models.catalog_record import Dataset
-from apps.core.serializers import DatasetSerializer
-from apps.files.models import StorageProject
+from apps.core.serializers import DatasetFilesSerializer, DatasetSerializer
+from apps.files.models import File, StorageProject
 from apps.files.serializers import DirectorySerializer
 from apps.files.views.directory_view import DirectoryCommonQueryParams, DirectoryViewSet
-from apps.files.views.file_view import FileCommonFilterset, FileViewSet
+from apps.files.views.file_view import BaseFileViewSet, FileCommonFilterset
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +40,13 @@ class DatasetFilter(filters.FilterSet):
 
 class DatasetViewSet(viewsets.ModelViewSet):
     serializer_class = DatasetSerializer
-    queryset = Dataset.objects.all()
+    queryset = Dataset.objects.prefetch_related(
+        "data_catalog",
+        "field_of_science",
+        "language",
+        "theme",
+    )
+
     filterset_class = DatasetFilter
     http_method_names = ["get", "post", "put", "delete"]
 
@@ -51,12 +65,11 @@ class DatasetDirectoryViewSet(DirectoryViewSet):
         params["dataset"] = dataset_id
         params["exclude_dataset"] = False
         try:
-            dataset_files = Dataset.objects.get(id=dataset_id).files
-            first_file = dataset_files.first()
-            if not first_file:
+            storage_project = Dataset.objects.get(id=dataset_id).storage_project
+            if not storage_project:
                 raise exceptions.NotFound()
-            params["storage_project_id"] = dataset_files.first().storage_project_id
-        except (Dataset.DoesNotExist, StorageProject.DoesNotExist):
+            params["storage_project_id"] = storage_project.id
+        except Dataset.DoesNotExist:
             raise exceptions.NotFound()
         return params
 
@@ -67,15 +80,41 @@ class DatasetDirectoryViewSet(DirectoryViewSet):
     def list(self, *args, **kwargs):
         return super().list(*args, **kwargs)
 
+    @swagger_auto_schema(
+        query_serializer=DirectoryCommonQueryParams,
+        responses={200: DirectorySerializer},
+    )
+    def list(self, *args, **kwargs):
+        return super().list(*args, **kwargs)
 
-class DatasetFilesViewSet(FileViewSet):
+
+class DatasetFilesViewSet(BaseFileViewSet):
+    """API for listing and updating dataset files."""
+
     filterset_class = FileCommonFilterset
-    http_method_names = ["get"]
+    http_method_names = ["get", "post"]
 
     def get_queryset(self):
-        files = super().get_queryset()
+        # path parameters are not available on drf-yasg inspection
+        if getattr(self, "swagger_fake_view", False):
+            return File.objects.none()
+
         dataset_id = self.kwargs["dataset_id"]
+        files = super().get_queryset()
         return files.filter(datasets=dataset_id)
 
-    # TODO: Support adding files to dataset
-    # TODO: Support adding dataset-specific metadata to files
+    @swagger_auto_schema(
+        request_body=DatasetFilesSerializer,
+        responses={200: DatasetFilesSerializer},
+    )
+    def create(self, request, dataset_id):
+        """Add or remove dataset files and update dataset-specific metadata."""
+        try:
+            dataset = Dataset.objects.get(id=dataset_id)
+            serializer = DatasetFilesSerializer(instance=dataset.files, data=self.request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
+
+        except Dataset.DoesNotExist:
+            raise exceptions.NotFound()

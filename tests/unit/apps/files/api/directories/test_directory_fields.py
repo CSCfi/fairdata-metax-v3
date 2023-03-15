@@ -1,6 +1,8 @@
 import pytest
 from tests.utils import assert_nested_subdict
 
+from apps.core.models import DatasetDirectoryMetadata
+from apps.files.models import StorageProject
 from apps.files.views.directory_view import DirectoryCommonQueryParams
 
 
@@ -113,6 +115,9 @@ def test_directory_directory_fields(client, file_tree_b):
 
 @pytest.mark.django_db
 def test_directory_all_directory_fields(client, file_tree_b):
+    fields = set(DirectoryCommonQueryParams.allowed_directory_fields)
+    fields = fields - {"dataset_metadata"}  # metadata not available without dataset
+
     res = client.get(
         "/rest/v3/directories",
         {
@@ -122,20 +127,21 @@ def test_directory_all_directory_fields(client, file_tree_b):
         },
     )
     assert res.status_code == 200
-    assert set(res.data["directories"][0]) == set(
-        DirectoryCommonQueryParams.allowed_directory_fields
-    )
+    assert set(res.data["directories"][0]) == fields
+    assert "dataset_metadata" not in res.data["directories"][0]
 
 
 @pytest.mark.django_db
 def test_directory_all_file_fields(client, file_tree_b):
+    fields = set(DirectoryCommonQueryParams.allowed_file_fields)
+    fields = fields - {"dataset_metadata"}  # metadata not available without dataset
     res = client.get(
         "/rest/v3/directories",
         {
             "pagination": False,
-            "file_fields": ",".join(DirectoryCommonQueryParams.allowed_file_fields),
+            "file_fields": ",".join(fields),
             **file_tree_b["params"],
         },
     )
     assert res.status_code == 200
-    assert set(res.data["files"][0]) == set(DirectoryCommonQueryParams.allowed_file_fields)
+    assert set(res.data["files"][0]) == set(fields)

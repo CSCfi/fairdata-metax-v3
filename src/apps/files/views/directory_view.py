@@ -13,7 +13,13 @@ from rest_framework import exceptions, fields, serializers, viewsets
 from rest_framework.response import Response
 
 from apps.files.functions import SplitPart
-from apps.files.helpers import remove_query_param, replace_query_param
+from apps.files.helpers import (
+    get_attr_or_item,
+    get_directory_metadata_model,
+    get_file_metadata_model,
+    remove_query_param,
+    replace_query_param,
+)
 from apps.files.models.file import File, StorageProject
 from apps.files.serializers.directory_serializer import (
     DirectoryFileSerializer,
@@ -177,10 +183,10 @@ class DirectoryViewSet(viewsets.ViewSet):
         if name := params["name"]:
             files = files.filter(file_name__icontains=name)
 
-        # retrive only requested fields
+        # retrieve only requested fields
         files = self.annotate_file_property_fields(params, files)
         if file_fields := params["file_fields"]:
-            files = files.values(*file_fields)
+            files = files.values(*file_fields, "id")
 
         return files.order_by(*params["file_ordering"], "file_name")
 
@@ -233,8 +239,6 @@ class DirectoryViewSet(viewsets.ViewSet):
         limit = params["limit"]
         offset = params["offset"]
 
-        # Evaluate all subdirectories into a list so they can be
-        # counted and sliced in a single DB query.
         subdirectories_list = list(subdirectories)
         paginated_dirs = subdirectories_list[offset : offset + limit]
         dir_count = len(subdirectories_list)
@@ -301,6 +305,37 @@ class DirectoryViewSet(viewsets.ViewSet):
         """Return storage project common for all subdirectories and files."""
         return StorageProject.objects.get(id=params.get("storage_project_id"))
 
+    def get_dataset_metadata(self, params, matching_subdirs, files):
+        """Fetch dataset-specific file/directory metadata as key-value pairs."""
+
+        metadata = {}
+        dataset = params.get("dataset")
+        if dataset and not params.get("exclude_dataset"):
+            file_fields = params.get("file_fields")
+            if (not file_fields) or ("dataset_metadata" in file_fields):
+                # Get file metadata with file id as key.
+                # Files may be or File instances or .values() dicts.
+                file_metadata = (
+                    get_file_metadata_model()
+                    .objects.filter(dataset_id=dataset)
+                    .prefetch_related("file_type")
+                    .distinct("file_id")
+                    .in_bulk([get_attr_or_item(f, "id") for f in files], field_name="file_id")
+                )
+                metadata["file_metadata"] = file_metadata
+
+            directory_fields = params.get("directory_fields")
+            if (not directory_fields) or ("dataset_metadata" in directory_fields):
+                # Get directory metadata, directory path as key.
+                directory_paths = [params["path"]]
+                directory_paths += [d["directory_path"] for d in matching_subdirs]
+                directory_metadata_list = get_directory_metadata_model().objects.filter(
+                    dataset_id=dataset, directory_path__in=directory_paths
+                )
+                directory_metadata = {d.directory_path: d for d in directory_metadata_list}
+                metadata["directory_metadata"] = directory_metadata
+        return metadata
+
     @swagger_auto_schema(
         query_serializer=DirectoryQueryParams, responses={200: DirectorySerializer}
     )
@@ -312,7 +347,10 @@ class DirectoryViewSet(viewsets.ViewSet):
         parent_data = {}
         if params.get("include_parent"):
             parent_data = self.get_parent_data(params, directories)
-        matching_subdirs = self.get_matching_subdirectories(params, directories)
+
+        # Evaluate all subdirectories into a list so they can be
+        # counted and sliced in a single DB query.
+        matching_subdirs = list(self.get_matching_subdirectories(params, directories))
         files = self.get_directory_files(params)
 
         pagination_data = {}
@@ -321,6 +359,8 @@ class DirectoryViewSet(viewsets.ViewSet):
             matching_subdirs = paginated["directories"]
             files = paginated["files"]
             pagination_data = self.get_pagination_data(request, params, paginated)
+
+        dataset_metadata = self.get_dataset_metadata(params, matching_subdirs, files)
 
         instance = {
             **parent_data,
@@ -337,6 +377,7 @@ class DirectoryViewSet(viewsets.ViewSet):
                 "directory_fields": params.get("directory_fields"),
                 "file_fields": params.get("file_fields"),
                 "storage_project": storage_project,
+                **dataset_metadata,  # add file and directory metadata to context
             },
         ).data
         results = serialized_data

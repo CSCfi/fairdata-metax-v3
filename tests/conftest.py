@@ -242,11 +242,59 @@ def license_reference_data():
 
 
 @pytest.fixture
+def file_type_reference_data():
+    common_args = {
+        "in_scheme": "http://uri.suomi.fi/codelist/fairdata/file_type",
+        "is_reference_data": True,
+    }
+    factories.FileTypeFactory(
+        url="http://uri.suomi.fi/codelist/fairdata/file_type/code/video",
+        pref_label={"en": "Video", "fi": "Video"},
+        **common_args,
+    )
+    factories.FileTypeFactory(
+        url="http://uri.suomi.fi/codelist/fairdata/file_type/code/image",
+        pref_label={"en": "Image", "fi": "Kuva"},
+        **common_args,
+    )
+    factories.FileTypeFactory(
+        url="http://uri.suomi.fi/codelist/fairdata/file_type/code/text",
+        pref_label={"en": "Text", "fi": "Teksti"},
+        **common_args,
+    )
+
+
+@pytest.fixture
+def use_category_reference_data():
+    common_args = {
+        "in_scheme": "http://uri.suomi.fi/codelist/fairdata/use_category",
+        "is_reference_data": True,
+    }
+    factories.UseCategoryFactory(
+        url="http://uri.suomi.fi/codelist/fairdata/use_category/code/source",
+        pref_label={"en": "Source material", "fi": "Lähdeaineisto"},
+        **common_args,
+    )
+    factories.UseCategoryFactory(
+        url="http://uri.suomi.fi/codelist/fairdata/use_category/code/outcome",
+        pref_label={"en": "Outcome material", "fi": "Tulosaineisto"},
+        **common_args,
+    )
+    factories.UseCategoryFactory(
+        url="http://uri.suomi.fi/codelist/fairdata/use_category/code/documentation",
+        pref_label={"en": "Documentation", "fi": "Dokumentaatio"},
+        **common_args,
+    )
+
+
+@pytest.fixture
 def reference_data(
     access_type_reference_data,
     field_of_science_reference_data,
     theme_reference_data,
     language_reference_data,
     license_reference_data,
+    file_type_reference_data,
+    use_category_reference_data,
 ):
     """Collection of reference data"""

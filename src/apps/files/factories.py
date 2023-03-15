@@ -111,6 +111,7 @@ def create_project_with_files(*args, project_identifier=None, file_storage=None,
     )
     return {
         "files": files,
+        "storage_project": project,
         "params": {
             "project_identifier": project.project_identifier,
             "file_storage": project.file_storage_id,

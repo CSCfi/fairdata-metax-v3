@@ -83,6 +83,7 @@ class LicenseModelSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = License
+        ref_name = "CustomLicenseModelSerializer"
         fields = ("url",)
 
 

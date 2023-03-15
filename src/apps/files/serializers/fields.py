@@ -7,6 +7,7 @@
 
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
+from rest_framework.fields import to_choices_dict
 
 
 class CommaSeparatedListField(serializers.ListField):
@@ -31,7 +32,9 @@ class ListValidChoicesField(serializers.ChoiceField):
         kwargs["error_messages"] = {
             "invalid_choice": serializers.ChoiceField.default_error_messages["invalid_choice"]
             + " "
-            + _("Valid choices are: {choices}").format(choices=[c[0] for c in choices]),
+            + _("Valid choices are: {choices}").format(
+                choices=[c for c in to_choices_dict(choices)]
+            ),
             **kwargs.get("error_messages", {}),
         }
 

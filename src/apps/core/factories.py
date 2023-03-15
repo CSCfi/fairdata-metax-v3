@@ -1,7 +1,7 @@
 import factory
 from django.utils import timezone
 
-from apps.files.factories import FileStorageFactory
+from apps.files.factories import FileFactory, FileStorageFactory, StorageProjectFactory
 from apps.users.factories import MetaxUserFactory
 
 from . import models
@@ -70,16 +70,16 @@ class FieldOfScienceFactory(factory.django.DjangoModelFactory):
         return f"https://dataset-field-of-science-{self}.fi"
 
 
-class ThemeFactory(factory.django.DjangoModelFactory):
+class FileTypeFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = models.Theme
+        model = models.FileType
         django_get_or_create = ("url",)
 
-    pref_label = factory.Dict({"en": factory.Sequence(lambda n: f"dataset-theme-{n}")})
+    pref_label = factory.Dict({"en": factory.Sequence(lambda n: f"dataset-file-type-{n}")})
 
     @factory.sequence
     def url(self):
-        return f"https://dataset-theme-{self}.fi"
+        return f"https://dataset-file-type-{self}.fi"
 
 
 class LanguageFactory(factory.django.DjangoModelFactory):
@@ -104,6 +104,30 @@ class LicenseFactory(factory.django.DjangoModelFactory):
     @factory.sequence
     def url(self):
         return f"https://dataset-license-{self}.fi"
+
+
+class ThemeFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.Theme
+        django_get_or_create = ("url",)
+
+    pref_label = factory.Dict({"en": factory.Sequence(lambda n: f"dataset-theme-{n}")})
+
+    @factory.sequence
+    def url(self):
+        return f"https://dataset-theme-{self}.fi"
+
+
+class UseCategoryFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.UseCategory
+        django_get_or_create = ("url",)
+
+    pref_label = factory.Dict({"en": factory.Sequence(lambda n: f"dataset-use-category-{n}")})
+
+    @factory.sequence
+    def url(self):
+        return f"https://dataset-use-category-{self}.fi"
 
 
 class AccessRightsFactory(factory.django.DjangoModelFactory):

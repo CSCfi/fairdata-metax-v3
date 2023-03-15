@@ -7,6 +7,7 @@ from django.contrib.postgres.fields import HStoreField
 from django.db import models
 
 from apps.common.models import AbstractBaseModel
+from apps.users.models import MetaxUser
 
 logger = logging.getLogger(__name__)
 

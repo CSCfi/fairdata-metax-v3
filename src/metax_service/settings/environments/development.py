@@ -1,8 +1,8 @@
-from metax_service.settings.components.base import INSTALLED_APPS, MIDDLEWARE, ALLOWED_HOSTS
+from metax_service.settings.components.base import ALLOWED_HOSTS, INSTALLED_APPS, MIDDLEWARE
 
 DEBUG = True
 
-ALLOWED_HOSTS = ALLOWED_HOSTS + ["metax.localdomain"]
+ALLOWED_HOSTS = ALLOWED_HOSTS + ["metax.localdomain", "127.0.0.1", "localhost"]
 
 DEV_ONLY_APPS = [
     "debug_toolbar",
