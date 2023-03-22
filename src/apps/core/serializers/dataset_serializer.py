@@ -5,64 +5,75 @@
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
 import logging
+from collections import namedtuple
 
 from rest_framework import serializers
 
 from apps.core.models import Dataset
 from apps.core.models.concepts import FieldOfScience, Language, Theme
-from apps.core.serializers.common_serializers import AccessRightsModelSerializer
+from apps.core.serializers.common_serializers import (
+    AccessRightsModelSerializer,
+    MetadataProviderModelSerializer,
+)
 
 from .dataset_files_serializer import DatasetFilesSerializer
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
+NestedDatasetObjects = namedtuple(
+    "NestedDatasetObjects",
+    "language, theme, fields_of_science, access_rights, metadata_owner, files",
+)
+
 
 class DatasetSerializer(serializers.ModelSerializer):
     access_rights = AccessRightsModelSerializer(required=False)
-    language = Language.get_serializer()(required=False, many=True)
-    theme = Theme.get_serializer()(required=False, many=True)
     field_of_science = FieldOfScience.get_serializer()(required=False, many=True)
     files = DatasetFilesSerializer(required=False)
+    language = Language.get_serializer()(required=False, many=True)
+    metadata_owner = MetadataProviderModelSerializer(required=False)
+    theme = Theme.get_serializer()(required=False, many=True)
 
     class Meta:
         model = Dataset
         fields = (
-            "persistent_identifier",
-            "issued",
-            "title",
-            "description",
-            "theme",
-            "language",
-            "data_catalog",
             "access_rights",
+            "data_catalog",
+            "description",
             "field_of_science",
             "files",
+            "issued",
+            "language",
+            "metadata_owner",
+            "persistent_identifier",
+            "theme",
+            "title",
             # read only
-            "id",
+            "created",
+            "cumulation_started",
             "first",
-            "last",
-            "previous",
-            "replaces",
+            "id",
             "is_deprecated",
             "is_removed",
-            "removal_date",
-            "cumulation_started",
-            "created",
+            "last",
             "modified",
+            "previous",
+            "removal_date",
+            "replaces",
         )
         read_only_fields = (
-            "id",
+            "created",
+            "cumulation_started",
             "first",
-            "last",
-            "previous",
-            "replaces",
+            "id",
             "is_deprecated",
             "is_removed",
-            "removal_date",
-            "cumulation_started",
-            "created",
+            "last",
             "modified",
+            "previous",
+            "removal_date",
+            "replaces",
         )
 
     def to_representation(self, instance):
@@ -77,51 +88,70 @@ class DatasetSerializer(serializers.ModelSerializer):
             rep.pop("files", None)
         return rep
 
+    @staticmethod
+    def _pop_related_validated_objects(validated_data) -> NestedDatasetObjects:
+        return NestedDatasetObjects(
+            language=validated_data.pop("language", []),
+            theme=validated_data.pop("theme", []),
+            fields_of_science=validated_data.pop("field_of_science", []),
+            access_rights=validated_data.pop("access_rights", None),
+            metadata_owner=validated_data.pop("metadata_owner", None),
+            files=validated_data.pop("files", None),
+        )
+
     def create(self, validated_data):
-        languages = validated_data.pop("language", [])
-        themes = validated_data.pop("theme", [])
-        fields_of_science = validated_data.pop("field_of_science", [])
+        rel_objects = self._pop_related_validated_objects(validated_data)
 
         access_rights_serializer: AccessRightsModelSerializer = self.fields["access_rights"]
+        metadata_provider_serializer: MetadataProviderModelSerializer = self.fields[
+            "metadata_owner"
+        ]
+        files_serializer: DatasetFilesSerializer = self.fields["files"]
+
         access_rights = None
-        if access_rights_data := validated_data.pop("access_rights", None):
-            access_rights = access_rights_serializer.create(access_rights_data)
+        if rel_objects.access_rights:
+            access_rights = access_rights_serializer.create(rel_objects.access_rights)
 
-        files_data = validated_data.pop("files", None)
+        metadata_provider = None
+        if rel_objects.metadata_owner:
+            metadata_provider = metadata_provider_serializer.create(rel_objects.metadata_owner)
 
-        dataset = Dataset.objects.create(**validated_data, access_rights=access_rights)
+        dataset = Dataset.objects.create(
+            **validated_data, access_rights=access_rights, metadata_owner=metadata_provider
+        )
 
-        dataset.language.set(languages)
-        dataset.theme.set(themes)
-        dataset.field_of_science.set(fields_of_science)
+        dataset.language.set(rel_objects.language)
+        dataset.theme.set(rel_objects.theme)
+        dataset.field_of_science.set(rel_objects.fields_of_science)
 
-        if files_data:
-            files_serializer: DatasetFilesSerializer = self.fields["files"]
-            files_serializer.update(dataset.files, files_data)
+        if rel_objects.files:
+            files_serializer.update(dataset.files, rel_objects.files)
 
         return dataset
 
     def update(self, instance, validated_data):
-        languages = validated_data.pop("language", [])
-        themes = validated_data.pop("theme", [])
-        fields_of_science = validated_data.pop("field_of_science", [])
+        rel_objects = self._pop_related_validated_objects(validated_data)
 
         access_rights_serializer: AccessRightsModelSerializer = self.fields["access_rights"]
         access_rights = None
-        if access_rights_data := validated_data.pop("access_rights", None):
-            access_rights = access_rights_serializer.create(access_rights_data)
+        if rel_objects.access_rights:
+            access_rights = access_rights_serializer.create(rel_objects.access_rights)
         instance.access_rights = access_rights
 
-        files_data = validated_data.pop("files", None)
+        metadata_owner_serializer: MetadataProviderModelSerializer = self.fields["metadata_owner"]
+        metadata_owner = None
+        if rel_objects.metadata_owner:
+            metadata_owner = metadata_owner_serializer.create(rel_objects.metadata_owner)
+        instance.metadata_owner = metadata_owner
 
         super().update(instance, validated_data)
 
-        instance.language.set(languages)
-        instance.theme.set(themes)
-        instance.field_of_science.set(fields_of_science)
+        instance.language.set(rel_objects.language)
+        instance.theme.set(rel_objects.theme)
+        instance.field_of_science.set(rel_objects.fields_of_science)
 
-        if files_data:
-            files_serializer: DatasetFilesSerializer = self.fields["files"]
-            files_serializer.update(instance.files, files_data)
+        files_serializer: DatasetFilesSerializer = self.fields["files"]
+        if rel_objects.files:
+            files_serializer.update(instance.files, rel_objects.files)
 
         return instance
