@@ -132,7 +132,6 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         cumulation_ended (models.DateTimeField): When cumulation has ended
         preservation_state (models.IntegerField): Number that represents long term preservation state of the dataset
         state (models.CharField): Is the dataset published or in draft state
-        publisher (DatasetPublisher): DatasetPublisher ForeignKey relation
         files (models.ManyToManyField): Files attached to dataset
         first (Self): First version of the dataset
         last (Self): Last version of the dataset
