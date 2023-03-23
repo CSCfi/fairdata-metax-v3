@@ -44,9 +44,7 @@ def test_create_dataset_invalid_language(client, dataset_a_json, value, expected
     """
     dataset_a_json["language"] = value
 
-    response = client.post(
-        "/rest/v3/datasets", dataset_a_json, content_type="application/json"
-    )
+    response = client.post("/rest/v3/datasets", dataset_a_json, content_type="application/json")
     assert response.status_code == 400
     assert response.json()["language"] == [expected_error]
 
@@ -82,3 +80,14 @@ def test_list_datasets_with_ordering(
     assert_nested_subdict(
         {0: dataset_b_json, 1: dataset_a_json}, dict(enumerate((res.data["results"])))
     )
+
+
+@pytest.mark.django_db
+def test_create_dataset_with_metadata_owner(client, dataset_a_json, data_catalog, reference_data):
+    dataset_a_json["metadata_owner"] = {
+        "organization": "organization-a.fi",
+        "user": {"username": "metax-user-a"},
+    }
+    res = client.post("/rest/v3/datasets", dataset_a_json, content_type="application/json")
+
+    assert res.status_code == 201
