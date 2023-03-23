@@ -15,6 +15,7 @@ from apps.core.serializers.common_serializers import (
     AccessRightsModelSerializer,
     MetadataProviderModelSerializer,
 )
+from common.helpers import update_or_create_instance
 
 from .dataset_files_serializer import DatasetFilesSerializer
 from django.conf import settings
@@ -139,10 +140,11 @@ class DatasetSerializer(serializers.ModelSerializer):
         instance.access_rights = access_rights
 
         metadata_owner_serializer: MetadataProviderModelSerializer = self.fields["metadata_owner"]
-        metadata_owner = None
         if rel_objects.metadata_owner:
-            metadata_owner = metadata_owner_serializer.create(rel_objects.metadata_owner)
-        instance.metadata_owner = metadata_owner
+            update_or_create_instance(
+                metadata_owner_serializer, instance.metadata_owner, rel_objects.metadata_owner
+            )
+
 
         super().update(instance, validated_data)
 
