@@ -59,6 +59,8 @@ class DataCatalogAdmin(AbstractDatasetPropertyBaseAdmin):
         "created",
         "modified",
     )
+    filter_horizontal = ("language", )
+
 
 
 @admin.register(MetadataProvider)
@@ -92,6 +94,8 @@ class DatasetAdmin(AbstractDatasetPropertyBaseAdmin):
         "issued",
         "is_deprecated",
     )
+    filter_horizontal = ("language", "theme", "field_of_science")
+    list_select_related = ("access_rights", "data_catalog", "metadata_owner")
 
 
 @admin.register(DatasetActor)

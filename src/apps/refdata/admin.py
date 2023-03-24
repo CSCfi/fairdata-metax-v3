@@ -19,6 +19,7 @@ class AbstractConceptAdmin(admin.ModelAdmin):
     search_fields = ("url", "pref_label")
     list_display = ("id", "url", "label_en", "broader_concept")
     ordering = ["url"]
+    filter_horizontal = ("broader",)
 
     def get_queryset(self, request):
         return super().get_queryset(request).prefetch_related("broader", "narrower")
