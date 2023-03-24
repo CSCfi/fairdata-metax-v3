@@ -1,15 +1,31 @@
+import os
+
+from environs import Env
+
 from metax_service.settings.components.base import ALLOWED_HOSTS, INSTALLED_APPS, MIDDLEWARE
+
+env = Env()
 
 DEBUG = True
 
 ALLOWED_HOSTS = ALLOWED_HOSTS + ["metax.localdomain", "127.0.0.1", "localhost"]
 
-DEV_ONLY_APPS = [
+DEBUG_TOOLBAR_APPS = [
     "debug_toolbar",
 ]
-DEV_ONLY_MIDDLEWARE = [
+DEBUG_TOOLBAR_MIDDLEWARE = [
     "debug_toolbar.middleware.DebugToolbarMiddleware",
-    # "silk.middleware.SilkyMiddleware",
 ]
-INSTALLED_APPS = INSTALLED_APPS + DEV_ONLY_APPS
-MIDDLEWARE = MIDDLEWARE + DEV_ONLY_MIDDLEWARE
+SILK_MIDDLEWARE = ["silk.middleware.SilkyMiddleware"]
+SILK_APP = ["silk"]
+
+ENABLE_DEBUG_TOOLBAR = env.bool("ENABLE_DEBUG_TOOLBAR", True)
+ENABLE_SILK_PROFILER = env.bool("ENABLE_SILK_PROFILER", False)
+
+if ENABLE_DEBUG_TOOLBAR:
+    INSTALLED_APPS = INSTALLED_APPS + DEBUG_TOOLBAR_APPS
+    MIDDLEWARE = MIDDLEWARE + DEBUG_TOOLBAR_MIDDLEWARE
+
+if ENABLE_SILK_PROFILER:
+    INSTALLED_APPS = INSTALLED_APPS + SILK_APP
+    MIDDLEWARE = SILK_MIDDLEWARE + MIDDLEWARE

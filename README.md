@@ -84,6 +84,23 @@ Building for production:
 mkdocs build
 ```
 
+### Using Silk profiler
+
+Disabled by default, Silk profiling can be turned on by setting `ENABLE_SILK_PROFILER` env-var to true. Profiler is only available when on `development` DJANGO_ENV.
+
+In order to set up the profiler properly you need to run following commands after setting ENABLE_SILK_PROFILER env-var to True:
+
+```bash
+python manage.py migrate
+python manage.py collectstatic --no-input
+```
+
+After successful setup, the profiler is available at /silk endpoint. More information about Silk can be found from [official docs](https://github.com/jazzband/django-silk).
+
+### Disabling debug-toolbar
+
+Django Debug Toolbar can slow down SQL-queries, you can switch it off by setting `ENABLE_DEBUG_TOOLBAR` env-var to False.
+
 ## Managing dependencies with Poetry
 
 ### Adding developer dependencies 
