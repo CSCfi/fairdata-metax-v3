@@ -13,9 +13,12 @@ import os
 import sys
 from os.path import join
 from pathlib import Path
+from environs import Env
 
 import factory.random
 from django.utils.translation import gettext_lazy as _
+
+env = Env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -236,3 +239,7 @@ DATASET_FILE_METADATA_SERIALIZERS = {
     "file": "apps.core.serializers.file_metadata_serializer.FileMetadataSerializer",
     "directory": "apps.core.serializers.file_metadata_serializer.DirectoryMetadataSerializer",
 }
+
+# Profiling
+ENABLE_DEBUG_TOOLBAR = env.bool("ENABLE_DEBUG_TOOLBAR", True)
+ENABLE_SILK_PROFILER = env.bool("ENABLE_SILK_PROFILER", False)

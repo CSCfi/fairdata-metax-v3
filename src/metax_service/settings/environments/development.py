@@ -1,10 +1,11 @@
-import os
+from metax_service.settings.components.base import (
+    ALLOWED_HOSTS,
+    INSTALLED_APPS,
+    MIDDLEWARE,
+    ENABLE_DEBUG_TOOLBAR,
+    ENABLE_SILK_PROFILER,
+)
 
-from environs import Env
-
-from metax_service.settings.components.base import ALLOWED_HOSTS, INSTALLED_APPS, MIDDLEWARE
-
-env = Env()
 
 DEBUG = True
 
@@ -18,9 +19,6 @@ DEBUG_TOOLBAR_MIDDLEWARE = [
 ]
 SILK_MIDDLEWARE = ["silk.middleware.SilkyMiddleware"]
 SILK_APP = ["silk"]
-
-ENABLE_DEBUG_TOOLBAR = env.bool("ENABLE_DEBUG_TOOLBAR", True)
-ENABLE_SILK_PROFILER = env.bool("ENABLE_SILK_PROFILER", False)
 
 if ENABLE_DEBUG_TOOLBAR:
     INSTALLED_APPS = INSTALLED_APPS + DEBUG_TOOLBAR_APPS
