@@ -5,6 +5,7 @@ from django.db import models
 from rest_framework import serializers
 
 from apps.common.models import AbstractBaseModel
+from django.utils.translation import gettext as _
 
 
 class AbstractConcept(AbstractBaseModel):
@@ -18,7 +19,7 @@ class AbstractConcept(AbstractBaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     url = models.URLField(max_length=255)
     in_scheme = models.URLField(max_length=255, default="", blank=True)
-    pref_label = HStoreField(help_text='example: {"en":"title", "fi":"otsikko"}')
+    pref_label = HStoreField(help_text=_('example: {"en":"title", "fi":"otsikko"}'))
     broader = models.ManyToManyField(
         "self",
         related_name="narrower",
@@ -88,17 +89,25 @@ class AbstractConcept(AbstractBaseModel):
 
 class FieldOfScience(AbstractConcept):
     # TODO: Add codes (skos:notation)
+
+    is_essential_choice = models.BooleanField(
+        default=False, help_text=_("If the field of science should be selectable in model forms")
+    )
     class Meta(AbstractConcept.Meta):
         verbose_name = "field of science"
         verbose_name_plural = "fields of science"
 
 
 class Language(AbstractConcept):
-    pass
+    is_essential_choice = models.BooleanField(
+        default=False, help_text=_("If the language should be selectable in model forms")
+    )
 
 
 class Theme(AbstractConcept):
-    pass
+    is_essential_choice = models.BooleanField(
+        default=False, help_text=_("If the theme should be selectable in model forms")
+    )
 
 
 class Location(AbstractConcept):

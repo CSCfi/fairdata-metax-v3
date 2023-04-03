@@ -13,6 +13,7 @@ from apps.core.models.concepts import FieldOfScience, Language, Theme
 from apps.core.serializers.common_serializers import AccessRightsModelSerializer
 
 from .dataset_files_serializer import DatasetFilesSerializer
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +67,12 @@ class DatasetSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
+        for lang in rep["language"]:
+            lang["pref_label"] = {
+                key: lang["pref_label"][key]
+                for key in settings.DISPLAY_API_LANGUAGES
+                if key in lang["pref_label"].keys()
+            }
         if not instance.storage_project:  # remove files dict from response if no files exist
             rep.pop("files", None)
         return rep

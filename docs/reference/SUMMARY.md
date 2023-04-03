@@ -63,7 +63,9 @@
     - refdata
         - [admin](src/apps/refdata/admin.md)
         - [apps](src/apps/refdata/apps.md)
-        - [management.commands.index_reference_data](src/apps/refdata/management/commands/index_reference_data.md)
+        - management.commands
+            - [index_reference_data](src/apps/refdata/management/commands/index_reference_data.md)
+            - [update_default_essential_choices](src/apps/refdata/management/commands/update_default_essential_choices.md)
         - [models](src/apps/refdata/models.md)
         - services
             - importers
@@ -147,7 +149,9 @@
                 - [serializers.test_fields](tests/unit/apps/files/serializers/test_fields.md)
             - refdata
                 - [api.test_refdata](tests/unit/apps/refdata/api/test_refdata.md)
-                - [commands.test_index_reference_data](tests/unit/apps/refdata/commands/test_index_reference_data.md)
+                - commands
+                    - [test_index_reference_data](tests/unit/apps/refdata/commands/test_index_reference_data.md)
+                    - [test_update_essential_choices](tests/unit/apps/refdata/commands/test_update_essential_choices.md)
                 - [models.test_concept](tests/unit/apps/refdata/models/test_concept.md)
                 - services
                     - [test_finto_importer](tests/unit/apps/refdata/services/test_finto_importer.md)
