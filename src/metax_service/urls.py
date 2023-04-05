@@ -46,6 +46,7 @@ urlpatterns = [
         name="schema-swagger-ui",
     ),
     re_path(r"^redoc/$", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
+    re_path(r"^watchman/", include("watchman.urls")),
     path("admin/", admin.site.urls),
     path("__debug__/", include("debug_toolbar.urls")),
     path("reference_data/", include("refdata.urls")),
@@ -58,4 +59,4 @@ if settings.ENABLE_DEBUG_TOOLBAR:
     urlpatterns = urlpatterns + [path("__debug__/", include("debug_toolbar.urls"))]
 
 if settings.ENABLE_SILK_PROFILER:
-    urlpatterns = urlpatterns + [path('silk/', include('silk.urls', namespace='silk'))]
+    urlpatterns = urlpatterns + [path("silk/", include("silk.urls", namespace="silk"))]

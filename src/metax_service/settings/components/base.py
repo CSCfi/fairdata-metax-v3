@@ -78,6 +78,7 @@ THIRD_PARTY_APPS = [
     "drf_yasg",
     "django_filters",
     "simple_history",
+    "watchman",
 ]
 LOCAL_APPS = [
     "common.apps.CommonConfig",
