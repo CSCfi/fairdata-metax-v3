@@ -19,19 +19,16 @@ from rest_framework.response import Response
 
 from apps.files.helpers import get_file_metadata_model
 from apps.files.models.file import File
-from apps.files.serializers.file_serializer import FileCreateQueryParamsSerializer, FileSerializer
+from apps.files.serializers.file_bulk_serializer import (
+    BulkAction,
+    FileBulkReturnValueSerializer,
+    FileBulkSerializer,
+)
+from apps.files.serializers.file_serializer import FileSerializer
 
 
 class FilePagination(LimitOffsetPagination):
     default_limit = 100
-
-
-class CreateListModelMixin:
-    def get_serializer(self, *args, **kwargs):
-        """Use list serializer when provided with a list of files."""
-        if isinstance(kwargs.get("data", {}), list):
-            kwargs["many"] = True
-        return super().get_serializer(*args, **kwargs)
 
 
 class FileCommonFilterset(filters.FilterSet):
@@ -133,21 +130,13 @@ class BaseFileViewSet(viewsets.ModelViewSet):
         return context
 
 
-class FileViewSet(CreateListModelMixin, BaseFileViewSet):
+class FileViewSet(BaseFileViewSet):
     http_method_names = ["get", "post", "patch", "put", "delete"]
-
-    @swagger_auto_schema(query_serializer=FileCreateQueryParamsSerializer)
-    def create(
-        self, *args, **kwargs
-    ):  # TODO: Instead of this, use separate actions for bulk operations
-        return super().create(*args, **kwargs)
-
-    # TODO: Bulk update, bulk patch, bulk delete
 
     # TODO: Restore files action (=convert removed files to "not removed", should not undeprecate datasets)
 
     @swagger_auto_schema(request_body=FilesDatasetsBodySerializer)
-    @action(detail=False, methods=["post"], url_path="datasets")
+    @action(detail=False, methods=["post"])
     def datasets(self, request):
         """Annotate file or dataset identifiers with corresponding dataset or file identifiers.
 
@@ -194,3 +183,41 @@ class FileViewSet(CreateListModelMixin, BaseFileViewSet):
             return Response([v["key"] for v in queryset])
         else:
             return Response({str(v["key"]): v["values"] for v in queryset})
+
+    def bulk_action(self, files, action):
+        f = FileBulkSerializer(data=files, action=action)
+        f.is_valid(raise_exception=True)
+        f.save()
+        return Response(f.data)
+
+    @swagger_auto_schema(
+        request_body=FileBulkSerializer(action=BulkAction.INSERT),
+        responses={200: FileBulkReturnValueSerializer()},
+    )
+    @action(detail=False, methods=["post"])
+    def insert_many(self, request):
+        return self.bulk_action(request.data, action=BulkAction.INSERT)
+
+    @swagger_auto_schema(
+        request_body=FileBulkSerializer(action=BulkAction.UPDATE),
+        responses={200: FileBulkReturnValueSerializer()},
+    )
+    @action(detail=False, methods=["post"])
+    def update_many(self, request):
+        return self.bulk_action(request.data, action=BulkAction.UPDATE)
+
+    @swagger_auto_schema(
+        request_body=FileBulkSerializer(action=BulkAction.UPSERT),
+        responses={200: FileBulkReturnValueSerializer()},
+    )
+    @action(detail=False, methods=["post"])
+    def upsert_many(self, request):
+        return self.bulk_action(request.data, action=BulkAction.UPSERT)
+
+    @swagger_auto_schema(
+        request_body=FileBulkSerializer(action=BulkAction.DELETE),
+        responses={200: FileBulkReturnValueSerializer()},
+    )
+    @action(detail=False, methods=["post"])
+    def delete_many(self, request):
+        return self.bulk_action(request.data, action=BulkAction.DELETE)

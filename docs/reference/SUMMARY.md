@@ -54,6 +54,7 @@
         - serializers
             - [directory_serializer](src/apps/files/serializers/directory_serializer.md)
             - [fields](src/apps/files/serializers/fields.md)
+            - [file_bulk_serializer](src/apps/files/serializers/file_bulk_serializer.md)
             - [file_serializer](src/apps/files/serializers/file_serializer.md)
             - [file_storage_serializer](src/apps/files/serializers/file_storage_serializer.md)
         - views
@@ -141,7 +142,7 @@
                         - [test_directory_storage_project](tests/unit/apps/files/api/directories/test_directory_storage_project.md)
                     - files
                         - [conftest](tests/unit/apps/files/api/files/conftest.md)
-                        - [test_files_bulk_create](tests/unit/apps/files/api/files/test_files_bulk_create.md)
+                        - [test_files_bulk](tests/unit/apps/files/api/files/test_files_bulk.md)
                         - [test_files_create](tests/unit/apps/files/api/files/test_files_create.md)
                         - [test_files_datasets](tests/unit/apps/files/api/files/test_files_datasets.md)
                         - [test_files_list](tests/unit/apps/files/api/files/test_files_list.md)

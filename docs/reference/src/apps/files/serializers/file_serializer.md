@@ -12,14 +12,6 @@
 
 ### :::src.apps.files.serializers.file_serializer.validate_path_conflicts
 
-## FileCreateQueryParamsSerializer
-
-### :::src.apps.files.serializers.file_serializer.FileCreateQueryParamsSerializer
-
-## FileListSerializer
-
-### :::src.apps.files.serializers.file_serializer.FileListSerializer
-
 ## CreateOnlyFieldsMixin
 
 ### :::src.apps.files.serializers.file_serializer.CreateOnlyFieldsMixin

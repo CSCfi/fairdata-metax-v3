@@ -73,7 +73,7 @@ def post_ida_file(admin_client, files_json):
 
     """
 
-    url = reverse("file-list")
+    url = reverse("file-insert-many")
     return admin_client.post(url, files_json, content_type="application/json")
 
 
@@ -119,7 +119,7 @@ def files_ok_response(file_response):
     Returns:
 
     """
-    assert file_response.status_code == 201
+    assert file_response.status_code == 200
 
 
 @scenario("file.feature", "IDA User freezes files")

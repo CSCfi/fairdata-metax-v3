@@ -6,13 +6,12 @@
 # :license: MIT
 
 from collections import Counter
+from dataclasses import dataclass
 
-from django.db.models import prefetch_related_objects
 from django.db.models.functions import Concat
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
-from apps.common.helpers import get_technical_metax_user
 from apps.files.helpers import get_file_metadata_serializer
 from apps.files.models.file import File, StorageProject, checksum_algorithm_choices
 from apps.files.models.file_storage import FileStorage
@@ -31,7 +30,7 @@ def get_storage_project_or_none(project_identifier, file_storage_id):
         return None
 
 
-def get_or_create_storage_project(project_identifier, file_storage_id):
+def get_or_create_storage_project(project_identifier, file_storage_id) -> StorageProject:
     try:
         project, created = StorageProject.available_objects.get_or_create(
             project_identifier=project_identifier,
@@ -86,89 +85,6 @@ def validate_path_conflicts(storage_project, file_paths):
         )
 
 
-class FileCreateQueryParamsSerializer(serializers.Serializer):
-    ignore_already_exists_errors = serializers.BooleanField(default=False)
-
-
-class FileListSerializer(serializers.ListSerializer):
-    """Serializer for bulk file creation."""
-
-    def validate_same_value(self, data, field):
-        value = data[0][field]
-        for item in data[1:]:
-            if value != item[field]:
-                raise serializers.ValidationError({field: "All files should have same value."})
-
-    def _get_params(self):
-        params_serializer = FileCreateQueryParamsSerializer(
-            data=self.context["request"].query_params
-        )
-        params_serializer.is_valid(raise_exception=True)
-        return params_serializer.validated_data
-
-    def validate(self, data):
-        params = self._get_params()
-        if len(data) > 0:
-            # check all files use same project and storage values
-            self.validate_same_value(data, "project_identifier")
-            self.validate_same_value(data, "file_storage")
-
-            storage_project = get_storage_project_or_none(
-                project_identifier=data[0]["project_identifier"],
-                file_storage_id=data[0]["file_storage"]["id"],
-            )
-            if storage_project and not params["ignore_already_exists_errors"]:
-                validate_path_conflicts(
-                    storage_project=storage_project,
-                    file_paths=[d["file_path"] for d in data],
-                )
-        return data
-
-    def create(self, validated_data):
-        params = self._get_params()
-        if len(validated_data) == 0:
-            return []
-
-        project_identifier = validated_data[0]["project_identifier"]
-        file_storage = validated_data[0]["file_storage"]["id"]
-        project_id = get_or_create_storage_project(project_identifier, file_storage).id
-        for file in validated_data:
-            del file["project_identifier"]
-            del file["file_storage"]
-
-        # TODO: Allow update instead of failing on existing files. Maybe using the update_conflicts parameter from django 4.1?
-        # https://docs.djangoproject.com/en/4.1/ref/models/querysets/#django.db.models.query.QuerySet.bulk_create
-        system_creator = get_technical_metax_user()
-        new_files = [
-            File(
-                **f,
-                storage_project_id=project_id,
-                system_creator_id=system_creator,
-            )
-            for f in validated_data
-        ]
-
-        File.available_objects.bulk_create(
-            new_files, ignore_conflicts=params["ignore_already_exists_errors"]
-        )
-
-        # Get successfully created files
-        created_files = File.available_objects.filter(id__in={f.id for f in new_files})
-
-        # TODO: Instead of returning just succesful creation, include errors, e.g.:
-        # {
-        #     "success": [
-        #         { object: {...} },
-        #     "failed": [
-        #         { object: {...}, errors: {...} },
-        #     ]
-        # }
-
-        # avoid making repeated storage_project queries for created files
-        prefetch_related_objects(created_files, "storage_project")
-        return created_files
-
-
 class CreateOnlyFieldsMixin:
     create_only_fields = []
 
@@ -188,7 +104,7 @@ class ChecksumSerializer(serializers.Serializer):
 
 
 class FileSerializer(CreateOnlyFieldsMixin, serializers.ModelSerializer):
-    create_only_fields = ["file_name", "file_path", "directory_path"]
+    create_only_fields = ["file_path", "project_identifier", "file_storage"]
 
     project_identifier = serializers.CharField(max_length=200)
     file_storage = serializers.CharField(max_length=255, source="file_storage.id")
@@ -227,7 +143,6 @@ class FileSerializer(CreateOnlyFieldsMixin, serializers.ModelSerializer):
         return super().validate(data)
 
     class Meta:
-        list_serializer_class = FileListSerializer
         model = File
         fields = [
             "id",

@@ -26,6 +26,7 @@ class File(AbstractBaseModel):
 
     # File id is provided by external service
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
     # TODO: use external identifier in APIs
     v2_identifier = models.CharField(max_length=200, null=True)  # External service identifier
     file_name = models.TextField()
@@ -89,7 +90,6 @@ class File(AbstractBaseModel):
             ("directory_path", "storage_project"),
             ("directory_path", "file_name"),
         ]
-        unique_together = [("file_name", "directory_path", "storage_project")]
         ordering = ["directory_path", "file_name"]
 
         constraints = [
@@ -101,5 +101,11 @@ class File(AbstractBaseModel):
                 check=models.Q(directory_path__startswith="/")
                 & models.Q(directory_path__endswith="/"),
                 name="%(app_label)s_%(class)s_require_dir_slash",
+            ),
+            # only one non-removed file for a specific storage_project and file_path can exist
+            models.UniqueConstraint(
+                fields=["file_name", "directory_path", "storage_project"],
+                condition=models.Q(is_removed=False),
+                name="%(app_label)s_%(class)s_unique_file_path_id",
             ),
         ]

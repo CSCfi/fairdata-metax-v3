@@ -4,10 +4,6 @@
 
 ### :::src.apps.files.views.file_view.FilePagination
 
-## CreateListModelMixin
-
-### :::src.apps.files.views.file_view.CreateListModelMixin
-
 ## FileCommonFilterset
 
 ### :::src.apps.files.views.file_view.FileCommonFilterset
