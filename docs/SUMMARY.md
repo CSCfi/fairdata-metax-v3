@@ -1,3 +1,5 @@
+- [User Guide](user-guide/index.md)
+    - user-guide/*
 - [Developer Guide](developer-guide/index.md)
     - [Contributing](developer-guide/contributing/index.md)
         - developer-guide/contributing/*
