@@ -71,6 +71,7 @@ This comparison is comparing DCAT concepts to equivalent Metax database Models. 
 | in series           | N/A                   |
 | keyword             | keyword               |
 | language            | language              |
+| license             | access_rights.license |
 | N/A                 | field_of_science      |
 | release date        | issued                |
 | spatial coverage    | spatial               |
