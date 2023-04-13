@@ -51,13 +51,13 @@ This comparison is comparing DCAT concepts to equivalent Metax database Models. 
 
 ### Catalog Record
 
-| DCAT 3 property | V3 equivalent   |
-|-----------------|-----------------|
-| conforms to     | N/A             |
-| listing_date    | created         |
-| primary topic   | dataset.keyword |
-| title           | dataset.title   |
-| update          | modified        |
+| DCAT 3 property | V3 equivalent            |
+|-----------------|--------------------------|
+| conforms to     | N/A                      |
+| listing_date    | created                  |
+| primary topic   | dataset.field_of_science |
+| title           | dataset.title            |
+| update          | modified                 |
 
 ### Dataset
 
