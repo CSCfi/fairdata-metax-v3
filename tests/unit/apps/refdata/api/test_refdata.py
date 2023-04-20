@@ -1,7 +1,7 @@
 from uuid import UUID
 
-import inflection
 import pytest
+from rest_framework.reverse import reverse
 
 from apps.refdata.models import FieldOfScience, Language, Location, Theme
 
@@ -20,7 +20,7 @@ extra_field_values = {"as_wkt": ""}
 
 
 def get_model_url(model):
-    return f"/reference_data/{inflection.underscore(model.__name__)}"
+    return f"{reverse('api-root')}reference-data/{model.get_model_url()}"
 
 
 @pytest.mark.django_db

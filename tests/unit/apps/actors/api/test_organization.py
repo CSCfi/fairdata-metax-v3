@@ -1,6 +1,6 @@
 import pytest
 from rest_framework.test import APIClient
-
+from rest_framework.reverse import reverse
 from apps.actors.factories import OrganizationFactory
 from apps.actors.models import Organization
 
@@ -48,12 +48,12 @@ def check_org_trees(organization_tree):
         if org_code:
             # single org
             org_id = Organization.available_objects.get(code=org_code).id
-            resp = client.get(f"/actors/organizations/{org_id}")
+            resp = client.get(f"{reverse('organization-detail', args=[org_id])}")
             assert resp.status_code == 200
             code_trees = get_code_trees([resp.data])
         else:
             # list of orgs
-            resp = client.get(f"/actors/organizations")
+            resp = client.get(f"{reverse('organization-list')}")
             assert resp.status_code == 200
             code_trees = get_code_trees(resp.data["results"])
         assert code_trees == expected_code_tree

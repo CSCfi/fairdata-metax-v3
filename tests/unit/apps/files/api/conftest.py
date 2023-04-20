@@ -3,6 +3,7 @@ import logging
 import os
 
 import pytest
+from rest_framework.reverse import reverse
 
 from apps.files import factories
 
@@ -42,14 +43,18 @@ def filestorage_a_invalid_json():
     return load_test_json("filestorage_a_invalid.json")
 
 
+@pytest.fixture(scope="module")
+def file_storage_list_url():
+    return reverse("storage-list")
+
+
 @pytest.fixture
 def post_filestorage_payloads_a_b_c(
-    client, filestorage_a_json, filestorage_b_json, filestorage_c_json
+    client, filestorage_a_json, filestorage_b_json, filestorage_c_json, file_storage_list_url
 ):
-    url = "/rest/v3/filestorages"
-    res1 = client.post(url, filestorage_a_json, content_type="application/json")
-    res2 = client.post(url, filestorage_b_json, content_type="application/json")
-    res3 = client.post(url, filestorage_c_json, content_type="application/json")
+    res1 = client.post(file_storage_list_url, filestorage_a_json, content_type="application/json")
+    res2 = client.post(file_storage_list_url, filestorage_b_json, content_type="application/json")
+    res3 = client.post(file_storage_list_url, filestorage_c_json, content_type="application/json")
     return res1, res2, res3
 
 

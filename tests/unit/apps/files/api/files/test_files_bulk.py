@@ -2,6 +2,7 @@ import uuid
 from typing import List
 
 import pytest
+from rest_framework.reverse import reverse
 from rest_framework.serializers import RegexField
 from tests.utils import assert_nested_subdict
 
@@ -64,9 +65,21 @@ def another_storage() -> StorageProject:
         file_storage__id="xyz-storage",
     )
 
+@pytest.fixture(scope="module")
+def action_url():
+    def _action_url(action: str):
+        if action == "insert":
+            return reverse('file-insert-many')
+        elif action == "update":
+            return reverse('file-update-many')
+        elif action == 'upsert':
+            return reverse('file-upsert-many')
+        elif action == "delete":
+            return reverse('file-delete-many')
+    return _action_url
 
 @pytest.mark.django_db
-def test_files_insert_many_ok(client):
+def test_files_insert_many_ok(client, action_url):
     files = build_files_json(
         [
             {"id": None, "exists": False},
@@ -75,7 +88,7 @@ def test_files_insert_many_ok(client):
         ]
     )
     res = client.post(
-        "/rest/v3/files/insert_many",
+        action_url("insert"),
         files,
         content_type="application/json",
     )
@@ -91,10 +104,10 @@ def test_files_insert_many_ok(client):
 
 
 @pytest.mark.django_db
-def test_files_insert_many_multiple_projects(client, project, another_project):
+def test_files_insert_many_multiple_projects(client, project, another_project, action_url):
     files = build_files_json([{"id": None}], project=project)
     files += build_files_json([{"id": None}], project=another_project)
-    res = client.post("/rest/v3/files/insert_many", files, content_type="application/json")
+    res = client.post(action_url("insert"), files, content_type="application/json")
     assert res.status_code == 200
     assert_nested_subdict(
         [
@@ -106,10 +119,10 @@ def test_files_insert_many_multiple_projects(client, project, another_project):
 
 
 @pytest.mark.django_db
-def test_files_insert_many_multiple_storages(client, project, another_storage):
+def test_files_insert_many_multiple_storages(client, project, another_storage, action_url):
     files = build_files_json([{"id": None}], project=project)
     files += build_files_json([{"id": None}], project=another_storage)
-    res = client.post("/rest/v3/files/insert_many", files, content_type="application/json")
+    res = client.post(action_url("insert"), files, content_type="application/json")
     assert res.status_code == 200
     assert_nested_subdict(
         [
@@ -121,13 +134,13 @@ def test_files_insert_many_multiple_storages(client, project, another_storage):
 
 
 @pytest.mark.django_db
-def test_files_insert_many_missing_required_fields(client):
+def test_files_insert_many_missing_required_fields(client, action_url):
     files = build_files_json(
         [
             {"exists": False, "fields": ["project_identifier", "file_storage"]},
         ]
     )
-    res = client.post("/rest/v3/files/insert_many", files, content_type="application/json")
+    res = client.post(action_url("insert"), files, content_type="application/json")
     assert res.status_code == 200
     assert_nested_subdict(
         {
@@ -150,9 +163,9 @@ def test_files_insert_many_missing_required_fields(client):
 
 
 @pytest.mark.django_db
-def test_files_insert_many_id_not_allowed(client):
+def test_files_insert_many_id_not_allowed(client, action_url):
     files = build_files_json([{"exists": False}])
-    res = client.post("/rest/v3/files/insert_many", files, content_type="application/json")
+    res = client.post(action_url("insert"), files, content_type="application/json")
     assert res.status_code == 200
     assert_nested_subdict(
         {
@@ -183,14 +196,14 @@ def test_files_insert_many_id_not_allowed(client):
 
 
 @pytest.mark.django_db
-def test_files_insert_many_file_path_already_exists(client, project):
+def test_files_insert_many_file_path_already_exists(client, project, action_url):
     existing_files = build_files_json(
         [{"exists": True, "file_path": "/data/1.txt"}], project=project
     )
     files = build_files_json(
         [{"exists": False, "id": None, "file_path": "/data/1.txt"}], project=project
     )
-    res = client.post("/rest/v3/files/insert_many", files, content_type="application/json")
+    res = client.post(action_url("insert"), files, content_type="application/json")
     assert res.status_code == 200
     assert_nested_subdict(
         {
@@ -210,14 +223,14 @@ def test_files_insert_many_file_path_already_exists(client, project):
 
 
 @pytest.mark.django_db
-def test_files_insert_many_duplicate_file_path(client):
+def test_files_insert_many_duplicate_file_path(client, action_url):
     files = build_files_json(
         [
             {"exists": False, "id": None, "file_path": "/data/1.txt"},
             {"exists": False, "id": None, "file_path": "/data/1.txt"},
         ],
     )
-    res = client.post("/rest/v3/files/insert_many", files, content_type="application/json")
+    res = client.post(action_url("insert"), files, content_type="application/json")
     assert res.status_code == 200
     assert_nested_subdict(
         {
@@ -235,7 +248,7 @@ def test_files_insert_many_duplicate_file_path(client):
 
 
 @pytest.mark.django_db
-def test_files_insert_many_invalid_file_storage(client):
+def test_files_insert_many_invalid_file_storage(client, action_url):
     files = build_files_json(
         [
             {"exists": False, "id": None, "file_path": "/data/1.txt"},
@@ -244,7 +257,7 @@ def test_files_insert_many_invalid_file_storage(client):
     )
     files[0]["file_storage"] = "doesnotexist"
     files[1]["file_storage"] = "doesnotexist"
-    res = client.post("/rest/v3/files/insert_many", files, content_type="application/json")
+    res = client.post(action_url("insert"), files, content_type="application/json")
     assert res.status_code == 200
     assert_nested_subdict(
         {
@@ -266,7 +279,7 @@ def test_files_insert_many_invalid_file_storage(client):
 
 
 @pytest.mark.django_db
-def test_files_update_many_ok(client):
+def test_files_update_many_ok(client, action_url):
     files = build_files_json(
         [
             {"byte_size": 100, "exists": True},
@@ -274,7 +287,7 @@ def test_files_update_many_ok(client):
             {"byte_size": 300, "exists": True},
         ]
     )
-    res = client.post("/rest/v3/files/update_many", files, content_type="application/json")
+    res = client.post(action_url("update"), files, content_type="application/json")
     assert_nested_subdict(
         [
             {"object": files[0], "action": "update"},
@@ -286,9 +299,9 @@ def test_files_update_many_ok(client):
 
 
 @pytest.mark.django_db
-def test_files_update_many_id_required(client):
+def test_files_update_many_id_required(client, action_url):
     files = build_files_json([{"exists": False, "id": None}])
-    res = client.post("/rest/v3/files/update_many", files, content_type="application/json")
+    res = client.post(action_url("update"), files, content_type="application/json")
     assert res.status_code == 200
     assert_nested_subdict(
         {
@@ -306,10 +319,10 @@ def test_files_update_many_id_required(client):
 
 
 @pytest.mark.django_db
-def test_files_update_many_existing_file_required(client):
+def test_files_update_many_existing_file_required(client, action_url):
     files = build_files_json([{"exists": True}])
     files[0]["id"] = str(uuid.uuid4())
-    res = client.post("/rest/v3/files/update_many", files, content_type="application/json")
+    res = client.post(action_url("update"), files, content_type="application/json")
     assert res.status_code == 200
     assert_nested_subdict(
         {
@@ -327,10 +340,10 @@ def test_files_update_many_existing_file_required(client):
 
 
 @pytest.mark.django_db
-def test_files_update_many_read_only_field(client):
+def test_files_update_many_read_only_field(client, action_url):
     files = build_files_json([{"exists": True}])
     files[0].update(file_path="/a_new_path/file.x")
-    res = client.post("/rest/v3/files/update_many", files, content_type="application/json")
+    res = client.post(action_url("update"), files, content_type="application/json")
     assert res.status_code == 200
     assert_nested_subdict(
         {
@@ -352,10 +365,10 @@ def test_files_update_many_read_only_field(client):
 
 
 @pytest.mark.django_db
-def test_files_update_many_change_project_for_existing(client):
+def test_files_update_many_change_project_for_existing(client, action_url):
     files = build_files_json([{"exists": True}])
     files[0].update(project_identifier="/a_new_path/file.x", file_storage="something_else")
-    res = client.post("/rest/v3/files/update_many", files, content_type="application/json")
+    res = client.post(action_url("update"), files, content_type="application/json")
     assert res.status_code == 200
     match_readonly = RegexField("Cannot change value")
     assert_nested_subdict(
@@ -377,7 +390,7 @@ def test_files_update_many_change_project_for_existing(client):
 
 
 @pytest.mark.django_db
-def test_files_upsert_many_ok(client):
+def test_files_upsert_many_ok(client, action_url):
     files = build_files_json(
         [
             {"byte_size": 100, "exists": True},
@@ -386,7 +399,7 @@ def test_files_upsert_many_ok(client):
             {"byte_size": 400, "exists": True},
         ]
     )
-    res = client.post("/rest/v3/files/upsert_many", files, content_type="application/json")
+    res = client.post(action_url("upsert"), files, content_type="application/json")
     assert res.status_code == 200
     assert_nested_subdict(
         [
@@ -408,7 +421,7 @@ def test_files_delete_many_ok(client):
             {"exists": True},
         ]
     )
-    res = client.post("/rest/v3/files/delete_many", files, content_type="application/json")
+    res = client.post("/rest/v3/files/delete-many", files, content_type="application/json")
     assert res.status_code == 200
     assert_nested_subdict(
         [
@@ -422,14 +435,14 @@ def test_files_delete_many_ok(client):
 
 
 @pytest.mark.django_db
-def test_files_delete_many_only_id(client):
+def test_files_delete_many_only_id(client, action_url):
     files = build_files_json(
         [
             {"exists": True},
         ]
     )
     res = client.post(
-        "/rest/v3/files/delete_many", [{"id": files[0]["id"]}], content_type="application/json"
+        action_url("delete"), [{"id": files[0]["id"]}], content_type="application/json"
     )
     assert res.status_code == 200
     assert_nested_subdict(
@@ -450,7 +463,7 @@ def test_files_delete_many_non_existing(client):
             {"exists": False},
         ]
     )
-    res = client.post("/rest/v3/files/delete_many", files, content_type="application/json")
+    res = client.post("/rest/v3/files/delete-many", files, content_type="application/json")
     assert res.status_code == 200
     assert_nested_subdict(
         {
@@ -468,10 +481,10 @@ def test_files_delete_many_non_existing(client):
 
 
 @pytest.mark.django_db
-def test_files_delete_many_multiple_projects(client, project, another_project):
+def test_files_delete_many_multiple_projects(client, project, another_project, action_url):
     files = build_files_json([{"exists": True}], project=project)
     files += build_files_json([{"exists": True}], project=another_project)
-    res = client.post("/rest/v3/files/delete_many", files, content_type="application/json")
+    res = client.post(action_url("delete"), files, content_type="application/json")
     assert res.status_code == 200
     assert_nested_subdict(
         [
@@ -483,10 +496,10 @@ def test_files_delete_many_multiple_projects(client, project, another_project):
 
 
 @pytest.mark.django_db
-def test_files_delete_duplicate_id(client, project, another_project):
+def test_files_delete_duplicate_id(client, project, another_project, action_url):
     files = build_files_json([{"exists": True}], project=project)
     files += files
-    res = client.post("/rest/v3/files/delete_many", files, content_type="application/json")
+    res = client.post(action_url("delete"), files, content_type="application/json")
     assert res.status_code == 200
     assert_nested_subdict(
         {

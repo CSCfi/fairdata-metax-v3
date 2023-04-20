@@ -3,4 +3,4 @@ from .common_views import (
     MetadataProviderViewSet,
 )
 from .data_catalog_view import DataCatalogView
-from .dataset_view import DatasetViewSet
+from .dataset_view import DatasetViewSet, DatasetDirectoryViewSet, DatasetFilesViewSet

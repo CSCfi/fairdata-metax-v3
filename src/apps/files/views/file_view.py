@@ -194,7 +194,7 @@ class FileViewSet(BaseFileViewSet):
         request_body=FileBulkSerializer(action=BulkAction.INSERT),
         responses={200: FileBulkReturnValueSerializer()},
     )
-    @action(detail=False, methods=["post"])
+    @action(detail=False, methods=["post"], url_path="insert-many")
     def insert_many(self, request):
         return self.bulk_action(request.data, action=BulkAction.INSERT)
 
@@ -202,7 +202,7 @@ class FileViewSet(BaseFileViewSet):
         request_body=FileBulkSerializer(action=BulkAction.UPDATE),
         responses={200: FileBulkReturnValueSerializer()},
     )
-    @action(detail=False, methods=["post"])
+    @action(detail=False, methods=["post"], url_path="update-many")
     def update_many(self, request):
         return self.bulk_action(request.data, action=BulkAction.UPDATE)
 
@@ -210,7 +210,7 @@ class FileViewSet(BaseFileViewSet):
         request_body=FileBulkSerializer(action=BulkAction.UPSERT),
         responses={200: FileBulkReturnValueSerializer()},
     )
-    @action(detail=False, methods=["post"])
+    @action(detail=False, methods=["post"], url_path="upsert-many")
     def upsert_many(self, request):
         return self.bulk_action(request.data, action=BulkAction.UPSERT)
 
@@ -218,6 +218,6 @@ class FileViewSet(BaseFileViewSet):
         request_body=FileBulkSerializer(action=BulkAction.DELETE),
         responses={200: FileBulkReturnValueSerializer()},
     )
-    @action(detail=False, methods=["post"])
+    @action(detail=False, methods=["post"], url_path="delete-many")
     def delete_many(self, request):
         return self.bulk_action(request.data, action=BulkAction.DELETE)

@@ -69,6 +69,12 @@ Show all available management commands with `python manage.py --help` and all se
 
 Run pytest managed tests with `pytest` command. You can run tox tests with `tox` command.
 
+Running tests quickly, stopping on first failure, reusing test-database and with 2 workers:
+
+```bash
+pytest -x --reuse-db -n 2
+```
+
 ### Building MkDocs documentation
 
 Running development server:

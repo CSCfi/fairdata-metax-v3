@@ -20,7 +20,7 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
-from apps.core.core_urls import urlpatterns as core_urls
+from apps.router.urls import urlpatterns as router_urls
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -49,10 +49,7 @@ urlpatterns = [
     re_path(r"^watchman/", include("watchman.urls")),
     path("admin/", admin.site.urls),
     path("__debug__/", include("debug_toolbar.urls")),
-    path("reference_data/", include("refdata.urls")),
-    path("actors/", include("actors.urls")),
-    path("rest/v3/", include(core_urls)),
-    path("rest/v3/", include("files.urls")),
+    path("rest/v3/", include(router_urls)),
     path("auth/", include("users.urls")),
 ]
 if settings.ENABLE_DEBUG_TOOLBAR:

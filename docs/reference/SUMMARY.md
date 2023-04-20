@@ -75,6 +75,7 @@
                 - [rdf](src/apps/refdata/services/importers/rdf.md)
             - [indexer](src/apps/refdata/services/indexer.md)
         - [views](src/apps/refdata/views.md)
+    - [router.apps](src/apps/router/apps.md)
     - users
         - [apps](src/apps/users/apps.md)
         - [factories](src/apps/users/factories.md)

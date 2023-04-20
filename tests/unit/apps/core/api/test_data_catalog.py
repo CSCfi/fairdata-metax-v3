@@ -4,44 +4,45 @@ import logging
 import pytest
 
 from apps.core.models import DataCatalog
+from rest_framework.reverse import reverse
 
 logger = logging.getLogger(__name__)
 
+pytestmark = [pytest.mark.django_db, pytest.mark.datacatalog]
 
-@pytest.mark.django_db
-def test_create_datacatalog(client, datacatalog_a_json, reference_data):
-    res = client.post("/rest/v3/datacatalogs", datacatalog_a_json, content_type="application/json")
+
+def test_create_datacatalog(client, datacatalog_a_json, reference_data, data_catalog_list_url):
+    res = client.post(data_catalog_list_url, datacatalog_a_json, content_type="application/json")
     logger.info(str(res.data))
     assert res.status_code == 201
 
 
-@pytest.mark.django_db
-def test_create_minimal_datacatalog(client, datacatalog_d_json, reference_data):
-    res = client.post("/rest/v3/datacatalogs", datacatalog_d_json, content_type="application/json")
+def test_create_minimal_datacatalog(
+    client, datacatalog_d_json, reference_data, data_catalog_list_url
+):
+    res = client.post(data_catalog_list_url, datacatalog_d_json, content_type="application/json")
     logger.info(str(res.data))
     assert res.status_code == 201
 
 
-@pytest.mark.django_db
-def test_create_datacatalog_twice(client, datacatalog_a_json, reference_data):
+def test_create_datacatalog_twice(
+    client, datacatalog_a_json, reference_data, data_catalog_list_url
+):
     _now = datetime.datetime.now()
-    res1 = client.post("/rest/v3/datacatalogs", datacatalog_a_json, content_type="application/json")
+    res1 = client.post(data_catalog_list_url, datacatalog_a_json, content_type="application/json")
     assert res1.status_code == 201
-    res2 = client.post("/rest/v3/datacatalogs", datacatalog_a_json, content_type="application/json")
+    res2 = client.post(data_catalog_list_url, datacatalog_a_json, content_type="application/json")
     assert res2.status_code == 400
 
 
-@pytest.mark.django_db
 def test_change_datacatalog(
-    client,
-    datacatalog_c_json,
-    datacatalog_put_json,
-    reference_data,
+    client, datacatalog_c_json, datacatalog_put_json, reference_data, data_catalog_list_url
 ):
     _now = datetime.datetime.now()
-    res1 = client.post("/rest/v3/datacatalogs", datacatalog_c_json, content_type="application/json")
+
+    res1 = client.post(data_catalog_list_url, datacatalog_c_json, content_type="application/json")
     response = client.put(
-        "/rest/v3/datacatalogs/urn:nbn:fi:att:data-catalog-uusitesti",
+        f"{reverse('datacatalog-detail', args=['urn:nbn:fi:att:data-catalog-uusitesti'])}",
         datacatalog_put_json,
         content_type="application/json",
     )
@@ -51,27 +52,25 @@ def test_change_datacatalog(
     assert len(response.data.get("language")) == 2
 
 
-@pytest.mark.django_db
 def test_change_datacatalog_to_minimal(
-    client, datacatalog_a_json, datacatalog_d_json, reference_data
+    client, datacatalog_a_json, datacatalog_d_json, reference_data, data_catalog_list_url
 ):
     _now = datetime.datetime.now()
-    res1 = client.post("/rest/v3/datacatalogs", datacatalog_a_json, content_type="application/json")
+    res1 = client.post(data_catalog_list_url, datacatalog_a_json, content_type="application/json")
     response = client.put(
-        "/rest/v3/datacatalogs/urn:nbn:fi:att:data-catalog-testi",
+        f"{reverse('datacatalog-detail', args=['urn:nbn:fi:att:data-catalog-testi'])}",
         datacatalog_d_json,
         content_type="application/json",
     )
     assert response.status_code == 200
 
 
-@pytest.mark.django_db
 def test_change_datacatalog_from_minimal(
-    client, datacatalog_a_json, datacatalog_d_json, reference_data
+    client, datacatalog_a_json, datacatalog_d_json, reference_data, data_catalog_list_url
 ):
-    res1 = client.post("/rest/v3/datacatalogs", datacatalog_d_json, content_type="application/json")
+    res1 = client.post(data_catalog_list_url, datacatalog_d_json, content_type="application/json")
     response = client.put(
-        "/rest/v3/datacatalogs/urn:nbn:fi:att:data-catalog-testi",
+        f"{reverse('datacatalog-detail', args=['urn:nbn:fi:att:data-catalog-testi'])}",
         datacatalog_a_json,
         content_type="application/json",
     )
@@ -80,20 +79,17 @@ def test_change_datacatalog_from_minimal(
     assert response.data.get("language")[0].get("url") == "http://lexvo.org/id/iso639-3/fin"
 
 
-@pytest.mark.django_db
-def test_create_datacatalog_error(client, datacatalog_error_json, reference_data):
+def test_create_datacatalog_error(
+    client, datacatalog_error_json, reference_data, data_catalog_list_url
+):
     res = client.post(
-        "/rest/v3/datacatalogs", datacatalog_error_json, content_type="application/json"
+        data_catalog_list_url, datacatalog_error_json, content_type="application/json"
     )
     assert res.status_code == 400
 
 
-@pytest.mark.django_db
-def test_list_datacatalogs(
-    client,
-    post_datacatalog_payloads_a_b_c,
-):
-    response = client.get("/rest/v3/datacatalogs")
+def test_list_datacatalogs(client, post_datacatalog_payloads_a_b_c, data_catalog_list_url):
+    response = client.get(data_catalog_list_url)
     logger.info(f"{response.data=}")
     catalog_count = DataCatalog.available_objects.all().count()
     assert response.status_code == 200
@@ -121,11 +117,10 @@ def test_list_datacatalogs(
         ("language__pref_label__values", "saami", 0),
     ],
 )
-@pytest.mark.django_db
 def test_list_datacatalogs_with_filter(
     client, post_datacatalog_payloads_a_b_c, catalog_filter, filter_value, filter_result
 ):
-    url = "/rest/v3/datacatalogs?{0}={1}".format(catalog_filter, filter_value)
+    url = "/rest/v3/data-catalogs?{0}={1}".format(catalog_filter, filter_value)
     logger.info(url)
     response = client.get(url)
     logger.info(response.data)
@@ -133,30 +128,27 @@ def test_list_datacatalogs_with_filter(
     assert response.data.get("count") == filter_result
 
 
-@pytest.mark.django_db
 def test_list_datacatalogs_with_ordering(client, post_datacatalog_payloads_a_b_c):
-    url = "/rest/v3/datacatalogs?ordering=created"
+    url = "/rest/v3/data-catalogs?ordering=created"
     response = client.get(url)
     results = response.data.get("results")
     assert response.status_code == 200
     assert results[0].get("id") == "urn:nbn:fi:att:data-catalog-testi"
-    url = "/rest/v3/datacatalogs?ordering=-created"
+    url = "/rest/v3/data-catalogs?ordering=-created"
     response = client.get(url)
     results = response.data.get("results")
     assert response.status_code == 200
     assert results[0].get("id") == "urn:nbn:fi:att:data-catalog-uusitesti"
 
 
-@pytest.mark.django_db
 def test_get_datacatalog_by_id(client, post_datacatalog_payloads_a_b_c):
-    response = client.get("/rest/v3/datacatalogs/urn:nbn:fi:att:data-catalog-uusitesti")
+    response = client.get("/rest/v3/data-catalogs/urn:nbn:fi:att:data-catalog-uusitesti")
     assert response.status_code == 200
     assert response.data.get("id") == "urn:nbn:fi:att:data-catalog-uusitesti"
 
 
-@pytest.mark.django_db
 def test_delete_datacatalog_by_id(client, post_datacatalog_payloads_a_b_c):
-    response = client.delete("/rest/v3/datacatalogs/urn:nbn:fi:att:data-catalog-uusitesti")
+    response = client.delete("/rest/v3/data-catalogs/urn:nbn:fi:att:data-catalog-uusitesti")
     assert response.status_code == 204
-    response = client.get("/rest/v3/datacatalogs/urn:nbn:fi:att:data-catalog-uusitesti")
+    response = client.get("/rest/v3/data-catalogs/urn:nbn:fi:att:data-catalog-uusitesti")
     assert response.status_code == 404

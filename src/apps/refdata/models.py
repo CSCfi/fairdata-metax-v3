@@ -1,5 +1,6 @@
 import uuid
 
+import inflection
 from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.db import models
 from rest_framework import serializers
@@ -86,6 +87,10 @@ class AbstractConcept(AbstractBaseModel):
     def __str__(self):
         return f"{self.id}: {self.get_label()}"
 
+    @classmethod
+    def get_model_url(cls) -> str:
+        return f"{inflection.dasherize(inflection.underscore(cls.__name__))}s?"
+
 
 class FieldOfScience(AbstractConcept):
     # TODO: Add codes (skos:notation)
@@ -93,6 +98,11 @@ class FieldOfScience(AbstractConcept):
     is_essential_choice = models.BooleanField(
         default=False, help_text=_("If the field of science should be selectable in model forms")
     )
+
+    @classmethod
+    def get_model_url(cls) -> str:
+        return "fields-of-science"
+
     class Meta(AbstractConcept.Meta):
         verbose_name = "field of science"
         verbose_name_plural = "fields of science"
@@ -176,13 +186,19 @@ class ResourceType(AbstractConcept):
 
 
 class RestrictionGrounds(AbstractConcept):
+    @classmethod
+    def get_model_url(cls) -> str:
+        return "restriction-grounds"
+
     class Meta(AbstractConcept.Meta):
         verbose_name = "restriction grounds"
         verbose_name_plural = "restriction grounds"
 
 
 class UseCategory(AbstractConcept):
-    pass
+    @classmethod
+    def get_model_url(cls) -> str:
+        return "use-categories"
 
 
 reference_data_models = [

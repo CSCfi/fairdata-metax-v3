@@ -3,6 +3,7 @@ import logging
 import os
 
 import pytest
+from rest_framework.reverse import reverse
 from rest_framework.test import APIClient
 
 logger = logging.getLogger(__name__)
@@ -61,6 +62,11 @@ def datacatalog_error_json():
     return load_test_json("datacatalog_error.json")
 
 
+@pytest.fixture(scope="module")
+def data_catalog_list_url():
+    return reverse("datacatalog-list")
+
+
 @pytest.fixture
 def post_datacatalog_payloads_a_b_c(
     client,
@@ -68,9 +74,10 @@ def post_datacatalog_payloads_a_b_c(
     datacatalog_b_json,
     datacatalog_c_json,
     reference_data,
+    data_catalog_list_url,
 ):
     logger.info(__name__)
-    url = "/rest/v3/datacatalogs"
+    url = data_catalog_list_url
     res1 = client.post(url, datacatalog_a_json, content_type="application/json")
     res2 = client.post(url, datacatalog_b_json, content_type="application/json")
     res3 = client.post(url, datacatalog_c_json, content_type="application/json")
@@ -154,6 +161,7 @@ def access_right_put_alfa_json():
 def dataset_access_right_error_json():
     return load_test_json("access_right_error.json")
 
+
 @pytest.fixture
 def metadata_provider_a_json():
     return load_test_json("metadata_provider_a.json")
@@ -168,21 +176,29 @@ def metadata_provider_b_json():
 def metadata_provider_c_json():
     return load_test_json("metadata_provider_c.json")
 
+
 @pytest.fixture
 def metadata_provider_d_json():
     return load_test_json("metadata_provider_d.json")
+
 
 @pytest.fixture
 def metadata_provider_error_json():
     return load_test_json("metadata_provider_error.json")
 
+
 @pytest.fixture
 def metadata_provider_put_c_json():
     return load_test_json("metadata_provider_put_c.json")
 
+
 @pytest.fixture
 def post_metadata_provider_payloads_a_b_c_d(
-    client, metadata_provider_a_json, metadata_provider_b_json, metadata_provider_c_json, metadata_provider_d_json
+    client,
+    metadata_provider_a_json,
+    metadata_provider_b_json,
+    metadata_provider_c_json,
+    metadata_provider_d_json,
 ):
     logger.info(__name__)
     url = "/rest/v3/metadata-provider"

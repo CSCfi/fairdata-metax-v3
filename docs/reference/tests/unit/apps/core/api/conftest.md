@@ -40,6 +40,10 @@
 
 ### :::tests.unit.apps.core.api.conftest.datacatalog_error_json
 
+## data_catalog_list_url
+
+### :::tests.unit.apps.core.api.conftest.data_catalog_list_url
+
 ## post_datacatalog_payloads_a_b_c
 
 ### :::tests.unit.apps.core.api.conftest.post_datacatalog_payloads_a_b_c
