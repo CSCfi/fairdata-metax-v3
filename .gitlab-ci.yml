@@ -18,10 +18,11 @@ variables:
     description: 'Which environment do you want to deploy to?'
     value: 'staging'
     options:
+      - 'demo'
+      - 'rework'
+      - 'stable'
       - 'staging'
       - 'test'
-      - 'demo'
-      - 'stable'
 
 stages:
   - test
