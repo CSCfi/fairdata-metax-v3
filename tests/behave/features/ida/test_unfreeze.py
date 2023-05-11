@@ -5,6 +5,7 @@ from django.utils import timezone
 from pytest_bdd import scenario, then, when
 
 from apps.core import factories
+from apps.core.models import FileSet
 from apps.files.factories import FileFactory
 from apps.files.models import File
 
@@ -23,8 +24,8 @@ def user_unfreeze_request():
 def mark_files_deleted():
     file = FileFactory(date_frozen=timezone.now())
     dataset = factories.DatasetFactory()
-
-    dataset.files.set([file])
+    file_set = FileSet.objects.create(dataset=dataset, file_storage=file.file_storage)
+    file_set.files.set([file])
 
     file.delete()
 

@@ -60,6 +60,10 @@
 
 ### :::src.apps.core.factories.DatasetFactory
 
+## FileSetFactory
+
+### :::src.apps.core.factories.FileSetFactory
+
 ## MetadataProviderFactory
 
 ### :::src.apps.core.factories.MetadataProviderFactory

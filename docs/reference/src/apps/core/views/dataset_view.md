@@ -12,6 +12,10 @@
 
 ### :::src.apps.core.views.dataset_view.DatasetDirectoryViewSet
 
+## DatasetFileSetViewSet
+
+### :::src.apps.core.views.dataset_view.DatasetFileSetViewSet
+
 ## DatasetFilesViewSet
 
 ### :::src.apps.core.views.dataset_view.DatasetFilesViewSet

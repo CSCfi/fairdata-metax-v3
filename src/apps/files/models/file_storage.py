@@ -261,14 +261,14 @@ class FileStorage(ProxyBasePolymorphicModel, AbstractBaseModel):
         )
         return f"<{self.__class__.__name__}: {values}>"
 
-    def get_directory_paths(self, dataset=None) -> Set[str]:
+    def get_directory_paths(self, file_set=None) -> Set[str]:
         """Get directory paths used in the storage as a set.
 
         If dataset is supplied, return only directories belonging to dataset.
         Otherwise all directories are returned."""
         qs = self.files
-        if dataset:
-            qs = qs.filter(datasets=dataset)
+        if file_set:
+            qs = qs.filter(file_sets=file_set)
         file_directory_paths = (
             qs.values_list("directory_path", flat=True)
             .order_by("directory_path")
@@ -296,6 +296,10 @@ class FileStorage(ProxyBasePolymorphicModel, AbstractBaseModel):
     @property
     def key(self) -> tuple:
         return self.get_key(self)
+
+    @property
+    def params_dict(self):
+        return self.remove_unsupported_extra_fields(self.key._asdict())
 
     # Validation for file data conflics
 

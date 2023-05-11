@@ -4,6 +4,10 @@
 
 ### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_post_empty
 
+## test_dataset_files_post_multiple_file_sets
+
+### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_post_multiple_file_sets
+
 ## test_dataset_files_post
 
 ### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_post
@@ -24,13 +28,25 @@
 
 ### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_post_multiple_metadata_updates
 
+## test_dataset_files_post_update_for_existing_metadata
+
+### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_post_update_for_existing_metadata
+
 ## test_dataset_files_post_remove_file_metadata
 
 ### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_post_remove_file_metadata
 
+## test_dataset_files_post_none_file_metadata
+
+### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_post_none_file_metadata
+
 ## test_dataset_files_post_remove_directory_metadata
 
 ### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_post_remove_directory_metadata
+
+## test_dataset_files_post_none_directory_metadata
+
+### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_post_none_directory_metadata
 
 ## test_dataset_files_multiple_post_requests
 
@@ -39,6 +55,14 @@
 ## test_dataset_files_all_metadata_fields
 
 ### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_all_metadata_fields
+
+## test_dataset_files_invalid_file_type
+
+### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_invalid_file_type
+
+## test_dataset_files_invalid_use_category
+
+### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_invalid_use_category
 
 ## test_dataset_files_missing_project_identifier
 
@@ -52,11 +76,11 @@
 
 ### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_unknown_project_identifier
 
-## test_dataset_files_missing_storage_service
+## test_dataset_files_file_from_wrong_storage_service
 
-### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_missing_storage_service
+### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_file_from_wrong_storage_service
 
-## test_dataset_files_unknown_file_storage
+## test_dataset_files_missing_project_identifier
 
-### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_unknown_file_storage
+### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_missing_project_identifier
 

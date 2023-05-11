@@ -1,7 +1,7 @@
 import pytest
 from tests.utils import assert_nested_subdict
 
-from apps.core.models import DatasetDirectoryMetadata
+from apps.core.models import FileSetDirectoryMetadata
 from apps.files.models import FileStorage
 from apps.files.views.directory_view import DirectoryCommonQueryParams
 

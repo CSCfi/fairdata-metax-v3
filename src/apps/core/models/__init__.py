@@ -3,6 +3,7 @@ from .catalog_record import (
     Dataset,
     DatasetActor,
     DatasetProject,
+    FileSet,
     MetadataProvider,
     OtherIdentifier,
     Temporal,
@@ -25,6 +26,6 @@ from .data_catalog import (
     DataCatalog,
     DatasetPublisher,
 )
-from .file_metadata import DatasetDirectoryMetadata, DatasetFileMetadata
+from .file_metadata import FileSetDirectoryMetadata, FileSetFileMetadata
 from .legacy import LegacyDataset
 from .provenance import Provenance, ProvenanceVariable

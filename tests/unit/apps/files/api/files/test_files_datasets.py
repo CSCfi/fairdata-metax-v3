@@ -7,30 +7,36 @@ from apps.core import factories
 def file_tree_with_datasets(file_tree_a):
     tree = file_tree_a
     dataset_a = factories.DatasetFactory()
-    dataset_a.files.set(
-        [
+    tree["dataset_a"] = dataset_a
+    factories.FileSetFactory(
+        dataset=dataset_a,
+        file_storage=file_tree_a["file_storage"],
+        files=[
             file_tree_a["files"]["/dir/a.txt"],
             file_tree_a["files"]["/dir/c.txt"],
-        ]
+        ],
     )
-    tree["dataset_a"] = dataset_a
 
     dataset_b = factories.DatasetFactory()
-    dataset_b.files.set(
-        [
+    tree["dataset_b"] = dataset_b
+    factories.FileSetFactory(
+        dataset=dataset_b,
+        file_storage=file_tree_a["file_storage"],
+        files=[
             tree["files"]["/dir/b.txt"],
             tree["files"]["/dir/c.txt"],
-        ]
+        ],
     )
-    tree["dataset_b"] = dataset_b
 
     dataset_c = factories.DatasetFactory()
-    dataset_c.files.set(
-        [
-            tree["files"]["/dir/c.txt"],
-        ]
-    )
     tree["dataset_c"] = dataset_c
+    factories.FileSetFactory(
+        dataset=dataset_c,
+        file_storage=file_tree_a["file_storage"],
+        files=[
+            tree["files"]["/dir/c.txt"],
+        ],
+    )
 
     tree["dataset_d"] = factories.DatasetFactory()
     return tree

@@ -10,10 +10,11 @@ import logging
 from django_filters import rest_framework as filters
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import exceptions, viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from apps.core.models.catalog_record import Dataset
-from apps.core.serializers import DatasetFilesSerializer, DatasetSerializer
+from apps.core.models.catalog_record import Dataset, FileSet
+from apps.core.serializers import DatasetSerializer, FileSetSerializer
 from apps.files.models import File
 from apps.files.serializers import DirectorySerializer
 from apps.files.views.directory_view import DirectoryCommonQueryParams, DirectoryViewSet
@@ -88,11 +89,10 @@ class DatasetDirectoryViewSet(DirectoryViewSet):
         params["dataset"] = dataset_id
         params["exclude_dataset"] = False
         try:
-            file_storage = Dataset.objects.get(id=dataset_id).file_storage
-            if not file_storage:
-                raise exceptions.NotFound()
+            file_set = FileSet.objects.get(dataset_id=dataset_id)
+            file_storage = file_set.file_storage
             params["file_storage_id"] = file_storage.id
-        except Dataset.DoesNotExist:
+        except FileSet.DoesNotExist:
             raise exceptions.NotFound()
         return params
 
@@ -111,11 +111,45 @@ class DatasetDirectoryViewSet(DirectoryViewSet):
         return super().list(*args, **kwargs)
 
 
-class DatasetFilesViewSet(BaseFileViewSet):
+class DatasetFileSetViewSet(viewsets.ViewSet):
     """API for listing and updating dataset files."""
 
-    filterset_class = FileCommonFilterset
     http_method_names = ["get", "post"]
+    lookup_field = "storage_service"
+
+    def get_dataset(self):
+        try:
+            dataset_id = self.kwargs["dataset_id"]
+            return Dataset.objects.get(id=dataset_id)
+        except Dataset.DoesNotExist:
+            raise exceptions.NotFound()
+
+    def list(self, request, *args, **kwargs):
+        dataset = self.get_dataset()
+        file_set: FileSet
+        try:
+            file_set = dataset.file_set
+        except FileSet.DoesNotExist:
+            raise exceptions.NotFound()
+        serializer = FileSetSerializer(instance=file_set)
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        dataset = self.get_dataset()
+        serializer = FileSetSerializer(
+            data=request.data,
+            context={"dataset": dataset},
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        dataset.save()  # update dataset modification date
+        return Response(serializer.data)
+
+
+class DatasetFilesViewSet(BaseFileViewSet):
+    """API for listing dataset files."""
+
+    filterset_class = FileCommonFilterset
 
     def get_queryset(self):
         # path parameters are not available on drf-yasg inspection
@@ -124,20 +158,9 @@ class DatasetFilesViewSet(BaseFileViewSet):
 
         dataset_id = self.kwargs["dataset_id"]
         files = super().get_queryset()
-        return files.filter(datasets=dataset_id)
-
-    @swagger_auto_schema(
-        request_body=DatasetFilesSerializer,
-        responses={200: DatasetFilesSerializer},
-    )
-    def create(self, request, dataset_id):
-        """Add or remove dataset files and update dataset-specific metadata."""
+        file_set: FileSet
         try:
-            dataset = Dataset.objects.get(id=dataset_id)
-            serializer = DatasetFilesSerializer(instance=dataset.files, data=self.request.data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data)
-
-        except Dataset.DoesNotExist:
-            raise exceptions.NotFound()
+            file_set = FileSet.objects.get(dataset=dataset_id)
+        except FileSet.DoesNotExist:
+            return files.none()
+        return files.filter(file_sets=file_set.id)

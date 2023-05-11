@@ -19,13 +19,13 @@ from apps.core.serializers.common_serializers import (
     MetadataProviderModelSerializer,
 )
 
-from .dataset_files_serializer import DatasetFilesSerializer
+from .dataset_files_serializer import FileSetSerializer
 
 logger = logging.getLogger(__name__)
 
 NestedDatasetObjects = namedtuple(
     "NestedDatasetObjects",
-    "language, theme, fields_of_science, access_rights, metadata_owner, files, actors",
+    "language, theme, fields_of_science, access_rights, metadata_owner, file_set, actors",
 )
 
 
@@ -33,7 +33,7 @@ class DatasetSerializer(serializers.ModelSerializer):
     access_rights = AccessRightsModelSerializer(required=False)
     field_of_science = FieldOfScience.get_serializer()(required=False, many=True)
     actors = DatasetActorModelSerializer(required=False, many=True)
-    files = DatasetFilesSerializer(required=False)
+    data = FileSetSerializer(required=False, source="file_set")
     language = Language.get_serializer()(required=False, many=True)
     metadata_owner = MetadataProviderModelSerializer(required=False)
     theme = Theme.get_serializer()(required=False, many=True)
@@ -46,7 +46,7 @@ class DatasetSerializer(serializers.ModelSerializer):
             "data_catalog",
             "description",
             "field_of_science",
-            "files",
+            "data",
             "issued",
             "language",
             "metadata_owner",
@@ -88,8 +88,9 @@ class DatasetSerializer(serializers.ModelSerializer):
                 for key in settings.DISPLAY_API_LANGUAGES
                 if key in lang["pref_label"].keys()
             }
-        if not instance.file_storage:  # remove files dict from response if no files exist
-            rep.pop("files", None)
+        # remove data dict from response if it's empty
+        if not rep.get("data"):
+            rep.pop("data", None)
         return rep
 
     @staticmethod
@@ -100,7 +101,7 @@ class DatasetSerializer(serializers.ModelSerializer):
             fields_of_science=validated_data.pop("field_of_science", []),
             access_rights=validated_data.pop("access_rights", None),
             metadata_owner=validated_data.pop("metadata_owner", None),
-            files=validated_data.pop("files", None),
+            file_set=validated_data.pop("file_set", None),
             actors=validated_data.pop("actors", None),
         )
 
@@ -111,7 +112,7 @@ class DatasetSerializer(serializers.ModelSerializer):
         metadata_provider_serializer: MetadataProviderModelSerializer = self.fields[
             "metadata_owner"
         ]
-        files_serializer: DatasetFilesSerializer = self.fields["files"]
+        data_serializer: FileSetSerializer = self.fields["data"]
 
         access_rights = None
         if rel_objects.access_rights:
@@ -135,8 +136,8 @@ class DatasetSerializer(serializers.ModelSerializer):
             actors = actors.save(dataset_id=dataset.id)
             dataset.actors.set(list(actors))
 
-        if rel_objects.files:
-            files_serializer.update(dataset.files, rel_objects.files)
+        if rel_objects.file_set:
+            data_serializer.create(dataset=dataset, validated_data=rel_objects.file_set)
 
         return dataset
 
@@ -164,8 +165,12 @@ class DatasetSerializer(serializers.ModelSerializer):
         instance.theme.set(rel_objects.theme)
         instance.field_of_science.set(rel_objects.fields_of_science)
 
-        files_serializer: DatasetFilesSerializer = self.fields["files"]
-        if rel_objects.files:
-            files_serializer.update(instance.files, rel_objects.files)
+        data_serializer: FileSetSerializer = self.fields["data"]
+        if rel_objects.file_set:
+            # Assigning instance.file_set here avoids refetch from db and clearing
+            # non-persistent values added_files_count and removed_files_count
+            instance.file_set = data_serializer.create(
+                dataset=instance, validated_data=rel_objects.file_set
+            )
 
         return super().update(instance, validated_data)

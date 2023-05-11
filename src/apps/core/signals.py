@@ -3,7 +3,7 @@ import logging
 from django.db.models.signals import m2m_changed, post_save, pre_save
 from django.dispatch import receiver
 
-from apps.core.models import Dataset, LegacyDataset
+from apps.core.models import FileSet, LegacyDataset
 
 logger = logging.getLogger(__name__)
 
@@ -20,8 +20,8 @@ def post_process_legacy_dataset(sender, instance: LegacyDataset, **kwargs):
     logger.info(f"post processed {attached_instances=}")
 
 
-@receiver(m2m_changed, sender=Dataset.files.through)
-def handle_files_changed(sender, instance: Dataset, action, **kwargs):
+@receiver(m2m_changed, sender=FileSet.files.through)
+def handle_files_changed(sender, instance: FileSet, action, **kwargs):
     if instance.skip_files_m2m_changed:  # allow skipping handler
         return
 

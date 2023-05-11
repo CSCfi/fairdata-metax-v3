@@ -198,6 +198,23 @@ class DatasetFactory(factory.django.DjangoModelFactory):
     system_creator = factory.SubFactory(MetaxUserFactory)
 
 
+class FileSetFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.FileSet
+        django_get_or_create = ("dataset", "file_storage")
+
+    dataset = factory.SubFactory(DatasetFactory)
+    file_storage = factory.SubFactory(FileStorageFactory)
+
+    @factory.post_generation
+    def files(self, create, extracted, **kwargs):
+        # allow passing files as argument to factory
+        if not create:
+            return
+        if extracted:
+            self.files.set(extracted)
+
+
 class MetadataProviderFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.MetadataProvider

@@ -6,12 +6,14 @@ from apps.core import factories
 @pytest.fixture
 def dataset(file_tree_a):
     dataset = factories.DatasetFactory()
-    dataset.files.set(
-        [
+    factories.FileSetFactory(
+        dataset=dataset,
+        file_storage=file_tree_a["file_storage"],
+        files=[
             file_tree_a["files"]["/dir/a.txt"],
             file_tree_a["files"]["/dir/b.txt"],
             file_tree_a["files"]["/dir/c.txt"],
-        ]
+        ],
     )
     return dataset
 

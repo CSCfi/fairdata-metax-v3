@@ -9,11 +9,11 @@ from .concepts import FileType, UseCategory
 logger = logging.getLogger(__name__)
 
 
-class DatasetFileMetadata(models.Model):
+class FileSetFileMetadata(models.Model):
     """Model for additional metadata for dataset-file relation."""
 
-    dataset = models.ForeignKey(
-        "core.Dataset", related_name="file_metadata", on_delete=models.CASCADE
+    file_set = models.ForeignKey(
+        "core.FileSet", related_name="file_metadata", editable=False, on_delete=models.CASCADE
     )
     file = models.ForeignKey(File, related_name="dataset_metadata", on_delete=models.CASCADE)
     title = models.TextField(null=True, blank=True)
@@ -22,20 +22,20 @@ class DatasetFileMetadata(models.Model):
     use_category = models.ForeignKey(UseCategory, null=True, on_delete=models.SET_NULL)
 
     class Meta:
-        unique_together = [("dataset", "file")]
+        unique_together = [("file_set", "file")]
 
 
-class DatasetDirectoryMetadata(models.Model):
+class FileSetDirectoryMetadata(models.Model):
     """Model for additional metadata for dataset-directory relation."""
 
-    dataset = models.ForeignKey(
-        "core.Dataset",
-        related_name="directory_metadata",
-        editable=False,
-        on_delete=models.CASCADE,
+    file_set = models.ForeignKey(
+        "core.FileSet", related_name="directory_metadata", editable=False, on_delete=models.CASCADE
     )
     directory_path = models.TextField(db_index=True)
     file_storage = models.ForeignKey(FileStorage, on_delete=models.CASCADE)
     title = models.TextField(null=True, blank=True)
     description = models.TextField(null=True, blank=True)
     use_category = models.ForeignKey(UseCategory, null=True, on_delete=models.SET_NULL)
+
+    class Meta:
+        unique_together = [("file_set", "directory_path")]

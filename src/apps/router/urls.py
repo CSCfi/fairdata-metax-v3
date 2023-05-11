@@ -7,6 +7,7 @@ from apps.actors.views import ActorViewSet, OrganizationViewSet
 from apps.core.views import (
     DataCatalogView,
     DatasetDirectoryViewSet,
+    DatasetFileSetViewSet,
     DatasetFilesViewSet,
     DatasetViewSet,
     MetadataProviderViewSet,
@@ -27,15 +28,21 @@ router.register(
 # core app
 router.register(r"data-catalogs?", DataCatalogView, basename="datacatalog")
 router.register(r"datasets?", DatasetViewSet, basename="dataset")
+
 router.register(
-    r"datasets?/(?P<dataset_id>[^/.]+)/files",
-    DatasetFilesViewSet,
-    basename="dataset_files",
+    r"datasets?/(?P<dataset_id>[^/.]+)/data",
+    DatasetFileSetViewSet,
+    basename="dataset-data",
 )
 router.register(
-    r"datasets?/(?P<dataset_id>[^/.]+)/directories",
+    r"datasets?/(?P<dataset_id>[^/.]+)/data/files",
+    DatasetFilesViewSet,
+    basename="dataset-files",
+)
+router.register(
+    r"datasets?/(?P<dataset_id>[^/.]+)/data/directories",
     DatasetDirectoryViewSet,
-    basename="dataset_directories",
+    basename="dataset-directories",
 )
 # router.register(r"dataset-actors?", DatasetActorViewSet, basename="dataset-actor")
 router.register(r"metadata-providers?", MetadataProviderViewSet, basename="metadata-provider")

@@ -203,6 +203,10 @@ class V2DatasetMixin:
                 else:
                     document["research_dataset"][role].append(data)
 
+        total_files_byte_size = 0
+        if file_set := getattr(self, "file_set", None):
+            total_files_byte_size = file_set.total_files_byte_size
+
         doc = {
             "identifier": str(self.id),
             "deprecated": self.is_deprecated,
@@ -219,7 +223,7 @@ class V2DatasetMixin:
                 "description": self.description,
                 "modified": self.modified,
                 "preferred_identifier": self.persistent_identifier,
-                "total_files_byte_size": self.total_files_byte_size,
+                "total_files_byte_size": total_files_byte_size,
                 "keyword": self.keyword,
                 "access_rights": self._generate_v2_access_rights(),
             },

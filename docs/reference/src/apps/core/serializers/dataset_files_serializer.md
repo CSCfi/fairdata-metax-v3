@@ -16,7 +16,7 @@
 
 ### :::src.apps.core.serializers.dataset_files_serializer.DirectoryActionSerializer
 
-## DatasetFilesSerializer
+## FileSetSerializer
 
-### :::src.apps.core.serializers.dataset_files_serializer.DatasetFilesSerializer
+### :::src.apps.core.serializers.dataset_files_serializer.FileSetSerializer
 

@@ -11,9 +11,9 @@ from django.db.models import Model, Q, TextChoices
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
-from apps.core.models import Dataset
+from apps.core.models import FileSet
 from apps.core.models.concepts import FileType, UseCategory
-from apps.core.models.file_metadata import DatasetDirectoryMetadata, DatasetFileMetadata
+from apps.core.models.file_metadata import FileSetDirectoryMetadata, FileSetFileMetadata
 from apps.core.serializers.file_metadata_serializer import (
     DirectoryMetadataSerializer,
     FileMetadataSerializer,
@@ -50,16 +50,16 @@ class DirectoryActionSerializer(ActionSerializerBase):
     dataset_metadata = DirectoryMetadataSerializer(required=False, allow_null=True)
 
 
-class DatasetFilesSerializer(serializers.Serializer):
-    """Serializer for dataset file relations.
+class FileSetSerializer(serializers.Serializer):
+    """Serializer for FileSet and its file relations.
 
-    Returns summary of dataset files with project information and file statistics.
+    Returns summary of files with file storage information and file statistics.
 
     Allows updating data file relations when provided with data in format
     ```
     {
+        "storage_service": ...
         "project_identifier": ...
-        "file_storage": ...
         "directory_actions": [{"action": "add", "directory_path": ..., "dataset_metadata": ...}]
         "file_actions": [{"action": "update", "id": ..., "dataset_metadata": ...}]
     }
@@ -76,29 +76,24 @@ class DatasetFilesSerializer(serializers.Serializer):
     are executed in sequence. Finally, dataset-specific metadata for files and
     directories that no longer belonging to the dataset will be removed.
 
-    Call `update(instance, validated_data)` to apply changes. The instance argument
-    should be a Dataset.files manager."""
+    Usage:
+    * To create or update FileSet, call `.create(validated_data, dataset)`.
+      Dataset argument can be omitted if it's in serializer context.
+    * To update existing FileSet, call `.update(instance, validated_data)`.
+    """
 
     directory_actions = DirectoryActionSerializer(many=True, required=False, write_only=True)
     file_actions = FileActionSerializer(many=True, required=False, write_only=True)
 
-    # Instance provided to the serializer is expected to be a Dataset.files manager.
-    # The instance in source then refers to dataset.files.instance, which is the dataset itself.
-    project_identifier = serializers.CharField(source="instance.project_identifier")
-    storage_service = StorageServiceField(source="instance.storage_service")
+    project_identifier = serializers.CharField(
+        source="file_storage.project_identifier", required=False
+    )
+    storage_service = StorageServiceField(source="file_storage.storage_service")
 
-    added_files_count = serializers.IntegerField(
-        read_only=True, source="instance.added_files_count"
-    )
-    removed_files_count = serializers.IntegerField(
-        read_only=True, source="instance.removed_files_count"
-    )
-    total_files_count = serializers.IntegerField(
-        read_only=True, source="instance.total_files_count"
-    )
-    total_files_byte_size = serializers.IntegerField(
-        read_only=True, source="instance.total_files_byte_size"
-    )
+    added_files_count = serializers.IntegerField(read_only=True)
+    removed_files_count = serializers.IntegerField(read_only=True)
+    total_files_count = serializers.IntegerField(read_only=True)
+    total_files_byte_size = serializers.IntegerField(read_only=True)
 
     def assign_reference_data(self, actions: list, key: str, model: Model):
         """Replace reference data in actions' dataset_metadata with reference data instances."""
@@ -116,11 +111,7 @@ class DatasetFilesSerializer(serializers.Serializer):
         refdata_by_url = model.objects.distinct("url").in_bulk(urls, field_name="url")
         if invalid_types := urls - set(refdata_by_url):
             raise serializers.ValidationError(
-                {
-                    key: _("Invalid {key} values: {values}").format(
-                        key=key, values=list(invalid_types)
-                    )
-                }
+                {key: _("Invalid values: {values}").format(key=key, values=list(invalid_types))}
             )
         # Assign model instances to dataset_metadata
         for action in actions:
@@ -131,21 +122,22 @@ class DatasetFilesSerializer(serializers.Serializer):
     def to_internal_value(self, data):
         value = super().to_internal_value(data)
 
-        # Move values from under instance to data root,
-        # e.g. value["instance"]["project_identifier"] becomes value["project_identifier"]
-        values_from_dataset = value.pop("instance")
-        value = {**value, **values_from_dataset}
-
-        # Get storage project, assign to value
+        # Replace file_storage dict with a FileStorage instance.
+        file_storage_params = value.pop("file_storage", {})
         try:
-            proj = FileStorage.available_objects.get(
-                project_identifier=value["project_identifier"],
-                storage_service=value["storage_service"],
+            FileStorage.validate_object(file_storage_params)
+            storage = FileStorage.available_objects.get(
+                project_identifier=file_storage_params.get("project_identifier"),
+                storage_service=file_storage_params.get("storage_service"),
             )
-            value["file_storage"] = proj
+            value["file_storage"] = storage
         except FileStorage.DoesNotExist:
             raise serializers.ValidationError(
-                {"file_storage": _("Invalid storage_service or project_identifier")}
+                {
+                    "file_storage": _("File storage not found with parameters {}.").format(
+                        file_storage_params
+                    )
+                }
             )
 
         # Convert file_type dicts to FileType instances
@@ -160,6 +152,7 @@ class DatasetFilesSerializer(serializers.Serializer):
     def to_representation(self, instance):
         """Remove file additions and removals from response when files are not being changed."""
         rep = super().to_representation(instance)
+        instance.file_storage.remove_unsupported_extra_fields(rep)
 
         if rep["added_files_count"] is None:
             del rep["added_files_count"]
@@ -177,7 +170,7 @@ class DatasetFilesSerializer(serializers.Serializer):
             files_not_found = file_ids - found_files
             if files_not_found:
                 return {
-                    "file.id": _("Files not found in project: {ids}").format(
+                    "file.id": _("Files not found in FileStorage: {ids}").format(
                         ids=sorted([str(f) for f in files_not_found])
                     )
                 }
@@ -211,17 +204,19 @@ class DatasetFilesSerializer(serializers.Serializer):
             raise serializers.ValidationError(errors)
         return attrs
 
-    def validate_dataset_file_storage(self, dataset, attrs):
-        """Check that new files don't belong to different FileStorage than dataset."""
-        if dataset:
-            if dataset_file_storage := dataset.file_storage:
-                errors = {}
-                if dataset_file_storage.project_identifier != attrs["project_identifier"]:
-                    errors["project_identifier"] = _("Wrong project_identifier for dataset.")
-                if dataset_file_storage.storage_service != attrs["storage_service"]:
-                    errors["storage_service"] = _("Wrong storage_service for dataset.")
-                if errors:
-                    raise serializers.ValidationError(errors)
+    def validate_correct_file_storage(self, file_set: FileSet, attrs: dict):
+        """Check that new files don't belong to different FileStorage than FileSet."""
+        if file_set:
+            errors = {}
+            if (
+                file_set.file_storage.project_identifier
+                != attrs["file_storage"].project_identifier
+            ):
+                errors["project_identifier"] = _("Wrong project_identifier for FileSet.")
+            if file_set.file_storage.storage_service != attrs["file_storage"].storage_service:
+                errors["storage_service"] = _("Wrong storage_service for FileSet.")
+            if errors:
+                raise serializers.ValidationError(errors)
 
     def get_directory_filters(self, directory_actions) -> Dict:
         """Get Q objects for directory additions and removals.
@@ -288,8 +283,10 @@ class DatasetFilesSerializer(serializers.Serializer):
             file_filters = self.get_file_filters(file_actions)
             if add := file_filters.get("add"):
                 combined_adds = combined_adds | add
+                combined_removes = combined_removes & ~add
             if remove := file_filters.get("remove"):
                 combined_removes = combined_removes | remove
+                combined_adds = combined_adds & ~remove
 
         # avoid returning empty Q objects that would match all
         return {
@@ -305,7 +302,7 @@ class DatasetFilesSerializer(serializers.Serializer):
             if "dataset_metadata" in action and action["action"] in (Action.ADD, Action.UPDATE)
         ]
 
-    def update_file_metadata(self, file_actions, dataset):
+    def update_file_metadata(self, file_actions, file_set):
         """Update dataset_metadata for files."""
         if not file_actions:
             return
@@ -317,8 +314,8 @@ class DatasetFilesSerializer(serializers.Serializer):
             file_metadata[action["id"]] = action["dataset_metadata"]
 
         # get existing metadata instances
-        file_metadata_instances = DatasetFileMetadata.objects.filter(
-            dataset=dataset, file_id__in=set(file_metadata)
+        file_metadata_instances = FileSetFileMetadata.objects.filter(
+            file_set=file_set, file_id__in=set(file_metadata)
         )
         file_metadata_instances_by_key = {fm.file_id: fm for fm in file_metadata_instances}
 
@@ -336,21 +333,21 @@ class DatasetFilesSerializer(serializers.Serializer):
 
             else:
                 new_file_metadata.append(
-                    DatasetFileMetadata(
-                        dataset=dataset,
+                    FileSetFileMetadata(
+                        file_set=file_set,
                         file_id=id,
                         **metadata,
                     )
                 )
 
-        DatasetFileMetadata.objects.bulk_update(
+        FileSetFileMetadata.objects.bulk_update(
             file_metadata_instances,
             fields=["title", "description", "file_type", "use_category"],
         )
-        DatasetFileMetadata.objects.bulk_create(new_file_metadata)
-        DatasetFileMetadata.objects.filter(id__in=removed_file_metadata_ids).delete()
+        FileSetFileMetadata.objects.bulk_create(new_file_metadata)
+        FileSetFileMetadata.objects.filter(id__in=removed_file_metadata_ids).delete()
 
-    def update_directory_metadata(self, directory_actions, dataset, file_storage):
+    def update_directory_metadata(self, directory_actions, file_set, file_storage):
         """Update dataset_metadata for directories."""
         if not directory_actions:
             return
@@ -362,8 +359,8 @@ class DatasetFilesSerializer(serializers.Serializer):
             directory_metadata[action["directory_path"]] = action["dataset_metadata"]
 
         # get existing metadata instances
-        directory_metadata_instances = DatasetDirectoryMetadata.objects.filter(
-            dataset=dataset, directory_path__in=set(directory_metadata)
+        directory_metadata_instances = FileSetDirectoryMetadata.objects.filter(
+            file_set=file_set, directory_path__in=set(directory_metadata)
         )
         directory_metadata_instances_by_key = {
             dm.directory_path: dm for dm in directory_metadata_instances
@@ -382,61 +379,93 @@ class DatasetFilesSerializer(serializers.Serializer):
                     setattr(instance, attr, value)  # assign new values
             else:
                 new_directory_metadata.append(
-                    DatasetDirectoryMetadata(
-                        dataset=dataset,
+                    FileSetDirectoryMetadata(
+                        file_set=file_set,
                         file_storage=file_storage,
                         directory_path=path,
                         **metadata,
                     )
                 )
-        DatasetDirectoryMetadata.objects.bulk_update(
+        FileSetDirectoryMetadata.objects.bulk_update(
             directory_metadata_instances,
             fields=["title", "description", "use_category"],
         )
-        DatasetDirectoryMetadata.objects.bulk_create(new_directory_metadata)
-        DatasetDirectoryMetadata.objects.filter(id__in=removed_directory_metadata_ids).delete()
+        FileSetDirectoryMetadata.objects.bulk_create(new_directory_metadata)
+        FileSetDirectoryMetadata.objects.filter(id__in=removed_directory_metadata_ids).delete()
 
-    def update(self, instance: Dataset.files.related_manager_cls, validated_data):
-        """Update file relations and metadata for dataset."""
-        dataset: Dataset = instance.instance
+    def get_or_create_instance_for_dataset(self, validated_data, dataset) -> FileSet:
+        data = validated_data or self.validated_data
+        if (
+            conflicting_file_set := FileSet.objects.filter(dataset=dataset)
+            .exclude(file_storage=data["file_storage"])
+            .first()
+        ):
+            raise serializers.ValidationError(
+                {
+                    "storage_service": _(
+                        "Dataset already has a file set with parameters {}. Cannot add another."
+                    ).format(conflicting_file_set.file_storage.params_dict)
+                }
+            )
+        file_set, created = FileSet.objects.get_or_create(
+            dataset=dataset,
+            file_storage=data["file_storage"],
+        )
+        return file_set
+
+    def create(self, validated_data, dataset=None):
+        """Create or update FileSet and its file relations."""
+        dataset = dataset or self.context.get("dataset")
+        if dataset is None:
+            raise ValueError("Expected dataset in arguments or context.")
+
+        instance = self.get_or_create_instance_for_dataset(validated_data, dataset=dataset)
+        return self.update(instance, validated_data)
+
+    def update(self, instance: FileSet, validated_data):
+        """Update file relations and metadata of FileSet."""
+        self.instance = instance
+        file_set = instance
         file_storage: FileStorage = validated_data["file_storage"]
         directory_actions: list = validated_data.get("directory_actions", [])
         file_actions: list = validated_data.get("file_actions", [])
 
-        self.validate_dataset_file_storage(dataset, validated_data)
+        self.validate_correct_file_storage(file_set, validated_data)
 
         filters = self.get_filters(directory_actions, file_actions)
-        dataset.skip_files_m2m_changed = True  # avoid running metadata cleanup step multiple times
-        dataset.removed_files_count = 0
-        dataset.added_files_count = 0
+        file_set.skip_files_m2m_changed = (
+            True  # avoid running metadata cleanup step multiple times
+        )
+        file_set.removed_files_count = 0
+        file_set.added_files_count = 0
 
         # remove files
         if filters["remove"]:
             files_to_remove = (
-                dataset.files.filter(filters["remove"]).order_by().values_list("id", flat=True)
+                file_set.files.filter(filters["remove"]).order_by().values_list("id", flat=True)
             )
-            dataset.removed_files_count = len(files_to_remove)
-            dataset.files.remove(*files_to_remove)
+            file_set.removed_files_count = len(files_to_remove)
+            file_set.files.remove(*files_to_remove)
 
         # add files
         if filters["add"]:
             files_to_add = (
-                file_storage.files.exclude(datasets=dataset.id)
+                file_storage.files.exclude(file_sets=file_set.id)
                 .filter(filters["add"])
                 .order_by()
                 .values_list("id", flat=True)
             )
-            dataset.added_files_count = len(files_to_add)
-            dataset.files.add(*files_to_add)
+            file_set.added_files_count = len(files_to_add)
+            file_set.files.add(*files_to_add)
 
         # file counts and dataset storage project may have changed, clear cached values
-        dataset.clear_cached_file_properties()
+        file_set.clear_cached_file_properties()
 
         # update dataset-specific metadata
-        self.update_file_metadata(file_actions, dataset)
-        self.update_directory_metadata(directory_actions, dataset, file_storage)
+        self.update_file_metadata(file_actions, file_set)
+        self.update_directory_metadata(directory_actions, file_set, file_storage)
 
         # remove any metadata that points to items not in dataset
-        dataset.remove_unused_file_metadata()
+        file_set.remove_unused_file_metadata()
 
         return instance

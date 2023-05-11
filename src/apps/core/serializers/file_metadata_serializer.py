@@ -9,7 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from apps.core.models.concepts import FileType, UseCategory
-from apps.core.models.file_metadata import DatasetDirectoryMetadata, DatasetFileMetadata
+from apps.core.models.file_metadata import FileSetDirectoryMetadata, FileSetFileMetadata
 
 
 class FileMetadataSerializer(serializers.ModelSerializer):
@@ -17,7 +17,7 @@ class FileMetadataSerializer(serializers.ModelSerializer):
     use_category = UseCategory.get_serializer()(required=False)
 
     class Meta:
-        model = DatasetFileMetadata
+        model = FileSetFileMetadata
         fields = ["title", "description", "file_type", "use_category"]
 
 
@@ -25,5 +25,5 @@ class DirectoryMetadataSerializer(serializers.ModelSerializer):
     use_category = UseCategory.get_serializer()(required=False)
 
     class Meta:
-        model = DatasetDirectoryMetadata
+        model = FileSetDirectoryMetadata
         fields = ["title", "description", "use_category"]

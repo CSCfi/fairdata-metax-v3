@@ -9,7 +9,7 @@ def dataset_json_with_files(deep_file_tree, data_catalog):
     return {
         "data_catalog": data_catalog.id,
         "title": {"en": "Test dataset"},
-        "files": {
+        "data": {
             **deep_file_tree["params"],
             "directory_actions": [
                 {
@@ -36,18 +36,21 @@ def dataset_json_with_no_files(deep_file_tree, data_catalog):
 
 
 @pytest.mark.django_db
-def test_dataset_post_dataset_with_files(client, deep_file_tree, dataset_json_with_files):
+def test_dataset_post_dataset_with_files(
+    client, deep_file_tree, dataset_json_with_files, data_urls
+):
     res = client.post(
         f"/v3/dataset",
         dataset_json_with_files,
         content_type="application/json",
     )
     assert res.status_code == 201
-    assert res.data["files"]["added_files_count"] == 3
-    assert res.data["files"]["removed_files_count"] == 0
-    assert res.data["files"]["total_files_count"] == 3
+    assert res.data["data"]["added_files_count"] == 3
+    assert res.data["data"]["removed_files_count"] == 0
+    assert res.data["data"]["total_files_count"] == 3
 
-    res = client.get(f"/v3/dataset/{res.data['id']}/directories?pagination=false")
+    url = data_urls(res.data["id"])["directories"]
+    res = client.get(url, {"pagination": "false"})
     assert_nested_subdict(
         {
             "directories": [
@@ -70,7 +73,7 @@ def test_dataset_get_dataset_with_files(client, deep_file_tree, dataset_json_wit
 
     res = client.get(f"/v3/dataset/{res.data['id']}")
     assert res.status_code == 200
-    assert res.data["files"] == {
+    assert res.data["data"] == {
         # no added_files_count or removed_files_count should be present for GET
         "storage_service": deep_file_tree["params"]["storage_service"],
         "project_identifier": deep_file_tree["params"]["project_identifier"],
@@ -94,14 +97,15 @@ def test_dataset_get_dataset_with_no_files(client, deep_file_tree, dataset_json_
 
 
 @pytest.mark.django_db
-def test_dataset_modify_dataset_with_files(client, deep_file_tree, dataset_json_with_files):
+def test_dataset_modify_dataset_with_files(
+    client, deep_file_tree, dataset_json_with_files, data_urls
+):
     res = client.post(
         f"/v3/dataset",
         dataset_json_with_files,
         content_type="application/json",
     )
     assert res.status_code == 201
-    dataset_id = res.data["id"]
 
     actions = {
         **deep_file_tree["params"],
@@ -110,17 +114,20 @@ def test_dataset_modify_dataset_with_files(client, deep_file_tree, dataset_json_
     }
 
     dataset_json = {k: v for k, v in res.data.items() if v != None}
+
+    dataset_id = res.data["id"]
+    urls = data_urls(dataset_id)
     res = client.put(
-        f"/v3/dataset/{dataset_id}",
-        {**dataset_json, "files": actions},
+        urls["dataset"],
+        {**dataset_json, "data": actions},
         content_type="application/json",
     )
     assert res.status_code == 200
-    assert res.data["files"]["added_files_count"] == 1
-    assert res.data["files"]["removed_files_count"] == 2
-    assert res.data["files"]["total_files_count"] == 2
+    assert res.data["data"]["added_files_count"] == 1
+    assert res.data["data"]["removed_files_count"] == 2
+    assert res.data["data"]["total_files_count"] == 2
 
-    res = client.get(f"/v3/dataset/{dataset_id}/directories?pagination=false")
+    res = client.get(urls["directories"], {"pagination": "false"})
     assert_nested_subdict(
         {
             "directories": [

@@ -7,25 +7,29 @@ from apps.core import factories
 @pytest.fixture
 def file_tree_with_datasets(file_tree_a):
     dataset_a = factories.DatasetFactory()
-    dataset_a.files.set(
-        [
+    file_tree_a["dataset_a"] = dataset_a
+    factories.FileSetFactory(
+        dataset=dataset_a,
+        file_storage=file_tree_a["file_storage"],
+        files=[
             file_tree_a["files"]["/dir/sub1/file1.csv"],
             file_tree_a["files"]["/dir/sub1/file2.csv"],
             file_tree_a["files"]["/dir/sub6/file.csv"],
             file_tree_a["files"]["/dir/c.txt"],
             file_tree_a["files"]["/dir/d.txt"],
-        ]
+        ],
     )
-    file_tree_a["dataset_a"] = dataset_a
 
     dataset_b = factories.DatasetFactory()
-    dataset_b.files.set(
-        [
+    file_tree_a["dataset_b"] = dataset_b
+    factories.FileSetFactory(
+        dataset=dataset_b,
+        file_storage=file_tree_a["file_storage"],
+        files=[
             file_tree_a["files"]["/dir/sub4/file.csv"],
             file_tree_a["files"]["/dir/sub6/file.csv"],
-        ]
+        ],
     )
-    file_tree_a["dataset_b"] = dataset_b
 
     dataset_c = factories.DatasetFactory()
     file_tree_a["dataset_c"] = dataset_c

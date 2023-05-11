@@ -1,7 +1,28 @@
+from uuid import UUID
 import pytest
+from rest_framework.reverse import reverse
+from typing import Union
 
 from apps.core import factories
+from apps.core.models import Dataset
 from apps.files.factories import create_project_with_files
+
+
+@pytest.fixture
+def data_urls():
+    """Return urls related to dataset data."""
+
+    def f(dataset: Union[Dataset, UUID, str]):
+        dataset_id = dataset.id if isinstance(dataset, Dataset) else dataset
+        kwargs = {"dataset_id": dataset_id}
+        return {
+            "dataset": reverse("dataset-detail", kwargs={"pk": dataset_id}),
+            "file_set": reverse("dataset-data-list", kwargs=kwargs),
+            "files": reverse("dataset-files-list", kwargs=kwargs),
+            "directories": reverse("dataset-directories-list", kwargs=kwargs),
+        }
+
+    return f
 
 
 @pytest.fixture
@@ -48,7 +69,9 @@ def deep_file_tree() -> dict:
 @pytest.fixture
 def dataset_with_files(file_tree):
     dataset = factories.DatasetFactory()
-    dataset.files.set(
+    storage = next(iter(file_tree["files"].values())).file_storage
+    file_set = factories.FileSetFactory(dataset=dataset, file_storage=storage)
+    file_set.files.set(
         [
             file_tree["files"]["/dir1/file.csv"],
             file_tree["files"]["/dir2/a.txt"],
@@ -57,7 +80,8 @@ def dataset_with_files(file_tree):
         ]
     )
     unrelated_dataset = factories.DatasetFactory()
-    unrelated_dataset.files.set(
+    unrelated_file_set = factories.FileSetFactory(dataset=unrelated_dataset, file_storage=storage)
+    unrelated_file_set.files.set(
         [  # this should not affect the first dataset at all
             file_tree["files"]["/dir1/file.csv"],
             file_tree["files"]["/dir2/b.txt"],

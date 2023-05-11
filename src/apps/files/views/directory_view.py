@@ -88,7 +88,7 @@ class DirectoryQueryParams(DirectoryCommonQueryParams):
     storage_service = StorageServiceField(write_only=True)
     project_identifier = fields.CharField(write_only=True, default=None)
 
-    # project_id is determined from project_identifier and storage_service
+    # FileStorage is determined from project_identifier and storage_service
     file_storage_id = fields.CharField(read_only=True)
 
     # project-wide filters (affect nested files and returned file_count, byte_size)
@@ -133,9 +133,9 @@ class DirectoryViewSet(viewsets.ViewSet):
         exclude_args = dict()
         if dataset := params["dataset"]:
             if params["exclude_dataset"]:
-                exclude_args["datasets"] = dataset
+                exclude_args["file_sets__dataset"] = dataset
             else:
-                filter_args["datasets"] = dataset
+                filter_args["file_sets__dataset"] = dataset
         filter_args = {key: value for (key, value) in filter_args.items() if value is not None}
 
         return File.available_objects.filter(**filter_args).exclude(**exclude_args)
@@ -312,7 +312,7 @@ class DirectoryViewSet(viewsets.ViewSet):
                 # Files may be or File instances or .values() dicts.
                 file_metadata = (
                     get_file_metadata_model()
-                    .objects.filter(dataset_id=dataset)
+                    .objects.filter(file_set__dataset_id=dataset)
                     .prefetch_related("file_type")
                     .distinct("file_id")
                     .in_bulk([get_attr_or_item(f, "id") for f in files], field_name="file_id")
@@ -325,7 +325,7 @@ class DirectoryViewSet(viewsets.ViewSet):
                 directory_paths = [params["path"]]
                 directory_paths += [d["directory_path"] for d in matching_subdirs]
                 directory_metadata_list = get_directory_metadata_model().objects.filter(
-                    dataset_id=dataset, directory_path__in=directory_paths
+                    file_set__dataset_id=dataset, directory_path__in=directory_paths
                 )
                 directory_metadata = {d.directory_path: d for d in directory_metadata_list}
                 metadata["directory_metadata"] = directory_metadata

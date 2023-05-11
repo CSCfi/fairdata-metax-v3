@@ -235,8 +235,8 @@ factory.random.reseed_random(FACTORY_BOY_RANDOM_SEED)
 # Allow access to dataset file metadata models and serializers
 # without depending explicitly on the core app
 DATASET_FILE_METADATA_MODELS = {
-    "file": "apps.core.models.file_metadata.DatasetFileMetadata",
-    "directory": "apps.core.models.file_metadata.DatasetDirectoryMetadata",
+    "file": "apps.core.models.file_metadata.FileSetFileMetadata",
+    "directory": "apps.core.models.file_metadata.FileSetDirectoryMetadata",
 }
 DATASET_FILE_METADATA_SERIALIZERS = {
     "file": "apps.core.serializers.file_metadata_serializer.FileMetadataSerializer",

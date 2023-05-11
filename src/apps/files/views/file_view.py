@@ -66,7 +66,7 @@ class FileFilterSet(FileCommonFilterset):
         field_name="file_storage__storage_service",
         max_length=255,
     )
-    dataset = filters.UUIDFilter(field_name="datasets__id")
+    dataset = filters.UUIDFilter(field_name="file_sets__dataset_id")
 
     class Meta:
         model = File
@@ -121,7 +121,7 @@ class BaseFileViewSet(viewsets.ModelViewSet):
             # Get file metadata objects as dict by file id
             file_metadata = (
                 get_file_metadata_model()
-                .objects.filter(dataset_id=dataset_id)
+                .objects.filter(file_set__dataset_id=dataset_id)
                 .prefetch_related("file_type")
                 .distinct("file_id")
                 .in_bulk([f.id for f in files], field_name="file_id")
@@ -164,18 +164,21 @@ class FileViewSet(BaseFileViewSet):
 
         # Fetch a queryset with dict in the format of {key: id, values: [id1, id2, ...]}
         queryset = []
-        if params["keys"] == "files":  # keys are files
+        if params["keys"] == "files":  # keys are files, return file_id->dataset_id
             files = File.objects.filter(id__in=ids)
-            queryset = files.values(key=F("id")).exclude(datasets__id=None)
+            queryset = files.values(key=F("id")).exclude(file_sets__id=None)
             if not params["keysonly"]:
                 queryset = queryset.annotate(
-                    values=ArrayAgg("datasets__id", filter=Q(datasets__is_deprecated=False))
+                    values=ArrayAgg(
+                        "file_sets__dataset__id", filter=Q(file_sets__dataset__is_deprecated=False)
+                    )
                 )
-        else:  # keys are datasets
-            datasets = File.datasets.rel.related_model.available_objects.filter(id__in=ids).filter(
-                is_deprecated=False
+        else:  # keys are datasets, return dataset_id->file_id
+            file_set_model = File.file_sets.rel.related_model
+            file_sets = file_set_model.available_objects.filter(dataset_id__in=ids).filter(
+                dataset__is_deprecated=False
             )
-            queryset = datasets.values(key=F("id")).exclude(files__id=None)
+            queryset = file_sets.values(key=F("dataset_id")).exclude(files__id=None)
             if not params["keysonly"]:
                 queryset = queryset.annotate(values=ArrayAgg("files__id"))
 

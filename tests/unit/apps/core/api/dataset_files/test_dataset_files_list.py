@@ -7,8 +7,9 @@ from apps.core import factories
 
 
 @pytest.mark.django_db
-def test_dataset_files(client, dataset_with_files):
-    res = client.get(f"/v3/datasets/{dataset_with_files.id}/files")
+def test_dataset_files(client, dataset_with_files, data_urls):
+    url = data_urls(dataset_with_files)["files"]
+    res = client.get(url)
     assert res.status_code == 200
     assert_nested_subdict(
         {
@@ -25,9 +26,10 @@ def test_dataset_files(client, dataset_with_files):
 
 
 @pytest.mark.django_db
-def test_dataset_directories(client, dataset_with_files):
+def test_dataset_directories(client, dataset_with_files, data_urls):
+    url = data_urls(dataset_with_files)["directories"]
     res = client.get(
-        f"/v3/datasets/{dataset_with_files.id}/directories",
+        url,
         {
             "pagination": False,
             "path": "/dir2/",
@@ -55,10 +57,24 @@ def test_dataset_directories(client, dataset_with_files):
 
 
 @pytest.mark.django_db
-def test_dataset_directories_no_files(client, dataset_with_files):
+def test_dataset_directories_no_files(client, dataset_with_files, data_urls):
     another_dataset = factories.DatasetFactory()
+    url = data_urls(another_dataset)["directories"]
     res = client.get(
-        f"/v3/datasets/{another_dataset.id}/directories",
+        url,
+        {
+            "pagination": False,
+        },
+    )
+    assert res.status_code == 404
+
+
+@pytest.mark.django_db
+def test_dataset_file_set_no_files(client, dataset_with_files, data_urls):
+    another_dataset = factories.DatasetFactory()
+    url = data_urls(another_dataset)["file_set"]
+    res = client.get(
+        url,
         {
             "pagination": False,
         },

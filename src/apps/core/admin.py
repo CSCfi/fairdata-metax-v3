@@ -16,6 +16,7 @@ from apps.core.models import (
     DatasetLicense,
     DatasetProject,
     DatasetPublisher,
+    FileSet,
     LegacyDataset,
     MetadataProvider,
     OtherIdentifier,
@@ -165,6 +166,11 @@ class ContractAdmin(AbstractDatasetPropertyBaseAdmin):
 
 @admin.register(DatasetLicense)
 class LicenseAdmin(AbstractDatasetPropertyBaseAdmin):
+    pass
+
+
+@admin.register(FileSet)
+class FileSetAdmin(AbstractDatasetPropertyBaseAdmin):
     pass
 
 

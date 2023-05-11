@@ -28,3 +28,7 @@
 
 ### :::src.apps.core.models.catalog_record.DatasetProject
 
+## FileSet
+
+### :::src.apps.core.models.catalog_record.FileSet
+

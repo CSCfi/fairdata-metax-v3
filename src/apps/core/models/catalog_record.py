@@ -21,7 +21,7 @@ from apps.refdata import models as refdata
 from .concepts import FieldOfScience, IdentifierType, Language, Theme
 from .contract import Contract
 from .data_catalog import AccessRights, DataCatalog
-from .file_metadata import DatasetDirectoryMetadata, DatasetFileMetadata
+from .file_metadata import FileSetDirectoryMetadata, FileSetFileMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -189,8 +189,6 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         default=StateChoices.DRAFT,
     )
 
-    files = models.ManyToManyField(File, related_name="datasets")
-
     first = models.ForeignKey(
         "self",
         on_delete=models.SET_NULL,
@@ -231,71 +229,6 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         default=CumulativeState.NOT_CUMULATIVE,
         help_text="Cumulative state",
     )
-
-    added_files_count: Optional[int] = None  # files added in request
-
-    removed_files_count: Optional[int] = None  # files removed in request
-
-    skip_files_m2m_changed = False  # enable to skip signal handler on file change
-
-    @cached_property
-    def total_files_aggregates(self) -> dict:
-        return self.files.aggregate(
-            total_files_count=Count("*"), total_files_byte_size=Coalesce(Sum("byte_size"), 0)
-        )
-
-    @property
-    def total_files_byte_size(self) -> int:
-        return self.total_files_aggregates["total_files_byte_size"]
-
-    @property
-    def total_files_count(self) -> int:
-        return self.total_files_aggregates["total_files_count"]
-
-    @cached_property
-    def file_storage(self) -> Optional[FileStorage]:
-        """FileStorage is not currently stored in model and has to be determined from files."""
-        if file := self.dataset.files.only("file_storage").select_related("file_storage").first():
-            return file.file_storage
-
-    @property
-    def project_identifier(self) -> Optional[str]:
-        if storage := self.file_storage:
-            return storage.project_identifier
-
-    @property
-    def storage_service(self) -> Optional[str]:
-        if storage := self.file_storage:
-            return storage.storage_service
-
-    def clear_cached_file_properties(self):
-        """Clear cached file properties after changes to dataset files."""
-        for prop in ["total_files_aggregates", "file_storage"]:
-            try:
-                delattr(self, prop)
-            except AttributeError:
-                logger.info(f"No property {prop} in cache.")
-
-    def remove_unused_file_metadata(self):
-        """Remove file and directory metadata for files and directories not in dataset."""
-
-        # remove metadata for files not in dataset
-        unused_file_metadata = DatasetFileMetadata.objects.filter(dataset=self).exclude(
-            file__datasets=self
-        )
-        unused_file_metadata.delete()
-
-        # remove metadata for directories not in dataset
-        file_storages = FileStorage.objects.filter(
-            datasetdirectorymetadata__in=self.directory_metadata.all()
-        )
-        # only one storage project is expected but this works with multiple
-        for file_storage in file_storages:
-            dataset_directory_paths = file_storage.get_directory_paths(dataset=self)
-            unused_directory_metadata = DatasetDirectoryMetadata.objects.filter(
-                file_storage=file_storage
-            ).exclude(directory_path__in=dataset_directory_paths)
-            unused_directory_metadata.delete()
 
     def delete(self, *args, **kwargs):
         if self.access_rights:
@@ -425,3 +358,69 @@ class DatasetProject(AbstractBaseModel):
     funder_type = models.ForeignKey(
         refdata.FunderType, on_delete=models.SET_NULL, null=True, blank=True
     )
+
+
+class FileSet(AbstractBaseModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    file_storage = models.ForeignKey(
+        FileStorage, related_name="file_sets", on_delete=models.CASCADE
+    )
+    dataset = models.OneToOneField(Dataset, related_name="file_set", on_delete=models.CASCADE)
+    files = models.ManyToManyField(File, related_name="file_sets")
+
+    added_files_count: Optional[int] = None  # files added in request
+
+    removed_files_count: Optional[int] = None  # files removed in request
+
+    skip_files_m2m_changed = False  # enable to skip signal handler on file changes
+
+    @cached_property
+    def total_files_aggregates(self) -> dict:
+        return self.files.aggregate(
+            total_files_count=Count("*"), total_files_byte_size=Coalesce(Sum("byte_size"), 0)
+        )
+
+    @property
+    def total_files_byte_size(self) -> int:
+        return self.total_files_aggregates["total_files_byte_size"]
+
+    @property
+    def total_files_count(self) -> int:
+        return self.total_files_aggregates["total_files_count"]
+
+    @property
+    def project_identifier(self) -> str:
+        return self.file_storage.project_identifier
+
+    @property
+    def storage_service(self) -> str:
+        return self.file_storage.storage_service
+
+    def clear_cached_file_properties(self):
+        """Clear cached file properties after changes to FileSet files."""
+        for prop in ["total_files_aggregates"]:
+            try:
+                delattr(self, prop)
+            except AttributeError:
+                logger.info(f"No property {prop} in cache.")
+
+    def remove_unused_file_metadata(self):
+        """Remove file and directory metadata for files and directories not in FileSet."""
+
+        # remove metadata for files not in FileSet
+        unused_file_metadata = FileSetFileMetadata.objects.filter(file_set=self).exclude(
+            file__file_sets=self
+        )
+        unused_file_metadata.delete()
+
+        # remove metadata for directories not in FileSet
+        file_storages = FileStorage.objects.filter(
+            filesetdirectorymetadata__in=self.directory_metadata.all()
+        )
+        # only one storage project is expected but this works with multiple
+        for file_storage in file_storages:
+            dataset_directory_paths = file_storage.get_directory_paths(file_set=self)
+            unused_directory_metadata = FileSetDirectoryMetadata.objects.filter(
+                file_storage=file_storage
+            ).exclude(directory_path__in=dataset_directory_paths)
+            unused_directory_metadata.delete()

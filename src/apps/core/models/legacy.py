@@ -12,6 +12,7 @@ from django.utils.dateparse import parse_datetime
 
 from apps.actors.models import Actor, Organization
 from apps.common.helpers import parse_iso_dates_in_nested_dict
+from apps.core.models import FileSet
 from apps.files.models import File, FileStorage
 from apps.files.serializers.file_serializer import get_or_create_file_storage
 from apps.refdata.models import FunderType, License, Location
@@ -42,11 +43,22 @@ from .provenance import Provenance, ProvenanceVariable
 logger = logging.getLogger(__name__)
 
 PreparedInstances = namedtuple(
-    "PreparedInstances", "access_rights, data_catalog, contract, metadata_owner"
+    "PreparedInstances", ["access_rights", "data_catalog", "contract", "metadata_owner"]
 )
 PostProcessedInstances = namedtuple(
     "PostProcessedInstances",
-    "languages, spatial, creators, files, temporal, other_identifiers, field_of_science, provenance, publisher, projects",
+    [
+        "languages",
+        "spatial",
+        "creators",
+        "file_set",
+        "temporal",
+        "other_identifiers",
+        "field_of_science",
+        "provenance",
+        "publisher",
+        "projects",
+    ],
 )
 
 
@@ -402,7 +414,7 @@ class LegacyDataset(Dataset):
         return actors
 
     def attach_files(self):
-        file_objects = []
+        file_storage_file_objects = {}
         if files := self.files_json:
             for f in files:
                 file_id = f["identifier"]
@@ -416,7 +428,6 @@ class LegacyDataset(Dataset):
                     project_identifier=f["project_identifier"],
                     storage_service=storage_service,
                 )
-
                 new_file, created = File.objects.get_or_create(
                     file_storage_identifier=file_id,
                     defaults={
@@ -433,9 +444,16 @@ class LegacyDataset(Dataset):
                 )
                 if file_checksum:
                     new_file.checksum = file_checksum
-                file_objects.append(new_file)
-        self.files.set(file_objects)
-        return file_objects
+
+                file_storage_file_objects.setdefault(file_storage.id, []).append(new_file)
+
+        file_set = None
+        for storage_id, file_objects in file_storage_file_objects.items():
+            file_set, created = FileSet.objects.get_or_create(
+                dataset=self, file_storage_id=storage_id
+            )
+            file_set.files.set(file_objects)
+        return file_set
 
     def attach_provenance(self):
         """
@@ -605,7 +623,7 @@ class LegacyDataset(Dataset):
             spatial=self.attach_spatial(),
             creators=self.attach_actor("creator"),
             publisher=self.attach_actor("publisher"),
-            files=self.attach_files(),
+            file_set=self.attach_files(),
             temporal=self.attach_temporal(),
             other_identifiers=self.attach_other_identifiers(),
             field_of_science=self.attach_ref_data_list(

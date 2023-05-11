@@ -1,10 +1,10 @@
 # file_metadata
 
-## DatasetFileMetadata
+## FileSetFileMetadata
 
-### :::src.apps.core.models.file_metadata.DatasetFileMetadata
+### :::src.apps.core.models.file_metadata.FileSetFileMetadata
 
-## DatasetDirectoryMetadata
+## FileSetDirectoryMetadata
 
-### :::src.apps.core.models.file_metadata.DatasetDirectoryMetadata
+### :::src.apps.core.models.file_metadata.FileSetDirectoryMetadata
 
