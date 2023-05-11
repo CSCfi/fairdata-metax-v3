@@ -80,6 +80,10 @@ Also named CatalogRecord in V1-V2. Main difference is removing the research_data
 
 #### Creating a dataset
 
+!!! NOTE
+
+    If you want to try out the dataset creation with this example, create the data-catalog first. Example data-catalog creation request can be found under DataCatalog in this article.
+
 `POST /datasets`
 
 === "V2"
@@ -103,7 +107,6 @@ Also named CatalogRecord in V1-V2. Main difference is removing the research_data
             "title": {
               "fi": "Otsikko"
             },
-            "issued": "2022-12-15",
             "creator": [
               {
                 "name": "Creator One",
@@ -168,17 +171,18 @@ Also named CatalogRecord in V1-V2. Main difference is removing the research_data
     ``` json
     {
         "data_catalog": "urn:nbn:fi:att:data-catalog-ida",
-        "theme": {
-            "url": "http://www.yso.fi/onto/koko/p32261",
-            "in_scheme": "http://www.yso.fi/onto/koko/",
-            "pref_label": {
-                "fi": "roolipelit"
+        "theme": [
+            {
+                "url": "http://www.yso.fi/onto/koko/p32261",
+                "in_scheme": "http://www.yso.fi/onto/koko/",
+                "pref_label": {
+                    "fi": "roolipelit"
+                }
             }
-        },
+        ],
         "title": {
             "fi": "Otsikko"
         },
-        "issued": "2022-12-15",
         "actors": [
             {
                 "role": "creator",
@@ -187,47 +191,49 @@ Also named CatalogRecord in V1-V2. Main difference is removing the research_data
             }
         ],
         "language": [
-            "url": ""http://lexvo.org/id/iso639-3/fin",
-            "pref_label": {
-                "fi": "suomi"
-            },
-            "in_scheme": "http://lexvo.org/id/"
+            {
+                "url": "http://lexvo.org/id/iso639-3/fin",
+                "pref_label": {
+                    "fi": "suomi"
+                },
+                "in_scheme": "http://lexvo.org/id/"
+            }
         ],
         "description": {
             "fi": "Kuvaus"
         },
         "access_rights": {
             "description": {
-                "fi": "kuvaus",
+                "fi": "kuvaus"
             },
             "license": [
                 {
                     "pref_label": {
                         "fi": "Creative Commons Nimeä 4.0 Kansainvälinen (CC BY 4.0)"
-                    }
-                    "url": "https://creativecommons.org/licenses/by/4.0/"
+                    },
+                    "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC0-1.0"
                 }
             ],
             "access_type": {
                 "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open",
                 "in_scheme": "http://uri.suomi.fi/codelist/fairdata/access_type",
                 "pref_label": {
-                    "fi": "Avoin",
+                    "fi": "Avoin"
                 }
-        },
-        "field_of_science": [
-            {
-                "url": "http://www.yso.fi/onto/okm-tieteenala/ta112",
-                "in_scheme": "http://www.yso.fi/onto/okm-tieteenala/conceptscheme",
-                "pref_label": {
-                    "fi": "Tilastotiede",
+            },
+            "field_of_science": [
+                {
+                    "url": "http://www.yso.fi/onto/okm-tieteenala/ta112",
+                    "in_scheme": "http://www.yso.fi/onto/okm-tieteenala/conceptscheme",
+                    "pref_label": {
+                        "fi": "Tilastotiede"
+                    }
                 }
-            }
-        ],
-        "persistent_identifier": "doi:10.23729/c23fbb80-4952-4a4a-82bd-a4016375a68b",
-        "state": "published",
-        "cumulative_state: 1,
-        "metadata_owner": {
+            ],
+            "persistent_identifier": "doi:10.23729/c23fbb80-4952-4a4a-82bd-a4016375aasd",
+            "state": "published",
+            "cumulative_state": 1,
+            "metadata_owner": {
                 "user": {
                     "username": "teppo",
                     "email": "teppo@csc.fi",
@@ -235,6 +241,7 @@ Also named CatalogRecord in V1-V2. Main difference is removing the research_data
                     "last_name": "Teppo"
                 },
                 "organization": "CSC"
+            }
         }
     }
     ``` 
@@ -275,6 +282,145 @@ Also named CatalogRecord in V1-V2. Main difference is removing the research_data
 | N/A                  | publisher__homepage__url                       |
 | N/A                  | publisher__name__values                        |
 | N/A                  | title__values                                  |
+
+
+### Examples
+
+#### Creating a data-catalog
+
+`POST /data-catalog`
+
+=== "V2"
+
+    ``` json
+    {
+        "catalog_json": {
+            "modified": "2014-01-17T08:19:58Z",
+            "issued": "2014-02-27",
+            "title": {
+                "fi": "Testidatakatalogin nimi",
+                "en": "Test data catalog name"
+            },
+            "harvested": false,
+            "language": [
+                {
+                    "identifier": "http://lexvo.org/id/iso639-3/fin",
+                    "title": {
+                        "sv": "finska",
+                        "en": "Finnish",
+                        "fi": "suomi",
+                        "und": "suomi"
+                    }
+                }
+            ],
+            "homepage": [
+                {
+                    "identifier": "http://testing.com",
+                    "title": {
+                        "en": "Test website",
+                        "fi": "Testi-verkkopalvelu"
+                    }
+                }
+            ],
+            "publisher": {
+                "identifier": "http://isni.org/isni/0000000405129137",
+                "name": {
+                    "fi": "Datakatalogin julkaisijaorganisaatio",
+                    "en": "Data catalog publisher organization"
+                },
+                "homepage": [
+                    {
+                        "identifier": "http://www.publisher.fi/",
+                        "title": {
+                            "fi": "Julkaisijaorganisaation kotisivu",
+                            "en": "Publisher organization website"
+                        }
+                    }
+                ]
+            },
+            "access_rights": {
+                "description": {
+                    "fi": "Käyttöehtojen kuvaus"
+                },
+                "access_type": [
+                    {
+                        "identifier": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open",
+                        "pref_label": {
+                            "fi": "Avoin",
+                            "en": "Open",
+                            "und": "Avoin"
+                        }
+                    }
+                ],
+                "license": [
+                    {
+                        "identifier": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0",
+                        "title": {
+                            "fi": "Creative Commons Nimeä 4.0 Kansainvälinen (CC BY 4.0)",
+                            "en": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+                            "und": "Creative Commons Nimeä 4.0 Kansainvälinen (CC BY 4.0)"
+                        }
+                    }
+                ]
+            },
+            "research_dataset_schema": "att",
+            "dataset_versioning": true
+        },
+        "service_created": "metax",
+        "catalog_record_services_create": "testuser,api_auth_user,metax,tpas",
+        "catalog_record_services_edit": "testuser,api_auth_user,metax,tpas",
+        "catalog_record_services_read": "testuser,api_auth_user,metax,tpas"
+    }
+    ```
+
+=== "V3"
+
+    ``` json
+    {
+        "title": {
+            "en": "Testing catalog",
+            "fi": "Testi katalogi"
+        },
+        "language": [
+            {
+                "url": "http://lexvo.org/id/iso639-3/fin"
+            }
+        ],
+        "harvested": false,
+        "publisher": {
+            "name": {
+                "en": "Testing",
+                "fi": "Testi"
+            },
+            "homepage": [
+                {
+                    "title": {
+                        "en": "Publisher organization website",
+                        "fi": "Julkaisijaorganisaation kotisivu"
+                    },
+                    "url": "http://www.testi.fi/"
+                }
+            ]
+        },
+        "id": "urn:nbn:fi:att:data-catalog-ida",
+        "access_rights": {
+            "license": [
+                {
+                    "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC0-1.0"
+                }
+            ],
+            "access_type": {
+                "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open"
+            },
+            "description": {
+                "en": "Contains datasets from IDA service",
+                "fi": "Sisältää aineistoja IDA-palvelusta"
+            }
+        },
+        "dataset_versioning_enabled": false,
+        "dataset_schema": "att"
+    }
+    ```
 
 ## Contract
 
