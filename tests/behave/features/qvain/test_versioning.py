@@ -59,9 +59,9 @@ def prev_dataset_exists(created_new_dataset_version, published_dataset):
     assert created_new_dataset_version.previous == published_dataset
 
 
-@pytest.mark.django_db
 @pytest.mark.xfail(raises=NotImplementedError)
 @scenario("dataset.feature", "Publishing new version from dataset")
+@pytest.mark.django_db
 def test_dataset_new_version(created_new_dataset_version, published_dataset):
     assert (
         created_new_dataset_version.persistent_identifier

@@ -24,7 +24,10 @@ logger = logging.getLogger(__name__)
                 "dictionary_item_added": [
                     "root['research_dataset']['creator'][0]['member_of']['identifier']",
                     "root['research_dataset']['creator'][1]['member_of']['identifier']",
-                ]
+                ],
+                # "dictionary_item_removed": [
+                #     "root['research_dataset']['access_rights']['license'][0]['title']['und']"
+                # ],
             },
         ),
         (
@@ -36,8 +39,7 @@ logger = logging.getLogger(__name__)
                     # This can be resolved by preparing dataset before DeepDiff comparison, or writing custom operator
                     # for DeepDiff.
                     "root['research_dataset']['theme']",
-                    # License named field in License model in problematic when trying to build foreign-keys into it.
-                    "root['research_dataset']['access_rights']['license'][0]['license']",
+                    # "root['research_dataset']['access_rights']['license'][0]['title']['und']",
                 ]
             },
         ),
@@ -58,7 +60,6 @@ logger = logging.getLogger(__name__)
                     # Remote resources is not modeled yet
                     "root['research_dataset']['remote_resources']",
                     "root['research_dataset']['total_remote_resources_byte_size']",
-                    "root['research_dataset']['access_rights']['license'][0]['license']",
                     # Spatial as_wkt information needs to be passed through adapter
                     "root['research_dataset']['spatial'][0]['as_wkt']",
                     "root['research_dataset']['provenance'][0]['spatial']['as_wkt']",
@@ -70,7 +71,9 @@ logger = logging.getLogger(__name__)
 )
 @pytest.mark.adapter
 @pytest.mark.django_db
-def test_v2_to_v3_dataset_conversion(test_file_path, files_path, expected_diff):
+def test_v2_to_v3_dataset_conversion(
+    license_reference_data, test_file_path, files_path, expected_diff
+):
     # Data prep
     test_data_path = os.path.dirname(os.path.abspath(__file__)) + "/testdata/"
     data = None

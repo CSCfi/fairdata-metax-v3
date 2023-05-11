@@ -7,7 +7,7 @@ from apps.core.models import DataCatalog
 
 
 @given("there is an existing data-catalog", target_fixture="data_catalog")
-def exists_datacatalog() -> DataCatalog:
+def exists_datacatalog(reference_data) -> DataCatalog:
     """
 
     Returns:
@@ -18,7 +18,7 @@ def exists_datacatalog() -> DataCatalog:
 
 
 @when("the user removes the data-catalog", target_fixture="datacatalog_delete_request")
-def remove_datacatalog(data_catalog, admin_client):
+def remove_datacatalog(data_catalog, admin_client, reference_data):
     """
 
     Args:
@@ -56,7 +56,7 @@ def is_response_delete_ok(datacatalog_delete_request):
     assert datacatalog_delete_request.status_code == 204
 
 
-@pytest.mark.django_db
 @scenario("datacatalog.feature", "Deleting data-catalog")
+@pytest.mark.django_db
 def test_delete_datacatalog():
     assert True

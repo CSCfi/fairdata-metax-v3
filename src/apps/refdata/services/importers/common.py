@@ -46,7 +46,7 @@ class BaseDataImporter(ReferenceDataImporterInterface):
 
     def get_existing_objects_by_url(self):
         """Return dict of reference data objects by URL."""
-        all_reference_objects = self.model.all_objects.filter(is_reference_data=True)
+        all_reference_objects = self.model.all_objects.all()
         return {object.url: object for object in all_reference_objects}
 
     def assign_fields(self, data_item, obj):
@@ -73,7 +73,7 @@ class BaseDataImporter(ReferenceDataImporterInterface):
             obj = objects_by_url.get(url)
             is_new = not obj
             if is_new:
-                obj = self.model(url=url, is_reference_data=True)
+                obj = self.model(url=url)
                 objects_by_url[url] = obj
 
             self.assign_fields(data_item, obj)

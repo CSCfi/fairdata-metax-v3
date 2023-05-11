@@ -13,7 +13,7 @@ def organization_tree():
     org1_2 = OrganizationFactory.create(parent=org1)
     org1_2_3 = OrganizationFactory.create(parent=org1_2)
     org1_2_4 = OrganizationFactory.create(parent=org1_2)
-    org1_5 = OrganizationFactory.create(parent=org1)
+    org1_3 = OrganizationFactory.create(parent=org1)
 
 
 def get_code_trees(orgs):

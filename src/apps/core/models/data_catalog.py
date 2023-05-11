@@ -6,7 +6,7 @@ from django.db import models
 from simple_history.models import HistoricalRecords
 
 from apps.common.models import AbstractBaseModel, AbstractDatasetProperty, AbstractFreeformConcept
-from apps.core.models.concepts import AccessType, Language, License
+from apps.core.models.concepts import AccessType, Language, DatasetLicense
 
 
 class DataCatalog(AbstractBaseModel):
@@ -131,7 +131,7 @@ class AccessRights(AbstractBaseModel):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     license = models.ManyToManyField(
-        License,
+        DatasetLicense,
         related_name="access_rights",
     )
     access_type = models.ForeignKey(

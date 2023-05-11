@@ -28,11 +28,9 @@ class AbstractConcept(AbstractBaseModel):
         blank=True,
     )
     same_as = ArrayField(models.CharField(max_length=255), default=list, blank=True)  # owl:sameAs
-    is_reference_data = models.BooleanField(default=False)
 
     class Meta:
         indexes = [
-            models.Index(fields=["is_reference_data"]),
             models.Index(fields=["url"]),
         ]
         abstract = True
@@ -48,12 +46,11 @@ class AbstractConcept(AbstractBaseModel):
             # URLs should be unique within reference data.
             models.UniqueConstraint(
                 fields=["url"],
-                condition=models.Q(is_reference_data=True),
                 name="%(app_label)s_%(class)s_unique_reference_data_url",
             ),
             # Reference data should have a scheme.
             models.CheckConstraint(
-                check=~models.Q(in_scheme="") | models.Q(is_reference_data=False),
+                check=~models.Q(in_scheme=""),
                 name="%(app_label)s_%(class)s_require_reference_data_scheme",
             ),
         ]
@@ -81,7 +78,7 @@ class AbstractConcept(AbstractBaseModel):
         return BaseSerializer
 
     def get_label(self):
-        pref_label = self.pref_label or {}
+        pref_label = self.pref_label if isinstance(self.pref_label, dict) else {}
         return pref_label.get("en") or pref_label.get("fi") or next(iter(pref_label.values()), "")
 
     def __str__(self):

@@ -45,9 +45,9 @@ def delete_ok(user_unfreeze_request):
     assert user_unfreeze_request.status_code == 204
 
 
-@pytest.mark.django_db
 @pytest.mark.xfail(raises=NotImplementedError)
 @scenario("file.feature", "IDA user unfreezes files")
+@pytest.mark.django_db
 def test_file_unfreeze(deprecate_dataset):
     dataset, file_id = deprecate_dataset
     assert dataset.is_deprecated is True

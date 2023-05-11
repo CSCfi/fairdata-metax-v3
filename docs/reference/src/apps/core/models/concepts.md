@@ -16,9 +16,13 @@
 
 ### :::src.apps.core.models.concepts.Theme
 
-## License
+## get_default_license
 
-### :::src.apps.core.models.concepts.License
+### :::src.apps.core.models.concepts.get_default_license
+
+## DatasetLicense
+
+### :::src.apps.core.models.concepts.DatasetLicense
 
 ## FieldOfScience
 
@@ -43,4 +47,8 @@
 ## FileType
 
 ### :::src.apps.core.models.concepts.FileType
+
+## Spatial
+
+### :::src.apps.core.models.concepts.Spatial
 

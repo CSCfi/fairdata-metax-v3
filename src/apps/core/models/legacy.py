@@ -6,12 +6,13 @@ from deepdiff import DeepDiff
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils.dateparse import parse_datetime
+from django.conf import settings
 
 from apps.actors.models import Actor, Organization
 from apps.common.helpers import parse_iso_dates_in_nested_dict
 from apps.files.models import File, FileStorage
 from apps.files.serializers.file_serializer import get_or_create_storage_project
-from apps.refdata.models import FunderType
+from apps.refdata.models import FunderType, License
 from apps.users.models import MetaxUser
 
 from .catalog_record import (
@@ -20,7 +21,6 @@ from .catalog_record import (
     DatasetProject,
     MetadataProvider,
     OtherIdentifier,
-    Spatial,
     Temporal,
 )
 from .concepts import (
@@ -29,8 +29,9 @@ from .concepts import (
     FieldOfScience,
     IdentifierType,
     Language,
-    License,
+    DatasetLicense,
     LifecycleEvent,
+    Spatial,
 )
 from .contract import Contract
 from .data_catalog import AccessRights, AccessRightsRestrictionGrounds, DataCatalog
@@ -210,21 +211,6 @@ class LegacyDataset(Dataset):
     def attach_access_rights(self) -> AccessRights:
         description = self.legacy_access_rights.get("description", None)
 
-        # license objects
-        licenses_list = self.legacy_license
-        license_objects = []
-        for lic in licenses_list:
-            identifier = lic["identifier"]
-            license_instance, created = License.objects.get_or_create(
-                url=identifier,
-                defaults={
-                    "url": identifier,
-                    "pref_label": lic["title"],
-                    "description": lic.get("description"),
-                },
-            )
-            license_objects.append(license_instance)
-
         # access-type object
         access_type, at_created = AccessType.objects.get_or_create(
             url=self.legacy_access_type["identifier"],
@@ -240,6 +226,24 @@ class LegacyDataset(Dataset):
             description=description,
         )
         access_rights.save()
+
+        # license objects
+        licenses_list = self.legacy_license
+        license_objects = []
+        for lic in licenses_list:
+            url = lic["identifier"]
+            lic_ref = License.objects.get(url=url)
+            custom_url = lic.get("license", None)
+            license_instance, created = DatasetLicense.objects.get_or_create(
+                access_rights__datasets=self.id,
+                reference=lic_ref,
+                defaults={
+                    "description": lic.get("description"),
+                    "custom_url": custom_url,
+                },
+            )
+            license_objects.append(license_instance)
+
         for res_grounds in self.legacy_access_rights.get("restriction_grounds", []):
             rg, rg_created = AccessRightsRestrictionGrounds.objects.get_or_create(
                 url=res_grounds["identifier"],
@@ -298,11 +302,11 @@ class LegacyDataset(Dataset):
                 defaults={
                     "url": obj["identifier"],
                     "pref_label": obj[pref_label_key_name],
+                    "in_scheme": settings.REFERENCE_DATA_SOURCES[target_many_to_many_field].get(
+                        "scheme"
+                    ),
                 },
             )
-            if obj.get("in_scheme"):
-                instance.in_scheme = obj["in_scheme"]
-                instance.save()
             obj_list.append(instance)
 
         # django-simple-history really does not like if trying to access m2m fields from inheritance child-instance.
@@ -315,12 +319,14 @@ class LegacyDataset(Dataset):
             obj_list = []
             for location in spatial_data:
                 obj, created = Spatial.objects.get_or_create(
-                    in_scheme=location["in_scheme"],
                     url=location["identifier"],
-                    pref_label=location["pref_label"],
-                    full_address=location.get("full_address"),
-                    geographic_name=location.get("geographic_name"),
                     dataset=self,
+                    defaults={
+                        "in_scheme": location["in_scheme"],
+                        "pref_label": location["pref_label"],
+                        "full_address": location.get("full_address"),
+                        "geographic_name": location.get("geographic_name"),
+                    },
                 )
                 obj_list.append(obj)
             return obj_list
@@ -435,11 +441,14 @@ class LegacyDataset(Dataset):
                 if spatial_data := data.get("spatial"):
                     place_uri = spatial_data["place_uri"]
                     spatial, spatial_created = Spatial.objects.get_or_create(
-                        full_address=spatial_data.get("full_address"),
-                        geographic_name=spatial_data.get("geographic_name"),
-                        in_scheme=place_uri["in_scheme"],
                         url=place_uri["identifier"],
-                        pref_label=place_uri["pref_label"],
+                        provenance=provenance,
+                        defaults={
+                            "in_scheme": place_uri["in_scheme"],
+                            "pref_label": place_uri["pref_label"],
+                            "full_address": spatial_data.get("full_address"),
+                            "geographic_name": spatial_data.get("geographic_name"),
+                        },
                     )
                     logger.info(f"{spatial=}, created={spatial_created}")
                     provenance.spatial = spatial
@@ -595,7 +604,18 @@ class LegacyDataset(Dataset):
                 "root['dataset_version_set']",
                 "date_modified",
             ],
+            exclude_regex_paths=[
+                add_escapes("root['research_dataset']['language'][\\d]['in_scheme']"),
+                add_escapes(
+                    "root['research_dataset']['access_rights']['license'][\\d]['title']['und']"
+                ),
+            ],
             truncate_datetime="day",
         )
         logger.info(f"diff={diff.to_json()}")
         return eval(diff.to_json())
+
+
+def add_escapes(val: str):
+    val = val.replace("[", "\\[")
+    return val.replace("]", "\\]")

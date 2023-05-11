@@ -12,6 +12,10 @@
 
 ### :::src.apps.core.serializers.common_serializers.LicenseModelSerializer
 
+## SpatialModelSerializer
+
+### :::src.apps.core.serializers.common_serializers.SpatialModelSerializer
+
 ## AccessRightsModelSerializer
 
 ### :::src.apps.core.serializers.common_serializers.AccessRightsModelSerializer

@@ -3,21 +3,25 @@ FINTO_REFERENCE_DATA_SOURCES = {
         "model": "refdata.FieldOfScience",
         "importer": "Finto",
         "source": "https://finto.fi/rest/v1/okm-tieteenala/data",
+        "scheme": "http://www.yso.fi/onto/okm-tieteenala/conceptscheme",
     },
     "language": {
         "model": "refdata.Language",
         "importer": "Finto",
         "source": "https://finto.fi/rest/v1/lexvo/data",
+        "scheme": "http://lexvo.org/id/",
     },
     "location": {
         "model": "refdata.Location",
         "importer": "FintoLocation",
         "source": "https://finto.fi/rest/v1/yso-paikat/data",
+        "scheme": "http://www.yso.fi/onto/yso/places",
     },
     "theme": {
         "model": "refdata.Theme",
         "importer": "Finto",
         "source": "https://finto.fi/rest/v1/koko/data",
+        "scheme": "http://www.yso.fi/onto/koko/",
     },
 }
 

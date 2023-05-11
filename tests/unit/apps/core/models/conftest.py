@@ -12,7 +12,7 @@ from apps.core.models import (
     DatasetPublisher,
     FieldOfScience,
     Language,
-    License,
+    DatasetLicense,
     MetadataProvider,
     Theme,
 )
@@ -36,10 +36,12 @@ def dataset_publisher() -> DatasetPublisher:
     }
     return factories.DatasetPublisherFactory(name=name)
 
+
 @pytest.fixture
 def metadata_provider() -> MetadataProvider:
     organization = "Awesome Organization"
     return factories.MetadataProviderFactory(organization=organization)
+
 
 @pytest.fixture
 def access_rights() -> AccessRights:
@@ -98,15 +100,8 @@ def language() -> Language:
 
 
 @pytest.fixture
-def license() -> License:
-    pref_label = {
-        "fi": "Creative Commons Yleismaailmallinen (CC0 1.0) Public Domain -lausuma",
-        "en": "Creative Commons CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",
-        "und": "Creative Commons Yleismaailmallinen (CC0 1.0) Public Domain -lausuma",
-    }
-    identifier = "http://uri.suomi.fi/codelist/fairdata/license/code/CC0-1.0"
-
-    return factories.LicenseFactory(pref_label=pref_label, url=identifier)
+def license() -> DatasetLicense:
+    return factories.DatasetLicenseFactory()
 
 
 @pytest.fixture
@@ -217,7 +212,13 @@ def dataset_property_object_factory(
 
 @pytest.fixture
 def abstract_base_object_factory(
-    dataset_publisher, access_rights, catalog_record, file_storage, file, contract, metadata_provider
+    dataset_publisher,
+    access_rights,
+    catalog_record,
+    file_storage,
+    file,
+    contract,
+    metadata_provider,
 ):
     def _abstract_base_object_factory(object_name):
         if object_name == "dataset_publisher":

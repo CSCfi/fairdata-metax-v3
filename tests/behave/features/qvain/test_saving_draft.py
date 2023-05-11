@@ -32,8 +32,8 @@ def is_draft_dataset(created_draft):
     assert created_draft.issued is None
 
 
-@pytest.mark.django_db
 @pytest.mark.xfail(raises=NotImplementedError)
 @scenario("dataset.feature", "Saving draft of unpublished Dataset")
+@pytest.mark.django_db
 def test_dataset_draft(qvain_draft_request):
     assert qvain_draft_request.status_code == 201

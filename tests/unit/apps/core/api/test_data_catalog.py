@@ -46,7 +46,6 @@ def test_change_datacatalog(
         datacatalog_put_json,
         content_type="application/json",
     )
-    print("DATA", response.data)
     assert response.status_code == 200
     logger.info(str(response.data))
     assert len(response.data.get("language")) == 2

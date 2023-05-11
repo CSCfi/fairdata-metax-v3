@@ -32,6 +32,10 @@
 
 ### :::src.apps.core.factories.LicenseFactory
 
+## DatasetLicenseFactory
+
+### :::src.apps.core.factories.DatasetLicenseFactory
+
 ## ThemeFactory
 
 ### :::src.apps.core.factories.ThemeFactory
@@ -59,4 +63,12 @@
 ## MetadataProviderFactory
 
 ### :::src.apps.core.factories.MetadataProviderFactory
+
+## LocationFactory
+
+### :::src.apps.core.factories.LocationFactory
+
+## SpatialFactory
+
+### :::src.apps.core.factories.SpatialFactory
 

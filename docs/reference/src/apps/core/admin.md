@@ -64,3 +64,7 @@
 
 ### :::src.apps.core.admin.ContractAdmin
 
+## LicenseAdmin
+
+### :::src.apps.core.admin.LicenseAdmin
+

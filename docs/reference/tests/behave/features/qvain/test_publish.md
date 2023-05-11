@@ -4,6 +4,10 @@
 
 ### :::tests.behave.features.qvain.test_publish.catalog_record_creator
 
+## dataset_is_published
+
+### :::tests.behave.features.qvain.test_publish.dataset_is_published
+
 ## published_dataset
 
 ### :::tests.behave.features.qvain.test_publish.published_dataset

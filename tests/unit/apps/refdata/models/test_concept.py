@@ -22,23 +22,18 @@ fields = dict(
     url="https://example.com/test",
     in_scheme="https://example.com",
     pref_label={"en": "Field"},
-    is_reference_data=False,
 )
 
 
 def test_create_duplicate_reference_data_url(model):
-    model.all_objects.create(**{**fields, "is_reference_data": True})
+    model.all_objects.create(**{**fields})
     with pytest.raises(IntegrityError):
-        model.all_objects.create(**{**fields, "is_reference_data": True})
+        model.all_objects.create(**{**fields})
 
 
 def test_create_reference_data_without_scheme(model):
     with pytest.raises(IntegrityError):
-        model.all_objects.create(**{**fields, "in_scheme": "", "is_reference_data": True})
-
-
-def test_create_concept_without_scheme(model):
-    model.all_objects.create(**{**fields, "in_scheme": ""})
+        model.all_objects.create(**{**fields, "in_scheme": ""})
 
 
 def test_create_concept_without_url(model):

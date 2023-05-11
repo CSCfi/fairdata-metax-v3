@@ -4,8 +4,8 @@ from django.utils.translation import gettext as _
 
 from apps.common.models import AbstractBaseModel, AbstractFreeformConcept
 
-from .catalog_record import Dataset, DatasetActor, Spatial
-from .concepts import EventOutcome, LifecycleEvent
+from .catalog_record import Dataset, DatasetActor
+from .concepts import EventOutcome, LifecycleEvent, Spatial
 
 
 class Provenance(AbstractBaseModel):
@@ -24,10 +24,14 @@ class Provenance(AbstractBaseModel):
 
     title = HStoreField(help_text=_('example: {"en":"title", "fi":"otsikko"}'))
     description = HStoreField(help_text=_('example: {"en":"description", "fi": "kuvaus"}'))
-    # Making foreign-key unique same as OneToOneField
-    spatial = models.ForeignKey(
-        Spatial, on_delete=models.CASCADE, null=True, blank=True, unique=True
+    spatial = models.OneToOneField(
+        Spatial,
+        on_delete=models.CASCADE,
+        related_name="provenance",
+        null=True,
+        blank=True,
     )
+
     lifecycle_event = models.ForeignKey(
         LifecycleEvent, on_delete=models.CASCADE, null=True, blank=True
     )

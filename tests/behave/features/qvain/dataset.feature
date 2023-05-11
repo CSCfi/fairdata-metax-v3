@@ -32,7 +32,8 @@ Feature: Datasets
     When user publishes a new dataset in Qvain
     And new published dataset is created in IDA data-catalog with persistent identifier
     And the user is saved as creator to the dataset
-    Then published dataset exists with persistent identifier
+    Then dataset is published
+    And published dataset exists with persistent identifier
     And the dataset has a creator
 
   @draft

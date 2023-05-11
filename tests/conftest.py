@@ -43,6 +43,7 @@ def pytest_collection_modifyitems(items):
             item.add_marker(pytest.mark.django_db)
         if "unit" in item.nodeid:
             item.add_marker("unit")
+            item.add_marker(pytest.mark.django_db)
 
 
 @pytest.fixture
@@ -56,11 +57,11 @@ def data_catalog() -> DataCatalog:
     return factories.DataCatalogFactory(id=identifier, title=title)
 
 
+@pytest.mark.django_db
 @pytest.fixture
 def access_type_reference_data():
     common_args = {
         "in_scheme": "http://uri.suomi.fi/codelist/fairdata/access_type",
-        "is_reference_data": True,
     }
     factories.AccessTypeFactory(
         url="http://uri.suomi.fi/codelist/fairdata/access_type/code/open",
@@ -104,7 +105,6 @@ def access_type_reference_data():
 def field_of_science_reference_data():
     common_args = {
         "in_scheme": "http://www.yso.fi/onto/okm-tieteenala/conceptscheme",
-        "is_reference_data": True,
     }
     field_a = factories.FieldOfScienceFactory(
         url="http://www.yso.fi/onto/okm-tieteenala/ta111",
@@ -136,7 +136,6 @@ def field_of_science_reference_data():
 def theme_reference_data():
     common_args = {
         "in_scheme": "http://www.yso.fi/onto/koko/",
-        "is_reference_data": True,
     }
     factories.ThemeFactory(
         url="http://www.yso.fi/onto/koko/p1",
@@ -182,7 +181,6 @@ def theme_reference_data():
 def language_reference_data():
     common_args = {
         "in_scheme": "http://lexvo.org/id/",
-        "is_reference_data": True,
     }
     factories.LanguageFactory(
         url="http://lexvo.org/id/iso639-3/fin",
@@ -220,7 +218,6 @@ def language_reference_data():
 def license_reference_data():
     common_args = {
         "in_scheme": "http://uri.suomi.fi/codelist/fairdata/license",
-        "is_reference_data": True,
     }
     factories.LicenseFactory(
         url="http://uri.suomi.fi/codelist/fairdata/license/code/CC0-1.0",
@@ -239,13 +236,28 @@ def license_reference_data():
         },
         **common_args,
     )
+    factories.LicenseFactory(
+        url="http://uri.suomi.fi/codelist/fairdata/license/code/other",
+        pref_label={
+            "en": "Other",
+            "fi": "Muu",
+        },
+        **common_args,
+    )
+    factories.LicenseFactory(
+        url="http://uri.suomi.fi/codelist/fairdata/license/code/other-closed",
+        pref_label={
+            "en": "Other (Not Open)",
+            "fi": "Muu (Ei avoin)",
+        },
+        **common_args,
+    )
 
 
 @pytest.fixture
 def file_type_reference_data():
     common_args = {
         "in_scheme": "http://uri.suomi.fi/codelist/fairdata/file_type",
-        "is_reference_data": True,
     }
     factories.FileTypeFactory(
         url="http://uri.suomi.fi/codelist/fairdata/file_type/code/video",
@@ -268,7 +280,6 @@ def file_type_reference_data():
 def use_category_reference_data():
     common_args = {
         "in_scheme": "http://uri.suomi.fi/codelist/fairdata/use_category",
-        "is_reference_data": True,
     }
     factories.UseCategoryFactory(
         url="http://uri.suomi.fi/codelist/fairdata/use_category/code/source",
@@ -288,6 +299,23 @@ def use_category_reference_data():
 
 
 @pytest.fixture
+def location_reference_data():
+    common_args = {
+        "in_scheme": "http://www.yso.fi/onto/yso/places",
+    }
+    factories.LocationFactory(
+        url="http://www.yso.fi/onto/onto/yso/c_9908ce39",
+        pref_label={"fi": "Alppikylä (Helsinki)", "sv": "Alpbyn (Helsingfors)"},
+        **common_args,
+    )
+    factories.LocationFactory(
+        url="http://www.yso.fi/onto/yso/p105080",
+        pref_label={"en": "Koitajoki", "fi": "Koitajoki", "sv": "Koitajoki"},
+        **common_args,
+    )
+
+
+@pytest.fixture
 def reference_data(
     access_type_reference_data,
     field_of_science_reference_data,
@@ -296,5 +324,6 @@ def reference_data(
     license_reference_data,
     file_type_reference_data,
     use_category_reference_data,
+    location_reference_data,
 ):
     """Collection of reference data"""

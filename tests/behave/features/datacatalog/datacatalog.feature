@@ -14,8 +14,8 @@ Feature: Data catalog
   Scenario: Creating new data-catalog
     When the user submits new data-catalog
     And new data-catalog is saved to database
-    Then the user should get an OK create-response
-
+    Then created data-catalog should be in database
+    And the user should get an OK create-response
 
   Scenario: Deleting data-catalog
     Given there is an existing data-catalog

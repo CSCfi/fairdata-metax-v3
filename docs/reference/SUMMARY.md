@@ -107,7 +107,10 @@
                 - [models.test_organization](tests/unit/apps/actors/models/test_organization.md)
             - [conftest](tests/unit/apps/conftest.md)
             - core
-                - [adapters.test_adapters](tests/unit/apps/core/adapters/test_adapters.md)
+                - adapters
+                    - [test_adapters](tests/unit/apps/core/adapters/test_adapters.md)
+                    - [test_license](tests/unit/apps/core/adapters/test_license.md)
+                    - [test_spatial](tests/unit/apps/core/adapters/test_spatial.md)
                 - api
                     - [conftest](tests/unit/apps/core/api/conftest.md)
                     - dataset_files

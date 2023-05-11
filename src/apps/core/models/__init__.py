@@ -5,10 +5,18 @@ from .catalog_record import (
     DatasetProject,
     MetadataProvider,
     OtherIdentifier,
-    Spatial,
     Temporal,
 )
-from .concepts import AccessType, FieldOfScience, FileType, Language, License, Theme, UseCategory
+from .concepts import (
+    AccessType,
+    FieldOfScience,
+    FileType,
+    Language,
+    DatasetLicense,
+    Theme,
+    UseCategory,
+    Spatial,
+)
 from .contract import Contract
 from .data_catalog import (
     AccessRights,

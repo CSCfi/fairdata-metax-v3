@@ -18,13 +18,17 @@ from apps.core.models import (
     AccessRights,
     MetadataProvider,
 )
-from apps.core.models.concepts import License, AccessType
+from apps.core.models.concepts import AccessType
 from apps.users.models import MetaxUser
 from apps.common.serializers import (
     AbstractDatasetModelSerializer,
     AbstractDatasetPropertyModelSerializer,
     URLReferencedModelListField,
 )
+from apps.core.models import AccessRights, CatalogHomePage, DatasetPublisher, Spatial
+from apps.core.models.concepts import AccessType, DatasetLicense
+from apps.refdata import models as refdata
+from django.forms.models import model_to_dict
 
 logger = logging.getLogger(__name__)
 
@@ -81,16 +85,117 @@ class LicenseModelSerializer(serializers.ModelSerializer):
 
     """
 
+    description = serializers.JSONField(required=False)
+    url = serializers.URLField(required=False)
+    pref_label = serializers.HStoreField(read_only=True)
+    in_scheme = serializers.URLField(max_length=255, read_only=True)
+    broader = refdata.License.get_serializer()(many=True, read_only=True)
+    same_as = refdata.License.get_serializer()(many=True, read_only=True)
+
     class Meta:
-        model = License
-        ref_name = "CustomLicenseModelSerializer"
-        fields = ("url",)
+        model = DatasetLicense
+        fields = [
+            "custom_url",
+            "description",
+            "url",
+            "pref_label",
+            "in_scheme",
+            "broader",
+            "same_as",
+        ]
+
+        ref_name = "DatasetLicense"
+
+    def create(self, validated_data):
+        reference: refdata.License
+        custom_url = validated_data.get("custom_url")
+        url = validated_data.pop("url", None)
+
+        if url is None and custom_url is None:
+            raise serializers.ValidationError(detail="License needs url or custom_url, got None")
+
+        if url is None:
+            url = "http://uri.suomi.fi/codelist/fairdata/license/code/other"
+
+        try:
+            reference = refdata.License.objects.get(url=url)
+        except refdata.License.DoesNotExist:
+            raise serializers.ValidationError(detail=f"License not found {url}")
+
+        return DatasetLicense.objects.create(**validated_data, reference=reference)
+
+    def update(self, instance, validated_data):
+        url = validated_data.pop("url", instance.reference.url)
+
+        if url != instance.reference.url:
+            try:
+                instance.reference = refdata.License.objects.get(url=url)
+            except refdata.License.DoesNotExist:
+                raise serializers.ValidationError(detail=f"License not found {url}")
+
+        return super().update(instance, validated_data)
+
+    def to_representation(self, instance):
+        refdata_serializer = refdata.License.get_serializer()
+        serialized_ref = refdata_serializer(instance.reference).data
+        rep = super().to_representation(instance)
+        return {**rep, **serialized_ref}
+
+
+class SpatialModelSerializer(serializers.ModelSerializer):
+    """Custom serializer for License that does not require pref_label
+
+    Conforms use case where AccessRights object can be created with only url-field in license
+
+    """
+
+    class Meta:
+        model = Spatial
+        fields = [
+            "url",
+            "pref_label",
+            "in_scheme",
+            "full_address",
+            "geographic_name",
+            "altitude_in_meters",
+            "dataset",
+            "provenance",
+        ]
+
+    def create(self, validated_data):
+        reference: refdata.Location
+        url = validated_data.pop("url", None)
+
+        if not url:
+            raise serializers.ValidationError("Spatial needs url, got None")
+
+        try:
+            reference = refdata.Location.objects.get(url=url)
+        except refdata.Location.DoesNotExist:
+            raise serializers.ValidationError(f"Location not found {url}")
+
+        return Spatial.objects.create(**validated_data, reference=reference)
+
+    def update(self, instance, validated_data):
+        url = validated_data.pop("url", instance.url)
+
+        if url != instance.url:
+            try:
+                instance.reference = refdata.Location.objects.get(url=url)
+            except refdata.Location.DoesNotExist:
+                raise serializers.ValidationError(detail=f"Location not found {url}")
+
+        return super().update(instance, validated_data)
+
+    def to_representation(self, instance):
+        refdata_serializer = refdata.Location.get_serializer()
+        serialized_ref = refdata_serializer(instance.reference).data
+        rep = super().to_representation(instance)
+        return {**rep, **serialized_ref}
 
 
 class AccessRightsModelSerializer(AbstractDatasetModelSerializer):
-    license = URLReferencedModelListField(
-        child=LicenseModelSerializer(required=False), read_only=False, required=False
-    )
+    license = LicenseModelSerializer(read_only=False, required=False, many=True)
     access_type = AccessType.get_serializer()(required=False, read_only=False, many=False)
     description = serializers.JSONField(required=False)
 
@@ -99,12 +204,14 @@ class AccessRightsModelSerializer(AbstractDatasetModelSerializer):
         fields = ("id", "description", "license", "access_type")
 
     def create(self, validated_data):
+        license_serializer: LicenseModelSerializer = self.fields["license"]
         access_type = None
         access_type_data = validated_data.pop("access_type", None)
         if access_type_data not in EMPTY_VALUES:
             access_type = AccessType.objects.get(url=access_type_data.get("url"))
 
-        licenses = validated_data.pop("license", [])
+        license_data = validated_data.pop("license", [])
+        licenses = license_serializer.create(license_data)
 
         access_rights = AccessRights.objects.create(access_type=access_type, **validated_data)
         access_rights.license.set(licenses)
@@ -112,13 +219,15 @@ class AccessRightsModelSerializer(AbstractDatasetModelSerializer):
         return access_rights
 
     def update(self, instance, validated_data):
+        license_serializer: LicenseModelSerializer = self.fields["license"]
         access_type = None
         access_type_data = validated_data.pop("access_type", None)
         if access_type_data not in EMPTY_VALUES:
             access_type = AccessType.objects.get(url=access_type_data.get("url"))
         instance.access_type = access_type
 
-        licenses = validated_data.pop("license", [])
+        license_data = validated_data.pop("license", [])
+        licenses = license_serializer.create(license_data)
         instance.license.set(licenses)
 
         return super().update(instance, validated_data)

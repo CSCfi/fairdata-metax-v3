@@ -3,6 +3,7 @@ from django.utils import timezone
 
 from apps.files.factories import FileFactory, FileStorageFactory, StorageProjectFactory
 from apps.users.factories import MetaxUserFactory
+from apps.refdata import models as refdata
 
 from . import models
 
@@ -52,6 +53,7 @@ class AccessTypeFactory(factory.django.DjangoModelFactory):
         django_get_or_create = ("url",)
 
     pref_label = factory.Dict({"en": factory.Sequence(lambda n: f"dataset-access-type-{n}")})
+    in_scheme = factory.Faker("url")
 
     @factory.sequence
     def url(self):
@@ -64,6 +66,7 @@ class FieldOfScienceFactory(factory.django.DjangoModelFactory):
         django_get_or_create = ("url",)
 
     pref_label = factory.Dict({"en": factory.Sequence(lambda n: f"dataset-field-of-science-{n}")})
+    in_scheme = factory.Faker("url")
 
     @factory.sequence
     def url(self):
@@ -76,6 +79,7 @@ class FileTypeFactory(factory.django.DjangoModelFactory):
         django_get_or_create = ("url",)
 
     pref_label = factory.Dict({"en": factory.Sequence(lambda n: f"dataset-file-type-{n}")})
+    in_scheme = factory.Faker("url")
 
     @factory.sequence
     def url(self):
@@ -88,6 +92,7 @@ class LanguageFactory(factory.django.DjangoModelFactory):
         django_get_or_create = ("url",)
 
     pref_label = factory.Dict({"en": factory.Sequence(lambda n: f"dataset-language-{n}")})
+    in_scheme = factory.Faker("url")
 
     @factory.sequence
     def url(self):
@@ -96,14 +101,24 @@ class LanguageFactory(factory.django.DjangoModelFactory):
 
 class LicenseFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = models.License
+        model = refdata.License
         django_get_or_create = ("url",)
 
-    pref_label = factory.Dict({"en": factory.Sequence(lambda n: f"dataset-license-{n}")})
+    pref_label = factory.Dict({"en": factory.Sequence(lambda n: f"license-{n}")})
+    in_scheme = factory.Faker("url")
 
     @factory.sequence
     def url(self):
-        return f"https://dataset-license-{self}.fi"
+        return f"https://license-{self}.fi"
+
+
+class DatasetLicenseFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.DatasetLicense
+
+    reference = factory.SubFactory(
+        LicenseFactory, url="http://uri.suomi.fi/codelist/fairdata/license/code/other"
+    )
 
 
 class ThemeFactory(factory.django.DjangoModelFactory):
@@ -112,6 +127,7 @@ class ThemeFactory(factory.django.DjangoModelFactory):
         django_get_or_create = ("url",)
 
     pref_label = factory.Dict({"en": factory.Sequence(lambda n: f"dataset-theme-{n}")})
+    in_scheme = factory.Faker("url")
 
     @factory.sequence
     def url(self):
@@ -136,7 +152,7 @@ class AccessRightsFactory(factory.django.DjangoModelFactory):
         django_get_or_create = ("description",)
 
     access_type = factory.SubFactory(AccessTypeFactory)
-    license = factory.RelatedFactory(LicenseFactory)  # create single license
+    license = factory.RelatedFactory(DatasetLicenseFactory)  # create single license
     description = factory.Dict({"en": factory.Faker("paragraph")})
 
 
@@ -188,3 +204,25 @@ class MetadataProviderFactory(factory.django.DjangoModelFactory):
 
     user = factory.SubFactory(MetaxUserFactory)
     system_creator = factory.SubFactory(MetaxUserFactory)
+
+
+class LocationFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = refdata.Location
+        django_get_or_create = ("url",)
+
+    pref_label = factory.Dict({"en": factory.Sequence(lambda n: f"location-{n}")})
+    in_scheme = factory.Faker("url")
+
+    @factory.sequence
+    def url(self):
+        return f"https://location-{self}.fi"
+
+
+class SpatialFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.Spatial
+
+    reference = factory.SubFactory(
+        LocationFactory, url="http://www.yso.fi/onto/onto/yso/c_9908ce39"
+    )

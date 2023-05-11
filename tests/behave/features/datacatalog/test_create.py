@@ -10,8 +10,7 @@ from apps.core.models import DataCatalog
 logger = logging.getLogger(__name__)
 
 
-@pytest.fixture
-@when("the user submits new data-catalog")
+@when("the user submits new data-catalog", target_fixture="datacatalog_post_request")
 def datacatalog_post_request(admin_client, datacatalog_json, reference_data):
     """
 
@@ -23,11 +22,13 @@ def datacatalog_post_request(admin_client, datacatalog_json, reference_data):
 
     """
     url = reverse("datacatalog-list")
-    return admin_client.post(url, datacatalog_json, content_type="application/json")
+    res = admin_client.post(url, datacatalog_json, content_type="application/json")
+    logger.info(f"{datacatalog_json=}")
+    logger.info(f"{res.content=}")
+    return res
 
 
-@pytest.fixture
-@when("new data-catalog is saved to database")
+@when("new data-catalog is saved to database", target_fixture="datacatalog_from_post_request")
 def datacatalog_from_post_request(datacatalog_post_request, datacatalog_json) -> DataCatalog:
     """
 
@@ -39,9 +40,20 @@ def datacatalog_from_post_request(datacatalog_post_request, datacatalog_json) ->
          DataCatalog: instance created from POST-request
 
     """
-    logger.info(f"datacatalog_json: {datacatalog_json}")
     payload = json.loads(datacatalog_json)
     return DataCatalog.objects.get(title=payload["title"])
+
+
+@then("created data-catalog should be in database")
+def is_created_datacatalog_in_db(datacatalog_from_post_request):
+    """
+
+    Args:
+        datacatalog_from_post_request (): datacatalog fetched from the db after creation
+
+
+    """
+    assert bool(datacatalog_from_post_request) is True
 
 
 @then("the user should get an OK create-response")
@@ -58,11 +70,11 @@ def is_response_create_ok(datacatalog_post_request):
 
 @scenario("datacatalog.feature", "Creating new data-catalog")
 @pytest.mark.django_db
-def test_datacatalog(datacatalog_json, datacatalog_from_post_request):
+def test_datacatalog():
     """
 
     Args:
         datacatalog_json (): POST-request body, used for assert validation
 
     """
-    assert datacatalog_from_post_request is not None
+    pass

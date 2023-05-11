@@ -10,9 +10,9 @@ class OrganizationFactory(factory.django.DjangoModelFactory):
 
     id = factory.Faker("uuid4")
     pref_label = factory.Dict({"en": factory.Sequence(lambda n: f"Organization-{n}")})
-    is_reference_data = True
     in_scheme = settings.ORGANIZATION_SCHEME
     parent = None
+    is_reference_data = True
 
     @factory.lazy_attribute_sequence
     def code(obj, n):

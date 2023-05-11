@@ -20,10 +20,6 @@
 
 ### :::src.apps.core.models.catalog_record.Temporal
 
-## Spatial
-
-### :::src.apps.core.models.catalog_record.Spatial
-
 ## OtherIdentifier
 
 ### :::src.apps.core.models.catalog_record.OtherIdentifier

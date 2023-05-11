@@ -44,6 +44,10 @@
 
 ### :::tests.conftest.use_category_reference_data
 
+## location_reference_data
+
+### :::tests.conftest.location_reference_data
+
 ## reference_data
 
 ### :::tests.conftest.reference_data

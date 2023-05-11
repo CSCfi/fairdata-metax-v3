@@ -15,7 +15,7 @@ pytestmark = pytest.mark.parametrize(
     ],
 )
 
-common_fields = {"in_scheme": "https://example.com", "is_reference_data": True}
+common_fields = {"in_scheme": "https://example.com"}
 extra_field_values = {"as_wkt": ""}
 
 

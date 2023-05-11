@@ -143,9 +143,14 @@ class V2DatasetMixin:
         }
 
         for license in self.access_rights.license.all():
-            row = {"identifier": license.url, "title": license.pref_label}
+            row = {
+                "identifier": license.reference.url,
+                "title": license.reference.pref_label,
+            }
             if description := license.description:
                 row["description"] = description
+            if custom_url := license.custom_url:
+                row["license"] = custom_url
             data["license"].append(row)
         for res_grounds in self.access_rights.restriction_grounds.all():
             if not data.get("restriction_grounds"):

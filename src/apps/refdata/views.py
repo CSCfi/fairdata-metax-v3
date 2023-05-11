@@ -40,9 +40,7 @@ def get_viewset_for_model(model):
         """Generic viewset for reference data objects."""
 
         serializer_class = model.get_serializer()
-        queryset = model.available_objects.filter(is_reference_data=True).prefetch_related(
-            "broader", "narrower"
-        )
+        queryset = model.available_objects.prefetch_related("broader", "narrower")
         filterset_class = get_filter_for_model(model)
 
     return ReferenceDataViewSet

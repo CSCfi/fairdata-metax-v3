@@ -13,6 +13,7 @@ from apps.core.models import (
     DataCatalog,
     Dataset,
     DatasetActor,
+    DatasetLicense,
     DatasetProject,
     DatasetPublisher,
     LegacyDataset,
@@ -59,8 +60,7 @@ class DataCatalogAdmin(AbstractDatasetPropertyBaseAdmin):
         "created",
         "modified",
     )
-    filter_horizontal = ("language", )
-
+    filter_horizontal = ("language",)
 
 
 @admin.register(MetadataProvider)
@@ -161,6 +161,11 @@ class ContractAdmin(AbstractDatasetPropertyBaseAdmin):
         "quota",
     )
     list_filter = ("valid_until", "created", "modified")
+
+
+@admin.register(DatasetLicense)
+class LicenseAdmin(AbstractDatasetPropertyBaseAdmin):
+    pass
 
 
 admin.site.register(get_user_model())

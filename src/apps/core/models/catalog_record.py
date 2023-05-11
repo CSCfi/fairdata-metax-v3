@@ -389,31 +389,6 @@ class Temporal(AbstractBaseModel):
     )
 
 
-class Spatial(refdata.Location):
-    """The geographical area covered by the dataset.
-
-    Attributes:
-        full_address(models.CharField): The complete address written as a string, with or without formatting.
-        geographic_name(models.CharField): A geographic name is a proper noun applied to a spatial object.
-        dataset(Dataset): Dataset ForeignKey relation
-
-    """
-
-    full_address = models.CharField(max_length=512, blank=True, null=True)
-    geographic_name = models.CharField(max_length=512, blank=True, null=True)
-    altitude_in_meters = models.IntegerField(
-        blank=True,
-        null=True,
-        help_text="The altitude of the geographical area (meters from WGS84 reference)",
-    )
-    dataset = models.ForeignKey(
-        Dataset, on_delete=models.CASCADE, related_name="spatial", null=True, blank=True
-    )
-
-    class Meta:
-        indexes = []
-
-
 class OtherIdentifier(AbstractBaseModel):
     """Other identifier that dataset has in other services.
 
