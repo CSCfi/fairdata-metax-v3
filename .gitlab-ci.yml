@@ -16,13 +16,13 @@ workflow:
 variables:
   GITLAB_ENV:
     description: 'Which environment do you want to deploy to?'
-    value: 'staging'
+    value: 'rework' # switch back to test when rework-environment is deprecated
     options:
-      - 'demo'
+      #- 'demo'
       - 'rework'
-      - 'stable'
+      #- 'stable'
       - 'staging'
-      - 'test'
+      #- 'test'
 
 stages:
   - test
@@ -37,7 +37,6 @@ include:
       - /templates/test/metax-v3-tests.yaml
       - /templates/deploy/metax-service-deploy-jobs.yaml
 
-
 # ------------------------
 
 unittests:
@@ -45,40 +44,6 @@ unittests:
   extends: .metax-unittests
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-
-prepare-service:
-  extends: .prepare-service-play
-  tags:
-  - shell
-  rules:
-    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
-
-deploy-service:
-  extends: .deploy-service-play
-  tags:
-  - shell
-  needs:
-    - job: prepare-service
-  rules:
-    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
-
-test-deployment:
-  extends: .test-deployment-play
-  tags:
-  - shell
-  needs:
-    - job: deploy-service
-  rules:
-    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
-
-post-deployment-tasks:
-  extends: .post-deployment-tasks-play
-  tags:
-  - shell
-  needs:
-    - job: deploy-service
-  rules:
-    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
 
 sonarqube:
   extends: .sonarqube-job
@@ -89,3 +54,71 @@ sonarqube:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH =~ /^(master)$/ && $CI_PIPELINE_SOURCE !~ /^(web)$/
+
+# ------------------------
+
+prepare-service:
+  extends: .prepare-service-play
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
+    - if: $CI_PIPELINE_SOURCE =~ /^(web)$/
+
+prepare-service-feature:
+  extends: .prepare-service-play
+  variables:
+    GITLAB_ENV: 'staging'
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+deploy-service:
+  extends: .deploy-service-play
+  needs:
+    - job: prepare-service
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
+    - if: $CI_PIPELINE_SOURCE =~ /^(web)$/
+
+deploy-service-feature:
+  extends: .deploy-service-play
+  needs:
+    - job: prepare-service-feature
+  variables:
+    GITLAB_ENV: 'staging'
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+# ------------------------
+
+post-deployment-tasks:
+  extends: .post-deployment-tasks-play
+  needs:
+    - job: deploy-service
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
+    - if: $CI_PIPELINE_SOURCE =~ /^(web)$/
+
+post-deployment-tasks-feature:
+  extends: .post-deployment-tasks-play
+  needs:
+    - job: deploy-service-feature
+  variables:
+    GITLAB_ENV: 'staging'
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+test-deployment:
+  extends: .test-deployment-play
+  needs:
+    - job: deploy-service
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
+    - if: $CI_PIPELINE_SOURCE =~ /^(web)$/
+
+test-deployment-feature:
+  extends: .test-deployment-play
+  needs:
+    - job: deploy-service-feature
+  variables:
+    GITLAB_ENV: 'staging'
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
