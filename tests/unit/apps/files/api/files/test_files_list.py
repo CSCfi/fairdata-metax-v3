@@ -19,7 +19,7 @@ def dataset(file_tree_a):
 @pytest.mark.django_db
 def test_files_get(client, file_tree_a):
     res = client.get(
-        "/rest/v3/files",
+        "/v3/files",
         file_tree_a["params"],
         content_type="application/json",
     )
@@ -29,7 +29,7 @@ def test_files_get(client, file_tree_a):
 @pytest.mark.django_db
 def test_files_get_no_dataset(client, file_tree_a):
     res = client.get(
-        "/rest/v3/files",
+        "/v3/files",
         file_tree_a["params"],
         content_type="application/json",
     )
@@ -40,7 +40,7 @@ def test_files_get_no_dataset(client, file_tree_a):
 @pytest.mark.django_db
 def test_files_get_dataset_files(client, dataset):
     res = client.get(
-        "/rest/v3/files",
+        "/v3/files",
         {"dataset": dataset.id},
         content_type="application/json",
     )
@@ -54,7 +54,7 @@ def test_files_get_dataset_files(client, dataset):
 @pytest.mark.django_db
 def test_files_get_dataset_files(client, dataset):
     res = client.get(
-        "/rest/v3/files",
+        "/v3/files",
         {"dataset": dataset.id, "project_identifier": "pröject_does_not_exist"},
         content_type="application/json",
     )
@@ -64,21 +64,21 @@ def test_files_get_dataset_files(client, dataset):
 @pytest.mark.django_db
 def test_files_get_multiple_storage_projects(client, file_tree_a, file_tree_b):
     res = client.get(
-        "/rest/v3/files",
+        "/v3/files",
         file_tree_a["params"],
         content_type="application/json",
     )
     assert res.json()["count"] == 16
 
     res = client.get(
-        "/rest/v3/files",
+        "/v3/files",
         file_tree_b["params"],
         content_type="application/json",
     )
     assert res.json()["count"] == 3
 
     res = client.get(
-        "/rest/v3/files",
+        "/v3/files",
         content_type="application/json",
     )
     assert res.json()["count"] == 19

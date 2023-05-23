@@ -49,7 +49,7 @@ urlpatterns = [
     re_path(r"^watchman/", include("watchman.urls")),
     path("admin/", admin.site.urls),
     path("__debug__/", include("debug_toolbar.urls")),
-    path("rest/v3/", include(router_urls)),
+    path("v3/", include(router_urls)),
     path("auth/", include("users.urls")),
 ]
 if settings.ENABLE_DEBUG_TOOLBAR:

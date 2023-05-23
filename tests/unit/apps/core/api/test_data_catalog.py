@@ -119,7 +119,7 @@ def test_list_datacatalogs(client, post_datacatalog_payloads_a_b_c, data_catalog
 def test_list_datacatalogs_with_filter(
     client, post_datacatalog_payloads_a_b_c, catalog_filter, filter_value, filter_result
 ):
-    url = "/rest/v3/data-catalogs?{0}={1}".format(catalog_filter, filter_value)
+    url = "/v3/data-catalogs?{0}={1}".format(catalog_filter, filter_value)
     logger.info(url)
     response = client.get(url)
     logger.info(response.data)
@@ -128,12 +128,12 @@ def test_list_datacatalogs_with_filter(
 
 
 def test_list_datacatalogs_with_ordering(client, post_datacatalog_payloads_a_b_c):
-    url = "/rest/v3/data-catalogs?ordering=created"
+    url = "/v3/data-catalogs?ordering=created"
     response = client.get(url)
     results = response.data.get("results")
     assert response.status_code == 200
     assert results[0].get("id") == "urn:nbn:fi:att:data-catalog-testi"
-    url = "/rest/v3/data-catalogs?ordering=-created"
+    url = "/v3/data-catalogs?ordering=-created"
     response = client.get(url)
     results = response.data.get("results")
     assert response.status_code == 200
@@ -141,13 +141,13 @@ def test_list_datacatalogs_with_ordering(client, post_datacatalog_payloads_a_b_c
 
 
 def test_get_datacatalog_by_id(client, post_datacatalog_payloads_a_b_c):
-    response = client.get("/rest/v3/data-catalogs/urn:nbn:fi:att:data-catalog-uusitesti")
+    response = client.get("/v3/data-catalogs/urn:nbn:fi:att:data-catalog-uusitesti")
     assert response.status_code == 200
     assert response.data.get("id") == "urn:nbn:fi:att:data-catalog-uusitesti"
 
 
 def test_delete_datacatalog_by_id(client, post_datacatalog_payloads_a_b_c):
-    response = client.delete("/rest/v3/data-catalogs/urn:nbn:fi:att:data-catalog-uusitesti")
+    response = client.delete("/v3/data-catalogs/urn:nbn:fi:att:data-catalog-uusitesti")
     assert response.status_code == 204
-    response = client.get("/rest/v3/data-catalogs/urn:nbn:fi:att:data-catalog-uusitesti")
+    response = client.get("/v3/data-catalogs/urn:nbn:fi:att:data-catalog-uusitesti")
     assert response.status_code == 404

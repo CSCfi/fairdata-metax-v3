@@ -40,7 +40,7 @@ def file_tree_with_datasets(file_tree_a):
 def test_files_datasets_datasets_for_files(client, file_tree_with_datasets):
     tree = file_tree_with_datasets
     res = client.post(
-        "/rest/v3/files/datasets",
+        "/v3/files/datasets",
         [
             tree["files"]["/dir/a.txt"].id,  # dataset a
             tree["files"]["/dir/b.txt"].id,  # dataset b
@@ -65,7 +65,7 @@ def test_files_datasets_datasets_for_files(client, file_tree_with_datasets):
 def test_files_datasets_datasets_for_files_keysonly(client, file_tree_with_datasets):
     tree = file_tree_with_datasets
     res = client.post(
-        "/rest/v3/files/datasets?keys=files&keysonly=true",
+        "/v3/files/datasets?keys=files&keysonly=true",
         [
             tree["files"]["/dir/a.txt"].id,  # dataset a
             tree["files"]["/dir/b.txt"].id,  # dataset b
@@ -90,7 +90,7 @@ def test_files_datasets_files_for_datasets(client, file_tree_with_datasets):
     id_c = str(tree["dataset_c"].id)
     id_d = str(tree["dataset_d"].id)
     res = client.post(
-        "/rest/v3/files/datasets?keys=datasets",
+        "/v3/files/datasets?keys=datasets",
         [id_a, id_b, id_c, id_d],
         content_type="application/json",
     )
@@ -118,7 +118,7 @@ def test_files_datasets_files_for_datasets_keysonly(client, file_tree_with_datas
     id_c = str(tree["dataset_c"].id)
     id_d = str(tree["dataset_d"].id)
     res = client.post(
-        "/rest/v3/files/datasets?keys=datasets&keysonly",
+        "/v3/files/datasets?keys=datasets&keysonly",
         [id_a, id_b, id_c, id_d],
         content_type="application/json",
     )

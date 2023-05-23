@@ -38,7 +38,7 @@ def dataset_json_with_no_files(deep_file_tree, data_catalog):
 @pytest.mark.django_db
 def test_dataset_post_dataset_with_files(client, deep_file_tree, dataset_json_with_files):
     res = client.post(
-        f"/rest/v3/dataset",
+        f"/v3/dataset",
         dataset_json_with_files,
         content_type="application/json",
     )
@@ -47,7 +47,7 @@ def test_dataset_post_dataset_with_files(client, deep_file_tree, dataset_json_wi
     assert res.data["files"]["removed_files_count"] == 0
     assert res.data["files"]["total_files_count"] == 3
 
-    res = client.get(f"/rest/v3/dataset/{res.data['id']}/directories?pagination=false")
+    res = client.get(f"/v3/dataset/{res.data['id']}/directories?pagination=false")
     assert_nested_subdict(
         {
             "directories": [
@@ -62,13 +62,13 @@ def test_dataset_post_dataset_with_files(client, deep_file_tree, dataset_json_wi
 @pytest.mark.django_db
 def test_dataset_get_dataset_with_files(client, deep_file_tree, dataset_json_with_files):
     res = client.post(
-        f"/rest/v3/dataset",
+        f"/v3/dataset",
         dataset_json_with_files,
         content_type="application/json",
     )
     assert res.status_code == 201
 
-    res = client.get(f"/rest/v3/dataset/{res.data['id']}")
+    res = client.get(f"/v3/dataset/{res.data['id']}")
     assert res.status_code == 200
     assert res.data["files"] == {
         # no added_files_count or removed_files_count should be present for GET
@@ -82,13 +82,13 @@ def test_dataset_get_dataset_with_files(client, deep_file_tree, dataset_json_wit
 @pytest.mark.django_db
 def test_dataset_get_dataset_with_no_files(client, deep_file_tree, dataset_json_with_no_files):
     res = client.post(
-        f"/rest/v3/dataset",
+        f"/v3/dataset",
         dataset_json_with_no_files,
         content_type="application/json",
     )
     assert res.status_code == 201
 
-    res = client.get(f"/rest/v3/dataset/{res.data['id']}")
+    res = client.get(f"/v3/dataset/{res.data['id']}")
     assert res.status_code == 200
     assert "files" not in res.data  # no files dict should be present if dataset has no files
 
@@ -96,7 +96,7 @@ def test_dataset_get_dataset_with_no_files(client, deep_file_tree, dataset_json_
 @pytest.mark.django_db
 def test_dataset_modify_dataset_with_files(client, deep_file_tree, dataset_json_with_files):
     res = client.post(
-        f"/rest/v3/dataset",
+        f"/v3/dataset",
         dataset_json_with_files,
         content_type="application/json",
     )
@@ -111,7 +111,7 @@ def test_dataset_modify_dataset_with_files(client, deep_file_tree, dataset_json_
 
     dataset_json = {k: v for k, v in res.data.items() if v != None}
     res = client.put(
-        f"/rest/v3/dataset/{dataset_id}",
+        f"/v3/dataset/{dataset_id}",
         {**dataset_json, "files": actions},
         content_type="application/json",
     )
@@ -120,7 +120,7 @@ def test_dataset_modify_dataset_with_files(client, deep_file_tree, dataset_json_
     assert res.data["files"]["removed_files_count"] == 2
     assert res.data["files"]["total_files_count"] == 2
 
-    res = client.get(f"/rest/v3/dataset/{dataset_id}/directories?pagination=false")
+    res = client.get(f"/v3/dataset/{dataset_id}/directories?pagination=false")
     assert_nested_subdict(
         {
             "directories": [

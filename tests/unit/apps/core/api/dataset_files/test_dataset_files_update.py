@@ -17,7 +17,7 @@ def test_dataset_files_post_empty(client, deep_file_tree):
         "directory_actions": [],
     }
     res = client.post(
-        f"/rest/v3/dataset/{dataset.id}/files",
+        f"/v3/dataset/{dataset.id}/files",
         actions,
         content_type="application/json",
     )
@@ -27,11 +27,11 @@ def test_dataset_files_post_empty(client, deep_file_tree):
     assert res.data["total_files_count"] == 0
     assert res.data["total_files_byte_size"] == 0
 
-    res = client.get(f"/rest/v3/dataset/{dataset.id}/files")
+    res = client.get(f"/v3/dataset/{dataset.id}/files")
     assert res.status_code == 200
     assert res.json()["count"] == 0
 
-    res = client.get(f"/rest/v3/dataset/{dataset.id}/directories")
+    res = client.get(f"/v3/dataset/{dataset.id}/directories")
     assert res.status_code == 404  # no storage project exists for dataset
 
 
@@ -63,7 +63,7 @@ def test_dataset_files_post(client, deep_file_tree):
         ],
     }
     res = client.post(
-        f"/rest/v3/dataset/{dataset.id}/files",
+        f"/v3/dataset/{dataset.id}/files",
         actions,
         content_type="application/json",
     )
@@ -71,7 +71,7 @@ def test_dataset_files_post(client, deep_file_tree):
     assert res.data["added_files_count"] == 7
     assert res.data["removed_files_count"] == 0
     assert res.data["total_files_count"] == 7
-    res = client.get(f"/rest/v3/dataset/{dataset.id}/files")
+    res = client.get(f"/v3/dataset/{dataset.id}/files")
 
     assert_nested_subdict(
         {
@@ -106,7 +106,7 @@ def dataset_with_metadata(client, deep_file_tree) -> Dict:
         ],
     }
     res = client.post(
-        f"/rest/v3/dataset/{dataset.id}/files",
+        f"/v3/dataset/{dataset.id}/files",
         actions,
         content_type="application/json",
     )
@@ -117,7 +117,7 @@ def dataset_with_metadata(client, deep_file_tree) -> Dict:
 @pytest.mark.django_db
 def test_dataset_files_post_metadata_get_files(client, dataset_with_metadata):
     dataset_id = dataset_with_metadata.id
-    res = client.get(f"/rest/v3/dataset/{dataset_id}/files")
+    res = client.get(f"/v3/dataset/{dataset_id}/files")
     assert_nested_subdict(
         {
             "results": [
@@ -136,9 +136,7 @@ def test_dataset_files_post_metadata_get_files(client, dataset_with_metadata):
 @pytest.mark.django_db
 def test_dataset_files_post_metadata_get_directories(client, dataset_with_metadata):
     dataset_id = dataset_with_metadata.id
-    res = client.get(
-        f"/rest/v3/dataset/{dataset_id}/directories?path=/dir2/subdir1/&pagination=false"
-    )
+    res = client.get(f"/v3/dataset/{dataset_id}/directories?path=/dir2/subdir1/&pagination=false")
     assert_nested_subdict(
         {
             "parent_directory": {
@@ -187,12 +185,12 @@ def test_dataset_files_post_multiple_metadata_updates(client, deep_file_tree):
         ],
     }
     res = client.post(
-        f"/rest/v3/dataset/{dataset.id}/files",
+        f"/v3/dataset/{dataset.id}/files",
         actions,
         content_type="application/json",
     )
     assert res.status_code == 200
-    res = client.get(f"/rest/v3/dataset/{dataset.id}/files")
+    res = client.get(f"/v3/dataset/{dataset.id}/files")
 
     assert_nested_subdict(
         {
@@ -218,14 +216,14 @@ def test_dataset_files_post_remove_file_metadata(client, deep_file_tree):
         ],
     }
     res = client.post(
-        f"/rest/v3/dataset/{dataset.id}/files",
+        f"/v3/dataset/{dataset.id}/files",
         actions,
         content_type="application/json",
     )
     assert res.status_code == 200
 
     # check metadata is present
-    res = client.get(f"/rest/v3/dataset/{dataset.id}/files")
+    res = client.get(f"/v3/dataset/{dataset.id}/files")
     assert "dataset_metadata" in res.data["results"][0]
 
     # remove metadata by setting it to None
@@ -240,13 +238,13 @@ def test_dataset_files_post_remove_file_metadata(client, deep_file_tree):
         ],
     }
     res = client.post(
-        f"/rest/v3/dataset/{dataset.id}/files",
+        f"/v3/dataset/{dataset.id}/files",
         actions,
         content_type="application/json",
     )
     assert res.status_code == 200
 
-    res = client.get(f"/rest/v3/dataset/{dataset.id}/files")
+    res = client.get(f"/v3/dataset/{dataset.id}/files")
     assert res.data["results"][0]["dataset_metadata"] is None
 
 
@@ -264,14 +262,14 @@ def test_dataset_files_post_remove_directory_metadata(client, deep_file_tree):
         ],
     }
     res = client.post(
-        f"/rest/v3/dataset/{dataset.id}/files",
+        f"/v3/dataset/{dataset.id}/files",
         actions,
         content_type="application/json",
     )
     assert res.status_code == 200
 
     # check metadata is present
-    res = client.get(f"/rest/v3/dataset/{dataset.id}/directories?pagination=false")
+    res = client.get(f"/v3/dataset/{dataset.id}/directories?pagination=false")
     assert "dataset_metadata" in res.data["directories"][0]
 
     # remove metadata by setting it to None
@@ -286,13 +284,13 @@ def test_dataset_files_post_remove_directory_metadata(client, deep_file_tree):
         ],
     }
     res = client.post(
-        f"/rest/v3/dataset/{dataset.id}/files",
+        f"/v3/dataset/{dataset.id}/files",
         actions,
         content_type="application/json",
     )
     assert res.status_code == 200
 
-    res = client.get(f"/rest/v3/dataset/{dataset.id}/directories?pagination=false")
+    res = client.get(f"/v3/dataset/{dataset.id}/directories?pagination=false")
     assert res.data["directories"][0]["dataset_metadata"] is None
 
 
@@ -311,7 +309,7 @@ def test_dataset_files_multiple_post_requests(client, deep_file_tree):
         ],
     }
     res = client.post(
-        f"/rest/v3/dataset/{dataset.id}/files",
+        f"/v3/dataset/{dataset.id}/files",
         actions,
         content_type="application/json",
     )
@@ -332,7 +330,7 @@ def test_dataset_files_multiple_post_requests(client, deep_file_tree):
         ],
     }
     res = client.post(
-        f"/rest/v3/dataset/{dataset.id}/files",
+        f"/v3/dataset/{dataset.id}/files",
         actions,
         content_type="application/json",
     )
@@ -340,7 +338,7 @@ def test_dataset_files_multiple_post_requests(client, deep_file_tree):
     assert res.data["added_files_count"] == 1
     assert res.data["removed_files_count"] == 4
     assert res.data["total_files_count"] == 10
-    res = client.get(f"/rest/v3/dataset/{dataset.id}/files")
+    res = client.get(f"/v3/dataset/{dataset.id}/files")
 
     assert_nested_subdict(
         {
@@ -389,13 +387,13 @@ def test_dataset_files_all_metadata_fields(client, deep_file_tree, reference_dat
         ],
     }
     res = client.post(
-        f"/rest/v3/dataset/{dataset.id}/files",
+        f"/v3/dataset/{dataset.id}/files",
         actions,
         content_type="application/json",
     )
     assert res.status_code == 200
 
-    res = client.get(f"/rest/v3/dataset/{dataset.id}/directories?pagination=false")
+    res = client.get(f"/v3/dataset/{dataset.id}/directories?pagination=false")
     assert_nested_subdict(
         {
             "directories": [
@@ -418,7 +416,7 @@ def test_dataset_files_missing_project_identifier(client, deep_file_tree):
         "directory_actions": [{"directory_path": "/dir1/"}],
     }
     res = client.post(
-        f"/rest/v3/dataset/{dataset.id}/files",
+        f"/v3/dataset/{dataset.id}/files",
         actions,
         content_type="application/json",
     )
@@ -439,7 +437,7 @@ def test_dataset_files_wrong_project_identifier(client, deep_file_tree):
         "file_actions": [{"id": deep_file_tree["files"]["/rootfile.txt"].id}],
     }
     res = client.post(
-        f"/rest/v3/dataset/{dataset.id}/files",
+        f"/v3/dataset/{dataset.id}/files",
         actions,
         content_type="application/json",
     )
@@ -457,7 +455,7 @@ def test_dataset_files_unknown_project_identifier(client, deep_file_tree):
         "directories": [{"directory_path": "/dir1/"}],
     }
     res = client.post(
-        f"/rest/v3/dataset/{dataset.id}/files",
+        f"/v3/dataset/{dataset.id}/files",
         actions,
         content_type="application/json",
     )
@@ -476,7 +474,7 @@ def test_dataset_files_missing_file_storage(client, deep_file_tree):
         "directory_actions": [{"directory_path": "/dir1/"}],
     }
     res = client.post(
-        f"/rest/v3/dataset/{dataset.id}/files",
+        f"/v3/dataset/{dataset.id}/files",
         actions,
         content_type="application/json",
     )
@@ -493,7 +491,7 @@ def test_dataset_files_unknown_file_storage(client, deep_file_tree):
         "directory_actions": [{"directory_path": "/dir1/"}],
     }
     res = client.post(
-        f"/rest/v3/dataset/{dataset.id}/files",
+        f"/v3/dataset/{dataset.id}/files",
         actions,
         content_type="application/json",
     )

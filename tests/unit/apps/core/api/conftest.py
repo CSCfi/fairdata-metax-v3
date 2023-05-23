@@ -123,7 +123,7 @@ def post_publisher_payloads_a_b_c_d(
     client, publisher_a_json, publisher_b_json, publisher_c_json, publisher_d_json
 ):
     logger.info(__name__)
-    url = "/rest/v3/publishers"
+    url = "/v3/publishers"
     res1 = client.post(url, publisher_a_json, content_type="application/json")
     res2 = client.post(url, publisher_b_json, content_type="application/json")
     res3 = client.post(url, publisher_c_json, content_type="application/json")
@@ -201,7 +201,7 @@ def post_metadata_provider_payloads_a_b_c_d(
     metadata_provider_d_json,
 ):
     logger.info(__name__)
-    url = "/rest/v3/metadata-provider"
+    url = "/v3/metadata-provider"
     res1 = client.post(url, metadata_provider_a_json, content_type="application/json")
     res2 = client.post(url, metadata_provider_b_json, content_type="application/json")
     res3 = client.post(url, metadata_provider_c_json, content_type="application/json")

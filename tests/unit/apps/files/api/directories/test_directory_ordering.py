@@ -4,7 +4,7 @@ import pytest
 @pytest.mark.django_db
 def test_directory_ordering_name(client, file_tree_a):
     res = client.get(
-        "/rest/v3/directories",
+        "/v3/directories",
         {
             "path": "/dir",
             "pagination": False,
@@ -20,7 +20,7 @@ def test_directory_ordering_name(client, file_tree_a):
 @pytest.mark.django_db
 def test_directory_ordering_name_reverse(client, file_tree_a):
     res = client.get(
-        "/rest/v3/directories",
+        "/v3/directories",
         {
             "path": "/dir",
             "pagination": False,
@@ -36,7 +36,7 @@ def test_directory_ordering_name_reverse(client, file_tree_a):
 @pytest.mark.django_db
 def test_directory_ordering_byte_size(client, file_tree_a):
     res = client.get(
-        "/rest/v3/directories",
+        "/v3/directories",
         {
             "path": "/dir",
             "pagination": False,
@@ -52,7 +52,7 @@ def test_directory_ordering_byte_size(client, file_tree_a):
 @pytest.mark.django_db
 def test_directory_ordering_multiple(client, file_tree_a):
     res = client.get(
-        "/rest/v3/directories",
+        "/v3/directories",
         {
             "path": "/dir",
             "pagination": False,
@@ -68,7 +68,7 @@ def test_directory_ordering_multiple(client, file_tree_a):
 @pytest.mark.django_db
 def test_file_ordering_name(client, file_tree_a):
     res = client.get(
-        "/rest/v3/directories",
+        "/v3/directories",
         {
             "path": "/dir",
             "pagination": False,
@@ -84,7 +84,7 @@ def test_file_ordering_name(client, file_tree_a):
 @pytest.mark.django_db
 def test_file_ordering_name_reverse(client, file_tree_a):
     res = client.get(
-        "/rest/v3/directories",
+        "/v3/directories",
         {
             "path": "/dir",
             "pagination": False,
@@ -100,7 +100,7 @@ def test_file_ordering_name_reverse(client, file_tree_a):
 @pytest.mark.django_db
 def test_file_ordering_path(client, file_tree_a):
     res = client.get(
-        "/rest/v3/directories",
+        "/v3/directories",
         {
             "path": "/dir",
             "pagination": False,

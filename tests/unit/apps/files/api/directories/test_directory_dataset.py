@@ -35,7 +35,7 @@ def file_tree_with_datasets(file_tree_a):
 @pytest.mark.django_db
 def test_directory_dataset_a(client, file_tree_with_datasets):
     res = client.get(
-        "/rest/v3/directories",
+        "/v3/directories",
         {
             "dataset": file_tree_with_datasets["dataset_a"].id,
             "pagination": False,
@@ -68,7 +68,7 @@ def test_directory_dataset_a(client, file_tree_with_datasets):
 @pytest.mark.django_db
 def test_directory_dataset_b(client, file_tree_with_datasets):
     res = client.get(
-        "/rest/v3/directories",
+        "/v3/directories",
         {
             "dataset": file_tree_with_datasets["dataset_b"].id,
             "pagination": False,
@@ -99,7 +99,7 @@ def test_directory_dataset_b(client, file_tree_with_datasets):
 def test_directory_dataset_no_files_dataset(client, file_tree_with_datasets):
     dataset = factories.DatasetFactory()
     res = client.get(
-        "/rest/v3/directories",
+        "/v3/directories",
         {
             "dataset": file_tree_with_datasets["dataset_c"].id,
             "pagination": False,
@@ -113,7 +113,7 @@ def test_directory_dataset_no_files_dataset(client, file_tree_with_datasets):
 @pytest.mark.django_db
 def test_directory_exclude_dataset_a(client, file_tree_with_datasets):
     res = client.get(
-        "/rest/v3/directories",
+        "/v3/directories",
         {
             "dataset": file_tree_with_datasets["dataset_a"].id,
             "exclude_dataset": True,

@@ -45,4 +45,4 @@ for model in reference_data_models:
         f"reference-data/{model.get_model_url()}",
         get_viewset_for_model(model),
     )
-urlpatterns = [path("", include(router.urls))]
+urlpatterns = router.urls

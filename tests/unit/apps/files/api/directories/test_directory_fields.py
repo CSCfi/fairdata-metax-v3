@@ -9,7 +9,7 @@ from apps.files.views.directory_view import DirectoryCommonQueryParams
 @pytest.mark.django_db
 def test_directory_field_values(client, file_tree_b):
     res = client.get(
-        "/rest/v3/directories",
+        "/v3/directories",
         {
             "pagination": False,
             **file_tree_b["params"],
@@ -39,7 +39,7 @@ def test_directory_field_values(client, file_tree_b):
                     "byte_size": 3200,
                     "created": file_tree_b["files"]["/dir/first"].created,
                     "modified": file_tree_b["files"]["/dir/last"].modified,
-                    "url": "http://testserver/rest/v3/directories?pagination=False&project_identifier=project_x&file_storage=test-file-storage-a&path=/dir/",
+                    "url": "http://testserver/v3/directories?pagination=False&project_identifier=project_x&file_storage=test-file-storage-a&path=/dir/",
                 }
             ],
             "files": [
@@ -72,7 +72,7 @@ def test_directory_field_values(client, file_tree_b):
 @pytest.mark.django_db
 def test_directory_file_fields(client, file_tree_b):
     res = client.get(
-        "/rest/v3/directories",
+        "/v3/directories",
         {
             "pagination": False,
             "file_fields": "file_path,byte_size",
@@ -93,7 +93,7 @@ def test_directory_file_fields(client, file_tree_b):
 @pytest.mark.django_db
 def test_directory_directory_fields(client, file_tree_b):
     res = client.get(
-        "/rest/v3/directories",
+        "/v3/directories",
         {
             "pagination": False,
             "directory_fields": "directory_name,directory_path,file_count,byte_size",
@@ -119,7 +119,7 @@ def test_directory_all_directory_fields(client, file_tree_b):
     fields = fields - {"dataset_metadata"}  # metadata not available without dataset
 
     res = client.get(
-        "/rest/v3/directories",
+        "/v3/directories",
         {
             "pagination": False,
             "directory_fields": ",".join(DirectoryCommonQueryParams.allowed_directory_fields),
@@ -136,7 +136,7 @@ def test_directory_all_file_fields(client, file_tree_b):
     fields = set(DirectoryCommonQueryParams.allowed_file_fields)
     fields = fields - {"dataset_metadata"}  # metadata not available without dataset
     res = client.get(
-        "/rest/v3/directories",
+        "/v3/directories",
         {
             "pagination": False,
             "file_fields": ",".join(fields),

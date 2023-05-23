@@ -6,7 +6,7 @@ def test_directory_storage_project(client, file_tree_a):
     project_identifier = file_tree_a["params"]["project_identifier"]
     file_storage = file_tree_a["params"]["file_storage"]
     res = client.get(
-        "/rest/v3/directories",
+        "/v3/directories",
         {
             "path": "/",
             "pagination": False,
@@ -26,7 +26,7 @@ def test_directory_storage_project(client, file_tree_a):
 def test_directory_storage_project_invalid_project_identifier(client, file_tree_a):
     file_storage = file_tree_a["params"]["file_storage"]
     res = client.get(
-        "/rest/v3/directories",
+        "/v3/directories",
         {
             "path": "/",
             "directory_ordering": "directory_name",
@@ -41,7 +41,7 @@ def test_directory_storage_project_invalid_project_identifier(client, file_tree_
 def test_directory_storage_project_invalid_file_storage(client, file_tree_a):
     project_identifier = file_tree_a["params"]["project_identifier"]
     res = client.get(
-        "/rest/v3/directories",
+        "/v3/directories",
         {
             "path": "/",
             "directory_ordering": "directory_name",
@@ -56,7 +56,7 @@ def test_directory_storage_project_invalid_file_storage(client, file_tree_a):
 def test_directory_storage_project_no_project_identifier(client, file_tree_a):
     file_storage = file_tree_a["params"]["file_storage"]
     res = client.get(
-        "/rest/v3/directories",
+        "/v3/directories",
         {
             "path": "/",
             "file_storage": file_storage,
@@ -69,7 +69,7 @@ def test_directory_storage_project_no_project_identifier(client, file_tree_a):
 def test_directory_storage_project_no_file_storage(client, file_tree_a):
     project_identifier = file_tree_a["params"]["project_identifier"]
     res = client.get(
-        "/rest/v3/directories",
+        "/v3/directories",
         {
             "path": "/",
             "directory_ordering": "directory_name",

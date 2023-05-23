@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 @pytest.mark.django_db
 def test_create_metadata_provider(client, metadata_provider_a_json):
     res = client.post(
-        "/rest/v3/metadata-provider", metadata_provider_a_json, content_type="application/json"
+        "/v3/metadata-provider", metadata_provider_a_json, content_type="application/json"
     )
     logger.info(f"{res.data=}")
     assert res.status_code == 201
@@ -20,12 +20,12 @@ def test_create_metadata_provider(client, metadata_provider_a_json):
 def test_create_metadata_provider_twice(client, metadata_provider_b_json):
     _now = datetime.datetime.now()
     res1 = client.post(
-        "/rest/v3/metadata-provider", metadata_provider_b_json, content_type="application/json"
+        "/v3/metadata-provider", metadata_provider_b_json, content_type="application/json"
     )
     assert res1.status_code == 201
     logger.info(f"{res1.data=}")
     res2 = client.post(
-        "/rest/v3/metadata-provider", metadata_provider_b_json, content_type="application/json"
+        "/v3/metadata-provider", metadata_provider_b_json, content_type="application/json"
     )
     assert res2.status_code == 400
 
@@ -33,14 +33,14 @@ def test_create_metadata_provider_twice(client, metadata_provider_b_json):
 @pytest.mark.django_db
 def test_create_metadata_provider_error(client, metadata_provider_error_json):
     response = client.post(
-        "/rest/v3/metadata-provider", metadata_provider_error_json, content_type="application/json"
+        "/v3/metadata-provider", metadata_provider_error_json, content_type="application/json"
     )
     assert response.status_code == 400
 
 
 @pytest.mark.django_db
 def test_list_metadata_providers(client, post_metadata_provider_payloads_a_b_c_d):
-    response = client.get("/rest/v3/metadata-provider")
+    response = client.get("/v3/metadata-provider")
     logger.info(f"{response.data=}")
     metadata_provider_count = MetadataProvider.available_objects.all().count()
     assert response.status_code == 200
@@ -63,7 +63,7 @@ def test_list_metadata_providers_with_filter(
     filter_value,
     filter_result,
 ):
-    url = "/rest/v3/metadata-provider?{0}={1}".format(metadata_provider_filter, filter_value)
+    url = "/v3/metadata-provider?{0}={1}".format(metadata_provider_filter, filter_value)
     response = client.get(url)
     logger.info(f"{response.data=}")
     assert response.status_code == 200
@@ -72,7 +72,7 @@ def test_list_metadata_providers_with_filter(
 
 @pytest.mark.django_db
 def test_list_metadata_providers_with_page_size(client, post_metadata_provider_payloads_a_b_c_d):
-    url = "/rest/v3/metadata-provider?{0}={1}".format("page_size", 2)
+    url = "/v3/metadata-provider?{0}={1}".format("page_size", 2)
     logger.info(url)
     response = client.get(url)
     logger.info(f"{response.data=}")
@@ -84,12 +84,12 @@ def test_list_metadata_providers_with_page_size(client, post_metadata_provider_p
 def test_change_metadata_provider(client, metadata_provider_c_json, metadata_provider_put_c_json):
     _now = datetime.datetime.now()
     res1 = client.post(
-        "/rest/v3/metadata-provider", metadata_provider_c_json, content_type="application/json"
+        "/v3/metadata-provider", metadata_provider_c_json, content_type="application/json"
     )
     metadata_provider_created = MetadataProvider.objects.get(id=res1.data.get("id"))
     assert metadata_provider_created.user.username == "metax-user-c"
     response = client.put(
-        "/rest/v3/metadata-provider/{id}".format(id=res1.data.get("id")),
+        "/v3/metadata-provider/{id}".format(id=res1.data.get("id")),
         metadata_provider_put_c_json,
         content_type="application/json",
     )
@@ -105,11 +105,11 @@ def test_change_metadata_provider(client, metadata_provider_c_json, metadata_pro
 
 @pytest.mark.django_db
 def test_get_metadata_provider_by_id(client, post_metadata_provider_payloads_a_b_c_d):
-    response = client.get("/rest/v3/metadata-provider")
+    response = client.get("/v3/metadata-provider")
     results = response.data.get("results")
     for result in results:
         metadata_provider_by_id = client.get(
-            "/rest/v3/metadata-provider/{id}".format(id=result.get("id"))
+            "/v3/metadata-provider/{id}".format(id=result.get("id"))
         )
         assert response.status_code == 200
         if user1 := metadata_provider_by_id.get("user"):
@@ -119,13 +119,11 @@ def test_get_metadata_provider_by_id(client, post_metadata_provider_payloads_a_b
 
 @pytest.mark.django_db
 def test_delete_metadata_provider_by_id(client, post_metadata_provider_payloads_a_b_c_d):
-    response = client.get("/rest/v3/metadata-provider")
+    response = client.get("/v3/metadata-provider")
     metadata_provider_count = MetadataProvider.available_objects.all().count()
     assert response.data.get("count") == metadata_provider_count
     results = response.data.get("results")
-    delete_result = client.delete(
-        "/rest/v3/metadata-provider/{id}".format(id=results[0].get("id"))
-    )
+    delete_result = client.delete("/v3/metadata-provider/{id}".format(id=results[0].get("id")))
     assert delete_result.status_code == 204
     assert metadata_provider_count - 1 == MetadataProvider.available_objects.all().count()
 
@@ -139,11 +137,11 @@ def test_delete_metadata_provider_by_id(client, post_metadata_provider_payloads_
         ("-organization,created", "organization-d.fi"),
     ],
 )
-
-
 @pytest.mark.django_db
-def test_list_metadata_providers_with_ordering(client, post_metadata_provider_payloads_a_b_c_d, metadata_provider_order, order_result):
-    url = "/rest/v3/metadata-provider?ordering={0}".format(metadata_provider_order)
+def test_list_metadata_providers_with_ordering(
+    client, post_metadata_provider_payloads_a_b_c_d, metadata_provider_order, order_result
+):
+    url = "/v3/metadata-provider?ordering={0}".format(metadata_provider_order)
     res = client.get(url)
     assert res.status_code == 200
     results = res.data.get("results")

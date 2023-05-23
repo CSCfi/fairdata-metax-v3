@@ -65,18 +65,21 @@ def another_storage() -> StorageProject:
         file_storage__id="xyz-storage",
     )
 
+
 @pytest.fixture(scope="module")
 def action_url():
     def _action_url(action: str):
         if action == "insert":
-            return reverse('file-insert-many')
+            return reverse("file-insert-many")
         elif action == "update":
-            return reverse('file-update-many')
-        elif action == 'upsert':
-            return reverse('file-upsert-many')
+            return reverse("file-update-many")
+        elif action == "upsert":
+            return reverse("file-upsert-many")
         elif action == "delete":
-            return reverse('file-delete-many')
+            return reverse("file-delete-many")
+
     return _action_url
+
 
 @pytest.mark.django_db
 def test_files_insert_many_ok(client, action_url):
@@ -421,7 +424,7 @@ def test_files_delete_many_ok(client):
             {"exists": True},
         ]
     )
-    res = client.post("/rest/v3/files/delete-many", files, content_type="application/json")
+    res = client.post("/v3/files/delete-many", files, content_type="application/json")
     assert res.status_code == 200
     assert_nested_subdict(
         [
@@ -463,7 +466,7 @@ def test_files_delete_many_non_existing(client):
             {"exists": False},
         ]
     )
-    res = client.post("/rest/v3/files/delete-many", files, content_type="application/json")
+    res = client.post("/v3/files/delete-many", files, content_type="application/json")
     assert res.status_code == 200
     assert_nested_subdict(
         {
