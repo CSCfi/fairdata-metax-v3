@@ -1,11 +1,10 @@
 import uuid
 
-from django.db import models
 from django.contrib.postgres.fields import HStoreField
+from django.db import models
 
 from apps.common.models import AbstractBaseModel, AbstractFreeformConcept
 from apps.common.serializers import URLReferencedModelListField
-from apps.common.models import AbstractBaseModel
 from apps.refdata import models as refdata
 
 

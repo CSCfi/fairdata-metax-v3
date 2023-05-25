@@ -24,3 +24,7 @@
 
 ### :::src.apps.files.serializers.fields.OptionalSlashDirectoryPathField
 
+## StorageServiceField
+
+### :::src.apps.files.serializers.fields.StorageServiceField
+

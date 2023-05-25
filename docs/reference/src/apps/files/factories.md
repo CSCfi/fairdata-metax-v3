@@ -4,10 +4,6 @@
 
 ### :::src.apps.files.factories.FileStorageFactory
 
-## StorageProjectFactory
-
-### :::src.apps.files.factories.StorageProjectFactory
-
 ## FileFactory
 
 ### :::src.apps.files.factories.FileFactory

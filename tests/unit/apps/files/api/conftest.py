@@ -86,7 +86,7 @@ def file_tree_a() -> dict:
 @pytest.fixture
 def file_tree_b() -> dict:
     return factories.create_project_with_files(
-        file_storage="test-file-storage-a",
+        storage_service="ida",
         project_identifier="project_x",
         file_paths=[
             "/dir/first",

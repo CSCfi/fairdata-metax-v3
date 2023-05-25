@@ -12,6 +12,7 @@
         - [admin](src/apps/common/admin.md)
         - [apps](src/apps/common/apps.md)
         - [helpers](src/apps/common/helpers.md)
+        - [managers](src/apps/common/managers.md)
         - [models](src/apps/common/models.md)
         - [pagination](src/apps/common/pagination.md)
         - [serializers](src/apps/common/serializers.md)
@@ -50,16 +51,13 @@
         - models
             - [file](src/apps/files/models/file.md)
             - [file_storage](src/apps/files/models/file_storage.md)
-            - [storage_project](src/apps/files/models/storage_project.md)
         - serializers
             - [directory_serializer](src/apps/files/serializers/directory_serializer.md)
             - [fields](src/apps/files/serializers/fields.md)
             - [file_bulk_serializer](src/apps/files/serializers/file_bulk_serializer.md)
             - [file_serializer](src/apps/files/serializers/file_serializer.md)
-            - [file_storage_serializer](src/apps/files/serializers/file_storage_serializer.md)
         - views
             - [directory_view](src/apps/files/views/directory_view.md)
-            - [file_storage_view](src/apps/files/views/file_storage_view.md)
             - [file_view](src/apps/files/views/file_view.md)
     - refdata
         - [admin](src/apps/refdata/admin.md)
@@ -90,7 +88,6 @@
             - [test_create](tests/behave/features/datacatalog/test_create.md)
             - [test_delete](tests/behave/features/datacatalog/test_delete.md)
         - ida
-            - [conftest](tests/behave/features/ida/conftest.md)
             - [test_freezing](tests/behave/features/ida/test_freezing.md)
             - [test_unfreeze](tests/behave/features/ida/test_unfreeze.md)
         - qvain
@@ -139,18 +136,18 @@
                     - directories
                         - [test_directory_dataset](tests/unit/apps/files/api/directories/test_directory_dataset.md)
                         - [test_directory_fields](tests/unit/apps/files/api/directories/test_directory_fields.md)
+                        - [test_directory_file_storage](tests/unit/apps/files/api/directories/test_directory_file_storage.md)
                         - [test_directory_include_parent](tests/unit/apps/files/api/directories/test_directory_include_parent.md)
                         - [test_directory_ordering](tests/unit/apps/files/api/directories/test_directory_ordering.md)
                         - [test_directory_pagination](tests/unit/apps/files/api/directories/test_directory_pagination.md)
                         - [test_directory_path](tests/unit/apps/files/api/directories/test_directory_path.md)
-                        - [test_directory_storage_project](tests/unit/apps/files/api/directories/test_directory_storage_project.md)
                     - files
                         - [conftest](tests/unit/apps/files/api/files/conftest.md)
                         - [test_files_bulk](tests/unit/apps/files/api/files/test_files_bulk.md)
                         - [test_files_create](tests/unit/apps/files/api/files/test_files_create.md)
                         - [test_files_datasets](tests/unit/apps/files/api/files/test_files_datasets.md)
                         - [test_files_list](tests/unit/apps/files/api/files/test_files_list.md)
-                    - [test_file_storage](tests/unit/apps/files/api/test_file_storage.md)
+                - [models.test_file_storage](tests/unit/apps/files/models/test_file_storage.md)
                 - [serializers.test_fields](tests/unit/apps/files/serializers/test_fields.md)
             - refdata
                 - [api.test_refdata](tests/unit/apps/refdata/api/test_refdata.md)

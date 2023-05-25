@@ -133,7 +133,7 @@ REFERENCE_DATA_SOURCES = {
 ESSENTIAL_LANGUAGE_CHOICE_URLS = [
     "http://lexvo.org/id/iso639-3/fin",
     "http://lexvo.org/id/iso639-3/swe",
-    "http://lexvo.org/id/iso639-3/eng"
+    "http://lexvo.org/id/iso639-3/eng",
 ]
 ESSENTIAL_FIELD_OF_SCIENCE_CHOICE_URLS = [
     "http://www.yso.fi/onto/okm-tieteenala/ta5",

@@ -2,7 +2,7 @@ import logging
 
 from django.db import models
 
-from apps.files.models import File, StorageProject
+from apps.files.models import File, FileStorage
 
 from .concepts import FileType, UseCategory
 
@@ -35,7 +35,7 @@ class DatasetDirectoryMetadata(models.Model):
         on_delete=models.CASCADE,
     )
     directory_path = models.TextField(db_index=True)
-    storage_project = models.ForeignKey(StorageProject, on_delete=models.CASCADE)
+    file_storage = models.ForeignKey(FileStorage, on_delete=models.CASCADE)
     title = models.TextField(null=True, blank=True)
     description = models.TextField(null=True, blank=True)
     use_category = models.ForeignKey(UseCategory, null=True, on_delete=models.SET_NULL)

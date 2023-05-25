@@ -4,15 +4,15 @@ from django_filters import rest_framework as filters
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets
 
+from apps.common.views import StandardResultsSetPagination
 from apps.core.models import AccessRights, Dataset
-from apps.core.models.data_catalog import DatasetPublisher
 from apps.core.models.catalog_record import MetadataProvider
+from apps.core.models.data_catalog import DatasetPublisher
 from apps.core.serializers import (
     DatasetPublisherModelSerializer,
-    MetadataProviderModelSerializer,
     DatasetSerializer,
+    MetadataProviderModelSerializer,
 )
-from apps.common.views import StandardResultsSetPagination
 
 logger = logging.getLogger(__name__)
 
@@ -177,10 +177,3 @@ class DatasetFilter(filters.FilterSet):
             ("modified", "modified"),
         )
     )
-
-
-class DatasetViewSet(viewsets.ModelViewSet):
-    serializer_class = DatasetSerializer
-    queryset = Dataset.objects.all()
-    filterset_class = DatasetFilter
-    http_method_names = ["get", "post", "put", "delete"]

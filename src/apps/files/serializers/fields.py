@@ -5,6 +5,7 @@
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
 
+from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.fields import to_choices_dict
@@ -88,3 +89,11 @@ class OptionalSlashDirectoryPathField(serializers.RegexField):
         if data and not data.endswith("/"):
             data += "/"
         return super().to_internal_value(data)
+
+
+class StorageServiceField(ListValidChoicesField):
+    """ChoiceField with validation for storage services."""
+
+    def __init__(self, *args, **kwargs):
+        kwargs["choices"] = list(settings.STORAGE_SERVICE_FILE_STORAGES)
+        super().__init__(*args, **kwargs)

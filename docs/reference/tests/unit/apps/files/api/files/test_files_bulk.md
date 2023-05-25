@@ -12,10 +12,6 @@
 
 ### :::tests.unit.apps.files.api.files.test_files_bulk.another_project
 
-## another_storage
-
-### :::tests.unit.apps.files.api.files.test_files_bulk.another_storage
-
 ## action_url
 
 ### :::tests.unit.apps.files.api.files.test_files_bulk.action_url
@@ -23,10 +19,6 @@
 ## test_files_insert_many_ok
 
 ### :::tests.unit.apps.files.api.files.test_files_bulk.test_files_insert_many_ok
-
-## test_files_insert_many_multiple_projects
-
-### :::tests.unit.apps.files.api.files.test_files_bulk.test_files_insert_many_multiple_projects
 
 ## test_files_insert_many_multiple_storages
 

@@ -2,9 +2,9 @@ import datetime
 import logging
 
 import pytest
+from rest_framework.reverse import reverse
 
 from apps.core.models import DataCatalog
-from rest_framework.reverse import reverse
 
 logger = logging.getLogger(__name__)
 

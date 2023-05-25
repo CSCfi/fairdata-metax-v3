@@ -8,36 +8,40 @@
 from rest_framework import serializers
 
 from apps.files.helpers import (
+    get_attr_or_item,
     get_directory_metadata_serializer,
     remove_hidden_fields,
     replace_query_path,
 )
+from apps.files.models.file import FileStorage
+from apps.files.serializers.file_serializer import FileSerializer
 
-from .file_serializer import FileSerializer
 
+class ContextFileStorageMixin(serializers.Serializer):
+    """Serializer mixin that gets FileStorage fields from context."""
 
-class ContextStorageProjectMixin(serializers.Serializer):
-    """Serializer mixin that gets StorageProject fields from context."""
-
-    file_storage = serializers.SerializerMethodField()
+    storage_service = serializers.SerializerMethodField()
     project_identifier = serializers.SerializerMethodField()
 
+    def get_file_storage(self, obj) -> FileStorage:
+        return self.context.get("file_storage")
+
     def get_project_identifier(self, obj):
-        if "storage_project" in self.context:
-            return self.context["storage_project"].project_identifier
+        if "file_storage" in self.context:
+            return self.context["file_storage"].project_identifier
 
-    def get_file_storage(self, obj):
-        if "storage_project" in self.context:
-            return self.context["storage_project"].file_storage_id
+    def get_storage_service(self, obj):
+        if "file_storage" in self.context:
+            return self.context["file_storage"].storage_service
 
 
-class DirectoryFileSerializer(ContextStorageProjectMixin, FileSerializer):
+class DirectoryFileSerializer(ContextFileStorageMixin, FileSerializer):
     def get_fields(self):
         fields = super().get_fields()
         return remove_hidden_fields(fields, self.context.get("file_fields"))
 
 
-class BaseDirectorySerializer(ContextStorageProjectMixin, serializers.Serializer):
+class BaseDirectorySerializer(ContextFileStorageMixin, serializers.Serializer):
     directory_name = serializers.CharField()
     directory_path = serializers.CharField()
     file_count = serializers.IntegerField()  # total file count including subdirectories
@@ -56,6 +60,10 @@ class BaseDirectorySerializer(ContextStorageProjectMixin, serializers.Serializer
         rep = super().to_representation(instance)
         if "directory_metadata" not in self.context:
             rep.pop("dataset_metadata", None)
+
+        # FileStorage should be available in context for directories
+        if storage := self.get_file_storage(instance):
+            storage.remove_unsupported_extra_fields(rep)
         return rep
 
 

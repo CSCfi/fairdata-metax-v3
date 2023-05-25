@@ -640,28 +640,6 @@ class Migration(migrations.Migration):
             name='system_creator',
             field=models.ForeignKey(blank=True, db_constraint=False, null=True, on_delete=django.db.models.deletion.DO_NOTHING, related_name='+', to=settings.AUTH_USER_MODEL),
         ),
-        migrations.CreateModel(
-            name='DatasetFileMetadata',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.TextField(blank=True, null=True)),
-                ('description', models.TextField(blank=True, null=True)),
-                ('file', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='dataset_metadata', to='files.file')),
-                ('file_type', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='core.filetype')),
-                ('use_category', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='core.usecategory')),
-            ],
-        ),
-        migrations.CreateModel(
-            name='DatasetDirectoryMetadata',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('directory_path', models.TextField(db_index=True)),
-                ('title', models.TextField(blank=True, null=True)),
-                ('description', models.TextField(blank=True, null=True)),
-                ('storage_project', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='files.storageproject')),
-                ('use_category', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='core.usecategory')),
-            ],
-        ),
         migrations.AddField(
             model_name='datacatalog',
             name='language',
@@ -864,16 +842,6 @@ class Migration(migrations.Migration):
             index=models.Index(fields=['custom_url'], name='core_datase_custom__ae10d6_idx'),
         ),
         migrations.AddField(
-            model_name='datasetfilemetadata',
-            name='dataset',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='file_metadata', to='core.dataset'),
-        ),
-        migrations.AddField(
-            model_name='datasetdirectorymetadata',
-            name='dataset',
-            field=models.ForeignKey(editable=False, on_delete=django.db.models.deletion.CASCADE, related_name='directory_metadata', to='core.dataset'),
-        ),
-        migrations.AddField(
             model_name='datasetactor',
             name='dataset',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='actors', to='core.dataset'),
@@ -922,9 +890,5 @@ class Migration(migrations.Migration):
             model_name='dataset',
             name='theme',
             field=models.ManyToManyField(blank=True, limit_choices_to={'is_essential_choice': True}, related_name='datasets', to='core.Theme'),
-        ),
-        migrations.AlterUniqueTogether(
-            name='datasetfilemetadata',
-            unique_together={('dataset', 'file')},
         ),
     ]

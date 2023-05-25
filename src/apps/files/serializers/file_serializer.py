@@ -5,84 +5,31 @@
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
 
-from collections import Counter
-from dataclasses import dataclass
-
-from django.db.models.functions import Concat
+from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
-from apps.files.helpers import get_file_metadata_serializer
-from apps.files.models.file import File, StorageProject, checksum_algorithm_choices
+from apps.files.helpers import get_attr_or_item, get_file_metadata_serializer
+from apps.files.models.file import File, FileStorage, checksum_algorithm_choices
 from apps.files.models.file_storage import FileStorage
 
 from .fields import DirectoryPathField, FileNameField, FilePathField, ListValidChoicesField
 
 
-def get_storage_project_or_none(project_identifier, file_storage_id):
-    try:
-        project = StorageProject.available_objects.get(
-            project_identifier=project_identifier,
-            file_storage_id=file_storage_id,
-        )
-        return project
-    except StorageProject.DoesNotExist:
-        return None
-
-
-def get_or_create_storage_project(project_identifier, file_storage_id) -> StorageProject:
-    try:
-        project, created = StorageProject.available_objects.get_or_create(
-            project_identifier=project_identifier,
-            file_storage=FileStorage.available_objects.get(id=file_storage_id),
-        )
-    except FileStorage.DoesNotExist:
+def get_or_create_file_storage(project_identifier: str, storage_service: str) -> FileStorage:
+    if storage_service not in settings.STORAGE_SERVICE_FILE_STORAGES:
         raise serializers.ValidationError(
             {
-                "file_storage": _("File storage not found: '{storage_id}'").format(
-                    storage_id=file_storage_id
+                "storage_service": _("Unknown storage service: '{storage_service}'").format(
+                    storage_service=storage_service
                 )
             }
         )
-    return project
-
-
-def validate_path_conflicts(storage_project, file_paths):
-    """Validate file paths for uniqueness conflicts."""
-    repeated = [path for path, count in Counter(file_paths).items() if count > 1]
-    if len(repeated) > 0:
-        raise serializers.ValidationError(
-            {
-                "file_path": _("Cannot create multiple files with same path: {paths}").format(
-                    paths=repeated
-                )
-            }
-        )
-
-    if storage_project is None:
-        return
-
-    conflicts = (
-        File.objects.filter(
-            storage_project=storage_project,
-            # prefilter results before doing a more expensive exact match with Concat
-            directory_path__in=set(p.rsplit("/", 1)[0] + "/" for p in file_paths),
-            file_name__in=set(p.rsplit("/", 1)[1] for p in file_paths),
-        )
-        .annotate(file_path=Concat("directory_path", "file_name"))
-        .filter(
-            file_path__in=file_paths,
-        )
-        .values_list("file_path", flat=True)
+    storage, created = FileStorage.available_objects.get_or_create(
+        project_identifier=project_identifier,
+        storage_service=storage_service,
     )
-    if conflicts:
-        raise serializers.ValidationError(
-            {
-                "file_path": _("File with path already exists: {paths}").format(
-                    paths=list(conflicts)
-                )
-            }
-        )
+    return storage
 
 
 class CreateOnlyFieldsMixin:
@@ -104,10 +51,17 @@ class ChecksumSerializer(serializers.Serializer):
 
 
 class FileSerializer(CreateOnlyFieldsMixin, serializers.ModelSerializer):
-    create_only_fields = ["file_path", "project_identifier", "file_storage"]
+    create_only_fields = [
+        "file_path",
+        "project_identifier",
+        "storage_service",
+        "file_storage_identifier",
+        "file_storage_pathname",
+    ]
 
-    project_identifier = serializers.CharField(max_length=200)
-    file_storage = serializers.CharField(max_length=255, source="file_storage.id")
+    # FileStorage specific fields
+    storage_service = ListValidChoicesField(choices=list(settings.STORAGE_SERVICE_FILE_STORAGES))
+    project_identifier = serializers.CharField(max_length=200, default=None)
 
     checksum = ChecksumSerializer()
 
@@ -127,18 +81,24 @@ class FileSerializer(CreateOnlyFieldsMixin, serializers.ModelSerializer):
         rep = super().to_representation(instance)
         if "file_metadata" not in self.context:
             rep.pop("dataset_metadata", None)
+
+        storage = FileStorage.get_proxy_model(get_attr_or_item(instance, "storage_service"))
+        storage.remove_unsupported_extra_fields(rep)
         return rep
+
+    def to_internal_value(self, data):
+        val = super().to_internal_value(data)
+        if not (self.parent and self.parent.many):
+            # When in a list, this should be done in a parent serializer
+            FileStorage.objects.assign_to_file_data(
+                [val], allow_create=True, raise_exception=True, remove_filestorage_fields=True
+            )
+        return val
 
     def validate(self, data):
         if not (self.parent and self.parent.many):
-            if storage_project := get_storage_project_or_none(
-                project_identifier=data["project_identifier"],
-                file_storage_id=data["file_storage"]["id"],
-            ):
-                validate_path_conflicts(
-                    storage_project=storage_project,
-                    file_paths=[data["file_path"]],
-                )
+            # When in a list, this should be done in a parent serializer
+            FileStorage.check_file_data_conflicts([data], raise_exception=True)
 
         return super().validate(data)
 
@@ -150,8 +110,10 @@ class FileSerializer(CreateOnlyFieldsMixin, serializers.ModelSerializer):
             "file_name",
             "directory_path",
             "byte_size",
+            "storage_service",
             "project_identifier",
-            "file_storage",
+            "file_storage_identifier",
+            "file_storage_pathname",
             "checksum",
             "date_frozen",
             "file_modified",
@@ -160,13 +122,5 @@ class FileSerializer(CreateOnlyFieldsMixin, serializers.ModelSerializer):
             "modified",
             "dataset_metadata",
         ]
-
-    def create(self, validated_data):
-        project_identifier = validated_data.pop("project_identifier", None)
-        file_storage = validated_data.pop("file_storage", {}).get("id")
-
-        project_id = get_or_create_storage_project(project_identifier, file_storage).id
-        validated_data["storage_project_id"] = project_id
-        return super().create(validated_data)
 
     # TODO: Partial update

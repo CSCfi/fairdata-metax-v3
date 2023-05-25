@@ -52,9 +52,9 @@
 
 ### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_unknown_project_identifier
 
-## test_dataset_files_missing_file_storage
+## test_dataset_files_missing_storage_service
 
-### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_missing_file_storage
+### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_missing_storage_service
 
 ## test_dataset_files_unknown_file_storage
 

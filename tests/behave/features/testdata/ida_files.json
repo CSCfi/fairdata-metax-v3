@@ -4,12 +4,12 @@
     "date_uploaded": "2022-11-13T12:34:00Z",
     "file_modified": "2022-11-13T12:34:00Z",
     "project_identifier": "project_x",
-    "data_storage": "data-storage-ida",
+    "data_location": "ida",
     "byte_size": 1024,
     "checksum": {
       "value": "123",
       "algorithm": "md5",
-      "checked": "2022-11-13T12:34:00Z",
+      "checked": "2022-11-13T12:34:00Z"
     }
   },
   {
@@ -17,12 +17,12 @@
     "date_uploaded": "2022-11-13T12:34:00Z",
     "file_modified": "2022-11-13T12:34:00Z",
     "project_identifier": "project_x",
-    "data_storage": "data-storage-ida",
+    "data_location": "ida",
     "byte_size": 1024,
     "checksum": {
       "value": "123",
       "algorithm": "md5",
-      "checked": "2022-11-13T12:34:00Z",
+      "checked": "2022-11-13T12:34:00Z"
     }
   },
   {
@@ -30,12 +30,12 @@
     "date_uploaded": "2022-11-13T12:34:00Z",
     "file_modified": "2022-11-13T12:34:00Z",
     "project_identifier": "project_x",
-    "data_storage": "data-storage-ida",
+    "data_location": "ida",
     "byte_size": 1024,
     "checksum": {
       "value": "123",
       "algorithm": "md5",
-      "checked": "2022-11-13T12:34:00Z",
+      "checked": "2022-11-13T12:34:00Z"
     }
   }
 ]

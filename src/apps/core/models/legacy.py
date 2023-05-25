@@ -3,15 +3,15 @@ from collections import namedtuple
 from typing import Dict, List
 
 from deepdiff import DeepDiff
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils.dateparse import parse_datetime
-from django.conf import settings
 
 from apps.actors.models import Actor, Organization
 from apps.common.helpers import parse_iso_dates_in_nested_dict
 from apps.files.models import File, FileStorage
-from apps.files.serializers.file_serializer import get_or_create_storage_project
+from apps.files.serializers.file_serializer import get_or_create_file_storage
 from apps.refdata.models import FunderType, License
 from apps.users.models import MetaxUser
 
@@ -25,11 +25,11 @@ from .catalog_record import (
 )
 from .concepts import (
     AccessType,
+    DatasetLicense,
     EventOutcome,
     FieldOfScience,
     IdentifierType,
     Language,
-    DatasetLicense,
     LifecycleEvent,
     Spatial,
 )
@@ -397,16 +397,16 @@ class LegacyDataset(Dataset):
                 file_checksum = None
                 checksum = f.get("checksum", {})
 
-                file_storage, created = FileStorage.objects.get_or_create(
-                    id=f["file_storage"]["identifier"]
-                )
-                storage_project = get_or_create_storage_project(
+                storage_service = settings.LEGACY_FILE_STORAGE_TO_V3_STORAGE_SERVICE[
+                    f["file_storage"]["identifier"]
+                ]
+                file_storage = get_or_create_file_storage(
                     project_identifier=f["project_identifier"],
-                    file_storage_id=file_storage.id,
+                    storage_service=storage_service,
                 )
 
                 new_file, created = File.objects.get_or_create(
-                    v2_identifier=file_id,
+                    file_storage_identifier=file_id,
                     defaults={
                         "checksum_value": checksum.get("value"),
                         "checksum_algorithm": checksum.get("algorithm"),
@@ -415,8 +415,8 @@ class LegacyDataset(Dataset):
                         "file_path": f["file_path"],
                         "date_uploaded": f["date_uploaded"],
                         "file_modified": f["file_modified"],
-                        "v2_identifier": f["identifier"],
-                        "storage_project": storage_project,
+                        "file_storage_identifier": f["identifier"],
+                        "file_storage": file_storage,
                     },
                 )
                 if file_checksum:
@@ -463,7 +463,10 @@ class LegacyDataset(Dataset):
                     logger.info(f"{temporal=}, created={temporal_created}")
                 if variables := data.get("variable"):
                     for var in variables:
-                        (variable, variable_created,) = ProvenanceVariable.objects.get_or_create(
+                        (
+                            variable,
+                            variable_created,
+                        ) = ProvenanceVariable.objects.get_or_create(
                             pref_label=var["pref_label"],
                             provenance=provenance,
                             representation=var.get("representation"),
@@ -586,7 +589,7 @@ class LegacyDataset(Dataset):
             projects=self.attach_projects(),
         )
 
-    def check_compatability(self) -> Dict:
+    def check_compatibility(self) -> Dict:
         v3_version = parse_iso_dates_in_nested_dict(self.as_v2_dataset())
         v2_version = parse_iso_dates_in_nested_dict(self.dataset_json)
         diff = DeepDiff(

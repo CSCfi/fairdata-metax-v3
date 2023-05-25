@@ -1,3 +1,5 @@
+from typing import Dict
+
 import factory
 from django.utils import timezone
 
@@ -7,24 +9,16 @@ from . import models
 class FileStorageFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.FileStorage
-        django_get_or_create = ("id",)
-
-    id = factory.Sequence(lambda n: f"data-storage-{n}")
-
-
-class StorageProjectFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = models.StorageProject
-        django_get_or_create = ("project_identifier", "file_storage")
+        django_get_or_create = ("project_identifier", "storage_service")
 
     project_identifier = factory.Faker("numerify", text="#######")
-    file_storage = factory.SubFactory(FileStorageFactory)
+    storage_service = "ida"
 
 
 class FileFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.File
-        django_get_or_create = ("directory_path", "file_name", "storage_project")
+        django_get_or_create = ("directory_path", "file_name", "file_storage")
 
     id = factory.Faker("uuid4")
     created = factory.LazyFunction(timezone.now)
@@ -35,7 +29,7 @@ class FileFactory(factory.django.DjangoModelFactory):
     checksum_algorithm = "MD5"
     checksum_value = factory.Faker("md5")
     checksum_checked = factory.LazyFunction(timezone.now)
-    storage_project = factory.SubFactory(StorageProjectFactory)
+    file_storage = factory.SubFactory(FileStorageFactory)
     byte_size = factory.Faker("random_number")
 
     @factory.lazy_attribute
@@ -55,18 +49,18 @@ class FileFactory(factory.django.DjangoModelFactory):
         self.file_format = str(self.file_name).split(".")[-1]
 
 
-def create_file_tree(storage_project, file_paths, file_args={}) -> list:
+def create_file_tree(file_storage, file_paths, file_args={}) -> Dict[str, models.File]:
     """Add files to a project.
 
-    Creates files in storage_project using list of file paths in file_paths.
+    Creates files in file_storage using list of file paths in file_paths.
     Optional file_args dict allows setting file factory arguments by file path.
     Use '*' as path to apply to all files.
 
-    Returns list of files."""
+    Returns dict of path->File mappings."""
 
     files = {
         path: FileFactory(
-            storage_project=storage_project,
+            file_storage=file_storage,
             file_path=path,
             **{**file_args.get("*", {}), **file_args.get(path, {})},
         )
@@ -89,31 +83,33 @@ def create_file_tree(storage_project, file_paths, file_args={}) -> list:
     return files
 
 
-def create_project_with_files(*args, project_identifier=None, file_storage=None, **kwargs) -> dict:
+def create_project_with_files(
+    *args, project_identifier=None, storage_service=None, **kwargs
+) -> dict:
     """Create a storage project and add files to it.
 
     Passes arguments to create_file_tree.
     Returns dict with files and project parameters."""
-    project_args = {
+    storage_args = {
         key: value
         for key, value in {
-            "file_storage__id": file_storage,
+            "storage_service": storage_service,
             "project_identifier": project_identifier,
         }.items()
         if value is not None  # remove "None" values so defaults will be used instead
     }
-    project = StorageProjectFactory(**project_args)
+    storage = FileStorageFactory(**storage_args)
 
     files = create_file_tree(
-        storage_project=project,
+        file_storage=storage,
         *args,
         **kwargs,
     )
     return {
         "files": files,
-        "storage_project": project,
+        "file_storage": storage,
         "params": {
-            "project_identifier": project.project_identifier,
-            "file_storage": project.file_storage_id,
+            "project_identifier": storage.project_identifier,
+            "storage_service": storage.storage_service,
         },
     }

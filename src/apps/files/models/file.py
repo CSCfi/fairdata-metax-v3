@@ -9,10 +9,11 @@ import uuid
 from typing import Dict
 
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from apps.common.models import AbstractBaseModel
 
-from .storage_project import StorageProject
+from .file_storage import FileStorage
 
 checksum_algorithm_choices = (
     ("SHA-256", "SHA-256"),
@@ -28,7 +29,12 @@ class File(AbstractBaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     # TODO: use external identifier in APIs
-    v2_identifier = models.CharField(max_length=200, null=True)  # External service identifier
+    file_storage_identifier = models.CharField(
+        max_length=200, null=True, help_text=_("Identifier of file in external service")
+    )
+    file_storage_pathname = models.CharField(
+        max_length=4096, null=True, help_text=_("Path of file in external service")
+    )
     file_name = models.TextField()
     directory_path = models.TextField(db_index=True)
     byte_size = models.BigIntegerField(default=0)
@@ -46,9 +52,7 @@ class File(AbstractBaseModel):
     # TODO: file_characteristics = JSONField(blank=True, null=True)
     # TODO: file_characteristics_extension = JSONField(blank=True, null=True)
 
-    storage_project = models.ForeignKey(
-        StorageProject, related_name="files", on_delete=models.CASCADE
-    )
+    file_storage = models.ForeignKey(FileStorage, related_name="files", on_delete=models.CASCADE)
     is_pas_compatible = models.BooleanField(default=None, null=True)
 
     @property
@@ -63,13 +67,13 @@ class File(AbstractBaseModel):
 
     @property
     def project_identifier(self) -> str:
-        if self.storage_project:
-            return self.storage_project.project_identifier
+        if self.file_storage:
+            return self.file_storage.project_identifier
 
     @property
-    def file_storage(self) -> str:
-        if self.storage_project.file_storage:
-            return self.storage_project.file_storage
+    def storage_service(self) -> str:
+        if self.file_storage.storage_service:
+            return self.file_storage.storage_service
 
     @property
     def checksum(self) -> Dict:
@@ -87,7 +91,7 @@ class File(AbstractBaseModel):
 
     class Meta:
         index_together = [
-            ("directory_path", "storage_project"),
+            ("directory_path", "file_storage"),
             ("directory_path", "file_name"),
         ]
         ordering = ["directory_path", "file_name"]
@@ -102,10 +106,24 @@ class File(AbstractBaseModel):
                 & models.Q(directory_path__endswith="/"),
                 name="%(app_label)s_%(class)s_require_dir_slash",
             ),
-            # only one non-removed file for a specific storage_project and file_path can exist
+            # file_path should be unique for file_storage
             models.UniqueConstraint(
-                fields=["file_name", "directory_path", "storage_project"],
+                fields=["file_name", "directory_path", "file_storage"],
                 condition=models.Q(is_removed=False),
-                name="%(app_label)s_%(class)s_unique_file_path_id",
+                name="%(app_label)s_%(class)s_unique_file_path",
+            ),
+            # file_storage_identifier should be unique for file_storage
+            models.UniqueConstraint(
+                fields=["file_storage_identifier", "file_storage"],
+                condition=models.Q(is_removed=False)
+                & models.Q(file_storage_identifier__isnull=False),
+                name="%(app_label)s_%(class)s_unique_file_storage_identifier",
+            ),
+            # file_storage_pathname should be unique for file_storage
+            models.UniqueConstraint(
+                fields=["file_storage_pathname", "file_storage"],
+                condition=models.Q(is_removed=False)
+                & models.Q(file_storage_pathname__isnull=False),
+                name="%(app_label)s_%(class)s_unique_file_storage_pathname",
             ),
         ]

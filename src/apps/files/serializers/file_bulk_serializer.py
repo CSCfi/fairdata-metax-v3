@@ -7,20 +7,18 @@
 
 from dataclasses import asdict, dataclass
 from enum import Enum
-from typing import Dict, List, NewType, Optional
+from typing import Dict, List, Optional
 
 from django.db.models import F
-from django.db.models.functions import Concat
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.settings import api_settings
 
 from apps.common.helpers import get_technical_metax_user
-from apps.files.models.file import File, StorageProject
+from apps.files.models.file import File, FileStorage
 from apps.files.models.file_storage import FileStorage
-
-from .file_serializer import FileSerializer
+from apps.files.serializers.file_serializer import FileSerializer
 
 
 class PartialFileSerializer(FileSerializer):
@@ -205,19 +203,19 @@ class FileBulkSerializer(serializers.ListSerializer):
                             f["errors"][field] = _("Field is required for new files.")
         return files
 
-    def assign_existing_project_data(self, files: List[dict]) -> List[dict]:
-        """Assign file_storage and project_identifier to existing file data."""
+    def assign_existing_storage_data(self, files: List[dict]) -> List[dict]:
+        """Assign file_storage and related fields to existing file data."""
         existing_files_with_missing_project_data = [
             f
             for f in files
-            if "id" in f and not ("file_storage" in f and "project_identifier" in f)
+            if "id" in f and not ("storage_service" in f and "project_identifier" in f)
         ]
         project_data = File.objects.filter(
             id__in=[f["id"] for f in existing_files_with_missing_project_data]
         ).values(
             "id",
-            file_storage=F("storage_project__file_storage_id"),
-            project_identifier=F("storage_project__project_identifier"),
+            storage_service=F("file_storage__storage_service"),
+            project_identifier=F("file_storage__project_identifier"),
         )
         project_data_by_id = {f["id"]: f for f in project_data}
 
@@ -225,118 +223,33 @@ class FileBulkSerializer(serializers.ListSerializer):
         # error if attempting to modify the values
         for f in existing_files_with_missing_project_data:
             if project_data := project_data_by_id.get(f["id"]):
-                if "file_storage" not in f:
-                    f["file_storage"] = {"id": project_data["file_storage"]}
-                if "project_identifier" not in f:
+                if f.get("storage_service") is None:
+                    f["storage_service"] = project_data["storage_service"]
+                if f.get("project_identifier") is None:
                     f["project_identifier"] = project_data["project_identifier"]
         return files
 
-    def get_or_create_storage_projects_by_key_for_files(
-        self, files: List[dict]
-    ) -> Dict[tuple, StorageProject]:
-        # Get StorageProjects for existing files
-        data_ids = [f["id"] for f in files if "id" in f]
-        storage_projects = StorageProject.objects.filter(files__in=data_ids)
-        storage_projects_by_key = {
-            (sp.file_storage_id, sp.project_identifier): sp for sp in storage_projects
-        }
-
-        # Get (or create) StorageProjects for new files
-        storage_projects_errors_by_key = {}
-        new_files = [f for f in files if "id" not in f]
-        for f in new_files:
-            if f["errors"]:
-                continue  # Don't create StorageProject for files that have errors
-
-            file_storage = f.get("file_storage")
-            project_identifier = f.get("project_identifier")
-            key = (file_storage["id"], project_identifier)
-            if key not in storage_projects_by_key:
-                try:
-                    file_storage = FileStorage.available_objects.get(id=f["file_storage"]["id"])
-                    storage_project, created = StorageProject.available_objects.get_or_create(
-                        project_identifier=f["project_identifier"],
-                        file_storage=file_storage,
-                    )
-                    storage_projects_by_key[key] = storage_project
-                except FileStorage.DoesNotExist:
-                    storage_projects_by_key[key] = None
-                    storage_projects_errors_by_key[key] = {
-                        "file_storage": _("File storage not found.")
-                    }
-            if errors := storage_projects_errors_by_key.get(key):
-                f["errors"].update(**errors)
-        return storage_projects_by_key
-
-    def assign_storage_project_to_files(self, files: List[dict]) -> List[dict]:
-        """Assign StorageProject instances to all files."""
+    def assign_file_storage_to_files(self, files: List[dict]) -> List[dict]:
+        """Assign StorageProject instances to files."""
         if not files:
             return files
 
-        storage_projects_by_key = self.get_or_create_storage_projects_by_key_for_files(files)
-
-        # Assign storage_project to files, may be None if there are errors
-        for f in files:
-            if "file_storage" in f and "project_identifier" in f:
-                key = (f["file_storage"]["id"], f["project_identifier"])
-                f["storage_project"] = storage_projects_by_key.get(key)
-            else:
-                f["storage_project"] = None
+        allow_create = self.action in self.BULK_INSERT_ACTIONS
+        files = FileStorage.objects.assign_to_file_data(
+            files, allow_create=allow_create, raise_exception=False
+        )
         return files
 
-    def group_files_by_storage_project(self, files: List[dict]) -> Dict[StorageProject, dict]:
+    def group_files_by_file_storage(self, files: List[dict]) -> Dict[FileStorage, dict]:
         files_by_project = {}
         for f in files:
-            if f["storage_project"] not in files_by_project:
-                files_by_project[f["storage_project"]] = []
-            files_by_project[f["storage_project"]].append(f)
+            if f["file_storage"] not in files_by_project:
+                files_by_project[f["file_storage"]] = []
+            files_by_project[f["file_storage"]].append(f)
         return files_by_project
 
-    def check_existing_path_conflicts(self, files: List[dict]) -> List[dict]:
-        """Check that new file paths don't conflict with existing ones."""
-        new_files = [f for f in files if ("id" not in f) and (f["storage_project"] is not None)]
-        new_files_by_project = self.group_files_by_storage_project(new_files)
-        for storage_project, new_project_files in new_files_by_project.items():
-            new_file_paths = [f["file_path"] for f in new_project_files]
-            conflicts = (
-                storage_project.files.filter(
-                    # prefilter results before doing a more expensive exact match with Concat
-                    directory_path__in=set(p.rsplit("/", 1)[0] + "/" for p in new_file_paths),
-                    file_name__in=set(p.rsplit("/", 1)[1] for p in new_file_paths),
-                )
-                .annotate(file_path=Concat("directory_path", "file_name"))
-                .filter(
-                    file_path__in=new_file_paths,
-                )
-                .values("file_path", "id")
-            )
-            if conflicts:
-                conflicts_by_path = {c["file_path"]: c["id"] for c in conflicts}
-                for f in new_project_files:
-                    if f["file_path"] in conflicts_by_path:
-                        f["errors"]["file_path"] = _(
-                            "A file with the same path already exists, id='{fid}'."
-                        ).format(fid=conflicts_by_path[f["file_path"]])
-        return files
-
-    def check_duplicate_paths(self, files: List[dict]) -> List[dict]:
-        """Check that there are no conflicting file changes."""
-        ok_files = [f for f in files if f["storage_project"] is not None]
-        files_by_project = self.group_files_by_storage_project(ok_files)
-        for project_files in files_by_project.values():
-            values = set()
-            for f in project_files:
-                if "file_path" not in f:
-                    continue
-                value = f["file_path"]
-                if value in values:
-                    f["errors"]["file_path"] = _("Value conflicts with another file in request")
-                else:
-                    values.add(value)
-        return files
-
     def flush_file_errors(self, files: List[dict]) -> List[dict]:
-        """Return only files that have no errors."""
+        """Remove errors field and return only files that have no errors."""
         ok_values = []
         for f in files:
             if errors := f.pop("errors"):
@@ -359,13 +272,12 @@ class FileBulkSerializer(serializers.ListSerializer):
         files = self.check_files_allowed_actions(files)
         files = self.check_new_files_required_fields(files)
 
-        # Assign StorageProject and related values
-        files = self.assign_existing_project_data(files)
-        files = self.assign_storage_project_to_files(files)
+        # Assign FileStorage and related values
+        files = self.assign_existing_storage_data(files)
+        files = self.assign_file_storage_to_files(files)
 
-        # Path checks
-        files = self.check_existing_path_conflicts(files)
-        files = self.check_duplicate_paths(files)
+        # FileStorage-specific checks
+        files = FileStorage.check_file_data_conflicts(files, raise_exception=False)
 
         return self.flush_file_errors(files)
 
@@ -397,7 +309,7 @@ class FileBulkSerializer(serializers.ListSerializer):
         """Return not yet saved instances from validated data."""
         system_creator = get_technical_metax_user()
 
-        existing_files_by_id = File.available_objects.prefetch_related("storage_project").in_bulk(
+        existing_files_by_id = File.available_objects.prefetch_related("file_storage").in_bulk(
             [f["id"] for f in validated_data if "id" in f]
         )
 
@@ -409,8 +321,8 @@ class FileBulkSerializer(serializers.ListSerializer):
                 # set on instantiation instead of on save, so checking
                 # `id is None` won't work.
                 original_data = f.pop("original_data")
-                f.pop("project_identifier", None)  # included in StorageProject
-                f.pop("file_storage", None)  # included in StorageProject
+                f.pop("storage_service", None)  # included in FileStorage
+                f.pop("project_identifier", None)  # included in FileStorage
                 file = File(**f, system_creator_id=system_creator)
                 file._original_data = original_data
                 files.append(file)
@@ -439,7 +351,7 @@ class FileBulkSerializer(serializers.ListSerializer):
         File.objects.bulk_update(files_to_update, fields=fields_to_update)
 
         # Get new and updated values from db
-        new_files_by_id = File.objects.prefetch_related("storage_project").in_bulk(
+        new_files_by_id = File.objects.prefetch_related("file_storage").in_bulk(
             [f.id for f in files]
         )
         new_files = []  # List files in original order

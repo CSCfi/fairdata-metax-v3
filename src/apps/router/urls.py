@@ -1,15 +1,16 @@
-from django.urls import path, include
+from django.urls import include, path
 from rest_framework.routers import DefaultRouter
+
 from apps.actors.views import OrganizationViewSet
 from apps.core.views import (
-    DatasetViewSet,
-    DatasetFilesViewSet,
+    DataCatalogView,
     DatasetDirectoryViewSet,
+    DatasetFilesViewSet,
+    DatasetViewSet,
     MetadataProviderViewSet,
     PublisherViewSet,
-    DataCatalogView,
 )
-from apps.files.views import FileStorageView, FileViewSet, DirectoryViewSet
+from apps.files.views import DirectoryViewSet, FileViewSet
 from apps.refdata.models import reference_data_models
 from apps.refdata.views import get_viewset_for_model
 
@@ -36,7 +37,6 @@ router.register(
 router.register(r"metadata-providers?", MetadataProviderViewSet, basename="metadata-provider")
 router.register(r"publishers?", PublisherViewSet, basename="publisher")
 # files app
-router.register(r"file-storages?", FileStorageView, basename="storage")
 router.register(r"files?", FileViewSet, basename="file")
 router.register(r"directories", DirectoryViewSet, basename="directory")
 # Refdata app

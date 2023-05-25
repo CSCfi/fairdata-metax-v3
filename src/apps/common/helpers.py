@@ -24,6 +24,7 @@ def get_technical_metax_user():
         obj.save()
     return obj.id
 
+
 def update_or_create_instance(serializer, instance, data):
     if instance is not None:
         serializer.update(instance, data)

@@ -6,7 +6,7 @@ from django.db import models
 from simple_history.models import HistoricalRecords
 
 from apps.common.models import AbstractBaseModel, AbstractDatasetProperty, AbstractFreeformConcept
-from apps.core.models.concepts import AccessType, Language, DatasetLicense
+from apps.core.models.concepts import AccessType, DatasetLicense, Language
 
 
 class DataCatalog(AbstractBaseModel):

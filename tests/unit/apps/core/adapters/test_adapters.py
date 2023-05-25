@@ -87,6 +87,6 @@ def test_v2_to_v3_dataset_conversion(
 
     v2_dataset.save()
 
-    diff = v2_dataset.check_compatability()
+    diff = v2_dataset.check_compatibility()
 
     assert diff == expected_diff

@@ -59,11 +59,11 @@ class FileFilterSet(FileCommonFilterset):
     """Add project and dataset filters to file filterset."""
 
     project_identifier = filters.CharFilter(
-        field_name="storage_project__project_identifier",
+        field_name="file_storage__project_identifier",
         max_length=200,
     )
-    file_storage = filters.CharFilter(
-        field_name="storage_project__file_storage",
+    storage_service = filters.CharFilter(
+        field_name="file_storage__storage_service",
         max_length=255,
     )
     dataset = filters.UUIDFilter(field_name="datasets__id")
@@ -91,7 +91,7 @@ class BaseFileViewSet(viewsets.ModelViewSet):
     pagination_class = FilePagination
     filterset_class = FileFilterSet
     http_method_names = ["get"]
-    queryset = File.objects.prefetch_related("storage_project")
+    queryset = File.objects.prefetch_related("file_storage")
 
     def get_serializer(self, instance=None, *args, **kwargs):
         """Modified get_serializer that passes instance to get_serializer_context."""

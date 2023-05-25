@@ -14,7 +14,7 @@ from rest_framework.response import Response
 
 from apps.core.models.catalog_record import Dataset
 from apps.core.serializers import DatasetFilesSerializer, DatasetSerializer
-from apps.files.models import File, StorageProject
+from apps.files.models import File, FileStorage
 from apps.files.serializers import DirectorySerializer
 from apps.files.views.directory_view import DirectoryCommonQueryParams, DirectoryViewSet
 from apps.files.views.file_view import BaseFileViewSet, FileCommonFilterset
@@ -65,10 +65,10 @@ class DatasetDirectoryViewSet(DirectoryViewSet):
         params["dataset"] = dataset_id
         params["exclude_dataset"] = False
         try:
-            storage_project = Dataset.objects.get(id=dataset_id).storage_project
-            if not storage_project:
+            file_storage = Dataset.objects.get(id=dataset_id).file_storage
+            if not file_storage:
                 raise exceptions.NotFound()
-            params["storage_project_id"] = storage_project.id
+            params["file_storage_id"] = file_storage.id
         except Dataset.DoesNotExist:
             raise exceptions.NotFound()
         return params

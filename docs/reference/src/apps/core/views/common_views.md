@@ -24,7 +24,3 @@
 
 ### :::src.apps.core.views.common_views.DatasetFilter
 
-## DatasetViewSet
-
-### :::src.apps.core.views.common_views.DatasetViewSet
-

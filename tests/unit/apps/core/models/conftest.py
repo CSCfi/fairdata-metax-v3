@@ -9,10 +9,10 @@ from apps.core.models import (
     Contract,
     DataCatalog,
     Dataset,
+    DatasetLicense,
     DatasetPublisher,
     FieldOfScience,
     Language,
-    DatasetLicense,
     MetadataProvider,
     Theme,
 )
@@ -167,18 +167,6 @@ def catalog_record(data_catalog, contract) -> CatalogRecord:
 
 
 @pytest.fixture
-def file_storage() -> FileStorage:
-    identifier = "test-data-storage"
-    endpoint_url = "https://www.test-123456dcba.fi"
-    endpoint_description = "Test-Data-Storage that is used for testing files"
-    return factories.FileStorageFactory(
-        id=identifier,
-        endpoint_url=endpoint_url,
-        endpoint_description=endpoint_description,
-    )
-
-
-@pytest.fixture
 def file() -> File:
     byte_size = 999
     checksum = "ABC-123456"
@@ -212,13 +200,7 @@ def dataset_property_object_factory(
 
 @pytest.fixture
 def abstract_base_object_factory(
-    dataset_publisher,
-    access_rights,
-    catalog_record,
-    file_storage,
-    file,
-    contract,
-    metadata_provider,
+    dataset_publisher, access_rights, catalog_record, file, contract, metadata_provider
 ):
     def _abstract_base_object_factory(object_name):
         if object_name == "dataset_publisher":
@@ -227,8 +209,6 @@ def abstract_base_object_factory(
             return access_rights
         elif object_name == "catalog_record":
             return catalog_record
-        elif object_name == "file_storage":
-            return file_storage
         elif object_name == "file":
             return file
         elif object_name == "contract":

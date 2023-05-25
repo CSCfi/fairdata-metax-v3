@@ -3,7 +3,7 @@ import logging
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from apps.refdata.models import Language, FieldOfScience, Theme
+from apps.refdata.models import FieldOfScience, Language, Theme
 
 logger = logging.getLogger(__name__)
 

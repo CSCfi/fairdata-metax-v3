@@ -72,7 +72,7 @@ def test_dataset_get_dataset_with_files(client, deep_file_tree, dataset_json_wit
     assert res.status_code == 200
     assert res.data["files"] == {
         # no added_files_count or removed_files_count should be present for GET
-        "file_storage": deep_file_tree["params"]["file_storage"],
+        "storage_service": deep_file_tree["params"]["storage_service"],
         "project_identifier": deep_file_tree["params"]["project_identifier"],
         "total_files_count": 3,
         "total_files_byte_size": 3 * 1024,

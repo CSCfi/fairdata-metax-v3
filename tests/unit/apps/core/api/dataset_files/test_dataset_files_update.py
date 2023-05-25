@@ -412,7 +412,7 @@ def test_dataset_files_all_metadata_fields(client, deep_file_tree, reference_dat
 def test_dataset_files_missing_project_identifier(client, deep_file_tree):
     dataset = factories.DatasetFactory()
     actions = {
-        "file_storage": deep_file_tree["params"]["file_storage"],
+        "storage_service": deep_file_tree["params"]["storage_service"],
         "directory_actions": [{"directory_path": "/dir1/"}],
     }
     res = client.post(
@@ -427,12 +427,12 @@ def test_dataset_files_missing_project_identifier(client, deep_file_tree):
 @pytest.mark.django_db
 def test_dataset_files_wrong_project_identifier(client, deep_file_tree):
     dataset = factories.DatasetFactory()
-    other_project = factories.StorageProjectFactory(
-        file_storage=deep_file_tree["storage_project"].file_storage
+    other_storage = factories.FileStorageFactory(
+        storage_service=deep_file_tree["file_storage"].storage_service
     )
     actions = {
-        "project_identifier": other_project.project_identifier,
-        "file_storage": other_project.file_storage_id,
+        "project_identifier": other_storage.project_identifier,
+        "storage_service": other_storage.storage_service,
         "directory_actions": [{"directory_path": "/dir1/"}],
         "file_actions": [{"id": deep_file_tree["files"]["/rootfile.txt"].id}],
     }
@@ -451,7 +451,7 @@ def test_dataset_files_unknown_project_identifier(client, deep_file_tree):
     dataset = factories.DatasetFactory()
     actions = {
         "project_identifier": "bleh",
-        "file_storage": deep_file_tree["params"]["file_storage"],
+        "storage_service": deep_file_tree["params"]["storage_service"],
         "directories": [{"directory_path": "/dir1/"}],
     }
     res = client.post(
@@ -467,7 +467,7 @@ def test_dataset_files_unknown_project_identifier(client, deep_file_tree):
 
 
 @pytest.mark.django_db
-def test_dataset_files_missing_file_storage(client, deep_file_tree):
+def test_dataset_files_missing_storage_service(client, deep_file_tree):
     dataset = factories.DatasetFactory()
     actions = {
         "project_identifier": deep_file_tree["params"]["project_identifier"],
@@ -479,7 +479,7 @@ def test_dataset_files_missing_file_storage(client, deep_file_tree):
         content_type="application/json",
     )
     assert res.status_code == 400
-    assert "file_storage" in res.data
+    assert "storage_service" in res.data
 
 
 @pytest.mark.django_db
@@ -496,4 +496,4 @@ def test_dataset_files_unknown_file_storage(client, deep_file_tree):
         content_type="application/json",
     )
     assert res.status_code == 400
-    assert "file_storage" in res.data
+    assert "storage_service" in res.data

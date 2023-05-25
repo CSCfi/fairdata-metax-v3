@@ -1,8 +1,8 @@
 # directory_serializer
 
-## ContextStorageProjectMixin
+## ContextFileStorageMixin
 
-### :::src.apps.files.serializers.directory_serializer.ContextStorageProjectMixin
+### :::src.apps.files.serializers.directory_serializer.ContextFileStorageMixin
 
 ## DirectoryFileSerializer
 

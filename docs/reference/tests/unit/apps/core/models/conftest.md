@@ -56,10 +56,6 @@
 
 ### :::tests.unit.apps.core.models.conftest.catalog_record
 
-## file_storage
-
-### :::tests.unit.apps.core.models.conftest.file_storage
-
 ## file
 
 ### :::tests.unit.apps.core.models.conftest.file

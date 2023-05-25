@@ -3,10 +3,10 @@ import uuid
 import inflection
 from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.db import models
+from django.utils.translation import gettext as _
 from rest_framework import serializers
 
 from apps.common.models import AbstractBaseModel
-from django.utils.translation import gettext as _
 
 
 class AbstractConcept(AbstractBaseModel):

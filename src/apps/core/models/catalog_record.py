@@ -15,7 +15,7 @@ from simple_history.models import HistoricalRecords
 from apps.actors.models import Actor, Organization
 from apps.common.models import AbstractBaseModel
 from apps.core.mixins import V2DatasetMixin
-from apps.files.models import File, FileStorage, StorageProject
+from apps.files.models import File, FileStorage
 from apps.refdata import models as refdata
 
 from .concepts import FieldOfScience, IdentifierType, Language, Theme
@@ -253,28 +253,24 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         return self.total_files_aggregates["total_files_count"]
 
     @cached_property
-    def storage_project(self) -> Optional[StorageProject]:
-        """StorageProject is not currently stored in model and has to be determined from files."""
-        if (
-            file := self.dataset.files.only("storage_project")
-            .select_related("storage_project")
-            .first()
-        ):
-            return file.storage_project
+    def file_storage(self) -> Optional[FileStorage]:
+        """FileStorage is not currently stored in model and has to be determined from files."""
+        if file := self.dataset.files.only("file_storage").select_related("file_storage").first():
+            return file.file_storage
 
     @property
     def project_identifier(self) -> Optional[str]:
-        if proj := self.storage_project:
-            return proj.project_identifier
+        if storage := self.file_storage:
+            return storage.project_identifier
 
     @property
-    def file_storage(self) -> Optional[FileStorage]:
-        if proj := self.storage_project:
-            return proj.file_storage
+    def storage_service(self) -> Optional[str]:
+        if storage := self.file_storage:
+            return storage.storage_service
 
     def clear_cached_file_properties(self):
         """Clear cached file properties after changes to dataset files."""
-        for prop in ["total_files_aggregates", "storage_project"]:
+        for prop in ["total_files_aggregates", "file_storage"]:
             try:
                 delattr(self, prop)
             except AttributeError:
@@ -290,14 +286,14 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         unused_file_metadata.delete()
 
         # remove metadata for directories not in dataset
-        storage_projects = StorageProject.objects.filter(
+        file_storages = FileStorage.objects.filter(
             datasetdirectorymetadata__in=self.directory_metadata.all()
         )
         # only one storage project is expected but this works with multiple
-        for storage_project in storage_projects:
-            dataset_directory_paths = storage_project.get_directory_paths(dataset=self)
+        for file_storage in file_storages:
+            dataset_directory_paths = file_storage.get_directory_paths(dataset=self)
             unused_directory_metadata = DatasetDirectoryMetadata.objects.filter(
-                storage_project=storage_project
+                file_storage=file_storage
             ).exclude(directory_path__in=dataset_directory_paths)
             unused_directory_metadata.delete()
 

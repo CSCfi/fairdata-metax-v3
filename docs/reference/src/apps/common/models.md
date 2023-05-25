@@ -12,3 +12,7 @@
 
 ### :::src.apps.common.models.AbstractFreeformConcept
 
+## ProxyBasePolymorphicModel
+
+### :::src.apps.common.models.ProxyBasePolymorphicModel
+

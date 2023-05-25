@@ -13,10 +13,10 @@ import os
 import sys
 from os.path import join
 from pathlib import Path
-from environs import Env
 
 import factory.random
 from django.utils.translation import gettext_lazy as _
+from environs import Env
 
 env = Env()
 
@@ -79,6 +79,7 @@ THIRD_PARTY_APPS = [
     "django_filters",
     "simple_history",
     "watchman",
+    "polymorphic",
 ]
 LOCAL_APPS = [
     "common.apps.CommonConfig",
@@ -241,6 +242,21 @@ DATASET_FILE_METADATA_SERIALIZERS = {
     "file": "apps.core.serializers.file_metadata_serializer.FileMetadataSerializer",
     "directory": "apps.core.serializers.file_metadata_serializer.DirectoryMetadataSerializer",
 }
+
+LEGACY_FILE_STORAGE_TO_V3_STORAGE_SERVICE = {
+    "urn:nbn:fi:att:file-storage-ida": "ida",
+    "urn:nbn:fi:att:file-storage-pas": "pas",
+    "pid:urn:storageidentifier1": "legacy-test-storage-1",
+}
+
+# Define supported storage services and their FileStorage proxy class
+STORAGE_SERVICE_FILE_STORAGES = {
+    "test": "BasicFileStorage",
+    "ida": "IDAFileStorage",
+    "pas": "ProjectFileStorage",
+    "legacy-test-storage-1": "ProjectFileStorage",
+}
+
 
 # Profiling
 ENABLE_DEBUG_TOOLBAR = env.bool("ENABLE_DEBUG_TOOLBAR", True)

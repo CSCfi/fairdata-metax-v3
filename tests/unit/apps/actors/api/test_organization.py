@@ -1,6 +1,7 @@
 import pytest
-from rest_framework.test import APIClient
 from rest_framework.reverse import reverse
+from rest_framework.test import APIClient
+
 from apps.actors.factories import OrganizationFactory
 from apps.actors.models import Organization
 

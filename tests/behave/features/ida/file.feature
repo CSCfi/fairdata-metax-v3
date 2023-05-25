@@ -34,12 +34,11 @@ Feature: IDA File metadata
 
   Background:
     Given IDA has its own data-catalog
-    And IDA has its own data-storage
 
   Scenario: IDA User freezes files
     When user freezes new files in IDA
-    Then a new storage project is created
-    And the storage project has the files associated with it
+    Then a new file storage is created
+    And the file storage has the files associated with it
     And API returns OK status
 
   Scenario: IDA user unfreezes files

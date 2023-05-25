@@ -8,27 +8,26 @@ import json
 import logging
 
 from django.core.validators import EMPTY_VALUES
+from django.forms.models import model_to_dict
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from apps.common.helpers import update_or_create_instance
-from apps.core.models import (
-    CatalogHomePage,
-    DatasetPublisher,
-    AccessRights,
-    MetadataProvider,
-)
-from apps.core.models.concepts import AccessType
-from apps.users.models import MetaxUser
 from apps.common.serializers import (
     AbstractDatasetModelSerializer,
     AbstractDatasetPropertyModelSerializer,
     URLReferencedModelListField,
 )
-from apps.core.models import AccessRights, CatalogHomePage, DatasetPublisher, Spatial
+from apps.core.models import (
+    AccessRights,
+    CatalogHomePage,
+    DatasetPublisher,
+    MetadataProvider,
+    Spatial,
+)
 from apps.core.models.concepts import AccessType, DatasetLicense
 from apps.refdata import models as refdata
-from django.forms.models import model_to_dict
+from apps.users.models import MetaxUser
 
 logger = logging.getLogger(__name__)
 

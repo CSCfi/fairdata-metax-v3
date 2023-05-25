@@ -7,7 +7,7 @@ from pytest_bdd import scenario, then, when
 from rest_framework.reverse import reverse
 
 from apps.core import factories
-from apps.files.models import StorageProject
+from apps.files.models import FileStorage
 
 logger = logging.getLogger(__name__)
 
@@ -18,14 +18,14 @@ def project_identifier():
 
 
 @pytest.fixture
-def files_json(ida_file_storage, project_identifier):
+def files_json(project_identifier):
     return [
         {
             "file_path": "/data/1.csv",
             "date_uploaded": "2022-11-13T12:34:00Z",
             "file_modified": "2022-11-13T12:34:00Z",
             "project_identifier": project_identifier,
-            "file_storage": ida_file_storage.id,
+            "storage_service": "ida",
             "byte_size": 1024,
             "checksum": {
                 "value": "123",
@@ -38,7 +38,7 @@ def files_json(ida_file_storage, project_identifier):
             "date_uploaded": "2022-11-13T12:34:00Z",
             "file_modified": "2022-11-13T12:34:00Z",
             "project_identifier": project_identifier,
-            "file_storage": ida_file_storage.id,
+            "storage_service": "ida",
             "byte_size": 1024,
             "checksum": {
                 "value": "123",
@@ -51,7 +51,7 @@ def files_json(ida_file_storage, project_identifier):
             "date_uploaded": "2022-11-13T12:34:00Z",
             "file_modified": "2022-11-13T12:34:00Z",
             "project_identifier": project_identifier,
-            "file_storage": ida_file_storage.id,
+            "storage_service": "ida",
             "byte_size": 1024,
             "checksum": {
                 "value": "123",
@@ -77,35 +77,35 @@ def post_ida_file(admin_client, files_json):
     return admin_client.post(url, files_json, content_type="application/json")
 
 
-@then("a new storage project is created", target_fixture="created_storage_project")
-def created_storage_project(ida_file_storage, project_identifier) -> StorageProject:
+@then("a new file storage is created", target_fixture="created_file_storage")
+def created_file_storage(project_identifier) -> FileStorage:
     """
 
     Args:
         ida_file_storage (FileStorage): FileStorage instance
 
     Returns:
-        StorageProject: Dataset StorageProject
+        FileStorage: Dataset FileStorage
 
     """
-    return StorageProject.available_objects.get(
-        file_storage=ida_file_storage, project_identifier=project_identifier
+    return FileStorage.available_objects.get(
+        storage_service="ida", project_identifier=project_identifier
     )
 
 
-@then("the storage project has the files associated with it")
-def storage_project(created_storage_project, files_json) -> StorageProject:
+@then("the file storage has the files associated with it")
+def file_storage(created_file_storage, files_json) -> FileStorage:
     """Ensure files are associated with the storage project
 
     Args:
-        created_storage_project (StorageProject): StorageProject from freezing action on IDA
+        created_file_storage (FileStorage): FileStorage from freezing action on IDA
 
     Returns:
-        StorageProject: StorageProject with files
+        FileStorage: FileStorage with files
 
     """
     file_paths = set(f["file_path"] for f in files_json)
-    created_paths = set(f.file_path for f in created_storage_project.files.all())
+    created_paths = set(f.file_path for f in created_file_storage.files.all())
     assert created_paths == file_paths
 
 

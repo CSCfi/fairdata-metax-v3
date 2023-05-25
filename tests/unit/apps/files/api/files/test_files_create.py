@@ -8,7 +8,6 @@ from apps.files.serializers import FileSerializer
 
 @pytest.mark.django_db
 def test_files_create(client, ida_file_json):
-    factories.FileStorageFactory(id="urn:nbn:fi:att:file-storage-ida")
     res = client.post(
         "/v3/files",
         ida_file_json,
@@ -31,7 +30,6 @@ def test_files_create(client, ida_file_json):
 
 @pytest.mark.django_db
 def test_files_create_twice(client, ida_file_json):
-    factories.FileStorageFactory(id="urn:nbn:fi:att:file-storage-ida")
     res = client.post("/v3/files", ida_file_json, content_type="application/json")
     assert res.status_code == 201
     res = client.post("/v3/files", ida_file_json, content_type="application/json")

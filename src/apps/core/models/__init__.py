@@ -9,13 +9,13 @@ from .catalog_record import (
 )
 from .concepts import (
     AccessType,
+    DatasetLicense,
     FieldOfScience,
     FileType,
     Language,
-    DatasetLicense,
+    Spatial,
     Theme,
     UseCategory,
-    Spatial,
 )
 from .contract import Contract
 from .data_catalog import (

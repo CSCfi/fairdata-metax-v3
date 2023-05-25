@@ -20,13 +20,17 @@ from apps.files.helpers import (
     remove_query_param,
     replace_query_param,
 )
-from apps.files.models.file import File, StorageProject
+from apps.files.models.file import File, FileStorage
 from apps.files.serializers.directory_serializer import (
     DirectoryFileSerializer,
     DirectorySerializer,
     SubDirectorySerializer,
 )
-from apps.files.serializers.fields import CommaSeparatedListField, OptionalSlashDirectoryPathField
+from apps.files.serializers.fields import (
+    CommaSeparatedListField,
+    OptionalSlashDirectoryPathField,
+    StorageServiceField,
+)
 
 
 class DirectoryCommonQueryParams(serializers.Serializer):
@@ -81,11 +85,11 @@ class DirectoryCommonQueryParams(serializers.Serializer):
 class DirectoryQueryParams(DirectoryCommonQueryParams):
     """Add project, storage and dataset specific parameters for directory."""
 
-    project_identifier = fields.CharField(write_only=True)
-    file_storage = fields.CharField(write_only=True)
+    storage_service = StorageServiceField(write_only=True)
+    project_identifier = fields.CharField(write_only=True, default=None)
 
-    # project_id is determined from project_identifier and file_storage
-    storage_project_id = fields.CharField(read_only=True)
+    # project_id is determined from project_identifier and storage_service
+    file_storage_id = fields.CharField(read_only=True)
 
     # project-wide filters (affect nested files and returned file_count, byte_size)
     dataset = fields.UUIDField(default=None, help_text="Only list items in dataset.")
@@ -104,16 +108,7 @@ class DirectoryQueryParams(DirectoryCommonQueryParams):
 
     def to_internal_value(self, data):
         value = super().to_internal_value(data)
-        project_identifier = value.pop("project_identifier")
-        file_storage = value.pop("file_storage")
-
-        try:
-            value["storage_project_id"] = StorageProject.available_objects.get(
-                project_identifier=project_identifier,
-                file_storage=file_storage,
-            ).id
-        except StorageProject.DoesNotExist as e:
-            raise exceptions.NotFound()
+        value["file_storage_id"] = FileStorage.objects.get_for_object(value).id
         return value
 
 
@@ -133,7 +128,7 @@ class DirectoryViewSet(viewsets.ViewSet):
     def get_project_files(self, params):
         """Get relevant project files."""
         filter_args = dict(
-            storage_project_id=params["storage_project_id"],
+            file_storage_id=params["file_storage_id"],
         )
         exclude_args = dict()
         if dataset := params["dataset"]:
@@ -169,10 +164,8 @@ class DirectoryViewSet(viewsets.ViewSet):
                     value="checksum_value",
                 )
             )
-        if "project_identifier" in used_fields:
-            files = files.annotate(project_identifier=F("storage_project__project_identifier"))
-        if "file_storage" in used_fields:
-            files = files.annotate(file_storage=F("storage_project__file_storage"))
+        if "project_identifier" in used_file_fields:
+            files = files.annotate(project_identifier=F("file_storage__project_identifier"))
         return files
 
     def get_directory_files(self, params):
@@ -186,7 +179,9 @@ class DirectoryViewSet(viewsets.ViewSet):
         # retrieve only requested fields
         files = self.annotate_file_property_fields(params, files)
         if file_fields := params["file_fields"]:
-            files = files.values(*file_fields, "id")
+            files = files.values(
+                *file_fields, "id", storage_service=F("file_storage__storage_service")
+            )
 
         return files.order_by(*params["file_ordering"], "file_name")
 
@@ -301,9 +296,9 @@ class DirectoryViewSet(viewsets.ViewSet):
             }
         }
 
-    def get_storage_project(self, params):
+    def get_file_storage(self, params):
         """Return storage project common for all subdirectories and files."""
-        return StorageProject.objects.get(id=params.get("storage_project_id"))
+        return FileStorage.objects.get(id=params.get("file_storage_id"))
 
     def get_dataset_metadata(self, params, matching_subdirs, files):
         """Fetch dataset-specific file/directory metadata as key-value pairs."""
@@ -369,14 +364,14 @@ class DirectoryViewSet(viewsets.ViewSet):
         }
 
         # all directories and files have same project, pass it through context
-        storage_project = self.get_storage_project(params)
+        file_storage = self.get_file_storage(params)
         serialized_data = DirectorySerializer(
             instance,
             context={
                 "request": self.request,
                 "directory_fields": params.get("directory_fields"),
                 "file_fields": params.get("file_fields"),
-                "storage_project": storage_project,
+                "file_storage": file_storage,
                 **dataset_metadata,  # add file and directory metadata to context
             },
         ).data

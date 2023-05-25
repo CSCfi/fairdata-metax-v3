@@ -4,9 +4,9 @@ from .common_serializers import (
     AccessRightsModelSerializer,
     CatalogHomePageModelSerializer,
     DatasetPublisherModelSerializer,
-    MetaxUserModelSerializer,
-    MetadataProviderModelSerializer,
     LicenseModelSerializer,
+    MetadataProviderModelSerializer,
+    MetaxUserModelSerializer,
     SpatialModelSerializer,
 )
 from .data_catalog_serializer import DataCatalogModelSerializer

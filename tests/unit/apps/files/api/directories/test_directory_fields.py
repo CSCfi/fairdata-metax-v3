@@ -2,7 +2,7 @@ import pytest
 from tests.utils import assert_nested_subdict
 
 from apps.core.models import DatasetDirectoryMetadata
-from apps.files.models import StorageProject
+from apps.files.models import FileStorage
 from apps.files.views.directory_view import DirectoryCommonQueryParams
 
 
@@ -19,7 +19,7 @@ def test_directory_field_values(client, file_tree_b):
     assert_nested_subdict(
         {
             "parent_directory": {
-                "file_storage": "test-file-storage-a",
+                "storage_service": "ida",
                 "project_identifier": "project_x",
                 "directory_name": "",
                 "directory_path": "/",
@@ -31,7 +31,7 @@ def test_directory_field_values(client, file_tree_b):
             },
             "directories": [
                 {
-                    "file_storage": "test-file-storage-a",
+                    "storage_service": "ida",
                     "project_identifier": "project_x",
                     "directory_name": "dir",
                     "directory_path": "/dir/",
@@ -39,7 +39,7 @@ def test_directory_field_values(client, file_tree_b):
                     "byte_size": 3200,
                     "created": file_tree_b["files"]["/dir/first"].created,
                     "modified": file_tree_b["files"]["/dir/last"].modified,
-                    "url": "http://testserver/v3/directories?pagination=False&project_identifier=project_x&file_storage=test-file-storage-a&path=/dir/",
+                    "url": "http://testserver/v3/directories?pagination=False&project_identifier=project_x&storage_service=ida&path=/dir/",
                 }
             ],
             "files": [
@@ -50,7 +50,9 @@ def test_directory_field_values(client, file_tree_b):
                     "directory_path": "/",
                     "byte_size": 10,
                     "project_identifier": "project_x",
-                    "file_storage": "test-file-storage-a",
+                    "storage_service": "ida",
+                    "file_storage_pathname": None,
+                    "file_storage_identifier": None,
                     "checksum": {
                         "algorithm": "md5",
                         "checked": "2023-01-01T03:00:00+02:00",

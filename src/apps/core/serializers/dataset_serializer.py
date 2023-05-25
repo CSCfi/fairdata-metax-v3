@@ -7,6 +7,8 @@
 import logging
 from collections import namedtuple
 
+from common.helpers import update_or_create_instance
+from django.conf import settings
 from rest_framework import serializers
 
 from apps.core.models import Dataset
@@ -15,10 +17,8 @@ from apps.core.serializers.common_serializers import (
     AccessRightsModelSerializer,
     MetadataProviderModelSerializer,
 )
-from common.helpers import update_or_create_instance
 
 from .dataset_files_serializer import DatasetFilesSerializer
-from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +85,7 @@ class DatasetSerializer(serializers.ModelSerializer):
                 for key in settings.DISPLAY_API_LANGUAGES
                 if key in lang["pref_label"].keys()
             }
-        if not instance.storage_project:  # remove files dict from response if no files exist
+        if not instance.file_storage:  # remove files dict from response if no files exist
             rep.pop("files", None)
         return rep
 
@@ -144,7 +144,6 @@ class DatasetSerializer(serializers.ModelSerializer):
             update_or_create_instance(
                 metadata_owner_serializer, instance.metadata_owner, rel_objects.metadata_owner
             )
-
 
         super().update(instance, validated_data)
 

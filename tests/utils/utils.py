@@ -69,7 +69,6 @@ def assert_nested_subdict(
         if check_all_keys_equal and not is_list:
             missing_from_sub = set(full_value) - set(sub_value)
             if len(missing_from_sub) > 0:
-                print(missing_from_sub)
                 raise AssertionError(f"Keys missing from sub dict: {', '.join(missing_from_sub)}")
 
         for key, inner_sub_value in sub_value.items():

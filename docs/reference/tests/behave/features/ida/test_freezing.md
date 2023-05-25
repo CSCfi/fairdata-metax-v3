@@ -12,13 +12,13 @@
 
 ### :::tests.behave.features.ida.test_freezing.post_ida_file
 
-## created_storage_project
+## created_file_storage
 
-### :::tests.behave.features.ida.test_freezing.created_storage_project
+### :::tests.behave.features.ida.test_freezing.created_file_storage
 
-## storage_project
+## file_storage
 
-### :::tests.behave.features.ida.test_freezing.storage_project
+### :::tests.behave.features.ida.test_freezing.file_storage
 
 ## files_ok_response
 
