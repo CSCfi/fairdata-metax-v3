@@ -186,8 +186,16 @@ Also named CatalogRecord in V1-V2. Main difference is removing the research_data
         "actors": [
             {
                 "role": "creator",
-                "type": "person",
-                "name": "Creator One"
+                "actor": {
+                    "person": "teppo testaaja",
+                    "organization": {
+                        "code": "20000",
+                        "in_scheme": "https://joku.schema.fi",
+                        "pref_label": {
+                            "fi": "CSC"
+                        }
+                    }
+                }
             }
         ],
         "language": [
@@ -220,28 +228,28 @@ Also named CatalogRecord in V1-V2. Main difference is removing the research_data
                 "pref_label": {
                     "fi": "Avoin"
                 }
-            },
-            "field_of_science": [
-                {
-                    "url": "http://www.yso.fi/onto/okm-tieteenala/ta112",
-                    "in_scheme": "http://www.yso.fi/onto/okm-tieteenala/conceptscheme",
-                    "pref_label": {
-                        "fi": "Tilastotiede"
-                    }
-                }
-            ],
-            "persistent_identifier": "doi:10.23729/c23fbb80-4952-4a4a-82bd-a4016375aasd",
-            "state": "published",
-            "cumulative_state": 1,
-            "metadata_owner": {
-                "user": {
-                    "username": "teppo",
-                    "email": "teppo@csc.fi",
-                    "first_name": "Teppo",
-                    "last_name": "Teppo"
-                },
-                "organization": "CSC"
             }
+        },
+        "field_of_science": [
+            {
+                "url": "http://www.yso.fi/onto/okm-tieteenala/ta112",
+                "in_scheme": "http://www.yso.fi/onto/okm-tieteenala/conceptscheme",
+                "pref_label": {
+                    "fi": "Tilastotiede"
+                }
+            }
+        ],
+        "persistent_identifier": "doi:10.23729/c23fbb80-4952-4a4a-82bd-a4016375aasd",
+        "state": "published",
+        "cumulative_state": 1,
+        "metadata_owner": {
+            "user": {
+                "username": "teppo",
+                "email": "teppo@csc.fi",
+                "first_name": "Teppo",
+                "last_name": "Teppo"
+            },
+            "organization": "CSC"
         }
     }
     ``` 
