@@ -11,6 +11,7 @@ from apps.core.views import (
     DatasetViewSet,
     MetadataProviderViewSet,
     PublisherViewSet,
+    LegacyDatasetViewSet
 )
 from apps.files.views import DirectoryViewSet, FileViewSet
 from apps.refdata.models import reference_data_models
@@ -39,6 +40,7 @@ router.register(
 # router.register(r"dataset-actors?", DatasetActorViewSet, basename="dataset-actor")
 router.register(r"metadata-providers?", MetadataProviderViewSet, basename="metadata-provider")
 router.register(r"publishers?", PublisherViewSet, basename="publisher")
+router.register(r"migrated-datasets?", LegacyDatasetViewSet, basename="migrated-dataset")
 # files app
 router.register(r"files?", FileViewSet, basename="file")
 router.register(r"directories", DirectoryViewSet, basename="directory")

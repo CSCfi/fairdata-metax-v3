@@ -13,3 +13,4 @@ from .common_serializers import (
 from .data_catalog_serializer import DataCatalogModelSerializer
 from .dataset_files_serializer import DatasetFilesSerializer
 from .dataset_serializer import DatasetSerializer
+from .legacy_serializer import LegacyDatasetModelSerializer

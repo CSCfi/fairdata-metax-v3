@@ -29,7 +29,19 @@ class DatasetFilter(filters.FilterSet):
         lookup_expr="icontains",
         label="title",
     )
-
+    data_catalog_id = filters.CharFilter(
+        field_name="data_catalog__id",
+        max_length=512,
+        lookup_expr="icontains",
+        label="data-catalog identifier",
+        help_text="filter with substring from data-catalog identifier",
+    )
+    data_catalog_title = filters.CharFilter(
+        field_name="data_catalog__title",
+        max_length=512,
+        lookup_expr="icontains",
+        label="data-catalog title",
+    )
     ordering = filters.OrderingFilter(
         fields=(
             ("created", "created"),
@@ -49,6 +61,17 @@ class DatasetViewSet(viewsets.ModelViewSet):
 
     filterset_class = DatasetFilter
     http_method_names = ["get", "post", "put", "delete"]
+
+    def get_object(self):
+        queryset = self.get_queryset()
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+
+        try:
+            obj = queryset.get(legacydataset__dataset_json__identifier=lookup_url_kwarg)
+            self.check_object_permissions(self.request, obj)
+            return obj
+        except Dataset.DoesNotExist:
+            return super().get_object()
 
 
 class DatasetDirectoryViewSet(DirectoryViewSet):
