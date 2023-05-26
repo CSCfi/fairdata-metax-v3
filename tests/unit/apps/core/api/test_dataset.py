@@ -1,3 +1,4 @@
+import json
 import logging
 
 import pytest
@@ -5,15 +6,15 @@ from tests.utils import assert_nested_subdict
 
 logger = logging.getLogger(__name__)
 
+pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
 
-@pytest.mark.django_db
+
 def test_create_dataset(client, dataset_a_json, data_catalog, reference_data):
     res = client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 201
     assert_nested_subdict(dataset_a_json, res.data)
 
 
-@pytest.mark.django_db
 def test_update_dataset(client, dataset_a_json, dataset_b_json, data_catalog, reference_data):
     res = client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     id = res.data["id"]
@@ -21,7 +22,6 @@ def test_update_dataset(client, dataset_a_json, dataset_b_json, data_catalog, re
     assert_nested_subdict(dataset_b_json, res.data)
 
 
-@pytest.mark.django_db
 def test_create_dataset_invalid_catalog(client, dataset_a_json):
     dataset_a_json["data_catalog"] = "urn:nbn:fi:att:data-catalog-does-not-exist"
     response = client.post("/v3/publishers", dataset_a_json, content_type="application/json")
@@ -49,7 +49,6 @@ def test_create_dataset_invalid_language(client, dataset_a_json, value, expected
     assert response.json()["language"] == [expected_error]
 
 
-@pytest.mark.django_db
 def test_delete_dataset(client, dataset_a_json, data_catalog, reference_data):
     res = client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     id = res.data["id"]
@@ -59,7 +58,6 @@ def test_delete_dataset(client, dataset_a_json, data_catalog, reference_data):
     assert res.status_code == 204
 
 
-@pytest.mark.django_db
 def test_list_datasets_with_ordering(
     client, dataset_a_json, dataset_b_json, data_catalog, reference_data
 ):
@@ -82,7 +80,6 @@ def test_list_datasets_with_ordering(
     )
 
 
-@pytest.mark.django_db
 def test_create_dataset_with_metadata_owner(client, dataset_a_json, data_catalog, reference_data):
     dataset_a_json["metadata_owner"] = {
         "organization": "organization-a.fi",
@@ -90,4 +87,21 @@ def test_create_dataset_with_metadata_owner(client, dataset_a_json, data_catalog
     }
     res = client.post("/v3/datasets", dataset_a_json, content_type="application/json")
 
+    assert res.status_code == 201
+
+
+def test_create_dataset_with_actor(client, dataset_c, data_catalog, reference_data):
+    assert dataset_c.status_code == 201
+
+
+def test_create_dataset_actor_nested_url(
+    client, dataset_a, dataset_actor_a, data_catalog, reference_data
+):
+    assert dataset_a.status_code == 201
+
+    res = client.post(
+        f"/v3/datasets/{dataset_a.data['id']}/actors",
+        json.dumps(dataset_actor_a.to_struct()),
+        content_type="application/json",
+    )
     assert res.status_code == 201

@@ -14,7 +14,7 @@ from rest_framework.response import Response
 
 from apps.core.models.catalog_record import Dataset
 from apps.core.serializers import DatasetFilesSerializer, DatasetSerializer
-from apps.files.models import File, FileStorage
+from apps.files.models import File
 from apps.files.serializers import DirectorySerializer
 from apps.files.views.directory_view import DirectoryCommonQueryParams, DirectoryViewSet
 from apps.files.views.file_view import BaseFileViewSet, FileCommonFilterset

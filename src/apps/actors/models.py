@@ -119,16 +119,14 @@ class Actor(AbstractBaseModel):
     """Name of organization or person. Different types include e.g. creator, curator, publisher or rights holder.
 
     Attributes:
-        user(MetaxUser): Person if any associated with this actor.
+        person(modelsCharField): Person if any associated with this actor.
         organization(Organization): Organization if any associated with this actor.
     """
 
-    user = models.ForeignKey(
-        get_user_model(),
-        related_name="actor_users",
+    person = models.CharField(
+        max_length=512,
         null=True,
         blank=True,
-        on_delete=models.SET_NULL,
     )
     organization = models.ForeignKey(
         Organization,
@@ -140,25 +138,28 @@ class Actor(AbstractBaseModel):
 
     def as_v2_data(self):
         data = {}
-        if self.user:
-            data["name"] = self.user.username
+        if self.person:
+            data["name"] = self.person
             data["@type"] = "Person"
             if self.organization:
                 data["member_of"] = {
                     "name": self.organization.pref_label,
                     "@type": "Organization",
-                    "identifier": self.organization.url,
                 }
+                if url := self.organization.url:
+                    data["member_of"]["identifier"] = url
         elif self.organization:
             data["@type"] = "Organization"
             data["name"] = self.organization.pref_label
+            if url := self.organization.url:
+                data["identifier"] = url
             if homepage := self.organization.homepage:
                 homepage["title"] = eval(homepage["title"])
                 data["homepage"] = homepage
         return data
 
     def __str__(self):
-        if self.user and self.user.username:
-            return self.user.username
+        if self.person:
+            return self.person
         else:
             return str(self.organization)

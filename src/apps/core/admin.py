@@ -100,7 +100,7 @@ class DatasetAdmin(AbstractDatasetPropertyBaseAdmin):
 
 @admin.register(DatasetActor)
 class DatasetActorAdmin(admin.ModelAdmin):
-    list_display = ("role", "user", "organization")
+    list_display = ("role", )
 
 
 @admin.register(Temporal)

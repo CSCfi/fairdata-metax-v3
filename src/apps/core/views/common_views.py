@@ -5,12 +5,12 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets
 
 from apps.common.views import StandardResultsSetPagination
-from apps.core.models import AccessRights, Dataset
-from apps.core.models.catalog_record import MetadataProvider
+from apps.core.models import AccessRights
+from apps.core.models.catalog_record import DatasetActor, MetadataProvider
 from apps.core.models.data_catalog import DatasetPublisher
 from apps.core.serializers import (
+    DatasetActorModelSerializer,
     DatasetPublisherModelSerializer,
-    DatasetSerializer,
     MetadataProviderModelSerializer,
 )
 
@@ -111,6 +111,19 @@ class AccessRightsFilter(filters.FilterSet):
             ("license__pref_label__values", "license_pref_label"),
         )
     )
+
+
+@swagger_auto_schema(operation_description="DatasetActor viewset")
+class DatasetActorViewSet(viewsets.ModelViewSet):
+    serializer_class = DatasetActorModelSerializer
+    filter_backends = (filters.DjangoFilterBackend,)
+
+    # filterset_class = DatasetActorFilter
+    def get_queryset(self):
+        return DatasetActor.available_objects.filter(dataset=self.kwargs["dataset_pk"])
+
+    def perform_create(self, serializer):
+        return serializer.save(dataset_id=self.kwargs["dataset_pk"])
 
 
 class MetadataProviderFilter(filters.FilterSet):

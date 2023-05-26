@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -150,7 +150,7 @@ class V2DatasetMixin:
             if provenance.is_associated_with.all().count() != 0:
                 data["was_associated_with"] = []
                 for association in provenance.is_associated_with.all():
-                    data["was_associated_with"].append(association.as_v2_data())
+                    data["was_associated_with"].append(association.actor.as_v2_data())
 
             obj_list.append(data)
         if len(obj_list) != 0:
@@ -197,7 +197,7 @@ class V2DatasetMixin:
             if role != "publisher":
                 document["research_dataset"][role] = []
             for dataset_actor in actors:
-                data = dataset_actor.as_v2_data()
+                data = dataset_actor.actor.as_v2_data()
                 if role == "publisher":
                     document["research_dataset"][role] = data
                 else:
@@ -244,4 +244,5 @@ class V2DatasetMixin:
         self._generate_v2_provenance(doc)
         add_actor("creator", doc)
         add_actor("publisher", doc)
+        logger.info(f"{doc=}")
         return doc

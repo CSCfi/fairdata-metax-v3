@@ -115,15 +115,16 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='DatasetActor',
             fields=[
-                ('actor_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='actors.actor')),
+                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('role', models.CharField(choices=[('creator', 'Creator'), ('contributor', 'Contributor'), ('publisher', 'Publisher'), ('curator', 'Curator'), ('rights_holder', 'Rights holder'), ('provenance', 'Provenance')], default='creator', max_length=100)),
+                ('actor', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='datasets', to='actors.actor')),
             ],
             options={
                 'ordering': ['created'],
                 'get_latest_by': 'modified',
                 'abstract': False,
             },
-            bases=('actors.actor',),
+
         ),
         migrations.CreateModel(
             name='DatasetLicense',

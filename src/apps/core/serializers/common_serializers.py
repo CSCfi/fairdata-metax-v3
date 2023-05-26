@@ -8,26 +8,25 @@ import json
 import logging
 
 from django.core.validators import EMPTY_VALUES
-from django.forms.models import model_to_dict
-from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
+from apps.actors.serializers import ActorModelSerializer
 from apps.common.helpers import update_or_create_instance
 from apps.common.serializers import (
     AbstractDatasetModelSerializer,
     AbstractDatasetPropertyModelSerializer,
-    URLReferencedModelListField,
 )
 from apps.core.models import (
     AccessRights,
     CatalogHomePage,
+    DatasetActor,
     DatasetPublisher,
     MetadataProvider,
     Spatial,
 )
 from apps.core.models.concepts import AccessType, DatasetLicense
 from apps.refdata import models as refdata
-from apps.users.models import MetaxUser
+from apps.users.serializers import MetaxUserModelSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -239,10 +238,19 @@ class AccessRightsModelSerializer(AbstractDatasetModelSerializer):
         return representation
 
 
-class MetaxUserModelSerializer(serializers.ModelSerializer):
+class DatasetActorModelSerializer(serializers.ModelSerializer):
+    actor = ActorModelSerializer(required=True, many=False)
+
+    def create(self, validated_data):
+        actor = None
+        if actor_data := validated_data.pop("actor", None):
+            actor = self.fields["actor"].create(actor_data)
+
+        return DatasetActor.objects.create(**validated_data, actor=actor)
+
     class Meta:
-        model = MetaxUser
-        fields = ("id", "username", "email", "first_name", "last_name")
+        model = DatasetActor
+        fields = ("id", "role", "actor")
 
 
 class MetadataProviderModelSerializer(AbstractDatasetModelSerializer):

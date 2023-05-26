@@ -20,9 +20,9 @@
 
 ### :::src.apps.core.serializers.common_serializers.AccessRightsModelSerializer
 
-## MetaxUserModelSerializer
+## DatasetActorModelSerializer
 
-### :::src.apps.core.serializers.common_serializers.MetaxUserModelSerializer
+### :::src.apps.core.serializers.common_serializers.DatasetActorModelSerializer
 
 ## MetadataProviderModelSerializer
 

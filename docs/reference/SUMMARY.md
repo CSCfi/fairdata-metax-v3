@@ -78,6 +78,7 @@
         - [apps](src/apps/users/apps.md)
         - [factories](src/apps/users/factories.md)
         - [models](src/apps/users/models.md)
+        - [serializers](src/apps/users/serializers.md)
         - [signals](src/apps/users/signals.md)
         - [views](src/apps/users/views.md)
 - tests
@@ -115,6 +116,7 @@
                         - [test_dataset_files_list](tests/unit/apps/core/api/dataset_files/test_dataset_files_list.md)
                         - [test_dataset_files_update](tests/unit/apps/core/api/dataset_files/test_dataset_files_update.md)
                         - [test_dataset_with_files](tests/unit/apps/core/api/dataset_files/test_dataset_with_files.md)
+                    - [json_models](tests/unit/apps/core/api/json_models.md)
                     - [test_data_catalog](tests/unit/apps/core/api/test_data_catalog.md)
                     - [test_dataset](tests/unit/apps/core/api/test_dataset.md)
                     - [test_dataset_publisher](tests/unit/apps/core/api/test_dataset_publisher.md)

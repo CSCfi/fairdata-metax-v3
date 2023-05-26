@@ -12,3 +12,7 @@
 
 ### :::src.apps.actors.serializers.OrganizationSerializer
 
+## ActorModelSerializer
+
+### :::src.apps.actors.serializers.ActorModelSerializer
+

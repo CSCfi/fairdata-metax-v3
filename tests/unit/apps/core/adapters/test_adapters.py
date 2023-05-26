@@ -21,10 +21,10 @@ logger = logging.getLogger(__name__)
                 # For example here creator is member of organization that gets additional identifier from database.
                 # The identifier was not originally part of the v2 dataset organization description, but is added
                 # as it is part of Organization object in v3.
-                "dictionary_item_added": [
-                    "root['research_dataset']['creator'][0]['member_of']['identifier']",
-                    "root['research_dataset']['creator'][1]['member_of']['identifier']",
-                ],
+                #"dictionary_item_added": [
+                #    "root['research_dataset']['creator'][0]['member_of']['identifier']",
+                #    "root['research_dataset']['creator'][1]['member_of']['identifier']",
+                #],
                 # "dictionary_item_removed": [
                 #     "root['research_dataset']['access_rights']['license'][0]['title']['und']"
                 # ],

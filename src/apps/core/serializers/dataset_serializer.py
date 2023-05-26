@@ -15,6 +15,7 @@ from apps.core.models import Dataset
 from apps.core.models.concepts import FieldOfScience, Language, Theme
 from apps.core.serializers.common_serializers import (
     AccessRightsModelSerializer,
+    DatasetActorModelSerializer,
     MetadataProviderModelSerializer,
 )
 
@@ -24,13 +25,14 @@ logger = logging.getLogger(__name__)
 
 NestedDatasetObjects = namedtuple(
     "NestedDatasetObjects",
-    "language, theme, fields_of_science, access_rights, metadata_owner, files",
+    "language, theme, fields_of_science, access_rights, metadata_owner, files, actors",
 )
 
 
 class DatasetSerializer(serializers.ModelSerializer):
     access_rights = AccessRightsModelSerializer(required=False)
     field_of_science = FieldOfScience.get_serializer()(required=False, many=True)
+    actors = DatasetActorModelSerializer(required=False, many=True)
     files = DatasetFilesSerializer(required=False)
     language = Language.get_serializer()(required=False, many=True)
     metadata_owner = MetadataProviderModelSerializer(required=False)
@@ -40,6 +42,7 @@ class DatasetSerializer(serializers.ModelSerializer):
         model = Dataset
         fields = (
             "access_rights",
+            "actors",
             "data_catalog",
             "description",
             "field_of_science",
@@ -98,6 +101,7 @@ class DatasetSerializer(serializers.ModelSerializer):
             access_rights=validated_data.pop("access_rights", None),
             metadata_owner=validated_data.pop("metadata_owner", None),
             files=validated_data.pop("files", None),
+            actors=validated_data.pop("actors", None),
         )
 
     def create(self, validated_data):
@@ -125,6 +129,12 @@ class DatasetSerializer(serializers.ModelSerializer):
         dataset.theme.set(rel_objects.theme)
         dataset.field_of_science.set(rel_objects.fields_of_science)
 
+        if rel_objects.actors:
+            actors = DatasetActorModelSerializer(many=True, data=rel_objects.actors)
+            actors.is_valid(raise_exception=True)
+            actors = actors.save(dataset_id=dataset.id)
+            dataset.actors.set(list(actors))
+
         if rel_objects.files:
             files_serializer.update(dataset.files, rel_objects.files)
 
@@ -134,18 +144,21 @@ class DatasetSerializer(serializers.ModelSerializer):
         rel_objects = self._pop_related_validated_objects(validated_data)
 
         access_rights_serializer: AccessRightsModelSerializer = self.fields["access_rights"]
-        access_rights = None
         if rel_objects.access_rights:
-            access_rights = access_rights_serializer.create(rel_objects.access_rights)
-        instance.access_rights = access_rights
+            update_or_create_instance(
+                access_rights_serializer, instance.access_rights, rel_objects.access_rights
+            )
+        dataset_actor_serializer: DatasetActorModelSerializer = self.fields["actors"]
+        if rel_objects.actors:
+            update_or_create_instance(
+                dataset_actor_serializer, instance.actors, rel_objects.actors
+            )
 
         metadata_owner_serializer: MetadataProviderModelSerializer = self.fields["metadata_owner"]
         if rel_objects.metadata_owner:
             update_or_create_instance(
                 metadata_owner_serializer, instance.metadata_owner, rel_objects.metadata_owner
             )
-
-        super().update(instance, validated_data)
 
         instance.language.set(rel_objects.language)
         instance.theme.set(rel_objects.theme)
@@ -155,4 +168,4 @@ class DatasetSerializer(serializers.ModelSerializer):
         if rel_objects.files:
             files_serializer.update(instance.files, rel_objects.files)
 
-        return instance
+        return super().update(instance, validated_data)

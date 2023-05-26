@@ -44,6 +44,6 @@ class OrganizationAdmin(admin.ModelAdmin):
 @admin.register(Actor)
 class ActorAdmin(admin.ModelAdmin):
     list_display = (
-        "user",
+        "person",
         "organization",
     )

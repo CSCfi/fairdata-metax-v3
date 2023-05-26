@@ -28,10 +28,11 @@ def get_technical_metax_user():
 def update_or_create_instance(serializer, instance, data):
     if instance is not None:
         serializer.update(instance, data)
+        return instance
     else:
         new_serializer = serializer.__class__(data=data)
         if new_serializer.is_valid(raise_exception=True):
-            new_serializer.save()
+            return new_serializer
 
 
 def parse_iso_dates_in_nested_dict(d: Dict) -> Dict:

@@ -52,7 +52,7 @@ class Migration(migrations.Migration):
                 ('removal_date', models.DateTimeField(blank=True, null=True)),
                 ('organization', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='actor_organizations', to='actors.organization')),
                 ('system_creator', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='actors_actors', to=settings.AUTH_USER_MODEL)),
-                ('user', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='actor_users', to=settings.AUTH_USER_MODEL)),
+                ('person', models.CharField(max_length=512, null=True)),
             ],
             options={
                 'ordering': ['created'],

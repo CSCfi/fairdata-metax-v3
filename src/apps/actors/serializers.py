@@ -1,6 +1,8 @@
+from drf_writable_nested import WritableNestedModelSerializer
 from rest_framework import serializers
 
-from apps.actors.models import Organization
+from apps.actors.models import Actor, Organization
+from apps.users.serializers import MetaxUserModelSerializer
 
 
 class ChildOrganizationSerializer(serializers.ModelSerializer):
@@ -52,3 +54,19 @@ class OrganizationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = "__all__"
+
+
+class ActorModelSerializer(WritableNestedModelSerializer):
+    organization = OrganizationSerializer(many=False, required=False, allow_null=True)
+
+    def create(self, validated_data):
+        org = None
+        if org_data := validated_data.pop("organization", None):
+            org = self.fields["organization"].create(org_data)
+
+        return Actor.objects.create(organization=org, **validated_data)
+
+
+    class Meta:
+        model = Actor
+        fields = ("organization", "person")

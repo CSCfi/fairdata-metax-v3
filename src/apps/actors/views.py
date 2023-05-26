@@ -2,8 +2,8 @@ from django_filters import rest_framework as filters
 from rest_framework import generics, viewsets
 from rest_framework.response import Response
 
-from apps.actors.models import Organization
-from apps.actors.serializers import OrganizationSerializer
+from apps.actors.models import Actor, Organization
+from apps.actors.serializers import ActorModelSerializer, OrganizationSerializer
 
 
 class OrganizationFilterSet(filters.FilterSet):
@@ -30,3 +30,8 @@ class OrganizationViewSet(viewsets.ReadOnlyModelViewSet):
         if not self.kwargs.get("pk"):
             qs = qs.filter(parent__isnull=True)
         return qs
+
+
+class ActorViewSet(viewsets.ModelViewSet):
+    serializer_class = ActorModelSerializer
+    queryset = Actor.available_objects.all()

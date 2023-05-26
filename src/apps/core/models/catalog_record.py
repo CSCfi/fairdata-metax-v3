@@ -1,6 +1,6 @@
 import logging
 import uuid
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -303,7 +303,7 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         return super().delete(*args, **kwargs)
 
 
-class DatasetActor(Actor):
+class DatasetActor(AbstractBaseModel):
     """Actors associated with a Dataset.
 
     Attributes:
@@ -326,22 +326,18 @@ class DatasetActor(Actor):
         """
         actor_type = obj["@type"]
         organization: Organization = None
-        user = None
+        person = None
         if actor_type == "Organization":
             organization = Organization.get_instance_from_v2_dictionary(obj)
         elif actor_type == "Person":
-            name = obj.get("name")
-            user, created = get_user_model().objects.get_or_create(
-                username=name, defaults={"username": name}
-            )
+            person = obj.get("name")
             if member_of := obj.get("member_of"):
                 organization = Organization.get_instance_from_v2_dictionary(member_of)
-
-        dataset_actor, created = cls.objects.get_or_create(
-            dataset=dataset, user=user, organization=organization, role=role
-        )
+        actor, created = Actor.objects.get_or_create(organization=organization, person=person)
+        dataset_actor, created = cls.objects.get_or_create(dataset=dataset, actor=actor, role=role)
         return dataset_actor
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     dataset = models.ForeignKey(Dataset, related_name="actors", on_delete=models.CASCADE)
 
     class RoleChoices(models.TextChoices):
@@ -355,6 +351,7 @@ class DatasetActor(Actor):
     role = models.CharField(
         max_length=100, choices=RoleChoices.choices, default=RoleChoices.CREATOR
     )
+    actor = models.ForeignKey(Actor, on_delete=models.CASCADE, related_name="datasets")
 
 
 class Temporal(AbstractBaseModel):

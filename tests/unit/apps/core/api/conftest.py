@@ -6,6 +6,8 @@ import pytest
 from rest_framework.reverse import reverse
 from rest_framework.test import APIClient
 
+from .json_models import Actor, DatasetActor, Organization
+
 logger = logging.getLogger(__name__)
 
 test_data_path = os.path.dirname(os.path.abspath(__file__)) + "/testdata/"
@@ -30,6 +32,11 @@ def dataset_a_json():
 @pytest.fixture
 def dataset_b_json():
     return load_test_json("dataset_b.json")
+
+
+@pytest.fixture
+def dataset_c_json():
+    return load_test_json("dataset_c.json")
 
 
 @pytest.fixture
@@ -208,3 +215,31 @@ def post_metadata_provider_payloads_a_b_c_d(
     res4 = client.post(url, metadata_provider_d_json, content_type="application/json")
     logger.info(f"{res1=}, {res2=}, {res3=}, {res4=}")
     return res1, res2, res3, res4
+
+
+@pytest.fixture
+def dataset_a(client, dataset_a_json, data_catalog, reference_data):
+    return client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+
+
+@pytest.fixture
+def dataset_b(client, dataset_b_json, data_catalog, reference_data):
+    return client.post("/v3/datasets", dataset_b_json, content_type="application/json")
+
+@pytest.fixture
+def dataset_c(client, dataset_c_json, data_catalog, reference_data):
+    return client.post("/v3/datasets", dataset_c_json, content_type="application/json")
+
+
+@pytest.fixture
+def dataset_actor_a(dataset_a):
+    return DatasetActor(
+        dataset=dataset_a.data["id"],
+        actor=Actor(
+            name="teppo",
+            organization=Organization(
+                pref_label={"fi": "CSC"}, in_scheme="https://joku.scheme.fi"
+            ),
+        ),
+        role="creator",
+    )
