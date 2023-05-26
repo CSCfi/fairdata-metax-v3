@@ -16,13 +16,13 @@ workflow:
 variables:
   GITLAB_ENV:
     description: 'Which environment do you want to deploy to?'
-    value: 'rework' # switch back to test when rework-environment is deprecated
+    value: 'test'
     options:
       #- 'demo'
       - 'rework'
       #- 'stable'
       - 'staging'
-      #- 'test'
+      - 'test'
 
 stages:
   - test
@@ -46,6 +46,7 @@ unittests:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
 
 sonarqube:
+  stage: test
   extends: .sonarqube-job
   needs:
     - job: unittests
@@ -57,35 +58,82 @@ sonarqube:
 
 # ------------------------
 
-prepare-service:
-  extends: .prepare-service-play
-  rules:
-    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
-    - if: $CI_PIPELINE_SOURCE =~ /^(web)$/
+# Deployment checks
+# -----------------
 
-prepare-service-feature:
+prepare-service-staging:
   extends: .prepare-service-play
   variables:
     GITLAB_ENV: 'staging'
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
+
+deploy-service-staging:
+  extends: .deploy-service-play
+  needs:
+    - job: prepare-service-staging
+  variables:
+    GITLAB_ENV: 'staging'
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
+
+post-deployment-tasks-staging:
+  extends: .post-deployment-tasks-play
+  stage: deploy
+  needs:
+    - job: deploy-service-staging
+  variables:
+    GITLAB_ENV: 'staging'
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
+
+test-deployment-staging:
+  extends: .test-deployment-play
+  stage: deploy
+  needs:
+    - job: post-deployment-tasks-staging
+  variables:
+    GITLAB_ENV: 'staging'
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
+
+# ------------------------
+
+prepare-service:
+  extends: .prepare-service-play
+  variables:
+    GITLAB_ENV: 'test'
+  needs:
+    - job: test-deployment-staging
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
+
+prepare-service-rework:
+  extends: .prepare-service-play
+  needs:
+    - job: test-deployment-staging
+  variables:
+    GITLAB_ENV: 'rework'
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
 
 deploy-service:
   extends: .deploy-service-play
   needs:
     - job: prepare-service
+  variables:
+    GITLAB_ENV: 'test'
   rules:
     - if: $CI_COMMIT_BRANCH =~ /^(master)$/
-    - if: $CI_PIPELINE_SOURCE =~ /^(web)$/
 
-deploy-service-feature:
+deploy-service-rework:
   extends: .deploy-service-play
   needs:
-    - job: prepare-service-feature
+    - job: prepare-service-rework
   variables:
-    GITLAB_ENV: 'staging'
+    GITLAB_ENV: 'rework'
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
 
 # ------------------------
 
@@ -93,32 +141,36 @@ post-deployment-tasks:
   extends: .post-deployment-tasks-play
   needs:
     - job: deploy-service
+  variables:
+    GITLAB_ENV: 'test'
   rules:
     - if: $CI_COMMIT_BRANCH =~ /^(master)$/
-    - if: $CI_PIPELINE_SOURCE =~ /^(web)$/
 
-post-deployment-tasks-feature:
+post-deployment-tasks-rework:
   extends: .post-deployment-tasks-play
   needs:
-    - job: deploy-service-feature
+    - job: deploy-service-rework
   variables:
-    GITLAB_ENV: 'staging'
+    GITLAB_ENV: 'rework'
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
+
+# ------------------------
 
 test-deployment:
   extends: .test-deployment-play
   needs:
-    - job: deploy-service
+    - job: post-deployment-tasks
+  variables:
+    GITLAB_ENV: 'test'
   rules:
     - if: $CI_COMMIT_BRANCH =~ /^(master)$/
-    - if: $CI_PIPELINE_SOURCE =~ /^(web)$/
 
-test-deployment-feature:
+test-deployment-rework:
   extends: .test-deployment-play
   needs:
-    - job: deploy-service-feature
+    - job: post-deployment-tasks-rework
   variables:
-    GITLAB_ENV: 'staging'
+    GITLAB_ENV: 'rework'
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
