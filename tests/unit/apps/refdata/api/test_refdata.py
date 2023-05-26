@@ -16,7 +16,7 @@ pytestmark = pytest.mark.parametrize(
 )
 
 common_fields = {"in_scheme": "https://example.com"}
-extra_field_values = {"as_wkt": ""}
+extra_field_values = {"as_wkt": None}
 
 
 def get_model_url(model):

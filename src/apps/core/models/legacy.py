@@ -1,5 +1,7 @@
+import json
 import logging
 from collections import namedtuple
+from pprint import pprint
 from typing import Dict, List
 
 from deepdiff import DeepDiff
@@ -12,7 +14,7 @@ from apps.actors.models import Actor, Organization
 from apps.common.helpers import parse_iso_dates_in_nested_dict
 from apps.files.models import File, FileStorage
 from apps.files.serializers.file_serializer import get_or_create_file_storage
-from apps.refdata.models import FunderType, License
+from apps.refdata.models import FunderType, License, Location
 from apps.users.models import MetaxUser
 
 from .catalog_record import (
@@ -115,7 +117,7 @@ class LegacyDataset(Dataset):
     @property
     def legacy_spatial(self):
         return self._flatten_nested_ref_data_object(
-            "spatial", "place_uri", additional_keys=["full_address", "geographic_name"]
+            "spatial", "place_uri", additional_keys=["full_address", "geographic_name", "as_wkt"]
         )
 
     @property
@@ -316,19 +318,29 @@ class LegacyDataset(Dataset):
 
     def attach_spatial(self) -> List[Spatial]:
         if spatial_data := self.legacy_spatial:
+            self.dataset.spatial.all().delete()
             obj_list = []
             for location in spatial_data:
-                obj, created = Spatial.objects.get_or_create(
-                    url=location["identifier"],
+                loc_obj = None
+                if location.get("identifier"):
+                    loc_obj, loc_created = Location.objects.get_or_create(
+                        url=location["identifier"],
+                        defaults={
+                            "in_scheme": location["in_scheme"],
+                            "pref_label": location["pref_label"],
+                        },
+                    )
+                spatial = Spatial(
+                    reference=loc_obj,
                     dataset=self,
-                    defaults={
-                        "in_scheme": location["in_scheme"],
-                        "pref_label": location["pref_label"],
-                        "full_address": location.get("full_address"),
-                        "geographic_name": location.get("geographic_name"),
-                    },
+                    geographic_name=location["geographic_name"],
+                    full_address=location.get("full_address"),
                 )
-                obj_list.append(obj)
+                if as_wkt := location.get("as_wkt"):
+                    if as_wkt != spatial.reference.as_wkt:
+                        spatial.custom_wkt = as_wkt
+                spatial.save()
+                obj_list.append(spatial)
             return obj_list
 
     def attach_temporal(self):
@@ -439,18 +451,28 @@ class LegacyDataset(Dataset):
                 )
                 logger.info(f"{provenance=}, created={provenance_created}")
                 if spatial_data := data.get("spatial"):
-                    place_uri = spatial_data["place_uri"]
-                    spatial, spatial_created = Spatial.objects.get_or_create(
-                        url=place_uri["identifier"],
-                        provenance=provenance,
+                    if provenance.spatial:
+                        provenance.spatial.delete()
+                        provenance.spatial = None
+
+                    loc_obj, loc_created = Location.objects.get_or_create(
+                        url=spatial_data["place_uri"]["identifier"],
                         defaults={
-                            "in_scheme": place_uri["in_scheme"],
-                            "pref_label": place_uri["pref_label"],
-                            "full_address": spatial_data.get("full_address"),
-                            "geographic_name": spatial_data.get("geographic_name"),
+                            "in_scheme": spatial_data["place_uri"]["in_scheme"],
+                            "pref_label": spatial_data["place_uri"]["pref_label"],
                         },
                     )
-                    logger.info(f"{spatial=}, created={spatial_created}")
+
+                    spatial = Spatial(
+                        provenance=provenance,
+                        full_address=spatial_data.get("full_address"),
+                        geographic_name=spatial_data.get("geographic_name"),
+                        reference=loc_obj,
+                    )
+                    if as_wkt := spatial_data.get("as_wkt"):
+                        if as_wkt != spatial.reference.as_wkt:
+                            spatial.custom_wkt = as_wkt
+                    spatial.save()
                     provenance.spatial = spatial
                 if temporal_data := data.get("temporal"):
                     start_date, end_date = self.parse_temporal_timestamps(temporal_data)
@@ -616,8 +638,8 @@ class LegacyDataset(Dataset):
             truncate_datetime="day",
         )
         logger.info(f"diff={diff.to_json()}")
-        return eval(diff.to_json())
-
+        json_diff = diff.to_json()
+        return json.loads(json_diff)
 
 def add_escapes(val: str):
     val = val.replace("[", "\\[")

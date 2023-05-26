@@ -118,7 +118,7 @@ class Theme(AbstractConcept):
 
 
 class Location(AbstractConcept):
-    as_wkt = models.TextField(default="", blank=True)
+    as_wkt = models.TextField(null=True, blank=True)
     serializer_extra_fields = ("as_wkt",)
     serializer_ref_name = "LocationModel"
 

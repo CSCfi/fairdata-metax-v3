@@ -1,7 +1,8 @@
 import uuid
 
-from django.contrib.postgres.fields import HStoreField
+from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.db import models
+from django.utils.translation import gettext as _
 
 from apps.common.models import AbstractBaseModel, AbstractFreeformConcept
 from apps.common.serializers import URLReferencedModelListField
@@ -136,12 +137,15 @@ class Spatial(AbstractFreeformConcept):
         null=True,
         help_text="The altitude of the geographical area (meters from WGS84 reference)",
     )
+    custom_wkt = ArrayField(
+        models.TextField(), blank=True, null=True, help_text=_("Additional wkt values according to WGS84")
+    )
     dataset = models.ForeignKey(
         "Dataset", on_delete=models.CASCADE, related_name="spatial", null=True, blank=True
     )
 
     def __str__(self):
-        return self.reference.__str__()
+        return self.geographic_name
 
     class Meta:
         indexes = []

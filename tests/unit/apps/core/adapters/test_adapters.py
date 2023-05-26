@@ -50,8 +50,7 @@ logger = logging.getLogger(__name__)
                 "dictionary_item_added": [
                     # Not all datasets have total_files_byte_size field in v1-v2. The best way to pinpoint when it
                     # should be present in DeepDiff needs investigation.
-                    "root['research_dataset']['total_files_byte_size']",
-                    "root['research_dataset']['provenance'][0]['spatial']['place_uri']['url']",
+                    "root['research_dataset']['total_files_byte_size']"
                 ],
                 "dictionary_item_removed": [
                     "root['research_dataset']['theme']",
@@ -60,10 +59,6 @@ logger = logging.getLogger(__name__)
                     # Remote resources is not modeled yet
                     "root['research_dataset']['remote_resources']",
                     "root['research_dataset']['total_remote_resources_byte_size']",
-                    # Spatial as_wkt information needs to be passed through adapter
-                    "root['research_dataset']['spatial'][0]['as_wkt']",
-                    "root['research_dataset']['provenance'][0]['spatial']['as_wkt']",
-                    "root['research_dataset']['provenance'][0]['spatial']['place_uri']['identifier']",
                 ],
             },
         ),

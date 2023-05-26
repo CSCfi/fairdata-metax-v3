@@ -26,7 +26,7 @@ class Provenance(AbstractBaseModel):
     description = HStoreField(help_text=_('example: {"en":"description", "fi": "kuvaus"}'))
     spatial = models.OneToOneField(
         Spatial,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name="provenance",
         null=True,
         blank=True,

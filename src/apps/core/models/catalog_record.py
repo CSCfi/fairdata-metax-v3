@@ -393,7 +393,8 @@ class OtherIdentifier(AbstractBaseModel):
         identifier_type(IdentifierType): IdentifierType ForeignKey relation
         dataset(Dataset): Dataset ForeignKey relation
     """
-
+    # ArrayField for as_wkt objects
+    # ForeignKey to Location
     notation = models.CharField(max_length=512)
     identifier_type = models.ForeignKey(
         IdentifierType, on_delete=models.CASCADE, related_name="dataset_identifiers"

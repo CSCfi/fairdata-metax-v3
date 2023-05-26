@@ -1,4 +1,7 @@
+import logging
 from typing import Dict, List
+
+logger = logging.getLogger(__name__)
 
 
 class V2DatasetMixin:
@@ -42,10 +45,33 @@ class V2DatasetMixin:
             if extra_top_level_fields:
                 for field in extra_top_level_fields:
                     if getattr(row, field) is not None:
-                        obj.update({field: getattr(row, field)})
+                        value = getattr(row, field)
+                        logger.info(f"{value=}")
+                        obj.update({field: value})
         if len(obj_list) != 0:
             document["research_dataset"][field_name] = obj_list
         return obj_list
+
+    def _construct_v2_spatial(self, model_obj):
+        obj = {"geographic_name": model_obj.geographic_name}
+        if model_obj.reference:
+            place_uri_obj = {}
+            if in_scheme := model_obj.reference.in_scheme:
+                place_uri_obj["in_scheme"] = in_scheme
+            if identifier := model_obj.reference.url:
+                place_uri_obj["identifier"] = identifier
+            if pref_label := model_obj.reference.pref_label:
+                place_uri_obj["pref_label"] = pref_label
+            obj["place_uri"] = place_uri_obj
+        if full_address := model_obj.full_address:
+            obj["full_address"] = full_address
+        if altitude_in_meters := model_obj.altitude_in_meters:
+            obj["altitude_in_meters"] = altitude_in_meters
+        if model_obj.reference.as_wkt or model_obj.custom_wkt:
+            obj["as_wkt"] = [
+                v for v in [model_obj.reference.as_wkt, *model_obj.custom_wkt] if v is not None
+            ]
+        return obj
 
     def _generate_v2_other_identifiers(self, document: Dict):
         obj_list = []
@@ -77,6 +103,15 @@ class V2DatasetMixin:
             document["research_dataset"]["temporal"] = obj_list
         return obj_list
 
+    def _generate_v2_spatial(self, document: Dict):
+        obj_list = []
+        for spatial in self.spatial.all():
+            obj = self._construct_v2_spatial(spatial)
+            obj_list.append(obj)
+        if len(obj_list) != 0:
+            document["research_dataset"]["spatial"] = obj_list
+        return obj_list
+
     def _generate_v2_provenance(self, document: Dict) -> List:
         obj_list = []
         for provenance in self.provenance.all():
@@ -86,17 +121,7 @@ class V2DatasetMixin:
             }
 
             if provenance.spatial:
-                data["spatial"] = {
-                    "place_uri": {
-                        "in_scheme": provenance.spatial.in_scheme,
-                        "url": provenance.spatial.url,
-                        "pref_label": provenance.spatial.pref_label,
-                    }
-                }
-                if full_address := provenance.spatial.full_address:
-                    data["spatial"]["full_address"] = full_address
-                if geographic_name := provenance.spatial.geographic_name:
-                    data["spatial"]["geographic_name"] = geographic_name
+                data["spatial"] = self._construct_v2_spatial(provenance.spatial)
             if temporal := provenance.temporal:
                 data["temporal"] = {
                     "start_date": temporal.start_date,
@@ -212,14 +237,9 @@ class V2DatasetMixin:
             doc["research_dataset"]["issued"] = self.issued
 
         self._generate_v2_other_identifiers(doc)
-        self._generate_v2_ref_data_field("language", doc, pref_label_text="title"),
-        self._generate_v2_ref_data_field("field_of_science", doc),
-        self._generate_v2_ref_data_field(
-            "spatial",
-            doc,
-            top_level_key_name="place_uri",
-            extra_top_level_fields=["geographic_name", "full_address"],
-        )
+        self._generate_v2_ref_data_field("language", doc, pref_label_text="title")
+        self._generate_v2_ref_data_field("field_of_science", doc)
+        self._generate_v2_spatial(doc)
         self._generate_v2_temporal(doc)
         self._generate_v2_provenance(doc)
         add_actor("creator", doc)

@@ -15,7 +15,7 @@ pytestmark = pytest.mark.parametrize(
     ],
 )
 
-extra_field_values = {"as_wkt": ""}
+extra_field_values = {"as_wkt": None}
 
 
 fields = dict(
