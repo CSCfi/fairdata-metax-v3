@@ -1,0 +1,76 @@
+{
+  "data_catalog": {
+    "id": 11,
+    "identifier": "urn:nbn:fi:att:data-catalog-ida"
+  },
+  "research_dataset": {
+    "theme": [
+      {
+        "in_scheme": "http://www.yso.fi/onto/koko/",
+        "identifier": "http://www.yso.fi/onto/koko/p32261",
+        "pref_label": {
+          "fi": "roolipelit"
+        }
+      }
+    ],
+    "title": {
+      "fi": "Otsikko"
+    },
+    "creator": [
+      {
+        "name": "Creator One",
+        "@type": "Person"
+      }
+    ],
+    "language": [
+      {
+        "title": {
+          "fi": "suomi"
+        },
+        "identifier": "http://lexvo.org/id/iso639-3/fin"
+      }
+    ],
+    "modified": "2022-12-15T13:07:41.789Z",
+    "description": {
+      "fi": "Kuvaus"
+    },
+    "access_rights": {
+      "license": [
+        {
+          "title": {
+            "fi": "Creative Commons Nimeä 4.0 Kansainvälinen (CC BY 4.0)"
+          },
+          "license": "https://creativecommons.org/licenses/by/4.0/",
+          "identifier": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0"
+        }
+      ],
+      "access_type": {
+        "in_scheme": "http://uri.suomi.fi/codelist/fairdata/access_type",
+        "identifier": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open",
+        "pref_label": {
+          "fi": "Avoin"
+        }
+      }
+    },
+    "field_of_science": [
+      {
+        "in_scheme": "http://www.yso.fi/onto/okm-tieteenala/conceptscheme",
+        "identifier": "http://www.yso.fi/onto/okm-tieteenala/ta112",
+        "pref_label": {
+          "fi": "Tilastotiede"
+        }
+      }
+    ],
+    "preferred_identifier": "doi:10.23729/c23fbb80-4952-4a4a-82bd-a4016375a68b",
+    "total_files_byte_size": 595968
+  },
+  "preservation_state": 0,
+  "preservation_identifier": "doi:10.23729/c23fbb80-4952-4a4a-82bd-a4016375a68b",
+  "state": "published",
+  "cumulative_state": 1,
+  "user_modified": "fd_tester",
+  "date_modified": "2022-12-15T15:07:42+02:00",
+  "date_created": "2022-12-15T15:07:06+02:00",
+  "service_modified": "qvain-light",
+  "service_created": "qvain-light"
+}

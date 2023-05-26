@@ -1,0 +1,78 @@
+{
+  "catalog_json": {
+    "modified": "2014-01-17T08:19:58Z",
+    "issued": "2014-02-27",
+    "title": {
+      "fi": "Testidatakatalogin nimi",
+      "en": "Test data catalog name"
+    },
+    "harvested": false,
+    "language": [
+      {
+        "identifier": "http://lexvo.org/id/iso639-3/fin",
+        "title": {
+          "sv": "finska",
+          "en": "Finnish",
+          "fi": "suomi",
+          "und": "suomi"
+        }
+      }
+    ],
+    "homepage": [
+      {
+        "identifier": "http://testing.com",
+        "title": {
+          "en": "Test website",
+          "fi": "Testi-verkkopalvelu"
+        }
+      }
+    ],
+    "publisher": {
+      "identifier": "http://isni.org/isni/0000000405129137",
+      "name": {
+        "fi": "Datakatalogin julkaisijaorganisaatio",
+        "en": "Data catalog publisher organization"
+      },
+      "homepage": [
+        {
+          "identifier": "http://www.publisher.fi/",
+          "title": {
+            "fi": "Julkaisijaorganisaation kotisivu",
+            "en": "Publisher organization website"
+          }
+        }
+      ]
+    },
+    "access_rights": {
+      "description": {
+        "fi": "Käyttöehtojen kuvaus"
+      },
+      "access_type": [
+        {
+          "identifier": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open",
+          "pref_label": {
+            "fi": "Avoin",
+            "en": "Open",
+            "und": "Avoin"
+          }
+        }
+      ],
+      "license": [
+        {
+          "identifier": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0",
+          "title": {
+            "fi": "Creative Commons Nimeä 4.0 Kansainvälinen (CC BY 4.0)",
+            "en": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+            "und": "Creative Commons Nimeä 4.0 Kansainvälinen (CC BY 4.0)"
+          }
+        }
+      ]
+    },
+    "research_dataset_schema": "att",
+    "dataset_versioning": true
+  },
+  "service_created": "metax",
+  "catalog_record_services_create": "testuser,api_auth_user,metax,tpas",
+  "catalog_record_services_edit": "testuser,api_auth_user,metax,tpas",
+  "catalog_record_services_read": "testuser,api_auth_user,metax,tpas"
+}
