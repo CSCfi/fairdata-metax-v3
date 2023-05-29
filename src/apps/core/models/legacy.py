@@ -506,8 +506,8 @@ class LegacyDataset(Dataset):
                     lifecycle_event, created = LifecycleEvent.objects.get_or_create(
                         url=lifecycle_event_data["identifier"],
                         defaults={
-                            "pref_label": event_outcome_data["pref_label"],
-                            "in_scheme": event_outcome_data["in_scheme"],
+                            "pref_label": lifecycle_event_data["pref_label"],
+                            "in_scheme": lifecycle_event_data["in_scheme"],
                         },
                     )
                     provenance.lifecycle_event = lifecycle_event

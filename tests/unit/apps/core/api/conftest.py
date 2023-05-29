@@ -40,6 +40,11 @@ def dataset_c_json():
 
 
 @pytest.fixture
+def legacy_dataset_a_json():
+    return load_test_json("legacy_dataset_a.json")
+
+
+@pytest.fixture
 def datacatalog_a_json():
     return load_test_json("datacatalog_a.json")
 
@@ -226,6 +231,7 @@ def dataset_a(client, dataset_a_json, data_catalog, reference_data):
 def dataset_b(client, dataset_b_json, data_catalog, reference_data):
     return client.post("/v3/datasets", dataset_b_json, content_type="application/json")
 
+
 @pytest.fixture
 def dataset_c(client, dataset_c_json, data_catalog, reference_data):
     return client.post("/v3/datasets", dataset_c_json, content_type="application/json")
@@ -242,4 +248,11 @@ def dataset_actor_a(dataset_a):
             ),
         ),
         role="creator",
+    )
+
+
+@pytest.fixture
+def legacy_dataset_a(client, data_catalog, reference_data, legacy_dataset_a_json):
+    return client.post(
+        reverse("migrated-dataset-list"), legacy_dataset_a_json, content_type="application/json"
     )
