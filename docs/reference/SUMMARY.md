@@ -37,11 +37,13 @@
             - [dataset_files_serializer](src/apps/core/serializers/dataset_files_serializer.md)
             - [dataset_serializer](src/apps/core/serializers/dataset_serializer.md)
             - [file_metadata_serializer](src/apps/core/serializers/file_metadata_serializer.md)
+            - [legacy_serializer](src/apps/core/serializers/legacy_serializer.md)
         - [signals](src/apps/core/signals.md)
         - views
             - [common_views](src/apps/core/views/common_views.md)
             - [data_catalog_view](src/apps/core/views/data_catalog_view.md)
             - [dataset_view](src/apps/core/views/dataset_view.md)
+            - [legacy_view](src/apps/core/views/legacy_view.md)
     - files
         - [admin](src/apps/files/admin.md)
         - [apps](src/apps/files/apps.md)
@@ -120,6 +122,7 @@
                     - [test_data_catalog](tests/unit/apps/core/api/test_data_catalog.md)
                     - [test_dataset](tests/unit/apps/core/api/test_dataset.md)
                     - [test_dataset_publisher](tests/unit/apps/core/api/test_dataset_publisher.md)
+                    - [test_legacy](tests/unit/apps/core/api/test_legacy.md)
                     - [test_metadata_provider](tests/unit/apps/core/api/test_metadata_provider.md)
                 - [management.test_load_test_data](tests/unit/apps/core/management/test_load_test_data.md)
                 - models
@@ -164,5 +167,8 @@
                 - [api.test_user_token](tests/unit/apps/users/api/test_user_token.md)
                 - [conftest](tests/unit/apps/users/conftest.md)
                 - [models.test_metax_user](tests/unit/apps/users/models/test_metax_user.md)
+        - docs.examples
+            - [conftest](tests/unit/docs/examples/conftest.md)
+            - [test_api_payloads](tests/unit/docs/examples/test_api_payloads.md)
         - [swagger.test_swagger](tests/unit/swagger/test_swagger.md)
     - [utils.utils](tests/utils/utils.md)

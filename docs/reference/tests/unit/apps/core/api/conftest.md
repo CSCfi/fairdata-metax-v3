@@ -20,6 +20,10 @@
 
 ### :::tests.unit.apps.core.api.conftest.dataset_c_json
 
+## legacy_dataset_a_json
+
+### :::tests.unit.apps.core.api.conftest.legacy_dataset_a_json
+
 ## datacatalog_a_json
 
 ### :::tests.unit.apps.core.api.conftest.datacatalog_a_json
@@ -147,4 +151,8 @@
 ## dataset_actor_a
 
 ### :::tests.unit.apps.core.api.conftest.dataset_actor_a
+
+## legacy_dataset_a
+
+### :::tests.unit.apps.core.api.conftest.legacy_dataset_a
 
