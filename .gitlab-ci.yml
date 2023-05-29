@@ -67,7 +67,7 @@ prepare-service-staging:
   variables:
     GITLAB_ENV: 'staging'
   rules:
-    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
+    - if: $CI_COMMIT_BRANCH =~ /^(master)$/ && $CI_PIPELINE_SOURCE !~ /^(web)$/
 
 deploy-service-staging:
   extends: .deploy-service-play
@@ -76,7 +76,7 @@ deploy-service-staging:
   variables:
     GITLAB_ENV: 'staging'
   rules:
-    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
+    - if: $CI_COMMIT_BRANCH =~ /^(master)$/ && $CI_PIPELINE_SOURCE !~ /^(web)$/
 
 post-deployment-tasks-staging:
   extends: .post-deployment-tasks-play
@@ -86,7 +86,7 @@ post-deployment-tasks-staging:
   variables:
     GITLAB_ENV: 'staging'
   rules:
-    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
+    - if: $CI_COMMIT_BRANCH =~ /^(master)$/ && $CI_PIPELINE_SOURCE !~ /^(web)$/
 
 test-deployment-staging:
   extends: .test-deployment-play
@@ -96,7 +96,7 @@ test-deployment-staging:
   variables:
     GITLAB_ENV: 'staging'
   rules:
-    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
+    - if: $CI_COMMIT_BRANCH =~ /^(master)$/ && $CI_PIPELINE_SOURCE !~ /^(web)$/
 
 # ------------------------
 
@@ -106,8 +106,11 @@ prepare-service:
     GITLAB_ENV: 'test'
   needs:
     - job: test-deployment-staging
+      optional: true
   rules:
-    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
+    - if: $CI_COMMIT_BRANCH =~ /^(master)$/ && $CI_PIPELINE_SOURCE !~ /^(web)$/
+    - if: $CI_PIPELINE_SOURCE =~ /^(web)$/
+
 
 prepare-service-rework:
   extends: .prepare-service-play
@@ -116,7 +119,7 @@ prepare-service-rework:
   variables:
     GITLAB_ENV: 'rework'
   rules:
-    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
+    - if: $CI_COMMIT_BRANCH =~ /^(master)$/ && $CI_PIPELINE_SOURCE !~ /^(web)$/
 
 deploy-service:
   extends: .deploy-service-play
@@ -125,7 +128,8 @@ deploy-service:
   variables:
     GITLAB_ENV: 'test'
   rules:
-    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
+    - if: $CI_COMMIT_BRANCH =~ /^(master)$/ && $CI_PIPELINE_SOURCE !~ /^(web)$/
+    - if: $CI_PIPELINE_SOURCE =~ /^(web)$/
 
 deploy-service-rework:
   extends: .deploy-service-play
@@ -134,7 +138,7 @@ deploy-service-rework:
   variables:
     GITLAB_ENV: 'rework'
   rules:
-    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
+    - if: $CI_COMMIT_BRANCH =~ /^(master)$/ && $CI_PIPELINE_SOURCE !~ /^(web)$/
 
 # ------------------------
 
@@ -145,7 +149,8 @@ post-deployment-tasks:
   variables:
     GITLAB_ENV: 'test'
   rules:
-    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
+    - if: $CI_COMMIT_BRANCH =~ /^(master)$/ && $CI_PIPELINE_SOURCE !~ /^(web)$/
+    - if: $CI_PIPELINE_SOURCE =~ /^(web)$/
 
 post-deployment-tasks-rework:
   extends: .post-deployment-tasks-play
@@ -154,7 +159,7 @@ post-deployment-tasks-rework:
   variables:
     GITLAB_ENV: 'rework'
   rules:
-    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
+    - if: $CI_COMMIT_BRANCH =~ /^(master)$/ && $CI_PIPELINE_SOURCE !~ /^(web)$/
 
 # ------------------------
 
@@ -165,7 +170,8 @@ test-deployment:
   variables:
     GITLAB_ENV: 'test'
   rules:
-    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
+    - if: $CI_COMMIT_BRANCH =~ /^(master)$/ && $CI_PIPELINE_SOURCE !~ /^(web)$/
+    - if: $CI_PIPELINE_SOURCE =~ /^(web)$/
 
 test-deployment-rework:
   extends: .test-deployment-play
@@ -174,4 +180,4 @@ test-deployment-rework:
   variables:
     GITLAB_ENV: 'rework'
   rules:
-    - if: $CI_COMMIT_BRANCH =~ /^(master)$/
+    - if: $CI_COMMIT_BRANCH =~ /^(master)$/ && $CI_PIPELINE_SOURCE !~ /^(web)$/
