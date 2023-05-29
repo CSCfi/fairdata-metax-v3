@@ -495,16 +495,20 @@ class LegacyDataset(Dataset):
                         )
                 if event_outcome_data := data.get("event_outcome"):
                     event_outcome, created = EventOutcome.objects.get_or_create(
-                        in_scheme=event_outcome_data["in_scheme"],
                         url=event_outcome_data["identifier"],
-                        pref_label=event_outcome_data["pref_label"],
+                        defaults={
+                            "pref_label": event_outcome_data["pref_label"],
+                            "in_scheme": event_outcome_data["in_scheme"],
+                        },
                     )
                     provenance.event_outcome = event_outcome
                 if lifecycle_event_data := data.get("lifecycle_event"):
                     lifecycle_event, created = LifecycleEvent.objects.get_or_create(
-                        in_scheme=lifecycle_event_data["in_scheme"],
                         url=lifecycle_event_data["identifier"],
-                        pref_label=lifecycle_event_data["pref_label"],
+                        defaults={
+                            "pref_label": event_outcome_data["pref_label"],
+                            "in_scheme": event_outcome_data["in_scheme"],
+                        },
                     )
                     provenance.lifecycle_event = lifecycle_event
                 associated_with_objs = []
@@ -533,9 +537,11 @@ class LegacyDataset(Dataset):
                     funder_identifier=data.get("funder_identifier"),
                 )
                 funder_type, created = FunderType.objects.get_or_create(
-                    in_scheme=data["funder_type"]["in_scheme"],
                     url=data["funder_type"]["identifier"],
-                    pref_label=data["funder_type"]["pref_label"],
+                    defaults={
+                        "in_scheme": data["funder_type"]["in_scheme"],
+                        "pref_label": data["funder_type"]["pref_label"],
+                    },
                 )
                 project.funder_type = funder_type
                 funders = []
@@ -640,6 +646,7 @@ class LegacyDataset(Dataset):
         logger.info(f"diff={diff.to_json()}")
         json_diff = diff.to_json()
         return json.loads(json_diff)
+
 
 def add_escapes(val: str):
     val = val.replace("[", "\\[")
