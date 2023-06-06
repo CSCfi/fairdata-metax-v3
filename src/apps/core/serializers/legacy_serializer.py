@@ -10,12 +10,9 @@ class LegacyDatasetModelSerializer(serializers.ModelSerializer):
         return obj.check_compatibility()
 
     def create(self, validated_data):
-        if LegacyDataset.objects.filter(
+        if instance := LegacyDataset.objects.filter(
             dataset_json__identifier=validated_data["dataset_json"]["identifier"]
-        ).exists():
-            instance = LegacyDataset.objects.get(
-                dataset_json__identifier=validated_data["dataset_json"]["identifier"]
-            )
+        ).first():
             return self.update(instance, validated_data)
         else:
             return super().create(validated_data)
