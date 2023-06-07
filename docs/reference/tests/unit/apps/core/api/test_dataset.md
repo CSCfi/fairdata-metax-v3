@@ -24,6 +24,18 @@
 
 ### :::tests.unit.apps.core.api.test_dataset.test_list_datasets_with_ordering
 
+## test_list_datasets_with_default_pagination
+
+### :::tests.unit.apps.core.api.test_dataset.test_list_datasets_with_default_pagination
+
+## test_list_datasets_with_pagination
+
+### :::tests.unit.apps.core.api.test_dataset.test_list_datasets_with_pagination
+
+## test_list_datasets_with_no_pagination
+
+### :::tests.unit.apps.core.api.test_dataset.test_list_datasets_with_no_pagination
+
 ## test_create_dataset_with_metadata_owner
 
 ### :::tests.unit.apps.core.api.test_dataset.test_create_dataset_with_metadata_owner

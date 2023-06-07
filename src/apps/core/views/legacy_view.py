@@ -1,8 +1,8 @@
+from django_filters import rest_framework as filters
 from rest_framework import viewsets
 
-from apps.core.serializers import LegacyDatasetModelSerializer
 from apps.core.models import LegacyDataset
-from django_filters import rest_framework as filters
+from apps.core.serializers import LegacyDatasetModelSerializer
 
 
 class LegacyDatasetFilter(filters.FilterSet):

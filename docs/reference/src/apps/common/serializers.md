@@ -12,7 +12,3 @@
 
 ### :::src.apps.common.serializers.AbstractDatasetPropertyModelSerializer
 
-## InvalidFieldsMixin
-
-### :::src.apps.common.serializers.InvalidFieldsMixin
-

@@ -10,9 +10,9 @@ from apps.core.views import (
     DatasetFileSetViewSet,
     DatasetFilesViewSet,
     DatasetViewSet,
+    LegacyDatasetViewSet,
     MetadataProviderViewSet,
     PublisherViewSet,
-    LegacyDatasetViewSet
 )
 from apps.files.views import DirectoryViewSet, FileViewSet
 from apps.refdata.models import reference_data_models

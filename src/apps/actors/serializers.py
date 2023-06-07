@@ -66,7 +66,6 @@ class ActorModelSerializer(WritableNestedModelSerializer):
 
         return Actor.objects.create(organization=org, **validated_data)
 
-
     class Meta:
         model = Actor
         fields = ("organization", "person")

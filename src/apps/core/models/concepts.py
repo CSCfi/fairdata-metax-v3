@@ -138,7 +138,10 @@ class Spatial(AbstractFreeformConcept):
         help_text="The altitude of the geographical area (meters from WGS84 reference)",
     )
     custom_wkt = ArrayField(
-        models.TextField(), blank=True, null=True, help_text=_("Additional wkt values according to WGS84")
+        models.TextField(),
+        blank=True,
+        null=True,
+        help_text=_("Additional wkt values according to WGS84"),
     )
     dataset = models.ForeignKey(
         "Dataset", on_delete=models.CASCADE, related_name="spatial", null=True, blank=True

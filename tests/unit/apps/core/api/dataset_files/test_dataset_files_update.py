@@ -3,8 +3,8 @@
 from typing import Dict
 
 import pytest
-from tests.utils import assert_nested_subdict
 from rest_framework.reverse import reverse
+from tests.utils import assert_nested_subdict
 
 from apps.core import factories
 

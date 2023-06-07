@@ -1,7 +1,9 @@
 import json
 import logging
+from unittest.mock import ANY
 
 import pytest
+from rest_framework.reverse import reverse
 from tests.utils import assert_nested_subdict
 
 logger = logging.getLogger(__name__)
@@ -78,6 +80,34 @@ def test_list_datasets_with_ordering(
     assert_nested_subdict(
         {0: dataset_b_json, 1: dataset_a_json}, dict(enumerate((res.data["results"])))
     )
+
+
+def test_list_datasets_with_default_pagination(client, dataset_a, dataset_b):
+    res = client.get(reverse("dataset-list"))
+    assert res.status_code == 200
+    assert res.data == {
+        "count": 2,
+        "next": None,
+        "previous": None,
+        "results": [ANY, ANY],
+    }
+
+
+def test_list_datasets_with_pagination(client, dataset_a, dataset_b):
+    res = client.get(reverse("dataset-list"), {"pagination": "true"})
+    assert res.status_code == 200
+    assert res.data == {
+        "count": 2,
+        "next": None,
+        "previous": None,
+        "results": [ANY, ANY],
+    }
+
+
+def test_list_datasets_with_no_pagination(client, dataset_a, dataset_b):
+    res = client.get(reverse("dataset-list"), {"pagination": "false"})
+    assert res.status_code == 200
+    assert res.data == [ANY, ANY]
 
 
 def test_create_dataset_with_metadata_owner(client, dataset_a_json, data_catalog, reference_data):

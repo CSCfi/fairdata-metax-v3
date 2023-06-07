@@ -68,3 +68,7 @@
 
 ### :::src.apps.core.admin.LicenseAdmin
 
+## FileSetAdmin
+
+### :::src.apps.core.admin.FileSetAdmin
+

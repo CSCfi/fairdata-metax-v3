@@ -1,7 +1,8 @@
+from typing import Union
 from uuid import UUID
+
 import pytest
 from rest_framework.reverse import reverse
-from typing import Union
 
 from apps.core import factories
 from apps.core.models import Dataset
