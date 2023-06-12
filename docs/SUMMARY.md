@@ -5,4 +5,6 @@
         - developer-guide/contributing/*
     - [Dependencies](developer-guide/dependencies/index.md)
         - developer-guide/dependencies/*
+    - [Installation](developer-guide/install/index.md)
+        - developer-guide/install/*
 - [Reference](reference/)

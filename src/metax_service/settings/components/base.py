@@ -80,6 +80,7 @@ THIRD_PARTY_APPS = [
     "simple_history",
     "watchman",
     "polymorphic",
+    "corsheaders",
 ]
 LOCAL_APPS = [
     "common.apps.CommonConfig",
@@ -91,12 +92,13 @@ LOCAL_APPS = [
     "router.apps.RouterConfig",
 ]
 
-INSTALLED_APPS = DEFAULT_APPS + THIRD_PARTY_APPS + LOCAL_APPS
+INSTALLED_APPS = LOCAL_APPS + DEFAULT_APPS + THIRD_PARTY_APPS
 
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -215,12 +217,14 @@ AUTH_USER_MODEL = "users.MetaxUser"
 # https://www.django-rest-framework.org/api-guide/authentication/#setting-the-authentication-scheme
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        "apps.users.authentication.SSOAuthentication",
         "rest_framework.authentication.BasicAuthentication",
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     "DEFAULT_PAGINATION_CLASS": "apps.common.pagination.OffsetPagination",
     "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
+    "EXCEPTION_HANDLER": "common.exceptions.exception_handler",
 }
 
 SWAGGER_SETTINGS = {
@@ -265,3 +269,21 @@ ENABLE_SILK_PROFILER = env.bool("ENABLE_SILK_PROFILER", False)
 # Languages
 
 DISPLAY_API_LANGUAGES = ["en", "fi", "sv"]
+
+
+# SSO Auth
+
+ENABLE_SSO_AUTH = env.bool("ENABLE_SSO_AUTH", False)
+SSO_HOST = env.str("SSO_HOST", None)
+SSO_SESSION_COOKIE = env.str("SSO_SESSION_COOKIE", None)
+SSO_SECRET_KEY = env.str("SSO_SECRET_KEY", None)
+SSO_METAX_SERVICE_NAME = env.str("SSO_METAX_SERVICE_NAME", None)
+
+# CSRF configuration
+# Note: CSRF_TRUSTED_ORIGINS require a scheme (e.g. https://someurl.com) in Django 4.0
+# but older versions expect scheme not to be present (e.g. someurl.com).
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", [])
+
+# CORS header settings for django-cors-headers
+CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", [])
+CORS_ALLOW_CREDENTIALS = env.bool("CORS_ALLOW_CREDENTIALS", False)

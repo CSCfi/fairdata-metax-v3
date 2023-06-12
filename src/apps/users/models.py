@@ -1,7 +1,9 @@
 import uuid
 
 from django.contrib.auth.models import AbstractUser
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 from model_utils.models import SoftDeletableModel
 
 
@@ -11,6 +13,12 @@ class MetaxUser(AbstractUser, SoftDeletableModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     # if True, don't display User details
     is_hidden = models.BooleanField(default=False)
+    ida_projects = ArrayField(models.CharField(max_length=256), default=list, blank=True)
+    synced = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text=_("When user data was synchronized from an external service."),
+    )
 
     def undelete(self):
         self.is_removed = False

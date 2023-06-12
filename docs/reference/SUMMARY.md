@@ -11,6 +11,7 @@
     - common
         - [admin](src/apps/common/admin.md)
         - [apps](src/apps/common/apps.md)
+        - [exceptions](src/apps/common/exceptions.md)
         - [helpers](src/apps/common/helpers.md)
         - [managers](src/apps/common/managers.md)
         - [models](src/apps/common/models.md)
@@ -78,10 +79,12 @@
     - [router.apps](src/apps/router/apps.md)
     - users
         - [apps](src/apps/users/apps.md)
+        - [authentication](src/apps/users/authentication.md)
         - [factories](src/apps/users/factories.md)
         - [models](src/apps/users/models.md)
         - [serializers](src/apps/users/serializers.md)
         - [signals](src/apps/users/signals.md)
+        - [templatetags.sso_auth](src/apps/users/templatetags/sso_auth.md)
         - [views](src/apps/users/views.md)
 - tests
     - behave.features
@@ -164,9 +167,13 @@
                     - [test_finto_importer](tests/unit/apps/refdata/services/test_finto_importer.md)
                     - [test_local_json_importer](tests/unit/apps/refdata/services/test_local_json_importer.md)
             - users
-                - [api.test_user_token](tests/unit/apps/users/api/test_user_token.md)
+                - api
+                    - [test_sso_authentication](tests/unit/apps/users/api/test_sso_authentication.md)
+                    - [test_user_token](tests/unit/apps/users/api/test_user_token.md)
+                - [authentication.test_sso_authentication](tests/unit/apps/users/authentication/test_sso_authentication.md)
                 - [conftest](tests/unit/apps/users/conftest.md)
                 - [models.test_metax_user](tests/unit/apps/users/models/test_metax_user.md)
+                - [templatetags.test_sso_auth_tags](tests/unit/apps/users/templatetags/test_sso_auth_tags.md)
         - docs.examples
             - [conftest](tests/unit/docs/examples/conftest.md)
             - [test_api_payloads](tests/unit/docs/examples/test_api_payloads.md)

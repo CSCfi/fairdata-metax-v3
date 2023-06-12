@@ -8,7 +8,7 @@ from metax_service.settings.components.base import (
 
 DEBUG = True
 
-ALLOWED_HOSTS = ALLOWED_HOSTS + ["metax.localdomain", "127.0.0.1", "localhost"]
+ALLOWED_HOSTS = ALLOWED_HOSTS + ["metax.localdomain", "127.0.0.1", "localhost", ".fd-dev.csc.fi"]
 
 DEBUG_TOOLBAR_APPS = [
     "debug_toolbar",
@@ -22,7 +22,6 @@ SILK_APP = ["silk"]
 if ENABLE_DEBUG_TOOLBAR:
     INSTALLED_APPS = INSTALLED_APPS + DEBUG_TOOLBAR_APPS
     MIDDLEWARE = MIDDLEWARE + DEBUG_TOOLBAR_MIDDLEWARE
-
 if ENABLE_SILK_PROFILER:
     INSTALLED_APPS = INSTALLED_APPS + SILK_APP
     MIDDLEWARE = SILK_MIDDLEWARE + MIDDLEWARE

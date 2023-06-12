@@ -61,7 +61,7 @@ class DatasetViewSet(viewsets.ModelViewSet):
     )
 
     filterset_class = DatasetFilter
-    http_method_names = ["get", "post", "put", "delete"]
+    http_method_names = ["get", "post", "put", "delete", "options"]
 
     def get_object(self):
         queryset = self.get_queryset()
