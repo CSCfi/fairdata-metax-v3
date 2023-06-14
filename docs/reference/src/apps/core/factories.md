@@ -76,3 +76,7 @@
 
 ### :::src.apps.core.factories.SpatialFactory
 
+## IdentifierTypeFactory
+
+### :::src.apps.core.factories.IdentifierTypeFactory
+

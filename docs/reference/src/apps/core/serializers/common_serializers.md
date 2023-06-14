@@ -28,3 +28,11 @@
 
 ### :::src.apps.core.serializers.common_serializers.MetadataProviderModelSerializer
 
+## OtherIdentifierListSerializer
+
+### :::src.apps.core.serializers.common_serializers.OtherIdentifierListSerializer
+
+## OtherIdentifierModelSerializer
+
+### :::src.apps.core.serializers.common_serializers.OtherIdentifierModelSerializer
+

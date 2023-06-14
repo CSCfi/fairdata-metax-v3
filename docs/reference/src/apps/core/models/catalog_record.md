@@ -4,6 +4,10 @@
 
 ### :::src.apps.core.models.catalog_record.MetadataProvider
 
+## OtherIdentifier
+
+### :::src.apps.core.models.catalog_record.OtherIdentifier
+
 ## CatalogRecord
 
 ### :::src.apps.core.models.catalog_record.CatalogRecord
@@ -19,10 +23,6 @@
 ## Temporal
 
 ### :::src.apps.core.models.catalog_record.Temporal
-
-## OtherIdentifier
-
-### :::src.apps.core.models.catalog_record.OtherIdentifier
 
 ## DatasetProject
 

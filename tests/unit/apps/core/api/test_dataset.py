@@ -5,6 +5,8 @@ from unittest.mock import ANY
 import pytest
 from rest_framework.reverse import reverse
 from tests.utils import assert_nested_subdict
+from apps.core.models import OtherIdentifier
+from apps.core.models.concepts import IdentifierType
 
 logger = logging.getLogger(__name__)
 
@@ -135,3 +137,73 @@ def test_create_dataset_actor_nested_url(
         content_type="application/json",
     )
     assert res.status_code == 201
+
+
+@pytest.mark.django_db
+def test_create_dataset_with_other_identifiers(
+    client, dataset_a_json, data_catalog, reference_data
+):
+    dataset_a_json["other_identifiers"] = [
+        {
+            "identifier_type": {
+                "url": "http://uri.suomi.fi/codelist/fairdata/identifier_type/code/doi"
+            },
+            "notation": "foo",
+        },
+        {"notation": "bar"},
+        {"old_notation": "foo", "notation": "bar"},
+    ]
+
+    res = client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    assert len(res.data["other_identifiers"]) == 3
+
+
+@pytest.mark.django_db
+def test_update_dataset_with_other_identifiers(
+    client, dataset_a_json, data_catalog, reference_data
+):
+    # Create a dataset with other_identifiers
+    dataset_a_json["other_identifiers"] = [
+        {
+            "identifier_type": {
+                "url": "http://uri.suomi.fi/codelist/fairdata/identifier_type/code/doi"
+            },
+            "notation": "foo",
+        },
+        {"notation": "bar"},
+        {"old_notation": "foo", "notation": "baz"},
+    ]
+
+    res = client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    assert len(res.data["other_identifiers"]) == 3
+    assert_nested_subdict(dataset_a_json["other_identifiers"], res.data["other_identifiers"])
+
+    ds_id = res.data["id"]
+
+    # Update other_identifiers
+    dataset_a_json["other_identifiers"] = [
+        {
+            "identifier_type": {
+                "url": "http://uri.suomi.fi/codelist/fairdata/identifier_type/code/urn"
+            },
+            "notation": "foo",
+        },
+        {
+            "identifier_type": {
+                "url": "http://uri.suomi.fi/codelist/fairdata/identifier_type/code/doi"
+            },
+            "notation": "new_foo",
+        },
+        {"notation": "updated_bar"},
+        {"old_notation": "updated_foo", "notation": "updated_baz"},
+    ]
+    res = client.put(f"/v3/datasets/{ds_id}", dataset_a_json, content_type="application/json")
+    assert res.status_code == 200
+    assert len(res.data["other_identifiers"]) == 4
+    assert_nested_subdict(dataset_a_json["other_identifiers"], res.data["other_identifiers"])
+
+    # Assert that the old other_identifiers don't exist in the db anymore
+    new_count = OtherIdentifier.available_objects.all().count()
+    assert new_count == 4

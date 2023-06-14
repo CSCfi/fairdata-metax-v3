@@ -316,6 +316,21 @@ def location_reference_data():
 
 
 @pytest.fixture
+def identifier_type_reference_data():
+    common_args = {"in_scheme": "http://uri.suomi.fi/codelist/fairdata/identifier_type"}
+    factories.IdentifierTypeFactory(
+        url="http://uri.suomi.fi/codelist/fairdata/identifier_type/code/doi",
+        pref_label={"en": "Digital Object Identifier (DOI)"},
+        **common_args,
+    )
+    factories.IdentifierTypeFactory(
+        url="http://uri.suomi.fi/codelist/fairdata/identifier_type/code/urn",
+        pref_label={"en": "Uniform Resource Name (URN)"},
+        **common_args,
+    )
+
+
+@pytest.fixture
 def reference_data(
     access_type_reference_data,
     field_of_science_reference_data,
@@ -325,5 +340,6 @@ def reference_data(
     file_type_reference_data,
     use_category_reference_data,
     location_reference_data,
+    identifier_type_reference_data,
 ):
     """Collection of reference data"""

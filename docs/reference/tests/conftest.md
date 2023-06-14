@@ -48,6 +48,10 @@
 
 ### :::tests.conftest.location_reference_data
 
+## identifier_type_reference_data
+
+### :::tests.conftest.identifier_type_reference_data
+
 ## reference_data
 
 ### :::tests.conftest.reference_data

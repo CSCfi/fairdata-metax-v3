@@ -243,3 +243,16 @@ class SpatialFactory(factory.django.DjangoModelFactory):
     reference = factory.SubFactory(
         LocationFactory, url="http://www.yso.fi/onto/onto/yso/c_9908ce39"
     )
+
+
+class IdentifierTypeFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = refdata.IdentifierType
+        django_get_or_create = ("url",)
+
+    pref_label = factory.Dict({"en": factory.Sequence(lambda n: f"dataset-identifier-type-{n}")})
+    in_scheme = factory.Faker("url")
+
+    @factory.sequence
+    def url(self):
+        return f"https://dataset-identifier-type-{self}.fi"

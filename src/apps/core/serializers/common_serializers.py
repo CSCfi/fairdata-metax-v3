@@ -4,28 +4,35 @@
 #
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
+
 import json
 import logging
 
 from django.core.validators import EMPTY_VALUES
 from rest_framework import serializers
 
+from apps.actors.models import Organization
 from apps.actors.serializers import ActorModelSerializer
+
 from apps.common.helpers import update_or_create_instance
 from apps.common.serializers import (
     AbstractDatasetModelSerializer,
     AbstractDatasetPropertyModelSerializer,
 )
+
 from apps.core.models import (
     AccessRights,
     CatalogHomePage,
     DatasetActor,
     DatasetPublisher,
     MetadataProvider,
+    OtherIdentifier,
     Spatial,
 )
-from apps.core.models.concepts import AccessType, DatasetLicense
+from apps.core.models.concepts import AccessType, DatasetLicense, IdentifierType
+
 from apps.refdata import models as refdata
+
 from apps.users.serializers import MetaxUserModelSerializer
 
 logger = logging.getLogger(__name__)
@@ -282,3 +289,71 @@ class MetadataProviderModelSerializer(AbstractDatasetModelSerializer):
             update_or_create_instance(user_serializer, user_instance, user_data)
 
         return super().update(instance, validated_data)
+
+
+class OtherIdentifierListSerializer(serializers.ListSerializer):
+    def update(self, instance, validated_data):
+        # Map the other_identifiers instance objects by their notation value
+        notation_mapping = {
+            other_id.notation: other_id for other_id in instance.other_identifiers.all()
+        }
+        data_mapping = {item["notation"]: item for item in validated_data}
+        ret = []
+
+        # Perform creations and updates
+        for notation, data in data_mapping.items():
+            other_identifiers = notation_mapping.get(notation, None)
+            if other_identifiers is None:
+                ret.append(self.child.create(data))
+            else:
+                ret.append(self.child.update(other_identifiers, data))
+
+        # Perform deletions
+        for notation, other_id in notation_mapping.items():
+            if notation not in data_mapping:
+                other_id.delete()
+
+        return ret
+
+
+class OtherIdentifierModelSerializer(AbstractDatasetModelSerializer):
+    identifier_type = IdentifierType.get_serializer()(read_only=False, required=False)
+
+    class Meta:
+        model = OtherIdentifier
+        fields = ("notation", "identifier_type", "old_notation")
+        list_serializer_class = OtherIdentifierListSerializer
+
+    def create(self, validated_data):
+        identifier_type = None
+        identifier_type_data = validated_data.pop("identifier_type", None)
+
+        if identifier_type_data not in EMPTY_VALUES:
+            identifier_type = IdentifierType.objects.get(url=identifier_type_data.get("url"))
+
+        other_identifiers = OtherIdentifier.objects.create(
+            identifier_type=identifier_type, **validated_data
+        )
+
+        return other_identifiers
+
+    def update(self, instance, validated_data):
+        identifier_type = None
+        identifier_type_data = validated_data.pop("identifier_type", None)
+
+        if identifier_type_data not in EMPTY_VALUES:
+            identifier_type = IdentifierType.objects.get(url=identifier_type_data.get("url"))
+        instance.identifier_type = identifier_type
+
+        return super().update(instance, validated_data)
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+
+        if instance.identifier_type is None:
+            rep.pop("identifier_type", None)
+
+        if instance.old_notation is None:
+            rep.pop("old_notation", None)
+
+        return rep

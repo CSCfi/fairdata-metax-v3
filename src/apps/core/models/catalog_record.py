@@ -38,6 +38,27 @@ class MetadataProvider(AbstractBaseModel):
     organization = models.CharField(max_length=512)
 
 
+class OtherIdentifier(AbstractBaseModel):
+    """Other identifier that dataset has in other services.
+
+    Attributes:
+        notation(models.CharField): Identifier
+        identifier_type(IdentifierType): IdentifierType ForeignKey relation
+        dataset(Dataset): Dataset ForeignKey relation
+    """
+
+    notation = models.CharField(max_length=512)
+    old_notation = models.CharField(max_length=512, blank=True, null=True)
+    identifier_type = models.ForeignKey(
+        IdentifierType,
+        on_delete=models.CASCADE,
+        related_name="dataset_identifiers",
+        blank=True,
+        null=True,
+    )
+    # ToDo: Provider
+
+
 class CatalogRecord(AbstractBaseModel):
     """A record in a catalog, describing the registration of a single resource.
 
@@ -173,6 +194,11 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         on_delete=models.SET_NULL,
         related_name="datasets",
         null=True,
+    )
+
+    other_identifiers = models.ManyToManyField(
+        OtherIdentifier,
+        blank=True,
     )
     is_deprecated = models.BooleanField(default=False)
     cumulation_started = models.DateTimeField(null=True, blank=True)
@@ -312,26 +338,6 @@ class Temporal(AbstractBaseModel):
         related_name="temporal",
         null=True,
         blank=True,
-    )
-
-
-class OtherIdentifier(AbstractBaseModel):
-    """Other identifier that dataset has in other services.
-
-    Attributes:
-        notation(models.CharField): Identifier
-        identifier_type(IdentifierType): IdentifierType ForeignKey relation
-        dataset(Dataset): Dataset ForeignKey relation
-    """
-
-    # ArrayField for as_wkt objects
-    # ForeignKey to Location
-    notation = models.CharField(max_length=512)
-    identifier_type = models.ForeignKey(
-        IdentifierType, on_delete=models.CASCADE, related_name="dataset_identifiers"
-    )
-    dataset = models.ForeignKey(
-        "Dataset", on_delete=models.CASCADE, related_name="other_identifiers"
     )
 
 
