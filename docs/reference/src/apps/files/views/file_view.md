@@ -1,9 +1,5 @@
 # file_view
 
-## FilePagination
-
-### :::src.apps.files.views.file_view.FilePagination
-
 ## FileCommonFilterset
 
 ### :::src.apps.files.views.file_view.FileCommonFilterset

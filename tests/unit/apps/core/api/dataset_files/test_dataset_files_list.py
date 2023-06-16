@@ -26,6 +26,36 @@ def test_dataset_files(client, dataset_with_files, data_urls):
 
 
 @pytest.mark.django_db
+def test_dataset_files_single_file(client, dataset_with_files, data_urls):
+    file_id = dataset_with_files.file_set.files.get(file_name="file.csv").id
+    url = f'{data_urls(dataset_with_files)["files"]}/{file_id}'
+    res = client.get(url)
+    assert res.status_code == 200
+    assert_nested_subdict(
+        {"file_path": "/dir1/file.csv"},
+        res.data,
+        check_list_length=True,
+    )
+
+
+@pytest.mark.django_db
+def test_dataset_files_no_pagination(client, dataset_with_files, data_urls):
+    url = data_urls(dataset_with_files)["files"]
+    res = client.get(url, {"pagination": "false"})
+    assert res.status_code == 200
+    assert_nested_subdict(
+        [
+            {"file_path": "/dir1/file.csv"},
+            {"file_path": "/dir2/a.txt"},
+            {"file_path": "/dir2/b.txt"},
+            {"file_path": "/dir2/subdir/file1.txt"},
+        ],
+        res.data,
+        check_list_length=True,
+    )
+
+
+@pytest.mark.django_db
 def test_dataset_directories(client, dataset_with_files, data_urls):
     url = data_urls(dataset_with_files)["directories"]
     res = client.get(

@@ -8,13 +8,12 @@
 
 from django import forms
 from django.contrib.postgres.aggregates import ArrayAgg
-from django.db.models import F, Q
+from django.db.models import F, Q, QuerySet
 from django.db.models.functions import Concat
 from django_filters import rest_framework as filters
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, viewsets
 from rest_framework.decorators import action
-from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 
 from apps.files.helpers import get_file_metadata_model
@@ -25,10 +24,6 @@ from apps.files.serializers.file_bulk_serializer import (
     FileBulkSerializer,
 )
 from apps.files.serializers.file_serializer import FileSerializer
-
-
-class FilePagination(LimitOffsetPagination):
-    default_limit = 100
 
 
 class FileCommonFilterset(filters.FilterSet):
@@ -88,7 +83,6 @@ class BaseFileViewSet(viewsets.ModelViewSet):
     """Basic read-only files view."""
 
     serializer_class = FileSerializer
-    pagination_class = FilePagination
     filterset_class = FileFilterSet
     http_method_names = ["get"]
     queryset = File.objects.prefetch_related("file_storage")
@@ -115,7 +109,7 @@ class BaseFileViewSet(viewsets.ModelViewSet):
         if dataset_id:
             # Convert single instance to list
             files = instance
-            if not isinstance(files, list):
+            if not (isinstance(files, list) or isinstance(files, QuerySet)):
                 files = [files]
 
             # Get file metadata objects as dict by file id
