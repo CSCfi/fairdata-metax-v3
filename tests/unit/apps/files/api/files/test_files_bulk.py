@@ -99,6 +99,29 @@ def test_files_insert_many_ok(client, action_url):
 
 
 @pytest.mark.django_db
+def test_files_insert_many_ok_missing_file_storage_identifier(client, action_url):
+    files = build_files_json(
+        [
+            {"id": None, "exists": False, "file_storage_identifier": None},
+        ]
+    )
+    res = client.post(
+        action_url("insert"),
+        files,
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert_nested_subdict(
+        [
+            {
+                "errors": {"file_storage_identifier": RegexField("Field is required")},
+            }
+        ],
+        res.json()["failed"],
+    )
+
+
+@pytest.mark.django_db
 def test_files_insert_many_multiple_storages(client, project, another_project, action_url):
     files = build_files_json([{"id": None}], storage=project)
     files += build_files_json([{"id": None}], storage=another_project)

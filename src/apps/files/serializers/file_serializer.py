@@ -98,6 +98,7 @@ class FileSerializer(CreateOnlyFieldsMixin, serializers.ModelSerializer):
     def validate(self, data):
         if not (self.parent and self.parent.many):
             # When in a list, this should be done in a parent serializer
+            FileStorage.check_required_file_fields([data], raise_exception=True)
             FileStorage.check_file_data_conflicts([data], raise_exception=True)
 
         return super().validate(data)

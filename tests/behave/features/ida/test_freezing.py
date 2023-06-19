@@ -21,6 +21,7 @@ def project_identifier():
 def files_json(project_identifier):
     return [
         {
+            "file_storage_identifier": "ida-file-1",
             "file_path": "/data/1.csv",
             "date_uploaded": "2022-11-13T12:34:00Z",
             "file_modified": "2022-11-13T12:34:00Z",
@@ -34,6 +35,7 @@ def files_json(project_identifier):
             },
         },
         {
+            "file_storage_identifier": "ida-file-2",
             "file_path": "/data/2.csv",
             "date_uploaded": "2022-11-13T12:34:00Z",
             "file_modified": "2022-11-13T12:34:00Z",
@@ -47,6 +49,7 @@ def files_json(project_identifier):
             },
         },
         {
+            "file_storage_identifier": "ida-file-3",
             "file_path": "/data/3.csv",
             "date_uploaded": "2022-11-13T12:34:00Z",
             "file_modified": "2022-11-13T12:34:00Z",

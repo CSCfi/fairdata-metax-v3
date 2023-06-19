@@ -201,6 +201,9 @@ class FileStorage(ProxyBasePolymorphicModel, AbstractBaseModel):
     unique_file_fields_per_file_storage = ["file_storage_pathname"]
     unique_file_fields_per_storage_service = ["file_storage_identifier"]
 
+    # File fields required by FileStorage that are normally optional, e.g. file_storage_identifier
+    required_file_fields = set()
+
     class Meta:
         unique_together = [("project_identifier", "storage_service")]
 
@@ -446,6 +449,28 @@ class FileStorage(ProxyBasePolymorphicModel, AbstractBaseModel):
         files = cls._check_file_service_value_conflicts(files, raise_exception=raise_exception)
         return files
 
+    @classmethod
+    def check_required_file_fields(cls, files: List[dict], raise_exception=True) -> List[dict]:
+        """Check new file data for missing field values that are required by the FileStorage."""
+        new_files = [f for f in files if ("id" not in f)]
+        new_files_by_storage = cls._group_file_data_by_file_storage(new_files)
+        for file_storage, storage_files in new_files_by_storage.items():
+            required_fields = list(file_storage.required_file_fields)
+            for file in storage_files:
+                missing_fields = {field for field in required_fields if not file.get(field)}
+                if missing_fields:
+                    errors = {
+                        field: _("Field is required for storage_service '{}'").format(
+                            file_storage.storage_service
+                        )
+                        for field in missing_fields
+                    }
+                    if raise_exception:
+                        raise ValidationError(errors)
+                    file.setdefault("errors", {}).update(errors)
+
+        return files
+
 
 class BasicFileStorage(FileStorage):
     """FileStorage that does not support any extra fields."""
@@ -464,5 +489,7 @@ class ProjectFileStorage(FileStorage):
 
 
 class IDAFileStorage(ProjectFileStorage):
+    required_file_fields = {"file_storage_identifier"}
+
     class Meta:
         proxy = True

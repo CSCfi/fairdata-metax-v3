@@ -310,6 +310,7 @@ class FileBulkSerializer(serializers.ListSerializer):
         files = self.assign_file_storage_to_files(files)
 
         # FileStorage-specific checks
+        files = FileStorage.check_required_file_fields(files, raise_exception=False)
         files = FileStorage.check_file_data_conflicts(files, raise_exception=False)
 
         return self.flush_file_errors(files)
