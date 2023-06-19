@@ -8,6 +8,7 @@
 
 from django import forms
 from django.contrib.postgres.aggregates import ArrayAgg
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import F, Q, QuerySet
 from django.db.models.functions import Concat
 from django_filters import rest_framework as filters
@@ -18,6 +19,7 @@ from rest_framework.response import Response
 
 from apps.files.helpers import get_file_metadata_model
 from apps.files.models.file import File
+from apps.files.serializers.fields import StorageServiceField
 from apps.files.serializers.file_bulk_serializer import (
     BulkAction,
     FileBulkReturnValueSerializer,
@@ -36,6 +38,8 @@ class FileCommonFilterset(filters.FilterSet):
         lookup_expr="istartswith",
     )
     file_path = filters.CharFilter(method="file_path_filter")
+
+    file_storage_identifier = filters.CharFilter()
 
     byte_size_gt = filters.NumberFilter(field_name="byte_size", lookup_expr="gt")
     byte_size_lt = filters.NumberFilter(field_name="byte_size", lookup_expr="lt")
@@ -70,9 +74,23 @@ class FileFilterSet(FileCommonFilterset):
 
 class FilesDatasetsQueryParamsSerializer(serializers.Serializer):
     files_datasets_key_choices = (("files", "files"), ("datasets", "datasets"))
+    file_id_type_choices = (("id", "id"), ("file_storage_identifier", "file_storage_identifier"))
 
     keys = serializers.ChoiceField(choices=files_datasets_key_choices, default="files")
     keysonly = serializers.BooleanField(default=False)
+
+    storage_service = StorageServiceField(default=None)
+    file_id_type = serializers.ChoiceField(choices=file_id_type_choices, default="id")
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        require_storage_service = attrs["file_id_type"] == "file_storage_identifier"
+        if require_storage_service and not attrs.get("storage_service"):
+            raise serializers.ValidationError(
+                "Field storage_service is required when file_id_type=file_storage_identifier."
+            )
+
+        return attrs
 
 
 class FilesDatasetsBodySerializer(serializers.ListSerializer):
@@ -129,7 +147,10 @@ class FileViewSet(BaseFileViewSet):
 
     # TODO: Restore files action (=convert removed files to "not removed", should not undeprecate datasets)
 
-    @swagger_auto_schema(request_body=FilesDatasetsBodySerializer)
+    @swagger_auto_schema(
+        request_body=FilesDatasetsBodySerializer,
+        query_serializer=FilesDatasetsQueryParamsSerializer,
+    )
     @action(detail=False, methods=["post"])
     def datasets(self, request):
         """Annotate file or dataset identifiers with corresponding dataset or file identifiers.
@@ -156,25 +177,38 @@ class FileViewSet(BaseFileViewSet):
         body_serializer.is_valid(raise_exception=True)
         ids = body_serializer.validated_data
 
-        # Fetch a queryset with dict in the format of {key: id, values: [id1, id2, ...]}
-        queryset = []
-        if params["keys"] == "files":  # keys are files, return file_id->dataset_id
-            files = File.objects.filter(id__in=ids)
-            queryset = files.values(key=F("id")).exclude(file_sets__id=None)
-            if not params["keysonly"]:
-                queryset = queryset.annotate(
-                    values=ArrayAgg(
-                        "file_sets__dataset__id", filter=Q(file_sets__dataset__is_deprecated=False)
+        # Support file_storage_identifier in input/output, requires storage_service
+        file_id_type = params["file_id_type"]
+
+        # Allow limiting results to specific storage_service
+        extra_filters = {}
+        if storage_service := params["storage_service"]:
+            extra_filters["file_storage__storage_service"] = storage_service
+
+        try:
+            # Fetch a queryset with dict in the format of {key: id, values: [id1, id2, ...]}
+            queryset = []
+            if params["keys"] == "files":  # keys are files, return file_id->dataset_id
+                id_query = {f"{file_id_type}__in": ids}
+                files = File.objects.filter(**id_query, **extra_filters)
+                queryset = files.values(key=F(file_id_type)).exclude(file_sets__id=None)
+                if not params["keysonly"]:
+                    queryset = queryset.annotate(
+                        values=ArrayAgg(
+                            "file_sets__dataset__id",
+                            filter=Q(file_sets__dataset__is_deprecated=False),
+                        )
                     )
-                )
-        else:  # keys are datasets, return dataset_id->file_id
-            file_set_model = File.file_sets.rel.related_model
-            file_sets = file_set_model.available_objects.filter(dataset_id__in=ids).filter(
-                dataset__is_deprecated=False
-            )
-            queryset = file_sets.values(key=F("dataset_id")).exclude(files__id=None)
-            if not params["keysonly"]:
-                queryset = queryset.annotate(values=ArrayAgg("files__id"))
+            else:  # keys are datasets, return dataset_id->file_id
+                file_set_model = File.file_sets.rel.related_model
+                file_sets = file_set_model.available_objects.filter(
+                    dataset_id__in=ids, **extra_filters
+                ).filter(dataset__is_deprecated=False)
+                queryset = file_sets.values(key=F("dataset_id")).exclude(files__id=None)
+                if not params["keysonly"]:
+                    queryset = queryset.annotate(values=ArrayAgg(f"files__{file_id_type}"))
+        except DjangoValidationError as e:
+            raise serializers.ValidationError(e.messages)  # avoid 500 from invalid uuid
 
         if params["keysonly"]:
             return Response([v["key"] for v in queryset])
