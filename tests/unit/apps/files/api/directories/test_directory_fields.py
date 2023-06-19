@@ -52,7 +52,7 @@ def test_directory_field_values(client, file_tree_b):
                     "project_identifier": "project_x",
                     "storage_service": "ida",
                     "file_storage_pathname": None,
-                    "file_storage_identifier": None,
+                    "file_storage_identifier": "file_rootfile.txt_00000000-0000-0000-0000-000000000000",
                     "checksum": {
                         "algorithm": "md5",
                         "checked": "2023-01-01T03:00:00+02:00",

@@ -5,6 +5,7 @@ from unittest.mock import ANY
 import pytest
 from rest_framework.reverse import reverse
 from tests.utils import assert_nested_subdict
+
 from apps.core.models import OtherIdentifier
 from apps.core.models.concepts import IdentifierType
 

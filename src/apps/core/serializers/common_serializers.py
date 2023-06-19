@@ -13,13 +13,11 @@ from rest_framework import serializers
 
 from apps.actors.models import Organization
 from apps.actors.serializers import ActorModelSerializer
-
 from apps.common.helpers import update_or_create_instance
 from apps.common.serializers import (
     AbstractDatasetModelSerializer,
     AbstractDatasetPropertyModelSerializer,
 )
-
 from apps.core.models import (
     AccessRights,
     CatalogHomePage,
@@ -30,9 +28,7 @@ from apps.core.models import (
     Spatial,
 )
 from apps.core.models.concepts import AccessType, DatasetLicense, IdentifierType
-
 from apps.refdata import models as refdata
-
 from apps.users.serializers import MetaxUserModelSerializer
 
 logger = logging.getLogger(__name__)

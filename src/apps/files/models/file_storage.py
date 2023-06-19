@@ -374,7 +374,7 @@ class FileStorage(ProxyBasePolymorphicModel, AbstractBaseModel):
         new_files = [f for f in files if ("id" not in f)]
         new_files_by_storage = cls._group_file_data_by_file_storage(new_files)
         for file_storage, new_storage_files in new_files_by_storage.items():
-            new_values = [f["file_path"] for f in files]
+            new_values = [f["file_path"] for f in files if f.get("file_path")]
             queryset = file_storage.files.filter(
                 # prefilter results before doing a more expensive exact match with Concat
                 directory_path__in=set(p.rsplit("/", 1)[0] + "/" for p in new_values),

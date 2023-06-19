@@ -44,6 +44,14 @@
 
 ### :::tests.unit.apps.files.api.files.test_files_bulk.test_files_insert_many_invalid_file_storage
 
+## test_files_insert_many_with_external_id
+
+### :::tests.unit.apps.files.api.files.test_files_bulk.test_files_insert_many_with_external_id
+
+## test_files_insert_many_same_external_id_different_storage
+
+### :::tests.unit.apps.files.api.files.test_files_bulk.test_files_insert_many_same_external_id_different_storage
+
 ## test_files_update_many_ok
 
 ### :::tests.unit.apps.files.api.files.test_files_bulk.test_files_update_many_ok
@@ -68,6 +76,14 @@
 
 ### :::tests.unit.apps.files.api.files.test_files_bulk.test_files_upsert_many_ok
 
+## test_files_upsert_many_with_external_identifier
+
+### :::tests.unit.apps.files.api.files.test_files_bulk.test_files_upsert_many_with_external_identifier
+
+## test_files_upsert_many_with_missing_fields_for_new
+
+### :::tests.unit.apps.files.api.files.test_files_bulk.test_files_upsert_many_with_missing_fields_for_new
+
 ## test_files_delete_many_ok
 
 ### :::tests.unit.apps.files.api.files.test_files_bulk.test_files_delete_many_ok
@@ -75,6 +91,10 @@
 ## test_files_delete_many_only_id
 
 ### :::tests.unit.apps.files.api.files.test_files_bulk.test_files_delete_many_only_id
+
+## test_files_delete_many_with_external_id
+
+### :::tests.unit.apps.files.api.files.test_files_bulk.test_files_delete_many_with_external_id
 
 ## test_files_delete_many_non_existing
 

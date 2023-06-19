@@ -33,12 +33,16 @@ class FileFactory(factory.django.DjangoModelFactory):
     byte_size = factory.Faker("random_number")
 
     @factory.lazy_attribute
+    def file_storage_identifier(self):
+        return f"file_{self.file_name}_{self.id}"
+
+    @factory.lazy_attribute
     def directory_path(self):
-        return self.file_path.rsplit("/")[0] + "/"
+        return self.file_path.rsplit("/", 1)[0] + "/"
 
     @factory.lazy_attribute
     def file_name(self):
-        return self.file_path.rsplit("/")[1]
+        return self.file_path.rsplit("/", 1)[1]
 
     @factory.post_generation
     def file_format(self, create, extracted, **kwargs):

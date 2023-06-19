@@ -146,6 +146,47 @@ class FileBulkSerializer(serializers.ListSerializer):
                     file["errors"]["id"] = _("File with id not found.")
         return files
 
+    def group_files_by_storage_service(self, files: List[dict]) -> Dict[Optional[str], dict]:
+        """Return files grouped by storage service."""
+        files_by_service = {}
+        for f in files:
+            files_by_service.setdefault(f.get("storage_service"), []).append(f)
+        return files_by_service
+
+    def populate_id_from_external_identifier(self, files):
+        """Add id value to files that already exist based on external id."""
+
+        files_missing_id = [f for f in files if "id" not in f]
+        for storage_service, storage_files in self.group_files_by_storage_service(
+            files_missing_id
+        ).items():
+            if not storage_service:
+                continue
+
+            files_by_external_id = {}
+
+            for f in storage_files:
+                if external_id := f.get("file_storage_identifier"):
+                    files_by_external_id[external_id] = f
+
+            # Get all files with matching external id
+            existing_files = File.available_objects.filter(
+                file_storage__storage_service=storage_service,
+                file_storage_identifier__in=files_by_external_id.keys(),
+            ).values(
+                "file_storage_identifier",
+                "id",
+                project_identifier=F("file_storage__project_identifier"),
+            )
+            for existing_file in existing_files:
+                file = files_by_external_id[existing_file["file_storage_identifier"]]
+                file["id"] = existing_file["id"]
+                # Project id can also be determined from external id when storage_service is known
+                if not file.get("project_identifier"):
+                    file["project_identifier"] = existing_file["project_identifier"]
+
+        return files
+
     def check_duplicate_ids(self, files: List[dict]) -> List[dict]:
         """Check that same files are not being modified multiple times."""
         existing_files = [f for f in files if "id" in f]
@@ -191,16 +232,15 @@ class FileBulkSerializer(serializers.ListSerializer):
 
     def check_new_files_required_fields(self, files: List[dict]) -> List[dict]:
         """Check that new files (no id) have all required fields."""
-        required_fields = {
-            name for name, field in FileSerializer().fields.items() if field.required
-        }
-        for f in files:
-            if "id" not in f:  # new file
-                missing_fields = required_fields - set(f)
-                if missing_fields:
+        if self.action not in self.BULK_DELETE_ACTIONS:
+            required_fields = {
+                name for name, field in FileSerializer().fields.items() if field.required
+            }
+            for f in files:
+                if "id" not in f:  # new file
+                    missing_fields = required_fields - set(f)
                     for field in missing_fields:
-                        if field not in f["errors"]:
-                            f["errors"][field] = _("Field is required for new files.")
+                        f["errors"].setdefault(field, _("Field is required for new files."))
         return files
 
     def assign_existing_storage_data(self, files: List[dict]) -> List[dict]:
@@ -240,14 +280,6 @@ class FileBulkSerializer(serializers.ListSerializer):
         )
         return files
 
-    def group_files_by_file_storage(self, files: List[dict]) -> Dict[FileStorage, dict]:
-        files_by_project = {}
-        for f in files:
-            if f["file_storage"] not in files_by_project:
-                files_by_project[f["file_storage"]] = []
-            files_by_project[f["file_storage"]].append(f)
-        return files_by_project
-
     def flush_file_errors(self, files: List[dict]) -> List[dict]:
         """Remove errors field and return only files that have no errors."""
         ok_values = []
@@ -265,7 +297,8 @@ class FileBulkSerializer(serializers.ListSerializer):
         # Identifier checks
         files = self.check_id_field_allowed(files)
         files = self.check_ids_exist(files)
-        # TODO: Populate id for values with only external id
+
+        files = self.populate_id_from_external_identifier(files)
         files = self.check_duplicate_ids(files)
 
         # Checks for required and forbidden values

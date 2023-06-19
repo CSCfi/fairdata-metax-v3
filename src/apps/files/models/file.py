@@ -28,7 +28,6 @@ class File(AbstractBaseModel):
     # File id is provided by external service
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
-    # TODO: use external identifier in APIs
     file_storage_identifier = models.CharField(
         max_length=200, null=True, help_text=_("Identifier of file in external service")
     )
