@@ -20,3 +20,13 @@ def v1_v3_dataset_v3_json():
 @pytest.fixture
 def v1_v3_data_catalog_v3_json():
     return load_test_json("v1-v3-data-catalog-v3.json")
+
+
+@pytest.fixture
+def post_file_payload_json():
+    return load_test_json("post_file_payload.json")
+
+
+@pytest.fixture
+def minimal_dataset_with_files_json():
+    return load_test_json("minimal_dataset_with_files.json")

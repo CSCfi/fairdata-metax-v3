@@ -85,10 +85,10 @@ class FileSetSerializer(serializers.Serializer):
     directory_actions = DirectoryActionSerializer(many=True, required=False, write_only=True)
     file_actions = FileActionSerializer(many=True, required=False, write_only=True)
 
+    storage_service = StorageServiceField(source="file_storage.storage_service")
     project_identifier = serializers.CharField(
         source="file_storage.project_identifier", required=False
     )
-    storage_service = StorageServiceField(source="file_storage.storage_service")
 
     added_files_count = serializers.IntegerField(read_only=True)
     removed_files_count = serializers.IntegerField(read_only=True)

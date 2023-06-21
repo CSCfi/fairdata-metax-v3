@@ -1,0 +1,15 @@
+{
+  "file_storage_identifier": "file",
+  "file_path": "/data/file.txt",
+  "project_identifier": "project",
+  "byte_size": 1024,
+  "storage_service": "ida",
+  "checksum": {
+    "algorithm": "MD5",
+    "checked": "2022-11-13T14:34:00+02:00",
+    "value": "1234"
+  },
+  "date_frozen": "2022-11-13T14:34:00Z",
+  "file_modified": "2022-11-13T14:34:00Z",
+  "date_uploaded": "2022-11-13T14:34:00+02:00"
+}

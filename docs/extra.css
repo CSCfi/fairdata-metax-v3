@@ -1,0 +1,8 @@
+.md-typeset table:not([class]) {
+  font-size: .72rem;
+}
+
+.md-typeset table:not([class]) td {
+  padding: .75em 1.25em;
+}
+

@@ -1,0 +1,21 @@
+{
+  "data_catalog": "urn:nbn:fi:att:data-catalog-ida",
+  "title": {
+    "en": "Test dataset"
+  },
+  "data": {
+    "project_identifier": "test_project",
+    "storage_service": "ida",
+    "directory_actions": [
+      {
+        "directory_path": "/data/",
+        "dataset_metadata": {
+          "title": "Test results",
+          "use_category": {
+            "url": "http://uri.suomi.fi/codelist/fairdata/use_category/code/outcome"
+          }
+        }
+      }
+    ]
+  }
+}

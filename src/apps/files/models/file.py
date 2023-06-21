@@ -25,7 +25,6 @@ checksum_algorithm_choices = (
 class File(AbstractBaseModel):
     """A file stored in external data storage."""
 
-    # File id is provided by external service
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     file_storage_identifier = models.CharField(
