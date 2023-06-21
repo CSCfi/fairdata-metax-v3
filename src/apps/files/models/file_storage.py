@@ -165,6 +165,9 @@ class FileStorageManager(FileStorageManagerMixin, models.Manager):
     pass
 
 
+STORAGE_SERVICE_CHOICES = [(s, s) for s in settings.STORAGE_SERVICE_FILE_STORAGES]
+
+
 class FileStorage(ProxyBasePolymorphicModel, AbstractBaseModel):
     """FileStorage respresents a collection of files in a storage service."""
 
@@ -179,10 +182,10 @@ class FileStorage(ProxyBasePolymorphicModel, AbstractBaseModel):
 
     # Fields common for all FileStorage types
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    storage_service = models.CharField(max_length=64)
+    storage_service = models.CharField(max_length=64, choices=STORAGE_SERVICE_CHOICES)
 
     # Extra identification fields used only by specific FileStorage types
-    project_identifier = models.CharField(max_length=200, null=True)
+    project_identifier = models.CharField(max_length=200, null=True, blank=True)
     all_extra_fields = ["project_identifier"]
 
     # A key should uniquely identify a FileStorage instance
