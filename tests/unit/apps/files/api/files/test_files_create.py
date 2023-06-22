@@ -38,6 +38,16 @@ def test_files_create_twice(client, ida_file_json):
 
 
 @pytest.mark.django_db
+def test_files_create_and_patch(client, ida_file_json):
+    res = client.post("/v3/files", ida_file_json, content_type="application/json")
+    assert res.status_code == 201
+    res = client.patch(
+        f"/v3/files/{res.data['id']}", ida_file_json, content_type="application/json"
+    )
+    assert res.status_code == 200
+
+
+@pytest.mark.django_db
 def test_files_create_missing_file_storage_identifier(client, ida_file_json):
     del ida_file_json["file_storage_identifier"]
     res = client.post(

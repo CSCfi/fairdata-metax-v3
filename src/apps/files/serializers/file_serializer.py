@@ -88,6 +88,11 @@ class FileSerializer(CreateOnlyFieldsMixin, serializers.ModelSerializer):
 
     def to_internal_value(self, data):
         val = super().to_internal_value(data)
+
+        # FileStorage validation expects id in data for existing files.
+        if self.instance:
+            val.setdefault("id", self.instance.id)
+
         if not (self.parent and self.parent.many):
             # When in a list, this should be done in a parent serializer
             FileStorage.objects.assign_to_file_data(
