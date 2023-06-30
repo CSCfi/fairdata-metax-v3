@@ -7,7 +7,7 @@
 import logging
 from collections import namedtuple
 
-from common.helpers import update_or_create_instance
+from apps.common.helpers import update_or_create_instance
 from django.conf import settings
 from rest_framework import serializers
 

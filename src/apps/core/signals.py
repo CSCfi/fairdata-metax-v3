@@ -17,6 +17,7 @@ def adapt_legacy_dataset_to_v3(sender, instance: LegacyDataset, **kwargs):
 @receiver(post_save, sender=LegacyDataset)
 def post_process_legacy_dataset(sender, instance: LegacyDataset, **kwargs):
     attached_instances = instance.post_process_dataset_for_v3()
+    instance.check_compatibility()
     logger.info(f"post processed {attached_instances=}")
 
 

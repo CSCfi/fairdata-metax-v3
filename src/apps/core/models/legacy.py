@@ -2,7 +2,7 @@ import json
 import logging
 from collections import namedtuple
 from pprint import pprint
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from deepdiff import DeepDiff
 from django.conf import settings
@@ -25,6 +25,7 @@ from .catalog_record import (
     MetadataProvider,
     OtherIdentifier,
     Temporal,
+    ProjectContributor,
 )
 from .concepts import (
     AccessType,
@@ -35,6 +36,7 @@ from .concepts import (
     Language,
     LifecycleEvent,
     Spatial,
+    ContributorType,
 )
 from .contract import Contract
 from .data_catalog import AccessRights, AccessRightsRestrictionGrounds, DataCatalog
@@ -182,7 +184,7 @@ class LegacyDataset(Dataset):
         Returns:
 
         """
-        self.is_deprecated = self.dataset_json["deprecated"]
+        self.is_deprecated = self.dataset_json.get("deprecated")
         self.cumulation_started = self.dataset_json.get("date_cumulation_started")
         self.cumulation_ended = self.dataset_json.get("date_cumulation_ended")
         self.last_cumulative_addition = self.dataset_json.get("date_last_cumulative_addition")
@@ -201,7 +203,7 @@ class LegacyDataset(Dataset):
             user, created = get_user_model().objects.get_or_create(username=user_modified)
             self.last_modified_by = user
 
-        self.preservation_state = self.dataset_json["preservation_state"]
+        self.preservation_state = self.dataset_json.get("preservation_state")
         self.preservation_identifier = self.dataset_json.get("preservation_identifier")
         self.state = self.dataset_json["state"]
 
@@ -503,10 +505,7 @@ class LegacyDataset(Dataset):
                     logger.info(f"{temporal=}, created={temporal_created}")
                 if variables := data.get("variable"):
                     for var in variables:
-                        (
-                            variable,
-                            variable_created,
-                        ) = ProvenanceVariable.objects.get_or_create(
+                        (variable, variable_created,) = ProvenanceVariable.objects.get_or_create(
                             pref_label=var["pref_label"],
                             provenance=provenance,
                             representation=var.get("representation"),
@@ -546,14 +545,58 @@ class LegacyDataset(Dataset):
         return obj_list
 
     def attach_projects(self):
+        def get_contributor(v2_data, proj: DatasetProject):
+            actor_type = v2_data.get("@type", "Organization")
+            person = None
+            organization = None
+            if actor_type == "Organization":
+                organization = Organization.get_instance_from_v2_dictionary(v2_data)
+            if actor_type == "Person":
+                person = v2_data.get("name")
+
+                if member_of := v2_data.get("member_of"):
+                    organization = Organization.get_instance_from_v2_dictionary(member_of)
+
+            actor, actor_created = Actor.objects.get_or_create(
+                person=person, organization=organization
+            )
+
+            project_contributions = []
+            contribution_types = []
+            if contr_data := v2_data.get("contributor_type", None):
+                for data in contr_data:
+                    contr_type, created = ContributorType.objects.get_or_create(
+                        in_scheme=data["in_scheme"],
+                        url=data["identifier"],
+                        pref_label=data["pref_label"],
+                    )
+                    contribution_types.append(contr_type)
+            if len(contribution_types) != 0:
+                proj_contr, created = ProjectContributor.objects.get_or_create(
+                    participating_organization=organization,
+                    project=proj,
+                    actor=actor,
+                )
+                proj_contr.contribution_type.add(*contribution_types)
+                project_contributions.append(proj_contr)
+            else:
+                proj_contr, created = ProjectContributor.objects.get_or_create(
+                    participating_organization=organization, project=proj, actor=actor
+                )
+                project_contributions.append(proj_contr)
+            return project_contributions
+
         obj_list = []
         if project_data := self.legacy_research_dataset.get("is_output_of"):
             for data in project_data:
                 project, created = DatasetProject.objects.get_or_create(
                     name=data["name"],
                     project_identifier=data["identifier"],
-                    funder_identifier=data.get("funder_identifier"),
+                    funder_identifier=data.get("has_funder_identifier"),
                 )
+                if created:
+                    project.dataset.add(self)
+
                 funder_type, created = FunderType.objects.get_or_create(
                     url=data["funder_type"]["identifier"],
                     defaults={
@@ -565,15 +608,14 @@ class LegacyDataset(Dataset):
                 funders = []
                 participants = []
                 for funder in data.get("has_funding_agency", []):
-                    org = Organization.get_instance_from_v2_dictionary(funder)
-                    funders.append(org)
+                    funders = funders + get_contributor(funder, project)
                 for participant in data.get("source_organization", []):
-                    org = Organization.get_instance_from_v2_dictionary(participant)
-                    participants.append(org)
+                    participants = participants + get_contributor(participant, project)
                 project.funding_agency.set(funders)
                 project.participating_organization.set(participants)
                 project.save()
                 obj_list.append(project)
+            self.is_output_of.set(obj_list)
         return obj_list
 
     def prepare_dataset_for_v3(self) -> PreparedInstances:

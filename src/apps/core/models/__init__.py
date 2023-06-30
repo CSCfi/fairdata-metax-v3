@@ -7,6 +7,7 @@ from .catalog_record import (
     MetadataProvider,
     OtherIdentifier,
     Temporal,
+    ProjectContributor,
 )
 from .concepts import (
     AccessType,
@@ -17,6 +18,7 @@ from .concepts import (
     Spatial,
     Theme,
     UseCategory,
+    ContributorType,
 )
 from .contract import Contract
 from .data_catalog import (

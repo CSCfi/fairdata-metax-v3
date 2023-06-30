@@ -152,3 +152,7 @@ class Spatial(AbstractFreeformConcept):
 
     class Meta:
         indexes = []
+
+
+class ContributorType(ConceptProxyMixin, refdata.ContributorType):
+    """Project Contributor"""

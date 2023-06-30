@@ -32,3 +32,7 @@
 
 ### :::src.apps.core.models.catalog_record.FileSet
 
+## ProjectContributor
+
+### :::src.apps.core.models.catalog_record.ProjectContributor
+

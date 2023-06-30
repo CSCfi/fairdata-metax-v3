@@ -356,11 +356,11 @@ class DatasetProject(AbstractBaseModel):
 
     dataset = models.ManyToManyField(Dataset, related_name="is_output_of")
     project_identifier = models.CharField(max_length=512, blank=True, null=True)
-    funding_agency = models.ManyToManyField(Organization, related_name="is_funding")
-    participating_organization = models.ManyToManyField(
-        Organization, related_name="participating_in"
-    )
+    funding_agency = models.ManyToManyField("ProjectContributor", related_name="is_funding")
     funder_identifier = models.CharField(max_length=512, blank=True, null=True)
+    participating_organization = models.ManyToManyField(
+        "ProjectContributor", related_name="is_participating"
+    )
     name = HStoreField(blank=True, null=True)
     funder_type = models.ForeignKey(
         refdata.FunderType, on_delete=models.SET_NULL, null=True, blank=True
@@ -431,3 +431,34 @@ class FileSet(AbstractBaseModel):
                 file_storage=file_storage
             ).exclude(directory_path__in=dataset_directory_paths)
             unused_directory_metadata.delete()
+
+
+class ProjectContributor(AbstractBaseModel):
+    """Project contributing organizations
+
+    Attributes:
+        participating_organization: ForeignKey relation to Organization
+        contribution_type: ForeignKey relation to ContributorType
+        project: ForeignKey relation to DatasetProject
+        actor: ForeignKey relation to Actor
+
+    """
+
+    participating_organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="contributions"
+    )
+
+    contribution_type = models.ManyToManyField(
+        refdata.ContributorType,
+        related_name="projects",
+    )
+    project = models.ForeignKey(
+        DatasetProject, on_delete=models.CASCADE, related_name="contributors"
+    )
+    actor = models.ForeignKey(
+        Actor, on_delete=models.CASCADE, related_name="actor_project", null=True, blank=True
+    )
+
+    def __str__(self):
+        return str(self.participating_organization.pref_label["fi"])
+

@@ -1,5 +1,6 @@
 import logging
 from typing import Dict, List, Optional
+from django.core.validators import EMPTY_VALUES
 
 logger = logging.getLogger(__name__)
 
@@ -189,6 +190,72 @@ class V2DatasetMixin:
             )
         return data
 
+    def _generate_v2_dataset_project(self) -> List:
+        def _populate_participant(participant):
+            participant_type = "Organization" if participant.actor.person is None else "Person"
+            _contribution_types = []
+            for cont_type in participant.contribution_type.all():
+                _contribution_types.append(
+                    {
+                        "pref_label": cont_type.pref_label,
+                        "identifier": cont_type.url,
+                        "in_scheme": cont_type.in_scheme,
+                    }
+                )
+            if participant_type == "Person":
+                _source_organization = {
+                    "name": participant.actor.person,
+                    "@type": participant_type,
+                }
+                if _contribution_types not in EMPTY_VALUES:
+                    _source_organization["contributor_type"] = _contribution_types
+                if participant.participating_organization not in EMPTY_VALUES:
+                    _source_organization["member_of"] = {
+                        "name": participant.participating_organization.pref_label,
+                        "@type": "Organization",
+                        "identifier": participant.participating_organization.url,
+                    }
+            else:
+                _source_organization = {
+                    "name": participant.participating_organization.pref_label,
+                    "@type": participant_type,
+                    "identifier": participant.participating_organization.url,
+                }
+                if _contribution_types not in EMPTY_VALUES:
+                    _source_organization["contributor_type"] = _contribution_types
+            return _source_organization
+
+        obj_list = []
+        for dataset_project in self.is_output_of.all():
+            project = {
+                "name": dataset_project.name,
+                "identifier": dataset_project.project_identifier,
+                "has_funder_identifier": dataset_project.funder_identifier,
+                "funder_type": {},
+                "has_funding_agency": [],
+                "source_organization": [],
+            }
+            if funder_type := dataset_project.funder_type:
+                project["funder_type"] = {
+                    "pref_label": funder_type.pref_label,
+                    "identifier": funder_type.url,
+                    "in_scheme": funder_type.in_scheme,
+                }
+            for funder_agency in dataset_project.funding_agency.all():
+                if "has_funding_agency" not in project:
+                    project["has_funding_agency"] = []
+                project["has_funding_agency"].append(_populate_participant(funder_agency))
+
+            for participating_organization in dataset_project.participating_organization.all():
+                if "source_organization" not in project:
+                    project["source_organization"] = []
+                project["source_organization"].append(
+                    _populate_participant(participating_organization)
+                )
+
+            obj_list.append(project)
+        return obj_list
+
     def as_v2_dataset(self) -> Dict:
         def add_actor(role: str, document: Dict):
             actors = self.actors.filter(role=role)
@@ -239,6 +306,8 @@ class V2DatasetMixin:
             doc["user_modified"] = self.last_modified_by.username
         if self.issued:
             doc["research_dataset"]["issued"] = self.issued
+        if project := self._generate_v2_dataset_project():
+            doc["research_dataset"]["is_output_of"] = project
 
         self._generate_v2_other_identifiers(doc)
         self._generate_v2_ref_data_field("language", doc, pref_label_text="title")
