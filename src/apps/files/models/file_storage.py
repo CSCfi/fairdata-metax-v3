@@ -21,9 +21,9 @@ from model_utils.managers import SoftDeletableManager
 from rest_framework import exceptions
 from rest_framework.serializers import ValidationError
 
+from apps.common.helpers import get_attr_or_item
 from apps.common.managers import ProxyBasePolymorphicManager
 from apps.common.models import AbstractBaseModel, ProxyBasePolymorphicModel
-from apps.files.helpers import get_attr_or_item
 
 
 class FileStorageManagerMixin(ProxyBasePolymorphicManager):

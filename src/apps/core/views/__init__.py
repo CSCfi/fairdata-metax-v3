@@ -6,4 +6,5 @@ from .dataset_view import (
     DatasetFilesViewSet,
     DatasetViewSet,
 )
+from .index_view import IndexView
 from .legacy_view import LegacyDatasetViewSet

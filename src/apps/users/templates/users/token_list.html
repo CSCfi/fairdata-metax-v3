@@ -1,0 +1,39 @@
+{% load rest_framework %}
+
+<style>
+.token-table > tbody > tr > td {
+  vertical-align: middle;
+}
+
+</style>
+
+{% if results %}
+<table class="table table-striped token-table" aria-labelledby="page-name">
+  <thead>
+    <tr>{% for column in columns%}<th>{{ column|capfirst }}</th>{% endfor %}<th class="col-xs-1"></th></tr>
+  </thead>
+  <tbody>
+    {% for row in results %}
+      <tr>
+        {% for key, value in row|items %}
+          {% if key in columns %}
+            <td {{ value|add_nested_class }} >
+              {{ value|format_value }}
+            </td>
+          {% endif %}
+        {% endfor %}
+        <td>
+          <form action="{% url 'tokens' %}?prefix={{ row.prefix }}" method="delete">
+            {% csrf_token %}
+            <button type="submit" class="button-form btn btn-danger">
+              <span class="glyphicon glyphicon-trash" aria-hidden="true"></span> Delete
+            </button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+You have not created any API tokens yet.
+{% endif %}

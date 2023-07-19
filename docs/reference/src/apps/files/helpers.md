@@ -16,10 +16,6 @@
 
 ### :::src.apps.files.helpers.remove_hidden_fields
 
-## get_attr_or_item
-
-### :::src.apps.files.helpers.get_attr_or_item
-
 ## get_file_metadata_model
 
 ### :::src.apps.files.helpers.get_file_metadata_model

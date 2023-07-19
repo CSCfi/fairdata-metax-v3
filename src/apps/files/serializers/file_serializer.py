@@ -9,7 +9,8 @@ from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
-from apps.files.helpers import get_attr_or_item, get_file_metadata_serializer
+from apps.common.helpers import get_attr_or_item
+from apps.files.helpers import get_file_metadata_serializer
 from apps.files.models.file import File, FileStorage, checksum_algorithm_choices
 from apps.files.models.file_storage import FileStorage
 

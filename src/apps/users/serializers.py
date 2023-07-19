@@ -1,5 +1,7 @@
 from django.middleware.csrf import get_token
+from knox.models import AuthToken
 from rest_framework import serializers
+from rest_framework.serializers import ModelSerializer
 
 from apps.users.models import MetaxUser
 
@@ -35,3 +37,14 @@ class UserInfoSerializer(serializers.ModelSerializer):
         model = MetaxUser
         fields = ("username", "ida_projects", "metax_csrf_token")
         read_only_fields = fields
+
+
+class TokenSerializer(ModelSerializer):
+    """Serializer for AuthTokens in API token list."""
+
+    # Show token key (first few characters of token) to allow identifying tokens
+    prefix = serializers.CharField(source="token_key", read_only=True)
+
+    class Meta:
+        model = AuthToken
+        fields = ["created", "expiry", "prefix"]

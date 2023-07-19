@@ -71,3 +71,14 @@ def parse_iso_dates_in_nested_dict(d: Dict) -> Dict:
             except TypeError:
                 pass
     return d
+
+
+def get_attr_or_item(obj, key):
+    """Return value for attribute. If not found, get item with key. Return None if not found."""
+    if hasattr(obj, key):
+        return getattr(obj, key)
+    try:
+        return obj[key]
+    except (KeyError, IndexError, TypeError):
+        pass
+    return None

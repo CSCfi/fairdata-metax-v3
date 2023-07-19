@@ -12,9 +12,9 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import exceptions, fields, serializers, viewsets
 from rest_framework.response import Response
 
+from apps.common.helpers import get_attr_or_item
 from apps.files.functions import SplitPart
 from apps.files.helpers import (
-    get_attr_or_item,
     get_directory_metadata_model,
     get_file_metadata_model,
     remove_query_param,

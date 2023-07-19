@@ -8,7 +8,6 @@
 from rest_framework import serializers
 
 from apps.files.helpers import (
-    get_attr_or_item,
     get_directory_metadata_serializer,
     remove_hidden_fields,
     replace_query_path,

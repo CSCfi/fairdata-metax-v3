@@ -1,0 +1,43 @@
+{% extends "rest_framework/api.html" %}
+{% load rest_framework %}
+
+{# Content based on rest_framework/admin.html #}
+
+{% block content %}
+<div id="content">
+  <form action="{% url 'tokens' %}" method="post">
+    {% csrf_token %}
+    <button type="submit" class="button-form btn btn-primary" data-toggle="modal" data-target="#createModal">
+      <span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Create new API token
+    </button>
+  </form>
+
+ <div class="content-main">
+    <div class="page-header">
+      <h1 id="page-name">{{ name }}</h1>
+    </div>
+
+    <div style="float:left">
+      {% block description %}
+        {{ description }}
+      {% endblock %}
+    </div>
+
+    <div class="request-info" style="clear: both" >
+      {% if style == 'list' %}
+        {% include "users/token_list.html" %}
+      {% else %}
+        <div class="alert alert-info" role="alert">
+          <p>
+            Store the token value in a secure place. The token cannot be recovered afterwards.
+          </p>
+          <p>
+            <a style="color: #337ab7" href="{% url 'tokens' %}">&gt; Return to token list.</a>
+          </p>
+        </div>
+        {% include "rest_framework/admin/detail.html" %}
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock content %}

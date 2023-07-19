@@ -41,17 +41,6 @@ def remove_hidden_fields(fields, visible):
     return fields
 
 
-def get_attr_or_item(obj, key):
-    """Return value for attribute. If not found, get item with key. Return None if not found."""
-    if hasattr(obj, key):
-        return getattr(obj, key)
-    try:
-        return obj[key]
-    except (KeyError, IndexError, TypeError):
-        pass
-    return None
-
-
 # Helpers for getting File and Directory metadata models and serializers
 # from configuration instead of importing them directly from another app.
 

@@ -16,6 +16,7 @@
         - [managers](src/apps/common/managers.md)
         - [models](src/apps/common/models.md)
         - [pagination](src/apps/common/pagination.md)
+        - [responses](src/apps/common/responses.md)
         - [serializers](src/apps/common/serializers.md)
         - [views](src/apps/common/views.md)
     - core
@@ -44,6 +45,7 @@
             - [common_views](src/apps/core/views/common_views.md)
             - [data_catalog_view](src/apps/core/views/data_catalog_view.md)
             - [dataset_view](src/apps/core/views/dataset_view.md)
+            - [index_view](src/apps/core/views/index_view.md)
             - [legacy_view](src/apps/core/views/legacy_view.md)
     - files
         - [admin](src/apps/files/admin.md)
@@ -83,8 +85,7 @@
         - [factories](src/apps/users/factories.md)
         - [models](src/apps/users/models.md)
         - [serializers](src/apps/users/serializers.md)
-        - [signals](src/apps/users/signals.md)
-        - [templatetags.sso_auth](src/apps/users/templatetags/sso_auth.md)
+        - [templatetags.users](src/apps/users/templatetags/users.md)
         - [views](src/apps/users/views.md)
 - tests
     - behave.features
@@ -168,12 +169,12 @@
                     - [test_local_json_importer](tests/unit/apps/refdata/services/test_local_json_importer.md)
             - users
                 - api
+                    - [test_bearer_authentication](tests/unit/apps/users/api/test_bearer_authentication.md)
                     - [test_sso_authentication](tests/unit/apps/users/api/test_sso_authentication.md)
-                    - [test_user_token](tests/unit/apps/users/api/test_user_token.md)
                 - [authentication.test_sso_authentication](tests/unit/apps/users/authentication/test_sso_authentication.md)
                 - [conftest](tests/unit/apps/users/conftest.md)
                 - [models.test_metax_user](tests/unit/apps/users/models/test_metax_user.md)
-                - [templatetags.test_sso_auth_tags](tests/unit/apps/users/templatetags/test_sso_auth_tags.md)
+                - [templatetags.test_users_tags](tests/unit/apps/users/templatetags/test_users_tags.md)
         - docs.examples
             - [conftest](tests/unit/docs/examples/conftest.md)
             - [test_api_payloads](tests/unit/docs/examples/test_api_payloads.md)

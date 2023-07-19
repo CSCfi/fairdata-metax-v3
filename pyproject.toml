@@ -32,7 +32,6 @@ rdflib = "^6.3.2"
 django-filter = "^22.1"
 factory-boy = "^3.2.1"
 inflection = "^0.5.1"
-djangorestframework-simplejwt = {extras = ["crypto"], version = "^5.2.2"}
 django-simple-history = "^3.3.0"
 httpx = "^0.23.3"
 deepdiff = "^6.3.0"
@@ -44,6 +43,8 @@ drf-nested-routers = "^0.93.4"
 python-dateutil = "^2.8.2"
 django-polymorphic = "^3.1.0"
 django-cors-headers = "^4.0.0"
+django-rest-knox = "^4.2.0"
+pyjwt = "^2.7.0"
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.12.0"

@@ -1,12 +1,12 @@
 {% extends "rest_framework/base.html" %}
-{% load sso_auth %}
+{% load users %}
 
 {% block style %}
 {{ block.super }}
 <style>
-  button.link {
+  .navbar-inverse .nav.navbar-nav .open .dropdown-menu button,
+  .navbar-inverse .nav.navbar-nav .open .dropdown-menu a {
     background: none;
-    color: inherit;
     border: none;
     padding: 3px 20px;
     font: inherit;
@@ -15,9 +15,11 @@
     clear: both;
     text-align: left;
     width: 100%;
+    color: #C20000;
   }
 
-  .navbar .dropdown-menu li button.link:hover {
+  .navbar-inverse .nav.navbar-nav .open .dropdown-menu li button.link:hover,
+  .navbar-inverse .nav.navbar-nav .open .dropdown-menu li>a:hover {
     border: none;
     padding: 3px 20px;
     font: inherit;
@@ -39,7 +41,7 @@
 
 {% block userlinks %}
   {% if user.is_authenticated %}
-    {% sso_logout user %}
+    {% user_menu user %}
   {% else %}
     {% sso_login request %}
   {% endif %}

@@ -20,6 +20,7 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
+from apps.core.views import IndexView
 from apps.router.urls import urlpatterns as router_urls
 
 schema_view = get_schema_view(
@@ -35,6 +36,7 @@ schema_view = get_schema_view(
 
 
 urlpatterns = [
+    path("", IndexView.as_view()),
     re_path(
         r"^swagger(?P<format>\.json|\.yaml)$",
         schema_view.without_ui(cache_timeout=0),

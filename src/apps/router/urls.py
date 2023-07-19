@@ -60,4 +60,9 @@ for model in reference_data_models:
 # Nested routes
 dataset_router = routers.NestedSimpleRouter(router, r"datasets?", lookup="dataset")
 dataset_router.register(r"actors", DatasetActorViewSet, basename="dataset-actors")
-urlpatterns = [path("", include(router.urls)), path("", include(dataset_router.urls))]
+
+
+urlpatterns = [
+    path("", include(router.urls)),
+    path("", include(dataset_router.urls)),
+]

@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 import os
 import sys
+from datetime import timedelta
 from os.path import join
 from pathlib import Path
 
@@ -71,9 +72,7 @@ DEFAULT_APPS = [
 ]
 THIRD_PARTY_APPS = [
     "rest_framework",
-    "rest_framework.authtoken",
-    "rest_framework_simplejwt",
-    "rest_framework_simplejwt.token_blacklist",
+    "knox",
     "django_extensions",
     "drf_yasg",
     "django_filters",
@@ -220,7 +219,7 @@ REST_FRAMEWORK = {
         "apps.users.authentication.SSOAuthentication",
         "rest_framework.authentication.BasicAuthentication",
         "rest_framework.authentication.SessionAuthentication",
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "knox.auth.TokenAuthentication",
     ],
     "DEFAULT_PAGINATION_CLASS": "apps.common.pagination.OffsetPagination",
     "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
@@ -287,3 +286,9 @@ CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", [])
 # CORS header settings for django-cors-headers
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", [])
 CORS_ALLOW_CREDENTIALS = env.bool("CORS_ALLOW_CREDENTIALS", False)
+
+REST_KNOX = {
+    "AUTH_HEADER_PREFIX": "Bearer",
+    "TOKEN_TTL": timedelta(weeks=8),
+    "TOKEN_LIMIT_PER_USER": 5,
+}

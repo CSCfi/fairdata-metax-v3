@@ -24,8 +24,9 @@ def sso_login(request):
 
 
 @register.simple_tag(takes_context=True)
-def sso_logout(context, user):
+def user_menu(context, user):
     logout_url = reverse("logout")
+    tokens_url = reverse("tokens")
 
     # Note: <button> is used here instead of <a> to allow using POST method,
     # and the button is styled in the api.html template look like a link.
@@ -36,8 +37,9 @@ def sso_logout(context, user):
             <b class="caret"></b>
         </a>
         <ul class="dropdown-menu">
+            <li><a href="{tokens_url}">API tokens</a></li>
             <li>
-                <form action="{href}" method="post">
+                <form action="{logout_url}" method="post">
                     {csrf}
                     <button class="link" type="submit">Logout</button>
                 </form>
@@ -48,7 +50,8 @@ def sso_logout(context, user):
     snippet = format_html(
         snippet,
         user=escape(user),
-        href=logout_url,
+        tokens_url=tokens_url,
+        logout_url=logout_url,
         csrf=CsrfTokenNode().render(context),
     )
     return mark_safe(snippet)
