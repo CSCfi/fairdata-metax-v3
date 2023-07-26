@@ -187,6 +187,14 @@ class CatalogRecordFactory(factory.django.DjangoModelFactory):
     contract = factory.SubFactory(ContractFactory)
 
 
+class MetadataProviderFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.MetadataProvider
+
+    user = factory.SubFactory(MetaxUserFactory)
+    system_creator = factory.SubFactory(MetaxUserFactory)
+
+
 class DatasetFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.Dataset
@@ -197,6 +205,7 @@ class DatasetFactory(factory.django.DjangoModelFactory):
     contract = factory.SubFactory(ContractFactory)
     access_rights = factory.SubFactory(AccessRightsFactory)
     system_creator = factory.SubFactory(MetaxUserFactory)
+    metadata_owner = factory.SubFactory(MetadataProviderFactory)
 
 
 class FileSetFactory(factory.django.DjangoModelFactory):
@@ -214,14 +223,6 @@ class FileSetFactory(factory.django.DjangoModelFactory):
             return
         if extracted:
             self.files.set(extracted)
-
-
-class MetadataProviderFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = models.MetadataProvider
-
-    user = factory.SubFactory(MetaxUserFactory)
-    system_creator = factory.SubFactory(MetaxUserFactory)
 
 
 class LocationFactory(factory.django.DjangoModelFactory):

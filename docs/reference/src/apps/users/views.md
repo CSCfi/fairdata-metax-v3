@@ -8,9 +8,9 @@
 
 ### :::src.apps.users.views.LogoutView
 
-## UserView
+## AuthenticatedUserView
 
-### :::src.apps.users.views.UserView
+### :::src.apps.users.views.AuthenticatedUserView
 
 ## TokenListRenderer
 
@@ -19,4 +19,8 @@
 ## APITokenListView
 
 ### :::src.apps.users.views.APITokenListView
+
+## UserViewSet
+
+### :::src.apps.users.views.UserViewSet
 

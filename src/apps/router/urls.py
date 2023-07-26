@@ -1,4 +1,5 @@
 from core.views import DatasetActorViewSet
+from django.conf import settings
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 from rest_framework_nested import routers
@@ -17,6 +18,7 @@ from apps.core.views import (
 from apps.files.views import DirectoryViewSet, FileViewSet
 from apps.refdata.models import reference_data_models
 from apps.refdata.views import get_viewset_for_model
+from apps.users.views import UserViewSet
 
 router = DefaultRouter(trailing_slash=False)
 
@@ -60,6 +62,10 @@ for model in reference_data_models:
 # Nested routes
 dataset_router = routers.NestedSimpleRouter(router, r"datasets?", lookup="dataset")
 dataset_router.register(r"actors", DatasetActorViewSet, basename="dataset-actors")
+
+# Users list
+if settings.ENABLE_USERS_VIEW:
+    router.register(r"users?", UserViewSet, basename="users")
 
 
 urlpatterns = [

@@ -292,3 +292,6 @@ REST_KNOX = {
     "TOKEN_TTL": timedelta(weeks=8),
     "TOKEN_LIMIT_PER_USER": 5,
 }
+
+# Enable view that allows listing and deleting users (and user data) for testing purposes
+ENABLE_USERS_VIEW = env.bool("ENABLE_USERS_VIEW", False)

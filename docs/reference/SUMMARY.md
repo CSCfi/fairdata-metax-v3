@@ -177,6 +177,7 @@
                 - api
                     - [test_bearer_authentication](tests/unit/apps/users/api/test_bearer_authentication.md)
                     - [test_sso_authentication](tests/unit/apps/users/api/test_sso_authentication.md)
+                    - [test_users_view](tests/unit/apps/users/api/test_users_view.md)
                 - [authentication.test_sso_authentication](tests/unit/apps/users/authentication/test_sso_authentication.md)
                 - [conftest](tests/unit/apps/users/conftest.md)
                 - [models.test_metax_user](tests/unit/apps/users/models/test_metax_user.md)

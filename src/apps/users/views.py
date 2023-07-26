@@ -1,4 +1,6 @@
-from django.contrib.auth import logout
+import logging
+
+from django.contrib.auth import get_user_model, logout
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.decorators import method_decorator
@@ -6,14 +8,20 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import never_cache
 from knox.models import AuthToken
 from knox.views import LoginView as KnoxLoginView
-from rest_framework import exceptions
+from rest_framework import exceptions, mixins, status, viewsets
 from rest_framework.renderers import AdminRenderer, JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.common.responses import HttpResponseSeeOther
 from apps.users.authentication import SSOAuthentication
-from apps.users.serializers import TokenSerializer, UserInfoSerializer
+from apps.users.serializers import (
+    AuthenticatedUserInfoSerializer,
+    TokenSerializer,
+    UserInfoSerializer,
+)
+
+logger = logging.getLogger(__name__)
 
 
 class LoginView(APIView):
@@ -41,14 +49,14 @@ class LogoutView(APIView):
         return redirect("/")
 
 
-class UserView(APIView):
+class AuthenticatedUserView(APIView):
     @method_decorator(never_cache)
     def get(self, request):
         """Return user session information."""
         if not request.user.is_authenticated:
             raise exceptions.NotAuthenticated()
 
-        serializer = UserInfoSerializer(request.user, context={"request": request})
+        serializer = AuthenticatedUserInfoSerializer(request.user, context={"request": request})
         return Response(serializer.data)
 
 
@@ -106,3 +114,26 @@ class APITokenListView(KnoxLoginView):
             qs.filter(token_key=token_key).delete()
 
         return HttpResponseSeeOther(reverse("tokens"))
+
+
+class UserViewSet(viewsets.ReadOnlyModelViewSet):
+    """API for listing and deleting users. Not for production use."""
+
+    queryset = get_user_model().objects.all()
+    serializer_class = UserInfoSerializer
+    lookup_field = "username"
+
+    def destroy(self, request, *args, **kwargs):
+        """Delete user and related data. Not for production use."""
+        username = kwargs[self.lookup_field]
+        logger.info(f"Deleting user {username} on the request of user: {request.user.username}")
+
+        user = self.get_object()
+        dataset_count = user.metadataprovider_set.count()
+        user.delete(soft=False)  # cascade delete will remove datasets and their linked filesets
+        new_dataset_count = user.metadataprovider_set.count()
+
+        logger.info(
+            f"Permanently deleted {dataset_count - new_dataset_count} datasets created by user {user}"
+        )
+        return Response(status=status.HTTP_204_NO_CONTENT)

@@ -17,6 +17,7 @@ def test_sso_login_tag_disabled(disable_sso):
     rendered = sso_login(request)
     assert rendered == ""
 
+
 def test_user_menu_tag(enable_sso):
     context = {"csrf_token": "token_value"}
     rendered = user_menu(context, MetaxUser(username="moro"))

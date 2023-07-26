@@ -11,7 +11,6 @@ import logging
 from django.core.validators import EMPTY_VALUES
 from rest_framework import serializers
 
-from apps.actors.models import Organization
 from apps.actors.serializers import ActorModelSerializer
 from apps.common.helpers import update_or_create_instance
 from apps.common.serializers import (

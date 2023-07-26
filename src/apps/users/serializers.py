@@ -7,16 +7,29 @@ from apps.users.models import MetaxUser
 
 
 class MetaxUserModelSerializer(serializers.ModelSerializer):
+    """User model serializer for use in datasets."""
+
     class Meta:
         model = MetaxUser
-        fields = (
-            "id",
-            "username",
-        )
+        fields = ("username",)
 
 
 class UserInfoSerializer(serializers.ModelSerializer):
-    """Serialize user session data required by external services."""
+    """User serializer with user details."""
+
+    dataset_count = serializers.SerializerMethodField()
+
+    def get_dataset_count(self, obj):
+        return obj.metadataprovider_set.count()
+
+    class Meta:
+        model = MetaxUser
+        fields = ("username", "ida_projects", "dataset_count")
+        read_only_fields = fields
+
+
+class AuthenticatedUserInfoSerializer(UserInfoSerializer):
+    """User serializer with user session data required by external services."""
 
     metax_csrf_token = serializers.SerializerMethodField()
 
@@ -35,7 +48,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MetaxUser
-        fields = ("username", "ida_projects", "metax_csrf_token")
+        fields = ("username", "ida_projects", "metax_csrf_token", "dataset_count")
         read_only_fields = fields
 
 

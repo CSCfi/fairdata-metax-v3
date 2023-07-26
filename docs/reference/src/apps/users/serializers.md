@@ -8,6 +8,10 @@
 
 ### :::src.apps.users.serializers.UserInfoSerializer
 
+## AuthenticatedUserInfoSerializer
+
+### :::src.apps.users.serializers.AuthenticatedUserInfoSerializer
+
 ## TokenSerializer
 
 ### :::src.apps.users.serializers.TokenSerializer

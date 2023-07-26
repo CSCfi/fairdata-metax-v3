@@ -56,6 +56,10 @@
 
 ### :::src.apps.core.factories.CatalogRecordFactory
 
+## MetadataProviderFactory
+
+### :::src.apps.core.factories.MetadataProviderFactory
+
 ## DatasetFactory
 
 ### :::src.apps.core.factories.DatasetFactory
@@ -63,10 +67,6 @@
 ## FileSetFactory
 
 ### :::src.apps.core.factories.FileSetFactory
-
-## MetadataProviderFactory
-
-### :::src.apps.core.factories.MetadataProviderFactory
 
 ## LocationFactory
 

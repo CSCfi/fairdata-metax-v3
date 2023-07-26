@@ -1,5 +1,6 @@
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, List
+
 
 from django.core.validators import EMPTY_VALUES
 
