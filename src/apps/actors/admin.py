@@ -1,7 +1,6 @@
 from django import forms
 from django.contrib import admin
-from django.db.models import Case, F, When
-from pkg_resources import require
+from django.db.models import Case, When
 
 from apps.actors.models import Actor, Organization
 

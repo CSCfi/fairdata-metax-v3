@@ -1,7 +1,6 @@
 from django import forms
 from django.contrib import admin
 from django.db.models import Case, F, When
-from pkg_resources import require
 
 from apps.refdata.models import reference_data_models
 
