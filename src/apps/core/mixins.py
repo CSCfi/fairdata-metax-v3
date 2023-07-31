@@ -1,5 +1,6 @@
 import logging
 from typing import Dict, List, Optional
+
 from django.core.validators import EMPTY_VALUES
 
 logger = logging.getLogger(__name__)
@@ -69,9 +70,12 @@ class V2DatasetMixin:
         if altitude_in_meters := model_obj.altitude_in_meters:
             obj["altitude_in_meters"] = altitude_in_meters
         if model_obj.reference.as_wkt or model_obj.custom_wkt:
-            obj["as_wkt"] = [
-                v for v in [model_obj.reference.as_wkt, *model_obj.custom_wkt] if v is not None
-            ]
+            custom_wkt = model_obj.custom_wkt or []
+            as_wkt = [*custom_wkt]
+            if ref_wkt := model_obj.reference.as_wkt:
+                as_wkt.append(ref_wkt)
+            if len(as_wkt) > 0:
+                obj["as_wkt"] = [v for v in as_wkt if v is not None]
         return obj
 
     def _generate_v2_other_identifiers(self, document: Dict):

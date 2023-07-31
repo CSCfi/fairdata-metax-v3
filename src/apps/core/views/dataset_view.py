@@ -65,10 +65,9 @@ class DatasetViewSet(viewsets.ModelViewSet):
 
     def get_object(self):
         queryset = self.get_queryset()
-        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
 
         try:
-            obj = queryset.get(legacydataset__dataset_json__identifier=lookup_url_kwarg)
+            obj = queryset.get(legacydataset__dataset_json__identifier=self.kwargs["pk"])
             self.check_object_permissions(self.request, obj)
             return obj
         except Dataset.DoesNotExist:

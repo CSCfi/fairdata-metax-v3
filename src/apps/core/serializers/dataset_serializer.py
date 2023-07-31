@@ -7,10 +7,10 @@
 import logging
 from collections import namedtuple
 
-from apps.common.helpers import update_or_create_instance
 from django.conf import settings
 from rest_framework import serializers
 
+from apps.common.helpers import update_or_create_instance
 from apps.core.models import Dataset
 from apps.core.models.concepts import FieldOfScience, Language, Theme
 from apps.core.serializers.common_serializers import (

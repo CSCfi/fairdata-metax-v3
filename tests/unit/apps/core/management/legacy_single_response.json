@@ -1,0 +1,111 @@
+{
+  "id": 1,
+  "identifier": "cr955e904-e3dd-4d7e-99f1-3fed446f96d1",
+  "data_catalog": {
+    "id": 1,
+    "identifier": "urn:nbn:fi:att:2955e904-e3dd-4d7e-99f1-3fed446f96d1"
+  },
+  "dataset_version_set": [
+    {
+      "identifier": "cr955e904-e3dd-4d7e-99f1-3fed446f96d1",
+      "preferred_identifier": "urn:nbn:fi:att:1955e904-e3dd-4d7e-99f1-3fed446f96d1",
+      "date_created": "2017-05-23T13:07:22+03:00",
+      "removed": false
+    }
+  ],
+  "deprecated": false,
+  "metadata_owner_org": "abc-org-123",
+  "metadata_provider_org": "abc-org-123",
+  "metadata_provider_user": "abc-user-123",
+  "research_dataset": {
+    "title": {
+      "en": "Wonderful Title"
+    },
+    "issued": "2019-01-01",
+    "creator": [
+      {
+        "name": "Teppo Testaaja",
+        "@type": "Person",
+        "member_of": {
+          "name": {
+            "fi": "Mysteeriorganisaatio"
+          },
+          "@type": "Organization"
+        },
+        "contributor_role": [
+          {
+            "in_scheme": "http://uri.suomi.fi/codelist/fairdata/contributor_role",
+            "identifier": "http://uri.suomi.fi/codelist/fairdata/contributor_role/code/visualization",
+            "pref_label": {
+              "en": "Visualization",
+              "fi": "Visualisointi",
+              "sv": "Visualisering",
+              "und": "Visualisointi"
+            }
+          }
+        ]
+      }
+    ],
+    "curator": [
+      {
+        "name": "Rahikainen",
+        "@type": "Person",
+        "member_of": {
+          "name": {
+            "fi": "MysteeriOrganisaatio"
+          },
+          "@type": "Organization"
+        },
+        "identifier": "id:of:curator:rahikainen"
+      }
+    ],
+    "language": [
+      {
+        "title": {
+          "en": "English",
+          "fi": "englanti",
+          "sv": "engelska",
+          "und": "englanti"
+        },
+        "identifier": "http://lexvo.org/id/iso639-3/eng"
+      }
+    ],
+    "modified": "2014-01-17T08:19:58Z",
+    "publisher": {
+      "name": {
+        "fi": "Mysteeriorganisaatio"
+      },
+      "@type": "Organization"
+    },
+    "description": {
+      "en": "A descriptive description describing the contents of this dataset. Must be descriptive."
+    },
+    "access_rights": {
+      "access_type": {
+        "in_scheme": "http://uri.suomi.fi/codelist/fairdata/access_type",
+        "identifier": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open",
+        "pref_label": {
+          "en": "Open",
+          "fi": "Avoin",
+          "und": "Avoin"
+        }
+      }
+    },
+    "version_notes": [
+      "This version contains changes to x and y."
+    ],
+    "preferred_identifier": "urn:nbn:fi:att:1955e904-e3dd-4d7e-99f1-3fed446f96d1",
+    "total_files_byte_size": 300,
+    "metadata_version_identifier": "1955e904-e3dd-4d7e-99f1-3fed446f96d1"
+  },
+  "preservation_state": 0,
+  "state": "published",
+  "cumulative_state": 0,
+  "api_meta": {
+    "version": 1
+  },
+  "date_modified": "2017-06-23T13:07:22+03:00",
+  "date_created": "2017-05-23T13:07:22+03:00",
+  "service_created": "metax",
+  "removed": false
+}

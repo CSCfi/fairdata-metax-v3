@@ -6,11 +6,12 @@ from .catalog_record import (
     FileSet,
     MetadataProvider,
     OtherIdentifier,
-    Temporal,
     ProjectContributor,
+    Temporal,
 )
 from .concepts import (
     AccessType,
+    ContributorType,
     DatasetLicense,
     FieldOfScience,
     FileType,
@@ -18,7 +19,6 @@ from .concepts import (
     Spatial,
     Theme,
     UseCategory,
-    ContributorType,
 )
 from .contract import Contract
 from .data_catalog import (

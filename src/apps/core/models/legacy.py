@@ -24,11 +24,12 @@ from .catalog_record import (
     DatasetProject,
     MetadataProvider,
     OtherIdentifier,
-    Temporal,
     ProjectContributor,
+    Temporal,
 )
 from .concepts import (
     AccessType,
+    ContributorType,
     DatasetLicense,
     EventOutcome,
     FieldOfScience,
@@ -36,7 +37,6 @@ from .concepts import (
     Language,
     LifecycleEvent,
     Spatial,
-    ContributorType,
 )
 from .contract import Contract
 from .data_catalog import AccessRights, AccessRightsRestrictionGrounds, DataCatalog
@@ -114,7 +114,7 @@ class LegacyDataset(Dataset):
 
     @property
     def legacy_license(self):
-        return self.legacy_access_rights["license"]
+        return self.legacy_access_rights.get("license") or []
 
     @property
     def legacy_data_catalog(self):
@@ -126,7 +126,7 @@ class LegacyDataset(Dataset):
 
     @property
     def legacy_field_of_science(self):
-        return self.legacy_research_dataset["field_of_science"]
+        return self.legacy_research_dataset.get("field_of_science") or []
 
     @property
     def legacy_spatial(self):
@@ -174,8 +174,10 @@ class LegacyDataset(Dataset):
 
     @classmethod
     def parse_temporal_timestamps(cls, legacy_temporal):
-        start_date = parse_datetime(legacy_temporal["start_date"])
-        end_date = parse_datetime(legacy_temporal["end_date"])
+        if start_date := legacy_temporal.get("start_date"):
+            start_date = parse_datetime(legacy_temporal["start_date"])
+        if end_date := legacy_temporal.get("end_date"):
+            end_date = parse_datetime(legacy_temporal["end_date"])
         return start_date, end_date
 
     def convert_root_level_fields(self):
@@ -184,7 +186,7 @@ class LegacyDataset(Dataset):
         Returns:
 
         """
-        self.is_deprecated = self.dataset_json.get("deprecated")
+        self.is_deprecated = self.dataset_json.get("deprecated") or False
         self.cumulation_started = self.dataset_json.get("date_cumulation_started")
         self.cumulation_ended = self.dataset_json.get("date_cumulation_ended")
         self.last_cumulative_addition = self.dataset_json.get("date_last_cumulative_addition")
@@ -376,9 +378,11 @@ class LegacyDataset(Dataset):
         if other_ids := self.legacy_other_identifiers:
             for other_id in other_ids:
                 id_type, id_type_created = IdentifierType.objects.get_or_create(
-                    in_scheme=other_id["in_scheme"],
                     url=other_id["identifier"],
-                    defaults={"pref_label": other_id["pref_label"]},
+                    defaults={
+                        "pref_label": other_id["pref_label"],
+                        "in_scheme": other_id["in_scheme"],
+                    },
                 )
                 instance, created = OtherIdentifier.objects.get_or_create(
                     dataset=self,
@@ -505,7 +509,10 @@ class LegacyDataset(Dataset):
                     logger.info(f"{temporal=}, created={temporal_created}")
                 if variables := data.get("variable"):
                     for var in variables:
-                        (variable, variable_created,) = ProvenanceVariable.objects.get_or_create(
+                        (
+                            variable,
+                            variable_created,
+                        ) = ProvenanceVariable.objects.get_or_create(
                             pref_label=var["pref_label"],
                             provenance=provenance,
                             representation=var.get("representation"),
@@ -566,9 +573,11 @@ class LegacyDataset(Dataset):
             if contr_data := v2_data.get("contributor_type", None):
                 for data in contr_data:
                     contr_type, created = ContributorType.objects.get_or_create(
-                        in_scheme=data["in_scheme"],
                         url=data["identifier"],
-                        pref_label=data["pref_label"],
+                        defaults={
+                            "pref_label": data["pref_label"],
+                            "in_scheme": data["in_scheme"],
+                        },
                     )
                     contribution_types.append(contr_type)
             if len(contribution_types) != 0:

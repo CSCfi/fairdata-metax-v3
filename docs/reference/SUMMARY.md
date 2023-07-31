@@ -23,7 +23,9 @@
         - [admin](src/apps/core/admin.md)
         - [apps](src/apps/core/apps.md)
         - [factories](src/apps/core/factories.md)
-        - [management.commands.load_test_data](src/apps/core/management/commands/load_test_data.md)
+        - management.commands
+            - [load_test_data](src/apps/core/management/commands/load_test_data.md)
+            - [migrate_v2_datasets](src/apps/core/management/commands/migrate_v2_datasets.md)
         - [mixins](src/apps/core/mixins.md)
         - models
             - [catalog_record](src/apps/core/models/catalog_record.md)
@@ -128,7 +130,10 @@
                     - [test_dataset_publisher](tests/unit/apps/core/api/test_dataset_publisher.md)
                     - [test_legacy](tests/unit/apps/core/api/test_legacy.md)
                     - [test_metadata_provider](tests/unit/apps/core/api/test_metadata_provider.md)
-                - [management.test_load_test_data](tests/unit/apps/core/management/test_load_test_data.md)
+                - management
+                    - [conftest](tests/unit/apps/core/management/conftest.md)
+                    - [test_load_test_data](tests/unit/apps/core/management/test_load_test_data.md)
+                    - [test_migrate_v2_datasets](tests/unit/apps/core/management/test_migrate_v2_datasets.md)
                 - models
                     - [conftest](tests/unit/apps/core/models/conftest.md)
                     - [test_abstract_base_object](tests/unit/apps/core/models/test_abstract_base_object.md)

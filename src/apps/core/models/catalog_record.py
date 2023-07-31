@@ -323,8 +323,8 @@ class Temporal(AbstractBaseModel):
         provenance (Provenance): Provenance ForeignKey relation, if part of Provenance
     """
 
-    start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
+    start_date = models.DateTimeField(null=True, blank=True)
+    end_date = models.DateTimeField(null=True, blank=True)
     dataset = models.ForeignKey(
         "Dataset",
         on_delete=models.CASCADE,
@@ -461,4 +461,3 @@ class ProjectContributor(AbstractBaseModel):
 
     def __str__(self):
         return str(self.participating_organization.pref_label["fi"])
-
