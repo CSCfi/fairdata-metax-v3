@@ -1,2 +1,2 @@
 from .directory_serializer import DirectorySerializer
-from .file_serializer import FileSerializer
+from .file_serializer import FileSerializer, DeleteWithProjectIdentifierSerializer

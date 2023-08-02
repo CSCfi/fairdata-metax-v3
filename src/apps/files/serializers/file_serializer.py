@@ -4,8 +4,10 @@
 #
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
+import logging
 
 from django.conf import settings
+from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
@@ -14,7 +16,15 @@ from apps.files.helpers import get_file_metadata_serializer
 from apps.files.models.file import File, FileStorage, checksum_algorithm_choices
 from apps.files.models.file_storage import FileStorage
 
-from .fields import DirectoryPathField, FileNameField, FilePathField, ListValidChoicesField
+from .fields import (
+    DirectoryPathField,
+    FileNameField,
+    FilePathField,
+    ListValidChoicesField,
+    StorageServiceField,
+)
+
+logger = logging.getLogger(__name__)
 
 
 def get_or_create_file_storage(project_identifier: str, storage_service: str) -> FileStorage:
@@ -131,3 +141,27 @@ class FileSerializer(CreateOnlyFieldsMixin, serializers.ModelSerializer):
         ]
 
     # TODO: Partial update
+
+
+class DeleteWithProjectIdentifierSerializer(serializers.Serializer):
+    storage_service = StorageServiceField(required=True)
+    project_identifier = serializers.CharField(max_length=200, required=True)
+    flush = serializers.BooleanField(required=False, default=False)
+    deleted_files_count = serializers.JSONField(required=False, read_only=True)
+
+    def delete_project(self):
+        validated_data = self.validated_data
+        query: QuerySet
+        if validated_data["flush"]:
+            query = File.all_objects.filter(
+                file_storage__project_identifier=validated_data["project_identifier"],
+                file_storage__storage_service=validated_data["storage_service"],
+            )
+        else:
+            query = File.available_objects.filter(
+                file_storage__project_identifier=validated_data["project_identifier"],
+                file_storage__storage_service=validated_data["storage_service"],
+            )
+        logger.info(f"Deleting {query=}")
+        self.validated_data["deleted_files_count"] = query.count()
+        query.delete()

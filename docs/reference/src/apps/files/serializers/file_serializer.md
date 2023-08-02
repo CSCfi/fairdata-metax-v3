@@ -16,3 +16,7 @@
 
 ### :::src.apps.files.serializers.file_serializer.FileSerializer
 
+## DeleteWithProjectIdentifierSerializer
+
+### :::src.apps.files.serializers.file_serializer.DeleteWithProjectIdentifierSerializer
+

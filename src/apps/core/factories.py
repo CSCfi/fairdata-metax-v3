@@ -195,6 +195,7 @@ class DatasetFactory(factory.django.DjangoModelFactory):
     data_catalog = factory.SubFactory(DataCatalogFactory)
     title = factory.Dict({"en": factory.Sequence(lambda n: f"research-dataset-{n}")})
     contract = factory.SubFactory(ContractFactory)
+    access_rights = factory.SubFactory(AccessRightsFactory)
     system_creator = factory.SubFactory(MetaxUserFactory)
 
 

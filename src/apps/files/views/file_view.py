@@ -4,7 +4,7 @@
 #
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
-
+import logging
 
 from django import forms
 from django.contrib.postgres.aggregates import ArrayAgg
@@ -13,7 +13,7 @@ from django.db.models import F, Q, QuerySet
 from django.db.models.functions import Concat
 from django_filters import rest_framework as filters
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import serializers, viewsets
+from rest_framework import serializers, viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -25,7 +25,9 @@ from apps.files.serializers.file_bulk_serializer import (
     FileBulkReturnValueSerializer,
     FileBulkSerializer,
 )
-from apps.files.serializers.file_serializer import FileSerializer
+from apps.files.serializers import FileSerializer, DeleteWithProjectIdentifierSerializer
+
+logger = logging.getLogger(__name__)
 
 
 class FileCommonFilterset(filters.FilterSet):
@@ -252,3 +254,14 @@ class FileViewSet(BaseFileViewSet):
     @action(detail=False, methods=["post"], url_path="delete-many")
     def delete_many(self, request):
         return self.bulk_action(request.data, action=BulkAction.DELETE)
+
+    @swagger_auto_schema(
+        operation_description="Delete all files belonging to certain project",
+        request_body=DeleteWithProjectIdentifierSerializer,
+    )
+    @action(detail=False, methods=["post"], url_path="delete-project")
+    def delete_project(self, request):
+        serializer = DeleteWithProjectIdentifierSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.delete_project()
+        return Response(serializer.data)

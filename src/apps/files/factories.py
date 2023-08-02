@@ -60,7 +60,8 @@ def create_file_tree(file_storage, file_paths, file_args={}) -> Dict[str, models
     Optional file_args dict allows setting file factory arguments by file path.
     Use '*' as path to apply to all files.
 
-    Returns dict of path->File mappings."""
+    Returns dict of path->File mappings.
+    """
 
     files = {
         path: FileFactory(
