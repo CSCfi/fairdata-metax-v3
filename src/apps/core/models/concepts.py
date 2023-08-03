@@ -5,8 +5,12 @@ from django.db import models
 from django.utils.translation import gettext as _
 
 from apps.common.models import AbstractBaseModel, AbstractFreeformConcept
-from apps.common.serializers import URLReferencedModelListField
+from apps.common.serializers.fields import URLReferencedModelField, URLReferencedModelListField
 from apps.refdata import models as refdata
+
+
+def not_implemented_function(*args, **kwargs):
+    raise NotImplementedError()
 
 
 class ConceptProxyMixin:
@@ -20,7 +24,16 @@ class ConceptProxyMixin:
             field: {"read_only": True} for field in serializer_class.Meta.fields if field != "url"
         }
         serializer_class.Meta.list_serializer_class = URLReferencedModelListField
+        serializer_class.save = not_implemented_function
+        serializer_class.create = not_implemented_function
+        serializer_class.update = not_implemented_function
         return serializer_class
+
+    @classmethod
+    def get_serializer_field(cls, **kwargs):
+        """Return serializer relation field for concept instances."""
+        serializer = cls.get_serializer()()
+        return URLReferencedModelField(child=serializer, **kwargs)
 
     class Meta:
         proxy = True
@@ -111,7 +124,7 @@ class UseCategory(ConceptProxyMixin, refdata.UseCategory):
 
 
 class FileType(ConceptProxyMixin, refdata.FileType):
-    """File type type of the resource."""
+    """File type of the resource."""
 
 
 class Spatial(AbstractFreeformConcept):

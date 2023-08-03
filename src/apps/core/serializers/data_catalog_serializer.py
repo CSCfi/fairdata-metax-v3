@@ -64,14 +64,16 @@ class DataCatalogModelSerializer(serializers.ModelSerializer):
         publisher_instance = instance.publisher
 
         if access_rights_data := validated_data.pop("access_rights", None):
-            update_or_create_instance(
+            instance.access_rights = update_or_create_instance(
                 access_rights_serializer,
                 access_rights_instance,
                 access_rights_data,
             )
 
         if publisher_data := validated_data.pop("publisher", None):
-            update_or_create_instance(publisher_serializer, publisher_instance, publisher_data)
+            instance.publisher = update_or_create_instance(
+                publisher_serializer, publisher_instance, publisher_data
+            )
 
         languages = validated_data.pop("language", [])
         instance.language.set(languages)

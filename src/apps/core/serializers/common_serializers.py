@@ -195,8 +195,8 @@ class SpatialModelSerializer(serializers.ModelSerializer):
 
 
 class AccessRightsModelSerializer(AbstractDatasetModelSerializer):
-    license = LicenseModelSerializer(read_only=False, required=False, many=True)
-    access_type = AccessType.get_serializer()(required=False, read_only=False, many=False)
+    license = LicenseModelSerializer(required=False, many=True)
+    access_type = AccessType.get_serializer_field(required=False)
     description = serializers.JSONField(required=False)
 
     class Meta:
@@ -205,26 +205,17 @@ class AccessRightsModelSerializer(AbstractDatasetModelSerializer):
 
     def create(self, validated_data):
         license_serializer: LicenseModelSerializer = self.fields["license"]
-        access_type = None
-        access_type_data = validated_data.pop("access_type", None)
-        if access_type_data not in EMPTY_VALUES:
-            access_type = AccessType.objects.get(url=access_type_data.get("url"))
 
         license_data = validated_data.pop("license", [])
         licenses = license_serializer.create(license_data)
 
-        access_rights = AccessRights.objects.create(access_type=access_type, **validated_data)
+        access_rights = AccessRights.objects.create(**validated_data)
         access_rights.license.set(licenses)
 
         return access_rights
 
     def update(self, instance, validated_data):
         license_serializer: LicenseModelSerializer = self.fields["license"]
-        access_type = None
-        access_type_data = validated_data.pop("access_type", None)
-        if access_type_data not in EMPTY_VALUES:
-            access_type = AccessType.objects.get(url=access_type_data.get("url"))
-        instance.access_type = access_type
 
         license_data = validated_data.pop("license", [])
         licenses = license_serializer.create(license_data)
@@ -281,7 +272,7 @@ class MetadataProviderModelSerializer(AbstractDatasetModelSerializer):
         user_instance = instance.user
 
         if user_data := validated_data.pop("user", None):
-            update_or_create_instance(user_serializer, user_instance, user_data)
+            instance.user = update_or_create_instance(user_serializer, user_instance, user_data)
 
         return super().update(instance, validated_data)
 

@@ -17,7 +17,11 @@
         - [models](src/apps/common/models.md)
         - [pagination](src/apps/common/pagination.md)
         - [responses](src/apps/common/responses.md)
-        - [serializers](src/apps/common/serializers.md)
+        - serializers
+            - [fields](src/apps/common/serializers/fields.md)
+            - [inspectors](src/apps/common/serializers/inspectors.md)
+            - [serializers](src/apps/common/serializers/serializers.md)
+        - [validators](src/apps/common/validators.md)
         - [views](src/apps/common/views.md)
     - core
         - [admin](src/apps/core/admin.md)

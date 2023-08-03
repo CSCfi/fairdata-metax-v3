@@ -17,6 +17,7 @@ from pathlib import Path
 
 import factory.random
 from django.utils.translation import gettext_lazy as _
+from drf_yasg.app_settings import SWAGGER_DEFAULTS
 from environs import Env
 
 env = Env()
@@ -228,6 +229,10 @@ REST_FRAMEWORK = {
 
 SWAGGER_SETTINGS = {
     "DEEP_LINKING": True,  # Automatically update URL fragment with current operation in Swagger UI
+    "DEFAULT_FIELD_INSPECTORS": [
+        "apps.common.serializers.inspectors.URLReferencedModelFieldInspector",
+        *SWAGGER_DEFAULTS["DEFAULT_FIELD_INSPECTORS"],
+    ],
 }
 
 FACTORY_BOY_RANDOM_SEED = "metax-service"

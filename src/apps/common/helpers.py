@@ -30,9 +30,7 @@ def update_or_create_instance(serializer, instance, data):
         serializer.update(instance, data)
         return instance
     else:
-        new_serializer = serializer.__class__(data=data)
-        if new_serializer.is_valid(raise_exception=True):
-            return new_serializer
+        return serializer.create(data)
 
 
 def parse_iso_dates_in_nested_dict(d: Dict) -> Dict:
