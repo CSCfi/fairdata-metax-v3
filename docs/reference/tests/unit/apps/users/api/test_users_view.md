@@ -1,9 +1,5 @@
 # test_users_view
 
-## dataset_json
-
-### :::tests.unit.apps.users.api.test_users_view.dataset_json
-
 ## reload_router_urls
 
 ### :::tests.unit.apps.users.api.test_users_view.reload_router_urls

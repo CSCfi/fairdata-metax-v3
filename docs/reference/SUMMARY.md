@@ -21,7 +21,6 @@
             - [fields](src/apps/common/serializers/fields.md)
             - [inspectors](src/apps/common/serializers/inspectors.md)
             - [serializers](src/apps/common/serializers/serializers.md)
-        - [validators](src/apps/common/validators.md)
         - [views](src/apps/common/views.md)
     - core
         - [admin](src/apps/core/admin.md)
@@ -124,7 +123,6 @@
                 - api
                     - [conftest](tests/unit/apps/core/api/conftest.md)
                     - dataset_files
-                        - [conftest](tests/unit/apps/core/api/dataset_files/conftest.md)
                         - [test_dataset_files_list](tests/unit/apps/core/api/dataset_files/test_dataset_files_list.md)
                         - [test_dataset_files_update](tests/unit/apps/core/api/dataset_files/test_dataset_files_update.md)
                         - [test_dataset_with_files](tests/unit/apps/core/api/dataset_files/test_dataset_with_files.md)
