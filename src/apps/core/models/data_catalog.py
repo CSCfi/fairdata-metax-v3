@@ -150,9 +150,11 @@ class AccessRights(AbstractBaseModel):
         if isinstance(description, str):
             description = json.loads(description)
         if description:
-            return str(next(iter(description.items())))
-        else:
+            return str(next(iter(description.values())))
+        elif self.access_type:
             return self.access_type.pref_label.get("en", "access rights")
+        else:
+            return "Access Rights"
 
 
 class AccessRightsRestrictionGrounds(AbstractFreeformConcept):

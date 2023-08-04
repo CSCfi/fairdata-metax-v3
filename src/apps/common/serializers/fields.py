@@ -4,13 +4,16 @@
 #
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
+import json
 import logging
+from collections import OrderedDict
 from typing import Any
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.fields import empty
+from rest_framework.utils import html
 
 logger = logging.getLogger(__name__)
 
@@ -122,3 +125,26 @@ class URLReferencedModelField(serializers.RelatedField):
 
     def to_representation(self, value):
         return self.child.to_representation(value)
+
+    def get_value(self, dictionary):
+        """Convert DRF forms input from json to dict."""
+        value = super().get_value(dictionary)
+        if html.is_html_input(dictionary):
+            value = json.loads(value)
+        return value
+
+    def get_choices(self, cutoff=None):
+        """Modified get_choices that converts dict to json for DRF forms."""
+        queryset = self.get_queryset()
+        if queryset is None:
+            return {}
+
+        if cutoff is not None:
+            queryset = queryset[:cutoff]
+
+        return OrderedDict(
+            [
+                (json.dumps(self.to_representation(item)), self.display_value(item))
+                for item in queryset
+            ]
+        )
