@@ -30,6 +30,11 @@ To update the source code reference files in `docs/reference/`, remove the exist
 python generate_reference.py
 ```
 
+The script also supports additional arguments:
+* `--delete-obsolete` or `-d`: Delete obsolete reference files automatically.
+* `--git-files-only` or `-g`: Ignore changes not staged in `git`.
+
+
 ## Running Mkdocs development server
 
 MkDocs development server is hot-reload enabled documentation generator, that instantly shows changes made to .md files in browser. You can start the development server from repository root folder with command:
