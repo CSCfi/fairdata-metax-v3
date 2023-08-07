@@ -2,79 +2,139 @@
 
 Metax V3 Rest-API has number of changes from previous versions (v1-v2) and is incompatible in most API-endpoints. 
 
-The most up-to-date information about the specific API version can always be found in the swagger documentation, but this page tries to show the main differences between the versions.
+The most up-to-date information about the specific API version can always be found in the [Swagger documentation](/swagger/), but this page tries to show the main differences between the versions.
 
 !!! NOTE
     Only changed field names, endpoint behaviour and query parameters are documented. The unchanged properties are omitted.
 
-!!! NOTE
-    ":clock1: Will be implemented in the future" does not mean the query parameter, field or endpoint will be named the same in V3.
 
 ## Dataset
 
-Also named CatalogRecord in V1-V2. Main difference is removing the research_dataset nested object and renaming fields to be more descriptive. 
+Also named CatalogRecord in V1-V2. Main difference is removing the research_dataset nested object and renaming fields to be more descriptive. All objects also now have their own id field that can be used when editing dataset properties.
 
-### Changed field names
+### Field names
 
-| V1-V2 field name                                      | V3 field name                 |
-|-------------------------------------------------------|-------------------------------|
-| date_created                                          | created                       |
-| date_cumulation_started                               | cumulation_started            |
-| date_last_cumulative_addition                         | last_cumulative_addition      |
-| date_modified                                         | modified                      |
-| deprecated                                            | is_deprecated                 |
-| identifier                                            | id                            |
-| metadata_owner_org                                    | metadata_owner/organization   |
-| metadata_provider_org                                 | metadata_owner/organization   |
-| metadata_provider_user                                | metadata_owner/user           |
-| removed                                               | is_removed                    |
-| research-dataset/access_rights/access_type/identifier | access_rights/access_type/url |
-| research-dataset/access_rights/title                  | access_rights/pref_label      |
-| research_dataset                                      | N/A                           |
-| research_dataset/access_rights/identifier             | access_rights/url             |
-| research_dataset/description                          | description                   |
-| research_dataset/issued                               | release_date                  |
-| research_dataset/keyword                              | theme                         |
-| research_dataset/modified                             | modified                      |
-| research_dataset/persistent_identifier                | persistent_identifier         |
-| research_dataset/preferred_identifier                 | persistent_identifier         |
-| research_dataset/title                                | title                         |
-| service_created                                       | N/A                           |
-| service_modified                                      | N/A                           |
+| V1-V2                                    | V3 field name                       |
+|------------------------------------------|-------------------------------------|
+| dataset_version_set [list]               | not implemented yet                 |
+| date_created [datetime]                  | created [datetime]                  |
+| date_cumulation_started [datetime]       | cumulation_started [datetime]       |
+| date_last_cumulative_addition [datetime] | last_cumulative_addition [datetime] |
+| date_modified [datetime]                 | modified [datetime]                 |
+| deprecated [bool]                        | is_deprecated [bool]                |
+| identifier [uuid]                        | id [uuid]                           |
+| metadata_owner_org [str]                 | metadata_owner/organization [str]   |
+| metadata_provider_org [str]              | metadata_owner/organization [str]   |
+| metadata_provider_user [str]             | metadata_owner/user [object]        |
+| metadata_version_identifier              | not implemented yet                 |
+| previous_dataset_version [str]           | previous [str]                      |
+| removed [bool]                           | is_removed [bool]                   |
+| research_dataset [object]                | N/A                                 |
+| research_dataset/access_rights [object]  | access_rights [object]              |
+| research_dataset/creator [list]          | actors [list]                       |
+| research_dataset/description [dict]      | description [dict]                  |
+| research_dataset/field_of_science [list] | field_of_science [list]             |
+| research_dataset/issued [datetime]       | issued [datetime]                   |
+| research_dataset/keyword [list]          | keyword [list]                      |
+| research_dataset/language [list]         | language [list]                     |
+| research_dataset/modified [datetime]     | modified [datetime]                 |
+| research_dataset/persistent_identifier   | persistent_identifier               |
+| research_dataset/preferred_identifier    | persistent_identifier               |
+| research_dataset/publisher [object]      | actors [list]                       |
+| research_dataset/theme [list]            | theme [list]                        |
+| research_dataset/title [dict]            | title [dict]                        |
+| service_created                          | N/A                                 |
+| service_modified                         | N/A                                 |
+| total_files_byte_size [int]              | N/A                                 |
+
+### Reference data fields
+
+Reference data such as language, theme, spatial, organization and field_of_science have been unified structurally. Now all of these share the same base fields and payload format.
+
+| V1-V2                      | V3 field name     |
+|----------------------------|-------------------|
+| identifier [url]           | url [url]         |
+| title or pref_label [dict] | pref_label [dict] |
+
+
+=== "V2"
+    ``` json
+    ---8<--- "tests/unit/docs/examples/test_data/spatial-v2.json"
+    ```
+=== "V3"
+    ``` json
+    ---8<--- "tests/unit/docs/examples/test_data/dataset_api/spatial.json"
+    ```
+
+### Access Rights
+
+Dataset access rights is now top level object in dataset. Following table shows differences in object structure. 
+
+| V1-V2                        | V3 field name                       |
+|------------------------------|-------------------------------------|
+| access_type/identifier [url] | access_rights/access_type/url [url] |
+| license/identifier [url]     | license/url [url]                   |
+| license/license [url]        | license/custom_url [url]            |
+
+=== "V2"
+    ``` json
+    ---8<--- "tests/unit/docs/examples/test_data/access_rights-v2.json"
+    ```
+=== "V3"
+    ``` json
+    ---8<--- "tests/unit/docs/examples/test_data/access_rights-v3.json"
+    ```
+
+
+### Actors
+
+Dataset related actors with roles such as creator, publisher, curator, rights_holder, provenance and contributor have been moved under actors field. 
+
+=== "V2"
+    ``` json
+    ---8<--- "tests/unit/docs/examples/test_data/actors-v2.json"
+    ```
+=== "V3"
+    ``` json
+    ---8<--- "tests/unit/docs/examples/test_data/dataset_api/actors.json"
+    ```
 
 ### Query parameters
 
-| V1-V2 parameter name    | V3 parameter name                           |
-|-------------------------|---------------------------------------------|
-| actor_filter            | :clock1: Will be implemented in the future  |
-| api_version             | :no_entry_sign: Not going to be implemented |
-| contract_org_identifier | :clock1: Will be implemented in the future  |
-| curator                 | :clock1: Will be implemented in the future  |
-| data_catalog            | :clock1: Will be implemented in the future  |
-| editor_permissions_user | :clock1: Will be implemented in the future  |
-| fields                  | N/A                                         |
-| include_legacy          | :clock1: Will be implemented in the future  |
-| latest                  | :clock1: Will be implemented in the future  |
-| metadata_owner_org      | :clock1: Will be implemented in the future  |
-| metadata_provider_user  | :clock1: Will be implemented in the future  |
-| N/A                     | title                                       |
-| owner_id                | :no_entry_sign: Not going to be implemented |
-| pas_filter              | :clock1: Will be implemented in the future  |
-| preferred_identifier    | :clock1: Will be implemented in the future  |
-| projects                | :clock1: Will be implemented in the future  |
-| research_dataset_fields | :no_entry_sign: Not going to be implemented |
-| state                   | :clock1: Will be implemented in the future  |
-| user_created            | :clock1: Will be implemented in the future  |
+| V1-V2 parameter name    | V3 parameter name           |
+|-------------------------|-----------------------------|
+| actor_filter            | organization_name           |
+| actor_filter            | person                      |
+| api_version             | N/A                         |
+| contract_org_identifier | not implemented yet         |
+| curator                 | not implemented yet         |
+| data_catalog            | data_catalog_id             |
+| editor_permissions_user | not implemented yet         |
+| fields                  | N/A                         |
+| include_legacy          | N/A                         |
+| latest                  | N/A                         |
+| metadata_owner_org      | metadata_owner_organization |
+| metadata_provider_user  | metadata_owner_user         |
+| N/A                     | data_catalog_title          |
+| N/A                     | title                       |
+| owner_id                | N/A                         |
+| pas_filter              | not implemented yet         |
+| preferred_identifier    | N/A                         |
+| projects                | not implemented yet         |
+| research_dataset_fields | N/A                         |
+| user_created            | not implemented yet         |
+
+
 
 ### Endpoints
 
-| V1-V2 endpoint                              | V3 endpoint                                 |
-|---------------------------------------------|---------------------------------------------|
-| `/datasets/identifiers`                     | :clock1: Will be implemented in the future  |
-| `/datasets/unique_preferred_identifiers`    | :no_entry_sign: Not going to be implemented |
-| `/datasets/list`                            | `/datasets`                                 |
-| `/datasets/metadata_versions`               | :clock1: Will be implemented in the future  |
-| `/datasets/{CRID}/editor_permissions/users` | :clock1: Will be implemented in the future  |
+| V1-V2 endpoint                              | V3 endpoint                 |
+|---------------------------------------------|-----------------------------|
+| `/datasets/identifiers`                     | not implemented yet         |
+| `/datasets/unique_preferred_identifiers`    | not going to be implemented |
+| `/datasets/list`                            | `/datasets`                 |
+| `/datasets/metadata_versions`               | not implemented yet         |
+| `/datasets/{CRID}/editor_permissions/users` | not implemented yet         |
 
 ### Examples
 

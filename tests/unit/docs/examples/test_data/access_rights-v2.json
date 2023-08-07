@@ -1,0 +1,20 @@
+{
+  "access_rights": {
+    "license": [
+      {
+        "title": {
+          "fi": "Creative Commons Nimeä 4.0 Kansainvälinen (CC BY 4.0)"
+        },
+        "license": "https://creativecommons.org/licenses/by/4.0/",
+        "identifier": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0"
+      }
+    ],
+    "access_type": {
+      "in_scheme": "http://uri.suomi.fi/codelist/fairdata/access_type",
+      "identifier": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open",
+      "pref_label": {
+        "fi": "Avoin"
+      }
+    }
+  }
+}

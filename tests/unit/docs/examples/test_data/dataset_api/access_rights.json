@@ -1,0 +1,32 @@
+{
+  "access_rights": {
+    "id": "39f48c3d-1f9b-43a8-9a59-7bf38e1ec2f4",
+    "description": {
+      "en": "Access is granted freely to anyone in the world, license restrictions apply."
+    },
+    "license": [
+      {
+        "custom_url": "https://creativecommons.org/publicdomain/zero/1.0/legalcode",
+        "description": {
+          "en": "The dataset is available for research, teaching and study."
+        },
+        "id": "3c37ceab-7138-41f8-8fcd-c93624ffe483",
+        "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC0-1.0",
+        "in_scheme": "http://uri.suomi.fi/codelist/fairdata/license",
+        "pref_label": {
+          "en": "Creative Commons CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",
+          "fi": "Creative Commons Yleismaailmallinen (CC0 1.0) Public Domain -lausuma"
+        }
+      }
+    ],
+    "access_type": {
+      "id": "20f133ae-6026-4e73-b0f8-6aab18a4963f",
+      "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open",
+      "in_scheme": "http://uri.suomi.fi/codelist/fairdata/access_type",
+      "pref_label": {
+        "en": "Open",
+        "fi": "Avoin"
+      }
+    }
+  }
+}

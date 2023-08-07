@@ -1,0 +1,19 @@
+{
+  "publisher": {
+    "id": "4a85cbee-2583-47d2-af51-aa57dd223ecb",
+    "name": {
+      "en": "Testing",
+      "fi": "Testi"
+    },
+    "homepage": [
+      {
+        "id": "883d0a2a-6438-4ce6-bdd5-6ac6bfcc6ed7",
+        "url": "http://www.testi.fi/",
+        "title": {
+          "en": "Publisher organization website",
+          "fi": "Julkaisijaorganisaation kotisivu"
+        }
+      }
+    ]
+  }
+}

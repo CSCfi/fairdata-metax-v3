@@ -13,7 +13,7 @@ from rest_framework import exceptions, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from apps.core.models.catalog_record import Dataset, FileSet
+from apps.core.models.catalog_record import Dataset, FileSet, DatasetActor
 from apps.core.serializers import DatasetSerializer, FileSetSerializer
 from apps.files.models import File
 from apps.files.serializers import DirectorySerializer
@@ -43,6 +43,28 @@ class DatasetFilter(filters.FilterSet):
         lookup_expr="icontains",
         label="data-catalog title",
     )
+    person = filters.CharFilter(
+        field_name="actors__actor__person", max_length=512, lookup_expr="icontains", label="person"
+    )
+    organization_name = filters.CharFilter(
+        field_name="actors__actor__organization__pref_label__values",
+        max_length=512,
+        lookup_expr="icontains",
+        label="organization name",
+    )
+    metadata_owner_organization = filters.CharFilter(
+        field_name="metadata_owner__organization",
+        max_length=512,
+        lookup_expr="icontains",
+        label="metadata owner organization",
+    )
+    metadata_owner_user = filters.CharFilter(
+        field_name="metadata_owner__user__username",
+        max_length=512,
+        lookup_expr="icontains",
+        label="metadata owner user",
+    )
+    state = filters.ChoiceFilter(choices=Dataset.StateChoices.choices, label="state")
     ordering = filters.OrderingFilter(
         fields=(
             ("created", "created"),

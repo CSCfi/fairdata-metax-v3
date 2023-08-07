@@ -18,6 +18,7 @@ from apps.core.serializers.common_serializers import (
     DatasetActorModelSerializer,
     MetadataProviderModelSerializer,
     OtherIdentifierModelSerializer,
+    SpatialModelSerializer,
 )
 
 from .dataset_files_serializer import FileSetSerializer
@@ -26,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 NestedDatasetObjects = namedtuple(
     "NestedDatasetObjects",
-    "language, theme, fields_of_science, access_rights, metadata_owner, file_set, actors, other_identifiers",
+    "language, theme, fields_of_science, access_rights, metadata_owner, file_set, actors, other_identifiers, spatial",
 )
 
 
@@ -39,6 +40,7 @@ class DatasetSerializer(serializers.ModelSerializer):
     metadata_owner = MetadataProviderModelSerializer(required=False)
     other_identifiers = OtherIdentifierModelSerializer(required=False, many=True)
     theme = Theme.get_serializer()(required=False, many=True)
+    spatial = SpatialModelSerializer(required=False, many=True)
 
     class Meta:
         model = Dataset
@@ -56,6 +58,7 @@ class DatasetSerializer(serializers.ModelSerializer):
             "persistent_identifier",
             "theme",
             "title",
+            "spatial",
             # read only
             "created",
             "cumulation_started",
@@ -101,14 +104,15 @@ class DatasetSerializer(serializers.ModelSerializer):
     @staticmethod
     def _pop_related_validated_objects(validated_data) -> NestedDatasetObjects:
         return NestedDatasetObjects(
-            language=validated_data.pop("language", []),
-            theme=validated_data.pop("theme", []),
-            fields_of_science=validated_data.pop("field_of_science", []),
+            language=validated_data.pop("language", None),
+            theme=validated_data.pop("theme", None),
+            fields_of_science=validated_data.pop("field_of_science", None),
             access_rights=validated_data.pop("access_rights", None),
             metadata_owner=validated_data.pop("metadata_owner", None),
             file_set=validated_data.pop("file_set", None),
             actors=validated_data.pop("actors", None),
             other_identifiers=validated_data.pop("other_identifiers", None),
+            spatial=validated_data.pop("spatial", None),
         )
 
     def create(self, validated_data):
@@ -138,11 +142,17 @@ class DatasetSerializer(serializers.ModelSerializer):
         dataset = Dataset.objects.create(
             **validated_data, access_rights=access_rights, metadata_owner=metadata_provider
         )
-
-        dataset.language.set(rel_objects.language)
-        dataset.theme.set(rel_objects.theme)
-        dataset.field_of_science.set(rel_objects.fields_of_science)
-        dataset.other_identifiers.set(other_identifiers)
+        if rel_objects.language:
+            dataset.language.set(rel_objects.language)
+        if rel_objects.theme:
+            dataset.theme.set(rel_objects.theme)
+        if rel_objects.fields_of_science:
+            dataset.field_of_science.set(rel_objects.fields_of_science)
+        if rel_objects.other_identifiers:
+            dataset.other_identifiers.set(other_identifiers)
+        if rel_objects.spatial:
+            spatial = self.fields["spatial"].create(rel_objects.spatial)
+            dataset.spatial.set(spatial)
 
         if rel_objects.actors:
             actors = DatasetActorModelSerializer(many=True, data=rel_objects.actors)
@@ -179,11 +189,16 @@ class DatasetSerializer(serializers.ModelSerializer):
             update_or_create_instance(
                 metadata_owner_serializer, instance.metadata_owner, rel_objects.metadata_owner
             )
-
-        instance.language.set(rel_objects.language)
-        instance.theme.set(rel_objects.theme)
-        instance.field_of_science.set(rel_objects.fields_of_science)
-        instance.other_identifiers.set(other_identifiers)
+        if rel_objects.language:
+            instance.language.set(rel_objects.language)
+        if rel_objects.theme:
+            instance.theme.set(rel_objects.theme)
+        if rel_objects.fields_of_science:
+            instance.field_of_science.set(rel_objects.fields_of_science)
+        if rel_objects.other_identifiers:
+            instance.other_identifiers.set(other_identifiers)
+        if rel_objects.spatial:
+            instance.spatial.set(rel_objects.spatial)
 
         data_serializer: FileSetSerializer = self.fields["data"]
         if rel_objects.file_set:

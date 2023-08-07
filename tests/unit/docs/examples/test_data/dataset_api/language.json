@@ -1,0 +1,15 @@
+{
+  "language": [
+    {
+      "url": "http://lexvo.org/id/iso639-3/fin"
+    },
+    {
+      "url": "http://lexvo.org/id/iso639-3/eng",
+      "pref_label": {
+        "fi": "Englanti",
+        "en": "English"
+      },
+      "in_scheme": "http://lexvo.org/id/"
+    }
+  ]
+}

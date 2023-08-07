@@ -1,5 +1,54 @@
 # Datasets API
 
+## Required properties
+
+A dataset has the following required properties. 
+
+| Field              | key                        | value                                                   |
+|--------------------|----------------------------|---------------------------------------------------------|
+| Title              | title                      | dict                                                    |
+| Description        | description                | dict                                                    |
+| Language           | language                   | list, reference data from `/v3/reference-data/language` |
+| Access Rights      | access_rights              | object                                                  |
+| Data Catalog       | data_catalog               | str                                                     |
+
+### Language
+
+A language of the resource. This refers to the natural language used for textual metadata (i.e., titles, descriptions, etc.) of a cataloged resource (i.e., dataset or service) or the textual values of a dataset distribution. [^1]
+
+Language field is a list of language reference data objects. Only url field is required to add language reference. Both of definitions below are valid objects:
+
+!!! example
+    ``` json
+    ---8<--- "tests/unit/docs/examples/test_data/dataset_api/language.json"
+    ```
+
+### Access Rights
+
+Information about who can access the resource or an indication of its security status. [^2]
+
+| Field       | key         | value                                                 |
+|-------------|-------------|-------------------------------------------------------|
+| Description | description | dict                                                  |
+| Access Type | access_type | reference data from `/v3/reference-data/access-types` |
+| License     | license     | list of objects                                       |
+
+License is special kind of reference data object, as it can have additional metadata properties:
+
+* custom_url
+* description
+
+Access type defines who can view your dataset metadata in Metax and Etsin. 
+
+!!! example
+    ``` json
+    ---8<--- "tests/unit/docs/examples/test_data/dataset_api/access_rights.json"
+    ```
+
+### Data Catalog
+
+This is the id of the Data Catalog object that can be seen in `/v3/data-catalogs` list. 
+
 ## Dataset files
 
 A dataset can have files associated with it, and associated files and directories can have
@@ -108,3 +157,5 @@ The following fields are supported in dataset-specific file and directory metada
     ```json
     ---8<--- "tests/unit/docs/examples/test_data/minimal_dataset_with_files.json"
     ```
+[^1]: [DCAT 3 Property: Language](https://www.w3.org/TR/vocab-dcat-3/#Property:resource_language)
+[^2]: [DCAT 3 Property: Access Rights](https://www.w3.org/TR/vocab-dcat-3/#Property:resource_access_rights)

@@ -161,6 +161,7 @@ class SpatialModelSerializer(serializers.ModelSerializer):
             "dataset",
             "provenance",
         ]
+        extra_kwargs = {"provenance": {"required": False}}
 
     def create(self, validated_data):
         reference: refdata.Location
