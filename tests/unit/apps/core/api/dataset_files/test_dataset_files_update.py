@@ -124,6 +124,65 @@ def test_dataset_files_post(client, deep_file_tree, data_urls):
     )
 
 
+@pytest.mark.django_db
+def test_dataset_files_post_noop_add(client, deep_file_tree, data_urls):
+    dataset = factories.DatasetFactory()
+    factories.FileSetFactory(
+        dataset=dataset,
+        file_storage=deep_file_tree["file_storage"],
+        files=deep_file_tree["files"].values(),
+    )
+
+    # file to add file is already in dataset, nothing should happen
+    actions = {
+        **deep_file_tree["params"],
+        "file_actions": [
+            {
+                "id": deep_file_tree["files"]["/dir2/subdir1/file2.txt"].id,
+                "action": "add",
+            },
+        ],
+    }
+
+    urls = data_urls(dataset)
+    res = client.post(
+        urls["file_set"],
+        actions,
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert res.data["added_files_count"] == 0
+    assert res.data["removed_files_count"] == 0
+    assert res.data["total_files_count"] == len(deep_file_tree["files"])
+
+
+@pytest.mark.django_db
+def test_dataset_files_post_noop_remove(client, deep_file_tree, data_urls):
+    dataset = factories.DatasetFactory()
+
+    # file to remove is not in dataset, nothing should happen
+    actions = {
+        **deep_file_tree["params"],
+        "file_actions": [
+            {
+                "id": deep_file_tree["files"]["/dir2/subdir1/file2.txt"].id,
+                "action": "remove",
+            },
+        ],
+    }
+
+    urls = data_urls(dataset)
+    res = client.post(
+        urls["file_set"],
+        actions,
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert res.data["added_files_count"] == 0
+    assert res.data["removed_files_count"] == 0
+    assert res.data["total_files_count"] == 0
+
+
 @pytest.fixture
 def dataset_with_metadata(client, deep_file_tree, data_urls) -> Dict:
     dataset = factories.DatasetFactory()

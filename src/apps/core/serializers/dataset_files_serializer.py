@@ -283,10 +283,12 @@ class FileSetSerializer(serializers.Serializer):
             file_filters = self.get_file_filters(file_actions)
             if add := file_filters.get("add"):
                 combined_adds = combined_adds | add
-                combined_removes = combined_removes & ~add
+                if combined_removes:
+                    combined_removes = combined_removes & ~add
             if remove := file_filters.get("remove"):
                 combined_removes = combined_removes | remove
-                combined_adds = combined_adds & ~remove
+                if combined_adds:
+                    combined_adds = combined_adds & ~remove
 
         # avoid returning empty Q objects that would match all
         return {
