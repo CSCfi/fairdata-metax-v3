@@ -4,6 +4,10 @@
 
 ### :::tests.unit.apps.core.api.json_models.Organization
 
+## Person
+
+### :::tests.unit.apps.core.api.json_models.Person
+
 ## Actor
 
 ### :::tests.unit.apps.core.api.json_models.Actor

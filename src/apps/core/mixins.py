@@ -196,7 +196,9 @@ class V2DatasetMixin:
         return data
 
     def _generate_v2_dataset_project(self) -> List:
-        def _populate_participant(participant):
+        from apps.core.models import ProjectContributor
+
+        def _populate_participant(participant: ProjectContributor):
             participant_type = "Organization" if participant.actor.person is None else "Person"
             _contribution_types = []
             for cont_type in participant.contribution_type.all():
@@ -208,8 +210,11 @@ class V2DatasetMixin:
                     }
                 )
             if participant_type == "Person":
+                person_name = None
+                if participant.actor.person:
+                    person_name = participant.actor.person.name
                 _source_organization = {
-                    "name": participant.actor.person,
+                    "name": person_name,
                     "@type": participant_type,
                 }
                 if _contribution_types not in EMPTY_VALUES:

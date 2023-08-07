@@ -6,7 +6,7 @@ import pytest
 from rest_framework.reverse import reverse
 from rest_framework.test import APIClient
 
-from .json_models import Actor, DatasetActor, Organization
+from .json_models import Actor, DatasetActor, Organization, Person
 
 logger = logging.getLogger(__name__)
 
@@ -242,7 +242,7 @@ def dataset_actor_a(dataset_a):
     return DatasetActor(
         dataset=dataset_a.data["id"],
         actor=Actor(
-            name="teppo",
+            person=Person(name="Teppo"),
             organization=Organization(
                 pref_label={"fi": "CSC"}, in_scheme="https://joku.scheme.fi"
             ),

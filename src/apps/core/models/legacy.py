@@ -1,8 +1,7 @@
 import json
 import logging
 from collections import namedtuple
-from pprint import pprint
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from deepdiff import DeepDiff
 from django.conf import settings
@@ -10,10 +9,10 @@ from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils.dateparse import parse_datetime
 
-from apps.actors.models import Actor, Organization
+from apps.actors.models import Actor, Organization, Person
 from apps.common.helpers import parse_iso_dates_in_nested_dict
 from apps.core.models import FileSet
-from apps.files.models import File, FileStorage
+from apps.files.models import File
 from apps.files.serializers.file_serializer import get_or_create_file_storage
 from apps.refdata.models import FunderType, License, Location
 from apps.users.models import MetaxUser
@@ -559,7 +558,8 @@ class LegacyDataset(Dataset):
             if actor_type == "Organization":
                 organization = Organization.get_instance_from_v2_dictionary(v2_data)
             if actor_type == "Person":
-                person = v2_data.get("name")
+                person_name = v2_data.get("name")
+                person = Person.objects.create(name=person_name)
 
                 if member_of := v2_data.get("member_of"):
                     organization = Organization.get_instance_from_v2_dictionary(member_of)

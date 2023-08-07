@@ -1,7 +1,7 @@
 from drf_writable_nested import WritableNestedModelSerializer
 from rest_framework import serializers
 
-from apps.actors.models import Actor, Organization
+from apps.actors.models import Actor, Organization, Person
 from apps.users.serializers import MetaxUserModelSerializer
 
 
@@ -56,15 +56,26 @@ class OrganizationSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class PersonModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Person
+        fields = ("name", "email", "external_id")
+
+
 class ActorModelSerializer(WritableNestedModelSerializer):
     organization = OrganizationSerializer(many=False, required=False, allow_null=True)
+    person = PersonModelSerializer(many=False, required=False, allow_null=True)
 
     def create(self, validated_data):
         org = None
+        person = None
+
         if org_data := validated_data.pop("organization", None):
             org = self.fields["organization"].create(org_data)
+        if person_data := validated_data.pop("person", None):
+            person = self.fields["person"].create(person_data)
 
-        return Actor.objects.create(organization=org, **validated_data)
+        return Actor.objects.create(organization=org, person=person, **validated_data)
 
     class Meta:
         model = Actor

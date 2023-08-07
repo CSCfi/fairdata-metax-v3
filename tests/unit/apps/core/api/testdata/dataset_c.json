@@ -36,13 +36,17 @@
   "actors": [
     {
       "actor": {
-        "person": "Teppo",
+        "person": {
+          "name": "Teppo"
+        },
         "role": "creator"
       }
     },
     {
       "actor": {
-        "person": "Tulppu",
+        "person": {
+          "name": "Tulppu"
+        },
         "role": "contributor",
         "organization": {
           "pref_label": {"fi":  "CSC"},

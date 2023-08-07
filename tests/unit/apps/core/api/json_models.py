@@ -5,9 +5,12 @@ class Organization(models.Base):
     in_scheme = fields.StringField(required=True)
     pref_label = fields.DictField(required=True)
 
+class Person(models.Base):
+    name = fields.StringField(required=True)
+
 
 class Actor(models.Base):
-    person = fields.StringField(required=False)
+    person = fields.EmbeddedField(Person, required=False)
     organization = fields.EmbeddedField(Organization, required=True)
 
 

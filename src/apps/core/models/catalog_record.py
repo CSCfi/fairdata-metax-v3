@@ -12,7 +12,7 @@ from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 from simple_history.models import HistoricalRecords
 
-from apps.actors.models import Actor, Organization
+from apps.actors.models import Actor, Organization, Person
 from apps.common.models import AbstractBaseModel
 from apps.core.mixins import V2DatasetMixin
 from apps.files.models import File, FileStorage
@@ -289,7 +289,9 @@ class DatasetActor(AbstractBaseModel):
         if actor_type == "Organization":
             organization = Organization.get_instance_from_v2_dictionary(obj)
         elif actor_type == "Person":
-            person = obj.get("name")
+            name = obj.get("name")
+            person = Person(name=name)
+            person.save()
             if member_of := obj.get("member_of"):
                 organization = Organization.get_instance_from_v2_dictionary(member_of)
         actor, created = Actor.objects.get_or_create(organization=organization, person=person)

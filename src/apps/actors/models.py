@@ -8,6 +8,7 @@ from django.db import models
 
 from apps.common.models import AbstractBaseModel
 from apps.users.models import MetaxUser
+from django.utils.translation import gettext as _
 
 logger = logging.getLogger(__name__)
 
@@ -115,18 +116,29 @@ class Organization(AbstractBaseModel):
         return f"<{self.__class__.__name__} {self.id}: {self.get_label()}>"
 
 
+class Person(AbstractBaseModel):
+    name = models.CharField(max_length=512)
+    email = models.EmailField(max_length=512, blank=True, null=True)
+    external_id = models.CharField(
+        max_length=512,
+        null=True,
+        blank=True,
+        help_text=_("External identifier for the actor, usually ORCID or similiar"),
+    )
+    def __str__(self):
+        return str(self.name)
+
+
 class Actor(AbstractBaseModel):
     """Name of organization or person. Different types include e.g. creator, curator, publisher or rights holder.
 
     Attributes:
-        person(modelsCharField): Person if any associated with this actor.
+        person(Person): Person if any associated with this actor.
         organization(Organization): Organization if any associated with this actor.
     """
 
-    person = models.CharField(
-        max_length=512,
-        null=True,
-        blank=True,
+    person = models.OneToOneField(
+        Person, related_name="part_of_actor", null=True, blank=True, on_delete=models.CASCADE
     )
     organization = models.ForeignKey(
         Organization,
@@ -139,7 +151,7 @@ class Actor(AbstractBaseModel):
     def as_v2_data(self):
         data = {}
         if self.person:
-            data["name"] = self.person
+            data["name"] = self.person.name
             data["@type"] = "Person"
             if self.organization:
                 data["member_of"] = {
@@ -160,6 +172,6 @@ class Actor(AbstractBaseModel):
 
     def __str__(self):
         if self.person:
-            return self.person
+            return str(self.person)
         else:
             return str(self.organization)
