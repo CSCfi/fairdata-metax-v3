@@ -109,6 +109,7 @@ class DatasetDirectoryViewSet(DirectoryViewSet):
         dataset_id = self.kwargs["dataset_id"]
         params["dataset"] = dataset_id
         params["exclude_dataset"] = False
+        params["include_all"] = False
         try:
             file_set = FileSet.objects.get(dataset_id=dataset_id)
             file_storage = file_set.file_storage

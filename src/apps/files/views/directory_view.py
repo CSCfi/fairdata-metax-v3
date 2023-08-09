@@ -92,12 +92,23 @@ class DirectoryQueryParams(DirectoryCommonQueryParams):
     file_storage_id = fields.CharField(read_only=True)
 
     # project-wide filters (affect nested files and returned file_count, byte_size)
-    dataset = fields.UUIDField(default=None, help_text="Only list items in dataset.")
+    dataset = fields.UUIDField(
+        default=None, help_text="List items in dataset and associated dataset_metadata."
+    )
+    include_all = fields.BooleanField(
+        default=False, help_text="When enabled and dataset is set, list also items not in dataset."
+    )
     exclude_dataset = fields.BooleanField(
-        default=False, help_text="Only list items missing from dataset."
+        default=False, help_text="When enabled, only list items missing from dataset."
     )
 
     def validate(self, data):
+        if data["include_all"] and data["exclude_dataset"]:
+            raise serializers.ValidationError(
+                {
+                    "exclude_dataset": "Fields include_all and exclude_dataset cannot be used together."
+                }
+            )
         if data["exclude_dataset"] and not data["dataset"]:
             raise serializers.ValidationError(
                 {
@@ -134,7 +145,7 @@ class DirectoryViewSet(viewsets.ViewSet):
         if dataset := params["dataset"]:
             if params["exclude_dataset"]:
                 exclude_args["file_sets__dataset"] = dataset
-            else:
+            elif not params["include_all"]:
                 filter_args["file_sets__dataset"] = dataset
         filter_args = {key: value for (key, value) in filter_args.items() if value is not None}
 
