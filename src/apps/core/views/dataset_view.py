@@ -64,6 +64,12 @@ class DatasetFilter(filters.FilterSet):
         lookup_expr="icontains",
         label="metadata owner user",
     )
+    persistent_identifier = filters.CharFilter(
+        field_name="persistent_identifier",
+        max_length=255,
+        lookup_expr="exact",
+        label="persistent identifier",
+    )
     state = filters.ChoiceFilter(choices=Dataset.StateChoices.choices, label="state")
     ordering = filters.OrderingFilter(
         fields=(
