@@ -8,6 +8,10 @@
     "en": "Test dataset desc",
     "fi": "Test dataset kuvaus"
   },
+  "keyword": [
+    "keyword",
+    "another_keyword"
+  ],
   "language": [
     {
       "url": "http://lexvo.org/id/iso639-3/eng"

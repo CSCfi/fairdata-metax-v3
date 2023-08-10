@@ -56,6 +56,7 @@ class DatasetSerializer(serializers.ModelSerializer):
             "field_of_science",
             "data",
             "issued",
+            "keyword",
             "language",
             "metadata_owner",
             "other_identifiers",
