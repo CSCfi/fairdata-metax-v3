@@ -4,7 +4,23 @@ from typing import Dict, List
 
 from django.core.validators import EMPTY_VALUES
 
+from rest_framework import viewsets
+
 logger = logging.getLogger(__name__)
+
+
+class DatasetNestedViewSetMixin(viewsets.ModelViewSet):
+    def get_queryset(self):
+        if getattr(
+            self, "swagger_fake_view", None
+        ):  # kwargs are not available in swagger inspection
+            return self.serializer_class.Meta.model.available_objects.none()
+        return self.serializer_class.Meta.model.available_objects.filter(
+            dataset=self.kwargs["dataset_pk"]
+        )
+
+    def perform_create(self, serializer):
+        return serializer.save(dataset_id=self.kwargs["dataset_pk"])
 
 
 class V2DatasetMixin:

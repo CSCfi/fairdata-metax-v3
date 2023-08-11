@@ -52,6 +52,14 @@
 
 ### :::tests.conftest.identifier_type_reference_data
 
+## event_outcome_reference_data
+
+### :::tests.conftest.event_outcome_reference_data
+
+## lifecycle_event_reference_data
+
+### :::tests.conftest.lifecycle_event_reference_data
+
 ## reference_data
 
 ### :::tests.conftest.reference_data

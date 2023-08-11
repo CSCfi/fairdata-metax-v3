@@ -1,18 +1,19 @@
-from core.views import DatasetActorViewSet
 from django.conf import settings
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 from rest_framework_nested import routers
 
-from apps.actors.views import ActorViewSet, OrganizationViewSet
+from apps.actors.views import OrganizationViewSet
 from apps.core.views import (
     DataCatalogView,
+    DatasetActorViewSet,
     DatasetDirectoryViewSet,
     DatasetFileSetViewSet,
     DatasetFilesViewSet,
     DatasetViewSet,
     LegacyDatasetViewSet,
     MetadataProviderViewSet,
+    ProvenanceViewSet,
     PublisherViewSet,
 )
 from apps.files.views import DirectoryViewSet, FileViewSet
@@ -62,13 +63,9 @@ for model in reference_data_models:
 # Nested routes
 dataset_router = routers.NestedSimpleRouter(router, r"datasets?", lookup="dataset")
 dataset_router.register(r"actors", DatasetActorViewSet, basename="dataset-actors")
-
+dataset_router.register(r"provenance", ProvenanceViewSet, basename="dataset-provenance")
 # Users list
 if settings.ENABLE_USERS_VIEW:
     router.register(r"users?", UserViewSet, basename="users")
 
-
-urlpatterns = [
-    path("", include(router.urls)),
-    path("", include(dataset_router.urls)),
-]
+urlpatterns = [path("", include(router.urls)), path("", include(dataset_router.urls))]

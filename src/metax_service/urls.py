@@ -23,13 +23,14 @@ from rest_framework import permissions
 from apps.core.views import IndexView
 from apps.router.urls import urlpatterns as router_urls
 
+openapi_info = openapi.Info(
+    title="Metax Service",
+    default_version="v3",
+    description="Metadata storage for Finnish research data",
+    license=openapi.License(name="GNU GPLv2 License"),
+)
 schema_view = get_schema_view(
-    openapi.Info(
-        title="Metax Service",
-        default_version="v3",
-        description="Metadata storage for Finnish research data",
-        license=openapi.License(name="GNU GPLv2 License"),
-    ),
+    openapi_info,
     public=True,
     permission_classes=[permissions.AllowAny],
 )

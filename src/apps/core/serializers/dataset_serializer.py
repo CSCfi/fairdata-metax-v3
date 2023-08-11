@@ -18,8 +18,11 @@ from apps.core.serializers.common_serializers import (
     DatasetActorModelSerializer,
     MetadataProviderModelSerializer,
     OtherIdentifierModelSerializer,
-    SpatialModelSerializer,
 )
+from apps.core.serializers.concept_serializers import SpatialModelSerializer
+
+# for preventing circular import, using submodule instead of apps.core.serializers
+from apps.core.serializers.provenance_serializers import ProvenanceModelSerializer
 
 from .dataset_files_serializer import FileSetSerializer
 
@@ -27,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 NestedDatasetObjects = namedtuple(
     "NestedDatasetObjects",
-    "language, theme, fields_of_science, access_rights, metadata_owner, file_set, actors, other_identifiers, spatial",
+    "language, theme, fields_of_science, access_rights, metadata_owner, file_set, actors, other_identifiers, spatial, provenance",
 )
 
 
@@ -41,6 +44,7 @@ class DatasetSerializer(serializers.ModelSerializer):
     other_identifiers = OtherIdentifierModelSerializer(required=False, many=True)
     theme = Theme.get_serializer()(required=False, many=True)
     spatial = SpatialModelSerializer(required=False, many=True)
+    provenance = ProvenanceModelSerializer(required=False, many=True)
 
     class Meta:
         model = Dataset
@@ -58,6 +62,7 @@ class DatasetSerializer(serializers.ModelSerializer):
             "persistent_identifier",
             "theme",
             "title",
+            "provenance",
             "spatial",
             # read only
             "created",
@@ -88,13 +93,6 @@ class DatasetSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
-        for lang in rep["language"]:
-            lang["pref_label"] = {
-                key: lang["pref_label"][key]
-                for key in settings.DISPLAY_API_LANGUAGES
-                if key in lang["pref_label"].keys()
-            }
-        # remove data dict from response if it's empty
         if not rep.get("data"):
             rep.pop("data", None)
         if not instance.other_identifiers.exists():
@@ -111,6 +109,7 @@ class DatasetSerializer(serializers.ModelSerializer):
             metadata_owner=validated_data.pop("metadata_owner", None),
             file_set=validated_data.pop("file_set", None),
             actors=validated_data.pop("actors", None),
+            provenance=validated_data.pop("provenance", None),
             other_identifiers=validated_data.pop("other_identifiers", None),
             spatial=validated_data.pop("spatial", None),
         )
@@ -155,10 +154,16 @@ class DatasetSerializer(serializers.ModelSerializer):
             dataset.spatial.set(spatial)
 
         if rel_objects.actors:
-            actors = DatasetActorModelSerializer(many=True, data=rel_objects.actors)
-            actors.is_valid(raise_exception=True)
+            actors: DatasetActorModelSerializer = self.fields["actors"]
+            actors._validated_data = rel_objects.actors
             actors = actors.save(dataset_id=dataset.id)
             dataset.actors.set(list(actors))
+
+        if rel_objects.provenance:
+            events: ProvenanceModelSerializer = self.fields["provenance"]
+            events._validated_data = rel_objects.provenance
+            events = events.save(dataset_id=dataset.id)
+            dataset.provenance.set(list(events))
 
         if rel_objects.file_set:
             data_serializer.create(dataset=dataset, validated_data=rel_objects.file_set)
@@ -173,7 +178,6 @@ class DatasetSerializer(serializers.ModelSerializer):
             update_or_create_instance(
                 access_rights_serializer, instance.access_rights, rel_objects.access_rights
             )
-        dataset_actor_serializer: DatasetActorModelSerializer = self.fields["actors"]
 
         other_identifiers_serializer: OtherIdentifierModelSerializer = self.fields[
             "other_identifiers"

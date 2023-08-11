@@ -8,3 +8,4 @@ from .dataset_view import (
 )
 from .index_view import IndexView
 from .legacy_view import LegacyDatasetViewSet
+from .provenance_view import ProvenanceViewSet

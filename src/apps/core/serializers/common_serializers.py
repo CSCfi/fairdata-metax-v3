@@ -15,7 +15,7 @@ from apps.actors.serializers import ActorModelSerializer
 from apps.common.helpers import update_or_create_instance
 from apps.common.serializers import (
     AbstractDatasetModelSerializer,
-    AbstractDatasetPropertyModelSerializer,
+    AbstractDatasetPropertyModelSerializer, CommonListSerializer,
 )
 from apps.core.models import (
     AccessRights,
@@ -137,59 +137,7 @@ class LicenseModelSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         refdata_serializer = refdata.License.get_serializer()
-        serialized_ref = refdata_serializer(instance.reference).data
-        rep = super().to_representation(instance)
-        return {**rep, **serialized_ref}
-
-
-class SpatialModelSerializer(serializers.ModelSerializer):
-    """Custom serializer for License that does not require pref_label
-
-    Conforms use case where AccessRights object can be created with only url-field in license
-
-    """
-
-    class Meta:
-        model = Spatial
-        fields = [
-            "url",
-            "pref_label",
-            "in_scheme",
-            "full_address",
-            "geographic_name",
-            "altitude_in_meters",
-            "dataset",
-            "provenance",
-        ]
-        extra_kwargs = {"provenance": {"required": False}}
-
-    def create(self, validated_data):
-        reference: refdata.Location
-        url = validated_data.pop("url", None)
-
-        if not url:
-            raise serializers.ValidationError("Spatial needs url, got None")
-
-        try:
-            reference = refdata.Location.objects.get(url=url)
-        except refdata.Location.DoesNotExist:
-            raise serializers.ValidationError(f"Location not found {url}")
-
-        return Spatial.objects.create(**validated_data, reference=reference)
-
-    def update(self, instance, validated_data):
-        url = validated_data.pop("url", instance.url)
-
-        if url != instance.url:
-            try:
-                instance.reference = refdata.Location.objects.get(url=url)
-            except refdata.Location.DoesNotExist:
-                raise serializers.ValidationError(detail=f"Location not found {url}")
-
-        return super().update(instance, validated_data)
-
-    def to_representation(self, instance):
-        refdata_serializer = refdata.Location.get_serializer()
+        refdata_serializer.omit_related = True
         serialized_ref = refdata_serializer(instance.reference).data
         rep = super().to_representation(instance)
         return {**rep, **serialized_ref}
@@ -239,12 +187,34 @@ class DatasetActorModelSerializer(serializers.ModelSerializer):
         actor = None
         if actor_data := validated_data.pop("actor", None):
             actor = self.fields["actor"].create(actor_data)
-
+        if validated_data.get("dataset_id") is None:
+            validated_data["dataset_id"] = self.context.get("dataset_pk")
+        if validated_data.get("dataset_id") is None:
+            raise serializers.ValidationError(detail="dataset_id is required for DatasetActor")
         return DatasetActor.objects.create(**validated_data, actor=actor)
+
+    def update(self, instance, validated_data):
+        if actor_data := validated_data.pop("actor", None):
+            self.fields["actor"].update(instance.actor, actor_data)
+        return super().update(instance, validated_data)
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        if org := rep["actor"].get("organization"):
+            rep["actor"]["organization"] = {
+                "id": org.get("id"),
+                "pref_label": org.get("pref_label"),
+                "url": org.get("url"),
+                "code": org.get("code"),
+                "in_scheme": org.get("in_scheme"),
+                "homepage": org.get("homepage")
+            }
+        return rep
 
     class Meta:
         model = DatasetActor
         fields = ("id", "role", "actor")
+        list_serializer_class = CommonListSerializer
 
 
 class MetadataProviderModelSerializer(AbstractDatasetModelSerializer):

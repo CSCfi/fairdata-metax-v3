@@ -25,26 +25,6 @@ def api_client() -> APIClient:
 
 
 @pytest.fixture
-def dataset_a_json():
-    return load_test_json("dataset_a.json")
-
-
-@pytest.fixture
-def dataset_b_json():
-    return load_test_json("dataset_b.json")
-
-
-@pytest.fixture
-def dataset_c_json():
-    return load_test_json("dataset_c.json")
-
-
-@pytest.fixture
-def legacy_dataset_a_json():
-    return load_test_json("legacy_dataset_a.json")
-
-
-@pytest.fixture
 def datacatalog_a_json():
     return load_test_json("datacatalog_a.json")
 
@@ -167,11 +147,6 @@ def access_right_delta_json():
 @pytest.fixture
 def access_right_put_alfa_json():
     return load_test_json("access_right_put_alfa.json")
-
-
-@pytest.fixture
-def dataset_access_right_error_json():
-    return load_test_json("access_right_error.json")
 
 
 @pytest.fixture

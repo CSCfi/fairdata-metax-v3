@@ -58,6 +58,8 @@ class AbstractConcept(AbstractBaseModel):
     @classmethod
     def get_serializer(cls):
         class BaseSerializer(serializers.ModelSerializer):
+            omit_related = False
+
             class Meta:
                 model = cls
 
@@ -74,6 +76,19 @@ class AbstractConcept(AbstractBaseModel):
                     # include fields defined in model.serializer_extra_fields
                     *getattr(cls, "serializer_extra_fields", ()),
                 )
+
+            def to_representation(self, instance):
+                rep = super().to_representation(instance)
+                if len(rep["pref_label"].keys()) > 4:
+                    rep["pref_label"] = {
+                        key: rep["pref_label"][key]
+                        for key in ["fi", "en", "sv", "und"]
+                        if key in rep["pref_label"].keys()
+                    }
+                if self.omit_related:
+                    del rep["broader"]
+                    del rep["narrower"]
+                return rep
 
         return BaseSerializer
 

@@ -258,3 +258,29 @@ class IdentifierTypeFactory(factory.django.DjangoModelFactory):
     @factory.sequence
     def url(self):
         return f"https://dataset-identifier-type-{self}.fi"
+
+
+class EventOutcomeFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = refdata.EventOutcome
+        django_get_or_create = ("url",)
+
+    pref_label = factory.Dict({"en": factory.Sequence(lambda n: f"event-outcome-{n}")})
+    in_scheme = factory.Faker("url")
+
+    @factory.sequence
+    def url(self):
+        return f"https://event-outcome-{self}.fi"
+
+
+class LifecycleEventFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = refdata.LifecycleEvent
+        django_get_or_create = ("url",)
+
+    pref_label = factory.Dict({"en": factory.Sequence(lambda n: f"lifecycle-event-{n}")})
+    in_scheme = factory.Faker("url")
+
+    @factory.sequence
+    def url(self):
+        return f"https://lifecycle-event-{self}.fi"

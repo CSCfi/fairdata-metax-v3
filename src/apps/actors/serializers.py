@@ -3,6 +3,7 @@ from rest_framework import serializers
 
 from apps.actors.models import Actor, Organization, Person
 from apps.users.serializers import MetaxUserModelSerializer
+from apps.common.serializers import CommonListSerializer
 
 
 class ChildOrganizationSerializer(serializers.ModelSerializer):
@@ -62,7 +63,7 @@ class PersonModelSerializer(serializers.ModelSerializer):
         fields = ("name", "email", "external_id")
 
 
-class ActorModelSerializer(WritableNestedModelSerializer):
+class ActorModelSerializer(serializers.ModelSerializer):
     organization = OrganizationSerializer(many=False, required=False, allow_null=True)
     person = PersonModelSerializer(many=False, required=False, allow_null=True)
 
@@ -77,6 +78,15 @@ class ActorModelSerializer(WritableNestedModelSerializer):
 
         return Actor.objects.create(organization=org, person=person, **validated_data)
 
+    def update(self, instance, validated_data):
+        if org_data := validated_data.pop("organization", None):
+            self.fields["organization"].update(
+                instance.organization, org_data
+            )
+        return super().update(instance, validated_data)
+
     class Meta:
         model = Actor
-        fields = ("organization", "person")
+        fields = ("organization", "person", "id")
+        read_only_fields = ("id",)
+        list_serializer_class = CommonListSerializer

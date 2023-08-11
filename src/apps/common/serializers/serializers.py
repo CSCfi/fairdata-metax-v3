@@ -45,3 +45,32 @@ class AbstractDatasetPropertyModelSerializer(serializers.ModelSerializer):
                 )
 
         return internal_value
+
+
+class CommonListSerializer(serializers.ListSerializer):
+    def update(self, instance, validated_data):
+        # Map the instance objects by their unique identifiers
+        instance_mapping = {obj.id: obj for obj in instance}
+        updated_instances = []
+
+        # Perform updates or create new instances
+        for item_data in validated_data:
+            item_id = item_data.get("id", None)
+            if item_id is not None:
+                # Update the existing instance
+                item_instance = instance_mapping.get(item_id, None)
+                if item_instance is not None:
+                    item_serializer = self.child._default_class(data=item_data)
+                    item_serializer.is_valid(raise_exception=True)
+                    updated_instances.append(item_serializer.update(item_instance, item_data))
+            else:
+                # Create a new instance
+                item_serializer = self.child.create(item_data)
+                updated_instances.append(item_serializer)
+
+        # Delete instances that were not included in the update
+        for item in instance:
+            if item.id not in [item_data.get("id", None) for item_data in validated_data]:
+                item.delete()
+
+        return updated_instances

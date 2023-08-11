@@ -44,6 +44,9 @@ class Provenance(AbstractBaseModel):
     is_associated_with = models.ManyToManyField(DatasetActor, related_name="provenance")
     dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE, related_name="provenance")
 
+    def __str__(self):
+        return str(next(iter(self.title.items())))
+
 
 class ProvenanceVariable(AbstractFreeformConcept):
     provenance = models.ForeignKey(Provenance, on_delete=models.CASCADE, related_name="variables")

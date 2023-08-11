@@ -80,3 +80,11 @@
 
 ### :::src.apps.core.factories.IdentifierTypeFactory
 
+## EventOutcomeFactory
+
+### :::src.apps.core.factories.EventOutcomeFactory
+
+## LifecycleEventFactory
+
+### :::src.apps.core.factories.LifecycleEventFactory
+

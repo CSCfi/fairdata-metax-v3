@@ -127,6 +127,12 @@ class DatasetActorViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         return serializer.save(dataset_id=self.kwargs["dataset_pk"])
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["dataset_pk"] = self.kwargs.get("dataset_pk")
+        return context
+
+
 
 class MetadataProviderFilter(filters.FilterSet):
     organization = filters.CharFilter(

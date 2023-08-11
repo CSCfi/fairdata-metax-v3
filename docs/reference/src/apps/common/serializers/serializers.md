@@ -8,3 +8,7 @@
 
 ### :::src.apps.common.serializers.serializers.AbstractDatasetPropertyModelSerializer
 
+## CommonListSerializer
+
+### :::src.apps.common.serializers.serializers.CommonListSerializer
+

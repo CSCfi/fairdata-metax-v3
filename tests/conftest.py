@@ -331,6 +331,31 @@ def identifier_type_reference_data():
 
 
 @pytest.fixture
+def event_outcome_reference_data():
+    common_args = {"in_scheme": "http://uri.suomi.fi/codelist/fairdata/event_outcome"}
+    factories.EventOutcomeFactory(
+        url="http://uri.suomi.fi/codelist/fairdata/event_outcome/code/success",
+        pref_label={"en": "Success", "fi": "Onnistunut", "sv": "Framgångsrik"},
+        **common_args,
+    )
+
+
+@pytest.fixture
+def lifecycle_event_reference_data():
+    common_args = {"in_scheme": "http://uri.suomi.fi/codelist/fairdata/lifecycle_event"}
+    factories.LifecycleEventFactory(
+        url="http://uri.suomi.fi/codelist/fairdata/lifecycle_event/code/planned",
+        pref_label={"en": "Planned", "fi": "Suunniteltu"},
+        **common_args,
+    )
+    factories.LifecycleEventFactory(
+        url="http://uri.suomi.fi/codelist/fairdata/lifecycle_event/code/modified",
+        pref_label={"en": "Modified", "fi": "Muokattu"},
+        **common_args,
+    )
+
+
+@pytest.fixture
 def reference_data(
     access_type_reference_data,
     field_of_science_reference_data,
@@ -341,5 +366,7 @@ def reference_data(
     use_category_reference_data,
     location_reference_data,
     identifier_type_reference_data,
+    event_outcome_reference_data,
+    lifecycle_event_reference_data,
 ):
     """Collection of reference data"""

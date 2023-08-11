@@ -8,22 +8,6 @@
 
 ### :::tests.unit.apps.core.api.conftest.api_client
 
-## dataset_a_json
-
-### :::tests.unit.apps.core.api.conftest.dataset_a_json
-
-## dataset_b_json
-
-### :::tests.unit.apps.core.api.conftest.dataset_b_json
-
-## dataset_c_json
-
-### :::tests.unit.apps.core.api.conftest.dataset_c_json
-
-## legacy_dataset_a_json
-
-### :::tests.unit.apps.core.api.conftest.legacy_dataset_a_json
-
 ## datacatalog_a_json
 
 ### :::tests.unit.apps.core.api.conftest.datacatalog_a_json
@@ -103,10 +87,6 @@
 ## access_right_put_alfa_json
 
 ### :::tests.unit.apps.core.api.conftest.access_right_put_alfa_json
-
-## dataset_access_right_error_json
-
-### :::tests.unit.apps.core.api.conftest.dataset_access_right_error_json
 
 ## metadata_provider_a_json
 

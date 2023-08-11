@@ -20,6 +20,7 @@ class ConceptProxyMixin:
     def get_serializer(cls):
         """Make non-url fields read-only"""
         serializer_class = super(ConceptProxyMixin, cls).get_serializer()
+        serializer_class.omit_related = True
         serializer_class.Meta.extra_kwargs = {
             field: {"read_only": True} for field in serializer_class.Meta.fields if field != "url"
         }
@@ -161,7 +162,7 @@ class Spatial(AbstractFreeformConcept):
     )
 
     def __str__(self):
-        return self.geographic_name
+        return self.geographic_name or str(next(iter(self.reference.pref_label.items())))
 
     class Meta:
         indexes = []
