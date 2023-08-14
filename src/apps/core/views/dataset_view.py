@@ -13,7 +13,7 @@ from rest_framework import exceptions, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from apps.core.models.catalog_record import Dataset, FileSet, DatasetActor
+from apps.core.models.catalog_record import Dataset, DatasetActor, FileSet
 from apps.core.serializers import DatasetSerializer, FileSetSerializer
 from apps.files.models import File
 from apps.files.serializers import DirectorySerializer
@@ -82,9 +82,26 @@ class DatasetFilter(filters.FilterSet):
 class DatasetViewSet(viewsets.ModelViewSet):
     serializer_class = DatasetSerializer
     queryset = Dataset.objects.prefetch_related(
+        "access_rights__access_type",
+        "access_rights__license__reference",
+        "access_rights__license",
+        "access_rights",
+        "actors",
         "data_catalog",
         "field_of_science",
+        "file_set",
         "language",
+        "metadata_owner",
+        "other_identifiers__identifier_type",
+        "other_identifiers",
+        "provenance__is_associated_with",
+        "provenance__spatial__reference",
+        "provenance__spatial",
+        "provenance__event_outcome",
+        "provenance",
+        "spatial__provenance",
+        "spatial__reference",
+        "spatial",
         "theme",
     )
 

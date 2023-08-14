@@ -60,6 +60,16 @@ class AbstractConcept(AbstractBaseModel):
         class BaseSerializer(serializers.ModelSerializer):
             omit_related = False
 
+            def get_fields(self):
+                fields = super().get_fields()
+                if self.omit_related:
+                    fields = {
+                        name: field
+                        for name, field in fields.items()
+                        if name not in {"broader", "narrower"}
+                    }
+                return fields
+
             class Meta:
                 model = cls
 
@@ -85,9 +95,6 @@ class AbstractConcept(AbstractBaseModel):
                         for key in ["fi", "en", "sv", "und"]
                         if key in rep["pref_label"].keys()
                     }
-                if self.omit_related:
-                    del rep["broader"]
-                    del rep["narrower"]
                 return rep
 
         return BaseSerializer

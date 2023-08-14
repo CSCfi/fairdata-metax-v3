@@ -74,6 +74,10 @@ def get_default_license():
     ).id
 
 
+class License(ConceptProxyMixin, refdata.License):
+    """License from reference data."""
+
+
 class DatasetLicense(AbstractBaseModel):
     """A legal document under which the resource is made available.
 
@@ -126,6 +130,10 @@ class UseCategory(ConceptProxyMixin, refdata.UseCategory):
 
 class FileType(ConceptProxyMixin, refdata.FileType):
     """File type of the resource."""
+
+
+class Location(ConceptProxyMixin, refdata.Location):
+    """Location from reference data."""
 
 
 class Spatial(AbstractFreeformConcept):

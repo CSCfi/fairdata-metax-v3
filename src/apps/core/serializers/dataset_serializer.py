@@ -176,7 +176,7 @@ class DatasetSerializer(serializers.ModelSerializer):
 
         access_rights_serializer: AccessRightsModelSerializer = self.fields["access_rights"]
         if rel_objects.access_rights:
-            update_or_create_instance(
+            instance.access_rights = update_or_create_instance(
                 access_rights_serializer, instance.access_rights, rel_objects.access_rights
             )
 

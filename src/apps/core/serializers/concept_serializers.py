@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from apps.core.models import Spatial
-from apps.refdata import models as refdata
+from apps.core.models import concepts
 
 
 class SpatialModelSerializer(serializers.ModelSerializer):
@@ -20,15 +20,15 @@ class SpatialModelSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
-        reference: refdata.Location
+        reference: concepts.Location
         url = validated_data.pop("url", None)
 
         if not url:
             raise serializers.ValidationError("Spatial needs url, got None")
 
         try:
-            reference = refdata.Location.objects.get(url=url)
-        except refdata.Location.DoesNotExist:
+            reference = concepts.Location.objects.get(url=url)
+        except concepts.Location.DoesNotExist:
             raise serializers.ValidationError(f"Location not found {url}")
 
         return Spatial.objects.create(**validated_data, reference=reference)
@@ -38,14 +38,14 @@ class SpatialModelSerializer(serializers.ModelSerializer):
 
         if url != instance.url:
             try:
-                instance.reference = refdata.Location.objects.get(url=url)
-            except refdata.Location.DoesNotExist:
+                instance.reference = concepts.Location.objects.get(url=url)
+            except concepts.Location.DoesNotExist:
                 raise serializers.ValidationError(detail=f"Location not found {url}")
 
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
-        refdata_serializer = refdata.Location.get_serializer()
+        refdata_serializer = concepts.Location.get_serializer()
         refdata_serializer.omit_related = True
         serialized_ref = {}
         if getattr(instance, "reference", None):

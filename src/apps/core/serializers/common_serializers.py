@@ -24,10 +24,8 @@ from apps.core.models import (
     DatasetPublisher,
     MetadataProvider,
     OtherIdentifier,
-    Spatial,
 )
-from apps.core.models.concepts import AccessType, DatasetLicense, IdentifierType
-from apps.refdata import models as refdata
+from apps.core.models.concepts import AccessType, DatasetLicense, IdentifierType, License
 from apps.users.serializers import MetaxUserModelSerializer
 
 logger = logging.getLogger(__name__)
@@ -89,8 +87,7 @@ class LicenseModelSerializer(serializers.ModelSerializer):
     url = serializers.URLField(required=False)
     pref_label = serializers.HStoreField(read_only=True)
     in_scheme = serializers.URLField(max_length=255, read_only=True)
-    broader = refdata.License.get_serializer()(many=True, read_only=True)
-    same_as = refdata.License.get_serializer()(many=True, read_only=True)
+    same_as = License.get_serializer_field(many=True, read_only=True)
 
     class Meta:
         model = DatasetLicense
@@ -100,14 +97,13 @@ class LicenseModelSerializer(serializers.ModelSerializer):
             "url",
             "pref_label",
             "in_scheme",
-            "broader",
             "same_as",
         ]
 
         ref_name = "DatasetLicense"
 
     def create(self, validated_data):
-        reference: refdata.License
+        reference: License
         custom_url = validated_data.get("custom_url")
         url = validated_data.pop("url", None)
 
@@ -118,8 +114,8 @@ class LicenseModelSerializer(serializers.ModelSerializer):
             url = "http://uri.suomi.fi/codelist/fairdata/license/code/other"
 
         try:
-            reference = refdata.License.objects.get(url=url)
-        except refdata.License.DoesNotExist:
+            reference = License.objects.get(url=url)
+        except License.DoesNotExist:
             raise serializers.ValidationError(detail=f"License not found {url}")
 
         return DatasetLicense.objects.create(**validated_data, reference=reference)
@@ -129,14 +125,14 @@ class LicenseModelSerializer(serializers.ModelSerializer):
 
         if url != instance.reference.url:
             try:
-                instance.reference = refdata.License.objects.get(url=url)
-            except refdata.License.DoesNotExist:
+                instance.reference = License.objects.get(url=url)
+            except License.DoesNotExist:
                 raise serializers.ValidationError(detail=f"License not found {url}")
 
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
-        refdata_serializer = refdata.License.get_serializer()
+        refdata_serializer = License.get_serializer()
         refdata_serializer.omit_related = True
         serialized_ref = refdata_serializer(instance.reference).data
         rep = super().to_representation(instance)
