@@ -20,6 +20,14 @@
 
 ### :::src.apps.core.factories.FieldOfScienceFactory
 
+## LifecycleEventFactory
+
+### :::src.apps.core.factories.LifecycleEventFactory
+
+## EventOutcomeFactory
+
+### :::src.apps.core.factories.EventOutcomeFactory
+
 ## FileTypeFactory
 
 ### :::src.apps.core.factories.FileTypeFactory
@@ -80,11 +88,7 @@
 
 ### :::src.apps.core.factories.IdentifierTypeFactory
 
-## EventOutcomeFactory
+## ContributorTypeFactory
 
-### :::src.apps.core.factories.EventOutcomeFactory
-
-## LifecycleEventFactory
-
-### :::src.apps.core.factories.LifecycleEventFactory
+### :::src.apps.core.factories.ContributorTypeFactory
 

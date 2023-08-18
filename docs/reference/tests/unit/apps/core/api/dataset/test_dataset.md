@@ -8,6 +8,10 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_update_dataset
 
+## test_filter_pid
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_filter_pid
+
 ## test_create_dataset_invalid_catalog
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_create_dataset_invalid_catalog

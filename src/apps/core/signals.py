@@ -11,14 +11,15 @@ logger = logging.getLogger(__name__)
 @receiver(pre_save, sender=LegacyDataset)
 def adapt_legacy_dataset_to_v3(sender, instance: LegacyDataset, **kwargs):
     attached_instances = instance.prepare_dataset_for_v3()
-    logger.info(f"prepared {attached_instances=}")
+    logger.debug(f"prepared {attached_instances=}")
 
 
 @receiver(post_save, sender=LegacyDataset)
 def post_process_legacy_dataset(sender, instance: LegacyDataset, **kwargs):
-    attached_instances = instance.post_process_dataset_for_v3()
-    instance.check_compatibility()
-    logger.info(f"post processed {attached_instances=}")
+    instance.post_process_dataset_for_v3()
+    diff = instance.check_compatibility()
+    # use update to not invoke another post_save signal
+    LegacyDataset.objects.filter(id=instance.id).update(v2_dataset_compatibility_diff=diff)
 
 
 @receiver(m2m_changed, sender=FileSet.files.through)

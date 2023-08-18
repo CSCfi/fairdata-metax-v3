@@ -20,3 +20,7 @@
 
 ### :::tests.unit.apps.actors.models.test_organization.test_create_organization_without_scheme
 
+## test_get_organization_with_duplicate_get
+
+### :::tests.unit.apps.actors.models.test_organization.test_get_organization_with_duplicate_get
+

@@ -151,9 +151,9 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         is_deprecated (models.BooleanField): Is the dataset deprecated
         cumulation_started (models.DateTimeField): When cumulation has started
         cumulation_ended (models.DateTimeField): When cumulation has ended
-        preservation_state (models.IntegerField): Number that represents long term preservation state of the dataset
+        preservation_state (models.IntegerField): Number that represents
+            long term preservation state of the dataset
         state (models.CharField): Is the dataset published or in draft state
-        files (models.ManyToManyField): Files attached to dataset
         first (Self): First version of the dataset
         last (Self): Last version of the dataset
         previous (Self): Previous version of the dataset
@@ -296,7 +296,7 @@ class DatasetActor(AbstractBaseModel):
                 organization = Organization.get_instance_from_v2_dictionary(member_of)
         actor, created = Actor.objects.get_or_create(organization=organization, person=person)
         dataset_actor, created = cls.objects.get_or_create(dataset=dataset, actor=actor, role=role)
-        return dataset_actor
+        return dataset_actor, created
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     dataset = models.ForeignKey(Dataset, related_name="actors", on_delete=models.CASCADE)
@@ -350,8 +350,10 @@ class DatasetProject(AbstractBaseModel):
         dataset(models.ManyToManyField): ManyToMany relation to Dataset
         project_identifier(models.CharField): Project identifier
         funding_agency(models.ManyToManyField): The Organization funding the project
-        funder_identifier(models.CharField): Unique identifier for the project that is being used by the project funder
-        participating_organization(models.ManyToManyField): The Organization participating in the project
+        funder_identifier(models.CharField): Unique identifier for the project
+            that is being used by the project funder
+        participating_organization(models.ManyToManyField): The Organization
+            participating in the project
         name(HStoreField): Name of the project
         funder_type(refdata.FunderType): FunderType ForeignKey relation
     """

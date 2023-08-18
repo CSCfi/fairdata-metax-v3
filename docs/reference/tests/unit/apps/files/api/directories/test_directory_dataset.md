@@ -12,6 +12,10 @@
 
 ### :::tests.unit.apps.files.api.directories.test_directory_dataset.test_directory_dataset_b
 
+## test_directory_dataset_include_all
+
+### :::tests.unit.apps.files.api.directories.test_directory_dataset.test_directory_dataset_include_all
+
 ## test_directory_dataset_no_files_dataset
 
 ### :::tests.unit.apps.files.api.directories.test_directory_dataset.test_directory_dataset_no_files_dataset

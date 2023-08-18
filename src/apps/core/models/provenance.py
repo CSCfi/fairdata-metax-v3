@@ -22,7 +22,7 @@ class Provenance(AbstractBaseModel):
         dataset(Dataset): Dataset ForeignKey relation
     """
 
-    title = HStoreField(help_text=_('example: {"en":"title", "fi":"otsikko"}'))
+    title = HStoreField(help_text=_('example: {"en":"title", "fi":"otsikko"}'), null=True)
     description = HStoreField(help_text=_('example: {"en":"description", "fi": "kuvaus"}'))
     spatial = models.OneToOneField(
         Spatial,
@@ -45,7 +45,10 @@ class Provenance(AbstractBaseModel):
     dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE, related_name="provenance")
 
     def __str__(self):
-        return str(next(iter(self.title.items())))
+        if self.title is not None:
+            return str(next(iter(self.title.items())))
+        else:
+            return str(next(iter(self.description.items())))
 
 
 class ProvenanceVariable(AbstractFreeformConcept):

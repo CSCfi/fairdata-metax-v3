@@ -1,8 +1,10 @@
 import logging
+from datetime import datetime
 from typing import Dict, List
 
-
+from django.contrib.auth import get_user_model
 from django.core.validators import EMPTY_VALUES
+from django.db.models import QuerySet
 
 from rest_framework import viewsets
 
@@ -24,7 +26,73 @@ class DatasetNestedViewSetMixin(viewsets.ModelViewSet):
 
 
 class V2DatasetMixin:
-    """Mixin for converting the class object into v2 Dataset"""
+    """Mixin for converting the class object into v2 Dataset
+
+    Attributes:
+        temporal (QuerySet): Set members must have `end_date` and `start_date` attributes
+        other_identifiers (QuerySet): Set members must have
+            `notation` and `identifier_type` attributes.
+            `identifier_type` must have reference-data compatible attributes.
+        spatial (QuerySet): Set members must have
+            `geographic_name`, `reference`, `full_address`, `altitude_in_meters`
+            and `custom_wkt` attributes.
+            `reference` must have `refdata.Location` compatible attributes.
+        provenance (QuerySet): Set members must have `title`, `description`,
+            `spatial`, `variable`, `lifecycle_event`, `event_outcome`,
+            `outcome_description` and `is_associated_with` attributes.
+            `spatial` must have `refdata.Location` compatible attributes.
+            `variable`, `lifecycle_event`, `event_outcome` and `outcome_description`
+            must have reference-data compatible attributes.
+            `is_associated_with` Set members must have `person` and `organization` attributes.
+        access_rights (object): Object must be compatible with AccessRights model attributes
+        is_output_of (QuerySet): Set members must have DatasetProject compatible attributes.
+        actors (QuerySet): Set members must have DatasetActor compatible attributes.
+        is_deprecated (bool): Indicates if dataset is deprecated
+        preservation_state (int): Long term preservation state of the dataset
+        state (str): State of the dataset, can be draft or published
+        cumulative_state (int): Cumulative state of the dataset
+        created (datetime): Datetime when the dataset was created
+        is_removed (bool): Indicates if dataset is removed
+        metadata_owner (object): Object must be compatible with MetadataProvider model attributes
+        title (dict): Dataset title in form of {"fi": "otsikko", "en": "title"}
+        description (dict): Dataset description in form of {"fi": "kuvaus", "en": "description"}
+        modified (datetime): Datetime when the dataset was last modified
+        persistent_identifier (str): Persistent identifier of the dataset
+        keyword (str): Keyword of the dataset
+        data_catalog (object): Object must be compatible with DataCatalog model attributes
+        cumulation_started (datetime): Datetime when the dataset started accumulation process
+        last_cumulative_addition (datetime): Datetime when the dataset had last cumulative event
+        preservation_identifier (str): Preservation identifier of the dataset
+        last_modified_by (object): Object must be compatible with User model attributes
+        issued (datetime): Datetime when the dataset was issued
+    """
+
+    # Cant use the real types because of circular imports
+    temporal: QuerySet
+    other_identifiers: QuerySet
+    spatial: QuerySet
+    provenance: QuerySet
+    access_rights: object
+    is_output_of: QuerySet
+    actors: QuerySet
+    is_deprecated: bool
+    preservation_state: int
+    state: str
+    cumulative_state: int
+    created: datetime
+    is_removed: bool
+    metadata_owner: object
+    title: dict
+    description: dict
+    modified: datetime
+    persistent_identifier: str
+    keyword: str
+    data_catalog: object
+    cumulation_started: datetime
+    last_cumulative_addition: datetime
+    preservation_identifier: str
+    last_modified_by: get_user_model()
+    issued: datetime
 
     def _generate_v2_ref_data_field(
         self,
@@ -37,7 +105,8 @@ class V2DatasetMixin:
         """
 
         Args:
-            field_name (RelatedManager): ForeignKey from which the reference data object is constructed
+            field_name (RelatedManager): ForeignKey from which
+                the reference data object is constructed
             document (Dict): V2 Dataset dictionary
             pref_label_text (): Object reference data key name
             top_level_key_name ():
@@ -86,28 +155,28 @@ class V2DatasetMixin:
             obj["full_address"] = full_address
         if altitude_in_meters := model_obj.altitude_in_meters:
             obj["altitude_in_meters"] = altitude_in_meters
-        if model_obj.reference.as_wkt or model_obj.custom_wkt:
-            custom_wkt = model_obj.custom_wkt or []
-            as_wkt = [*custom_wkt]
+        as_wkt = []
+        if model_obj.reference:
             if ref_wkt := model_obj.reference.as_wkt:
                 as_wkt.append(ref_wkt)
-            if len(as_wkt) > 0:
-                obj["as_wkt"] = [v for v in as_wkt if v is not None]
+        if model_obj.custom_wkt:
+            custom_wkt = model_obj.custom_wkt or []
+            as_wkt = as_wkt + [*custom_wkt]
+        if len(as_wkt) > 0:
+            obj["as_wkt"] = [v for v in as_wkt if v is not None]
         return obj
 
     def _generate_v2_other_identifiers(self, document: Dict):
         obj_list = []
         for identifier in self.other_identifiers.all():
-            obj_list.append(
-                {
-                    "type": {
-                        "in_scheme": identifier.identifier_type.in_scheme,
-                        "identifier": identifier.identifier_type.url,
-                        "pref_label": identifier.identifier_type.pref_label,
-                    },
-                    "notation": identifier.notation,
+            obj = {"notation": identifier.notation}
+            if identifier.identifier_type:
+                obj["type"] = {
+                    "in_scheme": identifier.identifier_type.in_scheme,
+                    "identifier": identifier.identifier_type.url,
+                    "pref_label": identifier.identifier_type.pref_label,
                 }
-            )
+            obj_list.append(obj)
         if len(obj_list) != 0:
             document["research_dataset"]["other_identifier"] = obj_list
         return obj_list
@@ -144,10 +213,11 @@ class V2DatasetMixin:
 
             if provenance.spatial:
                 data["spatial"] = self._construct_v2_spatial(provenance.spatial)
-            if temporal := provenance.temporal:
+
+            if hasattr(provenance, "temporal"):
                 data["temporal"] = {
-                    "start_date": temporal.start_date,
-                    "end_date": temporal.end_date,
+                    "start_date": provenance.temporal.start_date,
+                    "end_date": provenance.temporal.end_date,
                 }
             if provenance.variables.all().count() != 0:
                 data["variable"] = []
@@ -343,5 +413,5 @@ class V2DatasetMixin:
         self._generate_v2_provenance(doc)
         add_actor("creator", doc)
         add_actor("publisher", doc)
-        logger.info(f"{doc=}")
+        # logger.info(f"{doc=}")
         return doc

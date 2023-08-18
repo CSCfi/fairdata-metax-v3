@@ -23,6 +23,10 @@ class Command(BaseCommand):
 
     allow_fail = False
     failed_datasets = []
+    datasets = []
+    force_update = False
+    migrated = 0
+    migration_limit = 0
 
     def add_arguments(self, parser: ArgumentParser):
         parser.add_argument(
@@ -64,6 +68,22 @@ class Command(BaseCommand):
             default=100,
             help="Number of datasets to migrate per request",
         )
+        parser.add_argument(
+            "--force-update",
+            "-fu",
+            action="store_true",
+            required=False,
+            default=False,
+            help="re-migrate already migrated datasets by calling save method",
+        )
+        parser.add_argument(
+            "--stop-after",
+            "-sa",
+            type=int,
+            required=False,
+            default=0,
+            help="Stop after migrating this many datasets",
+        )
 
     def get_or_create_dataset(self, data):
         try:
@@ -71,14 +91,21 @@ class Command(BaseCommand):
                 dataset_json__identifier=data["identifier"],
                 defaults={"dataset_json": data},
             )
-            self.stdout.write(f"{dataset.id=}, {dataset.legacy_identifier=}, {created=}")
+            if self.force_update:
+                dataset.save()
+            self.stdout.write(
+                f"{self.migrated}: {dataset.id=}, {dataset.legacy_identifier=}, "
+                f"{created=}, {dataset.created_objects=}"
+            )
+            self.migrated += 1
             return dataset
         except Exception as e:
             if self.allow_fail:
                 logger.error(e)
-                self.stdout.write(f"Failed to migrate dataset payload {data}")
+                self.stdout.write(f"Failed to migrate dataset {data['identifier']}")
                 self.failed_datasets.append(data)
             else:
+                logger.error(f"Failed while processing {self.next_url=}")
                 raise e
 
     def migrate_from_list(self, list_json):
@@ -87,6 +114,8 @@ class Command(BaseCommand):
             dataset = self.get_or_create_dataset(data)
             if dataset:
                 created_instances.append(dataset)
+            if self.migration_limit != 0 and self.migrated >= self.migration_limit:
+                break
         return created_instances
 
     def handle(self, *args, **options):
@@ -95,34 +124,34 @@ class Command(BaseCommand):
         metax_instance = options.get("metax_instance")
         self.allow_fail = options.get("allow_fail")
         limit = options.get("pagination_size")
+        self.force_update = options.get("force_update")
+        self.migration_limit = options.get("stop_after")
 
-        datasets = []
         if identifiers and migrate_all:
             self.stderr.write("--identifiers and --all are mutually exclusive")
         if identifiers and not migrate_all:
             for identifier in identifiers:
                 response = httpx.get(f"{metax_instance}/rest/v2/datasets/{identifier}")
                 dataset_json = response.json()
-                datasets.append(self.get_or_create_dataset(dataset_json))
+                self.datasets.append(self.get_or_create_dataset(dataset_json))
         if migrate_all and not identifiers:
             response = httpx.get(
                 f"{metax_instance}/rest/v2/datasets?limit={limit}&include_legacy=true"
             )
             response_json = response.json()
-            datasets = datasets + self.migrate_from_list(response_json["results"])
+            self.datasets = self.datasets + self.migrate_from_list(response_json["results"])
             while next_url := response_json.get("next"):
+                self.next_url = next_url
                 response = httpx.get(next_url)
                 response_json = response.json()
-                datasets = datasets + self.migrate_from_list(response_json["results"])
-        self.stdout.write(
-            f"successfully migrated {len(datasets)} datasets: {[str(x.id) for x in datasets]}"
-        )
-        self.stdout.write(
-            f"legacy identifiers of migrated datasets: "
-            f"{[str(x.legacydataset.legacy_identifier) for x in datasets]}"
-        )
-        if len(self.failed_datasets) > 0:
+                self.datasets = self.datasets + self.migrate_from_list(response_json["results"])
+                if self.migration_limit != 0 and self.migrated >= self.migration_limit:
+                    break
+        self.stdout.write(f"successfully migrated {len(self.datasets)} datasets")
+        if len(self.datasets) <= 30:
             self.stdout.write(
-                f"failed to migrate {len(self.failed_datasets)} "
-                f"datasets: {[str(x['identifier']) for x in self.failed_datasets]}"
+                f"legacy identifiers of migrated datasets: "
+                f"{[str(x.legacydataset.legacy_identifier) for x in self.datasets]}"
             )
+        if len(self.failed_datasets) > 0:
+            self.stdout.write(f"failed to migrate {len(self.failed_datasets)}")

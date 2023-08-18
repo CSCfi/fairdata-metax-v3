@@ -1,12 +1,14 @@
 import json
 import logging
 from collections import namedtuple
+from datetime import datetime
 from typing import Dict, List
 
 from deepdiff import DeepDiff
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db import models
+from django.core.serializers.json import DjangoJSONEncoder
+from django.db import models, ProgrammingError
 from django.utils.dateparse import parse_datetime
 
 from apps.actors.models import Actor, Organization, Person
@@ -72,11 +74,20 @@ class LegacyDataset(Dataset):
         dataset_json (models.JSONField): V1/V2 dataset json from legacy metax dataset API
         contract_json (models.JSONField): Contract json for which the dataset is under
         files_json (models.JSONField): Files attached to the dataset trough dataset/files API in v2
+        v2_dataset_compatibility_diff (models.JSONField):
+            Difference between v1-v2 and V3 dataset json
     """
 
-    dataset_json = models.JSONField()
-    contract_json = models.JSONField(null=True, blank=True)
-    files_json = models.JSONField(null=True, blank=True)
+    dataset_json = models.JSONField(encoder=DjangoJSONEncoder)
+    contract_json = models.JSONField(null=True, blank=True, encoder=DjangoJSONEncoder)
+    files_json = models.JSONField(null=True, blank=True, encoder=DjangoJSONEncoder)
+    v2_dataset_compatibility_diff = models.JSONField(
+        null=True,
+        blank=True,
+        encoder=DjangoJSONEncoder,
+        help_text="Difference between v1-v2 and V3 dataset json",
+    )
+    created_objects = 0
 
     @property
     def legacy_identifier(self):
@@ -121,7 +132,7 @@ class LegacyDataset(Dataset):
 
     @property
     def legacy_languages(self):
-        return self.legacy_research_dataset["language"]
+        return self.legacy_research_dataset.get("language")
 
     @property
     def legacy_field_of_science(self):
@@ -164,7 +175,12 @@ class LegacyDataset(Dataset):
         if ref_data := self.legacy_research_dataset.get(ref_data_name):
             obj_list = []
             for obj in ref_data:
-                flatten_obj = {**obj[top_level_key_name]}
+                flatten_obj: Dict
+                # Sometimes spatial does not have place_uri top level key
+                if obj.get(top_level_key_name):
+                    flatten_obj = {**obj[top_level_key_name]}
+                else:
+                    flatten_obj = {**obj}
                 if additional_keys:
                     for key in additional_keys:
                         flatten_obj[key] = obj.get(key)
@@ -174,9 +190,11 @@ class LegacyDataset(Dataset):
     @classmethod
     def parse_temporal_timestamps(cls, legacy_temporal):
         if start_date := legacy_temporal.get("start_date"):
-            start_date = parse_datetime(legacy_temporal["start_date"])
+            if not isinstance(start_date, datetime):
+                start_date = parse_datetime(legacy_temporal["start_date"])
         if end_date := legacy_temporal.get("end_date"):
-            end_date = parse_datetime(legacy_temporal["end_date"])
+            if not isinstance(end_date, datetime):
+                end_date = parse_datetime(legacy_temporal["end_date"])
         return start_date, end_date
 
     def convert_root_level_fields(self):
@@ -190,7 +208,7 @@ class LegacyDataset(Dataset):
         self.cumulation_ended = self.dataset_json.get("date_cumulation_ended")
         self.last_cumulative_addition = self.dataset_json.get("date_last_cumulative_addition")
         self.cumulative_state = self.dataset_json.get("cumulative_state")
-        self.previous = self.dataset_json.get("previous_dataset_version")
+        # self.previous = self.dataset_json.get("previous_dataset_version")
         self.created = self.dataset_json.get("date_created")
 
         if modified := self.legacy_research_dataset.get("modified"):
@@ -237,19 +255,28 @@ class LegacyDataset(Dataset):
                 "pref_label": self.legacy_access_type["pref_label"],
             },
         )
-
-        access_rights = AccessRights(
-            access_type=access_type,
-            description=description,
-        )
-        access_rights.save()
+        if at_created:
+            self.created_objects += 1
+        if not self.access_rights:
+            access_rights = AccessRights(
+                access_type=access_type,
+                description=description,
+            )
+            access_rights.save()
+            self.created_objects += 1
+            self.access_rights = access_rights
 
         # license objects
         licenses_list = self.legacy_license
         license_objects = []
         for lic in licenses_list:
-            url = lic["identifier"]
-            lic_ref = License.objects.get(url=url)
+            url = lic.get("identifier")
+            if url:
+                lic_ref = License.objects.get(url=url)
+            else:
+                lic_ref = License.objects.get(
+                    url="http://uri.suomi.fi/codelist/fairdata/license/code/notspecified"
+                )
             custom_url = lic.get("license", None)
             license_instance, created = DatasetLicense.objects.get_or_create(
                 access_rights__datasets=self.id,
@@ -259,6 +286,8 @@ class LegacyDataset(Dataset):
                     "custom_url": custom_url,
                 },
             )
+            if created:
+                self.created_objects += 1
             license_objects.append(license_instance)
 
         for res_grounds in self.legacy_access_rights.get("restriction_grounds", []):
@@ -266,12 +295,13 @@ class LegacyDataset(Dataset):
                 url=res_grounds["identifier"],
                 pref_label=res_grounds["pref_label"],
                 in_scheme=res_grounds["in_scheme"],
-                access_rights=access_rights,
+                access_rights=self.access_rights,
             )
-            logger.info(f"restriction_grounds={rg}, created={rg_created}")
-        self.access_rights = access_rights
+            if rg_created:
+                self.created_objects += 1
+            logger.debug(f"restriction_grounds={rg}, created={rg_created}")
         self.access_rights.license.set(license_objects)
-        return access_rights
+        return self.access_rights
 
     def attach_data_catalog(self) -> DataCatalog:
         if hasattr(self, "data_catalog"):
@@ -280,6 +310,8 @@ class LegacyDataset(Dataset):
         catalog, created = DataCatalog.objects.get_or_create(
             id=catalog_id, defaults={"id": catalog_id, "title": {"und": catalog_id}}
         )
+        if created:
+            self.created_objects += 1
         self.data_catalog = catalog
         return catalog
 
@@ -291,6 +323,10 @@ class LegacyDataset(Dataset):
         metadata_owner, owner_created = MetadataProvider.objects.get_or_create(
             user=metadata_user, organization=self.metadata_provider_org
         )
+        if owner_created:
+            self.created_objects += 1
+        if user_created:
+            self.created_objects += 1
         self.metadata_owner = metadata_owner
         return metadata_owner
 
@@ -313,6 +349,8 @@ class LegacyDataset(Dataset):
 
         """
         obj_list = []
+        if not getattr(self, legacy_property_name):
+            return obj_list
         for obj in getattr(self, legacy_property_name):
             instance, created = ref_data_model.objects.get_or_create(
                 url=obj["identifier"],
@@ -324,6 +362,8 @@ class LegacyDataset(Dataset):
                     ),
                 },
             )
+            if created:
+                self.created_objects += 1
             obj_list.append(instance)
 
         # django-simple-history really does not like if trying to access m2m fields from inheritance child-instance.
@@ -333,28 +373,39 @@ class LegacyDataset(Dataset):
 
     def attach_spatial(self) -> List[Spatial]:
         if spatial_data := self.legacy_spatial:
+            self.created_objects -= self.dataset.spatial.all().count()
             self.dataset.spatial.all().delete()
             obj_list = []
-            for location in spatial_data:
+            for data in spatial_data:
                 loc_obj = None
-                if location.get("identifier"):
+                if data.get("identifier"):
                     loc_obj, loc_created = Location.objects.get_or_create(
-                        url=location["identifier"],
+                        url=data["identifier"],
                         defaults={
-                            "in_scheme": location["in_scheme"],
-                            "pref_label": location["pref_label"],
+                            "in_scheme": data["in_scheme"],
+                            "pref_label": data["pref_label"],
                         },
                     )
+                    if loc_created:
+                        self.created_objects += 1
                 spatial = Spatial(
                     reference=loc_obj,
                     dataset=self,
-                    geographic_name=location["geographic_name"],
-                    full_address=location.get("full_address"),
+                    geographic_name=data["geographic_name"],
+                    full_address=data.get("full_address"),
                 )
-                if as_wkt := location.get("as_wkt"):
+                self.created_objects += 1
+                if data.get("as_wkt") and spatial.reference:
+                    as_wkt = data.get("as_wkt")
                     if as_wkt != spatial.reference.as_wkt:
                         spatial.custom_wkt = as_wkt
-                spatial.save()
+                try:
+                    spatial.save()
+                except ProgrammingError as e:
+                    logger.error(
+                        f"Failed to save {spatial=}, with {data=}, and reference {loc_obj}"
+                    )
+                    raise e
                 obj_list.append(spatial)
             return obj_list
 
@@ -369,6 +420,8 @@ class LegacyDataset(Dataset):
                     end_date=end_date,
                     provenance=None,
                 )
+                if created:
+                    self.created_objects += 1
                 records.append(instance)
         return records
 
@@ -376,19 +429,26 @@ class LegacyDataset(Dataset):
         records = []
         if other_ids := self.legacy_other_identifiers:
             for other_id in other_ids:
-                id_type, id_type_created = IdentifierType.objects.get_or_create(
-                    url=other_id["identifier"],
-                    defaults={
-                        "pref_label": other_id["pref_label"],
-                        "in_scheme": other_id["in_scheme"],
-                    },
-                )
+                id_type = None
+                if other_id.get("identifier"):
+                    id_type, id_type_created = IdentifierType.objects.get_or_create(
+                        url=other_id["identifier"],
+                        defaults={
+                            "pref_label": other_id["pref_label"],
+                            "in_scheme": other_id["in_scheme"],
+                        },
+                    )
+                    if id_type_created:
+                        self.created_objects += 1
                 instance, created = OtherIdentifier.objects.get_or_create(
                     dataset=self,
                     notation=other_id["notation"],
                     defaults={"identifier_type": id_type},
                 )
+                if created:
+                    self.created_objects += 1
                 records.append(instance)
+
         self.other_identifiers.set(records)
         return records
 
@@ -401,22 +461,28 @@ class LegacyDataset(Dataset):
                 title={"fi": self.legacy_contract["title"]},
                 url=self.legacy_contract["identifier"],
             )
+            if created:
+                self.created_objects += 1
             self.contract = contract
             return contract
 
     def attach_actor(self, actor_role):
-        actors_data = self.legacy_research_dataset[actor_role]
+        if actors_data := self.legacy_research_dataset.get(actor_role):
+            # In case of publisher, actor is dictionary instead of list
+            if isinstance(actors_data, dict):
+                actors_data = [actors_data]
 
-        # In case of publisher, actor is dictionary instead of list
-        if isinstance(actors_data, dict):
-            actors_data = [actors_data]
+            actors = []
+            for actor in actors_data:
+                dataset_actor, created = DatasetActor.get_instance_from_v2_dictionary(
+                    actor, self, actor_role
+                )
+                if created:
+                    self.created_objects += 1
+                actors.append(dataset_actor)
 
-        actors = []
-        for actor in actors_data:
-            dataset_actor = DatasetActor.get_instance_from_v2_dictionary(actor, self, actor_role)
-            actors.append(dataset_actor)
-
-        return actors
+            return actors
+        return []
 
     def attach_files(self):
         file_storage_file_objects = {}
@@ -447,6 +513,8 @@ class LegacyDataset(Dataset):
                         "file_storage": file_storage,
                     },
                 )
+                if created:
+                    self.created_objects += 1
                 if file_checksum:
                     new_file.checksum = file_checksum
 
@@ -457,6 +525,8 @@ class LegacyDataset(Dataset):
             file_set, created = FileSet.objects.get_or_create(
                 dataset=self, file_storage_id=storage_id
             )
+            if created:
+                self.created_objects += 1
             file_set.files.set(file_objects)
         return file_set
 
@@ -470,12 +540,15 @@ class LegacyDataset(Dataset):
         if provenance_data := self.legacy_research_dataset.get("provenance"):
             for data in provenance_data:
                 provenance, provenance_created = Provenance.objects.get_or_create(
-                    title=data["title"], description=data["description"], dataset=self
+                    title=data.get("title"), description=data["description"], dataset=self
                 )
-                logger.info(f"{provenance=}, created={provenance_created}")
+                if provenance_created:
+                    self.created_objects += 1
+                logger.debug(f"{provenance=}, created={provenance_created}")
                 if spatial_data := data.get("spatial"):
                     if provenance.spatial:
                         provenance.spatial.delete()
+                        self.created_objects -= 1
                         provenance.spatial = None
 
                     loc_obj, loc_created = Location.objects.get_or_create(
@@ -485,6 +558,8 @@ class LegacyDataset(Dataset):
                             "pref_label": spatial_data["place_uri"]["pref_label"],
                         },
                     )
+                    if loc_created:
+                        self.created_objects += 1
 
                     spatial = Spatial(
                         provenance=provenance,
@@ -492,6 +567,7 @@ class LegacyDataset(Dataset):
                         geographic_name=spatial_data.get("geographic_name"),
                         reference=loc_obj,
                     )
+                    self.created_objects += 1
                     if as_wkt := spatial_data.get("as_wkt"):
                         if as_wkt != spatial.reference.as_wkt:
                             spatial.custom_wkt = as_wkt
@@ -500,12 +576,13 @@ class LegacyDataset(Dataset):
                 if temporal_data := data.get("temporal"):
                     start_date, end_date = self.parse_temporal_timestamps(temporal_data)
                     temporal, temporal_created = Temporal.objects.get_or_create(
-                        start_date=start_date,
-                        end_date=end_date,
                         provenance=provenance,
                         dataset=None,
+                        defaults={"end_date": end_date, "start_date": start_date},
                     )
-                    logger.info(f"{temporal=}, created={temporal_created}")
+                    if temporal_created:
+                        self.created_objects += 1
+                    logger.debug(f"{temporal=}, created={temporal_created}")
                 if variables := data.get("variable"):
                     for var in variables:
                         (
@@ -516,6 +593,8 @@ class LegacyDataset(Dataset):
                             provenance=provenance,
                             representation=var.get("representation"),
                         )
+                        if variable_created:
+                            self.created_objects += 1
                 if event_outcome_data := data.get("event_outcome"):
                     event_outcome, created = EventOutcome.objects.get_or_create(
                         url=event_outcome_data["identifier"],
@@ -524,6 +603,8 @@ class LegacyDataset(Dataset):
                             "in_scheme": event_outcome_data["in_scheme"],
                         },
                     )
+                    if created:
+                        self.created_objects += 1
                     provenance.event_outcome = event_outcome
                 if lifecycle_event_data := data.get("lifecycle_event"):
                     lifecycle_event, created = LifecycleEvent.objects.get_or_create(
@@ -533,13 +614,17 @@ class LegacyDataset(Dataset):
                             "in_scheme": lifecycle_event_data["in_scheme"],
                         },
                     )
+                    if created:
+                        self.created_objects += 1
                     provenance.lifecycle_event = lifecycle_event
                 associated_with_objs = []
                 if was_associated_with := data.get("was_associated_with"):
                     for actor_data in was_associated_with:
-                        actor = DatasetActor.get_instance_from_v2_dictionary(
+                        actor, created = DatasetActor.get_instance_from_v2_dictionary(
                             actor_data, self, "provenance"
                         )
+                        if created:
+                            self.created_objects += 1
                         associated_with_objs.append(actor)
 
                 provenance.is_associated_with.set(associated_with_objs)
@@ -567,7 +652,8 @@ class LegacyDataset(Dataset):
             actor, actor_created = Actor.objects.get_or_create(
                 person=person, organization=organization
             )
-
+            if actor_created:
+                self.created_objects += 1
             project_contributions = []
             contribution_types = []
             if contr_data := v2_data.get("contributor_type", None):
@@ -579,6 +665,8 @@ class LegacyDataset(Dataset):
                             "in_scheme": data["in_scheme"],
                         },
                     )
+                    if created:
+                        self.created_objects += 1
                     contribution_types.append(contr_type)
             if len(contribution_types) != 0:
                 proj_contr, created = ProjectContributor.objects.get_or_create(
@@ -586,12 +674,16 @@ class LegacyDataset(Dataset):
                     project=proj,
                     actor=actor,
                 )
+                if created:
+                    self.created_objects += 1
                 proj_contr.contribution_type.add(*contribution_types)
                 project_contributions.append(proj_contr)
             else:
                 proj_contr, created = ProjectContributor.objects.get_or_create(
                     participating_organization=organization, project=proj, actor=actor
                 )
+                if created:
+                    self.created_objects += 1
                 project_contributions.append(proj_contr)
             return project_contributions
 
@@ -600,19 +692,23 @@ class LegacyDataset(Dataset):
             for data in project_data:
                 project, created = DatasetProject.objects.get_or_create(
                     name=data["name"],
-                    project_identifier=data["identifier"],
+                    project_identifier=data.get("identifier"),
                     funder_identifier=data.get("has_funder_identifier"),
                 )
                 if created:
+                    self.created_objects += 1
                     project.dataset.add(self)
-
-                funder_type, created = FunderType.objects.get_or_create(
-                    url=data["funder_type"]["identifier"],
-                    defaults={
-                        "in_scheme": data["funder_type"]["in_scheme"],
-                        "pref_label": data["funder_type"]["pref_label"],
-                    },
-                )
+                funder_type = None
+                if data.get("funder_type"):
+                    funder_type, created = FunderType.objects.get_or_create(
+                        url=data["funder_type"]["identifier"],
+                        defaults={
+                            "in_scheme": data["funder_type"]["in_scheme"],
+                            "pref_label": data["funder_type"]["pref_label"],
+                        },
+                    )
+                    if created:
+                        self.created_objects += 1
                 project.funder_type = funder_type
                 funders = []
                 participants = []
@@ -712,7 +808,7 @@ class LegacyDataset(Dataset):
             ],
             truncate_datetime="day",
         )
-        logger.info(f"diff={diff.to_json()}")
+        # logger.info(f"diff={diff.to_json()}")
         json_diff = diff.to_json()
         return json.loads(json_diff)
 

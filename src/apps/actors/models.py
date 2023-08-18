@@ -1,13 +1,13 @@
 import logging
 import uuid
+from typing import Dict
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import HStoreField
+from django.core.exceptions import MultipleObjectsReturned
 from django.db import models
 
 from apps.common.models import AbstractBaseModel
-from apps.users.models import MetaxUser
 from django.utils.translation import gettext as _
 
 logger = logging.getLogger(__name__)
@@ -21,8 +21,23 @@ class Organization(AbstractBaseModel):
     https://www.w3.org/TR/skos-reference/#concepts
     """
 
+    def choose_between(self, other) -> "Organization":
+        if isinstance(other, self.__class__):
+            if self.parent is None and other.parent is not None:
+                return self
+            elif self.in_scheme and not other.in_scheme:
+                return self
+            elif self.code and not other.code:
+                return self
+            elif self.url and not other.url:
+                return self
+            elif len(list(self.pref_label.keys())) > len(list(other.pref_label.keys())):
+                return self
+            else:
+                return other
+
     @classmethod
-    def get_instance_from_v2_dictionary(cls, org_obj):
+    def get_instance_from_v2_dictionary(cls, org_obj) -> "Organization":
         """Gets or creates organization for the actor from v2 organization type actor object.
 
         Args:
@@ -37,17 +52,31 @@ class Organization(AbstractBaseModel):
         # pref_label is HStoreField that serializes into dictionary object.
         # pref_label__values works as normal python dictionary.values()
         # pref_label__values__contains compares if any given value in a list is contained in the pref_label values.
-        org, created = cls.objects.get_or_create(
-            pref_label__values__contains=list(org_obj["name"].values()),
-            defaults={
-                "pref_label": org_obj["name"],
-                "homepage": org_obj.get("homepage"),
-                "url": org_obj.get("identifier"),
-                "in_scheme": settings.ORGANIZATION_SCHEME,
-            },
-        )
-        logger.info(f"{org=}, {created=}")
-        return org
+        try:
+            org, created = cls.objects.get_or_create(
+                pref_label__values__contains=list(org_obj["name"].values()),
+                url=org_obj.get("identifier"),
+                defaults={
+                    "pref_label": org_obj["name"],
+                    "homepage": org_obj.get("homepage"),
+                    "url": org_obj.get("identifier"),
+                    "in_scheme": settings.ORGANIZATION_SCHEME,
+                },
+            )
+            logger.debug(f"{org=}, {created=}")
+            return org
+        except MultipleObjectsReturned as e:
+            orgs = cls.objects.filter(
+                pref_label__values__contains=list(org_obj["name"].values()),
+                url=org_obj.get("identifier"),
+            )
+            best_org = orgs[0]
+            for org in orgs:
+                best_org = org.choose_between(best_org)
+            logger.error(
+                f"{e}, chose: {best_org.pref_label} from: {[org.pref_label for org in orgs]}"
+            )
+            return best_org
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     url = models.URLField(max_length=255, blank=True, null=True)
@@ -125,12 +154,15 @@ class Person(AbstractBaseModel):
         blank=True,
         help_text=_("External identifier for the actor, usually ORCID or similiar"),
     )
+
     def __str__(self):
         return str(self.name)
 
 
 class Actor(AbstractBaseModel):
-    """Name of organization or person. Different types include e.g. creator, curator, publisher or rights holder.
+    """Name of organization or person.
+
+    Different types include e.g. creator, curator, publisher or rights holder.
 
     Attributes:
         person(Person): Person if any associated with this actor.
@@ -148,7 +180,8 @@ class Actor(AbstractBaseModel):
         on_delete=models.SET_NULL,
     )
 
-    def as_v2_data(self):
+    def as_v2_data(self) -> Dict:
+        """Returns v2 actor dictionary."""
         data = {}
         if self.person:
             data["name"] = self.person.name
@@ -166,7 +199,8 @@ class Actor(AbstractBaseModel):
             if url := self.organization.url:
                 data["identifier"] = url
             if homepage := self.organization.homepage:
-                homepage["title"] = eval(homepage["title"])
+                if title := homepage.get("title"):
+                    homepage["title"] = eval(title)
                 data["homepage"] = homepage
         return data
 

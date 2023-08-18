@@ -24,6 +24,10 @@
 
 ### :::src.apps.core.models.concepts.get_default_license
 
+## License
+
+### :::src.apps.core.models.concepts.License
+
 ## DatasetLicense
 
 ### :::src.apps.core.models.concepts.DatasetLicense
@@ -51,6 +55,10 @@
 ## FileType
 
 ### :::src.apps.core.models.concepts.FileType
+
+## Location
+
+### :::src.apps.core.models.concepts.Location
 
 ## Spatial
 

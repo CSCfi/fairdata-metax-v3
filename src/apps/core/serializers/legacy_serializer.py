@@ -4,11 +4,6 @@ from apps.core.models import LegacyDataset
 
 
 class LegacyDatasetModelSerializer(serializers.ModelSerializer):
-    compatibility = serializers.SerializerMethodField()
-
-    def get_compatibility(self, obj):
-        return obj.check_compatibility()
-
     def create(self, validated_data):
         if instance := LegacyDataset.objects.filter(
             dataset_json__identifier=validated_data["dataset_json"]["identifier"]
@@ -19,5 +14,11 @@ class LegacyDatasetModelSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LegacyDataset
-        fields = ("id", "dataset_json", "contract_json", "files_json", "compatibility")
-        read_only_fields = ("id",)
+        fields = (
+            "id",
+            "dataset_json",
+            "contract_json",
+            "files_json",
+            "v2_dataset_compatibility_diff",
+        )
+        read_only_fields = ("id", "v2_dataset_compatibility_diff")

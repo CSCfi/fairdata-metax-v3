@@ -146,6 +146,7 @@
                     - [conftest](tests/unit/apps/core/models/conftest.md)
                     - [test_abstract_base_object](tests/unit/apps/core/models/test_abstract_base_object.md)
                     - [test_access_rights](tests/unit/apps/core/models/test_access_rights.md)
+                    - [test_concepts](tests/unit/apps/core/models/test_concepts.md)
                     - [test_contract](tests/unit/apps/core/models/test_contract.md)
                     - [test_data_catalog](tests/unit/apps/core/models/test_data_catalog.md)
                     - [test_dataset](tests/unit/apps/core/models/test_dataset.md)
