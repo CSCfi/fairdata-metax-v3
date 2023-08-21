@@ -18,7 +18,6 @@ def test_files_create(client, ida_file_json):
         {
             **ida_file_json,
             "file_name": "file.pdf",
-            "directory_path": "/some/file/path/",
             "created": DateTimeField(),
             "modified": DateTimeField(),
             "id": UUIDField(),

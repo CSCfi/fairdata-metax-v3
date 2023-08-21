@@ -47,7 +47,6 @@ def test_directory_field_values(client, file_tree_b):
                     "id": "00000000-0000-0000-0000-000000000000",
                     "file_path": "/rootfile.txt",
                     "file_name": "rootfile.txt",
-                    "directory_path": "/",
                     "byte_size": 10,
                     "project_identifier": "project_x",
                     "storage_service": "ida",

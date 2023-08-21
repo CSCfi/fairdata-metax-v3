@@ -110,7 +110,6 @@ might look like.
                 "id": "b58cb132-d8b5-4aea-9009-545776610f0c",
                 "file_path": "/data/file1.txt",
                 "file_name": "file1.txt",
-                "directory_path": "/data/",
                 "byte_size": 1024,
                 "storage_service": "ida",
                 "project_identifier": "project",
@@ -207,7 +206,6 @@ Bolded fields are required when creating a file.
 | File pathname in external service     | file_storage_pathname         | str                      |           |
 | File path                             | **file_path**                 | str, e.g. /data/file.txt |           |
 | File name (determined from path)      | file_name                     | str, e.g. file.txt       | x         |
-| Directory path (determined from path) | directory_path                | str, e.g. /data/         | x         |
 | Freeze date in external service       | date_frozen                   | datetime                 |           |
 | Upload date in external service       | **date_uploaded**             | datetime                 |           |
 | Deletion date in external service     | date_deleted                  | datetime                 |           |

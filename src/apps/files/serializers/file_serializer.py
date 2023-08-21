@@ -79,7 +79,6 @@ class FileSerializer(CreateOnlyFieldsMixin, serializers.ModelSerializer):
     # when saving files, file_name and directory_path are generated from file_path
     file_path = FilePathField()
     file_name = FileNameField(read_only=True)
-    directory_path = DirectoryPathField(read_only=True)
 
     dataset_metadata = serializers.SerializerMethodField()
 
@@ -125,7 +124,6 @@ class FileSerializer(CreateOnlyFieldsMixin, serializers.ModelSerializer):
             "id",
             "file_path",
             "file_name",
-            "directory_path",
             "byte_size",
             "storage_service",
             "project_identifier",

@@ -36,9 +36,6 @@ class FileCommonFilterset(filters.FilterSet):
     file_name = filters.CharFilter(
         lookup_expr="icontains",
     )
-    directory_path = filters.CharFilter(
-        lookup_expr="istartswith",
-    )
     file_path = filters.CharFilter(method="file_path_filter")
 
     file_storage_identifier = filters.CharFilter()
@@ -47,6 +44,9 @@ class FileCommonFilterset(filters.FilterSet):
     byte_size_lt = filters.NumberFilter(field_name="byte_size", lookup_expr="lt")
 
     def file_path_filter(self, queryset, name, value):
+        if value.endswith("/"):
+            # Filtering by directory path, no need to include file_name
+            return queryset.filter(directory_path__istartswith=value)
         return queryset.alias(file_path=Concat("directory_path", "file_name")).filter(
             file_path__istartswith=value
         )
