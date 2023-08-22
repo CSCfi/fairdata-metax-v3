@@ -81,6 +81,7 @@ THIRD_PARTY_APPS = [
     "watchman",
     "polymorphic",
     "corsheaders",
+    "watson",
 ]
 LOCAL_APPS = [
     "common.apps.CommonConfig",
@@ -106,6 +107,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
     "django.middleware.locale.LocaleMiddleware",
+    "watson.middleware.SearchContextMiddleware",
 ]
 
 ROOT_URLCONF = "metax_service.urls"

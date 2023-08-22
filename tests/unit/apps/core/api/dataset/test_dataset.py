@@ -35,6 +35,14 @@ def test_filter_pid(client, dataset_a_json, dataset_b_json, data_catalog, refere
     res = client.get("/v3/datasets?persistent_identifier=some_pid")
     assert res.data["count"] == 1
 
+def test_search_pid(client, dataset_a_json, dataset_b_json, data_catalog, reference_data):
+    dataset_a_json["persistent_identifier"] = "some_pid"
+    dataset_b_json.pop("persistent_identifier", None)
+    client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    client.post("/v3/datasets", dataset_b_json, content_type="application/json")
+    res = client.get("/v3/datasets?search=some_pid")
+    assert res.data["count"] == 1
+
 
 def test_create_dataset_invalid_catalog(client, dataset_a_json):
     dataset_a_json["data_catalog"] = "urn:nbn:fi:att:data-catalog-does-not-exist"

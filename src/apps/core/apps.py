@@ -1,4 +1,5 @@
 from django.apps import AppConfig
+from watson import search
 
 
 class CoreConfig(AppConfig):
@@ -7,3 +8,15 @@ class CoreConfig(AppConfig):
 
     def ready(self):
         from apps.core import signals
+
+        dataset = self.get_model("Dataset")
+        search.register(
+            dataset,
+            fields=(
+                "title",
+                "description",
+                "keyword",
+                "persistent_identifier",
+                "id",
+            ),
+        )

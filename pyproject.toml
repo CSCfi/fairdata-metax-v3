@@ -45,6 +45,7 @@ django-polymorphic = "^3.1.0"
 django-cors-headers = "^4.0.0"
 django-rest-knox = "^4.2.0"
 pyjwt = "^2.7.0"
+django-watson = "^1.6.3"
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.12.0"

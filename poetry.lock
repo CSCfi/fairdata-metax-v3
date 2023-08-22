@@ -673,6 +673,17 @@ files = [
 django = ">=2.0"
 
 [[package]]
+name = "django-watson"
+version = "1.6.3"
+description = "Full-text multi-table search application for Django. Easy to install and use, with good performance."
+optional = false
+python-versions = "*"
+files = [
+    {file = "django-watson-1.6.3.tar.gz", hash = "sha256:d72db173695cdfa81ebb96227cb00deca4c3fc8816770f206a676cc67a759f87"},
+    {file = "django_watson-1.6.3-py2.py3-none-any.whl", hash = "sha256:a4ceacc57098c8e251dac1d59a717bd1204f8a49381ba9ab102f45e5c3efed48"},
+]
+
+[[package]]
 name = "djangorestframework"
 version = "3.14.0"
 description = "Web APIs for Django, made easy."
@@ -2223,4 +2234,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8.10"
-content-hash = "c607b5a6545e97832068dd5dcd2b2fc2f2a171300d821f3a6cf1656aea8b09c5"
+content-hash = "ff82a7b62d2d55ea0bcf86a35fbcfe0067990271159669de81140f0eda677207"

@@ -12,6 +12,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import exceptions, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from watson import search
 
 from apps.core.models.catalog_record import Dataset, DatasetActor, FileSet
 from apps.core.serializers import DatasetSerializer, FileSetSerializer
@@ -77,6 +78,12 @@ class DatasetFilter(filters.FilterSet):
             ("modified", "modified"),
         )
     )
+    search = filters.CharFilter(
+        method="search_dataset"
+    )
+
+    def search_dataset(self, queryset, name, value):
+        return search.filter(queryset, value)
 
 
 class DatasetViewSet(viewsets.ModelViewSet):
