@@ -3,12 +3,13 @@ site_name: Fairdata Metax Docs
 theme:
   name: "material"
 extra_css: [extra.css]
+watch:
+- src/apps
+- tests/
 plugins:
 - search
 - mkdocstrings:
-    watch:
-    - src/apps
-    - tests/
+    default_handler: python
 - literate-nav:
     nav_file: SUMMARY.md
 - section-index
