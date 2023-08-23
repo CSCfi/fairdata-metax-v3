@@ -82,6 +82,7 @@ THIRD_PARTY_APPS = [
     "polymorphic",
     "corsheaders",
     "watson",
+    "cachalot",
 ]
 LOCAL_APPS = [
     "common.apps.CommonConfig",
@@ -115,7 +116,7 @@ ROOT_URLCONF = "metax_service.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(ROOT_DIR, "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -136,7 +137,7 @@ WSGI_APPLICATION = "metax_service.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "ENGINE": "django.db.backends.postgresql",
         "NAME": os.environ.get("POSTGRES_DATABASE_NAME"),
         "USER": os.environ.get("POSTGRES_USER"),
         "PASSWORD": os.environ.get("POSTGRES_PASS"),

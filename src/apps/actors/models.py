@@ -200,7 +200,8 @@ class Actor(AbstractBaseModel):
                 data["identifier"] = url
             if homepage := self.organization.homepage:
                 if title := homepage.get("title"):
-                    homepage["title"] = eval(title)
+                    if isinstance(title, str):
+                        homepage["title"] = eval(title)
                 data["homepage"] = homepage
         return data
 

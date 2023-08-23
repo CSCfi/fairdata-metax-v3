@@ -21,6 +21,7 @@ base_settings = [
     "components/refdata.py",
     "components/actors.py",
     "components/users.py",
+    "components/cache.py",
     "environments/{0}.py".format(ENV),
 ]
 # Include settings:
