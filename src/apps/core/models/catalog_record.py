@@ -86,6 +86,7 @@ class CatalogRecord(AbstractBaseModel):
         on_delete=models.SET_NULL,
         related_name="records",
         null=True,
+        blank=True,
     )
     history = HistoricalRecords()
 
@@ -102,6 +103,7 @@ class CatalogRecord(AbstractBaseModel):
     )
 
     class PreservationState(models.IntegerChoices):
+        NONE = -1
         INITIALIZED = 0
         PROPOSED = 10
         TECHNICAL_METADATA_GENERATED = 20
@@ -122,7 +124,7 @@ class CatalogRecord(AbstractBaseModel):
 
     preservation_state = models.IntegerField(
         choices=PreservationState.choices,
-        default=PreservationState.INITIALIZED,
+        default=PreservationState.NONE,
         help_text="Record state in PAS.",
     )
 

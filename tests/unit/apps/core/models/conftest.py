@@ -130,7 +130,7 @@ def dataset() -> Dataset:
         "fi": "Otsikko 2",
         "sv": "Titel 2",
     }
-    return factories.DatasetFactory(id=identifier, title=title)
+    return factories.DatasetFactory(id=identifier, title=title, cumulative_state=1)
 
 
 @pytest.fixture

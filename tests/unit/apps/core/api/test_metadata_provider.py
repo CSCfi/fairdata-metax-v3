@@ -28,7 +28,7 @@ def test_create_metadata_provider_twice(client, metadata_provider_b_json):
     res2 = client.post(
         "/v3/metadata-provider", metadata_provider_b_json, content_type="application/json"
     )
-    assert res2.status_code == 400
+    assert res2.status_code == 201
 
 
 @pytest.mark.django_db

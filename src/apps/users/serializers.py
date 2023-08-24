@@ -12,6 +12,7 @@ class MetaxUserModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = MetaxUser
         fields = ("username",)
+        extra_kwargs = {"username": {"validators": []}}
 
 
 class UserInfoSerializer(serializers.ModelSerializer):

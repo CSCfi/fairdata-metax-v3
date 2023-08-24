@@ -51,6 +51,7 @@ class DatasetSerializer(serializers.ModelSerializer):
         fields = (
             "access_rights",
             "actors",
+            "cumulative_state",
             "data_catalog",
             "description",
             "field_of_science",

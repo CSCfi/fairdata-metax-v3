@@ -8,6 +8,7 @@
 import json
 import logging
 
+from django.contrib.auth import get_user_model
 from django.core.validators import EMPTY_VALUES
 from rest_framework import serializers
 
@@ -223,10 +224,8 @@ class MetadataProviderModelSerializer(AbstractDatasetModelSerializer):
     def create(self, validated_data):
         user = None
 
-        user_serializer: MetaxUserModelSerializer = self.fields["user"]
-
         if user_data := validated_data.pop("user", None):
-            user = user_serializer.create(user_data)
+            user, created = get_user_model().objects.get_or_create(**user_data)
 
         new_metadata_provider: MetadataProvider = MetadataProvider.objects.create(
             user=user, **validated_data
