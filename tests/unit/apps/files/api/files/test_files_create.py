@@ -2,9 +2,6 @@ import pytest
 from rest_framework.fields import DateTimeField, UUIDField
 from tests.utils import assert_nested_subdict
 
-from apps.files import factories
-from apps.files.serializers import FileSerializer
-
 
 @pytest.mark.django_db
 def test_files_create(client, ida_file_json):
@@ -17,10 +14,9 @@ def test_files_create(client, ida_file_json):
     assert_nested_subdict(
         {
             **ida_file_json,
-            "file_name": "file.pdf",
-            "created": DateTimeField(),
-            "modified": DateTimeField(),
+            "filename": "file.pdf",
             "id": UUIDField(),
+            "removed": None,
         },
         res.json(),
         check_all_keys_equal=True,
@@ -33,7 +29,7 @@ def test_files_create_twice(client, ida_file_json):
     assert res.status_code == 201
     res = client.post("/v3/files", ida_file_json, content_type="application/json")
     assert res.status_code == 400
-    assert "file_path" in res.json()
+    assert "pathname" in res.json()
 
 
 @pytest.mark.django_db
@@ -47,12 +43,12 @@ def test_files_create_and_patch(client, ida_file_json):
 
 
 @pytest.mark.django_db
-def test_files_create_missing_file_storage_identifier(client, ida_file_json):
-    del ida_file_json["file_storage_identifier"]
+def test_files_create_missing_identifier(client, ida_file_json):
+    del ida_file_json["storage_identifier"]
     res = client.post(
         "/v3/files",
         ida_file_json,
         content_type="application/json",
     )
     assert res.status_code == 400
-    assert res.data["file_storage_identifier"][0] == "Field is required for storage_service 'ida'"
+    assert res.data["storage_identifier"][0] == "Field is required for storage_service 'ida'"

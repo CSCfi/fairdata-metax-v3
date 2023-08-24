@@ -8,7 +8,7 @@ def dataset(file_tree_a):
     dataset = factories.DatasetFactory()
     factories.FileSetFactory(
         dataset=dataset,
-        file_storage=file_tree_a["file_storage"],
+        storage=file_tree_a["storage"],
         files=[
             file_tree_a["files"]["/dir/a.txt"],
             file_tree_a["files"]["/dir/b.txt"],
@@ -57,7 +57,7 @@ def test_files_get_dataset_files(client, dataset):
 def test_files_get_dataset_files(client, dataset):
     res = client.get(
         "/v3/files",
-        {"dataset": dataset.id, "project_identifier": "pröject_does_not_exist"},
+        {"dataset": dataset.id, "project": "pröject_does_not_exist"},
         content_type="application/json",
     )
     assert res.data["results"] == []

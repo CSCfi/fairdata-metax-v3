@@ -38,7 +38,7 @@ class FileStorageManagerMixin(ProxyBasePolymorphicManager):
         self.model.validate_object(object)
         try:
             return self.get(
-                project_identifier=object["project_identifier"],
+                project=object["project"],
                 storage_service=object["storage_service"],
             )
         except self.model.DoesNotExist:
@@ -57,37 +57,37 @@ class FileStorageManagerMixin(ProxyBasePolymorphicManager):
                 if raise_exception:
                     raise e
                 f.setdefault("errors", {}).update(e.detail)
-                f["file_storage"] = None
+                f["storage"] = None
         return files_by_key
 
     def _get_existing_filestorages_by_key(
         self, files_by_key: Dict[tuple, List[dict]]
     ) -> Dict[tuple, List[dict]]:
         """Get FileStorage instances that exist for files by FileStorage key."""
-        file_storages_by_key: Dict[self.model.key_type, self.model] = {}
+        storages_by_key: Dict[self.model.key_type, self.model] = {}
         filters = [models.Q(**key._asdict()) for key in files_by_key]
         if filters:
             combined_filters = functools.reduce(operator.or_, filters)
             queryset = self.filter(combined_filters)
-            file_storages_by_key = {self.model.get_key(fs): fs for fs in queryset}
-        return file_storages_by_key
+            storages_by_key = {self.model.get_key(fs): fs for fs in queryset}
+        return storages_by_key
 
     def _create_missing_filestorages(
         self,
         files_by_key: Dict[tuple, List[dict]],
-        file_storages_by_key: Dict[tuple, List[dict]],
+        storages_by_key: Dict[tuple, List[dict]],
         allow_create,
         raise_exception,
     ) -> Tuple[Dict[tuple, List[dict]], Dict[str, dict]]:
         """Create missing FileStorage instances.
 
         If files_by_key contains FileStorage keys that don't exist in
-        file_storages_by_key, create them. If creation is not allowed,
+        storages_by_key, create them. If creation is not allowed,
         raise exception or return error.
 
-        Returns tuple (modified file_storages_by_key, errors_by_key)."""
+        Returns tuple (modified storages_by_key, errors_by_key)."""
         errors_by_key = {}
-        missing_storages = [key for key in files_by_key if key not in file_storages_by_key]
+        missing_storages = [key for key in files_by_key if key not in storages_by_key]
         for key in missing_storages:
             try:
                 if not allow_create:
@@ -95,12 +95,12 @@ class FileStorageManagerMixin(ProxyBasePolymorphicManager):
                 key_dict = key._asdict()
                 new_storage = self.model.get_proxy_instance(**key_dict)
                 new_storage.save()
-                file_storages_by_key[key] = new_storage
+                storages_by_key[key] = new_storage
             except ValidationError as e:
                 if raise_exception:
                     raise e
                 errors_by_key[key] = e.detail
-        return file_storages_by_key, errors_by_key
+        return storages_by_key, errors_by_key
 
     def assign_to_file_data(
         self,
@@ -114,12 +114,12 @@ class FileStorageManagerMixin(ProxyBasePolymorphicManager):
 
         Retrieves (or optionally creates) a FileStorage instance for
         each file in files list. The instance is assigned to
-        file['file_storage'].
+        file['storage'].
 
         Files are validated for required FileStorage fields based on
         file['storage_service']. When raise_exception is False and
         an error occurs, the error will be added to file['errors'] dict
-        and file['file_storage'] will be set to None.
+        and file['storage'] will be set to None.
 
         Args:
             files: List of dicts containing file data
@@ -133,10 +133,10 @@ class FileStorageManagerMixin(ProxyBasePolymorphicManager):
         """
 
         files_by_key = self._group_files_by_key(files, raise_exception=raise_exception)
-        file_storages_by_key = self._get_existing_filestorages_by_key(files_by_key)
-        file_storages_by_key, errors_by_key = self._create_missing_filestorages(
+        storages_by_key = self._get_existing_filestorages_by_key(files_by_key)
+        storages_by_key, errors_by_key = self._create_missing_filestorages(
             files_by_key,
-            file_storages_by_key,
+            storages_by_key,
             allow_create=allow_create,
             raise_exception=raise_exception,
         )
@@ -145,13 +145,13 @@ class FileStorageManagerMixin(ProxyBasePolymorphicManager):
         for key, key_files in files_by_key.items():
             for f in key_files:
                 if f.get("errors"):
-                    f["file_storage"] = None
+                    f["storage"] = None
                     continue
                 if remove_filestorage_fields:
                     f.pop("storage_service", None)
                     for field in self.model.all_extra_fields:
                         f.pop(field, None)
-                f["file_storage"] = file_storages_by_key.get(key)
+                f["storage"] = storages_by_key.get(key)
                 if errors := errors_by_key.get(key):
                     f.setdefault("errors", {}).update(errors)
         return files
@@ -185,8 +185,8 @@ class FileStorage(ProxyBasePolymorphicModel, AbstractBaseModel):
     storage_service = models.CharField(max_length=64, choices=STORAGE_SERVICE_CHOICES)
 
     # Extra identification fields used only by specific FileStorage types
-    project_identifier = models.CharField(max_length=200, null=True, blank=True)
-    all_extra_fields = ["project_identifier"]
+    project = models.CharField(max_length=200, null=True, blank=True)
+    all_extra_fields = ["project"]
 
     # A key should uniquely identify a FileStorage instance
     key_type = namedtuple("FileStorageKey", ["storage_service", *all_extra_fields])
@@ -198,14 +198,14 @@ class FileStorage(ProxyBasePolymorphicModel, AbstractBaseModel):
     # File fields that are unique by FileStorage or file service, validation in Python.
     # Any null values are exempt from the uniqueness check. File path has its own validation
     # and is not listed here.
-    unique_file_fields_per_file_storage = ["file_storage_pathname"]
-    unique_file_fields_per_storage_service = ["file_storage_identifier"]
+    unique_file_fields_per_storage = []
+    unique_file_fields_per_storage_service = ["storage_identifier"]
 
-    # File fields required by FileStorage that are normally optional, e.g. file_storage_identifier
+    # File fields required by FileStorage that are normally optional, e.g. storage_identifier
     required_file_fields = set()
 
     class Meta:
-        unique_together = [("project_identifier", "storage_service")]
+        unique_together = [("project", "storage_service")]
 
     @classmethod
     @functools.lru_cache
@@ -221,8 +221,8 @@ class FileStorage(ProxyBasePolymorphicModel, AbstractBaseModel):
     def remove_unsupported_extra_fields(cls, data: dict) -> dict:
         """Remove disallowed FileService fields from data.
 
-        E.g. remove project_identifier from dict if the current
-        FileStorage does not support the project_identifier field."""
+        E.g. remove project from dict if the current
+        FileStorage does not support the project field."""
         allowed_extra_fields = cls.get_allowed_extra_fields()
         for field in cls.all_extra_fields:
             if field not in allowed_extra_fields:
@@ -275,16 +275,16 @@ class FileStorage(ProxyBasePolymorphicModel, AbstractBaseModel):
         qs = self.files
         if file_set:
             qs = qs.filter(file_sets=file_set)
-        file_directory_paths = (
+        file_pathnames = (
             qs.values_list("directory_path", flat=True)
             .order_by("directory_path")
             .distinct("directory_path")
         )
-        all_paths = set(file_directory_paths)
+        all_paths = set(file_pathnames)
 
         # Add intermediate directories that don't have files directly but in subdirs.
         last_part = re.compile("/[^/]+/$")  # matches e.g. `/subdir/` for `/dir/subdir/`
-        for path in file_directory_paths:
+        for path in file_pathnames:
             # Remove last path part and add to set until encountering path already in set.
             path = last_part.sub("/", path, count=1)
             while path not in all_paths:
@@ -310,19 +310,19 @@ class FileStorage(ProxyBasePolymorphicModel, AbstractBaseModel):
     # Validation for file data conflics
 
     @classmethod
-    def _group_file_data_by_file_storage(cls, files: List[dict]) -> Dict["FileStorage", dict]:
+    def _group_file_data_by_storage(cls, files: List[dict]) -> Dict["FileStorage", dict]:
         files_by_storage = {}
         for f in files:
-            if f["file_storage"] is not None:
-                files_by_storage.setdefault(f["file_storage"], []).append(f)
+            if f["storage"] is not None:
+                files_by_storage.setdefault(f["storage"], []).append(f)
         return files_by_storage
 
     @classmethod
     def _group_file_data_by_storage_service(cls, files: List[dict]) -> Dict[str, dict]:
         files_by_service = {}
         for f in files:
-            if f["file_storage"] is not None:
-                files_by_service.setdefault(f["file_storage"].storage_service, []).append(f)
+            if f["storage"] is not None:
+                files_by_service.setdefault(f["storage"].storage_service, []).append(f)
         return files_by_service
 
     @classmethod
@@ -376,32 +376,32 @@ class FileStorage(ProxyBasePolymorphicModel, AbstractBaseModel):
 
     @classmethod
     def _check_file_path_conflicts(cls, files: List[dict], raise_exception):
-        """Check file_path conflicts."""
+        """Check pathname conflicts."""
         new_files = [f for f in files if ("id" not in f)]
-        new_files_by_storage = cls._group_file_data_by_file_storage(new_files)
-        for file_storage, new_storage_files in new_files_by_storage.items():
-            new_values = [f["file_path"] for f in files if f.get("file_path")]
-            queryset = file_storage.files.filter(
+        new_files_by_storage = cls._group_file_data_by_storage(new_files)
+        for storage, new_storage_files in new_files_by_storage.items():
+            new_values = [f["pathname"] for f in files if f.get("pathname")]
+            queryset = storage.files.filter(
                 # prefilter results before doing a more expensive exact match with Concat
                 directory_path__in=set(p.rsplit("/", 1)[0] + "/" for p in new_values),
-                file_name__in=set(p.rsplit("/", 1)[1] for p in new_values),
-            ).annotate(file_path=Concat("directory_path", "file_name"))
+                filename__in=set(p.rsplit("/", 1)[1] for p in new_values),
+            ).annotate(pathname=Concat("directory_path", "filename"))
             cls._check_conflicts(
                 new_storage_files,
                 queryset=queryset,
-                field="file_path",
+                field="pathname",
                 raise_exception=raise_exception,
             )
         return files
 
     @classmethod
-    def _check_file_storage_value_conflicts(cls, files: List[dict], raise_exception):
+    def _check_storage_value_conflicts(cls, files: List[dict], raise_exception):
         """Check conflicts with fields that are unique per file storage."""
         new_files = [f for f in files if ("id" not in f)]
-        new_files_by_storage = cls._group_file_data_by_file_storage(new_files)
-        for file_storage, new_storage_files in new_files_by_storage.items():
-            queryset = file_storage.files
-            for field in file_storage.unique_file_fields_per_file_storage:
+        new_files_by_storage = cls._group_file_data_by_storage(new_files)
+        for storage, new_storage_files in new_files_by_storage.items():
+            queryset = storage.files
+            for field in storage.unique_file_fields_per_storage:
                 cls._check_conflicts(
                     new_storage_files,
                     queryset=queryset,
@@ -415,11 +415,11 @@ class FileStorage(ProxyBasePolymorphicModel, AbstractBaseModel):
         """Check conflicts with fields that are unique per file service."""
         from apps.files.models import File
 
-        new_files = [f for f in files if ("id" not in f) and (f["file_storage"] is not None)]
+        new_files = [f for f in files if ("id" not in f) and (f["storage"] is not None)]
         new_files_by_service = cls._group_file_data_by_storage_service(new_files)
         for storage_service, new_service_files in new_files_by_service.items():
             proxy_model = cls.get_proxy_model(storage_service)
-            queryset = File.objects.filter(file_storage__storage_service=storage_service)
+            queryset = File.objects.filter(storage__storage_service=storage_service)
             for field in proxy_model.unique_file_fields_per_storage_service:
                 cls._check_conflicts(
                     new_service_files,
@@ -445,7 +445,7 @@ class FileStorage(ProxyBasePolymorphicModel, AbstractBaseModel):
             files: File data with included errors.
         """
         files = cls._check_file_path_conflicts(files, raise_exception=raise_exception)
-        files = cls._check_file_storage_value_conflicts(files, raise_exception=raise_exception)
+        files = cls._check_storage_value_conflicts(files, raise_exception=raise_exception)
         files = cls._check_file_service_value_conflicts(files, raise_exception=raise_exception)
         return files
 
@@ -453,15 +453,15 @@ class FileStorage(ProxyBasePolymorphicModel, AbstractBaseModel):
     def check_required_file_fields(cls, files: List[dict], raise_exception=True) -> List[dict]:
         """Check new file data for missing field values that are required by the FileStorage."""
         new_files = [f for f in files if ("id" not in f)]
-        new_files_by_storage = cls._group_file_data_by_file_storage(new_files)
-        for file_storage, storage_files in new_files_by_storage.items():
-            required_fields = list(file_storage.required_file_fields)
+        new_files_by_storage = cls._group_file_data_by_storage(new_files)
+        for storage, storage_files in new_files_by_storage.items():
+            required_fields = list(storage.required_file_fields)
             for file in storage_files:
                 missing_fields = {field for field in required_fields if not file.get(field)}
                 if missing_fields:
                     errors = {
                         field: _("Field is required for storage_service '{}'").format(
-                            file_storage.storage_service
+                            storage.storage_service
                         )
                         for field in missing_fields
                     }
@@ -480,16 +480,16 @@ class BasicFileStorage(FileStorage):
 
 
 class ProjectFileStorage(FileStorage):
-    """FileStorage that requires project_identifier to be set."""
+    """FileStorage that requires project to be set."""
 
-    required_extra_fields = {"project_identifier"}
+    required_extra_fields = {"project"}
 
     class Meta:
         proxy = True
 
 
 class IDAFileStorage(ProjectFileStorage):
-    required_file_fields = {"file_storage_identifier"}
+    required_file_fields = {"storage_identifier"}
 
     class Meta:
         proxy = True

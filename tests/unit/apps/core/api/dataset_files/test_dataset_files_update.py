@@ -27,14 +27,12 @@ def test_dataset_files_post_empty(client, deep_file_tree, data_urls):
     assert res.data["added_files_count"] == 0
     assert res.data["removed_files_count"] == 0
     assert res.data["total_files_count"] == 0
-    assert res.data["total_files_byte_size"] == 0
+    assert res.data["total_files_size"] == 0
 
     # Dataset should have an empty FileSet
     res = client.get(urls["dataset"])
     assert res.status_code == 200
-    assert (
-        res.json()["data"]["project_identifier"] == deep_file_tree["params"]["project_identifier"]
-    )
+    assert res.json()["fileset"]["project"] == deep_file_tree["params"]["project"]
 
     res = client.get(urls["files"])
     assert res.status_code == 200
@@ -57,7 +55,7 @@ def test_dataset_files_post_multiple_file_sets(client, deep_file_tree, data_urls
     )
     assert res.status_code == 200
 
-    factories.FileStorageFactory(storage_service="test", project_identifier=None)
+    factories.FileStorageFactory(storage_service="test", project=None)
     res = client.post(
         urls["file_set"],
         {"storage_service": "test"},
@@ -75,14 +73,14 @@ def test_dataset_files_post(client, deep_file_tree, data_urls):
     actions = {
         **deep_file_tree["params"],
         "directory_actions": [
-            {"directory_path": "/dir2/"},
+            {"pathname": "/dir2/"},
             {
-                "directory_path": "/dir2/subdir2/",
+                "pathname": "/dir2/subdir2/",
                 "action": "remove",
             },
-            {"directory_path": "/dir2/subdir2/subsub/"},
+            {"pathname": "/dir2/subdir2/subsub/"},
             {
-                "directory_path": "/dir2/subdir2/subsub/subsubsub2/",
+                "pathname": "/dir2/subdir2/subsub/subsubsub2/",
                 "action": "remove",
             },
         ],
@@ -112,12 +110,12 @@ def test_dataset_files_post(client, deep_file_tree, data_urls):
     assert_nested_subdict(
         {
             "results": [
-                {"file_path": "/rootfile.txt"},
-                {"file_path": "/dir1/sub/file.csv"},
-                {"file_path": "/dir2/a.txt"},
-                {"file_path": "/dir2/subdir1/file1.txt"},
-                {"file_path": "/dir2/subdir1/file3.txt"},
-                {"file_path": "/dir2/subdir2/subsub/subsubsub1/file.txt"},
+                {"pathname": "/rootfile.txt"},
+                {"pathname": "/dir1/sub/file.csv"},
+                {"pathname": "/dir2/a.txt"},
+                {"pathname": "/dir2/subdir1/file1.txt"},
+                {"pathname": "/dir2/subdir1/file3.txt"},
+                {"pathname": "/dir2/subdir2/subsub/subsubsub1/file.txt"},
             ]
         },
         res.json(),
@@ -129,7 +127,7 @@ def test_dataset_files_post_noop_add(client, deep_file_tree, data_urls):
     dataset = factories.DatasetFactory()
     factories.FileSetFactory(
         dataset=dataset,
-        file_storage=deep_file_tree["file_storage"],
+        storage=deep_file_tree["storage"],
         files=deep_file_tree["files"].values(),
     )
 
@@ -189,7 +187,7 @@ def dataset_with_metadata(client, deep_file_tree, data_urls) -> Dict:
     actions = {
         **deep_file_tree["params"],
         "directory_actions": [
-            {"directory_path": "/dir2/subdir1/", "dataset_metadata": {"title": "directory title"}},
+            {"pathname": "/dir2/subdir1/", "dataset_metadata": {"title": "directory title"}},
         ],
         "file_actions": [
             {
@@ -217,12 +215,12 @@ def test_dataset_files_post_metadata_get_files(client, dataset_with_metadata, da
     assert_nested_subdict(
         {
             "results": [
-                {"file_path": "/dir2/subdir1/file1.txt"},
+                {"pathname": "/dir2/subdir1/file1.txt"},
                 {
-                    "file_path": "/dir2/subdir1/file2.txt",
+                    "pathname": "/dir2/subdir1/file2.txt",
                     "dataset_metadata": {"title": "file title"},
                 },
-                {"file_path": "/dir2/subdir1/file3.txt"},
+                {"pathname": "/dir2/subdir1/file3.txt"},
             ],
         },
         res.json(),
@@ -233,19 +231,20 @@ def test_dataset_files_post_metadata_get_files(client, dataset_with_metadata, da
 def test_dataset_files_post_metadata_get_directories(client, dataset_with_metadata, data_urls):
     url = data_urls(dataset_with_metadata)["directories"]
     res = client.get(url, {"path": "/dir2/subdir1", "pagination": "false"})
+    print(res.json())
     assert_nested_subdict(
         {
-            "parent_directory": {
-                "directory_name": "subdir1",
+            "directory": {
+                "name": "subdir1",
                 "dataset_metadata": {"title": "directory title"},
             },
             "files": [
-                {"file_path": "/dir2/subdir1/file1.txt"},
+                {"pathname": "/dir2/subdir1/file1.txt"},
                 {
-                    "file_path": "/dir2/subdir1/file2.txt",
+                    "pathname": "/dir2/subdir1/file2.txt",
                     "dataset_metadata": {"title": "file title"},
                 },
-                {"file_path": "/dir2/subdir1/file3.txt"},
+                {"pathname": "/dir2/subdir1/file3.txt"},
             ],
         },
         res.json(),
@@ -291,7 +290,7 @@ def test_dataset_files_post_multiple_metadata_updates(client, deep_file_tree, da
     assert_nested_subdict(
         {
             "results": [
-                {"file_path": "/rootfile.txt", "dataset_metadata": {"title": "title 2"}},
+                {"pathname": "/rootfile.txt", "dataset_metadata": {"title": "title 2"}},
             ]
         },
         res.json(),
@@ -312,7 +311,7 @@ def test_dataset_files_post_update_for_existing_metadata(client, deep_file_tree,
         ],
         "directory_actions": [
             {
-                "directory_path": "/",
+                "pathname": "/",
                 "dataset_metadata": {"title": "root dir"},
             },
         ],
@@ -334,7 +333,7 @@ def test_dataset_files_post_update_for_existing_metadata(client, deep_file_tree,
         ],
         "directory_actions": [
             {
-                "directory_path": "/",
+                "pathname": "/",
                 "dataset_metadata": {"title": "root dir updated"},
             },
         ],
@@ -350,14 +349,14 @@ def test_dataset_files_post_update_for_existing_metadata(client, deep_file_tree,
     assert_nested_subdict(
         {
             "results": [
-                {"file_path": "/rootfile.txt", "dataset_metadata": {"title": "title 2"}},
+                {"pathname": "/rootfile.txt", "dataset_metadata": {"title": "title 2"}},
             ]
         },
         res.json(),
     )
 
     res = client.get(urls["directories"], {"pagination": "false"})
-    assert res.data["parent_directory"]["dataset_metadata"]["title"] == "root dir updated"
+    assert res.data["directory"]["dataset_metadata"]["title"] == "root dir updated"
 
 
 @pytest.mark.django_db
@@ -440,7 +439,7 @@ def test_dataset_files_post_remove_directory_metadata(client, deep_file_tree, da
         **deep_file_tree["params"],
         "directory_actions": [
             {
-                "directory_path": "/dir1/",
+                "pathname": "/dir1/",
                 "dataset_metadata": {"title": "title"},
             },
         ],
@@ -462,7 +461,7 @@ def test_dataset_files_post_remove_directory_metadata(client, deep_file_tree, da
         **deep_file_tree["params"],
         "directory_actions": [
             {
-                "directory_path": "/dir1/",
+                "pathname": "/dir1/",
                 "action": "update",
                 "dataset_metadata": None,
             },
@@ -487,7 +486,7 @@ def test_dataset_files_post_none_directory_metadata(client, deep_file_tree, data
         **deep_file_tree["params"],
         "directory_actions": [
             {
-                "directory_path": "/dir1/",
+                "pathname": "/dir1/",
                 "dataset_metadata": None,
             },
         ],
@@ -510,8 +509,8 @@ def test_dataset_files_multiple_post_requests(client, deep_file_tree, data_urls)
     actions = {
         **deep_file_tree["params"],
         "directory_actions": [
-            {"directory_path": "/dir3/"},
-            {"directory_path": "/dir2/"},
+            {"pathname": "/dir3/"},
+            {"pathname": "/dir2/"},
         ],
         "file_actions": [
             {"id": deep_file_tree["files"]["/dir1/file.csv"].id},
@@ -532,8 +531,8 @@ def test_dataset_files_multiple_post_requests(client, deep_file_tree, data_urls)
     actions = {
         **deep_file_tree["params"],
         "directory_actions": [
-            {"directory_path": "/dir1/sub/"},
-            {"directory_path": "/dir3/", "action": "remove"},
+            {"pathname": "/dir1/sub/"},
+            {"pathname": "/dir3/", "action": "remove"},
         ],
         "file_actions": [
             {"id": deep_file_tree["files"]["/dir2/subdir1/file1.txt"].id, "action": "remove"},
@@ -554,16 +553,16 @@ def test_dataset_files_multiple_post_requests(client, deep_file_tree, data_urls)
     assert_nested_subdict(
         {
             "results": [
-                {"file_path": "/dir1/file.csv"},
-                {"file_path": "/dir1/sub/file.csv"},
-                {"file_path": "/dir2/a.txt"},
-                {"file_path": "/dir2/subdir1/file3.txt"},
-                {"file_path": "/dir2/subdir2/file1.txt"},
-                {"file_path": "/dir2/subdir2/file2.txt"},
-                {"file_path": "/dir2/subdir2/file3.txt"},
-                {"file_path": "/dir2/subdir2/subsub/subsubsub1/file.txt"},
-                {"file_path": "/dir2/subdir2/subsub/subsubsub2/file1.txt"},
-                {"file_path": "/dir2/subdir2/subsub/subsubsub2/file2.txt"},
+                {"pathname": "/dir1/file.csv"},
+                {"pathname": "/dir1/sub/file.csv"},
+                {"pathname": "/dir2/a.txt"},
+                {"pathname": "/dir2/subdir1/file3.txt"},
+                {"pathname": "/dir2/subdir2/file1.txt"},
+                {"pathname": "/dir2/subdir2/file2.txt"},
+                {"pathname": "/dir2/subdir2/file3.txt"},
+                {"pathname": "/dir2/subdir2/subsub/subsubsub1/file.txt"},
+                {"pathname": "/dir2/subdir2/subsub/subsubsub2/file1.txt"},
+                {"pathname": "/dir2/subdir2/subsub/subsubsub2/file2.txt"},
             ]
         },
         res.json(),
@@ -593,9 +592,7 @@ def test_dataset_files_all_metadata_fields(client, deep_file_tree, reference_dat
         "file_actions": [
             {"id": deep_file_tree["files"]["/rootfile.txt"].id, "dataset_metadata": file_metadata},
         ],
-        "directory_actions": [
-            {"directory_path": "/dir1/", "dataset_metadata": directory_metadata}
-        ],
+        "directory_actions": [{"pathname": "/dir1/", "dataset_metadata": directory_metadata}],
     }
     urls = data_urls(dataset)
     res = client.post(
@@ -609,9 +606,9 @@ def test_dataset_files_all_metadata_fields(client, deep_file_tree, reference_dat
     assert_nested_subdict(
         {
             "directories": [
-                {"directory_path": "/dir1/", "dataset_metadata": directory_metadata},
+                {"pathname": "/dir1/", "dataset_metadata": directory_metadata},
             ],
-            "files": [{"file_path": "/rootfile.txt", "dataset_metadata": file_metadata}],
+            "files": [{"pathname": "/rootfile.txt", "dataset_metadata": file_metadata}],
         },
         res.json(),
     )
@@ -670,32 +667,15 @@ def test_dataset_files_invalid_use_category(client, deep_file_tree, reference_da
 
 
 @pytest.mark.django_db
-def test_dataset_files_missing_project_identifier(client, deep_file_tree, data_urls):
-    dataset = factories.DatasetFactory()
-    actions = {
-        "storage_service": deep_file_tree["params"]["storage_service"],
-        "directory_actions": [{"directory_path": "/dir1/"}],
-    }
-    urls = data_urls(dataset)
-    res = client.post(
-        urls["file_set"],
-        actions,
-        content_type="application/json",
-    )
-    assert res.status_code == 400
-    assert "project_identifier" in res.data
-
-
-@pytest.mark.django_db
 def test_dataset_files_wrong_project_identifier(client, deep_file_tree, data_urls):
     dataset = factories.DatasetFactory()
     other_storage = factories.FileStorageFactory(
-        storage_service=deep_file_tree["file_storage"].storage_service
+        storage_service=deep_file_tree["storage"].storage_service
     )
     actions = {
-        "project_identifier": other_storage.project_identifier,
+        "project": other_storage.project,
         "storage_service": other_storage.storage_service,
-        "directory_actions": [{"directory_path": "/dir1/"}],
+        "directory_actions": [{"pathname": "/dir1/"}],
         "file_actions": [{"id": deep_file_tree["files"]["/rootfile.txt"].id}],
     }
     urls = data_urls(dataset)
@@ -705,7 +685,7 @@ def test_dataset_files_wrong_project_identifier(client, deep_file_tree, data_url
         content_type="application/json",
     )
     assert res.status_code == 400
-    assert "Directory not found" in str(res.data["directory_path"])
+    assert "Directory not found" in str(res.data["pathname"])
     assert "Files not found" in str(res.data["file.id"])
 
 
@@ -713,9 +693,9 @@ def test_dataset_files_wrong_project_identifier(client, deep_file_tree, data_url
 def test_dataset_files_unknown_project_identifier(client, deep_file_tree, data_urls):
     dataset = factories.DatasetFactory()
     actions = {
-        "project_identifier": "bleh",
+        "project": "bleh",
         "storage_service": deep_file_tree["params"]["storage_service"],
-        "directories": [{"directory_path": "/dir1/"}],
+        "directories": [{"pathname": "/dir1/"}],
     }
     urls = data_urls(dataset)
     res = client.post(
@@ -724,13 +704,13 @@ def test_dataset_files_unknown_project_identifier(client, deep_file_tree, data_u
         content_type="application/json",
     )
     assert res.status_code == 400
-    assert "project_identifier" in str(res.data)
+    assert "project" in str(res.data)
 
 
 @pytest.mark.django_db
 def test_dataset_files_file_from_wrong_storage_service(client, data_urls, deep_file_tree):
     dataset = factories.DatasetFactory()
-    factories.FileStorageFactory(storage_service="test", project_identifier=None)
+    factories.FileStorageFactory(storage_service="test", project=None)
     urls = data_urls(dataset)
     res = client.post(
         urls["file_set"],
@@ -754,4 +734,4 @@ def test_dataset_files_missing_project_identifier(client, data_urls):
         content_type="application/json",
     )
     assert res.status_code == 400
-    assert "Field is required" in res.data["project_identifier"]
+    assert "Field is required" in res.data["project"]

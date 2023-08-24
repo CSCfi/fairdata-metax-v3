@@ -1,16 +1,12 @@
 # file_serializer
 
-## get_or_create_file_storage
+## get_or_create_storage
 
-### :::src.apps.files.serializers.file_serializer.get_or_create_file_storage
+### :::src.apps.files.serializers.file_serializer.get_or_create_storage
 
 ## CreateOnlyFieldsMixin
 
 ### :::src.apps.files.serializers.file_serializer.CreateOnlyFieldsMixin
-
-## ChecksumSerializer
-
-### :::src.apps.files.serializers.file_serializer.ChecksumSerializer
 
 ## FileSerializer
 

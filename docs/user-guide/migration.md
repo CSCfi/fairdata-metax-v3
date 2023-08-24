@@ -38,7 +38,6 @@ Also named CatalogRecord in V1-V2. Main difference is removing the research_data
 | research_dataset/keyword [list]          | keyword [list]                      |
 | research_dataset/language [list]         | language [list]                     |
 | research_dataset/modified [datetime]     | modified [datetime]                 |
-| research_dataset/persistent_identifier   | persistent_identifier               |
 | research_dataset/preferred_identifier    | persistent_identifier               |
 | research_dataset/publisher [object]      | actors [list]                       |
 | research_dataset/theme [list]            | theme [list]                        |
@@ -249,98 +248,131 @@ They have been moved under `/v3/` together with the former `/rest/` style endpoi
 | contract_json/title       | title         |
 | contract_json/validity    | valid_until   |
 
-## File
+## Files API changes
 
-### Field names
+### Files
 
-| V1-V2 field name     | V3 field name      |
-| -------------------- | ------------------ |
-| checksum_algorithm   | checksum/algorithm |
-| checksum_checked     | checksum/checked   |
-| checksum_value       | checksum/value     |
-| file_characteristics | N/A                |
-| file_deleted         | date_deleted       |
-| file_format          | N/A                |
-| file_frozen          | date_frozen        |
-| file_uploaded        | date_uploaded      |
-| identifier           | id                 |
+File identifier in external storage service has been renamed from `identifier` to `storage_identifier`.
+The `storage_identifier` value is only unique per storage service and the same value
+may exist in multiple services.
 
-### Examples
+| Field                                 | V1/V2                                                      | V3                                          |
+| ------------------------------------- | ---------------------------------------------------------- | ------------------------------------------- |
+| File id                               | id [int]                                                   | id [uuid]                                   |
+| File id in external service           | identifier [str]                                           | storage_identifier [str]                    |
+| External service                      | file_storage [str]<br>e.g. urn:nbn:fi:att:file-storage-ida | storage_service [str]<br>e.g. ida           |
+| Project identifier                    | project_identifier [str]                                   | project [str]                               |
+| Modification date in external service | file_modified [datetime]                                   | modified [datetime]                         |
+| Freeze date in external service       | file_frozen [datetime]                                     | frozen [datetime]                           |
+| File removal date from Metax          | file_removed                                               | removed [datetime]                          |
+| Deletion date                         | file_deleted [datetime]                                    | n/a                                         |
+| Upload date in external service       | file_uploaded [datetime]                                   | n/a                                         |
+| File extension                        | file_format [str]                                          | n/a                                         |
+| File characteristics                  | file_characteristics [object]                              | not implemented yet                         |
+| File characteristics extension        | file_characteristics_extension [object]                    | not implemented yet                         |
+| Parent directory                      | parent_directory [obj]                                     | n/a                                         |
+| Full file path                        | file_path [str]                                            | pathname [str]                              |
+| File name                             | file_name [str]                                            | filename, determined from pathname [str]    |
+| Open access                           | open_access [bool]                                         | n/a                                         |
+| PAS compatible                        | pas_compatible [bool]                                      | not implemented yet                         |
+| File size in bytes                    | byte_size                                                  | size                                        |
+| Checksum algorithm                    | checksum_algorithm                                         | checksum [algorithm:value], e.g. "md5:f00f" |
+| Checksum value                        | checksum_value                                             | merged with checksum_algorithm              |
+| Checksum check date                   | checksum_checked                                           | n/a                                         |
 
-#### Creating files
+### Directories
 
-`POST /files`
+Directories no longer exist as persistent database objects. They are instead generated dynamically
+based on filtered file results when browsing the `/v3/directories` endpoint.
 
-=== "V2"
+When browsing directories and the query parameter `dataset=<id>` is set, the directory `file_count` and `size`
+values correspond to total count and size of directory files belonging to the dataset.
+When `exclude_dataset=true` is also set, the returned counts are for directory
+files _not_ belonging to the dataset.
 
-    ``` json
-     {
-        "id": 0,
-        "identifier": "string",
-        "file_name": "string",
-        "file_path": "string",
-        "file_uploaded": "2023-03-30T06:55:03.737Z",
-        "file_modified": "2023-03-30T06:55:03.737Z",
-        "file_frozen": "2023-03-30T06:55:03.737Z",
-        "file_deleted": "2023-03-30T06:55:03.737Z",
-        "file_characteristics": {
-          "title": "string",
-          "description": "string",
-          "encoding": "string",
-          "application_name": "string",
-          "file_created": "2023-03-30T06:55:03.737Z",
-          "metadata_modified": "2023-03-30T06:55:03.737Z",
-          "open_access": true
-        },
-        "file_format": "string",
-        "byte_size": 0,
-        "file_storage": {
-          "id": 0,
-          "file_storage_json": {
-            "identifier": "string",
-            "title": "string",
-            "url": "string"
-          }
-        },
-        "project_identifier": "string",
-        "checksum": {
-          "value": "string",
-          "algorithm": "MD5",
-          "checked": "2023-03-30T06:55:03.737Z"
-        },
-        "parent_directory": {
-          "id": 0,
-          "identifier": "string"
-        },
-        "open_access": true,
-        "file_characteristics_extension": {
-          "anything_you_need_here": "string"
-        },
-        "date_modified": "2023-03-30T06:55:03.737Z",
-        "user_modified": "string",
-        "date_created": "2023-03-30T06:55:03.737Z",
-        "user_created": "string",
-        "service_created": "string",
-        "service_modified": "string",
-        "date_removed": "2023-03-30T06:55:03.737Z"
-      }
-    ```
+See [Directory object fields](./files-api.md#directory-object-fields) for available directory fields.
 
-=== "V3"
+### File storages
 
-     ``` json
-     {
-        "file_path": "string",
-        "byte_size": 9223372036854776000,
-        "project_identifier": "string",
-        "file_storage": "string",
-        "checksum": {
-            "algorithm": "SHA-256",
-            "checked": "2023-03-30T07:00:23.573Z",
-            "value": "string"
-        },
-        "date_frozen": "2023-03-30T07:00:23.573Z",
-        "file_modified": "2023-03-30T07:00:23.573Z",
-        "date_uploaded": "2023-03-30T07:00:23.573Z"
-     }
-     ```
+In V1/V2, a file storage is an object reprenting an external service where files are stored.
+In V3, file storages represent a collection of files in an external service. For example,
+each IDA project has its own file storage object, identified by
+`{"storage_service": "ida", "project": <project> }`.
+
+File storages are created automatically when files are added and are not exposed directly through the API.
+
+See [Storage services](./files-api.md#storage-services-and-file-storages) for supported storage services.
+
+### File endpoints changes
+
+In v3, automatic identifier type detection (internal `id` or external `storage_identifier`) in endpoint
+paths has been removed. The `<id>` in a V3 file endpoint path always refers to the internal `id`.
+To operate on an existing file using `storage_identifier` instead of `id`, bulk file endpoints can be used.
+
+Bulk file operations now have their own endpoints:
+`insert-many`, `update-many`, `upsert-many`, `delete-many`.
+The bulk endpoints support file identification with either Metax id `{"id": <id>}`
+or by external identifier `{"storage_identifier": <external id>, "storage_service": <service>}`.
+
+Directories no longer have an identifier, so the `​/rest​/directories​/<id>` endpoints
+have been removed. To get details for a directory,
+`/v3/directories?storage_service=<service>&project_identifier=<project>&path=<path>`
+contains the directory details for `<path>` in the `parent_directory` object.
+
+Many of the parameters for `/v3/files` and `/v3/directories` have been renamed or have other changes.
+For a full list of supported parameters, see the [Swagger documentation](/swagger/).
+
+Here are some of the common files API requests and how they map to Metax V3:
+
+| Action                            | V1/V2                                                          | V3                                                                                      |
+| --------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| List files                        | `GET /rest/v1/files`                                           | `GET /v3/files`                                                                         |
+| Get file (using Metax id)         | `GET /rest/v1/files/<id>`                                      | `GET /v3/files/<id>`                                                                    |
+| Get file (using external id)      | `GET /rest/v1/files/<id>`                                      | `GET /v3/files?file_storage=*&storage_identifier=<id>&pagination=false`<br>returns list |
+| Create file                       | `POST /rest/v1/files`                                          | `POST /v3/files`                                                                        |
+| Create files (array)              | `POST /rest/v1/files`                                          | `POST /v3/files/insert-many`                                                            |
+| Update files (array)              | `PATCH /rest/v1/files`                                         | `POST /v3/files/update-many`                                                            |
+| Update or create files (array)    | n/a                                                            | `POST /v3/files/upsert-many`                                                            |
+| Delete files                      | `DELETE /rest/v1/files` (array of ids)                         | `POST /v3/files/delete-many` (array of file objects)                                    |
+| Restore files (array)             | `POST /rest/v1/files/restore`                                  | not implemented yet                                                                     |
+| File datasets (using Metax id)    | `POST /rest/v1/files/datasets`                                 | `POST /v3/files/datasets`                                                               |
+| File datasets (using external id) | `POST /rest/v1/files/datasets`                                 | `POST /v3/files/datasets?file_id_type=storage_identifier&storage_service=<service>`     |
+| List directory contents by path   | `GET /rest/v1/directories/files?project=<project>&path=<path>` | `GET /v3/directories?storage_service=<service>&project=<project>&path=<path>`           |
+
+### Dataset files
+
+In Metax V3 datasets provide a summary of contained files in the `data` object:
+
+```
+  "data": {
+      "storage_service": "ida",
+      "project": "project",
+      "total_files_count": 2,
+      "total_files_size": 2048
+  },
+```
+
+The dataset files endpoints are now located under `fileset`:
+
+- To get list of dataset files, use `GET /v3/datasets/<id>/fileset/files`.
+- To browse dataset directory tree, use `GET /v3/datasets/<id>/fileset/directories`.
+
+The dataset fileset endpoints support the same parameters as corresponding
+`/v3/files` and `/v3/directories` endpoints and use pagination by default.
+
+Updating dataset files is performed by specifying `directory_actions` or `file_actions` in
+`fileset` object when updating dataset. See [Files API](../files-api.md) for details.
+
+### Dataset-specific file metadata
+
+Dataset-specific directory and file metadata used to be
+under `directories` and `files` objects in the dataset.
+In Metax V3 the metadata is included in `dataset_metadata` objects when browsing
+fileset associated with a dataset:
+
+- viewing `/v3/datasets/<id>/fileset/files`
+- viewing `/v3/datasets/<id>/fileset/directories`
+- viewing `/v3/files` with `dataset=<id>`
+- viewing `/v3/directories` with `dataset=<id>`
+
+Dataset-specific directory metadata is only visible when browsing directories.

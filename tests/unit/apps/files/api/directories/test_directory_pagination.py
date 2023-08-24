@@ -19,13 +19,13 @@ def test_directory_pagination(client, file_tree_a):
             "count": 12,
             "previous": None,
             "results": {
-                "parent_directory": {"file_count": 15, "byte_size": 15 * 1024},
+                "directory": {"file_count": 15, "size": 15 * 1024},
                 "directories": [
-                    {"directory_name": "sub1"},
-                    {"directory_name": "sub2"},
-                    {"directory_name": "sub3"},
-                    {"directory_name": "sub4"},
-                    {"directory_name": "sub5"},
+                    {"name": "sub1"},
+                    {"name": "sub2"},
+                    {"name": "sub3"},
+                    {"name": "sub4"},
+                    {"name": "sub5"},
                 ],
                 "files": [],
             },
@@ -42,15 +42,15 @@ def test_directory_pagination(client, file_tree_a):
         {
             "count": 12,
             "results": {
-                "parent_directory": {"file_count": 15, "byte_size": 15 * 1024},
+                "directory": {"file_count": 15, "size": 15 * 1024},
                 "directories": [
-                    {"directory_name": "sub6"},
+                    {"name": "sub6"},
                 ],
                 "files": [
-                    {"file_name": "a.txt"},
-                    {"file_name": "b.txt"},
-                    {"file_name": "c.txt"},
-                    {"file_name": "d.txt"},
+                    {"filename": "a.txt"},
+                    {"filename": "b.txt"},
+                    {"filename": "c.txt"},
+                    {"filename": "d.txt"},
                 ],
             },
         },
@@ -66,11 +66,11 @@ def test_directory_pagination(client, file_tree_a):
             "count": 12,
             "next": None,
             "results": {
-                "parent_directory": {"file_count": 15, "byte_size": 15 * 1024},
+                "directory": {"file_count": 15, "size": 15 * 1024},
                 "directories": [],
                 "files": [
-                    {"file_name": "e.txt"},
-                    {"file_name": "f.txt"},
+                    {"filename": "e.txt"},
+                    {"filename": "f.txt"},
                 ],
             },
         },
@@ -95,7 +95,7 @@ def test_directory_pagination_empty_due_to_offset(client, file_tree_a):
         {
             "count": 12,
             "results": {
-                "parent_directory": {"file_count": 15, "byte_size": 15 * 1024},
+                "directory": {"file_count": 15, "size": 15 * 1024},
                 "directories": [],
                 "files": [],
             },
@@ -123,14 +123,14 @@ def test_directory_pagination_with_name(client, file_tree_a):
             "count": 6,
             "previous": None,
             "results": {
-                "parent_directory": {"file_count": 15, "byte_size": 15 * 1024},
+                "directory": {"file_count": 15, "size": 15 * 1024},
                 "directories": [],
                 "files": [
-                    {"file_name": "a.txt"},
-                    {"file_name": "b.txt"},
-                    {"file_name": "c.txt"},
-                    {"file_name": "d.txt"},
-                    {"file_name": "e.txt"},
+                    {"filename": "a.txt"},
+                    {"filename": "b.txt"},
+                    {"filename": "c.txt"},
+                    {"filename": "d.txt"},
+                    {"filename": "e.txt"},
                 ],
             },
         },
@@ -145,10 +145,10 @@ def test_directory_pagination_with_name(client, file_tree_a):
             "count": 6,
             "next": None,
             "results": {
-                "parent_directory": {"file_count": 15, "byte_size": 15 * 1024},
+                "directory": {"file_count": 15, "size": 15 * 1024},
                 "directories": [],
                 "files": [
-                    {"file_name": "f.txt"},
+                    {"filename": "f.txt"},
                 ],
             },
         },

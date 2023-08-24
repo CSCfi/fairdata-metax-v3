@@ -53,7 +53,7 @@ def dataset_with_provenance_json(dataset_a_json):
                     "person": {"name": "john"},
                 }
             ],
-        }
+        },
     ]
     dataset_a_json["actors"] = [{"actor": {"person": {"name": "john"}}, "role": "creator"}]
     return dataset_a_json

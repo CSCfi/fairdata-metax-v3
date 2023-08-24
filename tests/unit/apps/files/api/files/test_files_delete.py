@@ -1,9 +1,8 @@
 import pytest
+from rest_framework.reverse import reverse
 
 from apps.core import factories as core_factories
 from apps.files import factories as file_factories
-from rest_framework.reverse import reverse
-
 from apps.files.models import File
 
 
@@ -20,12 +19,12 @@ def file_set(client):
             "/dir/a.txt",
             "/rootfile.txt",
         ],
-        file_args={"*": {"byte_size": 1024}},
+        file_args={"*": {"size": 1024}},
     )
     data_catalog = core_factories.DataCatalogFactory()
     dataset = core_factories.DatasetFactory(data_catalog=data_catalog)
     return core_factories.FileSetFactory(
-        dataset=dataset, file_storage=files["file_storage"], files=files["files"].values()
+        dataset=dataset, storage=files["storage"], files=files["files"].values()
     )
 
 
@@ -44,9 +43,9 @@ def test_delete_files_by_project_id(
     res = client.post(
         delete_project_url,
         {
-            "project_identifier": file_set.project_identifier,
-            "storage_service": file_set.file_storage.storage_service,
-            "flush": flush
+            "project": file_set.project,
+            "storage_service": file_set.storage.storage_service,
+            "flush": flush,
         },
         content_type="application/json",
     )

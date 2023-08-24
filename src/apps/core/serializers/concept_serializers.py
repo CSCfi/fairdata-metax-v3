@@ -1,7 +1,6 @@
 from rest_framework import serializers
 
-from apps.core.models import Spatial
-from apps.core.models import concepts
+from apps.core.models import Spatial, concepts
 
 
 class SpatialModelSerializer(serializers.ModelSerializer):

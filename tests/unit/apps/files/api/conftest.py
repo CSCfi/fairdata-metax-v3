@@ -79,7 +79,7 @@ def file_tree_a() -> dict:
             "/dir/f.txt",
             "/rootfile.txt",
         ],
-        file_args={"*": {"byte_size": 1024}},
+        file_args={"*": {"size": 1024}},
     )
 
 
@@ -87,7 +87,7 @@ def file_tree_a() -> dict:
 def file_tree_b() -> dict:
     return factories.create_project_with_files(
         storage_service="ida",
-        project_identifier="project_x",
+        project="project_x",
         file_paths=[
             "/dir/first",
             "/dir/last",
@@ -95,32 +95,24 @@ def file_tree_b() -> dict:
         ],
         file_args={
             "*": {
-                "checksum": {
-                    "algorithm": "md5",
-                    "checked": "2023-01-01T01:00:00Z",
-                    "value": "f00f",
-                },
-                "file_modified": "2022-01-01T12:00:00Z",
-                "date_frozen": "2022-01-02T12:00:00Z",
-                "date_uploaded": "2022-01-03T12:00:00Z",
+                "checksum": "md5:f00f",
+                "modified": "2022-01-01T12:00:00Z",
+                "frozen": "2022-01-02T12:00:00Z",
             },
             "/dir/first": {
                 "id": "00000000-0000-0000-0000-000000000001",
-                "created": "2023-01-01T10:00:00Z",
                 "modified": "2023-01-01T13:00:00Z",
-                "byte_size": 200,
+                "size": 200,
             },
             "/dir/last": {
                 "id": "00000000-0000-0000-0000-000000000002",
-                "created": "2023-01-01T12:00:00Z",
                 "modified": "2023-01-01T22:00:00Z",
-                "byte_size": 3000,
+                "size": 3000,
             },
             "/rootfile.txt": {
                 "id": "00000000-0000-0000-0000-000000000000",
-                "created": "2023-01-01T05:00:00Z",
                 "modified": "2023-01-01T12:00:00Z",
-                "byte_size": 10,
+                "size": 10,
             },
         },
     )

@@ -10,7 +10,7 @@ def file_tree_with_datasets(file_tree_a):
     file_tree_a["dataset_a"] = dataset_a
     factories.FileSetFactory(
         dataset=dataset_a,
-        file_storage=file_tree_a["file_storage"],
+        storage=file_tree_a["storage"],
         files=[
             file_tree_a["files"]["/dir/sub1/file1.csv"],
             file_tree_a["files"]["/dir/sub1/file2.csv"],
@@ -24,7 +24,7 @@ def file_tree_with_datasets(file_tree_a):
     file_tree_a["dataset_b"] = dataset_b
     factories.FileSetFactory(
         dataset=dataset_b,
-        file_storage=file_tree_a["file_storage"],
+        storage=file_tree_a["storage"],
         files=[
             file_tree_a["files"]["/dir/sub4/file.csv"],
             file_tree_a["files"]["/dir/sub6/file.csv"],
@@ -50,18 +50,18 @@ def test_directory_dataset_a(client, file_tree_with_datasets):
     assert res.status_code == 200
     assert_nested_subdict(
         {
-            "parent_directory": {
-                "directory_name": "dir",
+            "directory": {
+                "name": "dir",
                 "file_count": 5,
-                "byte_size": 5 * 1024,
+                "size": 5 * 1024,
             },
             "directories": [
-                {"directory_name": "sub1", "file_count": 2, "byte_size": 2 * 1024},
-                {"directory_name": "sub6", "file_count": 1, "byte_size": 1024},
+                {"name": "sub1", "file_count": 2, "size": 2 * 1024},
+                {"name": "sub6", "file_count": 1, "size": 1024},
             ],
             "files": [
-                {"file_name": "c.txt"},
-                {"file_name": "d.txt"},
+                {"filename": "c.txt"},
+                {"filename": "d.txt"},
             ],
         },
         res.data,
@@ -83,14 +83,14 @@ def test_directory_dataset_b(client, file_tree_with_datasets):
     assert res.status_code == 200
     assert_nested_subdict(
         {
-            "parent_directory": {
-                "directory_name": "dir",
+            "directory": {
+                "name": "dir",
                 "file_count": 2,
-                "byte_size": 2 * 1024,
+                "size": 2 * 1024,
             },
             "directories": [
-                {"directory_name": "sub4", "file_count": 1, "byte_size": 1024},
-                {"directory_name": "sub6", "file_count": 1, "byte_size": 1024},
+                {"name": "sub4", "file_count": 1, "size": 1024},
+                {"name": "sub6", "file_count": 1, "size": 1024},
             ],
             "files": [],
         },
@@ -117,27 +117,27 @@ def test_directory_dataset_include_all(client, file_tree_with_datasets):
     dm = {"dataset_metadata": None}
     assert_nested_subdict(
         {
-            "parent_directory": {
-                "directory_name": "dir",
+            "directory": {
+                "name": "dir",
                 "file_count": 15,
-                "byte_size": 15 * 1024,
+                "size": 15 * 1024,
                 **dm,
             },
             "directories": [
-                {"directory_name": "sub1", "file_count": 3, "byte_size": 3 * 1024, **dm},
-                {"directory_name": "sub2", "file_count": 1, "byte_size": 1024, **dm},
-                {"directory_name": "sub3", "file_count": 1, "byte_size": 1024, **dm},
-                {"directory_name": "sub4", "file_count": 1, "byte_size": 1024, **dm},
-                {"directory_name": "sub5", "file_count": 2, "byte_size": 2 * 1024, **dm},
-                {"directory_name": "sub6", "file_count": 1, "byte_size": 1024, **dm},
+                {"name": "sub1", "file_count": 3, "size": 3 * 1024, **dm},
+                {"name": "sub2", "file_count": 1, "size": 1024, **dm},
+                {"name": "sub3", "file_count": 1, "size": 1024, **dm},
+                {"name": "sub4", "file_count": 1, "size": 1024, **dm},
+                {"name": "sub5", "file_count": 2, "size": 2 * 1024, **dm},
+                {"name": "sub6", "file_count": 1, "size": 1024, **dm},
             ],
             "files": [
-                {"file_name": "a.txt", **dm},
-                {"file_name": "b.txt", **dm},
-                {"file_name": "c.txt", **dm},
-                {"file_name": "d.txt", **dm},
-                {"file_name": "e.txt", **dm},
-                {"file_name": "f.txt", **dm},
+                {"filename": "a.txt", **dm},
+                {"filename": "b.txt", **dm},
+                {"filename": "c.txt", **dm},
+                {"filename": "d.txt", **dm},
+                {"filename": "e.txt", **dm},
+                {"filename": "f.txt", **dm},
             ],
         },
         res.data,
@@ -175,27 +175,27 @@ def test_directory_exclude_dataset_a(client, file_tree_with_datasets):
     assert res.status_code == 200
     assert_nested_subdict(
         {
-            "parent_directory": {
-                "directory_name": "dir",
+            "directory": {
+                "name": "dir",
                 "file_count": 10,
-                "byte_size": 10 * 1024,
+                "size": 10 * 1024,
             },
             "directories": [
                 {
-                    "directory_name": "sub1",
+                    "name": "sub1",
                     "file_count": 1,
-                    "byte_size": 1 * 1024,
+                    "size": 1 * 1024,
                 },  # 1 file not yet in dataset
-                {"directory_name": "sub2", "file_count": 1, "byte_size": 1 * 1024},
-                {"directory_name": "sub3", "file_count": 1, "byte_size": 1 * 1024},
-                {"directory_name": "sub4", "file_count": 1, "byte_size": 1 * 1024},
-                {"directory_name": "sub5", "file_count": 2, "byte_size": 2 * 1024},
+                {"name": "sub2", "file_count": 1, "size": 1 * 1024},
+                {"name": "sub3", "file_count": 1, "size": 1 * 1024},
+                {"name": "sub4", "file_count": 1, "size": 1 * 1024},
+                {"name": "sub5", "file_count": 2, "size": 2 * 1024},
             ],
             "files": [
-                {"file_name": "a.txt"},
-                {"file_name": "b.txt"},
-                {"file_name": "e.txt"},
-                {"file_name": "f.txt"},
+                {"filename": "a.txt"},
+                {"filename": "b.txt"},
+                {"filename": "e.txt"},
+                {"filename": "f.txt"},
             ],
         },
         res.data,

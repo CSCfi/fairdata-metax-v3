@@ -27,17 +27,17 @@ Each file is associated with a storage service such as IDA,
 defined with `storage_service` field.
 Storage services may have additional parameters that are used
 for organizing files. For example, each file in IDA belongs
-to a project as specified by the `project_identifier` field.
+to a project as specified by the `project` field.
 A set of `storage_service` and related parameters define
 a file storage in Metax. A single dataset may only have
 files from a single file storage.
 
 Below is a list of currently supported services.
 
-| Service      | storage_service value | project_identifier required |
-| ------------ | --------------------- | --------------------------- |
-| Fairdata IDA | ida                   | yes                         |
-| Fairdata PAS | pas                   | yes                         |
+| Service      | storage_service value | project required |
+| ------------ | --------------------- | ---------------- |
+| Fairdata IDA | ida                   | yes              |
+| Fairdata PAS | pas                   | yes              |
 
 ## Browsing files in Metax
 
@@ -45,11 +45,11 @@ Files are accessed with the `/v3/files` endpoint. There is also a separate read-
 
 For example, to browse frozen IDA files:
 
-- `GET /v3/files?storage_service=ida&project_identifier=<project>` List of all files in IDA project with pagination.
-- `GET /v3/files?storage_service=ida&project_identifier=<project>&pagination=false` List all files in IDA project without pagination. Not recommended for large projects.
+- `GET /v3/files?storage_service=ida&project=<project>` List of all files in IDA project with pagination.
+- `GET /v3/files?storage_service=ida&project=<project>&pagination=false` List all files in IDA project without pagination. Not recommended for large projects.
 - `GET /v3/files?file_storage=ida&file_storage_identifier=<id>&pagination=false` Returns IDA file with specified `file_storage_identifier` in a list.
-- `GET /v3/directories?storage_service=ida&project_identifier=<project>` View root directory contents of an IDA project.
-- `GET /v3/directories?storage_service=ida&project_identifier=<project>&path=/dir/subdir/` View contents of `/dir/subdir/` of an IDA project.
+- `GET /v3/directories?storage_service=ida&project=<project>` View root directory contents of an IDA project.
+- `GET /v3/directories?storage_service=ida&project=<project>&path=/dir/subdir/` View contents of `/dir/subdir/` of an IDA project.
 
 For examples on browsing dataset files or directories, see [Datasets API](datasets-api.md#dataset-files).
 
@@ -66,69 +66,61 @@ This differs from the usual pagination where `results` is a list.
 Pagination counts subdirectories and files together with directories first.
 Pagination is enabled by default.
 
-The `file_count` and `byte_size` values for a directory include all files
+The `file_count` and `size` values for a directory include all files
 in a directory, including subdirectories.
 
 <details><summary>Example directory response</summary>
 
 This is an example of what the response for
-GET /v3/directories?storage_service=ida&project_identifier=project&path=/data/
+GET /v3/directories?storage_service=ida&project=project&path=/data/
 might look like.
 
 ```json
 {
-    "count": 15,
-    "next": null,
-    "previous": null,
-    "results": {
-        "parent_directory": {
-            "storage_service": "ida",
-            "project_identifier": "project",
-            "directory_name": "data",
-            "directory_path": "/data/",
-            "file_count": 15,
-            "byte_size": 15360,
-            "created": "2023-06-19T10:20:53.127875+03:00",
-            "modified": "2023-06-21T14:38:23.875899+03:00",
-            "parent_url": "https://metax.fairdata.fi/v3/directories?storage_service=ida&project_identifier=project&path=/"
-        },
-        "directories": [
-            {
-                "storage_service": "ida",
-                "project_identifier": "project",
-                "directory_name": "subdir",
-                "directory_path": "/data/subdir/",
-                "file_count": 1,
-                "byte_size": 1024,
-                "created": "2023-06-21T14:38:23.875899+03:00",
-                "modified": "2023-06-21T14:38:23.875899+03:00",
-                "url": "https://metax.fairdata.fi/v3/directories?storage_service=ida&project_identifier=project&path=/data/subdir/"
-            }
-        ],
-        "files": [
-            {
-                "id": "b58cb132-d8b5-4aea-9009-545776610f0c",
-                "file_path": "/data/file1.txt",
-                "file_name": "file1.txt",
-                "byte_size": 1024,
-                "storage_service": "ida",
-                "project_identifier": "project",
-                "file_storage_identifier": "file1-id",
-                "file_storage_pathname": null,
-                "checksum": {
-                    "algorithm": "MD5",
-                    "checked": "2022-11-13T14:34:00+02:00",
-                    "value": "1234"
-                },
-                "date_frozen": null,
-                "file_modified": "2022-11-13T16:34:00+02:00",
-                "date_uploaded": "2022-11-13T14:34:00+02:00",
-                "created": "2023-06-19T10:20:53.127875+03:00",
-                "modified": "2023-06-19T10:20:53.127875+03:00"
-            },
-            ...
-        ]
-    }
+  "count": 2,
+  "next": null,
+  "previous": null,
+  "results": {
+    "directory": {
+      "storage_service": "ida",
+      "project": "project",
+      "name": "data",
+      "pathname": "/data/",
+      "file_count": 5,
+      "size": 1024,
+      "created": "2022-11-12T12:34:00+02:00",
+      "modified": "2022-11-13T14:34:00+02:00",
+      "parent_url": "https://m3.fd-dev.csc.fi:8100/v3/directories?storage_service=ida&project=project&path=/"
+    },
+    "directories": [
+      {
+        "storage_service": "ida",
+        "project": "project",
+        "name": "subdirectory",
+        "pathname": "/data/subdirectory/",
+        "file_count": 4,
+        "size": 0,
+        "created": "2022-11-13T14:34:00+02:00",
+        "modified": "2022-11-13T14:34:00+02:00",
+        "url": "https://m3.fd-dev.csc.fi:8100/v3/directories?storage_service=ida&project=project&path=/data/subdirectory/"
+      }
+    ],
+    "files": [
+      {
+        "id": "e8524528-bfef-4731-8314-c5fe10ba3487",
+        "storage_identifier": "file1-id",
+        "pathname": "/data/file1.txt",
+        "filename": "file1.txt",
+        "size": 1024,
+        "storage_service": "ida",
+        "project": "project",
+        "checksum": "md5:bd0f1dff407071e5db8eb57dde4847a3",
+        "frozen": "2022-11-12T13:20:00+02:00",
+        "modified": "2022-11-12T12:34:00+02:00",
+        "removed": null
+      }
+    ]
+  }
 }
 ```
 
@@ -163,7 +155,7 @@ There are bulk endpoints that accept an array of file objects:
 - `/v3/files/delete-many` Deletes existing files. Requires `id` for each file.
 
 The bulk endpoints also support updating files with the external identifier
-`file_storage_identifier` instead of the Metax internal `id`. Because external identifiers
+`storage_identifier` instead of the Metax internal `id`. Because external identifiers
 are specific to a service, `storage_service` also
 needs to be specified in the file payload.
 
@@ -195,48 +187,37 @@ succeeded. The response will be JSON in the following shape:
 
 Bolded fields are required when creating a file.
 
-| Field                                 | key                           | value                    | read only |
-| ------------------------------------- | ----------------------------- | ------------------------ | --------- |
-| Creation date in Metax                | created                       | datetime                 | x         |
-| Modification date in Metax            | modified                      | datetime                 | x         |
-| Metax identifier                      | id                            | uuid                     | x         |
-| Storage service                       | **storage_service**           | str                      |           |
-| Service-specific project identifier   | **project_identifier\***      | str                      |           |
-| File identifier in external service   | **file_storage_identifier\*** | str                      |           |
-| File pathname in external service     | file_storage_pathname         | str                      |           |
-| File path                             | **file_path**                 | str, e.g. /data/file.txt |           |
-| File name (determined from path)      | file_name                     | str, e.g. file.txt       | x         |
-| Freeze date in external service       | date_frozen                   | datetime                 |           |
-| Upload date in external service       | **date_uploaded**             | datetime                 |           |
-| Deletion date in external service     | date_deleted                  | datetime                 |           |
-| Modification date in external service | **file_modified**             | datetime                 |           |
-| File size in bytes                    | **byte_size**                 | int                      |           |
-| Checksum                              | **checksum**                  | object                   |           |
-| Is PAS compatible                     | is_pas_compatible             | bool or null             |           |
-| Dataset-specific metadata             | dataset_metadata**\*\***      | object                   | x         |
+| Field                                 | key                      | value                          | read only |
+| ------------------------------------- | ------------------------ | ------------------------------ | --------- |
+| Metax identifier                      | id                       | uuid                           | x         |
+| Storage service                       | **storage_service**      | str                            |           |
+| Service-specific project identifier   | **project\***            | str                            |           |
+| File identifier in external service   | **storage_identifier\*** | str                            |           |
+| File path                             | **pathname**             | str, e.g. /data/file.txt       |           |
+| File name (determined from path)      | filename                 | str, e.g. file.txt             | x         |
+| Freeze date in external service       | frozen                   | datetime                       |           |
+| When file was removed from service    | removed                  | datetime (null if not removed) | x         |
+| Modification date in external service | **modified**             | datetime                       |           |
+| File size in bytes                    | **size**                 | int                            |           |
+| Checksum                              | **checksum**             | str, e.g. md5:ffa123f...       |           |
+| Is PAS compatible                     | is_pas_compatible        | bool or null                   |           |
+| Dataset-specific metadata             | dataset_metadata**\*\*** | object                         | x         |
+| User                                  | user                     | str                            |           |
 
 **\*** Required depending on storage service.
 
 **\*\*** Only available when viewing files of a dataset.
 
-### File checksum object fields
-
-| Field              | key           | value                   |
-| ------------------ | ------------- | ----------------------- |
-| Checksum algorithm | **algorithm** | SHA-256, SHA-512 or MD5 |
-| Checksum date      | **checked**   | datetime                |
-| Checksum value     | **value**     | str                     |
-
 ### Directory object fields
 
-| Field                                 | key                    | value                   |
-| ------------------------------------- | ---------------------- | ----------------------- |
-| Creation of first file                | created                | datetime                |
-| Most recent modification date of file | modified               | datetime                |
-| Storage service                       | storage_service        | str                     |
-| Service-specific project identifier   | project_identifier     | str                     |
-| Directory name                        | directory_name         | str, e.g. subdir        |
-| Directory path                        | directory_path         | str, e.g. /data/subdir/ |
-| Dataset-specific metadata             | dataset_metadata**\*** | object                  |
+| Field                                 | key                    | value                                   |
+| ------------------------------------- | ---------------------- | --------------------------------------- |
+| Earliest file modification date       | created                | datetime                                |
+| Most recent modification date of file | modified               | datetime                                |
+| Storage service                       | storage_service        | str                                     |
+| Service-specific project identifier   | project                | str                                     |
+| Directory name                        | name                   | str, e.g. subdir                        |
+| Directory path                        | pathname               | str ending with `/`, e.g. /data/subdir/ |
+| Dataset-specific metadata             | dataset_metadata**\*** | object                                  |
 
 **\*** Only available when viewing directories of a dataset.

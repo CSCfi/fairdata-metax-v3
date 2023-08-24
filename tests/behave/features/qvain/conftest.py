@@ -30,7 +30,7 @@ def mock_qvain_dataset_with_files_request(qvain_user, frozen_files_in_ida, mock_
 @given("user has frozen files in IDA")
 def frozen_files_in_ida():
     """When files are frozen in IDA, new File Model Objects are created for the IDA-project in Metax"""
-    files = FileFactory.create_batch(3, date_frozen=timezone.now())
+    files = FileFactory.create_batch(3, frozen=timezone.now())
     return files
 
 

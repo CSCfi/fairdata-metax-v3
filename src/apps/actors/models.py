@@ -6,9 +6,9 @@ from django.conf import settings
 from django.contrib.postgres.fields import HStoreField
 from django.core.exceptions import MultipleObjectsReturned
 from django.db import models
+from django.utils.translation import gettext as _
 
 from apps.common.models import AbstractBaseModel
-from django.utils.translation import gettext as _
 
 logger = logging.getLogger(__name__)
 

@@ -3,12 +3,12 @@
   "title": {
     "en": "Test dataset"
   },
-  "data": {
-    "project_identifier": "test_project",
+  "fileset": {
+    "project": "test_project",
     "storage_service": "ida",
     "directory_actions": [
       {
-        "directory_path": "/data/",
+        "pathname": "/data/",
         "dataset_metadata": {
           "title": "Test results",
           "use_category": {

@@ -1,9 +1,7 @@
 import pytest
-
-from tests.unit.apps.core.api.json_models import DatasetActor, Actor, Organization
 from rest_framework.reverse import reverse
-
 from tests.unit.apps.core.api.conftest import load_test_json
+from tests.unit.apps.core.api.json_models import Actor, DatasetActor, Organization
 
 
 @pytest.fixture

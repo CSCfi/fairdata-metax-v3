@@ -1,6 +1,5 @@
 - [User Guide](user-guide/index.md)
-    - [Differences between V1-V2 and V3](user-guide/migration/index.md)
-        - user-guide/migration/*
+    - [Differences between V1-V2 and V3](user-guide/migration.md)
     - user-guide/*
 - [Developer Guide](developer-guide/index.md)
     - [Contributing](developer-guide/contributing/index.md)

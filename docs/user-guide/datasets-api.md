@@ -2,7 +2,7 @@
 
 ## Required properties
 
-A dataset has the following required properties. 
+A dataset has the following required properties.
 
 | Field              | key                        | value                                                   |
 |--------------------|----------------------------|---------------------------------------------------------|
@@ -38,7 +38,7 @@ License is special kind of reference data object, as it can have additional meta
 * custom_url
 * description
 
-Access type defines who can view your dataset metadata in Metax and Etsin. 
+Access type defines who can view your dataset metadata in Metax and Etsin.
 
 !!! example
     ``` json
@@ -47,38 +47,38 @@ Access type defines who can view your dataset metadata in Metax and Etsin.
 
 ### Data Catalog
 
-This is the id of the Data Catalog object that can be seen in `/v3/data-catalogs` list. 
+This is the id of the Data Catalog object that can be seen in `/v3/data-catalogs` list.
 
 ## Dataset files
 
 A dataset can have files associated with it, and associated files and directories can have
 additional dataset-specific metadata. All associated files have to be from the same file storage (e.g. same IDA project).
 
-When viewing a dataset with `GET /v3/datasets/<id>`, the response includes a summary of its data. For example:
+When viewing a dataset with `GET /v3/datasets/<id>`, the response includes a summary of its file data in the `fileset` object. For example:
 
 <!-- prettier-ignore -->
 !!! example
     ```
     {
       ...
-      "data": {
+      "fileset": {
           "storage_service": "ida",
-          "project_identifier": "project",
+          "project": "project",
           "total_files_count": 2,
-          "total_files_byte_size": 2048
+          "total_files_size": 2048
       }
     }
     ```
 
-The data object is also directly available at `/v3/datasets/<id>/data`.
+The fileset object is also directly available at `/v3/datasets/<id>/fileset`.
 
 ### Browsing dataset files
 
 Dataset files can be viewed as a flat list or browsed as a directory tree:
 
-- `GET /v3/datasets/<id>/data/files` View flat list of dataset files.
-- `GET /v3/datasets/<id>/data/directories` View root directory of dataset files.
-- `GET /v3/datasets/<id>/data/directories?path=<path>` View content of path `<path>`, e.g. `?path=/data/subdir/`.
+- `GET /v3/datasets/<id>/fileset/files` View flat list of dataset files.
+- `GET /v3/datasets/<id>/fileset/directories` View root directory of dataset files.
+- `GET /v3/datasets/<id>/fileset/directories?path=<path>` View content of path `<path>`, e.g. `?path=/fileset/subdir/`.
 
 The endpoints support the same parameters as corresponding
 `/v3/files` and `/v3/directories` endpoints and use pagination by default.
@@ -89,17 +89,17 @@ in the `dataset_metadata` field, or `null` if metadata is not set.
 ### Adding, updating or removing dataset files
 
 To modify dataset file associations, include file storage parameters
-(i.e. `storage_service`, `project_identifier`) and a `directory_actions` or `file_actions` list either
+(i.e. `storage_service`, `project`) and a `directory_actions` or `file_actions` list either
 
-- in data object when creating or updating a dataset, e.g. with `POST /v3/datasets`
-- or in payload for `POST /v3/datasets/<id>/data`.
+- in fileset object when creating or updating a dataset, e.g. with `POST /v3/datasets`
+- or in payload for `POST /v3/datasets/<id>/fileset`.
 
-The data object should look like
+The fileset object should look like
 
 ```
 {
   "storage_service": <service, e.g. ida>,
-  "project_identifier": <project>,
+  "project": <project>,
   "directory_actions": [
     {
       "directory_path": <path, e.g. /data/>,
@@ -133,7 +133,7 @@ where the optional action is is one of
 If `dataset_metadata` is present but set to `null`, existing metadata will be removed.
 Metadata is also removed if the file or directory is no longer in the dataset after the operations.
 
-The response data object will include the normal data summary and additional
+The response fileset object will include the normal fileset summary and additional
 values `added_files_count` and `removed_files_count` which tell how many
 files were added and how many files were removed by the operations.
 

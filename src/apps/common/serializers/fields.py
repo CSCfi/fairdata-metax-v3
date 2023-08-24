@@ -148,3 +148,19 @@ class URLReferencedModelField(serializers.RelatedField):
                 for item in queryset
             ]
         )
+
+
+class ChecksumField(serializers.RegexField):
+    allowed_algorithms = ["md5", "sha256", "sha512"]
+    checksum_regex = rf"^({'|'.join(allowed_algorithms)}):[a-z0-9_]+$"
+
+    default_error_messages = {
+        "invalid": _(
+            "Checksum should be a lowercase string in format 'algorithm:value'. "
+            "Allowed algorithms are: {}."
+        ).format(allowed_algorithms)
+    }
+
+    def __init__(self, *args, **kwargs):
+        kwargs["trim_whitespace"] = False
+        super().__init__(self.checksum_regex, *args, **kwargs)

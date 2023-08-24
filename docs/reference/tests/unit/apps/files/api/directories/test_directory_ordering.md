@@ -8,9 +8,9 @@
 
 ### :::tests.unit.apps.files.api.directories.test_directory_ordering.test_directory_ordering_name_reverse
 
-## test_directory_ordering_byte_size
+## test_directory_ordering_size
 
-### :::tests.unit.apps.files.api.directories.test_directory_ordering.test_directory_ordering_byte_size
+### :::tests.unit.apps.files.api.directories.test_directory_ordering.test_directory_ordering_size
 
 ## test_directory_ordering_multiple
 

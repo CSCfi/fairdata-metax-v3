@@ -21,8 +21,6 @@ from .concepts import (
     Spatial,
     Theme,
     UseCategory,
-    LifecycleEvent,
-    EventOutcome
 )
 from .contract import Contract
 from .data_catalog import (

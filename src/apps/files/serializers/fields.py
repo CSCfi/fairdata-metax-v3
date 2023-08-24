@@ -42,10 +42,10 @@ class ListValidChoicesField(serializers.ChoiceField):
         super().__init__(*args, **kwargs)
 
 
-file_name_regex = r"^[^/]+$"  # e.g. file
-file_path_regex = r"^/([^/]+/)*[^/]+$"  # e.g. /directory/subdirectory/file
-directory_path_regex = r"^/([^/]+/)*$"  # e.g. /directory/subdirectory/
-optional_slash_directory_path_regex = (
+filename_regex = r"^[^/]+$"  # e.g. file
+file_pathname_regex = r"^/([^/]+/)*[^/]+$"  # e.g. /directory/subdirectory/file
+directory_pathname_regex = r"^/([^/]+/)*$"  # e.g. /directory/subdirectory/
+optional_slash_pathname_regex = (
     r"^/([^/]+/?)*$"  # e.g. /directory/subdirectory/ or /directory/subdirectory
 )
 
@@ -55,7 +55,7 @@ class FileNameField(serializers.RegexField):
 
     def __init__(self, *args, **kwargs):
         kwargs["trim_whitespace"] = False
-        super().__init__(file_name_regex, *args, **kwargs)
+        super().__init__(filename_regex, *args, **kwargs)
 
 
 class FilePathField(serializers.RegexField):
@@ -63,7 +63,7 @@ class FilePathField(serializers.RegexField):
 
     def __init__(self, *args, **kwargs):
         kwargs["trim_whitespace"] = False
-        super().__init__(file_path_regex, *args, **kwargs)
+        super().__init__(file_pathname_regex, *args, **kwargs)
 
 
 class DirectoryPathField(serializers.RegexField):
@@ -71,7 +71,7 @@ class DirectoryPathField(serializers.RegexField):
 
     def __init__(self, *args, **kwargs):
         kwargs["trim_whitespace"] = False
-        super().__init__(directory_path_regex, *args, **kwargs)
+        super().__init__(directory_pathname_regex, *args, **kwargs)
 
 
 class OptionalSlashDirectoryPathField(serializers.RegexField):
@@ -83,7 +83,7 @@ class OptionalSlashDirectoryPathField(serializers.RegexField):
 
     def __init__(self, *args, **kwargs):
         kwargs["trim_whitespace"] = False
-        super().__init__(optional_slash_directory_path_regex, *args, **kwargs)
+        super().__init__(optional_slash_pathname_regex, *args, **kwargs)
 
     def to_internal_value(self, data):
         if data and not data.endswith("/"):

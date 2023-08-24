@@ -133,7 +133,6 @@ class DatasetActorViewSet(viewsets.ModelViewSet):
         return context
 
 
-
 class MetadataProviderFilter(filters.FilterSet):
     organization = filters.CharFilter(
         field_name="organization",

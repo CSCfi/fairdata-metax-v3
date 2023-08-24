@@ -12,7 +12,21 @@ from polymorphic.models import PolymorphicModel
 from apps.common.managers import ProxyBasePolymorphicManager
 
 
-class AbstractBaseModel(TimeStampedModel, SoftDeletableModel):
+class SystemCreatorBaseModel(models.Model):
+    """Abstact model with system creator field."""
+
+    system_creator = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="%(app_label)s_%(class)ss",
+        null=True,
+    )
+
+    class Meta:
+        abstract = True
+
+
+class AbstractBaseModel(SystemCreatorBaseModel, TimeStampedModel, SoftDeletableModel):
     """Adds soft-delete and created / modified timestamp functionalities
 
     Added fields are:
@@ -22,12 +36,6 @@ class AbstractBaseModel(TimeStampedModel, SoftDeletableModel):
     """
 
     removal_date = models.DateTimeField(null=True, blank=True)
-    system_creator = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        related_name="%(app_label)s_%(class)ss",
-        null=True,
-    )
 
     def delete(self, using=None, soft=True, *args, **kwargs):
         """Override delete method to add removal_date
@@ -97,7 +105,7 @@ class AbstractFreeformConcept(AbstractDatasetProperty):
         abstract = True
 
     def __str__(self):
-        return str({k:v for k, v in self.__dict__.items() if v is not None})
+        return str({k: v for k, v in self.__dict__.items() if v is not None})
 
 
 class ProxyBasePolymorphicModel(PolymorphicModel):

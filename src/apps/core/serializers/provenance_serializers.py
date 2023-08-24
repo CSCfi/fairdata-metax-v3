@@ -6,7 +6,7 @@ from rest_framework import serializers
 
 from apps.actors.models import Person
 from apps.actors.serializers import ActorModelSerializer, PersonModelSerializer
-from apps.core.models import EventOutcome, Provenance, DatasetActor, LifecycleEvent
+from apps.core.models import DatasetActor, EventOutcome, LifecycleEvent, Provenance
 from apps.core.serializers import DatasetActorModelSerializer, SpatialModelSerializer
 
 logger = logging.getLogger(__name__)

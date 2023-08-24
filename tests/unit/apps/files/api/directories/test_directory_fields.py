@@ -1,4 +1,5 @@
 import pytest
+from rest_framework.fields import DateTimeField
 from tests.utils import assert_nested_subdict
 
 from apps.core.models import FileSetDirectoryMetadata
@@ -18,50 +19,44 @@ def test_directory_field_values(client, file_tree_b):
     assert res.status_code == 200
     assert_nested_subdict(
         {
-            "parent_directory": {
+            "directory": {
                 "storage_service": "ida",
-                "project_identifier": "project_x",
-                "directory_name": "",
-                "directory_path": "/",
+                "project": "project_x",
+                "name": "",
+                "pathname": "/",
                 "file_count": 3,
-                "byte_size": 3210,
-                "created": file_tree_b["files"]["/rootfile.txt"].created,
+                "size": 3210,
+                "created": file_tree_b["files"]["/rootfile.txt"].modified,
                 "modified": file_tree_b["files"]["/dir/last"].modified,
                 "parent_url": None,
             },
             "directories": [
                 {
                     "storage_service": "ida",
-                    "project_identifier": "project_x",
-                    "directory_name": "dir",
-                    "directory_path": "/dir/",
+                    "project": "project_x",
+                    "name": "dir",
+                    "pathname": "/dir/",
                     "file_count": 2,
-                    "byte_size": 3200,
-                    "created": file_tree_b["files"]["/dir/first"].created,
+                    "size": 3200,
+                    "created": file_tree_b["files"]["/dir/first"].modified,
                     "modified": file_tree_b["files"]["/dir/last"].modified,
-                    "url": "http://testserver/v3/directories?pagination=False&project_identifier=project_x&storage_service=ida&path=/dir/",
+                    "url": "http://testserver/v3/directories?pagination=False&project=project_x&storage_service=ida&path=/dir/",
                 }
             ],
             "files": [
                 {
                     "id": "00000000-0000-0000-0000-000000000000",
-                    "file_path": "/rootfile.txt",
-                    "file_name": "rootfile.txt",
-                    "byte_size": 10,
-                    "project_identifier": "project_x",
+                    "pathname": "/rootfile.txt",
+                    "filename": "rootfile.txt",
+                    "size": 10,
+                    "project": "project_x",
                     "storage_service": "ida",
-                    "file_storage_pathname": None,
-                    "file_storage_identifier": "file_rootfile.txt_00000000-0000-0000-0000-000000000000",
-                    "checksum": {
-                        "algorithm": "md5",
-                        "checked": "2023-01-01T03:00:00+02:00",
-                        "value": "f00f",
-                    },
-                    "date_frozen": file_tree_b["files"]["/rootfile.txt"].date_frozen,
-                    "file_modified": file_tree_b["files"]["/rootfile.txt"].file_modified,
-                    "date_uploaded": file_tree_b["files"]["/rootfile.txt"].date_uploaded,
-                    "created": file_tree_b["files"]["/rootfile.txt"].created,
+                    "storage_identifier": "file_rootfile.txt_00000000-0000-0000-0000-000000000000",
+                    "checksum": "md5:f00f",
                     "modified": file_tree_b["files"]["/rootfile.txt"].modified,
+                    "frozen": file_tree_b["files"]["/rootfile.txt"].frozen,
+                    "removed": None,
+                    "user": None,
                 }
             ],
         },
@@ -76,15 +71,15 @@ def test_directory_file_fields(client, file_tree_b):
         "/v3/directories",
         {
             "pagination": False,
-            "file_fields": "file_path,byte_size",
+            "file_fields": "pathname,size",
             **file_tree_b["params"],
         },
     )
     assert res.status_code == 200
     assert_nested_subdict(
         {
-            "file_path": "/rootfile.txt",  # computed from other fields
-            "byte_size": 10,
+            "pathname": "/rootfile.txt",  # computed from other fields
+            "size": 10,
         },
         res.data["files"][0],
         check_all_keys_equal=True,
@@ -97,16 +92,16 @@ def test_directory_directory_fields(client, file_tree_b):
         "/v3/directories",
         {
             "pagination": False,
-            "directory_fields": "directory_name,directory_path,file_count,byte_size",
+            "directory_fields": "name,pathname,file_count,size",
             **file_tree_b["params"],
         },
     )
     assert res.status_code == 200
     assert_nested_subdict(
         {
-            "directory_name": "dir",
-            "directory_path": "/dir/",
-            "byte_size": 3200,
+            "name": "dir",
+            "pathname": "/dir/",
+            "size": 3200,
             "file_count": 2,
         },
         res.data["directories"][0],

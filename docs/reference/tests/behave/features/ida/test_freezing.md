@@ -1,8 +1,8 @@
 # test_freezing
 
-## project_identifier
+## project
 
-### :::tests.behave.features.ida.test_freezing.project_identifier
+### :::tests.behave.features.ida.test_freezing.project
 
 ## files_json
 

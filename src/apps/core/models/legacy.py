@@ -8,14 +8,14 @@ from deepdiff import DeepDiff
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db import models, ProgrammingError
+from django.db import ProgrammingError, models
 from django.utils.dateparse import parse_datetime
 
 from apps.actors.models import Actor, Organization, Person
 from apps.common.helpers import parse_iso_dates_in_nested_dict
 from apps.core.models import FileSet
 from apps.files.models import File
-from apps.files.serializers.file_serializer import get_or_create_file_storage
+from apps.files.serializers.file_serializer import get_or_create_storage
 from apps.refdata.models import FunderType, License, Location
 from apps.users.models import MetaxUser
 
@@ -484,8 +484,13 @@ class LegacyDataset(Dataset):
             return actors
         return []
 
+    def convert_checksum_v2_to_v3(self, checksum: dict) -> str:
+        algorithm = checksum.get("algorithm", "").lower().replace("-", "")
+        value = checksum.get("value", "").lower()
+        return f"{algorithm}:{value}"
+
     def attach_files(self):
-        file_storage_file_objects = {}
+        storage_file_objects = {}
         if files := self.files_json:
             for f in files:
                 file_id = f["identifier"]
@@ -495,22 +500,19 @@ class LegacyDataset(Dataset):
                 storage_service = settings.LEGACY_FILE_STORAGE_TO_V3_STORAGE_SERVICE[
                     f["file_storage"]["identifier"]
                 ]
-                file_storage = get_or_create_file_storage(
-                    project_identifier=f["project_identifier"],
+                storage = get_or_create_storage(
+                    project=f["project_identifier"],
                     storage_service=storage_service,
                 )
                 new_file, created = File.objects.get_or_create(
-                    file_storage_identifier=file_id,
+                    storage_identifier=file_id,
                     defaults={
-                        "checksum_value": checksum.get("value"),
-                        "checksum_algorithm": checksum.get("algorithm"),
-                        "checksum_checked": parse_datetime(checksum.get("checked")),
-                        "byte_size": f["byte_size"],
-                        "file_path": f["file_path"],
-                        "date_uploaded": f["date_uploaded"],
-                        "file_modified": f["file_modified"],
-                        "file_storage_identifier": f["identifier"],
-                        "file_storage": file_storage,
+                        "checksum": self.convert_checksum_v2_to_v3(checksum),
+                        "size": f["byte_size"],
+                        "pathname": f["file_path"],
+                        "modified": f["file_modified"],
+                        "storage_identifier": f["identifier"],
+                        "storage": storage,
                     },
                 )
                 if created:
@@ -518,13 +520,11 @@ class LegacyDataset(Dataset):
                 if file_checksum:
                     new_file.checksum = file_checksum
 
-                file_storage_file_objects.setdefault(file_storage.id, []).append(new_file)
+                storage_file_objects.setdefault(storage.id, []).append(new_file)
 
         file_set = None
-        for storage_id, file_objects in file_storage_file_objects.items():
-            file_set, created = FileSet.objects.get_or_create(
-                dataset=self, file_storage_id=storage_id
-            )
+        for storage_id, file_objects in storage_file_objects.items():
+            file_set, created = FileSet.objects.get_or_create(dataset=self, storage_id=storage_id)
             if created:
                 self.created_objects += 1
             file_set.files.set(file_objects)

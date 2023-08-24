@@ -35,7 +35,7 @@ def test_comma_separated_field(input, expected):
         ("ti/edo/sto.txt", serializers.ValidationError),
     ],
 )
-def test_file_name_field(input, expected):
+def test_filename_field(input, expected):
     field = fields.FileNameField()
     validate_input(field, input, expected)
 

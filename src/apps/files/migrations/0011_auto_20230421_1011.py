@@ -21,6 +21,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RemoveConstraint(
+            model_name='file',
+            name='files_file_unique_file_storage_pathname',
+        ),
         migrations.AddField(
             model_name='filestorage',
             name='polymorphic_ctype',

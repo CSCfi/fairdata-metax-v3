@@ -13,19 +13,19 @@ from django.db.models import F, Q, QuerySet
 from django.db.models.functions import Concat
 from django_filters import rest_framework as filters
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import serializers, viewsets, status
+from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from apps.files.helpers import get_file_metadata_model
 from apps.files.models.file import File
+from apps.files.serializers import DeleteWithProjectIdentifierSerializer, FileSerializer
 from apps.files.serializers.fields import StorageServiceField
 from apps.files.serializers.file_bulk_serializer import (
     BulkAction,
     FileBulkReturnValueSerializer,
     FileBulkSerializer,
 )
-from apps.files.serializers import FileSerializer, DeleteWithProjectIdentifierSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -33,22 +33,22 @@ logger = logging.getLogger(__name__)
 class FileCommonFilterset(filters.FilterSet):
     """File attribute specific filters for files."""
 
-    file_name = filters.CharFilter(
+    filename = filters.CharFilter(
         lookup_expr="icontains",
     )
-    file_path = filters.CharFilter(method="file_path_filter")
+    pathname = filters.CharFilter(method="pathname_filter")
 
-    file_storage_identifier = filters.CharFilter()
+    storage_identifier = filters.CharFilter()
 
-    byte_size_gt = filters.NumberFilter(field_name="byte_size", lookup_expr="gt")
-    byte_size_lt = filters.NumberFilter(field_name="byte_size", lookup_expr="lt")
+    size_gt = filters.NumberFilter(field_name="size", lookup_expr="gt")
+    size_lt = filters.NumberFilter(field_name="size", lookup_expr="lt")
 
-    def file_path_filter(self, queryset, name, value):
+    def pathname_filter(self, queryset, name, value):
         if value.endswith("/"):
-            # Filtering by directory path, no need to include file_name
-            return queryset.filter(directory_path__istartswith=value)
-        return queryset.alias(file_path=Concat("directory_path", "file_name")).filter(
-            file_path__istartswith=value
+            # Filtering by directory path, no need to include filename
+            return queryset.filter(pathname__istartswith=value)
+        return queryset.alias(pathname=Concat("pathname", "filename")).filter(
+            pathname__istartswith=value
         )
 
     class Meta:
@@ -59,12 +59,12 @@ class FileCommonFilterset(filters.FilterSet):
 class FileFilterSet(FileCommonFilterset):
     """Add project and dataset filters to file filterset."""
 
-    project_identifier = filters.CharFilter(
-        field_name="file_storage__project_identifier",
+    project = filters.CharFilter(
+        field_name="storage__project",
         max_length=200,
     )
     storage_service = filters.CharFilter(
-        field_name="file_storage__storage_service",
+        field_name="storage__storage_service",
         max_length=255,
     )
     dataset = filters.UUIDFilter(field_name="file_sets__dataset_id")
@@ -76,7 +76,7 @@ class FileFilterSet(FileCommonFilterset):
 
 class FilesDatasetsQueryParamsSerializer(serializers.Serializer):
     files_datasets_key_choices = (("files", "files"), ("datasets", "datasets"))
-    file_id_type_choices = (("id", "id"), ("file_storage_identifier", "file_storage_identifier"))
+    file_id_type_choices = (("id", "id"), ("storage_identifier", "storage_identifier"))
 
     keys = serializers.ChoiceField(choices=files_datasets_key_choices, default="files")
     keysonly = serializers.BooleanField(default=False)
@@ -86,10 +86,10 @@ class FilesDatasetsQueryParamsSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
-        require_storage_service = attrs["file_id_type"] == "file_storage_identifier"
+        require_storage_service = attrs["file_id_type"] == "storage_identifier"
         if require_storage_service and not attrs.get("storage_service"):
             raise serializers.ValidationError(
-                "Field storage_service is required when file_id_type=file_storage_identifier."
+                "Field storage_service is required when file_id_type=storage_identifier."
             )
 
         return attrs
@@ -105,7 +105,7 @@ class BaseFileViewSet(viewsets.ModelViewSet):
     serializer_class = FileSerializer
     filterset_class = FileFilterSet
     http_method_names = ["get"]
-    queryset = File.objects.prefetch_related("file_storage")
+    queryset = File.objects.prefetch_related("storage")
 
     def get_serializer(self, instance=None, *args, **kwargs):
         """Modified get_serializer that passes instance to get_serializer_context."""
@@ -179,13 +179,13 @@ class FileViewSet(BaseFileViewSet):
         body_serializer.is_valid(raise_exception=True)
         ids = body_serializer.validated_data
 
-        # Support file_storage_identifier in input/output, requires storage_service
+        # Support identifier in input/output, requires storage_service
         file_id_type = params["file_id_type"]
 
         # Allow limiting results to specific storage_service
         extra_filters = {}
         if storage_service := params["storage_service"]:
-            extra_filters["file_storage__storage_service"] = storage_service
+            extra_filters["storage__storage_service"] = storage_service
 
         try:
             # Fetch a queryset with dict in the format of {key: id, values: [id1, id2, ...]}

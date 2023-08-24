@@ -12,8 +12,9 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from apps.common.helpers import get_attr_or_item
+from apps.common.serializers.fields import ChecksumField
 from apps.files.helpers import get_file_metadata_serializer
-from apps.files.models.file import File, FileStorage, checksum_algorithm_choices
+from apps.files.models.file import File, FileStorage
 from apps.files.models.file_storage import FileStorage
 
 from .fields import (
@@ -27,7 +28,7 @@ from .fields import (
 logger = logging.getLogger(__name__)
 
 
-def get_or_create_file_storage(project_identifier: str, storage_service: str) -> FileStorage:
+def get_or_create_storage(project: str, storage_service: str) -> FileStorage:
     if storage_service not in settings.STORAGE_SERVICE_FILE_STORAGES:
         raise serializers.ValidationError(
             {
@@ -37,7 +38,7 @@ def get_or_create_file_storage(project_identifier: str, storage_service: str) ->
             }
         )
     storage, created = FileStorage.available_objects.get_or_create(
-        project_identifier=project_identifier,
+        project=project,
         storage_service=storage_service,
     )
     return storage
@@ -55,30 +56,23 @@ class CreateOnlyFieldsMixin:
         return super().update(instance, validated_data)
 
 
-class ChecksumSerializer(serializers.Serializer):
-    algorithm = ListValidChoicesField(choices=checksum_algorithm_choices)
-    checked = serializers.DateTimeField()
-    value = serializers.CharField()
-
-
 class FileSerializer(CreateOnlyFieldsMixin, serializers.ModelSerializer):
     create_only_fields = [
-        "file_path",
-        "project_identifier",
+        "pathname",
+        "project",
         "storage_service",
-        "file_storage_identifier",
-        "file_storage_pathname",
+        "storage_identifier",
     ]
 
     # FileStorage specific fields
     storage_service = ListValidChoicesField(choices=list(settings.STORAGE_SERVICE_FILE_STORAGES))
-    project_identifier = serializers.CharField(max_length=200, default=None)
+    project = serializers.CharField(max_length=200, default=None)
 
-    checksum = ChecksumSerializer()
+    checksum = ChecksumField(max_length=200)
 
-    # when saving files, file_name and directory_path are generated from file_path
-    file_path = FilePathField()
-    file_name = FileNameField(read_only=True)
+    # when saving files, filename and pathname are generated from pathname
+    pathname = FilePathField()
+    filename = FileNameField(read_only=True)
 
     dataset_metadata = serializers.SerializerMethodField()
 
@@ -122,19 +116,17 @@ class FileSerializer(CreateOnlyFieldsMixin, serializers.ModelSerializer):
         model = File
         fields = [
             "id",
-            "file_path",
-            "file_name",
-            "byte_size",
+            "storage_identifier",
+            "pathname",
+            "filename",
+            "size",
             "storage_service",
-            "project_identifier",
-            "file_storage_identifier",
-            "file_storage_pathname",
+            "project",
             "checksum",
-            "date_frozen",
-            "file_modified",
-            "date_uploaded",
-            "created",
+            "frozen",
             "modified",
+            "removed",
+            "user",
             "dataset_metadata",
         ]
 
@@ -143,7 +135,7 @@ class FileSerializer(CreateOnlyFieldsMixin, serializers.ModelSerializer):
 
 class DeleteWithProjectIdentifierSerializer(serializers.Serializer):
     storage_service = StorageServiceField(required=True)
-    project_identifier = serializers.CharField(max_length=200, required=True)
+    project = serializers.CharField(max_length=200, required=True)
     flush = serializers.BooleanField(required=False, default=False)
     deleted_files_count = serializers.JSONField(required=False, read_only=True)
 
@@ -152,13 +144,13 @@ class DeleteWithProjectIdentifierSerializer(serializers.Serializer):
         query: QuerySet
         if validated_data["flush"]:
             query = File.all_objects.filter(
-                file_storage__project_identifier=validated_data["project_identifier"],
-                file_storage__storage_service=validated_data["storage_service"],
+                storage__project=validated_data["project"],
+                storage__storage_service=validated_data["storage_service"],
             )
         else:
             query = File.available_objects.filter(
-                file_storage__project_identifier=validated_data["project_identifier"],
-                file_storage__storage_service=validated_data["storage_service"],
+                storage__project=validated_data["project"],
+                storage__storage_service=validated_data["storage_service"],
             )
         logger.info(f"Deleting {query=}")
         self.validated_data["deleted_files_count"] = query.count()

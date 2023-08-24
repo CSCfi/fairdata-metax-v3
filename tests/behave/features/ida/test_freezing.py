@@ -13,54 +13,39 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.fixture
-def project_identifier():
+def project():
     return "project_x"
 
 
 @pytest.fixture
-def files_json(project_identifier):
+def files_json(project):
     return [
         {
-            "file_storage_identifier": "ida-file-1",
-            "file_path": "/data/1.csv",
-            "date_uploaded": "2022-11-13T12:34:00Z",
-            "file_modified": "2022-11-13T12:34:00Z",
-            "project_identifier": project_identifier,
+            "storage_identifier": "ida-file-1",
+            "pathname": "/data/1.csv",
+            "modified": "2022-11-13T12:34:00Z",
+            "project": project,
             "storage_service": "ida",
-            "byte_size": 1024,
-            "checksum": {
-                "value": "123",
-                "algorithm": "MD5",
-                "checked": "2022-11-13T12:34:00Z",
-            },
+            "size": 1024,
+            "checksum": "md5:123",
         },
         {
-            "file_storage_identifier": "ida-file-2",
-            "file_path": "/data/2.csv",
-            "date_uploaded": "2022-11-13T12:34:00Z",
-            "file_modified": "2022-11-13T12:34:00Z",
-            "project_identifier": project_identifier,
+            "storage_identifier": "ida-file-2",
+            "pathname": "/data/2.csv",
+            "modified": "2022-11-13T12:34:00Z",
+            "project": project,
             "storage_service": "ida",
-            "byte_size": 1024,
-            "checksum": {
-                "value": "123",
-                "algorithm": "MD5",
-                "checked": "2022-11-13T12:34:00Z",
-            },
+            "size": 1024,
+            "checksum": "md5:123",
         },
         {
-            "file_storage_identifier": "ida-file-3",
-            "file_path": "/data/3.csv",
-            "date_uploaded": "2022-11-13T12:34:00Z",
-            "file_modified": "2022-11-13T12:34:00Z",
-            "project_identifier": project_identifier,
+            "storage_identifier": "ida-file-3",
+            "pathname": "/data/3.csv",
+            "modified": "2022-11-13T12:34:00Z",
+            "project": project,
             "storage_service": "ida",
-            "byte_size": 1024,
-            "checksum": {
-                "value": "123",
-                "algorithm": "MD5",
-                "checked": "2022-11-13T12:34:00Z",
-            },
+            "size": 1024,
+            "checksum": "md5:123",
         },
     ]
 
@@ -81,7 +66,7 @@ def post_ida_file(admin_client, files_json):
 
 
 @then("a new file storage is created", target_fixture="created_file_storage")
-def created_file_storage(project_identifier) -> FileStorage:
+def created_file_storage(project) -> FileStorage:
     """
 
     Args:
@@ -91,9 +76,7 @@ def created_file_storage(project_identifier) -> FileStorage:
         FileStorage: Dataset FileStorage
 
     """
-    return FileStorage.available_objects.get(
-        storage_service="ida", project_identifier=project_identifier
-    )
+    return FileStorage.available_objects.get(storage_service="ida", project=project)
 
 
 @then("the file storage has the files associated with it")
@@ -107,8 +90,8 @@ def file_storage(created_file_storage, files_json) -> FileStorage:
         FileStorage: FileStorage with files
 
     """
-    file_paths = set(f["file_path"] for f in files_json)
-    created_paths = set(f.file_path for f in created_file_storage.files.all())
+    file_paths = set(f["pathname"] for f in files_json)
+    created_paths = set(f.pathname for f in created_file_storage.files.all())
     assert created_paths == file_paths
 
 

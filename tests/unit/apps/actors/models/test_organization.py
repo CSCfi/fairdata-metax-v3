@@ -1,8 +1,8 @@
 import pytest
 from django.db import IntegrityError
 
-from apps.actors.models import Organization
 from apps.actors.factories import OrganizationFactory
+from apps.actors.models import Organization
 
 
 def test_create_missing_organization_url():
@@ -34,9 +34,7 @@ def test_create_organization_without_scheme():
 
 @pytest.mark.django_db
 def test_get_organization_with_duplicate_get():
-    org1 = OrganizationFactory.create(
-        pref_label={"en": "University of Helsinki"}, url=None
-    )
+    org1 = OrganizationFactory.create(pref_label={"en": "University of Helsinki"}, url=None)
     org2 = OrganizationFactory.create(
         pref_label={"en": "University of Helsinki", "fi": "Helsingin Yliopisto"},
         url=None,

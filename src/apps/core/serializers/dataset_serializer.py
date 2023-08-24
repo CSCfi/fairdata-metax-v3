@@ -9,6 +9,7 @@ from collections import namedtuple
 
 from django.conf import settings
 from rest_framework import serializers
+from rest_framework.fields import empty
 
 from apps.common.helpers import update_or_create_instance
 from apps.core.models import Dataset
@@ -38,7 +39,7 @@ class DatasetSerializer(serializers.ModelSerializer):
     access_rights = AccessRightsModelSerializer(required=False)
     field_of_science = FieldOfScience.get_serializer()(required=False, many=True)
     actors = DatasetActorModelSerializer(required=False, many=True)
-    data = FileSetSerializer(required=False, source="file_set")
+    fileset = FileSetSerializer(required=False, source="file_set")
     language = Language.get_serializer()(required=False, many=True)
     metadata_owner = MetadataProviderModelSerializer(required=False)
     other_identifiers = OtherIdentifierModelSerializer(required=False, many=True)
@@ -49,13 +50,14 @@ class DatasetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dataset
         fields = (
+            "id",  # read only
             "access_rights",
             "actors",
             "cumulative_state",
             "data_catalog",
             "description",
             "field_of_science",
-            "data",
+            "fileset",
             "issued",
             "keyword",
             "language",
@@ -70,7 +72,6 @@ class DatasetSerializer(serializers.ModelSerializer):
             "created",
             "cumulation_started",
             "first",
-            "id",
             "is_deprecated",
             "is_removed",
             "last",
@@ -95,8 +96,8 @@ class DatasetSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
-        if not rep.get("data"):
-            rep.pop("data", None)
+        if not rep.get("fileset"):
+            rep.pop("fileset", None)
         if not instance.other_identifiers.exists():
             rep.pop("other_identifiers", None)
         return rep
@@ -123,7 +124,7 @@ class DatasetSerializer(serializers.ModelSerializer):
         metadata_provider_serializer: MetadataProviderModelSerializer = self.fields[
             "metadata_owner"
         ]
-        data_serializer: FileSetSerializer = self.fields["data"]
+        data_serializer: FileSetSerializer = self.fields["fileset"]
         other_identifiers_serializer: OtherIdentifierModelSerializer = self.fields[
             "other_identifiers"
         ]
@@ -206,7 +207,7 @@ class DatasetSerializer(serializers.ModelSerializer):
         if rel_objects.spatial:
             instance.spatial.set(rel_objects.spatial)
 
-        data_serializer: FileSetSerializer = self.fields["data"]
+        data_serializer: FileSetSerializer = self.fields["fileset"]
         if rel_objects.file_set:
             # Assigning instance.file_set here avoids refetch from db and clearing
             # non-persistent values added_files_count and removed_files_count

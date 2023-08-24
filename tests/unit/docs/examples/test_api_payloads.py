@@ -38,20 +38,20 @@ def test_minimal_dataset_with_files(
 ):
     create_project_with_files(
         storage_service="ida",
-        project_identifier="test_project",
+        project="test_project",
         file_paths=["/data/file1.csv", "/data/file2.csv", "/data/file3.csv", "/not-this.txt"],
-        file_args={"*": {"byte_size": 1024}},
+        file_args={"*": {"size": 1024}},
     )
 
     res = client.post(
         "/v3/datasets", minimal_dataset_with_files_json, content_type="application/json"
     )
     assert res.status_code == 201
-    assert res.json()["data"] == {
+    assert res.json()["fileset"] == {
         "storage_service": "ida",
-        "project_identifier": "test_project",
+        "project": "test_project",
         "added_files_count": 3,
         "removed_files_count": 0,
         "total_files_count": 3,
-        "total_files_byte_size": 3072,
+        "total_files_size": 3072,
     }

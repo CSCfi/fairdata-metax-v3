@@ -168,19 +168,17 @@ def catalog_record(data_catalog, contract) -> CatalogRecord:
 
 @pytest.fixture
 def file() -> File:
-    byte_size = 999
-    checksum = "ABC-123456"
-    file_path = "/project_x/path/file.pdf"
-    date_uploaded = "2021-12-31 15:25:00+01"
-    file_modified = "2021-12-31 12:25:00+01"
-    identifier = "12345678-51d3-4c25-ad20-75aff8ca19e7"
+    size = 999
+    checksum = "md5:abc_123456"
+    pathname = "/project_x/path/file.pdf"
+    modified = "2021-12-31 12:25:00+01"
+    id = "12345678-51d3-4c25-ad20-75aff8ca19e7"
     return FileFactory(
-        byte_size=byte_size,
+        size=size,
         checksum_value=checksum,
-        file_path=file_path,
-        file_modified=file_modified,
-        date_uploaded=date_uploaded,
-        id=identifier,
+        pathname=pathname,
+        modified=modified,
+        id=id,
     )
 
 

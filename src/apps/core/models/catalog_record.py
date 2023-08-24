@@ -350,7 +350,7 @@ class DatasetProject(AbstractBaseModel):
 
     Attributes:
         dataset(models.ManyToManyField): ManyToMany relation to Dataset
-        project_identifier(models.CharField): Project identifier
+        project(models.CharField): Project identifier
         funding_agency(models.ManyToManyField): The Organization funding the project
         funder_identifier(models.CharField): Unique identifier for the project
             that is being used by the project funder
@@ -375,9 +375,7 @@ class DatasetProject(AbstractBaseModel):
 
 class FileSet(AbstractBaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    file_storage = models.ForeignKey(
-        FileStorage, related_name="file_sets", on_delete=models.CASCADE
-    )
+    storage = models.ForeignKey(FileStorage, related_name="file_sets", on_delete=models.CASCADE)
     dataset = models.OneToOneField(Dataset, related_name="file_set", on_delete=models.CASCADE)
     files = models.ManyToManyField(File, related_name="file_sets")
 
@@ -390,24 +388,24 @@ class FileSet(AbstractBaseModel):
     @cached_property
     def total_files_aggregates(self) -> dict:
         return self.files.aggregate(
-            total_files_count=Count("*"), total_files_byte_size=Coalesce(Sum("byte_size"), 0)
+            total_files_count=Count("*"), total_files_size=Coalesce(Sum("size"), 0)
         )
 
     @property
-    def total_files_byte_size(self) -> int:
-        return self.total_files_aggregates["total_files_byte_size"]
+    def total_files_size(self) -> int:
+        return self.total_files_aggregates["total_files_size"]
 
     @property
     def total_files_count(self) -> int:
         return self.total_files_aggregates["total_files_count"]
 
     @property
-    def project_identifier(self) -> str:
-        return self.file_storage.project_identifier
+    def project(self) -> str:
+        return self.storage.project
 
     @property
     def storage_service(self) -> str:
-        return self.file_storage.storage_service
+        return self.storage.storage_service
 
     def clear_cached_file_properties(self):
         """Clear cached file properties after changes to FileSet files."""
@@ -427,15 +425,15 @@ class FileSet(AbstractBaseModel):
         unused_file_metadata.delete()
 
         # remove metadata for directories not in FileSet
-        file_storages = FileStorage.objects.filter(
+        storages = FileStorage.objects.filter(
             filesetdirectorymetadata__in=self.directory_metadata.all()
         )
         # only one storage project is expected but this works with multiple
-        for file_storage in file_storages:
-            dataset_directory_paths = file_storage.get_directory_paths(file_set=self)
+        for storage in storages:
+            dataset_pathnames = storage.get_directory_paths(file_set=self)
             unused_directory_metadata = FileSetDirectoryMetadata.objects.filter(
-                file_storage=file_storage
-            ).exclude(directory_path__in=dataset_directory_paths)
+                storage=storage
+            ).exclude(pathname__in=dataset_pathnames)
             unused_directory_metadata.delete()
 
 

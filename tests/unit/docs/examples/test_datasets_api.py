@@ -1,5 +1,4 @@
 import pytest
-
 from tests.unit.docs.examples.conftest import load_test_json
 
 pytestmark = [pytest.mark.django_db, pytest.mark.docs]
@@ -47,4 +46,7 @@ def test_dataset_snippets(
     assert len(res.data["language"]) == 2
     assert len(res.data["actors"]) == 2
     assert len(res.data["spatial"]) == 1
-    assert res.data["access_rights"]["description"] == access_rights_json["access_rights"]["description"]
+    assert (
+        res.data["access_rights"]["description"]
+        == access_rights_json["access_rights"]["description"]
+    )

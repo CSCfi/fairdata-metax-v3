@@ -166,24 +166,24 @@ class FileBulkSerializer(serializers.ListSerializer):
             files_by_external_id = {}
 
             for f in storage_files:
-                if external_id := f.get("file_storage_identifier"):
+                if external_id := f.get("storage_identifier"):
                     files_by_external_id[external_id] = f
 
             # Get all files with matching external id
             existing_files = File.available_objects.filter(
-                file_storage__storage_service=storage_service,
-                file_storage_identifier__in=files_by_external_id.keys(),
+                storage__storage_service=storage_service,
+                storage_identifier__in=files_by_external_id.keys(),
             ).values(
-                "file_storage_identifier",
+                "storage_identifier",
                 "id",
-                project_identifier=F("file_storage__project_identifier"),
+                project=F("storage__project"),
             )
             for existing_file in existing_files:
-                file = files_by_external_id[existing_file["file_storage_identifier"]]
+                file = files_by_external_id[existing_file["storage_identifier"]]
                 file["id"] = existing_file["id"]
                 # Project id can also be determined from external id when storage_service is known
-                if not file.get("project_identifier"):
-                    file["project_identifier"] = existing_file["project_identifier"]
+                if not file.get("project"):
+                    file["project"] = existing_file["project"]
 
         return files
 
@@ -213,8 +213,7 @@ class FileBulkSerializer(serializers.ListSerializer):
         """Check if inserting new files is allowed."""
         update_allowed = self.action in self.BULK_UPDATE_ACTIONS
         deleting = self.action in self.BULK_DELETE_ACTIONS
-        # TODO: This is redundant until alternate identifier is supported
-        # since user-provided id is only allowed when updating
+        # User-provided id is only allowed when updating
         if not (update_allowed or deleting):
             # All files should be new and not have an existing id
             for file in files:
@@ -244,18 +243,16 @@ class FileBulkSerializer(serializers.ListSerializer):
         return files
 
     def assign_existing_storage_data(self, files: List[dict]) -> List[dict]:
-        """Assign file_storage and related fields to existing file data."""
+        """Assign storage and related fields to existing file data."""
         existing_files_with_missing_project_data = [
-            f
-            for f in files
-            if "id" in f and not ("storage_service" in f and "project_identifier" in f)
+            f for f in files if "id" in f and not ("storage_service" in f and "project" in f)
         ]
         project_data = File.objects.filter(
             id__in=[f["id"] for f in existing_files_with_missing_project_data]
         ).values(
             "id",
-            storage_service=F("file_storage__storage_service"),
-            project_identifier=F("file_storage__project_identifier"),
+            storage_service=F("storage__storage_service"),
+            project=F("storage__project"),
         )
         project_data_by_id = {f["id"]: f for f in project_data}
 
@@ -265,11 +262,11 @@ class FileBulkSerializer(serializers.ListSerializer):
             if project_data := project_data_by_id.get(f["id"]):
                 if f.get("storage_service") is None:
                     f["storage_service"] = project_data["storage_service"]
-                if f.get("project_identifier") is None:
-                    f["project_identifier"] = project_data["project_identifier"]
+                if f.get("project") is None:
+                    f["project"] = project_data["project"]
         return files
 
-    def assign_file_storage_to_files(self, files: List[dict]) -> List[dict]:
+    def assign_storage_to_files(self, files: List[dict]) -> List[dict]:
         """Assign StorageProject instances to files."""
         if not files:
             return files
@@ -307,7 +304,7 @@ class FileBulkSerializer(serializers.ListSerializer):
 
         # Assign FileStorage and related values
         files = self.assign_existing_storage_data(files)
-        files = self.assign_file_storage_to_files(files)
+        files = self.assign_storage_to_files(files)
 
         # FileStorage-specific checks
         files = FileStorage.check_required_file_fields(files, raise_exception=False)
@@ -324,7 +321,7 @@ class FileBulkSerializer(serializers.ListSerializer):
         for field, value in file_data.items():
             if field in FileSerializer.create_only_fields:
                 existing_value = getattr(instance, field, None)
-                if field == "file_storage":
+                if field == "storage":
                     existing_value = {"id": existing_value.id}
                 if value != existing_value:
                     errors[field] = _("Cannot change value after creation")
@@ -336,14 +333,14 @@ class FileBulkSerializer(serializers.ListSerializer):
                 errors=errors,
             )
             return None
-        instance.modified = timezone.now()
+        instance.record_modified = timezone.now()
         return instance
 
     def get_file_instances(self, validated_data) -> List[File]:
         """Return not yet saved instances from validated data."""
         system_creator = get_technical_metax_user()
 
-        existing_files_by_id = File.available_objects.prefetch_related("file_storage").in_bulk(
+        existing_files_by_id = File.available_objects.prefetch_related("storage").in_bulk(
             [f["id"] for f in validated_data if "id" in f]
         )
 
@@ -356,7 +353,7 @@ class FileBulkSerializer(serializers.ListSerializer):
                 # `id is None` won't work.
                 original_data = f.pop("original_data")
                 f.pop("storage_service", None)  # included in FileStorage
-                f.pop("project_identifier", None)  # included in FileStorage
+                f.pop("project", None)  # included in FileStorage
                 file = File(**f, system_creator_id=system_creator)
                 file._original_data = original_data
                 files.append(file)
@@ -385,9 +382,7 @@ class FileBulkSerializer(serializers.ListSerializer):
         File.objects.bulk_update(files_to_update, fields=fields_to_update)
 
         # Get new and updated values from db
-        new_files_by_id = File.objects.prefetch_related("file_storage").in_bulk(
-            [f.id for f in files]
-        )
+        new_files_by_id = File.objects.prefetch_related("storage").in_bulk([f.id for f in files])
         new_files = []  # List files in original order
         for f in files:
             if new_file := new_files_by_id.get(f.id, None):

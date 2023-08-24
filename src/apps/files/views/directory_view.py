@@ -38,14 +38,12 @@ class DirectoryCommonQueryParams(serializers.Serializer):
 
     allowed_file_fields = sorted(DirectoryFileSerializer().get_fields())
     allowed_file_orderings = [
-        "file_name",
-        "file_path",
-        "byte_size",
-        "created",
+        "filename",
+        "pathname",
+        "size",
+        "frozen",
         "modified",
-        "date_frozen",
-        "file_modified",
-        "date_deleted",
+        "deleted",
     ]
     allowed_file_orderings += [f"-{field}" for field in allowed_file_orderings]
 
@@ -86,12 +84,12 @@ class DirectoryQueryParams(DirectoryCommonQueryParams):
     """Add project, storage and dataset specific parameters for directory."""
 
     storage_service = StorageServiceField(write_only=True)
-    project_identifier = fields.CharField(write_only=True, default=None)
+    project = fields.CharField(write_only=True, default=None)
 
-    # FileStorage is determined from project_identifier and storage_service
-    file_storage_id = fields.CharField(read_only=True)
+    # FileStorage is determined from project and storage_service
+    storage_id = fields.CharField(read_only=True)
 
-    # project-wide filters (affect nested files and returned file_count, byte_size)
+    # project-wide filters (affect nested files and returned file_count, size)
     dataset = fields.UUIDField(
         default=None, help_text="List items in dataset and associated dataset_metadata."
     )
@@ -119,7 +117,7 @@ class DirectoryQueryParams(DirectoryCommonQueryParams):
 
     def to_internal_value(self, data):
         value = super().to_internal_value(data)
-        value["file_storage_id"] = FileStorage.objects.get_for_object(value).id
+        value["storage_id"] = FileStorage.objects.get_for_object(value).id
         return value
 
 
@@ -139,7 +137,7 @@ class DirectoryViewSet(viewsets.ViewSet):
     def get_project_files(self, params):
         """Get relevant project files."""
         filter_args = dict(
-            file_storage_id=params["file_storage_id"],
+            storage_id=params["storage_id"],
         )
         exclude_args = dict()
         if dataset := params["dataset"]:
@@ -156,7 +154,7 @@ class DirectoryViewSet(viewsets.ViewSet):
         and file_ordering.
 
         When using the file_fields parameter, the File QuerySet uses .values()
-        and returns dicts so File properties (e.g. file_path) are not available
+        and returns dicts so File properties (e.g. pathname) are not available
         for the serializer unless explicitly added by annotation.
 
         Also, model properties cannot be used directly in queries (e.g. order_by)
@@ -165,18 +163,10 @@ class DirectoryViewSet(viewsets.ViewSet):
         used_file_fields = set(params["file_fields"] or [])
         used_ordering_fields = set(params["file_ordering"] or [])
         used_fields = used_file_fields | used_ordering_fields
-        if "file_path" in used_fields or "-file_path" in used_fields:
-            files = files.annotate(file_path=Concat("directory_path", "file_name"))
-        if "checksum" in used_fields:
-            files = files.annotate(
-                checksum=JSONObject(
-                    algorithm="checksum_algorithm",
-                    checked="checksum_checked",
-                    value="checksum_value",
-                )
-            )
-        if "project_identifier" in used_file_fields:
-            files = files.annotate(project_identifier=F("file_storage__project_identifier"))
+        if "pathname" in used_fields or "-pathname" in used_fields:
+            files = files.annotate(pathname=Concat("directory_path", "filename"))
+        if "project" in used_file_fields:
+            files = files.annotate(project=F("storage__project"))
         return files
 
     def get_directory_files(self, params):
@@ -185,27 +175,25 @@ class DirectoryViewSet(viewsets.ViewSet):
             directory_path=params["path"],
         )
         if name := params["name"]:
-            files = files.filter(file_name__icontains=name)
+            files = files.filter(filename__icontains=name)
 
         # retrieve only requested fields
         files = self.annotate_file_property_fields(params, files)
         if file_fields := params["file_fields"]:
-            files = files.values(
-                *file_fields, "id", storage_service=F("file_storage__storage_service")
-            )
+            files = files.values(*file_fields, "id", storage_service=F("storage__storage_service"))
 
-        return files.order_by(*params["file_ordering"], "file_name")
+        return files.order_by(*params["file_ordering"], "filename")
 
     def get_directories(self, params):
         """Get directory and subdirectory data for path.
 
         The query generates directory information from files as follows:
         * Get all files that start with path
-        * Determine which subdirectory of path each file is in (=directory_name)
-        * Aggregate files by directory_name
+        * Determine which subdirectory of path each file is in (=name)
+        * Aggregate files by directory name
 
         Note: If path contains files directly (not in a subdirectory), it will also be included
-        in the result with directory_name=="". Its file_count, byte_size, created and modified
+        in the result with directory name=="". Its file_count, size, created and modified
         values include only the files it contains directly.
         """
 
@@ -217,7 +205,7 @@ class DirectoryViewSet(viewsets.ViewSet):
                 directory_path__startswith=path,
             )
             .values(
-                directory_name=SplitPart(
+                name=SplitPart(
                     "directory_path",
                     Value("/"),
                     subdirectory_level,
@@ -226,17 +214,17 @@ class DirectoryViewSet(viewsets.ViewSet):
             )
             .annotate(
                 file_count=Count("*"),
-                byte_size=Sum("byte_size"),
-                created=Min("created"),
+                size=Sum("size"),
+                created=Min("modified"),
                 modified=Max("modified"),
-                directory_path=Concat(  # append directory name and slash to path
+                pathname=Concat(  # append directory name and slash to path
                     Value(path),
-                    F("directory_name"),
+                    F("name"),
                     Value("/"),
                     output_field=CharField(),
                 ),
             )
-            .order_by(*params["directory_ordering"], "directory_name")
+            .order_by(*params["directory_ordering"], "name")
         )
         return dirs
 
@@ -285,31 +273,31 @@ class DirectoryViewSet(viewsets.ViewSet):
 
     def get_matching_subdirectories(self, params, directories):
         """Get subdirectories that match the filters."""
-        subdirs = directories.exclude(directory_name="")  # exclude current dir
+        subdirs = directories.exclude(name="")  # exclude current dir
         if name := params.get("name"):
-            subdirs = subdirs.filter(directory_name__icontains=name)
+            subdirs = subdirs.filter(name__icontains=name)
         return subdirs
 
     def get_parent_data(self, params, directories):
         """Aggregate totals for parent directory."""
         file_count = sum(d.get("file_count", 0) for d in directories)
-        byte_size = sum(d.get("byte_size", 0) for d in directories)
+        size = sum(d.get("size", 0) for d in directories)
         created = min((d.get("created") for d in directories), default=None)
         modified = max((d.get("modified") for d in directories), default=None)
         return {
-            "parent_directory": {
-                "directory_name": params["path"].split("/")[-2],
-                "directory_path": params["path"],
+            "directory": {
+                "name": params["path"].split("/")[-2],
+                "pathname": params["path"],
                 "file_count": file_count,
-                "byte_size": byte_size,
+                "size": size,
                 "created": created,
                 "modified": modified,
             }
         }
 
-    def get_file_storage(self, params):
+    def get_storage(self, params):
         """Return storage project common for all subdirectories and files."""
-        return FileStorage.objects.get(id=params.get("file_storage_id"))
+        return FileStorage.objects.get(id=params.get("storage_id"))
 
     def get_dataset_metadata(self, params, matching_subdirs, files):
         """Fetch dataset-specific file/directory metadata as key-value pairs."""
@@ -333,12 +321,12 @@ class DirectoryViewSet(viewsets.ViewSet):
             directory_fields = params.get("directory_fields")
             if (not directory_fields) or ("dataset_metadata" in directory_fields):
                 # Get directory metadata, directory path as key.
-                directory_paths = [params["path"]]
-                directory_paths += [d["directory_path"] for d in matching_subdirs]
+                pathnames = [params["path"]]
+                pathnames += [d["pathname"] for d in matching_subdirs]
                 directory_metadata_list = get_directory_metadata_model().objects.filter(
-                    file_set__dataset_id=dataset, directory_path__in=directory_paths
+                    file_set__dataset_id=dataset, pathname__in=pathnames
                 )
-                directory_metadata = {d.directory_path: d for d in directory_metadata_list}
+                directory_metadata = {d.pathname: d for d in directory_metadata_list}
                 metadata["directory_metadata"] = directory_metadata
         return metadata
 
@@ -375,14 +363,14 @@ class DirectoryViewSet(viewsets.ViewSet):
         }
 
         # all directories and files have same project, pass it through context
-        file_storage = self.get_file_storage(params)
+        storage = self.get_storage(params)
         serialized_data = DirectorySerializer(
             instance,
             context={
                 "request": self.request,
                 "directory_fields": params.get("directory_fields"),
                 "file_fields": params.get("file_fields"),
-                "file_storage": file_storage,
+                "storage": storage,
                 **dataset_metadata,  # add file and directory metadata to context
             },
         ).data
@@ -392,11 +380,11 @@ class DirectoryViewSet(viewsets.ViewSet):
 
         # empty results may be due to pagination, remove parent dir if it does not actually exist
         if (
-            "parent_directory" in results
+            "directory" in results
             and not serialized_data["directories"]
             and not serialized_data["files"]
             and not directories.exists()
         ):
-            del results["parent_directory"]
+            del results["directory"]
 
         return Response({**pagination_data, **results})

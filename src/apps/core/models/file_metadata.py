@@ -31,11 +31,11 @@ class FileSetDirectoryMetadata(models.Model):
     file_set = models.ForeignKey(
         "core.FileSet", related_name="directory_metadata", editable=False, on_delete=models.CASCADE
     )
-    directory_path = models.TextField(db_index=True)
-    file_storage = models.ForeignKey(FileStorage, on_delete=models.CASCADE)
+    pathname = models.TextField(db_index=True)
+    storage = models.ForeignKey(FileStorage, on_delete=models.CASCADE)
     title = models.TextField(null=True, blank=True)
     description = models.TextField(null=True, blank=True)
     use_category = models.ForeignKey(UseCategory, null=True, on_delete=models.SET_NULL)
 
     class Meta:
-        unique_together = [("file_set", "directory_path")]
+        unique_together = [("file_set", "pathname")]

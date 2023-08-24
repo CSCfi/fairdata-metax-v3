@@ -24,14 +24,14 @@ class AbstractDatasetPropertyBaseAdmin(SimpleHistoryAdmin):
 
 @admin.register(File)
 class FileAdmin(AbstractDatasetPropertyBaseAdmin):
-    list_display = ("file_name", "file_path", "project_identifier", "file_storage")
+    list_display = ("filename", "pathname", "project", "storage")
 
     def get_name(self, obj):
         return obj.author.name
 
     list_filter = [
-        "date_frozen",
-        "file_storage__project_identifier",
+        "frozen",
+        "storage__project",
     ]
     formfield_overrides = {
         TextField: {"widget": TextInput()},
@@ -40,7 +40,7 @@ class FileAdmin(AbstractDatasetPropertyBaseAdmin):
 
 @admin.register(FileStorage)
 class FileStorageAdmin(AbstractDatasetPropertyBaseAdmin, PolymorphicParentModelAdmin):
-    list_display = ("id", "storage_service", "project_identifier")
+    list_display = ("id", "storage_service", "project")
     readonly_fields = ("file_count",)
 
     def get_readonly_fields(self, request, obj=None):

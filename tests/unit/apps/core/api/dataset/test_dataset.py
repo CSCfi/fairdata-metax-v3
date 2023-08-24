@@ -35,6 +35,7 @@ def test_filter_pid(client, dataset_a_json, dataset_b_json, data_catalog, refere
     res = client.get("/v3/datasets?persistent_identifier=some_pid")
     assert res.data["count"] == 1
 
+
 def test_search_pid(client, dataset_a_json, dataset_b_json, data_catalog, reference_data):
     dataset_a_json["persistent_identifier"] = "some_pid"
     dataset_b_json.pop("persistent_identifier", None)

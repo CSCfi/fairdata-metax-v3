@@ -8,9 +8,9 @@
 
 ### :::tests.unit.apps.files.serializers.test_fields.test_comma_separated_field
 
-## test_file_name_field
+## test_filename_field
 
-### :::tests.unit.apps.files.serializers.test_fields.test_file_name_field
+### :::tests.unit.apps.files.serializers.test_fields.test_filename_field
 
 ## test_file_path_field
 

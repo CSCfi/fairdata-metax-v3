@@ -93,6 +93,7 @@ class EventOutcomeFactory(factory.django.DjangoModelFactory):
 
     pref_label = factory.Dict({"en": factory.Sequence(lambda n: f"event-outcome-{n}")})
     in_scheme = factory.Faker("url")
+
     @factory.sequence
     def url(self):
         return f"https://event-outcome-{self}.fi"
@@ -166,6 +167,7 @@ class UseCategoryFactory(factory.django.DjangoModelFactory):
 
     pref_label = factory.Dict({"en": factory.Sequence(lambda n: f"dataset-use-category-{n}")})
     in_scheme = factory.Faker("url")
+
     @factory.sequence
     def url(self):
         return f"https://dataset-use-category-{self}.fi"
@@ -236,10 +238,10 @@ class DatasetFactory(factory.django.DjangoModelFactory):
 class FileSetFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.FileSet
-        django_get_or_create = ("dataset", "file_storage")
+        django_get_or_create = ("dataset", "storage")
 
     dataset = factory.SubFactory(DatasetFactory)
-    file_storage = factory.SubFactory(FileStorageFactory)
+    storage = factory.SubFactory(FileStorageFactory)
 
     @factory.post_generation
     def files(self, create, extracted, **kwargs):

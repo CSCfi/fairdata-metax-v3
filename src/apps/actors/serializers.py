@@ -2,8 +2,8 @@ from drf_writable_nested import WritableNestedModelSerializer
 from rest_framework import serializers
 
 from apps.actors.models import Actor, Organization, Person
-from apps.users.serializers import MetaxUserModelSerializer
 from apps.common.serializers import CommonListSerializer
+from apps.users.serializers import MetaxUserModelSerializer
 
 
 class ChildOrganizationSerializer(serializers.ModelSerializer):
@@ -80,9 +80,7 @@ class ActorModelSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         if org_data := validated_data.pop("organization", None):
-            self.fields["organization"].update(
-                instance.organization, org_data
-            )
+            self.fields["organization"].update(instance.organization, org_data)
         return super().update(instance, validated_data)
 
     class Meta:

@@ -78,9 +78,7 @@ class DatasetFilter(filters.FilterSet):
             ("modified", "modified"),
         )
     )
-    search = filters.CharFilter(
-        method="search_dataset"
-    )
+    search = filters.CharFilter(method="search_dataset")
 
     def search_dataset(self, queryset, name, value):
         return search.filter(queryset, value)
@@ -142,8 +140,8 @@ class DatasetDirectoryViewSet(DirectoryViewSet):
         params["include_all"] = False
         try:
             file_set = FileSet.objects.get(dataset_id=dataset_id)
-            file_storage = file_set.file_storage
-            params["file_storage_id"] = file_storage.id
+            storage = file_set.storage
+            params["storage_id"] = storage.id
         except FileSet.DoesNotExist:
             raise exceptions.NotFound()
         return params

@@ -50,7 +50,7 @@ def file_tree() -> dict:
             "/dir3/file.pdf",
             "/rootfile.txt",
         ],
-        file_args={"*": {"byte_size": 1024}},
+        file_args={"*": {"size": 1024}},
     )
 
 
@@ -74,15 +74,15 @@ def deep_file_tree() -> dict:
             "/dir3/sub2/file.txt",
             "/rootfile.txt",
         ],
-        file_args={"*": {"byte_size": 1024}},
+        file_args={"*": {"size": 1024}},
     )
 
 
 @pytest.fixture
 def dataset_with_files(file_tree):
     dataset = factories.DatasetFactory()
-    storage = next(iter(file_tree["files"].values())).file_storage
-    file_set = factories.FileSetFactory(dataset=dataset, file_storage=storage)
+    storage = next(iter(file_tree["files"].values())).storage
+    file_set = factories.FileSetFactory(dataset=dataset, storage=storage)
     file_set.files.set(
         [
             file_tree["files"]["/dir1/file.csv"],

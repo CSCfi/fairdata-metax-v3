@@ -236,7 +236,7 @@ SWAGGER_SETTINGS = {
         "apps.common.serializers.inspectors.URLReferencedModelFieldInspector",
         *SWAGGER_DEFAULTS["DEFAULT_FIELD_INSPECTORS"],
     ],
-    "DEFAULT_INFO": "metax_service.urls.openapi_info"
+    "DEFAULT_INFO": "metax_service.urls.openapi_info",
 }
 REDOC_SETTINGS = {"HIDE_HOSTNAME": True}
 

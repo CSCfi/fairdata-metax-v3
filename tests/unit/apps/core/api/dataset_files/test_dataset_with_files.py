@@ -9,11 +9,11 @@ def dataset_json_with_files(deep_file_tree, data_catalog):
     return {
         "data_catalog": data_catalog.id,
         "title": {"en": "Test dataset"},
-        "data": {
+        "fileset": {
             **deep_file_tree["params"],
             "directory_actions": [
                 {
-                    "directory_path": "/dir1/",
+                    "pathname": "/dir1/",
                     "dataset_metadata": {"title": "directory"},
                 }
             ],
@@ -45,18 +45,18 @@ def test_dataset_post_dataset_with_files(
         content_type="application/json",
     )
     assert res.status_code == 201
-    assert res.data["data"]["added_files_count"] == 3
-    assert res.data["data"]["removed_files_count"] == 0
-    assert res.data["data"]["total_files_count"] == 3
+    assert res.data["fileset"]["added_files_count"] == 3
+    assert res.data["fileset"]["removed_files_count"] == 0
+    assert res.data["fileset"]["total_files_count"] == 3
 
     url = data_urls(res.data["id"])["directories"]
     res = client.get(url, {"pagination": "false"})
     assert_nested_subdict(
         {
             "directories": [
-                {"directory_path": "/dir1/", "dataset_metadata": {"title": "directory"}},
+                {"pathname": "/dir1/", "dataset_metadata": {"title": "directory"}},
             ],
-            "files": [{"file_path": "/rootfile.txt", "dataset_metadata": {"title": "file"}}],
+            "files": [{"pathname": "/rootfile.txt", "dataset_metadata": {"title": "file"}}],
         },
         res.json(),
     )
@@ -73,12 +73,12 @@ def test_dataset_get_dataset_with_files(client, deep_file_tree, dataset_json_wit
 
     res = client.get(f"/v3/dataset/{res.data['id']}")
     assert res.status_code == 200
-    assert res.data["data"] == {
+    assert res.data["fileset"] == {
         # no added_files_count or removed_files_count should be present for GET
         "storage_service": deep_file_tree["params"]["storage_service"],
-        "project_identifier": deep_file_tree["params"]["project_identifier"],
+        "project": deep_file_tree["params"]["project"],
         "total_files_count": 3,
-        "total_files_byte_size": 3 * 1024,
+        "total_files_size": 3 * 1024,
     }
 
 
@@ -109,7 +109,7 @@ def test_dataset_modify_dataset_with_files(
 
     actions = {
         **deep_file_tree["params"],
-        "directory_actions": [{"directory_path": "/dir1/", "action": "remove"}],
+        "directory_actions": [{"pathname": "/dir1/", "action": "remove"}],
         "file_actions": [{"id": deep_file_tree["files"]["/dir3/sub1/file.txt"].id}],
     }
 
@@ -119,21 +119,21 @@ def test_dataset_modify_dataset_with_files(
     urls = data_urls(dataset_id)
     res = client.put(
         urls["dataset"],
-        {**dataset_json, "data": actions},
+        {**dataset_json, "fileset": actions},
         content_type="application/json",
     )
     assert res.status_code == 200
-    assert res.data["data"]["added_files_count"] == 1
-    assert res.data["data"]["removed_files_count"] == 2
-    assert res.data["data"]["total_files_count"] == 2
+    assert res.data["fileset"]["added_files_count"] == 1
+    assert res.data["fileset"]["removed_files_count"] == 2
+    assert res.data["fileset"]["total_files_count"] == 2
 
     res = client.get(urls["directories"], {"pagination": "false"})
     assert_nested_subdict(
         {
             "directories": [
-                {"directory_path": "/dir3/"},
+                {"pathname": "/dir3/"},
             ],
-            "files": [{"file_path": "/rootfile.txt", "dataset_metadata": {"title": "file"}}],
+            "files": [{"pathname": "/rootfile.txt", "dataset_metadata": {"title": "file"}}],
         },
         res.json(),
     )

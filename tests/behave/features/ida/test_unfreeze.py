@@ -22,9 +22,9 @@ def user_unfreeze_request():
 @pytest.fixture
 @when("the file is marked as deleted")
 def mark_files_deleted():
-    file = FileFactory(date_frozen=timezone.now())
+    file = FileFactory(frozen=timezone.now())
     dataset = factories.DatasetFactory()
-    file_set = FileSet.objects.create(dataset=dataset, file_storage=file.file_storage)
+    file_set = FileSet.objects.create(dataset=dataset, storage=file.storage)
     file_set.files.set([file])
 
     file.delete()

@@ -33,17 +33,17 @@ router.register(r"data-catalogs?", DataCatalogView, basename="datacatalog")
 router.register(r"datasets?", DatasetViewSet, basename="dataset")
 
 router.register(
-    r"datasets?/(?P<dataset_id>[^/.]+)/data",
+    r"datasets?/(?P<dataset_id>[^/.]+)/fileset",
     DatasetFileSetViewSet,
     basename="dataset-data",
 )
 router.register(
-    r"datasets?/(?P<dataset_id>[^/.]+)/data/files",
+    r"datasets?/(?P<dataset_id>[^/.]+)/fileset/files",
     DatasetFilesViewSet,
     basename="dataset-files",
 )
 router.register(
-    r"datasets?/(?P<dataset_id>[^/.]+)/data/directories",
+    r"datasets?/(?P<dataset_id>[^/.]+)/fileset/directories",
     DatasetDirectoryViewSet,
     basename="dataset-directories",
 )

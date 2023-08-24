@@ -11,12 +11,14 @@ import logging
 from django.contrib.auth import get_user_model
 from django.core.validators import EMPTY_VALUES
 from rest_framework import serializers
+from rest_framework.fields import empty
 
 from apps.actors.serializers import ActorModelSerializer
 from apps.common.helpers import update_or_create_instance
 from apps.common.serializers import (
     AbstractDatasetModelSerializer,
-    AbstractDatasetPropertyModelSerializer, CommonListSerializer,
+    AbstractDatasetPropertyModelSerializer,
+    CommonListSerializer,
 )
 from apps.core.models import (
     AccessRights,
@@ -204,7 +206,7 @@ class DatasetActorModelSerializer(serializers.ModelSerializer):
                 "url": org.get("url"),
                 "code": org.get("code"),
                 "in_scheme": org.get("in_scheme"),
-                "homepage": org.get("homepage")
+                "homepage": org.get("homepage"),
             }
         return rep
 

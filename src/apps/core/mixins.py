@@ -5,7 +5,6 @@ from typing import Dict, List
 from django.contrib.auth import get_user_model
 from django.core.validators import EMPTY_VALUES
 from django.db.models import QuerySet
-
 from rest_framework import viewsets
 
 logger = logging.getLogger(__name__)
@@ -368,7 +367,7 @@ class V2DatasetMixin:
 
         total_files_byte_size = 0
         if file_set := getattr(self, "file_set", None):
-            total_files_byte_size = file_set.total_files_byte_size
+            total_files_byte_size = file_set.total_files_size
 
         doc = {
             "identifier": str(self.id),

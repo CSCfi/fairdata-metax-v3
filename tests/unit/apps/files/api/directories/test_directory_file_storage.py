@@ -3,22 +3,22 @@ import pytest
 
 @pytest.mark.django_db
 def test_directory_file_storage(client, file_tree_a):
-    project_identifier = file_tree_a["params"]["project_identifier"]
+    project = file_tree_a["params"]["project"]
     storage_service = file_tree_a["params"]["storage_service"]
     res = client.get(
         "/v3/directories",
         {
             "path": "/",
             "pagination": False,
-            "directory_ordering": "directory_name",
-            "project_identifier": project_identifier,
+            "directory_ordering": "name",
+            "project": project,
             "storage_service": storage_service,
         },
     )
     assert res.status_code == 200
-    assert res.data["directories"][0]["project_identifier"] == project_identifier
+    assert res.data["directories"][0]["project"] == project
     assert res.data["directories"][0]["storage_service"] == storage_service
-    assert res.data["files"][0]["project_identifier"] == project_identifier
+    assert res.data["files"][0]["project"] == project
     assert res.data["files"][0]["storage_service"] == storage_service
 
 
@@ -29,8 +29,8 @@ def test_directory_file_storage_invalid_project_identifier(client, file_tree_a):
         "/v3/directories",
         {
             "path": "/",
-            "directory_ordering": "directory_name",
-            "project_identifier": "projekti_jota_ei_ole",
+            "directory_ordering": "name",
+            "project": "projekti_jota_ei_ole",
             "storage_service": storage_service,
         },
     )
@@ -39,13 +39,13 @@ def test_directory_file_storage_invalid_project_identifier(client, file_tree_a):
 
 @pytest.mark.django_db
 def test_directory_file_storage_invalid_file_storage(client, file_tree_a):
-    project_identifier = file_tree_a["params"]["project_identifier"]
+    project = file_tree_a["params"]["project"]
     res = client.get(
         "/v3/directories",
         {
             "path": "/",
-            "directory_ordering": "directory_name",
-            "project_identifier": project_identifier,
+            "directory_ordering": "name",
+            "project": project,
             "storage_service": "invalid",
         },
     )
@@ -68,13 +68,13 @@ def test_directory_file_storage_no_project_identifier(client, file_tree_a):
 
 @pytest.mark.django_db
 def test_directory_file_storage_no_file_storage(client, file_tree_a):
-    project_identifier = file_tree_a["params"]["project_identifier"]
+    project = file_tree_a["params"]["project"]
     res = client.get(
         "/v3/directories",
         {
             "path": "/",
-            "directory_ordering": "directory_name",
-            "project_identifier": project_identifier,
+            "directory_ordering": "name",
+            "project": project,
         },
     )
     assert res.status_code == 400

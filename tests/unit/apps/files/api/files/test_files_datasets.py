@@ -10,7 +10,7 @@ def file_tree_with_datasets(file_tree_a):
     tree["dataset_a"] = dataset_a
     factories.FileSetFactory(
         dataset=dataset_a,
-        file_storage=file_tree_a["file_storage"],
+        storage=file_tree_a["storage"],
         files=[
             file_tree_a["files"]["/dir/a.txt"],
             file_tree_a["files"]["/dir/c.txt"],
@@ -21,7 +21,7 @@ def file_tree_with_datasets(file_tree_a):
     tree["dataset_b"] = dataset_b
     factories.FileSetFactory(
         dataset=dataset_b,
-        file_storage=file_tree_a["file_storage"],
+        storage=file_tree_a["storage"],
         files=[
             tree["files"]["/dir/b.txt"],
             tree["files"]["/dir/c.txt"],
@@ -32,7 +32,7 @@ def file_tree_with_datasets(file_tree_a):
     tree["dataset_c"] = dataset_c
     factories.FileSetFactory(
         dataset=dataset_c,
-        file_storage=file_tree_a["file_storage"],
+        storage=file_tree_a["storage"],
         files=[
             tree["files"]["/dir/c.txt"],
         ],
@@ -133,25 +133,23 @@ def test_files_datasets_files_for_datasets_keysonly(client, file_tree_with_datas
 
 
 @pytest.mark.django_db
-def test_files_datasets_datasets_for_files_file_storage_identifier(
-    client, file_tree_with_datasets
-):
+def test_files_datasets_datasets_for_files_storage_identifier(client, file_tree_with_datasets):
     tree = file_tree_with_datasets
     res = client.post(
-        "/v3/files/datasets?file_id_type=file_storage_identifier&storage_service=ida",
+        "/v3/files/datasets?file_id_type=storage_identifier&storage_service=ida",
         [
-            tree["files"]["/dir/a.txt"].file_storage_identifier,  # dataset a
-            tree["files"]["/dir/b.txt"].file_storage_identifier,  # dataset b
-            tree["files"]["/dir/c.txt"].file_storage_identifier,  # dataset a,b,c
-            tree["files"]["/dir/d.txt"].file_storage_identifier,  # no dataset
+            tree["files"]["/dir/a.txt"].storage_identifier,  # dataset a
+            tree["files"]["/dir/b.txt"].storage_identifier,  # dataset b
+            tree["files"]["/dir/c.txt"].storage_identifier,  # dataset a,b,c
+            tree["files"]["/dir/d.txt"].storage_identifier,  # no dataset
         ],
         content_type="application/json",
     )
     assert res.status_code == 200
     assert res.json() == {
-        tree["files"]["/dir/a.txt"].file_storage_identifier: [str(tree["dataset_a"].id)],
-        tree["files"]["/dir/b.txt"].file_storage_identifier: [str(tree["dataset_b"].id)],
-        tree["files"]["/dir/c.txt"].file_storage_identifier: [
+        tree["files"]["/dir/a.txt"].storage_identifier: [str(tree["dataset_a"].id)],
+        tree["files"]["/dir/b.txt"].storage_identifier: [str(tree["dataset_b"].id)],
+        tree["files"]["/dir/c.txt"].storage_identifier: [
             str(tree["dataset_a"].id),
             str(tree["dataset_b"].id),
             str(tree["dataset_c"].id),
@@ -160,12 +158,12 @@ def test_files_datasets_datasets_for_files_file_storage_identifier(
 
 
 @pytest.mark.django_db
-def test_files_datasets_datasets_for_files_file_storage_identifier_no_storage_service(
+def test_files_datasets_datasets_for_files_storage_identifier_no_storage_service(
     client, file_tree_with_datasets
 ):
     tree = file_tree_with_datasets
     res = client.post(
-        "/v3/files/datasets?file_id_type=file_storage_identifier",
+        "/v3/files/datasets?file_id_type=storage_identifier",
         [
             tree["files"]["/dir/a.txt"].id,  # dataset a
             tree["files"]["/dir/b.txt"].id,  # dataset b
@@ -179,16 +177,14 @@ def test_files_datasets_datasets_for_files_file_storage_identifier_no_storage_se
 
 
 @pytest.mark.django_db
-def test_files_datasets_files_for_datasets_file_storage_identifier(
-    client, file_tree_with_datasets
-):
+def test_files_datasets_files_for_datasets_storage_identifier(client, file_tree_with_datasets):
     tree = file_tree_with_datasets
     id_a = str(tree["dataset_a"].id)
     id_b = str(tree["dataset_b"].id)
     id_c = str(tree["dataset_c"].id)
     id_d = str(tree["dataset_d"].id)
     res = client.post(
-        "/v3/files/datasets?keys=datasets&file_id_type=file_storage_identifier&storage_service=ida",
+        "/v3/files/datasets?keys=datasets&file_id_type=storage_identifier&storage_service=ida",
         [id_a, id_b, id_c, id_d],
         content_type="application/json",
     )
@@ -197,27 +193,27 @@ def test_files_datasets_files_for_datasets_file_storage_identifier(
     assert len(data) == 3
     assert set(data[id_a]) == set(
         [
-            tree["files"]["/dir/a.txt"].file_storage_identifier,
-            tree["files"]["/dir/c.txt"].file_storage_identifier,
+            tree["files"]["/dir/a.txt"].storage_identifier,
+            tree["files"]["/dir/c.txt"].storage_identifier,
         ]
     )
     assert set(data[id_b]) == {
-        tree["files"]["/dir/b.txt"].file_storage_identifier,
-        tree["files"]["/dir/c.txt"].file_storage_identifier,
+        tree["files"]["/dir/b.txt"].storage_identifier,
+        tree["files"]["/dir/c.txt"].storage_identifier,
     }
-    assert set(data[id_c]) == {tree["files"]["/dir/c.txt"].file_storage_identifier}
+    assert set(data[id_c]) == {tree["files"]["/dir/c.txt"].storage_identifier}
 
 
 @pytest.mark.django_db
 def test_files_datasets_datasets_for_files_different_service(client, file_tree_with_datasets):
     tree = file_tree_with_datasets
     res = client.post(
-        "/v3/files/datasets?file_id_type=file_storage_identifier&storage_service=pas",
+        "/v3/files/datasets?file_id_type=storage_identifier&storage_service=pas",
         [
-            tree["files"]["/dir/a.txt"].file_storage_identifier,  # dataset a
-            tree["files"]["/dir/b.txt"].file_storage_identifier,  # dataset b
-            tree["files"]["/dir/c.txt"].file_storage_identifier,  # dataset a,b,c
-            tree["files"]["/dir/d.txt"].file_storage_identifier,  # no dataset
+            tree["files"]["/dir/a.txt"].storage_identifier,  # dataset a
+            tree["files"]["/dir/b.txt"].storage_identifier,  # dataset b
+            tree["files"]["/dir/c.txt"].storage_identifier,  # dataset a,b,c
+            tree["files"]["/dir/d.txt"].storage_identifier,  # no dataset
         ],
         content_type="application/json",
     )

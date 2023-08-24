@@ -2,8 +2,8 @@ import logging
 
 from django.core.management.base import BaseCommand
 
-from apps.core import factories
 import apps.files.factories as file_factories
+from apps.core import factories
 
 logger = logging.getLogger(__name__)
 
@@ -25,10 +25,10 @@ class Command(BaseCommand):
                 "/dir/a.txt",
                 "/rootfile.txt",
             ],
-            file_args={"*": {"byte_size": 1024}},
+            file_args={"*": {"size": 1024}},
         )
         file_set = factories.FileSetFactory(
-            dataset=dataset, file_storage=files["file_storage"], files=files["files"].values()
+            dataset=dataset, storage=files["storage"], files=files["files"].values()
         )
         logger.info(
             f"Created test objects: {language=}, {homepage=}, {dataset_publisher=}, {data_catalog=}, "
