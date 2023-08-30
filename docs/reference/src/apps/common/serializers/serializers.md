@@ -12,3 +12,7 @@
 
 ### :::src.apps.common.serializers.serializers.CommonListSerializer
 
+## StrictSerializer
+
+### :::src.apps.common.serializers.serializers.StrictSerializer
+

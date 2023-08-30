@@ -20,9 +20,13 @@
 
 ### :::tests.unit.apps.files.api.files.test_files_bulk.test_files_insert_many_ok
 
-## test_files_insert_many_ok_missing_identifier
+## test_files_insert_many_ok_missing_storage_identifier
 
-### :::tests.unit.apps.files.api.files.test_files_bulk.test_files_insert_many_ok_missing_identifier
+### :::tests.unit.apps.files.api.files.test_files_bulk.test_files_insert_many_ok_missing_storage_identifier
+
+## test_files_insert_many_missing_storage_identifier
+
+### :::tests.unit.apps.files.api.files.test_files_bulk.test_files_insert_many_missing_storage_identifier
 
 ## test_files_insert_many_multiple_storages
 
@@ -87,6 +91,10 @@
 ## test_files_upsert_many_with_missing_fields_for_new
 
 ### :::tests.unit.apps.files.api.files.test_files_bulk.test_files_upsert_many_with_missing_fields_for_new
+
+## test_files_upsert_many_unknown_field
+
+### :::tests.unit.apps.files.api.files.test_files_bulk.test_files_upsert_many_unknown_field
 
 ## test_files_delete_many_ok
 

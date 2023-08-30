@@ -12,37 +12,64 @@ from typing import Dict, List, Optional
 from django.db.models import F
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from django.core.exceptions import FieldDoesNotExist
 from rest_framework import serializers
+from rest_framework.fields import empty
 from rest_framework.settings import api_settings
 
 from apps.common.helpers import get_technical_metax_user
 from apps.files.models.file import File, FileStorage
 from apps.files.models.file_storage import FileStorage
 from apps.files.serializers.file_serializer import FileSerializer
+from apps.common.serializers import StrictSerializer
 
 
-class PartialFileSerializer(FileSerializer):
+class PartialFileSerializer(FileSerializer, StrictSerializer):
     """File serializer that does not validate required fields.
 
     All fields have required=False and id is writable.
     Null id is treated as missing id.
     """
 
+    def assign_defaults_from_model(self, fields):
+        """Set default serializer field values from model fields.
+
+        Used for PUT-style update where fields that are not included in
+        the update are reset to their default values."""
+        for name, field in fields.items():
+            if name == "id" or field.required or field.read_only or (field.default is not empty):
+                continue
+
+            try:
+                source = field.source or name
+                model_field = self.Meta.model._meta.get_field(source)
+                if model_field.has_default():
+                    field.default = model_field.get_default()
+                elif model_field.null:
+                    field.default = None
+            except FieldDoesNotExist:
+                pass
+        return fields
+
     def get_fields(self):
         fields = super().get_fields()
-        for field in fields.values():
-            field.required = False
+        if self.partial:
+            for field in fields.values():
+                field.required = False
+        else:
+            fields = self.assign_defaults_from_model(fields)
         return fields
 
     class Meta(FileSerializer.Meta):
         extra_kwargs = {
-            "id": {"read_only": False, "allow_null": True},
+            "id": {"read_only": False, "allow_null": True, "required": False},
         }
 
     def to_internal_value(self, data):
         val = super().to_internal_value(data)
         if val.get("id") is None:
             val.pop("id", None)
+
         val["original_data"] = data  # retain original data for error reporting
         val["errors"] = {}  # store for validation errors
         return val
@@ -82,13 +109,13 @@ class FileBulkSerializer(serializers.ListSerializer):
     Action parameter should be one of BulkAction values:
     * insert: Create new files.
     * update: Update existing files.
-    * upsert: Create new files or update already existing files.
+    * upsert: Create new files or replace already existing files.
     * delete: Delete existing files.
     Update support partial updating. Values omitted from the request are not changed.
 
     If input file has an id, it's treated as an existing file.
-    If input file has an TODO:external_id, its existence is checked from the database.
-    If input file has no id and no TODO:external_id, it's treated as a new file.
+    If input file has a storage_identifier, its existence is checked from the database.
+    If input file has no id and no storage_identifier, it's treated as a new file.
 
     Call serializer.save() to apply changes. After this,
     serializer.data will return an object in the format
@@ -101,6 +128,9 @@ class FileBulkSerializer(serializers.ListSerializer):
         ]
     }
 
+    When ignore_errors is enabled (False by default), changes will be committed even if
+    there are errors for some objects. Otherwise, only failed objects will be returned.
+
     Where success objects will contain the deserialized file object
     and failed objects will contain the corresponding input data.
     Order of input files is maintained so successes and failed objects
@@ -111,14 +141,19 @@ class FileBulkSerializer(serializers.ListSerializer):
     BULK_UPDATE_ACTIONS = {BulkAction.UPDATE, BulkAction.UPSERT}
     BULK_DELETE_ACTIONS = {BulkAction.DELETE}
 
-    def __init__(self, *args, action: BulkAction, **kwargs):
-        self.child = PartialFileSerializer()
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, action: BulkAction, ignore_errors=False, **kwargs):
         self.action: BulkAction = action
+        self.child = PartialFileSerializer(partial=action not in self.BULK_INSERT_ACTIONS)
+        self.ignore_errors = ignore_errors
+        super().__init__(*args, **kwargs)
         self.failed: List[BulkFileFail] = []
 
     def fail(self, object: dict, errors: dict):
         """Add object to list of failed items."""
+        for key, error in errors.items():
+            # simplify 1-length arrays from `[error]` to `error``
+            if isinstance(error, list) and len(error) == 1:
+                errors[key] = error[0]
         self.failed.append(BulkFileFail(object=object, errors=errors))
 
     @property
@@ -131,8 +166,8 @@ class FileBulkSerializer(serializers.ListSerializer):
         deleting = self.action in self.BULK_DELETE_ACTIONS
         if not (update_allowed or deleting):
             for file in files:
-                if "id" in file and "id" not in file["errors"]:
-                    file["errors"]["id"] = _("Field not allowed for inserting files.")
+                if "id" in file:
+                    file["errors"].setdefault("id", _("Field not allowed for inserting files."))
         return files
 
     def check_ids_exist(self, files: List[dict]) -> List[dict]:
@@ -142,8 +177,7 @@ class FileBulkSerializer(serializers.ListSerializer):
 
         for file in files:
             if "id" in file and file["id"] not in existing_ids:
-                if "id" not in file["errors"]:
-                    file["errors"]["id"] = _("File with id not found.")
+                file["errors"].setdefault("id", _("File with id not found."))
         return files
 
     def group_files_by_storage_service(self, files: List[dict]) -> Dict[Optional[str], dict]:
@@ -167,7 +201,7 @@ class FileBulkSerializer(serializers.ListSerializer):
 
             for f in storage_files:
                 if external_id := f.get("storage_identifier"):
-                    files_by_external_id[external_id] = f
+                    files_by_external_id.setdefault(external_id, []).append(f)
 
             # Get all files with matching external id
             existing_files = File.available_objects.filter(
@@ -178,12 +212,13 @@ class FileBulkSerializer(serializers.ListSerializer):
                 "id",
                 project=F("storage__project"),
             )
+
             for existing_file in existing_files:
-                file = files_by_external_id[existing_file["storage_identifier"]]
-                file["id"] = existing_file["id"]
-                # Project id can also be determined from external id when storage_service is known
-                if not file.get("project"):
-                    file["project"] = existing_file["project"]
+                for file in files_by_external_id[existing_file["storage_identifier"]]:
+                    file["id"] = existing_file["id"]
+                    # Project id can also be determined from external id when storage_service is known
+                    if not file.get("project"):
+                        file["project"] = existing_file["project"]
 
         return files
 
@@ -193,8 +228,7 @@ class FileBulkSerializer(serializers.ListSerializer):
         id_values = set()
         for f in existing_files:
             if f["id"] in id_values:
-                if "id" not in f["errors"]:
-                    f["errors"]["id"] = _("Duplicate file id in request.")
+                f["errors"].setdefault("id", _("Duplicate file in request."))
             else:
                 id_values.add(f["id"])
         return files
@@ -206,7 +240,7 @@ class FileBulkSerializer(serializers.ListSerializer):
             # All files should be existing and have an id
             for file in files:
                 if "id" not in file and "id" not in file["errors"]:
-                    file["errors"]["id"] = _("Expected an existing file.")
+                    file["errors"]["id"] = _("File not found.")
         return files
 
     def check_changing_existing_allowed(self, files: List[dict]) -> List[dict]:
@@ -227,19 +261,6 @@ class FileBulkSerializer(serializers.ListSerializer):
         Files containing an id field are assumed to exist."""
         files = self.check_creating_new_allowed(files)
         files = self.check_changing_existing_allowed(files)
-        return files
-
-    def check_new_files_required_fields(self, files: List[dict]) -> List[dict]:
-        """Check that new files (no id) have all required fields."""
-        if self.action not in self.BULK_DELETE_ACTIONS:
-            required_fields = {
-                name for name, field in FileSerializer().fields.items() if field.required
-            }
-            for f in files:
-                if "id" not in f:  # new file
-                    missing_fields = required_fields - set(f)
-                    for field in missing_fields:
-                        f["errors"].setdefault(field, _("Field is required for new files."))
         return files
 
     def assign_existing_storage_data(self, files: List[dict]) -> List[dict]:
@@ -289,7 +310,14 @@ class FileBulkSerializer(serializers.ListSerializer):
         return ok_values
 
     def to_internal_value(self, data) -> List[dict]:
-        files = super().to_internal_value(data)
+        # Deserialize data and run basic validation
+        files = []
+        for item in data:
+            try:
+                validated = self.child.run_validation(item)
+                files.append(validated)
+            except serializers.ValidationError as exc:
+                self.fail(object=item, errors=exc.detail)
 
         # Identifier checks
         files = self.check_id_field_allowed(files)
@@ -300,7 +328,6 @@ class FileBulkSerializer(serializers.ListSerializer):
 
         # Checks for required and forbidden values
         files = self.check_files_allowed_actions(files)
-        files = self.check_new_files_required_fields(files)
 
         # Assign FileStorage and related values
         files = self.assign_existing_storage_data(files)
@@ -428,6 +455,10 @@ class FileBulkSerializer(serializers.ListSerializer):
             return []
 
         files = self.get_file_instances(validated_data)
+
+        # Return empty success list on error
+        if not self.ignore_errors and self.failed:
+            return []
 
         success_files: List[dict]
         is_insert = self.action in self.BULK_INSERT_ACTIONS

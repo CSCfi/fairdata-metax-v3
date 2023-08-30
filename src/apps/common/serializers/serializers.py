@@ -73,3 +73,14 @@ class CommonListSerializer(serializers.ListSerializer):
                 item.delete()
 
         return updated_instances
+
+
+class StrictSerializer(serializers.Serializer):
+    """Serializer that throws an error for unknown fields."""
+
+    def to_internal_value(self, data):
+        if unknown_fields := set(data).difference(self.fields):
+            raise serializers.ValidationError(
+                {field: _("Unknown field") for field in unknown_fields}
+            )
+        return super().to_internal_value(data)

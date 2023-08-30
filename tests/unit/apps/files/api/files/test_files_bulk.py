@@ -39,7 +39,6 @@ def build_files_json(file_kwargs: List[dict], storage=None):
             for field in list(f):
                 if field not in fields:
                     f.pop(field, None)
-    print(files)
     return files
 
 
@@ -61,15 +60,16 @@ def another_project() -> FileStorage:
 
 @pytest.fixture(scope="module")
 def action_url():
-    def _action_url(action: str):
+    def _action_url(action: str, ignore_errors=False):
+        query = "?ignore_errors=true" if ignore_errors else ""
         if action == "insert":
-            return reverse("file-insert-many")
+            return reverse("file-post-many") + query
         elif action == "update":
-            return reverse("file-update-many")
+            return reverse("file-patch-many") + query
         elif action == "upsert":
-            return reverse("file-upsert-many")
+            return reverse("file-put-many") + query
         elif action == "delete":
-            return reverse("file-delete-many")
+            return reverse("file-delete-many") + query
 
     return _action_url
 
@@ -100,7 +100,7 @@ def test_files_insert_many_ok(client, action_url):
 
 
 @pytest.mark.django_db
-def test_files_insert_many_ok_missing_identifier(client, action_url):
+def test_files_insert_many_ok_missing_storage_identifier(client, action_url):
     files = build_files_json(
         [
             {"id": None, "exists": False, "storage_identifier": None},
@@ -108,6 +108,29 @@ def test_files_insert_many_ok_missing_identifier(client, action_url):
     )
     res = client.post(
         action_url("insert"),
+        files,
+        content_type="application/json",
+    )
+    assert res.status_code == 400
+    assert_nested_subdict(
+        [
+            {
+                "errors": {"storage_identifier": RegexField("Field is required")},
+            }
+        ],
+        res.json()["failed"],
+    )
+
+
+@pytest.mark.django_db
+def test_files_insert_many_missing_storage_identifier(client, action_url):
+    files = build_files_json(
+        [
+            {"id": None, "exists": False, "storage_identifier": None},
+        ]
+    )
+    res = client.post(
+        action_url("insert", ignore_errors=True),
         files,
         content_type="application/json",
     )
@@ -145,7 +168,7 @@ def test_files_insert_many_missing_required_fields(client, action_url):
         ]
     )
     res = client.post(action_url("insert"), files, content_type="application/json")
-    assert res.status_code == 200
+    assert res.status_code == 400
     assert_nested_subdict(
         {
             "success": [],
@@ -153,9 +176,9 @@ def test_files_insert_many_missing_required_fields(client, action_url):
                 {
                     "object": files[0],
                     "errors": {
-                        "pathname": "Field is required for new files.",
-                        "modified": "Field is required for new files.",
-                        "checksum": "Field is required for new files.",
+                        "pathname": "This field is required.",
+                        "modified": "This field is required.",
+                        "checksum": "This field is required.",
                     },
                 }
             ],
@@ -169,7 +192,7 @@ def test_files_insert_many_missing_required_fields(client, action_url):
 def test_files_insert_many_id_not_allowed(client, action_url):
     files = build_files_json([{"exists": False}])
     res = client.post(action_url("insert"), files, content_type="application/json")
-    assert res.status_code == 200
+    assert res.status_code == 400
     assert_nested_subdict(
         {
             "success": [],
@@ -206,7 +229,9 @@ def test_files_insert_many_file_path_already_exists(client, project, action_url)
     files = build_files_json(
         [{"exists": False, "id": None, "pathname": "/data/1.txt"}], storage=project
     )
-    res = client.post(action_url("insert"), files, content_type="application/json")
+    res = client.post(
+        action_url("insert", ignore_errors=True), files, content_type="application/json"
+    )
     assert res.status_code == 200
     assert_nested_subdict(
         {
@@ -233,7 +258,9 @@ def test_files_insert_many_duplicate_file_path(client, action_url):
             {"exists": False, "id": None, "pathname": "/data/1.txt"},
         ],
     )
-    res = client.post(action_url("insert"), files, content_type="application/json")
+    res = client.post(
+        action_url("insert", ignore_errors=True), files, content_type="application/json"
+    )
     assert res.status_code == 200
     assert_nested_subdict(
         {
@@ -262,8 +289,8 @@ def test_files_insert_many_invalid_file_storage(client, action_url):
     res = client.post(action_url("insert"), files, content_type="application/json")
     assert res.status_code == 400
     assert_nested_subdict(
-        [{"storage_service": [RegexField("not a valid choice")]}, {}],
-        res.json(),
+        [{"errors": {"storage_service": RegexField("not a valid choice")}}],
+        res.json()["failed"],
         check_list_length=True,
     )
 
@@ -282,7 +309,6 @@ def test_files_insert_many_with_external_id(client, action_url):
         content_type="application/json",
     )
     assert res.status_code == 200
-    print(res.json())
     assert_nested_subdict(
         [
             {"object": files[0], "action": "insert"},
@@ -345,14 +371,14 @@ def test_files_update_many_ok(client, action_url):
 def test_files_update_many_id_required(client, action_url):
     files = build_files_json([{"exists": False, "id": None}])
     res = client.post(action_url("update"), files, content_type="application/json")
-    assert res.status_code == 200
+    assert res.status_code == 400
     assert_nested_subdict(
         {
             "success": [],
             "failed": [
                 {
                     "object": files[0],
-                    "errors": {"id": "Expected an existing file."},
+                    "errors": {"id": "File not found."},
                 }
             ],
         },
@@ -366,7 +392,7 @@ def test_files_update_many_existing_file_required(client, action_url):
     files = build_files_json([{"exists": True}])
     files[0]["id"] = str(uuid.uuid4())
     res = client.post(action_url("update"), files, content_type="application/json")
-    assert res.status_code == 200
+    assert res.status_code == 400
     assert_nested_subdict(
         {
             "success": [],
@@ -387,7 +413,7 @@ def test_files_update_many_read_only_field(client, action_url):
     files = build_files_json([{"exists": True}])
     files[0].update(pathname="/a_new_path/file.x")
     res = client.post(action_url("update"), files, content_type="application/json")
-    assert res.status_code == 200
+    assert res.status_code == 400
     assert_nested_subdict(
         {
             "success": [],
@@ -416,7 +442,7 @@ def test_files_update_many_change_project_for_existing(client, action_url):
     )
     files[0].update(project="another_project")
     res = client.post(action_url("update"), files, content_type="application/json")
-    assert res.status_code == 200
+    assert res.status_code == 400
     match_readonly = RegexField("Cannot change value")
     assert_nested_subdict(
         {
@@ -470,9 +496,6 @@ def test_files_upsert_many_with_external_identifier(client, action_url):
             },
         ]
     )
-    # storage_identifier and storage_service should be enough to identify existing files
-    del files[0]["id"]
-    del files[0]["project"]
     res = client.post(action_url("upsert"), files, content_type="application/json")
     assert res.status_code == 200
     assert_nested_subdict(
@@ -499,7 +522,9 @@ def test_files_upsert_many_with_missing_fields_for_new(client, action_url):
     )
     del files[1]["pathname"]
     del files[1]["checksum"]
-    res = client.post(action_url("upsert"), files, content_type="application/json")
+    res = client.post(
+        action_url("upsert", ignore_errors=True), files, content_type="application/json"
+    )
     assert res.status_code == 200
     assert_nested_subdict(
         {
@@ -510,6 +535,28 @@ def test_files_upsert_many_with_missing_fields_for_new(client, action_url):
         },
         res.json(),
         check_list_length=True,
+    )
+
+
+@pytest.mark.django_db
+def test_files_upsert_many_unknown_field(client, action_url):
+    files = build_files_json(
+        [
+            {"exists": True, "storage_identifier": "file1"},
+        ]
+    )
+    files[0]["thisfielddoesnotexist"] = "something"
+    res = client.post(action_url("upsert"), files, content_type="application/json")
+    assert res.status_code == 400
+    assert_nested_subdict(
+        {
+            "success": [],
+            "failed": [
+                {"errors": {"thisfielddoesnotexist": "Unknown field"}, "object": files[0]},
+            ],
+        },
+        res.json(),
+        check_list_length=True
     )
 
 
@@ -586,7 +633,9 @@ def test_files_delete_many_non_existing(client):
             {"exists": False},
         ]
     )
-    res = client.post("/v3/files/delete-many", files, content_type="application/json")
+    res = client.post(
+        "/v3/files/delete-many?ignore_errors=true", files, content_type="application/json"
+    )
     assert res.status_code == 200
     assert_nested_subdict(
         {
@@ -622,7 +671,9 @@ def test_files_delete_many_multiple_projects(client, project, another_project, a
 def test_files_delete_duplicate_id(client, project, another_project, action_url):
     files = build_files_json([{"exists": True}], storage=project)
     files += files
-    res = client.post(action_url("delete"), files, content_type="application/json")
+    res = client.post(
+        action_url("delete", ignore_errors=True), files, content_type="application/json"
+    )
     assert res.status_code == 200
     assert_nested_subdict(
         {

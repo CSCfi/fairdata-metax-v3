@@ -47,7 +47,7 @@ For example, to browse frozen IDA files:
 
 - `GET /v3/files?storage_service=ida&project=<project>` List of all files in IDA project with pagination.
 - `GET /v3/files?storage_service=ida&project=<project>&pagination=false` List all files in IDA project without pagination. Not recommended for large projects.
-- `GET /v3/files?file_storage=ida&file_storage_identifier=<id>&pagination=false` Returns IDA file with specified `file_storage_identifier` in a list.
+- `GET /v3/files?file_storage=ida&storage_identifier=<id>&pagination=false` Returns IDA file with specified `storage_identifier` in a list.
 - `GET /v3/directories?storage_service=ida&project=<project>` View root directory contents of an IDA project.
 - `GET /v3/directories?storage_service=ida&project=<project>&path=/dir/subdir/` View contents of `/dir/subdir/` of an IDA project.
 
@@ -146,28 +146,24 @@ field values you want to change. Use `null` to remove a field value.
 It may be more convenient to operate on multiple files in a single request.
 There are bulk endpoints that accept an array of file objects:
 
-- `/v3/files/insert-many` Creates new files. Returns error if file already exists.
+- `/v3/files/put-many` Create new files or replace existing files.
+- `/v3/files/post-many` Create new files. Error if file already exists.
+- `/v3/files/patch-many` Partially update existing files. Error if file does not exist.
+- `/v3/files/delete-many` Deletes existing files. Error if file does not exist.
 
-- `/v3/files/update-many` Updates existing files. Requires `id` and changed fields for each file.
+The bulk endpoints support omitting the Metax file `id` if
+the storage service and file identifier in the storage are specified:
+`{"storage_identifier": <external id>, "storage_service": <service>}`.
+When replacing an existing file, `put-many` will attempt to clear
+any existing file fields that are not specified in the request.
 
-- `/v3/files/upsert-many` Creates new files, or updates files if they already exist.
-
-- `/v3/files/delete-many` Deletes existing files. Requires `id` for each file.
-
-The bulk endpoints also support updating files with the external identifier
-`storage_identifier` instead of the Metax internal `id`. Because external identifiers
-are specific to a service, `storage_service` also
-needs to be specified in the file payload.
-
-If input validation fails, the response will have a `400` status code.
-Otherwise the response status is `200` even if no updates actually
-succeeded. The response will be JSON in the following shape:
+The response of the bulk file operations is in the following shape:
 
 ```
 {
   "success": [
     {
-      "object": <created file object>,
+      "object": <created/updated file object>,
       "action": <action "insert", "update" or "delete">
     },
     ...
@@ -180,6 +176,11 @@ succeeded. The response will be JSON in the following shape:
   ]
 }
 ```
+
+By default, any errors in a creating or updating a file cause the entire request to fail with a `400`
+status code, with the failed objects listed in the `failed` array. When the query parameter `ignore_errors`
+is enabled, the response code will be `200` even when there are errors. In that case, the `success`
+array contains objects that were updated and `failed` array contains objects that weren't.
 
 ## Files API fields
 

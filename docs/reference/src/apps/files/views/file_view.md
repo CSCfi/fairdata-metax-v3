@@ -20,6 +20,10 @@
 
 ### :::src.apps.files.views.file_view.BaseFileViewSet
 
+## FileBulkQuerySerializer
+
+### :::src.apps.files.views.file_view.FileBulkQuerySerializer
+
 ## FileViewSet
 
 ### :::src.apps.files.views.file_view.FileViewSet

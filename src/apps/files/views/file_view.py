@@ -11,6 +11,7 @@ from django.contrib.postgres.aggregates import ArrayAgg
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import F, Q, QuerySet
 from django.db.models.functions import Concat
+from django.utils.translation import gettext_lazy as _
 from django_filters import rest_framework as filters
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status, viewsets
@@ -144,6 +145,12 @@ class BaseFileViewSet(viewsets.ModelViewSet):
         return context
 
 
+class FileBulkQuerySerializer(serializers.Serializer):
+    ignore_errors = serializers.BooleanField(
+        default=False, help_text=_("Commit changes and return 200 even if there are errors.")
+    )
+
+
 class FileViewSet(BaseFileViewSet):
     http_method_names = ["get", "post", "patch", "put", "delete"]
 
@@ -218,36 +225,48 @@ class FileViewSet(BaseFileViewSet):
             return Response({str(v["key"]): v["values"] for v in queryset})
 
     def bulk_action(self, files, action):
-        f = FileBulkSerializer(data=files, action=action)
-        f.is_valid(raise_exception=True)
-        f.save()
-        return Response(f.data)
+        query_serializer = FileBulkQuerySerializer(data=self.request.query_params)
+        query_serializer.is_valid(raise_exception=True)
+        ignore_errors = query_serializer.validated_data["ignore_errors"]
+
+        serializer = FileBulkSerializer(data=files, action=action, ignore_errors=ignore_errors)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        status = 200
+        if serializer.data.get("failed") and not ignore_errors:
+            status = 400
+        return Response(serializer.data, status=status)
 
     @swagger_auto_schema(
+        query_serializer=FileBulkQuerySerializer(),
         request_body=FileBulkSerializer(action=BulkAction.INSERT),
         responses={200: FileBulkReturnValueSerializer()},
     )
-    @action(detail=False, methods=["post"], url_path="insert-many")
-    def insert_many(self, request):
+    @action(detail=False, methods=["post"], url_path="post-many")
+    def post_many(self, request):
         return self.bulk_action(request.data, action=BulkAction.INSERT)
 
     @swagger_auto_schema(
+        query_serializer=FileBulkQuerySerializer(),
         request_body=FileBulkSerializer(action=BulkAction.UPDATE),
         responses={200: FileBulkReturnValueSerializer()},
     )
-    @action(detail=False, methods=["post"], url_path="update-many")
-    def update_many(self, request):
+    @action(detail=False, methods=["post"], url_path="patch-many")
+    def patch_many(self, request):
         return self.bulk_action(request.data, action=BulkAction.UPDATE)
 
     @swagger_auto_schema(
+        query_serializer=FileBulkQuerySerializer(),
         request_body=FileBulkSerializer(action=BulkAction.UPSERT),
         responses={200: FileBulkReturnValueSerializer()},
     )
-    @action(detail=False, methods=["post"], url_path="upsert-many")
-    def upsert_many(self, request):
+    @action(detail=False, methods=["post"], url_path="put-many")
+    def put_many(self, request):
         return self.bulk_action(request.data, action=BulkAction.UPSERT)
 
     @swagger_auto_schema(
+        query_serializer=FileBulkQuerySerializer(),
         request_body=FileBulkSerializer(action=BulkAction.DELETE),
         responses={200: FileBulkReturnValueSerializer()},
     )
