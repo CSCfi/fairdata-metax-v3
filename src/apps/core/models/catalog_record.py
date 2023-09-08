@@ -105,14 +105,14 @@ class CatalogRecord(AbstractBaseModel):
     class PreservationState(models.IntegerChoices):
         NONE = -1
         INITIALIZED = 0
-        PROPOSED = 10
+        GENERATING_TECHNICAL_METADATA = 10
         TECHNICAL_METADATA_GENERATED = 20
         TECHNICAL_METADATA_GENERATED_FAILED = 30
         INVALID_METADATA = 40
         METADATA_VALIDATION_FAILED = 50
         VALIDATED_METADATA_UPDATED = 60
         VALIDATING_METADATA = 65
-        VALID_METADATA = 70
+        REJECTED_BY_USER = 70
         METADATA_CONFIRMED = 75
         ACCEPTED_TO_PAS = 80
         IN_PACKAGING_SERVICE = 90
