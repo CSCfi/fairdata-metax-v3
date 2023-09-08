@@ -11,6 +11,7 @@ from django.db.models import Model, Q, TextChoices
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
+from apps.common.serializers import StrictSerializer
 from apps.core.models import FileSet
 from apps.core.models.concepts import FileType, UseCategory
 from apps.core.models.file_metadata import FileSetDirectoryMetadata, FileSetFileMetadata
@@ -32,7 +33,7 @@ class Action(TextChoices):
     UPDATE = "update", _("Update dataset-specific metadata for file or directory")
 
 
-class ActionSerializerBase(serializers.Serializer):
+class ActionSerializerBase(StrictSerializer):
     action = ListValidChoicesField(choices=Action.choices, default=Action.ADD)
 
 
@@ -50,7 +51,7 @@ class DirectoryActionSerializer(ActionSerializerBase):
     dataset_metadata = DirectoryMetadataSerializer(required=False, allow_null=True)
 
 
-class FileSetSerializer(serializers.Serializer):
+class FileSetSerializer(StrictSerializer):
     """Serializer for FileSet and its file relations.
 
     Returns summary of files with file storage information and file statistics.

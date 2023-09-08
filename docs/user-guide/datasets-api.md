@@ -4,13 +4,13 @@
 
 A dataset has the following required properties.
 
-| Field              | key                        | value                                                   |
-|--------------------|----------------------------|---------------------------------------------------------|
-| Title              | title                      | dict                                                    |
-| Description        | description                | dict                                                    |
-| Language           | language                   | list, reference data from `/v3/reference-data/language` |
-| Access Rights      | access_rights              | object                                                  |
-| Data Catalog       | data_catalog               | str                                                     |
+| Field         | key           | value                                                   |
+| ------------- | ------------- | ------------------------------------------------------- |
+| Title         | title         | dict                                                    |
+| Description   | description   | dict                                                    |
+| Language      | language      | list, reference data from `/v3/reference-data/language` |
+| Access Rights | access_rights | object                                                  |
+| Data Catalog  | data_catalog  | str                                                     |
 
 ### Language
 
@@ -19,6 +19,7 @@ A language of the resource. This refers to the natural language used for textual
 Language field is a list of language reference data objects. Only url field is required to add language reference. Both of definitions below are valid objects:
 
 !!! example
+
     ``` json
     ---8<--- "tests/unit/docs/examples/test_data/dataset_api/language.json"
     ```
@@ -28,19 +29,20 @@ Language field is a list of language reference data objects. Only url field is r
 Information about who can access the resource or an indication of its security status. [^2]
 
 | Field       | key         | value                                                 |
-|-------------|-------------|-------------------------------------------------------|
+| ----------- | ----------- | ----------------------------------------------------- |
 | Description | description | dict                                                  |
 | Access Type | access_type | reference data from `/v3/reference-data/access-types` |
 | License     | license     | list of objects                                       |
 
 License is special kind of reference data object, as it can have additional metadata properties:
 
-* custom_url
-* description
+- custom_url
+- description
 
 Access type defines who can view your dataset metadata in Metax and Etsin.
 
 !!! example
+
     ``` json
     ---8<--- "tests/unit/docs/examples/test_data/dataset_api/access_rights.json"
     ```
@@ -56,8 +58,8 @@ additional dataset-specific metadata. All associated files have to be from the s
 
 When viewing a dataset with `GET /v3/datasets/<id>`, the response includes a summary of its file data in the `fileset` object. For example:
 
-<!-- prettier-ignore -->
 !!! example
+
     ```
     {
       ...
@@ -70,15 +72,13 @@ When viewing a dataset with `GET /v3/datasets/<id>`, the response includes a sum
     }
     ```
 
-The fileset object is also directly available at `/v3/datasets/<id>/fileset`.
-
 ### Browsing dataset files
 
 Dataset files can be viewed as a flat list or browsed as a directory tree:
 
-- `GET /v3/datasets/<id>/fileset/files` View flat list of dataset files.
-- `GET /v3/datasets/<id>/fileset/directories` View root directory of dataset files.
-- `GET /v3/datasets/<id>/fileset/directories?path=<path>` View content of path `<path>`, e.g. `?path=/fileset/subdir/`.
+- `GET /v3/datasets/<id>/files` View flat list of dataset files.
+- `GET /v3/datasets/<id>/directories` View root directory of dataset files.
+- `GET /v3/datasets/<id>/directories?path=<path>` View content of path `<path>`, e.g. `?path=/data/subdir/`.
 
 The endpoints support the same parameters as corresponding
 `/v3/files` and `/v3/directories` endpoints and use pagination by default.
@@ -89,10 +89,10 @@ in the `dataset_metadata` field, or `null` if metadata is not set.
 ### Adding, updating or removing dataset files
 
 To modify dataset file associations, include file storage parameters
-(i.e. `storage_service`, `project`) and a `directory_actions` or `file_actions` list either
+(i.e. `storage_service`, `project`) and a `directory_actions` or `file_actions` list in
+fileset object when creating or updating a dataset.
 
-- in fileset object when creating or updating a dataset, e.g. with `POST /v3/datasets`
-- or in payload for `POST /v3/datasets/<id>/fileset`.
+For example, to update files of an existing dataset, use `PATCH /v3/datasets/<id>` with `{"fileset": <fileset object>}`.
 
 The fileset object should look like
 
@@ -117,7 +117,7 @@ The fileset object should look like
 }
 ```
 
-where the optional action is is one of
+where the optional action value is is one of
 
 - "add" (default): Add file or all files in directory to dataset, update `dataset_metadata` if present.
 - "update": Only update `dataset_metadata` without adding or removing files.
@@ -151,6 +151,7 @@ The following fields are supported in dataset-specific file and directory metada
 ### Examples
 
 #### Creating minimal dataset with files from directory
+
 <!-- prettier-ignore -->
 !!! example
     `POST /v3/datasets`

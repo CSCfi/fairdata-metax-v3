@@ -9,19 +9,19 @@ from dataclasses import asdict, dataclass
 from enum import Enum
 from typing import Dict, List, Optional
 
+from django.core.exceptions import FieldDoesNotExist
 from django.db.models import F
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from django.core.exceptions import FieldDoesNotExist
 from rest_framework import serializers
 from rest_framework.fields import empty
 from rest_framework.settings import api_settings
 
 from apps.common.helpers import get_technical_metax_user
+from apps.common.serializers import StrictSerializer
 from apps.files.models.file import File, FileStorage
 from apps.files.models.file_storage import FileStorage
 from apps.files.serializers.file_serializer import FileSerializer
-from apps.common.serializers import StrictSerializer
 
 
 class PartialFileSerializer(FileSerializer, StrictSerializer):

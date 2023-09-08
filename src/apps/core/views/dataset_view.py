@@ -9,13 +9,12 @@ import logging
 
 from django_filters import rest_framework as filters
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import exceptions, viewsets
-from rest_framework.decorators import action
-from rest_framework.response import Response
+from rest_framework import exceptions, response, viewsets
 from watson import search
 
-from apps.core.models.catalog_record import Dataset, DatasetActor, FileSet
-from apps.core.serializers import DatasetSerializer, FileSetSerializer
+from apps.common.views import PatchModelMixin
+from apps.core.models.catalog_record import Dataset, FileSet
+from apps.core.serializers import DatasetSerializer
 from apps.files.models import File
 from apps.files.serializers import DirectorySerializer
 from apps.files.views.directory_view import DirectoryCommonQueryParams, DirectoryViewSet
@@ -84,7 +83,7 @@ class DatasetFilter(filters.FilterSet):
         return search.filter(queryset, value)
 
 
-class DatasetViewSet(viewsets.ModelViewSet):
+class DatasetViewSet(PatchModelMixin, viewsets.ModelViewSet):
     serializer_class = DatasetSerializer
     queryset = Dataset.objects.prefetch_related(
         "access_rights__access_type",
@@ -111,7 +110,7 @@ class DatasetViewSet(viewsets.ModelViewSet):
     )
 
     filterset_class = DatasetFilter
-    http_method_names = ["get", "post", "put", "delete", "options"]
+    http_method_names = ["get", "post", "put", "patch", "delete", "options"]
 
     def get_object(self):
         queryset = self.get_queryset()
@@ -152,48 +151,6 @@ class DatasetDirectoryViewSet(DirectoryViewSet):
     )
     def list(self, *args, **kwargs):
         return super().list(*args, **kwargs)
-
-    @swagger_auto_schema(
-        query_serializer=DirectoryCommonQueryParams,
-        responses={200: DirectorySerializer},
-    )
-    def list(self, *args, **kwargs):
-        return super().list(*args, **kwargs)
-
-
-class DatasetFileSetViewSet(viewsets.ViewSet):
-    """API for listing and updating dataset files."""
-
-    http_method_names = ["get", "post"]
-    lookup_field = "storage_service"
-
-    def get_dataset(self):
-        try:
-            dataset_id = self.kwargs["dataset_id"]
-            return Dataset.objects.get(id=dataset_id)
-        except Dataset.DoesNotExist:
-            raise exceptions.NotFound()
-
-    def list(self, request, *args, **kwargs):
-        dataset = self.get_dataset()
-        file_set: FileSet
-        try:
-            file_set = dataset.file_set
-        except FileSet.DoesNotExist:
-            raise exceptions.NotFound()
-        serializer = FileSetSerializer(instance=file_set)
-        return Response(serializer.data)
-
-    def create(self, request, *args, **kwargs):
-        dataset = self.get_dataset()
-        serializer = FileSetSerializer(
-            data=request.data,
-            context={"dataset": dataset},
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        dataset.save()  # update dataset modification date
-        return Response(serializer.data)
 
 
 class DatasetFilesViewSet(BaseFileViewSet):

@@ -102,11 +102,11 @@ def test_dataset_directories_no_files(client, dataset_with_files, data_urls):
 @pytest.mark.django_db
 def test_dataset_file_set_no_files(client, dataset_with_files, data_urls):
     another_dataset = factories.DatasetFactory()
-    url = data_urls(another_dataset)["file_set"]
+    url = data_urls(another_dataset)["dataset"]
     res = client.get(
         url,
         {
             "pagination": False,
         },
     )
-    assert res.status_code == 404
+    assert res.data.get("fileset") is None

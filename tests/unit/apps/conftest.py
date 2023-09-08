@@ -29,7 +29,6 @@ def data_urls():
         kwargs = {"dataset_id": dataset_id}
         return {
             "dataset": reverse("dataset-detail", kwargs={"pk": dataset_id}),
-            "file_set": reverse("dataset-data-list", kwargs=kwargs),
             "files": reverse("dataset-files-list", kwargs=kwargs),
             "directories": reverse("dataset-directories-list", kwargs=kwargs),
         }

@@ -8,7 +8,6 @@ from apps.core.views import (
     DataCatalogView,
     DatasetActorViewSet,
     DatasetDirectoryViewSet,
-    DatasetFileSetViewSet,
     DatasetFilesViewSet,
     DatasetViewSet,
     LegacyDatasetViewSet,
@@ -33,17 +32,12 @@ router.register(r"data-catalogs?", DataCatalogView, basename="datacatalog")
 router.register(r"datasets?", DatasetViewSet, basename="dataset")
 
 router.register(
-    r"datasets?/(?P<dataset_id>[^/.]+)/fileset",
-    DatasetFileSetViewSet,
-    basename="dataset-data",
-)
-router.register(
-    r"datasets?/(?P<dataset_id>[^/.]+)/fileset/files",
+    r"datasets?/(?P<dataset_id>[^/.]+)/files",
     DatasetFilesViewSet,
     basename="dataset-files",
 )
 router.register(
-    r"datasets?/(?P<dataset_id>[^/.]+)/fileset/directories",
+    r"datasets?/(?P<dataset_id>[^/.]+)/directories",
     DatasetDirectoryViewSet,
     basename="dataset-directories",
 )

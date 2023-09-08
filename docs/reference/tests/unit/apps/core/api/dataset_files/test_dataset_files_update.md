@@ -8,9 +8,9 @@
 
 ### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_post_multiple_file_sets
 
-## test_dataset_files_post
+## test_dataset_patch_fileset
 
-### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_post
+### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_patch_fileset
 
 ## test_dataset_files_post_noop_add
 

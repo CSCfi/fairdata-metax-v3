@@ -3,5 +3,6 @@ from .serializers import (
     AbstractDatasetModelSerializer,
     AbstractDatasetPropertyModelSerializer,
     CommonListSerializer,
-    StrictSerializer
+    PatchSerializer,
+    StrictSerializer,
 )

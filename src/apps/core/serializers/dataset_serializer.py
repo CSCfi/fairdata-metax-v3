@@ -12,6 +12,7 @@ from rest_framework import serializers
 from rest_framework.fields import empty
 
 from apps.common.helpers import update_or_create_instance
+from apps.common.serializers import PatchSerializer
 from apps.core.models import Dataset
 from apps.core.models.concepts import FieldOfScience, Language, Theme
 from apps.core.serializers.common_serializers import (
@@ -35,7 +36,7 @@ NestedDatasetObjects = namedtuple(
 )
 
 
-class DatasetSerializer(serializers.ModelSerializer):
+class DatasetSerializer(PatchSerializer, serializers.ModelSerializer):
     access_rights = AccessRightsModelSerializer(required=False)
     field_of_science = FieldOfScience.get_serializer()(required=False, many=True)
     actors = DatasetActorModelSerializer(required=False, many=True)

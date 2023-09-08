@@ -10,6 +10,7 @@ from uuid import UUID
 
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
+from rest_framework.fields import SkipField, empty
 
 logger = logging.getLogger(__name__)
 
@@ -84,3 +85,30 @@ class StrictSerializer(serializers.Serializer):
                 {field: _("Unknown field") for field in unknown_fields}
             )
         return super().to_internal_value(data)
+
+
+class PatchSerializer(serializers.Serializer):
+    """Serializer which allows partial update that does not propagate to nested serializers.
+
+    For partial updates, use patch=True which does not make nested updates partial.
+    Using partial=True throws a ValueError to prevent accidentally using the
+    default (propagating) partial update style.
+    """
+
+    def __init__(self, *args, **kwargs):
+        self.patch = kwargs.pop("patch", False)
+        if kwargs.get("partial"):
+            raise ValueError(
+                "PatchSerializer should not be used with partial=True. Use patch=True instead."
+            )
+        super().__init__(*args, **kwargs)
+
+    def get_fields(self):
+        """When patch is enabled, no fields are required."""
+        fields = super().get_fields()
+        if self.patch:
+            for field in fields.values():
+                field.required = False
+                if not field.read_only:
+                    field.default = empty
+        return fields

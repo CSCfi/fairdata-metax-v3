@@ -16,3 +16,7 @@
 
 ### :::src.apps.common.serializers.serializers.StrictSerializer
 
+## PatchSerializer
+
+### :::src.apps.common.serializers.serializers.PatchSerializer
+
