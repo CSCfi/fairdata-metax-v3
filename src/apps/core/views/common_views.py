@@ -20,16 +20,16 @@ logger = logging.getLogger(__name__)
 class DatasetPublisherFilter(filters.FilterSet):
     class Meta:
         model = DatasetPublisher
-        fields = ("name", "url", "homepage_title")
+        fields = ("name", "homepage__url", "homepage__title")
 
-    homepage_title = filters.CharFilter(
+    homepage__title = filters.CharFilter(
         field_name="homepage__title__values",
         max_length=255,
         lookup_expr="icontains",
-        label="homepage_title",
+        label="homepage__title",
     )
-    url = filters.CharFilter(
-        field_name="homepage__url", max_length=512, lookup_expr="icontains", label="url"
+    homepage__url = filters.CharFilter(
+        max_length=512, lookup_expr="icontains", label="url"
     )
     name = filters.CharFilter(
         field_name="name__values", max_length=255, lookup_expr="icontains", label="name"
@@ -41,7 +41,7 @@ class DatasetPublisherFilter(filters.FilterSet):
             ("modified", "modified"),
             ("name__values", "name"),
             ("homepage__url", "url"),
-            ("homepage__title__values", "homepage_title"),
+            ("homepage__title__values", "homepage__title"),
         )
     )
 
@@ -59,10 +59,10 @@ class AccessRightsFilter(filters.FilterSet):
         model = AccessRights
         fields = (
             "description",
-            "access_type_url",
-            "access_type_pref_label",
-            "license_url",
-            "license_pref_label",
+            "access_type__url",
+            "access_type__pref_label",
+            "license__url",
+            "license__pref_label",
         )
 
     description = filters.CharFilter(
@@ -72,32 +72,30 @@ class AccessRightsFilter(filters.FilterSet):
         label="description",
     )
 
-    access_type_url = filters.CharFilter(
-        field_name="access_type__url",
+    access_type__url = filters.CharFilter(
         max_length=512,
         lookup_expr="icontains",
-        label="access_type_url",
+        label="access_type__url",
     )
 
-    access_type_pref_label = filters.CharFilter(
+    access_type__pref_label = filters.CharFilter(
         field_name="access_type__pref_label__values",
         max_length=255,
         lookup_expr="icontains",
-        label="access_type_pref_label",
+        label="access_type__pref_label",
     )
 
-    license_url = filters.CharFilter(
-        field_name="license__url",
+    license__url = filters.CharFilter(
         max_length=512,
         lookup_expr="icontains",
-        label="license_url",
+        label="license__url",
     )
 
-    license_pref_label = filters.CharFilter(
+    license__pref_label = filters.CharFilter(
         field_name="license__pref_label__values",
         max_length=255,
         lookup_expr="icontains",
-        label="license_pref_label",
+        label="license__pref_label",
     )
 
     ordering = filters.OrderingFilter(
@@ -105,10 +103,10 @@ class AccessRightsFilter(filters.FilterSet):
             ("created", "created"),
             ("modified", "modified"),
             ("description__values", "description"),
-            ("access_type__url", "access_type_url"),
-            ("access_type__pref_label__values", "access_type_pref_label"),
-            ("license__url", "license_url"),
-            ("license__pref_label__values", "license_pref_label"),
+            ("access_type__url", "access_type__url"),
+            ("access_type__pref_label__values", "access_type__pref_label"),
+            ("license__url", "license__url"),
+            ("license__pref_label__values", "license__pref_label"),
         )
     )
 
@@ -141,25 +139,22 @@ class MetadataProviderFilter(filters.FilterSet):
         label="organization",
     )
 
-    user_first_name = filters.CharFilter(
-        field_name="user__first_name",
+    user__first_name = filters.CharFilter(
         max_length=150,
         lookup_expr="icontains",
-        label="user_first_name",
+        label="user__first_name",
     )
 
-    user_last_name = filters.CharFilter(
-        field_name="user__last_name",
+    user__last_name = filters.CharFilter(
         max_length=150,
         lookup_expr="icontains",
-        label="user_last_name",
+        label="user__last_name",
     )
 
-    user_email = filters.CharFilter(
-        field_name="user__email",
+    user__email = filters.CharFilter(
         max_length=254,
         lookup_expr="icontains",
-        label="user_email",
+        label="user__email",
     )
 
     ordering = filters.OrderingFilter(
@@ -167,9 +162,9 @@ class MetadataProviderFilter(filters.FilterSet):
             ("created", "created"),
             ("modified", "modified"),
             ("organization", "organization"),
-            ("user__first_name", "user_first_name"),
-            ("user__last_name", "user_last_name"),
-            ("user__email", "user_email"),
+            ("user__first_name", "user__first_name"),
+            ("user__last_name", "user__last_name"),
+            ("user__email", "user__email"),
         )
     )
 
@@ -185,7 +180,7 @@ class MetadataProviderViewSet(viewsets.ModelViewSet):
 
 class DatasetFilter(filters.FilterSet):
     title = filters.CharFilter(
-        field_name="title__values",
+        field_name="title",
         max_length=512,
         lookup_expr="icontains",
         label="title",

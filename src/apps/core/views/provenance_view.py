@@ -7,7 +7,7 @@ from apps.core.serializers import ProvenanceModelSerializer
 
 class ProvenanceFilter(filters.FilterSet):
     title = filters.CharFilter(
-        field_name="title__values",
+        field_name="title",
         max_length=512,
         lookup_expr="icontains",
         label="title",

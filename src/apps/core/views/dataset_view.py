@@ -30,42 +30,38 @@ class DatasetFilter(filters.FilterSet):
         lookup_expr="icontains",
         label="title",
     )
-    data_catalog_id = filters.CharFilter(
-        field_name="data_catalog__id",
+    data_catalog__id = filters.CharFilter(
         max_length=512,
         lookup_expr="icontains",
         label="data-catalog identifier",
         help_text="filter with substring from data-catalog identifier",
     )
-    data_catalog_title = filters.CharFilter(
-        field_name="data_catalog__title",
+    data_catalog__title = filters.CharFilter(
+        field_name="data_catalog__title__values",
         max_length=512,
         lookup_expr="icontains",
         label="data-catalog title",
     )
-    person = filters.CharFilter(
-        field_name="actors__actor__person", max_length=512, lookup_expr="icontains", label="person"
+    actors__actor__person__name = filters.CharFilter(
+        max_length=512, lookup_expr="icontains", label="person name"
     )
-    organization_name = filters.CharFilter(
+    actors__actor__organization__pref_label = filters.CharFilter(
         field_name="actors__actor__organization__pref_label__values",
         max_length=512,
         lookup_expr="icontains",
         label="organization name",
     )
-    metadata_owner_organization = filters.CharFilter(
-        field_name="metadata_owner__organization",
+    metadata_owner__organization = filters.CharFilter(
         max_length=512,
         lookup_expr="icontains",
         label="metadata owner organization",
     )
-    metadata_owner_user = filters.CharFilter(
-        field_name="metadata_owner__user__username",
+    metadata_owner__user__username = filters.CharFilter(
         max_length=512,
         lookup_expr="icontains",
         label="metadata owner user",
     )
     persistent_identifier = filters.CharFilter(
-        field_name="persistent_identifier",
         max_length=255,
         lookup_expr="exact",
         label="persistent identifier",

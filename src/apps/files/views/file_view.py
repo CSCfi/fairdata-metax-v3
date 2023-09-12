@@ -123,12 +123,12 @@ class BaseFileViewSet(viewsets.ModelViewSet):
     def get_serializer_context(self, instance):
         """Add dataset file metadata to serializer context when listing files."""
         context = super().get_serializer_context()
-        if self.request.method != "GET":
+        if self.request and self.request.method != "GET":
             return context
 
         # Get dataset id from kwargs (i.e. from url) or query parameters
         dataset_id = self.kwargs.get("dataset_id")
-        if not dataset_id:
+        if not dataset_id and self.request:
             dataset_id = forms.CharField(required=False).clean(
                 self.request.query_params.get("dataset")
             )

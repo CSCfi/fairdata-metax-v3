@@ -45,9 +45,9 @@ def test_list_publishers(client, post_publisher_payloads_a_b_c_d):
     "publisher_filter, filter_value, filter_result",
     [
         ("name", "sija C", 1),
-        ("url", "yyy", 2),
-        ("homepage_title", "website", 5),
-        ("homepage_title", "C kotisivu", 1),
+        ("homepage__url", "yyy", 2),
+        ("homepage__title", "website", 5),
+        ("homepage__title", "C kotisivu", 1),
     ],
 )
 @pytest.mark.django_db

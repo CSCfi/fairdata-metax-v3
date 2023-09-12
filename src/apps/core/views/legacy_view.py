@@ -6,14 +6,12 @@ from apps.core.serializers import LegacyDatasetModelSerializer
 
 
 class LegacyDatasetFilter(filters.FilterSet):
-    title = filters.CharFilter(
-        field_name="dataset_json__research_dataset__title",
+    dataset_json__research_dataset__title = filters.CharFilter(
         lookup_expr="icontains",
         label="Research Dataset Title",
         max_length=512,
     )
-    data_catalog = filters.CharFilter(
-        field_name="dataset_json__data_catalog__identifier",
+    dataset_json__data_catalog__identifier = filters.CharFilter(
         lookup_expr="icontains",
         label="Data Catalog Identifier",
         max_length=512,

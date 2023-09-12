@@ -49,6 +49,7 @@ django-cachalot = "^2.6.1"
 django-watson = "^1.6.3"
 coreapi = "^2.3.3"
 mkdocstrings = {extras = ["python"], version = "^0.22.0"}
+pyyaml = "^6.0.1"
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.12.0"

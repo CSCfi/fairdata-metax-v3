@@ -22,31 +22,40 @@ class DataCatalogFilter(filters.FilterSet):
             "dataset_schema",
         )
 
-    title__values = filters.CharFilter(max_length=255, lookup_expr="icontains", label="title")
+    title = filters.CharFilter(
+        field_name="title__values", max_length=255, lookup_expr="icontains", label="title"
+    )
     id = filters.CharFilter(max_length=255, lookup_expr="icontains")
-    publisher__name__values = filters.CharFilter(
-        max_length=255, lookup_expr="icontains", label="publisher name contains"
+    publisher__name = filters.CharFilter(
+        field_name="publisher__name__values",
+        max_length=255,
+        lookup_expr="icontains",
+        label="publisher name contains",
     )
 
     publisher__homepage__url = filters.CharFilter(max_length=255, lookup_expr="icontains")
-    access_rights__description__values = filters.CharFilter(
+    access_rights__description = filters.CharFilter(
+        field_name="access_rights__description__values",
         max_length=255,
         lookup_expr="icontains",
         label="access rights description contains",
     )
     access_rights__access_type__url = filters.CharFilter(max_length=255, lookup_expr="icontains")
-    access_rights__access_type__pref_label__values = filters.CharFilter(
+    access_rights__access_type__pref_label = filters.CharFilter(
+        field_name="access_rights__access_type__pref_label__values",
         max_length=255,
         lookup_expr="icontains",
         label="access rights access type preferred label contains",
     )
-    publisher__homepage__title__values = filters.CharFilter(
+    publisher__homepage__title = filters.CharFilter(
+        field_name="publisher__homepage__title__values",
         max_length=255,
         lookup_expr="icontains",
         label="publisher homepage title contains",
     )
     language__url = filters.CharFilter(max_length=255, lookup_expr="icontains")
-    language__pref_label__values = filters.CharFilter(
+    language__pref_label = filters.CharFilter(
+        field_name="language__pref_label__values",
         max_length=255,
         lookup_expr="icontains",
         label="language preferred label contains",

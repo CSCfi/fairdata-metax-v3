@@ -52,7 +52,7 @@ def test_list_metadata_providers(client, post_metadata_provider_payloads_a_b_c_d
     "metadata_provider_filter, filter_value, filter_result",
     [
         ("organization", "organ", 4),
-        ("user_first_name", "Etunimi", 0),
+        ("user__first_name", "Etunimi", 0),
         ("organization", "organization-a", 1),
     ],
 )
