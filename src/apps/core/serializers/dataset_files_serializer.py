@@ -7,6 +7,7 @@
 
 from typing import Dict
 
+from cachalot.api import cachalot_disabled
 from django.db.models import Model, Q, TextChoices
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
@@ -433,24 +434,27 @@ class FileSetSerializer(StrictSerializer):
         file_set.removed_files_count = 0
         file_set.added_files_count = 0
 
-        # remove files
-        if filters["remove"]:
-            files_to_remove = (
-                file_set.files.filter(filters["remove"]).order_by().values_list("id", flat=True)
-            )
-            file_set.removed_files_count = len(files_to_remove)
-            file_set.files.remove(*files_to_remove)
+        with cachalot_disabled():
+            # remove files
+            if filters["remove"]:
+                files_to_remove = (
+                    file_set.files.filter(filters["remove"])
+                    .order_by()
+                    .values_list("id", flat=True)
+                )
+                file_set.removed_files_count = len(files_to_remove)
+                file_set.files.remove(*files_to_remove)
 
-        # add files
-        if filters["add"]:
-            files_to_add = (
-                storage.files.exclude(file_sets=file_set.id)
-                .filter(filters["add"])
-                .order_by()
-                .values_list("id", flat=True)
-            )
-            file_set.added_files_count = len(files_to_add)
-            file_set.files.add(*files_to_add)
+            # add files
+            if filters["add"]:
+                files_to_add = (
+                    storage.files.exclude(file_sets=file_set.id)
+                    .filter(filters["add"])
+                    .order_by()
+                    .values_list("id", flat=True)
+                )
+                file_set.added_files_count = len(files_to_add)
+                file_set.files.add(*files_to_add)
 
         # file counts and dataset storage project may have changed, clear cached values
         file_set.clear_cached_file_properties()

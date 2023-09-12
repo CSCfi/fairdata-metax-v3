@@ -1,6 +1,8 @@
 import logging
+from contextlib import contextmanager
 from typing import Dict
 
+from cachalot.api import cachalot_disabled
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.utils.dateparse import parse_datetime
@@ -80,3 +82,20 @@ def get_attr_or_item(obj, key):
     except (KeyError, IndexError, TypeError):
         pass
     return None
+
+
+@contextmanager
+def cachalot_toggle(enabled=True, all_queries: bool = False):
+    """Context manager that allows disabling cachalot.
+
+    Useful for heavy one-off queries that may be too large for memcached.
+
+    Usage:
+        with cachalot_toggle(enabled=False):
+            do_stuff() # run code without caching
+    """
+    if enabled:
+        yield
+    else:
+        with cachalot_disabled(all_queries=all_queries):
+            yield

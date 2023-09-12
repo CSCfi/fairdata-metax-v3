@@ -12,7 +12,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import exceptions, fields, serializers, viewsets
 from rest_framework.response import Response
 
-from apps.common.helpers import get_attr_or_item
+from apps.common.helpers import cachalot_toggle, get_attr_or_item
 from apps.files.functions import SplitPart
 from apps.files.helpers import (
     get_directory_metadata_model,
@@ -335,56 +335,58 @@ class DirectoryViewSet(viewsets.ViewSet):
     )
     def list(self, request, *args, **kwargs):
         """Directory content view."""
-
         params = self.get_params()
-        directories = self.get_directories(params)
-        parent_data = {}
-        if params.get("include_parent"):
-            parent_data = self.get_parent_data(params, directories)
+        with cachalot_toggle(enabled=params["pagination"]):
+            directories = self.get_directories(params)
+            parent_data = {}
+            if params.get("include_parent"):
+                parent_data = self.get_parent_data(params, directories)
 
-        # Evaluate all subdirectories into a list so they can be
-        # counted and sliced in a single DB query.
-        matching_subdirs = list(self.get_matching_subdirectories(params, directories))
-        files = self.get_directory_files(params)
+            # Evaluate all subdirectories into a list so they can be
+            # counted and sliced in a single DB query.
+            matching_subdirs = list(self.get_matching_subdirectories(params, directories))
+            files = self.get_directory_files(params)
 
-        pagination_data = {}
-        if params.get("pagination"):
-            paginated = self.paginate(params, matching_subdirs, files)
-            matching_subdirs = paginated["directories"]
-            files = paginated["files"]
-            pagination_data = self.get_pagination_data(request, params, paginated)
+            pagination_data = {}
+            if params.get("pagination"):
+                paginated = self.paginate(params, matching_subdirs, files)
+                matching_subdirs = paginated["directories"]
+                files = paginated["files"]
+                pagination_data = self.get_pagination_data(request, params, paginated)
 
-        dataset_metadata = self.get_dataset_metadata(params, matching_subdirs, files)
+            dataset_metadata = self.get_dataset_metadata(params, matching_subdirs, files)
 
-        instance = {
-            **parent_data,
-            "directories": matching_subdirs,
-            "files": files,
-        }
+            instance = {
+                **parent_data,
+                "directories": matching_subdirs,
+                "files": files,
+            }
 
-        # all directories and files have same project, pass it through context
-        storage = self.get_storage(params)
-        serialized_data = DirectorySerializer(
-            instance,
-            context={
-                "request": self.request,
-                "directory_fields": params.get("directory_fields"),
-                "file_fields": params.get("file_fields"),
-                "storage": storage,
-                **dataset_metadata,  # add file and directory metadata to context
-            },
-        ).data
-        results = serialized_data
-        if params.get("pagination"):
-            results = {"results": serialized_data}
+            # all directories and files have same project, pass it through context
+            storage = self.get_storage(params)
+            serialized_data = DirectorySerializer(
+                instance,
+                context={
+                    "request": self.request,
+                    "directory_fields": params.get("directory_fields"),
+                    "file_fields": params.get("file_fields"),
+                    "storage": storage,
+                    **dataset_metadata,  # add file and directory metadata to context
+                },
+            ).data
+            results = serialized_data
+            if params.get("pagination"):
+                results = {"results": serialized_data}
 
-        # empty results may be due to pagination, remove parent dir if it does not actually exist
-        if (
-            "directory" in results
-            and not serialized_data["directories"]
-            and not serialized_data["files"]
-            and not directories.exists()
-        ):
-            del results["directory"]
+            # results["files"] = ["lol"]
 
-        return Response({**pagination_data, **results})
+            # empty results may be due to pagination, remove parent dir if it does not actually exist
+            if (
+                "directory" in results
+                and not serialized_data["directories"]
+                and not serialized_data["files"]
+                and not directories.exists()
+            ):
+                del results["directory"]
+
+            return Response({**pagination_data, **results})

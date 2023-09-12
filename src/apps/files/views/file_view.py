@@ -18,6 +18,7 @@ from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from apps.common.helpers import cachalot_toggle
 from apps.files.helpers import get_file_metadata_model
 from apps.files.models.file import File
 from apps.files.serializers import DeleteWithProjectIdentifierSerializer, FileSerializer
@@ -47,8 +48,8 @@ class FileCommonFilterset(filters.FilterSet):
     def pathname_filter(self, queryset, name, value):
         if value.endswith("/"):
             # Filtering by directory path, no need to include filename
-            return queryset.filter(pathname__istartswith=value)
-        return queryset.alias(pathname=Concat("pathname", "filename")).filter(
+            return queryset.filter(directory_path__istartswith=value)
+        return queryset.alias(directory_path=Concat("pathname", "filename")).filter(
             pathname__istartswith=value
         )
 
@@ -107,6 +108,11 @@ class BaseFileViewSet(viewsets.ModelViewSet):
     filterset_class = FileFilterSet
     http_method_names = ["get"]
     queryset = File.objects.prefetch_related("storage")
+
+    def list(self, request, *args, **kwargs):
+        pagination_enabled = self.paginator.pagination_enabled(request)
+        with cachalot_toggle(pagination_enabled):
+            return super().list(request, *args, **kwargs)
 
     def get_serializer(self, instance=None, *args, **kwargs):
         """Modified get_serializer that passes instance to get_serializer_context."""
