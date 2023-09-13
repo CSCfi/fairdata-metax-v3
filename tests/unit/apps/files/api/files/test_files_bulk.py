@@ -3,7 +3,7 @@ from typing import List
 
 import pytest
 from rest_framework.reverse import reverse
-from rest_framework.serializers import RegexField
+from rest_framework.serializers import RegexField, DateTimeField
 from tests.utils import assert_nested_subdict
 
 from apps.files import factories
@@ -560,6 +560,11 @@ def test_files_upsert_many_unknown_field(client, action_url):
     )
 
 
+def set_removed(file):
+    """Change file json "removed" timestamp to match any date value."""
+    return {**file, "removed": DateTimeField()}
+
+
 @pytest.mark.django_db
 def test_files_delete_many_ok(client):
     files = build_files_json(
@@ -573,9 +578,9 @@ def test_files_delete_many_ok(client):
     assert res.status_code == 200
     assert_nested_subdict(
         [
-            {"object": files[0], "action": "delete"},
-            {"object": files[1], "action": "delete"},
-            {"object": files[2], "action": "delete"},
+            {"object": set_removed(files[0]), "action": "delete"},
+            {"object": set_removed(files[1]), "action": "delete"},
+            {"object": set_removed(files[2]), "action": "delete"},
         ],
         res.json()["success"],
     )
@@ -595,7 +600,7 @@ def test_files_delete_many_only_id(client, action_url):
     assert res.status_code == 200
     assert_nested_subdict(
         [
-            {"object": files[0], "action": "delete"},
+            {"object": set_removed(files[0]), "action": "delete"},
         ],
         res.json()["success"],
     )
@@ -617,7 +622,7 @@ def test_files_delete_many_with_external_id(client, action_url):
     assert res.status_code == 200
     assert_nested_subdict(
         [
-            {"object": files[0], "action": "delete"},
+            {"object": set_removed(files[0]), "action": "delete"},
         ],
         res.json()["success"],
     )
@@ -640,7 +645,7 @@ def test_files_delete_many_non_existing(client):
     assert_nested_subdict(
         {
             "success": [
-                {"object": files[0], "action": "delete"},
+                {"object": set_removed(files[0]), "action": "delete"},
             ],
             "failed": [
                 {"object": files[1], "errors": {"id": "File with id not found."}},
@@ -660,8 +665,8 @@ def test_files_delete_many_multiple_projects(client, project, another_project, a
     assert res.status_code == 200
     assert_nested_subdict(
         [
-            {"object": files[0], "action": "delete"},
-            {"object": files[1], "action": "delete"},
+            {"object": set_removed(files[0]), "action": "delete"},
+            {"object": set_removed(files[1]), "action": "delete"},
         ],
         res.json()["success"],
     )
@@ -678,7 +683,7 @@ def test_files_delete_duplicate_id(client, project, another_project, action_url)
     assert_nested_subdict(
         {
             "success": [
-                {"object": files[0], "action": "delete"},
+                {"object": set_removed(files[0]), "action": "delete"},
             ],
             "failed": [
                 {"object": files[1], "errors": {"id": RegexField("Duplicate file")}},

@@ -437,8 +437,15 @@ class FileBulkSerializer(serializers.ListSerializer):
 
     def do_delete(self, files: List[File]) -> List[dict]:
         """Perform bulk delete on files."""
+        now = timezone.now()
+        for f in files:
+            f.removed = now # include new value in response
+            f.is_removed = True
+
+        # Update all files in db at once
         file_ids = [f.id for f in files]
-        File.objects.filter(id__in=file_ids).delete()
+        File.objects.filter(id__in=file_ids).update(is_removed=True, removed=now)
+
         return [
             {
                 "object": f,
