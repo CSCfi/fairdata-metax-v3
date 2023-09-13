@@ -4,7 +4,7 @@ Before contributing, check you have your development setup in order. Following s
 
 ## Write the implementation
 
-Write easy to understand code with descriptive class, function and variable names. Use Black formatter to format your code. 
+Write easy to understand code with descriptive class, function and variable names. Use Black formatter to format your code and `isort` to organize imports.
 
 ## Write unit-tests
 

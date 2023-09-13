@@ -91,24 +91,10 @@ class FileDeleteListFilterSet(FileFilterSet):
 
 
 class FilesDatasetsQueryParamsSerializer(serializers.Serializer):
-    files_datasets_key_choices = (("files", "files"), ("datasets", "datasets"))
-    file_id_type_choices = (("id", "id"), ("storage_identifier", "storage_identifier"))
-
-    keys = serializers.ChoiceField(choices=files_datasets_key_choices, default="files")
-    keysonly = serializers.BooleanField(default=False)
-
+    relations = serializers.BooleanField(
+        default=False, help_text="List dataset relations per file"
+    )
     storage_service = StorageServiceField(default=None)
-    file_id_type = serializers.ChoiceField(choices=file_id_type_choices, default="id")
-
-    def validate(self, attrs):
-        attrs = super().validate(attrs)
-        require_storage_service = attrs["file_id_type"] == "storage_identifier"
-        if require_storage_service and not attrs.get("storage_service"):
-            raise serializers.ValidationError(
-                "Field storage_service is required when file_id_type=storage_identifier."
-            )
-
-        return attrs
 
 
 class FilesDatasetsBodySerializer(serializers.ListSerializer):
@@ -217,64 +203,65 @@ class FileViewSet(BaseFileViewSet):
     )
     @action(detail=False, methods=["post"])
     def datasets(self, request):
-        """Annotate file or dataset identifiers with corresponding dataset or file identifiers.
+        """Return datasets belonging to files.
+
+        The request body should contain an array of file identifiers.
+        By default, the file identifiers are internal Metax `id` values.
+        If `storage_service` is set, the identifiers are `storage_identifier`
+        values specific to that storage service.
+
+        `relations=false` (default): Return list of dataset ids.
+
+        `relations=true`: Return object with a list of dataset ids
+        for each file identifier. Files with no datasets are omitted.
+
+        `storage_service`: List only files in specific storage service, and
+        use `storage_identifier` as file identifier in both input and output.
+
 
         POST is used instead of GET because of query parameter length limitations for GET requests.
-        The request body should contain an array of identifiers of type specified by the `keys`
-        parameter.
-
-        `keys=files` (default): Return object with file ids as keys, lists of dataset ids as values.
-
-        `keys=datasets`: Return object with dataset ids as keys, lists of file ids as values.
-
-        Keys with empty values are omitted.
-
-        If `keysonly` is True (default is False), return only the keys as a list. This effectively removes keys that
-        had no corresponding values (i.e. with `keys=files`, this returns only files that belong to a dataset).
         """
 
         body_serializer = FilesDatasetsBodySerializer(data=self.request.data)
         body_serializer.is_valid(raise_exception=True)
         ids = body_serializer.validated_data
 
-        # Support identifier in input/output, requires storage_service
-        params = self.query_params
-        file_id_type = self.query_params["file_id_type"]
+        # File identifiers are metax internal ids unless storage_service is defined
+        file_id_type = "id"
 
         # Allow limiting results to specific storage_service
-        extra_filters = {}
+        params = self.query_params
+        storage_filter = Q()
         if storage_service := params["storage_service"]:
-            extra_filters["storage__storage_service"] = storage_service
+            file_id_type = "storage_identifier"
+            storage_filter = Q(storage__storage_service=storage_service)
 
         try:
-            # Fetch a queryset with dict in the format of {key: id, values: [id1, id2, ...]}
-            queryset = []
-            if params["keys"] == "files":  # keys are files, return file_id->dataset_id
-                id_query = {f"{file_id_type}__in": ids}
-                files = File.objects.filter(**id_query, **extra_filters)
-                queryset = files.values(key=F(file_id_type)).exclude(file_sets__id=None)
-                if not params["keysonly"]:
-                    queryset = queryset.annotate(
-                        values=ArrayAgg(
-                            "file_sets__dataset__id",
-                            filter=Q(file_sets__dataset__is_deprecated=False),
-                        )
+            if params["relations"]:
+                # Return dict of file ids -> list of dataset ids
+                file_id_filter = Q(**{f"{file_id_type}__in": ids})
+                queryset = File.objects.filter(
+                    file_id_filter, storage_filter, file_sets__isnull=False
+                ).values(key=F(file_id_type))
+                queryset = queryset.annotate(
+                    values=ArrayAgg(
+                        "file_sets__dataset_id", filter=Q(file_sets__dataset__is_deprecated=False)
                     )
-            else:  # keys are datasets, return dataset_id->file_id
+                )
+                return Response({str(v["key"]): v["values"] for v in queryset})
+            else:
+                # Return list of dataset ids
+                file_id_filter = Q(**{f"files__{file_id_type}__in": ids})
                 file_set_model = File.file_sets.rel.related_model
-                file_sets = file_set_model.available_objects.filter(
-                    dataset_id__in=ids, **extra_filters
-                ).filter(dataset__is_deprecated=False)
-                queryset = file_sets.values(key=F("dataset_id")).exclude(files__id=None)
-                if not params["keysonly"]:
-                    queryset = queryset.annotate(values=ArrayAgg(f"files__{file_id_type}"))
+                queryset = (
+                    file_set_model.objects.filter(file_id_filter, storage_filter)
+                    .values_list("dataset__id", flat=True)
+                    .distinct()
+                )
+                return Response(queryset)
+
         except DjangoValidationError as e:
             raise serializers.ValidationError(e.messages)  # avoid 500 from invalid uuid
-
-        if params["keysonly"]:
-            return Response([v["key"] for v in queryset])
-        else:
-            return Response({str(v["key"]): v["values"] for v in queryset})
 
     def bulk_action(self, files, action):
         ignore_errors = self.query_params["ignore_errors"]
