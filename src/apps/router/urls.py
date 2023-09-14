@@ -20,7 +20,9 @@ from apps.refdata.models import reference_data_models
 from apps.refdata.views import get_viewset_for_model
 from apps.users.views import UserViewSet
 
-router = DefaultRouter(trailing_slash=False)
+from .router import CommonRouter
+
+router = CommonRouter(trailing_slash=False)
 
 # actors app
 router.register(

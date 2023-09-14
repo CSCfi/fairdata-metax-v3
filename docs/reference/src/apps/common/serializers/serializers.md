@@ -20,3 +20,11 @@
 
 ### :::src.apps.common.serializers.serializers.PatchSerializer
 
+## DeleteListQueryParamsSerializer
+
+### :::src.apps.common.serializers.serializers.DeleteListQueryParamsSerializer
+
+## DeleteListReturnValueSerializer
+
+### :::src.apps.common.serializers.serializers.DeleteListReturnValueSerializer
+

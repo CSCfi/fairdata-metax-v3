@@ -12,16 +12,21 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import F, Q, QuerySet
 from django.db.models.functions import Concat
 from django.utils.translation import gettext_lazy as _
-from django_filters import rest_framework as filters
+from django_filters import compat, rest_framework as filters
+from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from apps.common.helpers import cachalot_toggle
+from apps.common.helpers import cachalot_toggle, get_filter_openapi_parameters
+from apps.common.serializers import (
+    DeleteListReturnValueSerializer,
+    DeleteListQueryParamsSerializer,
+)
 from apps.files.helpers import get_file_metadata_model
 from apps.files.models.file import File
-from apps.files.serializers import DeleteWithProjectIdentifierSerializer, FileSerializer
+from apps.files.serializers import FileSerializer
 from apps.files.serializers.fields import StorageServiceField
 from apps.files.serializers.file_bulk_serializer import (
     BulkAction,
@@ -49,7 +54,7 @@ class FileCommonFilterset(filters.FilterSet):
         if value.endswith("/"):
             # Filtering by directory path, no need to include filename
             return queryset.filter(directory_path__istartswith=value)
-        return queryset.alias(directory_path=Concat("pathname", "filename")).filter(
+        return queryset.alias(pathname=Concat("directory_path", "filename")).filter(
             pathname__istartswith=value
         )
 
@@ -74,6 +79,12 @@ class FileFilterSet(FileCommonFilterset):
     class Meta:
         model = File
         fields = ()
+
+
+class FileDeleteListFilterSet(FileFilterSet):
+    """Add project and dataset filters to file filterset."""
+
+    project = filters.CharFilter(field_name="storage__project", max_length=200, required=True)
 
 
 class FilesDatasetsQueryParamsSerializer(serializers.Serializer):
@@ -161,6 +172,14 @@ class FileViewSet(BaseFileViewSet):
     http_method_names = ["get", "post", "patch", "put", "delete"]
 
     # TODO: Restore files action (=convert removed files to "not removed", should not undeprecate datasets)
+
+    @property
+    def filterset_class(self):
+        if self.action == "destroy_list":
+            # DELETE on list requires project to be set
+            return FileDeleteListFilterSet
+        else:
+            return FileFilterSet
 
     @swagger_auto_schema(
         request_body=FilesDatasetsBodySerializer,
@@ -281,12 +300,33 @@ class FileViewSet(BaseFileViewSet):
         return self.bulk_action(request.data, action=BulkAction.DELETE)
 
     @swagger_auto_schema(
-        operation_description="Delete all files belonging to certain project",
-        request_body=DeleteWithProjectIdentifierSerializer,
+        operation_id="v3_files_delete_list",
+        query_serializer=DeleteListQueryParamsSerializer,
+        manual_parameters=get_filter_openapi_parameters(FileDeleteListFilterSet),
+        responses={200: DeleteListReturnValueSerializer()},
     )
-    @action(detail=False, methods=["post"], url_path="delete-project")
-    def delete_project(self, request):
-        serializer = DeleteWithProjectIdentifierSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.delete_project()
-        return Response(serializer.data)
+    def destroy_list(self, *args, **kwargs):
+        """Delete files matching query parameters.
+
+        The `project` parameter is required. If no `storage_service` is defined,
+        matching files from all storage services are deleted.
+
+        By default the files are flagged as removed.
+        When flush is enabled, the files are removed from the database.
+        """
+        params_serializer = DeleteListQueryParamsSerializer(data=self.request.query_params)
+        params_serializer.is_valid(raise_exception=True)
+        params = params_serializer.validated_data
+
+        flush = params["flush"]
+        queryset: QuerySet
+        if flush:
+            queryset = File.all_objects
+        else:
+            queryset = File.available_objects
+        queryset = self.filter_queryset(queryset)
+
+        count = queryset.count()
+        queryset.delete()
+
+        return Response(DeleteListReturnValueSerializer(instance={"count": count}).data, 200)

@@ -131,27 +131,3 @@ class FileSerializer(CreateOnlyFieldsMixin, serializers.ModelSerializer):
         ]
 
     # TODO: Partial update
-
-
-class DeleteWithProjectIdentifierSerializer(serializers.Serializer):
-    storage_service = StorageServiceField(required=True)
-    project = serializers.CharField(max_length=200, required=True)
-    flush = serializers.BooleanField(required=False, default=False)
-    deleted_files_count = serializers.JSONField(required=False, read_only=True)
-
-    def delete_project(self):
-        validated_data = self.validated_data
-        query: QuerySet
-        if validated_data["flush"]:
-            query = File.all_objects.filter(
-                storage__project=validated_data["project"],
-                storage__storage_service=validated_data["storage_service"],
-            )
-        else:
-            query = File.available_objects.filter(
-                storage__project=validated_data["project"],
-                storage__storage_service=validated_data["storage_service"],
-            )
-        logger.info(f"Deleting {query=}")
-        self.validated_data["deleted_files_count"] = query.count()
-        query.delete()

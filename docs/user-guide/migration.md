@@ -15,7 +15,7 @@ Also named CatalogRecord in V1-V2. Main difference is removing the research_data
 ### Field names
 
 | V1-V2                                    | V3 field name                       |
-|------------------------------------------|-------------------------------------|
+| ---------------------------------------- | ----------------------------------- |
 | dataset_version_set [list]               | not implemented yet                 |
 | date_created [datetime]                  | created [datetime]                  |
 | date_cumulation_started [datetime]       | cumulation_started [datetime]       |
@@ -38,7 +38,6 @@ Also named CatalogRecord in V1-V2. Main difference is removing the research_data
 | research_dataset/keyword [list]          | keyword [list]                      |
 | research_dataset/language [list]         | language [list]                     |
 | research_dataset/modified [datetime]     | modified [datetime]                 |
-| research_dataset/persistent_identifier   | persistent_identifier               |
 | research_dataset/preferred_identifier    | persistent_identifier               |
 | research_dataset/publisher [object]      | actors [list]                       |
 | research_dataset/theme [list]            | theme [list]                        |
@@ -52,7 +51,7 @@ Also named CatalogRecord in V1-V2. Main difference is removing the research_data
 Reference data such as language, theme, spatial, organization and field_of_science have been unified structurally. Now all of these share the same base fields and payload format.
 
 | V1-V2                      | V3 field name     |
-|----------------------------|-------------------|
+| -------------------------- | ----------------- |
 | identifier [url]           | url [url]         |
 | title or pref_label [dict] | pref_label [dict] |
 
@@ -73,7 +72,7 @@ Reference data such as language, theme, spatial, organization and field_of_scien
 Dataset access rights is now top level object in dataset. Following table shows differences in object structure.
 
 | V1-V2                        | V3 field name                       |
-|------------------------------|-------------------------------------|
+| ---------------------------- | ----------------------------------- |
 | access_type/identifier [url] | access_rights/access_type/url [url] |
 | license/identifier [url]     | license/url [url]                   |
 | license/license [url]        | license/custom_url [url]            |
@@ -108,33 +107,33 @@ Dataset related actors with roles such as creator, publisher, curator, rights_ho
 
 ### Query parameters
 
-| V1-V2 parameter name    | V3 parameter name                         |
-|-------------------------|-------------------------------------------|
-| actor_filter            | `actors__actor__organization__pref_label` |
-| actor_filter            | `actors__actor__person`                   |
-| api_version             | N/A                                       |
-| contract_org_identifier | not implemented yet                       |
-| curator                 | not implemented yet                       |
-| data_catalog            | `data_catalog__id`                        |
-| editor_permissions_user | not implemented yet                       |
-| fields                  | N/A                                       |
-| include_legacy          | N/A                                       |
-| latest                  | N/A                                       |
-| metadata_owner_org      | `metadata_owner__organization`            |
-| metadata_provider_user  | `metadata_owner__user__username`          |
-| N/A                     | `data_catalog__title`                     |
-| N/A                     | `title`                                   |
-| owner_id                | N/A                                       |
-| pas_filter              | not implemented yet                       |
-| preferred_identifier    | N/A                                       |
-| projects                | not implemented yet                       |
-| research_dataset_fields | N/A                                       |
-| user_created            | not implemented yet                       |
+| V1-V2 parameter name    | V3 parameter name           |
+| ----------------------- | --------------------------- |
+| actor_filter            | organization_name           |
+| actor_filter            | person                      |
+| api_version             | N/A                         |
+| contract_org_identifier | not implemented yet         |
+| curator                 | not implemented yet         |
+| data_catalog            | data_catalog_id             |
+| editor_permissions_user | not implemented yet         |
+| fields                  | N/A                         |
+| include_legacy          | N/A                         |
+| latest                  | N/A                         |
+| metadata_owner_org      | metadata_owner_organization |
+| metadata_provider_user  | metadata_owner_user         |
+| N/A                     | data_catalog_title          |
+| N/A                     | title                       |
+| owner_id                | N/A                         |
+| pas_filter              | not implemented yet         |
+| preferred_identifier    | N/A                         |
+| projects                | not implemented yet         |
+| research_dataset_fields | N/A                         |
+| user_created            | not implemented yet         |
 
 ### Endpoints
 
 | V1-V2 endpoint                              | V3 endpoint                 |
-|---------------------------------------------|-----------------------------|
+| ------------------------------------------- | --------------------------- |
 | `/datasets/identifiers`                     | not implemented yet         |
 | `/datasets/unique_preferred_identifiers`    | not going to be implemented |
 | `/datasets/list`                            | `/datasets`                 |
@@ -184,7 +183,7 @@ They have been moved under `/v3/` together with the former `/rest/` style endpoi
 ### Field names
 
 | V1-V2 field name                     | V3 field name              |
-|--------------------------------------|----------------------------|
+| ------------------------------------ | -------------------------- |
 | catalog_json                         | N/A                        |
 | catalog_json/access_rights           | access_rights              |
 | catalog_json/dataset_versioning      | dataset_versioning_enabled |
@@ -200,21 +199,21 @@ They have been moved under `/v3/` together with the former `/rest/` style endpoi
 
 ### Query parameters
 
-| V1-V2 parameter name | V3 parameter name                        |
-|----------------------|------------------------------------------|
-| N/A                  | `access_rights__access_type__pref_label` |
-| N/A                  | `access_rights__access_type__url`        |
-| N/A                  | `access_rights__description`             |
-| N/A                  | `dataset_schema`                         |
-| N/A                  | `dataset_versioning_enabled`             |
-| N/A                  | `harvested`                              |
-| N/A                  | `id`                                     |
-| N/A                  | `language__pref_label`                   |
-| N/A                  | `language__url`                          |
-| N/A                  | `publisher__homepage__title`             |
-| N/A                  | `publisher__homepage__url`               |
-| N/A                  | `publisher__name`                        |
-| N/A                  | `title`                                  |
+| V1-V2 parameter name | V3 parameter name                                |
+| -------------------- | ------------------------------------------------ |
+| N/A                  | `access_rights__access_type__pref_label__values` |
+| N/A                  | `access_rights__access_type__url`                |
+| N/A                  | `access_rights__description__values`             |
+| N/A                  | `dataset_schema`                                 |
+| N/A                  | `dataset_versioning_enabled`                     |
+| N/A                  | `harvested`                                      |
+| N/A                  | `id`                                             |
+| N/A                  | `language__pref_label__values`                   |
+| N/A                  | `language__url`                                  |
+| N/A                  | `publisher__homepage__title__values`             |
+| N/A                  | `publisher__homepage__url`                       |
+| N/A                  | `publisher__name__values`                        |
+| N/A                  | `title__values`                                  |
 
 ### Examples
 
@@ -239,7 +238,7 @@ They have been moved under `/v3/` together with the former `/rest/` style endpoi
 ### Field names
 
 | V1-V2 field name          | V3 field name |
-|---------------------------|---------------|
+| ------------------------- | ------------- |
 | contract_json             | N/A           |
 | contract_json/contact     | N/A           |
 | contract_json/created     | created       |
@@ -258,7 +257,7 @@ The `storage_identifier` value is only unique per storage service and the same v
 may exist in multiple services.
 
 | Field                                 | V1/V2                                                      | V3                                          |
-|---------------------------------------|------------------------------------------------------------|---------------------------------------------|
+| ------------------------------------- | ---------------------------------------------------------- | ------------------------------------------- |
 | File id                               | id [int]                                                   | id [uuid]                                   |
 | File id in external service           | identifier [str]                                           | storage_identifier [str]                    |
 | External service                      | file_storage [str]<br>e.g. urn:nbn:fi:att:file-storage-ida | storage_service [str]<br>e.g. ida           |
@@ -329,7 +328,7 @@ For a full list of supported parameters, see the [Swagger documentation](/swagge
 Here are some of the common files API requests and how they map to Metax V3:
 
 | Action                            | V1/V2                                                          | V3                                                                                      |
-|-----------------------------------|----------------------------------------------------------------|-----------------------------------------------------------------------------------------|
+| --------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
 | List files                        | `GET /rest/v1/files`                                           | `GET /v3/files`                                                                         |
 | Get file (using Metax id)         | `GET /rest/v1/files/<id>`                                      | `GET /v3/files/<id>`                                                                    |
 | Get file (using external id)      | `GET /rest/v1/files/<id>`                                      | `GET /v3/files?file_storage=*&storage_identifier=<id>&pagination=false`<br>returns list |
@@ -348,7 +347,7 @@ Here are some of the common files API requests and how they map to Metax V3:
 In Metax V3 datasets provide a summary of contained files in the `data` object:
 
 | Action                            | V1/V2                                                          | V3                                                                                                 |
-|-----------------------------------|----------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
+| --------------------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | List files                        | `GET /rest/v1/files`                                           | `GET /v3/files`                                                                                    |
 | Get file (using Metax id)         | `GET /rest/v1/files/<id>`                                      | `GET /v3/files/<id>`                                                                               |
 | Get file (using external id)      | `GFET /rest/v1/files/<id>`                                     | `GET /v3/files?storage_service=<service>&storage_identifier=<id>&pagination=false`<br>returns list |

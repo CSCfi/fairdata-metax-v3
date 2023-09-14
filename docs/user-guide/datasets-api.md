@@ -102,7 +102,7 @@ The fileset object should look like
   "project": <project>,
   "directory_actions": [
     {
-      "directory_path": <path, e.g. /data/>,
+      "pathname": <path, e.g. /data/>,
       "action": <action>,
       "dataset_metadata": <directory metadata object>
     }

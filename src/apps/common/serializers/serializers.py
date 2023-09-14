@@ -112,3 +112,15 @@ class PatchSerializer(serializers.Serializer):
                 if not field.read_only:
                     field.default = empty
         return fields
+
+
+class DeleteListQueryParamsSerializer(serializers.Serializer):
+    """Non-filter query parameters for deleting a list."""
+
+    flush = serializers.BooleanField(required=False, default=False)
+
+
+class DeleteListReturnValueSerializer(serializers.Serializer):
+    """Serializer (for swagger purposes) for return value of list delete operation."""
+
+    count = serializers.IntegerField(read_only=True)

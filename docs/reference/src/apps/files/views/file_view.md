@@ -8,6 +8,10 @@
 
 ### :::src.apps.files.views.file_view.FileFilterSet
 
+## FileDeleteListFilterSet
+
+### :::src.apps.files.views.file_view.FileDeleteListFilterSet
+
 ## FilesDatasetsQueryParamsSerializer
 
 ### :::src.apps.files.views.file_view.FilesDatasetsQueryParamsSerializer
@@ -23,6 +27,14 @@
 ## FileBulkQuerySerializer
 
 ### :::src.apps.files.views.file_view.FileBulkQuerySerializer
+
+## DeleteListQueryParamsSerializer
+
+### :::src.apps.files.views.file_view.DeleteListQueryParamsSerializer
+
+## DeleteListReturnValueSerializer
+
+### :::src.apps.files.views.file_view.DeleteListReturnValueSerializer
 
 ## FileViewSet
 

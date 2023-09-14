@@ -6,6 +6,10 @@ from cachalot.api import cachalot_disabled
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.utils.dateparse import parse_datetime
+from django_filters import NumberFilter
+from django_filters.rest_framework import DjangoFilterBackend
+from drf_yasg import openapi
+from drf_yasg.inspectors import CoreAPICompatInspector
 
 logger = logging.getLogger(__name__)
 
@@ -99,3 +103,43 @@ def cachalot_toggle(enabled=True, all_queries: bool = False):
     else:
         with cachalot_disabled(all_queries=all_queries):
             yield
+
+
+def get_filter_openapi_parameters(filterset_class):
+    """
+    Extract OpenAPI (swagger) parameters for filter query parameters.
+
+    Useful in special cases where automatic swagger generation
+    is unable to produce query parameters for a view. Most of
+    the time (i.e. for 'list' method of a ViewSet that has 'filterset_class')
+    the parameters are produced automatically by DjangoFilterBackend.
+
+    Usage example:
+    ```
+    @swagger_auto_schema(
+        manual_parameters=get_filter_openapi_parameters(SomeFilterSet),
+    )
+    def view_function_to_decorate():
+        ...
+    ```
+    """
+
+    params = []
+    for name, field in filterset_class.base_filters.items():
+        extra = field.extra or {}
+        choices = [c[0] for c in extra.get("choices", [])] or None
+        typ = openapi.TYPE_STRING
+        if isinstance(field, NumberFilter):
+            typ = openapi.TYPE_NUMBER
+
+        description = str(extra.get("help_text", "")) or field.label
+        param = openapi.Parameter(
+            name=name,
+            required=field.extra["required"],
+            in_="query",
+            description=description,
+            type=typ,
+            enum=choices,
+        )
+        params.append(param)
+    return params
