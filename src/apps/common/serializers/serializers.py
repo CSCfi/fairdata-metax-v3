@@ -114,6 +114,12 @@ class PatchSerializer(serializers.Serializer):
         return fields
 
 
+class IncludeRemovedQueryParamsSerializer(serializers.Serializer):
+    include_removed = serializers.BooleanField(
+        default=False, help_text=_("Include removed items in query.")
+    )
+
+
 class DeleteListQueryParamsSerializer(serializers.Serializer):
     """Non-filter query parameters for deleting a list."""
 

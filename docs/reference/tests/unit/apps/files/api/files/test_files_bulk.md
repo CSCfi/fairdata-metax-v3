@@ -96,6 +96,10 @@
 
 ### :::tests.unit.apps.files.api.files.test_files_bulk.test_files_upsert_many_unknown_field
 
+## set_removed
+
+### :::tests.unit.apps.files.api.files.test_files_bulk.set_removed
+
 ## test_files_delete_many_ok
 
 ### :::tests.unit.apps.files.api.files.test_files_bulk.test_files_delete_many_ok

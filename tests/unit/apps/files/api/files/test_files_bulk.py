@@ -3,7 +3,7 @@ from typing import List
 
 import pytest
 from rest_framework.reverse import reverse
-from rest_framework.serializers import RegexField, DateTimeField
+from rest_framework.serializers import DateTimeField, RegexField
 from tests.utils import assert_nested_subdict
 
 from apps.files import factories

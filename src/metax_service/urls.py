@@ -17,9 +17,9 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path, re_path
 from drf_yasg import openapi
-from rest_framework.schemas import get_schema_view as drf_schema_view
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
+from rest_framework.schemas import get_schema_view as drf_schema_view
 
 from apps.core.views import IndexView
 from apps.router.urls import urlpatterns as router_urls
@@ -50,7 +50,7 @@ urlpatterns = [
         name="schema-swagger-ui",
     ),
     re_path(r"^redoc/$", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
-    path('schema/', drf_schema_view()),
+    path("schema/", drf_schema_view()),
     re_path(r"^watchman/", include("watchman.urls")),
     path("admin/", admin.site.urls),
     path("__debug__/", include("debug_toolbar.urls")),

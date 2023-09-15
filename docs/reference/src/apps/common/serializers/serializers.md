@@ -20,6 +20,10 @@
 
 ### :::src.apps.common.serializers.serializers.PatchSerializer
 
+## IncludeRemovedQueryParamsSerializer
+
+### :::src.apps.common.serializers.serializers.IncludeRemovedQueryParamsSerializer
+
 ## DeleteListQueryParamsSerializer
 
 ### :::src.apps.common.serializers.serializers.DeleteListQueryParamsSerializer

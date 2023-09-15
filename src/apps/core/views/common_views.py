@@ -28,9 +28,7 @@ class DatasetPublisherFilter(filters.FilterSet):
         lookup_expr="icontains",
         label="homepage__title",
     )
-    homepage__url = filters.CharFilter(
-        max_length=512, lookup_expr="icontains", label="url"
-    )
+    homepage__url = filters.CharFilter(max_length=512, lookup_expr="icontains", label="url")
     name = filters.CharFilter(
         field_name="name__values", max_length=255, lookup_expr="icontains", label="name"
     )

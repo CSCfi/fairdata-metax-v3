@@ -11,6 +11,7 @@ from django.contrib.postgres.aggregates import ArrayAgg
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import F, Q, QuerySet
 from django.db.models.functions import Concat
+from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django_filters import compat, rest_framework as filters
 from drf_yasg import openapi
@@ -21,9 +22,11 @@ from rest_framework.response import Response
 
 from apps.common.helpers import cachalot_toggle, get_filter_openapi_parameters
 from apps.common.serializers import (
-    DeleteListReturnValueSerializer,
     DeleteListQueryParamsSerializer,
+    DeleteListReturnValueSerializer,
 )
+from apps.common.serializers.serializers import IncludeRemovedQueryParamsSerializer
+from apps.common.views import QueryParamsMixin
 from apps.files.helpers import get_file_metadata_model
 from apps.files.models.file import File
 from apps.files.serializers import FileSerializer
@@ -112,13 +115,29 @@ class FilesDatasetsBodySerializer(serializers.ListSerializer):
     child = serializers.CharField()
 
 
-class BaseFileViewSet(viewsets.ModelViewSet):
+class BaseFileViewSet(QueryParamsMixin, viewsets.ModelViewSet):
     """Basic read-only files view."""
 
     serializer_class = FileSerializer
     filterset_class = FileFilterSet
     http_method_names = ["get"]
     queryset = File.objects.prefetch_related("storage")
+
+    # Query serializer info for query_params and swagger generation
+    query_serializers = [
+        {
+            "class": IncludeRemovedQueryParamsSerializer,
+            "actions": ["list", "retrieve"],
+        }
+    ]
+
+    def get_queryset(self):
+        if self.query_params.get("include_removed"):
+            return File.all_objects.prefetch_related("storage")
+        return super().get_queryset()
+
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
 
     def list(self, request, *args, **kwargs):
         pagination_enabled = self.paginator.pagination_enabled(request)
@@ -173,6 +192,18 @@ class FileViewSet(BaseFileViewSet):
 
     # TODO: Restore files action (=convert removed files to "not removed", should not undeprecate datasets)
 
+    query_serializers = BaseFileViewSet.query_serializers + [
+        {
+            "class": FilesDatasetsQueryParamsSerializer,
+            "actions": ["datasets"],
+        },
+        {
+            "class": FileBulkQuerySerializer,
+            "actions": ["post_many", "patch_many", "put_many", "delete_many"],
+        },
+        {"class": DeleteListQueryParamsSerializer, "actions": ["destroy_list"]},
+    ]
+
     @property
     def filterset_class(self):
         if self.action == "destroy_list":
@@ -183,7 +214,6 @@ class FileViewSet(BaseFileViewSet):
 
     @swagger_auto_schema(
         request_body=FilesDatasetsBodySerializer,
-        query_serializer=FilesDatasetsQueryParamsSerializer,
     )
     @action(detail=False, methods=["post"])
     def datasets(self, request):
@@ -203,16 +233,13 @@ class FileViewSet(BaseFileViewSet):
         had no corresponding values (i.e. with `keys=files`, this returns only files that belong to a dataset).
         """
 
-        params_serializer = FilesDatasetsQueryParamsSerializer(data=self.request.query_params)
-        params_serializer.is_valid(raise_exception=True)
-        params = params_serializer.validated_data
-
         body_serializer = FilesDatasetsBodySerializer(data=self.request.data)
         body_serializer.is_valid(raise_exception=True)
         ids = body_serializer.validated_data
 
         # Support identifier in input/output, requires storage_service
-        file_id_type = params["file_id_type"]
+        params = self.query_params
+        file_id_type = self.query_params["file_id_type"]
 
         # Allow limiting results to specific storage_service
         extra_filters = {}
@@ -250,10 +277,7 @@ class FileViewSet(BaseFileViewSet):
             return Response({str(v["key"]): v["values"] for v in queryset})
 
     def bulk_action(self, files, action):
-        query_serializer = FileBulkQuerySerializer(data=self.request.query_params)
-        query_serializer.is_valid(raise_exception=True)
-        ignore_errors = query_serializer.validated_data["ignore_errors"]
-
+        ignore_errors = self.query_params["ignore_errors"]
         serializer = FileBulkSerializer(data=files, action=action, ignore_errors=ignore_errors)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -264,7 +288,6 @@ class FileViewSet(BaseFileViewSet):
         return Response(serializer.data, status=status)
 
     @swagger_auto_schema(
-        query_serializer=FileBulkQuerySerializer(),
         request_body=FileBulkSerializer(action=BulkAction.INSERT),
         responses={200: FileBulkReturnValueSerializer()},
     )
@@ -273,7 +296,6 @@ class FileViewSet(BaseFileViewSet):
         return self.bulk_action(request.data, action=BulkAction.INSERT)
 
     @swagger_auto_schema(
-        query_serializer=FileBulkQuerySerializer(),
         request_body=FileBulkSerializer(action=BulkAction.UPDATE),
         responses={200: FileBulkReturnValueSerializer()},
     )
@@ -282,7 +304,6 @@ class FileViewSet(BaseFileViewSet):
         return self.bulk_action(request.data, action=BulkAction.UPDATE)
 
     @swagger_auto_schema(
-        query_serializer=FileBulkQuerySerializer(),
         request_body=FileBulkSerializer(action=BulkAction.UPSERT),
         responses={200: FileBulkReturnValueSerializer()},
     )
@@ -291,7 +312,6 @@ class FileViewSet(BaseFileViewSet):
         return self.bulk_action(request.data, action=BulkAction.UPSERT)
 
     @swagger_auto_schema(
-        query_serializer=FileBulkQuerySerializer(),
         request_body=FileBulkSerializer(action=BulkAction.DELETE),
         responses={200: FileBulkReturnValueSerializer()},
     )
@@ -301,7 +321,6 @@ class FileViewSet(BaseFileViewSet):
 
     @swagger_auto_schema(
         operation_id="v3_files_delete_list",
-        query_serializer=DeleteListQueryParamsSerializer,
         manual_parameters=get_filter_openapi_parameters(FileDeleteListFilterSet),
         responses={200: DeleteListReturnValueSerializer()},
     )
@@ -314,11 +333,8 @@ class FileViewSet(BaseFileViewSet):
         By default the files are flagged as removed.
         When flush is enabled, the files are removed from the database.
         """
-        params_serializer = DeleteListQueryParamsSerializer(data=self.request.query_params)
-        params_serializer.is_valid(raise_exception=True)
-        params = params_serializer.validated_data
 
-        flush = params["flush"]
+        flush = self.query_params["flush"]
         queryset: QuerySet
         if flush:
             queryset = File.all_objects

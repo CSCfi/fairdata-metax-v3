@@ -28,14 +28,6 @@
 
 ### :::src.apps.files.views.file_view.FileBulkQuerySerializer
 
-## DeleteListQueryParamsSerializer
-
-### :::src.apps.files.views.file_view.DeleteListQueryParamsSerializer
-
-## DeleteListReturnValueSerializer
-
-### :::src.apps.files.views.file_view.DeleteListReturnValueSerializer
-
 ## FileViewSet
 
 ### :::src.apps.files.views.file_view.FileViewSet

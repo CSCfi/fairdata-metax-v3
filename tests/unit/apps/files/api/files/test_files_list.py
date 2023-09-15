@@ -46,7 +46,7 @@ def test_files_get_dataset_files(client, dataset):
         {"dataset": dataset.id},
         content_type="application/json",
     )
-    assert [f["file_path"] for f in res.json()["results"]] == [
+    assert [f["pathname"] for f in res.json()["results"]] == [
         "/dir/a.txt",
         "/dir/b.txt",
         "/dir/c.txt",
@@ -54,7 +54,7 @@ def test_files_get_dataset_files(client, dataset):
 
 
 @pytest.mark.django_db
-def test_files_get_dataset_files(client, dataset):
+def test_files_get_dataset_files_empty(client, dataset):
     res = client.get(
         "/v3/files",
         {"dataset": dataset.id, "project": "pröject_does_not_exist"},
@@ -84,3 +84,72 @@ def test_files_get_multiple_storage_projects(client, file_tree_a, file_tree_b):
         content_type="application/json",
     )
     assert res.json()["count"] == 19
+
+
+@pytest.mark.django_db
+def test_files_list_include_removed(client, file_tree_a):
+    file_tree_a["files"]["/dir/c.txt"].delete(soft=True)
+    storage_identifier = file_tree_a["files"]["/dir/c.txt"].storage_identifier
+    params = {
+        **file_tree_a["params"],
+        "pagination": False,
+        "include_removed": False,
+    }
+    res = client.get(
+        f"/v3/files",
+        {**params, "storage_identifier": storage_identifier},
+        content_type="application/json",
+    )
+    assert [f["pathname"] for f in res.json()] == []
+
+    # also non-removed files should be included
+    res = client.get(
+        f"/v3/files",
+        {**params, "storage_identifier": storage_identifier, "include_removed": True},
+        content_type="application/json",
+    )
+    assert [f["pathname"] for f in res.json()] == [
+        "/dir/c.txt",
+    ]
+
+    # also non-removed files should be included
+    res = client.get(
+        f"/v3/files",
+        {**params, "pathname": "/dir/", "include_removed": True},
+        content_type="application/json",
+    )
+    assert len(res.json()) == 15
+
+
+@pytest.mark.django_db
+def test_files_retrieve_include_removed(client, file_tree_a):
+    file_tree_a["files"]["/dir/c.txt"].delete(soft=True)
+    file_id = file_tree_a["files"]["/dir/c.txt"].id
+    params = {
+        **file_tree_a["params"],
+        "include_removed": False,
+    }
+    res = client.get(
+        f"/v3/files/{file_id}",
+        params,
+        content_type="application/json",
+    )
+    assert res.status_code == 404
+
+    res = client.get(
+        f"/v3/files/{file_id}",
+        {**params, "include_removed": True},
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert res.json()["pathname"] == "/dir/c.txt"
+
+    # also non-removed files should be included
+    file_b_id = file_tree_a["files"]["/dir/b.txt"].id
+    res = client.get(
+        f"/v3/files/{file_b_id}",
+        {**params, "include_removed": True},
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert res.json()["pathname"] == "/dir/b.txt"

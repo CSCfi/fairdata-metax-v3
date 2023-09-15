@@ -439,7 +439,7 @@ class FileBulkSerializer(serializers.ListSerializer):
         """Perform bulk delete on files."""
         now = timezone.now()
         for f in files:
-            f.removed = now # include new value in response
+            f.removed = now  # include new value in response
             f.is_removed = True
 
         # Update all files in db at once

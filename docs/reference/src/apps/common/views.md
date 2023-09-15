@@ -8,3 +8,7 @@
 
 ### :::src.apps.common.views.PatchModelMixin
 
+## QueryParamsMixin
+
+### :::src.apps.common.views.QueryParamsMixin
+

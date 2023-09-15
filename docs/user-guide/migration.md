@@ -330,7 +330,9 @@ Here are some of the common files API requests and how they map to Metax V3:
 | Action                            | V1/V2                                                          | V3                                                                                      |
 | --------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
 | List files                        | `GET /rest/v1/files`                                           | `GET /v3/files`                                                                         |
+| List removed files                | `GET /rest/v1/files?removed=true`                              | `GET /v3/files?include_removed=true` (includes non-removed files)                       |
 | Get file (using Metax id)         | `GET /rest/v1/files/<id>`                                      | `GET /v3/files/<id>`                                                                    |
+| Get removed file (using Metax id) | `GET /rest/v1/files/<id>?removed=true` (includes non-removed)  | `GET /v3/files/<id>?include_removed=true` (includes non-removed files)                  |
 | Get file (using external id)      | `GET /rest/v1/files/<id>`                                      | `GET /v3/files?file_storage=*&storage_identifier=<id>&pagination=false`<br>returns list |
 | Create file                       | `POST /rest/v1/files`                                          | `POST /v3/files`                                                                        |
 | Create files (array)              | `POST /rest/v1/files`                                          | `POST /v3/files/insert-many`                                                            |

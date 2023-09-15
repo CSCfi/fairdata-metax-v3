@@ -13,13 +13,13 @@
         - [apps](src/apps/common/apps.md)
         - [exceptions](src/apps/common/exceptions.md)
         - [helpers](src/apps/common/helpers.md)
+        - [inspectors](src/apps/common/inspectors.md)
         - [managers](src/apps/common/managers.md)
         - [models](src/apps/common/models.md)
         - [pagination](src/apps/common/pagination.md)
         - [responses](src/apps/common/responses.md)
         - serializers
             - [fields](src/apps/common/serializers/fields.md)
-            - [inspectors](src/apps/common/serializers/inspectors.md)
             - [serializers](src/apps/common/serializers/serializers.md)
         - [views](src/apps/common/views.md)
     - core
