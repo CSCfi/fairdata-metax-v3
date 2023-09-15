@@ -112,6 +112,13 @@ class FieldOfScience(ConceptProxyMixin, refdata.FieldOfScience):
     """
 
 
+class ResearchInfra(ConceptProxyMixin, refdata.ResearchInfra):
+    """Research infrastructure classification of resource.
+
+    Source: http://www.yso.fi/onto/koko/p34158
+    """
+
+
 class LifecycleEvent(ConceptProxyMixin, refdata.LifecycleEvent):
     """Lifecycle event of the resource."""
 

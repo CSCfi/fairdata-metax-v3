@@ -21,6 +21,7 @@ from .concepts import (
     Spatial,
     Theme,
     UseCategory,
+    ResearchInfra,
 )
 from .contract import Contract
 from .data_catalog import (

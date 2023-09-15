@@ -73,6 +73,19 @@ class FieldOfScienceFactory(factory.django.DjangoModelFactory):
         return f"https://dataset-field-of-science-{self}.fi"
 
 
+class InfrastructureFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.ResearchInfra
+        django_get_or_create = ("url",)
+
+    pref_label = factory.Dict({"en": factory.Sequence(lambda n: f"dataset-infrastructure-{n}")})
+    in_scheme = factory.Faker("url")
+
+    @factory.sequence
+    def url(self):
+        return f"https://dataset-infrastructure-{self}.fi"
+
+
 class LifecycleEventFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.LifecycleEvent

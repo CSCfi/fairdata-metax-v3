@@ -94,7 +94,7 @@ LOCAL_REFERENCE_DATA_SOURCES = {
         "source": f"{LOCAL_REF_DATA_DIR}/preservation_event.json",
         "scheme": "http://uri.suomi.fi/codelist/fairdata/preservation_event",
     },
-    "research_infra": {
+    "infrastructure": {
         "model": "refdata.ResearchInfra",
         "importer": "LocalJSON",
         "source": f"{LOCAL_REF_DATA_DIR}/research_infra.json",

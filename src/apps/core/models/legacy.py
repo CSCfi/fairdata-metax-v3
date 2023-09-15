@@ -34,6 +34,7 @@ from .concepts import (
     DatasetLicense,
     EventOutcome,
     FieldOfScience,
+    ResearchInfra,
     IdentifierType,
     Language,
     LifecycleEvent,
@@ -58,6 +59,7 @@ PostProcessedInstances = namedtuple(
         "temporal",
         "other_identifiers",
         "field_of_science",
+        "infrastructure",
         "provenance",
         "publisher",
         "projects",
@@ -137,6 +139,10 @@ class LegacyDataset(Dataset):
     @property
     def legacy_field_of_science(self):
         return self.legacy_research_dataset.get("field_of_science") or []
+
+    @property
+    def legacy_infrastructure(self):
+        return self.legacy_research_dataset.get("infrastructure") or []
 
     @property
     def legacy_spatial(self):
@@ -777,6 +783,11 @@ class LegacyDataset(Dataset):
                 legacy_property_name="legacy_field_of_science",
                 target_many_to_many_field="field_of_science",
                 ref_data_model=FieldOfScience,
+            ),
+            infrastructure=self.attach_ref_data_list(
+                legacy_property_name="legacy_infrastructure",
+                target_many_to_many_field="infrastructure",
+                ref_data_model=ResearchInfra,
             ),
             provenance=self.attach_provenance(),
             projects=self.attach_projects(),

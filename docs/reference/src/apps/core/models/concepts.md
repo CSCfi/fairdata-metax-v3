@@ -36,6 +36,10 @@
 
 ### :::src.apps.core.models.concepts.FieldOfScience
 
+## ResearchInfra
+
+### :::src.apps.core.models.concepts.ResearchInfra
+
 ## LifecycleEvent
 
 ### :::src.apps.core.models.concepts.LifecycleEvent

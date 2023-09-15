@@ -15,6 +15,7 @@ from apps.core.models import (
     Language,
     MetadataProvider,
     Theme,
+    ResearchInfra,
 )
 from apps.files.factories import FileFactory
 from apps.files.models import File, FileStorage
@@ -68,6 +69,19 @@ def field_of_science() -> FieldOfScience:
             "fi": "Suomen kieli",
             "sv": "finska",
             "und": "Finnish",
+        },
+    )
+
+
+@pytest.fixture
+def infrastructure() -> ResearchInfra:
+    return factories.InfrastructureFactory(
+        url="http://www.yso.fi/onto/koko/p34158/data/1234",
+        pref_label={
+            "en": "Infra",
+            "fi": "Infrä",
+            "sv": "Infrå",
+            "und": "Infra",
         },
     )
 

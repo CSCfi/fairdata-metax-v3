@@ -20,6 +20,10 @@
 
 ### :::src.apps.core.factories.FieldOfScienceFactory
 
+## InfrastructureFactory
+
+### :::src.apps.core.factories.InfrastructureFactory
+
 ## LifecycleEventFactory
 
 ### :::src.apps.core.factories.LifecycleEventFactory

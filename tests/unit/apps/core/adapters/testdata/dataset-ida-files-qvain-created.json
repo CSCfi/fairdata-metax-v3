@@ -52,10 +52,7 @@
         }
       }
     ],
-    "keyword": [
-      "Roolipelit",
-      "Pelit"
-    ],
+    "keyword": ["Roolipelit", "Pelit"],
     "language": [
       {
         "title": {
@@ -116,6 +113,17 @@
           "fi": "Tilastotiede",
           "sv": "Statistik",
           "und": "Tilastotiede"
+        }
+      }
+    ],
+    "infrastructure": [
+      {
+        "in_scheme": "https://avaa.tdata.fi/api/jsonws/tupa-portlet.Infrastructures/get-all-infrastructures",
+        "identifier": "http://urn.fi/urn:nbn:fi:research-infras-201607251",
+        "pref_label": {
+          "en": "European Social Survey",
+          "fi": "Eurooppalainen sosiaalitutkimus",
+          "und": "Eurooppalainen sosiaalitutkimus"
         }
       }
     ],

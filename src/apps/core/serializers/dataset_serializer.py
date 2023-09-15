@@ -14,7 +14,7 @@ from rest_framework.fields import empty
 from apps.common.helpers import update_or_create_instance
 from apps.common.serializers import PatchSerializer
 from apps.core.models import Dataset
-from apps.core.models.concepts import FieldOfScience, Language, Theme
+from apps.core.models.concepts import FieldOfScience, Language, Theme, ResearchInfra
 from apps.core.serializers.common_serializers import (
     AccessRightsModelSerializer,
     DatasetActorModelSerializer,
@@ -32,13 +32,14 @@ logger = logging.getLogger(__name__)
 
 NestedDatasetObjects = namedtuple(
     "NestedDatasetObjects",
-    "language, theme, fields_of_science, access_rights, metadata_owner, file_set, actors, other_identifiers, spatial, provenance",
+    "language, theme, fields_of_science, infrastructure, access_rights, metadata_owner, file_set, actors, other_identifiers, spatial, provenance",
 )
 
 
 class DatasetSerializer(PatchSerializer, serializers.ModelSerializer):
     access_rights = AccessRightsModelSerializer(required=False)
     field_of_science = FieldOfScience.get_serializer()(required=False, many=True)
+    infrastructure = ResearchInfra.get_serializer()(required=False, many=True)
     actors = DatasetActorModelSerializer(required=False, many=True)
     fileset = FileSetSerializer(required=False, source="file_set")
     language = Language.get_serializer()(required=False, many=True)
@@ -58,6 +59,7 @@ class DatasetSerializer(PatchSerializer, serializers.ModelSerializer):
             "data_catalog",
             "description",
             "field_of_science",
+            "infrastructure",
             "fileset",
             "issued",
             "keyword",
@@ -109,6 +111,7 @@ class DatasetSerializer(PatchSerializer, serializers.ModelSerializer):
             language=validated_data.pop("language", None),
             theme=validated_data.pop("theme", None),
             fields_of_science=validated_data.pop("field_of_science", None),
+            infrastructure=validated_data.pop("infrastructure", None),
             access_rights=validated_data.pop("access_rights", None),
             metadata_owner=validated_data.pop("metadata_owner", None),
             file_set=validated_data.pop("file_set", None),
@@ -151,6 +154,8 @@ class DatasetSerializer(PatchSerializer, serializers.ModelSerializer):
             dataset.theme.set(rel_objects.theme)
         if rel_objects.fields_of_science:
             dataset.field_of_science.set(rel_objects.fields_of_science)
+        if rel_objects.infrastructure:
+            dataset.infrastructure.set(rel_objects.infrastructure)
         if rel_objects.other_identifiers:
             dataset.other_identifiers.set(other_identifiers)
         if rel_objects.spatial:
@@ -203,6 +208,8 @@ class DatasetSerializer(PatchSerializer, serializers.ModelSerializer):
             instance.theme.set(rel_objects.theme)
         if rel_objects.fields_of_science:
             instance.field_of_science.set(rel_objects.fields_of_science)
+        if rel_objects.infrastructure:
+            instance.infrastructure.set(rel_objects.infrastructure)
         if rel_objects.other_identifiers:
             instance.other_identifiers.set(other_identifiers)
         if rel_objects.spatial:

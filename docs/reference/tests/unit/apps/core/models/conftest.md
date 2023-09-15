@@ -24,6 +24,10 @@
 
 ### :::tests.unit.apps.core.models.conftest.field_of_science
 
+## infrastructure
+
+### :::tests.unit.apps.core.models.conftest.infrastructure
+
 ## keyword
 
 ### :::tests.unit.apps.core.models.conftest.keyword

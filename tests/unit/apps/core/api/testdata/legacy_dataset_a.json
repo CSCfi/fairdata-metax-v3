@@ -43,15 +43,10 @@
           }
         }
       ],
-      "keyword": [
-        "Roolipelit",
-        "Pelit"
-      ],
+      "keyword": ["Roolipelit", "Pelit"],
       "spatial": [
         {
-          "as_wkt": [
-            "POINT(24.65673 60.20638)"
-          ],
+          "as_wkt": ["POINT(24.65673 60.20638)"],
           "place_uri": {
             "in_scheme": "http://www.yso.fi/onto/yso/places",
             "identifier": "http://www.yso.fi/onto/yso/p94105",
@@ -104,9 +99,7 @@
             "en": "Collection"
           },
           "spatial": {
-            "as_wkt": [
-              "POINT(24.65673 60.20638)"
-            ],
+            "as_wkt": ["POINT(24.65673 60.20638)"],
             "place_uri": {
               "in_scheme": "http://www.yso.fi/onto/yso/places",
               "identifier": "http://www.yso.fi/onto/yso/p94105",
@@ -243,6 +236,18 @@
             "fi": "Tilastotiede",
             "sv": "Statistik",
             "und": "Tilastotiede"
+          }
+        }
+      ],
+      "infrastructure": [
+        {
+          "in_scheme": "http://www.yso.fi/onto/koko/p34158",
+          "identifier": "http://www.yso.fi/onto/koko/p34158/data/1234",
+          "pref_label": {
+            "en": "Infra",
+            "fi": "Infrä",
+            "sv": "Infrå",
+            "und": "Infra"
           }
         }
       ],

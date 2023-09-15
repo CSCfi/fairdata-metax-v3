@@ -18,7 +18,7 @@ from apps.core.mixins import V2DatasetMixin
 from apps.files.models import File, FileStorage
 from apps.refdata import models as refdata
 
-from .concepts import FieldOfScience, IdentifierType, Language, Theme
+from .concepts import FieldOfScience, IdentifierType, Language, Theme, ResearchInfra
 from .contract import Contract
 from .data_catalog import AccessRights, DataCatalog
 from .file_metadata import FileSetDirectoryMetadata, FileSetFileMetadata
@@ -190,14 +190,17 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         blank=True,
         limit_choices_to={"is_essential_choice": True},
     )
-
+    infrastructure = models.ManyToManyField(
+        ResearchInfra,
+        related_name="datasets",
+        blank=True,
+    )
     access_rights = models.ForeignKey(
         AccessRights,
         on_delete=models.SET_NULL,
         related_name="datasets",
         null=True,
     )
-
     other_identifiers = models.ManyToManyField(
         OtherIdentifier,
         blank=True,
