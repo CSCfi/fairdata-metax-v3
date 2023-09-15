@@ -15,6 +15,7 @@ if ENABLE_MEMCACHED:
         }
     }
 else:
+    CACHALOT_ENABLED = False
     CACHES = {
         "default": {
             "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
