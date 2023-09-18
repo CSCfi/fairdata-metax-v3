@@ -12,6 +12,7 @@
         - [admin](src/apps/common/admin.md)
         - [apps](src/apps/common/apps.md)
         - [exceptions](src/apps/common/exceptions.md)
+        - [filters](src/apps/common/filters.md)
         - [helpers](src/apps/common/helpers.md)
         - [inspectors](src/apps/common/inspectors.md)
         - [managers](src/apps/common/managers.md)

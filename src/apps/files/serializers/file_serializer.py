@@ -12,18 +12,12 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from apps.common.helpers import get_attr_or_item
-from apps.common.serializers.fields import ChecksumField
+from apps.common.serializers.fields import ChecksumField, ListValidChoicesField
 from apps.files.helpers import get_file_metadata_serializer
 from apps.files.models.file import File, FileStorage
 from apps.files.models.file_storage import FileStorage
 
-from .fields import (
-    DirectoryPathField,
-    FileNameField,
-    FilePathField,
-    ListValidChoicesField,
-    StorageServiceField,
-)
+from .fields import DirectoryPathField, FileNameField, FilePathField, StorageServiceField
 
 logger = logging.getLogger(__name__)
 

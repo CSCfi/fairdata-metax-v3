@@ -13,6 +13,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from apps.common.serializers import StrictSerializer
+from apps.common.serializers.fields import ListValidChoicesField
 from apps.core.models import FileSet
 from apps.core.models.concepts import FileType, UseCategory
 from apps.core.models.file_metadata import FileSetDirectoryMetadata, FileSetFileMetadata
@@ -21,11 +22,7 @@ from apps.core.serializers.file_metadata_serializer import (
     FileMetadataSerializer,
 )
 from apps.files.models import FileStorage
-from apps.files.serializers.fields import (
-    DirectoryPathField,
-    ListValidChoicesField,
-    StorageServiceField,
-)
+from apps.files.serializers.fields import DirectoryPathField, StorageServiceField
 
 
 class Action(TextChoices):

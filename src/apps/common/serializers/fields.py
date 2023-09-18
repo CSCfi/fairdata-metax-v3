@@ -12,7 +12,7 @@ from typing import Any
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
-from rest_framework.fields import empty
+from rest_framework.fields import empty, to_choices_dict
 from rest_framework.utils import html
 
 logger = logging.getLogger(__name__)
@@ -164,3 +164,20 @@ class ChecksumField(serializers.RegexField):
     def __init__(self, *args, **kwargs):
         kwargs["trim_whitespace"] = False
         super().__init__(self.checksum_regex, *args, **kwargs)
+
+
+class ListValidChoicesField(serializers.ChoiceField):
+    """ChoiceField that lists valid choices in the 'invalid choice' error message."""
+
+    def __init__(self, *args, **kwargs):
+        choices = kwargs.get("choices", [])
+        kwargs["error_messages"] = {
+            "invalid_choice": serializers.ChoiceField.default_error_messages["invalid_choice"]
+            + " "
+            + _("Valid choices are: {choices}").format(
+                choices=[c for c in to_choices_dict(choices)]
+            ),
+            **kwargs.get("error_messages", {}),
+        }
+
+        super().__init__(*args, **kwargs)

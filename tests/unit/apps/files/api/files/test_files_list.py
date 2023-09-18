@@ -153,3 +153,15 @@ def test_files_retrieve_include_removed(client, file_tree_a):
     )
     assert res.status_code == 200
     assert res.json()["pathname"] == "/dir/b.txt"
+
+
+@pytest.mark.django_db
+def test_files_list_invalid_storage_service(client, file_tree_a):
+    res = client.get(
+        f"/v3/files?storage_service=doesnotexist",
+        content_type="application/json",
+    )
+    assert res.status_code == 400
+    assert "'doesnotexist' is not a valid choice. Valid choices are" in str(
+        res.data["storage_service"]
+    )

@@ -14,8 +14,8 @@ from apps.core.models import (
     FieldOfScience,
     Language,
     MetadataProvider,
-    Theme,
     ResearchInfra,
+    Theme,
 )
 from apps.files.factories import FileFactory
 from apps.files.models import File, FileStorage

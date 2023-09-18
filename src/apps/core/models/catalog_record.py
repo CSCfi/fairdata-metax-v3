@@ -18,7 +18,7 @@ from apps.core.mixins import V2DatasetMixin
 from apps.files.models import File, FileStorage
 from apps.refdata import models as refdata
 
-from .concepts import FieldOfScience, IdentifierType, Language, Theme, ResearchInfra
+from .concepts import FieldOfScience, IdentifierType, Language, ResearchInfra, Theme
 from .contract import Contract
 from .data_catalog import AccessRights, DataCatalog
 from .file_metadata import FileSetDirectoryMetadata, FileSetFileMetadata

@@ -14,7 +14,7 @@ from rest_framework.fields import empty
 from apps.common.helpers import update_or_create_instance
 from apps.common.serializers import PatchSerializer
 from apps.core.models import Dataset
-from apps.core.models.concepts import FieldOfScience, Language, Theme, ResearchInfra
+from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
 from apps.core.serializers.common_serializers import (
     AccessRightsModelSerializer,
     DatasetActorModelSerializer,

@@ -1,4 +1,4 @@
-from .fields import URLReferencedModelField, URLReferencedModelListField
+from .fields import ListValidChoicesField, URLReferencedModelField, URLReferencedModelListField
 from .serializers import (
     AbstractDatasetModelSerializer,
     AbstractDatasetPropertyModelSerializer,

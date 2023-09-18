@@ -7,6 +7,7 @@
 import logging
 
 from django import forms
+from django.conf import settings
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import F, Q, QuerySet
@@ -20,6 +21,7 @@ from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from apps.common.filters import VerboseChoiceFilter
 from apps.common.helpers import cachalot_toggle, get_filter_openapi_parameters
 from apps.common.serializers import (
     DeleteListQueryParamsSerializer,
@@ -73,10 +75,11 @@ class FileFilterSet(FileCommonFilterset):
         field_name="storage__project",
         max_length=200,
     )
-    storage_service = filters.CharFilter(
+    storage_service = VerboseChoiceFilter(
         field_name="storage__storage_service",
-        max_length=255,
+        choices=[(v, v) for v in settings.STORAGE_SERVICE_FILE_STORAGES],
     )
+
     dataset = filters.UUIDFilter(field_name="file_sets__dataset_id")
 
     class Meta:

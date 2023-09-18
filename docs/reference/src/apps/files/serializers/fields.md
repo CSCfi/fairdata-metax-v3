@@ -4,10 +4,6 @@
 
 ### :::src.apps.files.serializers.fields.CommaSeparatedListField
 
-## ListValidChoicesField
-
-### :::src.apps.files.serializers.fields.ListValidChoicesField
-
 ## FileNameField
 
 ### :::src.apps.files.serializers.fields.FileNameField

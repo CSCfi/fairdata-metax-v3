@@ -34,10 +34,10 @@ from .concepts import (
     DatasetLicense,
     EventOutcome,
     FieldOfScience,
-    ResearchInfra,
     IdentifierType,
     Language,
     LifecycleEvent,
+    ResearchInfra,
     Spatial,
 )
 from .contract import Contract

@@ -8,7 +8,8 @@
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
-from rest_framework.fields import to_choices_dict
+
+from apps.common.serializers import ListValidChoicesField
 
 
 class CommaSeparatedListField(serializers.ListField):
@@ -23,23 +24,6 @@ class CommaSeparatedListField(serializers.ListField):
 
     def to_representation(self, data):
         return ",".join(data)
-
-
-class ListValidChoicesField(serializers.ChoiceField):
-    """ChoiceField that lists valid choices in the 'invalid choice' error message."""
-
-    def __init__(self, *args, **kwargs):
-        choices = kwargs.get("choices", [])
-        kwargs["error_messages"] = {
-            "invalid_choice": serializers.ChoiceField.default_error_messages["invalid_choice"]
-            + " "
-            + _("Valid choices are: {choices}").format(
-                choices=[c for c in to_choices_dict(choices)]
-            ),
-            **kwargs.get("error_messages", {}),
-        }
-
-        super().__init__(*args, **kwargs)
 
 
 filename_regex = r"^[^/]+$"  # e.g. file

@@ -18,10 +18,10 @@ from .concepts import (
     FileType,
     Language,
     LifecycleEvent,
+    ResearchInfra,
     Spatial,
     Theme,
     UseCategory,
-    ResearchInfra,
 )
 from .contract import Contract
 from .data_catalog import (
