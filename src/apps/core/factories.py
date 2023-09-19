@@ -1,7 +1,8 @@
 import factory
 from django.utils import timezone
 
-from apps.files.factories import FileFactory, FileStorageFactory
+from apps.files.factories import FileStorageFactory
+from apps.actors.factories import PersonFactory, OrganizationFactory
 from apps.refdata import models as refdata
 from apps.users.factories import MetaxUserFactory
 
@@ -246,6 +247,15 @@ class DatasetFactory(factory.django.DjangoModelFactory):
     access_rights = factory.SubFactory(AccessRightsFactory)
     system_creator = factory.SubFactory(MetaxUserFactory)
     metadata_owner = factory.SubFactory(MetadataProviderFactory)
+
+
+class DatasetActorFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.DatasetActor
+
+    dataset = factory.SubFactory(DatasetFactory)
+    person = factory.SubFactory(PersonFactory)
+    organization = factory.SubFactory(OrganizationFactory)
 
 
 class FileSetFactory(factory.django.DjangoModelFactory):

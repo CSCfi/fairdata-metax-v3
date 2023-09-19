@@ -116,7 +116,9 @@ class DatasetActorViewSet(viewsets.ModelViewSet):
 
     # filterset_class = DatasetActorFilter
     def get_queryset(self):
-        if getattr(self, "swagger_fake_view"):  # kwargs are not available in swagger inspection
+        if getattr(
+            self, "swagger_fake_view", None
+        ):  # kwargs are not available in swagger inspection
             return DatasetActor.available_objects.none()
         return DatasetActor.available_objects.filter(dataset=self.kwargs["dataset_pk"])
 

@@ -2,7 +2,7 @@ from django import forms
 from django.contrib import admin
 from django.db.models import Case, When
 
-from apps.actors.models import Actor, Organization
+from apps.actors.models import Actor, Organization, Person
 
 
 class OrganizationAdminForm(forms.ModelForm):
@@ -46,3 +46,7 @@ class ActorAdmin(admin.ModelAdmin):
         "person",
         "organization",
     )
+
+@admin.register(Person)
+class PersonAdmin(admin.ModelAdmin):
+    list_display = ("name", "email")

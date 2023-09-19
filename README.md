@@ -138,11 +138,8 @@ poetry remove (-D) <package>
 After any modification to `pyproject.toml`, re-generate requirements with 
 ```bash
 poetry export --without-hashes -o requirements.txt
-``` 
-and 
-```bash
 poetry export --dev --without-hashes -o dev-requirements.txt 
-```
+``` 
 
 ## Formatting code
 

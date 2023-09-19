@@ -55,7 +55,17 @@ def dataset_with_provenance_json(dataset_a_json):
             ],
         },
     ]
-    dataset_a_json["actors"] = [{"actor": {"person": {"name": "john"}}, "role": "creator"}]
+    dataset_a_json["actors"] = [
+        {
+            "person": {"name": "john"},
+            "organization": {
+                "pref_label": {"fi": "CSC"},
+                "code": "20000",
+                "in_scheme": "https://joku.schema.fi",
+            },
+            "roles": ["creator"],
+        }
+    ]
     return dataset_a_json
 
 
@@ -70,8 +80,10 @@ def test_create_dataset_with_provenance(provenance_a_request):
     assert provenance_a_request.status_code == 201
     dataset = Dataset.objects.get(id=provenance_a_request.data["id"])
     actors = dataset.actors.all()
-    assert actors.count() == 2
+    assert actors.count() == 1
     assert dataset.provenance.count() == 2
+    actor = actors.first()
+    assert len(set(actor.roles)) == 2
 
 
 def test_edit_provenance(dataset_with_provenance_json, provenance_a_request, client):

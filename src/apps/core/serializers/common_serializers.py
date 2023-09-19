@@ -7,13 +7,19 @@
 
 import json
 import logging
+from typing import Optional
 
 from django.contrib.auth import get_user_model
 from django.core.validators import EMPTY_VALUES
 from rest_framework import serializers
 from rest_framework.fields import empty
 
-from apps.actors.serializers import ActorModelSerializer
+from apps.actors.models import Organization, Person
+from apps.actors.serializers import (
+    ActorModelSerializer,
+    OrganizationSerializer,
+    PersonModelSerializer,
+)
 from apps.common.helpers import update_or_create_instance
 from apps.common.serializers import (
     AbstractDatasetModelSerializer,
@@ -180,27 +186,50 @@ class AccessRightsModelSerializer(AbstractDatasetModelSerializer):
 
 
 class DatasetActorModelSerializer(serializers.ModelSerializer):
-    actor = ActorModelSerializer(required=True, many=False)
+    organization = OrganizationSerializer(many=False, required=False, allow_null=True)
+    person = PersonModelSerializer(many=False, required=False, allow_null=True)
 
     def create(self, validated_data):
-        actor = None
-        if actor_data := validated_data.pop("actor", None):
-            actor = self.fields["actor"].create(actor_data)
+        # Object extraction from payload
+        org_data = validated_data.pop("organization", None)
+        person_data = validated_data.pop("person", None)
+
+        # Final foreign key model objects
+        org: Optional[Organization] = None
+        person: Optional[Person] = None
+
+        # Organizations are global, persons are local to dataset
+        if org_data:
+            org, created = Organization.available_objects.get_or_create(**org_data)
+        if person_data:
+            person = self.fields["person"].create(person_data)
+
+        # dataset id context binding
         if validated_data.get("dataset_id") is None:
             validated_data["dataset_id"] = self.context.get("dataset_pk")
         if validated_data.get("dataset_id") is None:
             raise serializers.ValidationError(detail="dataset_id is required for DatasetActor")
-        return DatasetActor.objects.create(**validated_data, actor=actor)
+        return DatasetActor.objects.create(organization=org, person=person, **validated_data)
 
     def update(self, instance, validated_data):
-        if actor_data := validated_data.pop("actor", None):
-            self.fields["actor"].update(instance.actor, actor_data)
-        return super().update(instance, validated_data)
+        org_data = validated_data.pop("organization", None)
+        person_data = validated_data.pop("person", None)
+
+        if org_data:
+            instance.organization = update_or_create_instance(
+                self.fields["organization"], instance.organization, org_data
+            )
+        if person_data:
+            instance.person = update_or_create_instance(
+                self.fields["person"], instance.person, person_data
+            )
+
+        return instance
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
-        if org := rep["actor"].get("organization"):
-            rep["actor"]["organization"] = {
+        if org := rep.get("organization"):
+            rep["organization"] = {
                 "id": org.get("id"),
                 "pref_label": org.get("pref_label"),
                 "url": org.get("url"),
@@ -212,8 +241,13 @@ class DatasetActorModelSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DatasetActor
-        fields = ("id", "role", "actor")
+        fields = ("id", "roles", "person", "organization")
         list_serializer_class = CommonListSerializer
+
+
+class DatasetActorProvenanceSerializer(DatasetActorModelSerializer):
+    class Meta(DatasetActorModelSerializer.Meta):
+        fields = ("id", "person", "organization")
 
 
 class MetadataProviderModelSerializer(AbstractDatasetModelSerializer):

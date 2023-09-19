@@ -1,8 +1,7 @@
-from os import access
-
 import pytest
+from apps.core.factories import DatasetActorFactory
 
-from apps.core.models.data_catalog import AccessRights
+pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
 
 
 def test_create_dataset_with_foreign_keys(dataset_with_foreign_keys):
@@ -38,3 +37,8 @@ def test_delete_dataset_with_foreign_keys(dataset_with_foreign_keys):
     assert not last.first_version.filter(id=dataset_with_foreign_keys.id).exists()
     assert not previous.next.filter(id=dataset_with_foreign_keys.id).exists()
     assert not replaces.replaced_by.filter(id=dataset_with_foreign_keys.id).exists()
+
+
+def test_create_dataset_actor():
+    actor = DatasetActorFactory()
+    assert actor.id is not None

@@ -12,3 +12,7 @@
 
 ### :::src.apps.actors.admin.ActorAdmin
 
+## PersonAdmin
+
+### :::src.apps.actors.admin.PersonAdmin
+

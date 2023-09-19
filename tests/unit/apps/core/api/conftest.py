@@ -6,7 +6,7 @@ import pytest
 from rest_framework.reverse import reverse
 from rest_framework.test import APIClient
 
-from .json_models import Actor, DatasetActor, Organization, Person
+from .json_models import DatasetActor, Organization, Person
 
 logger = logging.getLogger(__name__)
 
@@ -195,39 +195,3 @@ def post_metadata_provider_payloads_a_b_c_d(
     res4 = client.post(url, metadata_provider_d_json, content_type="application/json")
     logger.info(f"{res1=}, {res2=}, {res3=}, {res4=}")
     return res1, res2, res3, res4
-
-
-@pytest.fixture
-def dataset_a(client, dataset_a_json, data_catalog, reference_data):
-    return client.post("/v3/datasets", dataset_a_json, content_type="application/json")
-
-
-@pytest.fixture
-def dataset_b(client, dataset_b_json, data_catalog, reference_data):
-    return client.post("/v3/datasets", dataset_b_json, content_type="application/json")
-
-
-@pytest.fixture
-def dataset_c(client, dataset_c_json, data_catalog, reference_data):
-    return client.post("/v3/datasets", dataset_c_json, content_type="application/json")
-
-
-@pytest.fixture
-def dataset_actor_a(dataset_a):
-    return DatasetActor(
-        dataset=dataset_a.data["id"],
-        actor=Actor(
-            person=Person(name="Teppo"),
-            organization=Organization(
-                pref_label={"fi": "CSC"}, in_scheme="https://joku.scheme.fi"
-            ),
-        ),
-        role="creator",
-    )
-
-
-@pytest.fixture
-def legacy_dataset_a(client, data_catalog, reference_data, legacy_dataset_a_json):
-    return client.post(
-        reverse("migrated-dataset-list"), legacy_dataset_a_json, content_type="application/json"
-    )

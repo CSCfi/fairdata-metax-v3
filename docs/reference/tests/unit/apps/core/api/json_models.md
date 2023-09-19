@@ -8,10 +8,6 @@
 
 ### :::tests.unit.apps.core.api.json_models.Person
 
-## Actor
-
-### :::tests.unit.apps.core.api.json_models.Actor
-
 ## DatasetActor
 
 ### :::tests.unit.apps.core.api.json_models.DatasetActor

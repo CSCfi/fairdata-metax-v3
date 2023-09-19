@@ -215,6 +215,13 @@ class DatasetSerializer(PatchSerializer, serializers.ModelSerializer):
         if rel_objects.spatial:
             instance.spatial.set(rel_objects.spatial)
 
+        if rel_objects.actors:
+            d_actor_ser: DatasetActorModelSerializer = self.fields["actors"]
+            d_actor_ser.context["dataset_pk"] = instance.id
+            instance.actors.set(
+                self.fields["actors"].update(instance.actors.all(), rel_objects.actors)
+            )
+
         data_serializer: FileSetSerializer = self.fields["fileset"]
         if rel_objects.file_set:
             # Assigning instance.file_set here avoids refetch from db and clearing

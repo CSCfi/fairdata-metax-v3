@@ -1,7 +1,7 @@
 import factory
 from django.conf import settings
 
-from .models import Organization
+from .models import Organization, Person, Actor
 
 
 class OrganizationFactory(factory.django.DjangoModelFactory):
@@ -24,3 +24,19 @@ class OrganizationFactory(factory.django.DjangoModelFactory):
     @factory.lazy_attribute
     def url(obj):
         return f"https://{settings.ORGANIZATION_BASE_URI}/{obj.code}"
+
+
+class PersonFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Person
+
+    name = factory.Faker("name")
+    email = factory.Faker("email")
+
+
+class ActorFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Actor
+
+    person = factory.SubFactory(PersonFactory)
+    organization = factory.SubFactory(OrganizationFactory)

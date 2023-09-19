@@ -10,12 +10,8 @@ class Person(models.Base):
     name = fields.StringField(required=True)
 
 
-class Actor(models.Base):
-    person = fields.EmbeddedField(Person, required=False)
-    organization = fields.EmbeddedField(Organization, required=True)
-
-
 class DatasetActor(models.Base):
     dataset = fields.StringField(required=True)
-    actor = fields.EmbeddedField(Actor, required=True)
-    role = fields.StringField(required=True)
+    role = fields.ListField(required=True, items_types=str)
+    person = fields.EmbeddedField(Person, required=False)
+    organization = fields.EmbeddedField(Organization, required=True)

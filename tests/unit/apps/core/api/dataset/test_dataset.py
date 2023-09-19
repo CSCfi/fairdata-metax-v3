@@ -141,8 +141,42 @@ def test_create_dataset_with_metadata_owner(client, dataset_a_json, data_catalog
     assert res.status_code == 201
 
 
-def test_create_dataset_with_actor(client, dataset_c, data_catalog, reference_data):
+def test_create_dataset_with_actor(dataset_c, data_catalog, reference_data):
     assert dataset_c.status_code == 201
+    assert len(dataset_c.data["actors"]) == 2
+
+
+def test_edit_dataset_actor(client, dataset_c, data_catalog, reference_data):
+    assert dataset_c.status_code == 201
+    res = client.put(
+        reverse(
+            "dataset-actors-detail",
+            kwargs={"dataset_pk": dataset_c.data["id"], "pk": dataset_c.data["actors"][0]["id"]},
+        ),
+        {
+            "person": {"name": "hannah"},
+            "organization": {"pref_label": {"fi": "CSC"}, "in_scheme": "https://testischeema.fi"},
+        },
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert res.data["person"]["name"] == "hannah"
+    assert res.data["organization"]["pref_label"]["fi"] == "CSC"
+
+
+def test_modify_dataset_actor_roles(
+    client, dataset_c, dataset_c_json, data_catalog, reference_data
+):
+    assert dataset_c.status_code == 201
+    assert len(dataset_c.data["actors"]) == 2
+    dataset_c_json["actors"][0]["roles"].append("publisher")
+    res = client.put(
+        f"/v3/datasets/{dataset_c.data['id']}", dataset_c_json, content_type="application/json"
+    )
+    assert res.status_code == 200
+    assert len(res.data["actors"]) == 2
+    assert "publisher" in res.data["actors"][0]["roles"]
+    assert "creator" in res.data["actors"][0]["roles"]
 
 
 def test_create_dataset_actor_nested_url(

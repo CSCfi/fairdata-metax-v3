@@ -1,7 +1,7 @@
 import pytest
 from rest_framework.reverse import reverse
 from tests.unit.apps.core.api.conftest import load_test_json
-from tests.unit.apps.core.api.json_models import Actor, DatasetActor, Organization
+from tests.unit.apps.core.api.json_models import DatasetActor, Organization, Person
 
 
 @pytest.fixture
@@ -48,13 +48,9 @@ def dataset_c(client, dataset_c_json, data_catalog, reference_data):
 def dataset_actor_a(dataset_a):
     return DatasetActor(
         dataset=dataset_a.data["id"],
-        actor=Actor(
-            name="teppo",
-            organization=Organization(
-                pref_label={"fi": "CSC"}, in_scheme="https://joku.scheme.fi"
-            ),
-        ),
-        role="creator",
+        person=Person(name="teppo"),
+        organization=Organization(pref_label={"fi": "CSC"}, in_scheme="https://joku.scheme.fi"),
+        role=["creator"],
     )
 
 

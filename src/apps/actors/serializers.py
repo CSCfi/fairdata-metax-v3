@@ -3,7 +3,6 @@ from rest_framework import serializers
 
 from apps.actors.models import Actor, Organization, Person
 from apps.common.serializers import CommonListSerializer
-from apps.users.serializers import MetaxUserModelSerializer
 
 
 class ChildOrganizationSerializer(serializers.ModelSerializer):

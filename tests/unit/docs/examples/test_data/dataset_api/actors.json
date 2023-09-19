@@ -1,41 +1,41 @@
 {
   "actors": [
     {
-      "role": "creator",
-      "actor": {
-        "organization": {
-          "url": "http://uri.suomi.fi/codelist/fairdata/organization/code/09206320",
-          "code": "09206320",
-          "in_scheme": "http://uri.suomi.fi/codelist/fairdata/organization",
-          "pref_label": {
-            "en": "CSC – IT Center for Science",
-            "fi": "CSC - Tieteen tietotekniikan keskus Oy",
-            "sv": "CSC – IT Center for Science",
-            "und": "CSC - Tieteen tietotekniikan keskus Oy"
-          }
-        },
-        "person": {
-          "name": "John Doe"
+      "role": [
+        "creator"
+      ],
+      "organization": {
+        "url": "http://uri.suomi.fi/codelist/fairdata/organization/code/09206320",
+        "code": "09206320",
+        "in_scheme": "http://uri.suomi.fi/codelist/fairdata/organization",
+        "pref_label": {
+          "en": "CSC – IT Center for Science",
+          "fi": "CSC - Tieteen tietotekniikan keskus Oy",
+          "sv": "CSC – IT Center for Science",
+          "und": "CSC - Tieteen tietotekniikan keskus Oy"
         }
+      },
+      "person": {
+        "name": "John Doe"
       }
     },
     {
-      "role": "publisher",
-      "actor": {
-        "organization": {
-          "url": "http://uri.suomi.fi/codelist/fairdata/organization/code/09206320",
-          "code": "09206320",
-          "in_scheme": "http://uri.suomi.fi/codelist/fairdata/organization",
-          "pref_label": {
-            "en": "CSC – IT Center for Science",
-            "fi": "CSC - Tieteen tietotekniikan keskus Oy",
-            "sv": "CSC – IT Center for Science",
-            "und": "CSC - Tieteen tietotekniikan keskus Oy"
-          }
-        },
-        "person": {
-          "name": "Jane Doe"
+      "role": [
+        "publisher"
+      ],
+      "organization": {
+        "url": "http://uri.suomi.fi/codelist/fairdata/organization/code/09206320",
+        "code": "09206320",
+        "in_scheme": "http://uri.suomi.fi/codelist/fairdata/organization",
+        "pref_label": {
+          "en": "CSC – IT Center for Science",
+          "fi": "CSC - Tieteen tietotekniikan keskus Oy",
+          "sv": "CSC – IT Center for Science",
+          "und": "CSC - Tieteen tietotekniikan keskus Oy"
         }
+      },
+      "person": {
+        "name": "Jane Doe"
       }
     }
   ]

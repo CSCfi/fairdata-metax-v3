@@ -35,23 +35,25 @@
   },
   "actors": [
     {
-      "actor": {
-        "person": {
-          "name": "Teppo"
-        },
-        "role": "creator"
-      }
+      "person": {
+        "name": "Teppo"
+      },
+      "roles": [
+        "creator"
+      ]
     },
     {
-      "actor": {
-        "person": {
-          "name": "Tulppu"
+      "person": {
+        "name": "Tulppu"
+      },
+      "roles": [
+        "contributor"
+      ],
+      "organization": {
+        "pref_label": {
+          "fi": "CSC"
         },
-        "role": "contributor",
-        "organization": {
-          "pref_label": {"fi":  "CSC"},
-          "in_scheme": "https://testischeema.fi"
-        }
+        "in_scheme": "https://testischeema.fi"
       }
     }
   ]

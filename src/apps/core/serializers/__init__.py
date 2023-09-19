@@ -2,6 +2,7 @@ from .common_serializers import (
     AccessRightsModelSerializer,
     CatalogHomePageModelSerializer,
     DatasetActorModelSerializer,
+    DatasetActorProvenanceSerializer,
     DatasetPublisherModelSerializer,
     LicenseModelSerializer,
     MetadataProviderModelSerializer,

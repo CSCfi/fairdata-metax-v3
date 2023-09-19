@@ -241,7 +241,7 @@ class V2DatasetMixin:
             if provenance.is_associated_with.all().count() != 0:
                 data["was_associated_with"] = []
                 for association in provenance.is_associated_with.all():
-                    data["was_associated_with"].append(association.actor.as_v2_data())
+                    data["was_associated_with"].append(association.as_v2_data())
 
             obj_list.append(data)
         if len(obj_list) != 0:
@@ -353,13 +353,13 @@ class V2DatasetMixin:
 
     def as_v2_dataset(self) -> Dict:
         def add_actor(role: str, document: Dict):
-            actors = self.actors.filter(role=role)
+            actors = self.actors.filter(roles__contains=[role])
             if actors.count() == 0:
                 return
             if role != "publisher":
                 document["research_dataset"][role] = []
             for dataset_actor in actors:
-                data = dataset_actor.actor.as_v2_data()
+                data = dataset_actor.as_v2_data()
                 if role == "publisher":
                     document["research_dataset"][role] = data
                 else:

@@ -101,7 +101,29 @@ class DatasetAdmin(AbstractDatasetPropertyBaseAdmin):
 
 @admin.register(DatasetActor)
 class DatasetActorAdmin(admin.ModelAdmin):
-    list_display = ("role",)
+    list_display = (
+        "dataset",
+        "actor",
+        "roles",
+    )
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .prefetch_related("person", "organization", "dataset")
+        )
+
+    def roles(self, obj):
+        return ", ".join(o.name for o in obj.roles.all())
+
+    def actor(self, obj):
+        if obj.person:
+            return str(obj.person)
+        elif obj.organization:
+            return str(obj.organization)
+        else:
+            return "none"
 
 
 @admin.register(Temporal)

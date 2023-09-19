@@ -76,6 +76,10 @@
 
 ### :::src.apps.core.factories.DatasetFactory
 
+## DatasetActorFactory
+
+### :::src.apps.core.factories.DatasetActorFactory
+
 ## FileSetFactory
 
 ### :::src.apps.core.factories.FileSetFactory

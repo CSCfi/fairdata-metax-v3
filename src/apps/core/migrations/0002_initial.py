@@ -113,20 +113,6 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='DatasetActor',
-            fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('role', models.CharField(choices=[('creator', 'Creator'), ('contributor', 'Contributor'), ('publisher', 'Publisher'), ('curator', 'Curator'), ('rights_holder', 'Rights holder'), ('provenance', 'Provenance')], default='creator', max_length=100)),
-                ('actor', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='datasets', to='actors.actor')),
-            ],
-            options={
-                'ordering': ['created'],
-                'get_latest_by': 'modified',
-                'abstract': False,
-            },
-
-        ),
-        migrations.CreateModel(
             name='DatasetLicense',
             fields=[
                 ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
@@ -420,11 +406,6 @@ class Migration(migrations.Migration):
             model_name='provenance',
             name='event_outcome',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='core.eventoutcome'),
-        ),
-        migrations.AddField(
-            model_name='provenance',
-            name='is_associated_with',
-            field=models.ManyToManyField(related_name='provenance', to='core.DatasetActor'),
         ),
         migrations.AddField(
             model_name='provenance',
@@ -841,11 +822,6 @@ class Migration(migrations.Migration):
         migrations.AddIndex(
             model_name='datasetlicense',
             index=models.Index(fields=['custom_url'], name='core_datase_custom__ae10d6_idx'),
-        ),
-        migrations.AddField(
-            model_name='datasetactor',
-            name='dataset',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='actors', to='core.dataset'),
         ),
         migrations.AddField(
             model_name='dataset',

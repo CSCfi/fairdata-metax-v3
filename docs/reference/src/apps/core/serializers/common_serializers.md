@@ -20,6 +20,10 @@
 
 ### :::src.apps.core.serializers.common_serializers.DatasetActorModelSerializer
 
+## DatasetActorProvenanceSerializer
+
+### :::src.apps.core.serializers.common_serializers.DatasetActorProvenanceSerializer
+
 ## MetadataProviderModelSerializer
 
 ### :::src.apps.core.serializers.common_serializers.MetadataProviderModelSerializer

@@ -545,6 +545,8 @@ class LegacyDataset(Dataset):
         obj_list = []
         if provenance_data := self.legacy_research_dataset.get("provenance"):
             for data in provenance_data:
+                provenance: Provenance
+                provenance_created: bool
                 provenance, provenance_created = Provenance.objects.get_or_create(
                     title=data.get("title"), description=data["description"], dataset=self
                 )
@@ -623,7 +625,7 @@ class LegacyDataset(Dataset):
                     if created:
                         self.created_objects += 1
                     provenance.lifecycle_event = lifecycle_event
-                associated_with_objs = []
+                associated_with_objs: List[DatasetActor] = []
                 if was_associated_with := data.get("was_associated_with"):
                     for actor_data in was_associated_with:
                         actor, created = DatasetActor.get_instance_from_v2_dictionary(

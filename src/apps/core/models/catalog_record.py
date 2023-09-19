@@ -1,6 +1,6 @@
 import logging
 import uuid
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -267,7 +267,7 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         return super().delete(*args, **kwargs)
 
 
-class DatasetActor(AbstractBaseModel):
+class DatasetActor(Actor):
     """Actors associated with a Dataset.
 
     Attributes:
@@ -275,8 +275,46 @@ class DatasetActor(AbstractBaseModel):
         role (models.CharField): Role of the actor
     """
 
+    class RoleChoices(models.TextChoices):
+        CREATOR = "creator", _("Creator")
+        CONTRIBUTOR = "contributor", _("Contributor")
+        PUBLISHER = "publisher", _("Publisher")
+        CURATOR = "curator", _("Curator")
+        RIGHTS_HOLDER = "rights_holder", _("Rights holder")
+        PROVENANCE = "provenance", _("Provenance")
+
+    roles = ArrayField(
+        models.CharField(choices=RoleChoices.choices, default=RoleChoices.CREATOR, max_length=30),
+        null=True,
+    )
+    dataset = models.ForeignKey("Dataset", on_delete=models.CASCADE, related_name="actors")
+
+    def add_role(self, role: str) -> bool:
+        """Adds a roles to the actor.
+        
+        Args:
+            role (str): The roles to add to the actor.
+        
+        Returns:
+            bool: A boolean indicating whether the roles was added or not.
+        
+        Raises:
+            ValueError: If the roles is not valid.
+        """
+
+        if self.roles is None:
+            self.roles = [role]
+            return True
+        else:
+            if role not in self.roles:
+                self.roles.append(role)
+                return True
+        return False
+
     @classmethod
-    def get_instance_from_v2_dictionary(cls, obj: Dict, dataset: Dataset, role: str):
+    def get_instance_from_v2_dictionary(
+        cls, obj: Dict, dataset: "Dataset", role: str
+    ) -> Tuple["DatasetActor", bool]:
         """
 
         Args:
@@ -289,8 +327,8 @@ class DatasetActor(AbstractBaseModel):
 
         """
         actor_type = obj["@type"]
-        organization: Organization = None
-        person = None
+        organization: Optional[Organization] = None
+        person: Optional[Person] = None
         if actor_type == "Organization":
             organization = Organization.get_instance_from_v2_dictionary(obj)
         elif actor_type == "Person":
@@ -299,25 +337,15 @@ class DatasetActor(AbstractBaseModel):
             person.save()
             if member_of := obj.get("member_of"):
                 organization = Organization.get_instance_from_v2_dictionary(member_of)
-        actor, created = Actor.objects.get_or_create(organization=organization, person=person)
-        dataset_actor, created = cls.objects.get_or_create(dataset=dataset, actor=actor, role=role)
-        return dataset_actor, created
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    dataset = models.ForeignKey(Dataset, related_name="actors", on_delete=models.CASCADE)
-
-    class RoleChoices(models.TextChoices):
-        CREATOR = "creator", _("Creator")
-        CONTRIBUTOR = "contributor", _("Contributor")
-        PUBLISHER = "publisher", _("Publisher")
-        CURATOR = "curator", _("Curator")
-        RIGHTS_HOLDER = "rights_holder", _("Rights holder")
-        PROVENANCE = "provenance", _("Provenance")
-
-    role = models.CharField(
-        max_length=100, choices=RoleChoices.choices, default=RoleChoices.CREATOR
-    )
-    actor = models.ForeignKey(Actor, on_delete=models.CASCADE, related_name="datasets")
+        actor, created = cls.objects.get_or_create(
+            organization=organization, person=person, dataset=dataset
+        )
+        if not actor.roles:
+            actor.roles = [role]
+        elif role not in actor.roles:
+            actor.roles.append(role)
+        actor.save()
+        return actor, created
 
 
 class Temporal(AbstractBaseModel):
