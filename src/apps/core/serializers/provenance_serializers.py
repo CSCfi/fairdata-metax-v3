@@ -5,18 +5,31 @@ from django.core.exceptions import MultipleObjectsReturned
 from django.forms import model_to_dict
 from rest_framework import serializers
 
-from apps.actors.models import Person, Organization
+from apps.actors.models import Organization, Person
 from apps.actors.serializers import ActorModelSerializer, PersonModelSerializer
-from apps.core.models import DatasetActor, EventOutcome, LifecycleEvent, Provenance, Dataset
-from apps.core.serializers import DatasetActorProvenanceSerializer, SpatialModelSerializer
+from apps.common.serializers.serializers import CommonListSerializer, NestedModelSerializer
+from apps.core.models import (
+    Dataset,
+    DatasetActor,
+    EventOutcome,
+    LifecycleEvent,
+    Provenance,
+    Temporal,
+)
+from apps.core.serializers import (
+    DatasetActorProvenanceSerializer,
+    SpatialModelSerializer,
+    TemporalModelSerializer,
+)
 
 logger = logging.getLogger(__name__)
 
 
-class ProvenanceModelSerializer(serializers.ModelSerializer):
-    spatial = SpatialModelSerializer(many=False, required=False)
-    lifecycle_event = LifecycleEvent.get_serializer_field(required=False)
-    event_outcome = EventOutcome.get_serializer_field(required=False)
+class ProvenanceModelSerializer(NestedModelSerializer):
+    spatial = SpatialModelSerializer(required=False, allow_null=True)
+    temporal = TemporalModelSerializer(required=False, allow_null=True)
+    lifecycle_event = LifecycleEvent.get_serializer_field(required=False, allow_null=True)
+    event_outcome = EventOutcome.get_serializer_field(required=False, allow_null=True)
     is_associated_with = DatasetActorProvenanceSerializer(many=True, required=False)
 
     class Meta:
@@ -26,12 +39,14 @@ class ProvenanceModelSerializer(serializers.ModelSerializer):
             "title",
             "description",
             "spatial",
+            "temporal",
             "lifecycle_event",
             "event_outcome",
             "outcome_description",
             "is_associated_with",
         )
         read_only_fields = ("id",)
+        list_serializer_class = CommonListSerializer
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -43,17 +58,11 @@ class ProvenanceModelSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """creates a single Provenance record within the database"""
 
-        # Define local variables
-        spatial_serializer: SpatialModelSerializer = self.fields["spatial"]
-        spatial_data = validated_data.pop("spatial", None)
         is_associated_with_data = validated_data.pop("is_associated_with", None)
-        spatial = None
         is_associated_with = []
-        dataset = Dataset.available_objects.get(id=validated_data["dataset_id"])
-
-        # Check if spatial data exists
-        if spatial_data:
-            spatial = spatial_serializer.create(spatial_data)
+        dataset = validated_data.get("dataset") or Dataset.available_objects.get(
+            id=validated_data["dataset_id"]
+        )
 
         # Check if is_associated_with data exists
         if is_associated_with_data:
@@ -90,18 +99,22 @@ class ProvenanceModelSerializer(serializers.ModelSerializer):
                 # Need to check if the actor is already in the dataset.
                 # Otherwise would duplicate same actor on same roles.
                 if DatasetActor.objects.filter(
-                    organization=org, person=person, dataset_id=validated_data["dataset_id"]
+                    organization=org, person=person, dataset_id=dataset.id
                 ).exists():
                     dataset_actor = DatasetActor.objects.get(
-                        organization=org, person=person, dataset_id=validated_data["dataset_id"]
+                        organization=org, person=person, dataset_id=dataset.id
                     )
                 else:
                     creation_kwargs = {
                         "person": person,
                         "organization": org,
-                        "dataset_id": validated_data["dataset_id"],
+                        "dataset_id": dataset.id,
                     }
-                    if person.part_of_actor is not None:
+                    if (
+                        person
+                        and hasattr(person, "part_of_actor")
+                        and person.part_of_actor is not None
+                    ):
                         creation_kwargs["actor_ptr"] = person.part_of_actor
                     dataset_actor = DatasetActor(**creation_kwargs)
 
@@ -110,29 +123,18 @@ class ProvenanceModelSerializer(serializers.ModelSerializer):
                     dataset_actor.save()
                     is_associated_with.append(dataset_actor)
 
-        provenance = Provenance.available_objects.create(
-            spatial=spatial,
-            **validated_data,
-        )
-        if len(is_associated_with) > 0:
+        provenance = super().create(validated_data=validated_data)
+        if is_associated_with:
             provenance.is_associated_with.set(is_associated_with)
         return provenance
 
     def update(self, instance, validated_data):
-        spatial_serializer: SpatialModelSerializer = self.fields["spatial"]
         is_associated_with_serializer = self.fields["is_associated_with"]
-
-        spatial_data = validated_data.pop("spatial", None)
         is_associated_with_data = validated_data.pop("is_associated_with", None)
-
-        if spatial_data:
-            spatial_serializer.update(instance.spatial, spatial_data)
-
         if is_associated_with_data:
             is_associated_with_actors = is_associated_with_serializer.update(
                 instance.is_associated_with.all(), is_associated_with_data
             )
-            logger.debug(f"{is_associated_with_actors=}")
-            instance.is_associated_with.set([x.id for x in is_associated_with_actors])
+            instance.is_associated_with.set(is_associated_with_actors)
 
         return super().update(instance, validated_data)

@@ -108,11 +108,7 @@ class DatasetActorAdmin(admin.ModelAdmin):
     )
 
     def get_queryset(self, request):
-        return (
-            super()
-            .get_queryset(request)
-            .prefetch_related("person", "organization", "dataset")
-        )
+        return super().get_queryset(request).prefetch_related("person", "organization", "dataset")
 
     def roles(self, obj):
         return ", ".join(o.name for o in obj.roles.all())

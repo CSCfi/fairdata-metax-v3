@@ -6,19 +6,18 @@
 # :license: MIT
 import logging
 
-from rest_framework import serializers
-
 from apps.common.helpers import update_or_create_instance
+from apps.common.serializers import NestedModelSerializer
 from apps.core.models import DataCatalog, Language
 from apps.core.serializers import AccessRightsModelSerializer, DatasetPublisherModelSerializer
 
 logger = logging.getLogger(__name__)
 
 
-class DataCatalogModelSerializer(serializers.ModelSerializer):
+class DataCatalogModelSerializer(NestedModelSerializer):
     access_rights = AccessRightsModelSerializer(required=False)
     publisher = DatasetPublisherModelSerializer(required=False)
-    language = Language.get_serializer()(required=False, many=True)
+    language = Language.get_serializer_field(required=False, many=True)
 
     class Meta:
         model = DataCatalog
@@ -33,49 +32,3 @@ class DataCatalogModelSerializer(serializers.ModelSerializer):
             "dataset_schema",
             "url",
         )
-
-    def create(self, validated_data):
-        publisher = None
-        access_rights = None
-
-        languages = validated_data.pop("language", [])
-
-        publisher_serializer: DatasetPublisherModelSerializer = self.fields["publisher"]
-        access_rights_serializer: AccessRightsModelSerializer = self.fields["access_rights"]
-
-        if access_rights_data := validated_data.pop("access_rights", None):
-            access_rights = access_rights_serializer.create(access_rights_data)
-
-        if publisher_data := validated_data.pop("publisher", None):
-            publisher = publisher_serializer.create(publisher_data)
-
-        new_datacatalog: DataCatalog = DataCatalog.objects.create(
-            access_rights=access_rights, publisher=publisher, **validated_data
-        )
-        new_datacatalog.language.add(*languages)
-
-        return new_datacatalog
-
-    def update(self, instance, validated_data):
-        access_rights_serializer = self.fields["access_rights"]
-        access_rights_instance = instance.access_rights
-
-        publisher_serializer = self.fields["publisher"]
-        publisher_instance = instance.publisher
-
-        if access_rights_data := validated_data.pop("access_rights", None):
-            instance.access_rights = update_or_create_instance(
-                access_rights_serializer,
-                access_rights_instance,
-                access_rights_data,
-            )
-
-        if publisher_data := validated_data.pop("publisher", None):
-            instance.publisher = update_or_create_instance(
-                publisher_serializer, publisher_instance, publisher_data
-            )
-
-        languages = validated_data.pop("language", [])
-        instance.language.set(languages)
-
-        return super().update(instance, validated_data)

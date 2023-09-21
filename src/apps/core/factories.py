@@ -1,8 +1,8 @@
 import factory
 from django.utils import timezone
 
+from apps.actors.factories import OrganizationFactory, PersonFactory
 from apps.files.factories import FileStorageFactory
-from apps.actors.factories import PersonFactory, OrganizationFactory
 from apps.refdata import models as refdata
 from apps.users.factories import MetaxUserFactory
 

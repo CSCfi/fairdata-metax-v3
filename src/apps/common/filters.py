@@ -1,7 +1,7 @@
+from django import forms
 from django.core import exceptions
 from django.utils.translation import gettext_lazy as _
 from django_filters import fields, rest_framework as filters
-from django import forms
 
 
 class VerboseChoiceField(fields.ChoiceField):

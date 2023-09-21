@@ -52,6 +52,7 @@ def test_dataset_files_post_multiple_file_sets(client, deep_file_tree, data_urls
     )
     assert res.status_code == 200
 
+    # Cannot alter storage for existing FileSet
     factories.FileStorageFactory(storage_service="test", project=None)
     res = client.patch(
         urls["dataset"],
@@ -60,7 +61,10 @@ def test_dataset_files_post_multiple_file_sets(client, deep_file_tree, data_urls
     )
 
     assert res.status_code == 400
-    assert "Dataset already has a file set" in res.data["storage_service"]
+    assert res.json() == {
+        "project": "Wrong project for FileSet.",
+        "storage_service": "Wrong storage_service for FileSet.",
+    }
 
 
 @pytest.mark.django_db

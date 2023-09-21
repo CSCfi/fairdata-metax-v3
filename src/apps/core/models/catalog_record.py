@@ -291,13 +291,13 @@ class DatasetActor(Actor):
 
     def add_role(self, role: str) -> bool:
         """Adds a roles to the actor.
-        
+
         Args:
             role (str): The roles to add to the actor.
-        
+
         Returns:
             bool: A boolean indicating whether the roles was added or not.
-        
+
         Raises:
             ValueError: If the roles is not valid.
         """

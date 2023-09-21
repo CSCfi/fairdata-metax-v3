@@ -1,7 +1,7 @@
 import factory
 from django.conf import settings
 
-from .models import Organization, Person, Actor
+from .models import Actor, Organization, Person
 
 
 class OrganizationFactory(factory.django.DjangoModelFactory):

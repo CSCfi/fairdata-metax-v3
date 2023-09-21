@@ -36,3 +36,7 @@
 
 ### :::src.apps.core.serializers.common_serializers.OtherIdentifierModelSerializer
 
+## TemporalModelSerializer
+
+### :::src.apps.core.serializers.common_serializers.TemporalModelSerializer
+

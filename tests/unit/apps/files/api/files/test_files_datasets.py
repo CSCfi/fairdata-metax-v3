@@ -57,11 +57,13 @@ def test_files_datasets(client, file_tree_with_datasets):
     )
     assert res.status_code == 200
     print(res.json())
-    assert sorted(res.json()) == sorted([
-        str(tree["dataset_a"].id),
-        str(tree["dataset_b"].id),
-        str(tree["dataset_c"].id),
-    ])
+    assert sorted(res.json()) == sorted(
+        [
+            str(tree["dataset_a"].id),
+            str(tree["dataset_b"].id),
+            str(tree["dataset_c"].id),
+        ]
+    )
 
 
 @pytest.mark.django_db
@@ -78,11 +80,13 @@ def test_files_datasets_for_service(client, file_tree_with_datasets):
         content_type="application/json",
     )
     assert res.status_code == 200
-    assert sorted(res.json()) == sorted([
-        str(tree["dataset_a"].id),
-        str(tree["dataset_b"].id),
-        str(tree["dataset_c"].id),
-    ])
+    assert sorted(res.json()) == sorted(
+        [
+            str(tree["dataset_a"].id),
+            str(tree["dataset_b"].id),
+            str(tree["dataset_c"].id),
+        ]
+    )
 
 
 @pytest.mark.django_db

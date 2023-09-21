@@ -47,6 +47,7 @@ class ActorAdmin(admin.ModelAdmin):
         "organization",
     )
 
+
 @admin.register(Person)
 class PersonAdmin(admin.ModelAdmin):
     list_display = ("name", "email")

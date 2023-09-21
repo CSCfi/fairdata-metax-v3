@@ -8,9 +8,14 @@ import json
 import logging
 from uuid import UUID
 
+from django.core.validators import EMPTY_VALUES
+from django.db import models
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
-from rest_framework.fields import SkipField, empty
+from rest_framework.fields import empty
+from rest_framework.utils import model_meta
+
+from apps.common.helpers import update_or_create_instance
 
 logger = logging.getLogger(__name__)
 
@@ -65,8 +70,8 @@ class CommonListSerializer(serializers.ListSerializer):
                     updated_instances.append(item_serializer.update(item_instance, item_data))
             else:
                 # Create a new instance
-                item_serializer = self.child.create(item_data)
-                updated_instances.append(item_serializer)
+                new_item = self.child.create(item_data)
+                updated_instances.append(new_item)
 
         # Delete instances that were not included in the update
         for item in instance:
@@ -130,3 +135,191 @@ class DeleteListReturnValueSerializer(serializers.Serializer):
     """Serializer (for swagger purposes) for return value of list delete operation."""
 
     count = serializers.IntegerField(read_only=True)
+
+
+class NestedModelSerializer(serializers.ModelSerializer):
+    """Serializer for nested models.
+
+    Calls create or update methods for nested serializer fields
+    where the field source is a model relation.
+
+    Adds current instance to validated_data for reverse related fields.
+    E.g. dataset.provenance serializer will have the parent
+    dataset object in validated_data as {"dataset": dataset}.
+
+    To indicate that field has alread been processed and should be ignored
+    in nested create/update, pop the value from validated_data before calling
+    create/update.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Get writable serializer fields that correspond to a relation
+        model_class = self.Meta.model
+        self.model_field_info = model_meta.get_field_info(model_class)
+
+        self.relation_serializers = {}
+        self.forward_serializers = {}
+        self.reverse_serializers = {}
+        self.many_serializers = {}
+
+        for name, field in self.fields.items():
+            is_nested_serializer = (
+                isinstance(field, serializers.BaseSerializer)
+                and (field.source in self.model_field_info.relations)
+                and not field.read_only
+            )
+            if is_nested_serializer:
+                relation_info = self.model_field_info.relations[field.source]
+                self.relation_serializers[name] = field
+                if relation_info.to_many:
+                    self.many_serializers[name] = field
+                elif relation_info.reverse:
+                    self.reverse_serializers[name] = field
+                else:
+                    self.forward_serializers[name] = field
+
+    def inject_instance_to_data(self, serializer, instance, field_data):
+        """Inject parent instance to reverse relation data.
+
+        ForeignKey and OneToOne relations defined from child model to parent
+        model need to be assigned to the child instance. This method adds
+        the parent instance to the data passed to child serializer.
+
+        E.g. when calling `SerializerA.save` for
+        ```
+        class SerializerA(NestedModelSerializer):
+            b = SerializerB()
+
+        class SerializerB(ModelSerializer):
+            a = PrimaryKeyRelatedField()
+        ```
+        the data for nested update of a.b will have {"a": a} in validated_data.
+        """
+        model_class = self.Meta.model
+        reverse_field = model_class._meta.get_field(serializer.source).remote_field
+        if reverse_field.concrete and not reverse_field.many_to_many:
+            # field is defined on the other model and can be assigned directly
+            if isinstance(field_data, dict):
+                field_data[reverse_field.name] = instance
+            elif isinstance(field_data, list):
+                for val in field_data:
+                    val[reverse_field.name] = instance
+
+    def create_related(self, serializers, instance, related_data):
+        """Create related model instances.
+
+        Instance should be None for simple forward relations."""
+        related_instances = {}
+        for serializer in serializers.values():
+            model_class = self.Meta.model
+            f = model_class._meta.get_field(serializer.source)
+            r = model_class._meta.get_field(serializer.source).remote_field
+            data = related_data.pop(serializer.field_name, None)
+            if data not in EMPTY_VALUES:
+                if instance:
+                    self.inject_instance_to_data(serializer, instance, data)
+                serializer.instance = (
+                    None  # clear instance to avoid issues when serializer is reused
+                )
+                serializer._validated_data = data
+                serializer._errors = []  # data was already validated by parent serializer
+                related_instances[serializer.source] = serializer.save()
+        return related_instances
+
+    def get_related_instance(self, serializer, instance):
+        """Get related field value from model instance.
+
+        Uses hasattr check to avoid ObjectDoesNotExist for reverse one-to-one fields.
+        """
+        source = serializer.source
+        return hasattr(instance, source) and getattr(instance, source) or None
+
+    def update_related(self, serializers, instance, related_data):
+        """Update related model instances."""
+        related_instances = {}
+        for serializer in serializers.values():
+            if serializer.field_name not in related_data:
+                continue  # data missing from related_data, ignore field
+
+            data = related_data.pop(serializer.field_name)
+            if instance:
+                self.inject_instance_to_data(serializer, instance, data)
+
+            related_instance = self.get_related_instance(serializer, instance)
+            if isinstance(related_instance, models.Manager):
+                # Convert manager to iterable
+                related_instance = related_instance.all()
+
+            if data is not None:
+                serializer.instance = related_instance
+                serializer._validated_data = data
+                serializer._errors = []  # data was already validated by parent serializer
+                related_instance = serializer.save()
+            elif related_instance:
+                related_instance.delete()
+
+            related_instances[serializer.source] = related_instance
+        return related_instances
+
+    def pop_related_data(self, validated_data):
+        """Pop nested serializer data from validated_data."""
+        return {
+            name: validated_data.pop(serializer.source)
+            for name, serializer in self.relation_serializers.items()
+            if serializer.source in validated_data
+        }
+
+    def create(self, validated_data):
+        related_data = self.pop_related_data(validated_data)
+
+        # Create forward related objects
+        forward_instances = self.create_related(
+            self.forward_serializers, instance=None, related_data=related_data
+        )
+
+        # Create instance, assign forward one-to-one and many-to-one relations
+        instance = super().create(validated_data={**validated_data, **forward_instances})
+
+        # Create reverse related objects
+        self.create_related(self.reverse_serializers, instance=instance, related_data=related_data)
+
+        # Create one-to-many and many-to-many relations
+        many_instances = self.create_related(
+            self.many_serializers, instance=instance, related_data=related_data
+        )
+
+        # Assign many-to-many relations
+        for source, related_instance in many_instances.items():
+            is_many_to_many = self.model_field_info.relations[source].to_field is None
+            if is_many_to_many:
+                model_field = getattr(instance, source)
+                model_field.set(related_instance)
+
+        return instance
+
+    def update(self, instance, validated_data):
+        related_data = self.pop_related_data(validated_data)
+
+        # Update forward related objects
+        forward_instances = self.update_related(
+            self.forward_serializers, instance=instance, related_data=related_data
+        )
+
+        # Update instance, assign forward one-to-one and many-to-one relations
+        instance = super().update(
+            instance=instance, validated_data={**validated_data, **forward_instances}
+        )
+        # Update reverse one-to-one related objects
+        self.update_related(self.reverse_serializers, instance=instance, related_data=related_data)
+
+        # Update one-to-many and many-to-many objects
+        many_instances = self.update_related(
+            self.many_serializers, instance=instance, related_data=related_data
+        )
+        for source, related_instance in many_instances.items():
+            model_field = getattr(instance, source)
+            model_field.set(related_instance)  # Assign new relations
+
+        return instance

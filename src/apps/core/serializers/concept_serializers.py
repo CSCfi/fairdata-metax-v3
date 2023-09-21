@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from apps.common.serializers import CommonListSerializer
 from apps.core.models import Spatial, concepts
 
 
@@ -17,6 +18,7 @@ class SpatialModelSerializer(serializers.ModelSerializer):
             "altitude_in_meters",
             "dataset",
         ]
+        list_serializer_class = CommonListSerializer
 
     def create(self, validated_data):
         reference: concepts.Location

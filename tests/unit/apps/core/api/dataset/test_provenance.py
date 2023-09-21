@@ -86,12 +86,35 @@ def test_create_dataset_with_provenance(provenance_a_request):
     assert len(set(actor.roles)) == 2
 
 
+def test_update_dataset_with_provenance(
+    client, dataset_with_provenance_json, data_catalog, reference_data
+):
+    dataset = {**dataset_with_provenance_json}
+    provenance = dataset.pop("provenance")
+    resp = client.post("/v3/datasets", dataset, content_type="application/json")
+    assert resp.data.get("provenance") == []
+
+    # add provenance to dataset that didn't have it before
+    dataset_id = resp.data["id"]
+    resp = client.patch(
+        f"/v3/datasets/{dataset_id}", {"provenance": provenance}, content_type="application/json"
+    )
+    assert resp.status_code == 200
+    dataset = Dataset.objects.get(id=resp.data["id"])
+    actors = dataset.actors.all()
+    assert actors.count() == 1
+    assert dataset.provenance.count() == 2
+    actor = actors.first()
+    assert len(set(actor.roles)) == 2
+
+
 def test_edit_provenance(dataset_with_provenance_json, provenance_a_request, client):
     dataset_id = provenance_a_request.data["id"]
     logger.info(f"{provenance_a_request.data=}")
     provenance_json = provenance_a_request.data["provenance"][0]
     provenance_id = provenance_json["id"]
     provenance_json["title"]["fi"] = "new title"
+    assert len(provenance_a_request.data["provenance"][0]["is_associated_with"]) == 1
     provenance_json["is_associated_with"].append(
         {
             "person": {"name": "jack"},

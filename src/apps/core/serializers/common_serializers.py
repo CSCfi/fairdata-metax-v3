@@ -11,20 +11,18 @@ from typing import Optional
 
 from django.contrib.auth import get_user_model
 from django.core.validators import EMPTY_VALUES
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
-from rest_framework.fields import empty
 
 from apps.actors.models import Organization, Person
-from apps.actors.serializers import (
-    ActorModelSerializer,
-    OrganizationSerializer,
-    PersonModelSerializer,
-)
+from apps.actors.serializers import OrganizationSerializer, PersonModelSerializer
 from apps.common.helpers import update_or_create_instance
 from apps.common.serializers import (
     AbstractDatasetModelSerializer,
     AbstractDatasetPropertyModelSerializer,
+    AnyOf,
     CommonListSerializer,
+    NestedModelSerializer,
 )
 from apps.core.models import (
     AccessRights,
@@ -34,6 +32,7 @@ from apps.core.models import (
     MetadataProvider,
     OtherIdentifier,
 )
+from apps.core.models.catalog_record import Temporal
 from apps.core.models.concepts import AccessType, DatasetLicense, IdentifierType, License
 from apps.users.serializers import MetaxUserModelSerializer
 
@@ -44,45 +43,15 @@ class CatalogHomePageModelSerializer(AbstractDatasetPropertyModelSerializer):
     class Meta:
         model = CatalogHomePage
         fields = AbstractDatasetPropertyModelSerializer.Meta.fields
+        list_serializer_class = CommonListSerializer
 
 
-class DatasetPublisherModelSerializer(AbstractDatasetModelSerializer):
+class DatasetPublisherModelSerializer(NestedModelSerializer):
     homepage = CatalogHomePageModelSerializer(many=True)
 
     class Meta:
         model = DatasetPublisher
         fields = ("id", "name", "homepage")
-
-    def create(self, validated_data):
-        homepages = validated_data.pop("homepage")
-        dataset_publisher = DatasetPublisher.objects.create(**validated_data)
-        pages = []
-        for page in homepages:
-            page_created = CatalogHomePage.objects.create(**page)
-            pages.append(page_created)
-        dataset_publisher.homepage.set(pages)
-        return dataset_publisher
-
-    def update(self, instance, validated_data):
-        homepages = validated_data.pop("homepage")
-        instance.name = validated_data.get("name", instance.name)
-        instance.save()
-        pages = []
-        for homepage in homepages:
-            page, created = CatalogHomePage.objects.update_or_create(
-                id=homepage.get("id"), defaults=homepage
-            )
-            pages.append(page)
-        instance.homepage.set(pages)
-        return instance
-
-    def to_representation(self, instance):
-        logger.info(f"{instance.name=}")
-        if isinstance(instance.name, str):
-            instance.name = json.loads(instance.name)
-        representation = super().to_representation(instance)
-
-        return representation
 
 
 class LicenseModelSerializer(serializers.ModelSerializer):
@@ -110,6 +79,7 @@ class LicenseModelSerializer(serializers.ModelSerializer):
         ]
 
         ref_name = "DatasetLicense"
+        list_serializer_class = CommonListSerializer
 
     def create(self, validated_data):
         reference: License
@@ -148,41 +118,13 @@ class LicenseModelSerializer(serializers.ModelSerializer):
         return {**rep, **serialized_ref}
 
 
-class AccessRightsModelSerializer(AbstractDatasetModelSerializer):
+class AccessRightsModelSerializer(NestedModelSerializer):
     license = LicenseModelSerializer(required=False, many=True)
-    access_type = AccessType.get_serializer_field(required=False)
-    description = serializers.JSONField(required=False)
+    access_type = AccessType.get_serializer_field(required=False, allow_null=True)
 
     class Meta:
         model = AccessRights
         fields = ("id", "description", "license", "access_type")
-
-    def create(self, validated_data):
-        license_serializer: LicenseModelSerializer = self.fields["license"]
-
-        license_data = validated_data.pop("license", [])
-        licenses = license_serializer.create(license_data)
-
-        access_rights = AccessRights.objects.create(**validated_data)
-        access_rights.license.set(licenses)
-
-        return access_rights
-
-    def update(self, instance, validated_data):
-        license_serializer: LicenseModelSerializer = self.fields["license"]
-
-        license_data = validated_data.pop("license", [])
-        licenses = license_serializer.create(license_data)
-        instance.license.set(licenses)
-
-        return super().update(instance, validated_data)
-
-    def to_representation(self, instance):
-        if isinstance(instance.description, str):
-            instance.description = json.loads(instance.description)
-        representation = super().to_representation(instance)
-
-        return representation
 
 
 class DatasetActorModelSerializer(serializers.ModelSerializer):
@@ -205,6 +147,8 @@ class DatasetActorModelSerializer(serializers.ModelSerializer):
             person = self.fields["person"].create(person_data)
 
         # dataset id context binding
+        if dataset := validated_data.get("dataset"):
+            validated_data["dataset_id"] = dataset.id
         if validated_data.get("dataset_id") is None:
             validated_data["dataset_id"] = self.context.get("dataset_pk")
         if validated_data.get("dataset_id") is None:
@@ -280,11 +224,9 @@ class MetadataProviderModelSerializer(AbstractDatasetModelSerializer):
 
 
 class OtherIdentifierListSerializer(serializers.ListSerializer):
-    def update(self, instance, validated_data):
+    def update(self, instance: list, validated_data):
         # Map the other_identifiers instance objects by their notation value
-        notation_mapping = {
-            other_id.notation: other_id for other_id in instance.other_identifiers.all()
-        }
+        notation_mapping = {other_id.notation: other_id for other_id in instance}
         data_mapping = {item["notation"]: item for item in validated_data}
         ret = []
 
@@ -305,35 +247,12 @@ class OtherIdentifierListSerializer(serializers.ListSerializer):
 
 
 class OtherIdentifierModelSerializer(AbstractDatasetModelSerializer):
-    identifier_type = IdentifierType.get_serializer()(read_only=False, required=False)
+    identifier_type = IdentifierType.get_serializer_field(required=False, allow_null=True)
 
     class Meta:
         model = OtherIdentifier
         fields = ("notation", "identifier_type", "old_notation")
         list_serializer_class = OtherIdentifierListSerializer
-
-    def create(self, validated_data):
-        identifier_type = None
-        identifier_type_data = validated_data.pop("identifier_type", None)
-
-        if identifier_type_data not in EMPTY_VALUES:
-            identifier_type = IdentifierType.objects.get(url=identifier_type_data.get("url"))
-
-        other_identifiers = OtherIdentifier.objects.create(
-            identifier_type=identifier_type, **validated_data
-        )
-
-        return other_identifiers
-
-    def update(self, instance, validated_data):
-        identifier_type = None
-        identifier_type_data = validated_data.pop("identifier_type", None)
-
-        if identifier_type_data not in EMPTY_VALUES:
-            identifier_type = IdentifierType.objects.get(url=identifier_type_data.get("url"))
-        instance.identifier_type = identifier_type
-
-        return super().update(instance, validated_data)
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
@@ -345,3 +264,23 @@ class OtherIdentifierModelSerializer(AbstractDatasetModelSerializer):
             rep.pop("old_notation", None)
 
         return rep
+
+
+class TemporalModelSerializer(AbstractDatasetModelSerializer):
+    class Meta:
+        model = Temporal
+        fields = ("start_date", "end_date")
+        list_serializer_class = CommonListSerializer
+        validators = [AnyOf(["start_date", "end_date"])]
+
+    def validate(self, attrs):
+        if attrs.get("start_date") and attrs.get("end_date"):
+            if attrs["start_date"] > attrs["end_date"]:
+                raise serializers.ValidationError(
+                    {
+                        "end_date": _(
+                            "Value for end_date='{end_date}' is before start_date='{start_date}'."
+                        ).format(**attrs)
+                    }
+                )
+        return super().validate(attrs)

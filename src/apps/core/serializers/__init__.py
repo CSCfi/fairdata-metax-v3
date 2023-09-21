@@ -7,6 +7,7 @@ from .common_serializers import (
     LicenseModelSerializer,
     MetadataProviderModelSerializer,
     MetaxUserModelSerializer,
+    TemporalModelSerializer,
 )
 from .concept_serializers import SpatialModelSerializer
 from .data_catalog_serializer import DataCatalogModelSerializer

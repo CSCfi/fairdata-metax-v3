@@ -32,3 +32,7 @@
 
 ### :::src.apps.common.serializers.serializers.DeleteListReturnValueSerializer
 
+## NestedModelSerializer
+
+### :::src.apps.common.serializers.serializers.NestedModelSerializer
+

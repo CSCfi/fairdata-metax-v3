@@ -405,18 +405,17 @@ class FileSetSerializer(StrictSerializer):
         )
         return file_set
 
-    def create(self, validated_data, dataset=None):
+    def create(self, validated_data):
         """Create or update FileSet and its file relations."""
-        dataset = dataset or self.context.get("dataset")
+        dataset = validated_data.get("dataset")
         if dataset is None:
-            raise ValueError("Expected dataset in arguments or context.")
+            raise ValueError("Expected dataset instance in validated_data.")
 
         instance = self.get_or_create_instance_for_dataset(validated_data, dataset=dataset)
         return self.update(instance, validated_data)
 
     def update(self, instance: FileSet, validated_data):
         """Update file relations and metadata of FileSet."""
-        self.instance = instance
         file_set = instance
         storage: FileStorage = validated_data["storage"]
         directory_actions: list = validated_data.get("directory_actions", [])

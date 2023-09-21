@@ -100,8 +100,10 @@ class URLReferencedModelField(serializers.RelatedField):
         check_child_model_serializer(child)
         self.queryset = child.Meta.model.objects.all()
         self.child = child
+        # Always allow child to be null. Otherwise both parent and child would require allow_null,
+        # e.g. `URLReferencedModelField(Child(allow_null=True), allow_null=True)`
+        child.allow_null = True
         self.child.bind(field_name="", parent=self)
-
         super().__init__(**kwargs)
 
     @classmethod
