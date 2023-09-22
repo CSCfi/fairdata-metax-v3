@@ -1,9 +1,11 @@
 import functools
+import re
 import uuid
 from typing import Dict, Iterator
 
 from django.conf import settings
 from django.contrib.postgres.fields import HStoreField
+from django.core.validators import RegexValidator
 from django.db import models
 from django.utils import timezone
 from model_utils.models import SoftDeletableModel, TimeStampedModel
@@ -180,3 +182,15 @@ class ProxyBasePolymorphicModel(PolymorphicModel):
                 f"expected {proxy.__name__}."
             )
         return super().save(*args, **kwargs)
+
+
+# Very permissive regex for validating "type/subtype" style string
+# https://www.rfc-editor.org/rfc/rfc2045#section-5.1
+mediatype_regex = re.compile(r".+/.+")
+
+
+class MediaTypeValidator(RegexValidator):
+    """Validator for media types (formerly MIME types)."""
+
+    def __init__(self, **kwargs):
+        super().__init__(regex=mediatype_regex, **kwargs)

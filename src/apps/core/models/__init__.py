@@ -7,6 +7,7 @@ from .catalog_record import (
     MetadataProvider,
     OtherIdentifier,
     ProjectContributor,
+    RemoteResource,
     Temporal,
 )
 from .concepts import (

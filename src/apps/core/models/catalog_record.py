@@ -13,12 +13,13 @@ from django.utils.translation import gettext as _
 from simple_history.models import HistoricalRecords
 
 from apps.actors.models import Actor, Organization, Person
-from apps.common.models import AbstractBaseModel
+from apps.common.models import AbstractBaseModel, MediaTypeValidator
 from apps.core.mixins import V2DatasetMixin
+from apps.core.models.concepts import UseCategory
 from apps.files.models import File, FileStorage
 from apps.refdata import models as refdata
 
-from .concepts import FieldOfScience, IdentifierType, Language, ResearchInfra, Theme
+from .concepts import FieldOfScience, FileType, IdentifierType, Language, ResearchInfra, Theme
 from .contract import Contract
 from .data_catalog import AccessRights, DataCatalog
 from .file_metadata import FileSetDirectoryMetadata, FileSetFileMetadata
@@ -496,3 +497,24 @@ class ProjectContributor(AbstractBaseModel):
 
     def __str__(self):
         return str(self.participating_organization.pref_label["fi"])
+
+
+class RemoteResource(AbstractBaseModel):
+    dataset = models.ForeignKey(
+        "Dataset", on_delete=models.CASCADE, related_name="remote_resources"
+    )
+    title = HStoreField(help_text='example: {"en":"title", "fi":"otsikko"}')
+    description = HStoreField(
+        help_text='example: {"en":"description", "fi":"kuvaus"}', blank=True, null=True
+    )
+    access_url = models.URLField(max_length=2048, blank=True, null=True)
+    download_url = models.URLField(max_length=2048, blank=True, null=True)
+    checksum = models.TextField(blank=True, null=True)
+    mediatype = models.TextField(
+        help_text=_('IANA media type as a string, e.g. "text/csv".'),
+        validators=[MediaTypeValidator()],
+        blank=True,
+        null=True,
+    )
+    use_category = models.ForeignKey(UseCategory, on_delete=models.CASCADE)
+    file_type = models.ForeignKey(FileType, on_delete=models.CASCADE, blank=True, null=True)

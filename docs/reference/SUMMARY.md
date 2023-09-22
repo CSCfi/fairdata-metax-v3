@@ -134,6 +134,7 @@
                         - [test_dataset](tests/unit/apps/core/api/dataset/test_dataset.md)
                         - [test_legacy](tests/unit/apps/core/api/dataset/test_legacy.md)
                         - [test_provenance](tests/unit/apps/core/api/dataset/test_provenance.md)
+                        - [test_remote_resources](tests/unit/apps/core/api/dataset/test_remote_resources.md)
                         - [test_temporal](tests/unit/apps/core/api/dataset/test_temporal.md)
                     - dataset_files
                         - [test_dataset_files_list](tests/unit/apps/core/api/dataset_files/test_dataset_files_list.md)

@@ -20,6 +20,10 @@
 
 ### :::src.apps.common.serializers.fields.ListValidChoicesField
 
+## MediaTypeField
+
+### :::src.apps.common.serializers.fields.MediaTypeField
+
 ## WKTField
 
 ### :::src.apps.common.serializers.fields.WKTField

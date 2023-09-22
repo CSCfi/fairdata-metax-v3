@@ -36,3 +36,7 @@
 
 ### :::src.apps.core.models.catalog_record.ProjectContributor
 
+## RemoteResource
+
+### :::src.apps.core.models.catalog_record.RemoteResource
+

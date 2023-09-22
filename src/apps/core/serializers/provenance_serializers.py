@@ -14,7 +14,6 @@ from apps.core.models import (
     EventOutcome,
     LifecycleEvent,
     Provenance,
-    Temporal,
 )
 from apps.core.serializers import (
     DatasetActorProvenanceSerializer,

@@ -7,7 +7,6 @@
 import json
 import logging
 from collections import OrderedDict
-from typing import Any
 
 import shapely.wkt
 from django.core.exceptions import ObjectDoesNotExist
@@ -15,6 +14,8 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.fields import empty, to_choices_dict
 from rest_framework.utils import html
+
+from apps.common.models import MediaTypeValidator
 
 logger = logging.getLogger(__name__)
 
@@ -184,6 +185,15 @@ class ListValidChoicesField(serializers.ChoiceField):
         }
 
         super().__init__(*args, **kwargs)
+
+
+class MediaTypeField(serializers.CharField):
+    default_error_messages = {"invalid": _("Value should contain a media type, e.g. 'text/csv'.")}
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        validator = MediaTypeValidator(message=self.error_messages["invalid"])
+        self.validators.append(validator)
 
 
 class WKTField(serializers.CharField):

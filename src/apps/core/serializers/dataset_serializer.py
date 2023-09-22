@@ -14,6 +14,7 @@ from apps.core.serializers.common_serializers import (
     DatasetActorModelSerializer,
     MetadataProviderModelSerializer,
     OtherIdentifierModelSerializer,
+    RemoteResourceSerializer,
     TemporalModelSerializer,
 )
 from apps.core.serializers.concept_serializers import SpatialModelSerializer
@@ -32,6 +33,7 @@ class DatasetSerializer(PatchSerializer, NestedModelSerializer):
     infrastructure = ResearchInfra.get_serializer()(required=False, many=True)
     actors = DatasetActorModelSerializer(required=False, many=True)
     fileset = FileSetSerializer(required=False, source="file_set")
+    remote_resources = RemoteResourceSerializer(many=True, required=False)
     language = Language.get_serializer()(required=False, many=True)
     metadata_owner = MetadataProviderModelSerializer(required=False)
     other_identifiers = OtherIdentifierModelSerializer(required=False, many=True)
@@ -63,6 +65,7 @@ class DatasetSerializer(PatchSerializer, NestedModelSerializer):
             "provenance",
             "spatial",
             "temporal",
+            "remote_resources",
             # read only
             "created",
             "cumulation_started",

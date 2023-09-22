@@ -40,3 +40,7 @@
 
 ### :::src.apps.core.serializers.common_serializers.TemporalModelSerializer
 
+## RemoteResourceSerializer
+
+### :::src.apps.core.serializers.common_serializers.RemoteResourceSerializer
+

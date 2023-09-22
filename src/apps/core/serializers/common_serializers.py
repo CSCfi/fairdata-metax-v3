@@ -24,6 +24,7 @@ from apps.common.serializers import (
     CommonListSerializer,
     NestedModelSerializer,
 )
+from apps.common.serializers.fields import ChecksumField, MediaTypeField
 from apps.core.models import (
     AccessRights,
     CatalogHomePage,
@@ -32,8 +33,15 @@ from apps.core.models import (
     MetadataProvider,
     OtherIdentifier,
 )
-from apps.core.models.catalog_record import Temporal
-from apps.core.models.concepts import AccessType, DatasetLicense, IdentifierType, License
+from apps.core.models.catalog_record import RemoteResource, Temporal
+from apps.core.models.concepts import (
+    AccessType,
+    DatasetLicense,
+    FileType,
+    IdentifierType,
+    License,
+    UseCategory,
+)
 from apps.users.serializers import MetaxUserModelSerializer
 
 logger = logging.getLogger(__name__)
@@ -282,3 +290,24 @@ class TemporalModelSerializer(AbstractDatasetModelSerializer):
                     }
                 )
         return super().validate(attrs)
+
+
+class RemoteResourceSerializer(serializers.ModelSerializer):
+    use_category = UseCategory.get_serializer_field()
+    file_type = FileType.get_serializer_field(required=False, allow_null=True)
+    checksum = ChecksumField(required=False, allow_null=True)
+    mediatype = MediaTypeField(required=False, allow_null=True)
+
+    class Meta:
+        model = RemoteResource
+        fields = [
+            "title",
+            "description",
+            "use_category",
+            "access_url",
+            "download_url",
+            "checksum",
+            "file_type",
+            "mediatype",
+        ]
+        list_serializer_class = CommonListSerializer
