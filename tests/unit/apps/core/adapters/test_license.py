@@ -33,7 +33,7 @@ def test_create_dataset_license_with_non_existing_url(license_reference_data):
         assert "License not found http://diipadaapa.co.uk" in str(error.value)
 
 
-def test_udpate_dataset_license_with_invalid_url(license_reference_data):
+def test_update_dataset_license_with_invalid_url(license_reference_data):
     """Should automatically fill reference to use other license."""
     with pytest.raises(serializers.ValidationError) as error:
         ser = LicenseModelSerializer()
@@ -42,7 +42,7 @@ def test_udpate_dataset_license_with_invalid_url(license_reference_data):
         assert "License not found https://diipadaapa.com" in str(error.value)
 
 
-def test_udpate_dataset_license(license_reference_data):
+def test_update_dataset_license(license_reference_data):
     """Should automatically fill reference to use other license."""
     ser = LicenseModelSerializer()
     license = ser.create({"custom_url": "https://test.com"})

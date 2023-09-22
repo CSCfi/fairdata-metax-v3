@@ -1,55 +1,36 @@
 from rest_framework import serializers
 
-from apps.common.serializers import CommonListSerializer
+from apps.common.serializers.fields import WKTField
+from apps.common.serializers.serializers import CommonListSerializer
+from apps.common.serializers.validators import AnyOf
 from apps.core.models import Spatial, concepts
 
 
 class SpatialModelSerializer(serializers.ModelSerializer):
     """Model Serializer for Spatial"""
 
+    reference = concepts.Location.get_serializer_field(required=False)
+    custom_wkt = serializers.ListField(child=WKTField(), required=False, allow_null=True)
+
     class Meta:
         model = Spatial
+        list_serializer_class = CommonListSerializer
         fields = [
-            "url",
-            "pref_label",
-            "in_scheme",
             "full_address",
             "geographic_name",
             "altitude_in_meters",
-            "dataset",
+            "reference",
+            "custom_wkt",
         ]
         list_serializer_class = CommonListSerializer
-
-    def create(self, validated_data):
-        reference: concepts.Location
-        url = validated_data.pop("url", None)
-
-        if not url:
-            raise serializers.ValidationError("Spatial needs url, got None")
-
-        try:
-            reference = concepts.Location.objects.get(url=url)
-        except concepts.Location.DoesNotExist:
-            raise serializers.ValidationError(f"Location not found {url}")
-
-        return Spatial.objects.create(**validated_data, reference=reference)
-
-    def update(self, instance, validated_data):
-        url = validated_data.pop("url", instance.url)
-
-        if url != instance.url:
-            try:
-                instance.reference = concepts.Location.objects.get(url=url)
-            except concepts.Location.DoesNotExist:
-                raise serializers.ValidationError(detail=f"Location not found {url}")
-
-        return super().update(instance, validated_data)
-
-    def to_representation(self, instance):
-        refdata_serializer = concepts.Location.get_serializer()
-        refdata_serializer.omit_related = True
-        serialized_ref = {}
-        if getattr(instance, "reference", None):
-            serialized_ref = refdata_serializer(instance.reference).data
-        rep = super().to_representation(instance)
-        return {**rep, **serialized_ref}
+        validators = [
+            AnyOf(
+                [
+                    "full_address",
+                    "geographic_name",
+                    "altitude_in_meters",
+                    "reference",
+                    "custom_wkt",
+                ]
+            )
+        ]

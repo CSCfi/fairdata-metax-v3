@@ -48,12 +48,15 @@ Also named CatalogRecord in V1-V2. Main difference is removing the research_data
 
 ### Reference data fields
 
-Reference data such as language, theme, spatial, organization and field_of_science have been unified structurally. Now all of these share the same base fields and payload format.
-
+Reference data such as language, theme, location, organization and field_of_science have been unified structurally. Now all of these share the same base fields and payload format.
 | V1-V2                      | V3 field name     |
-|----------------------------|-------------------|
+| -------------------------- | ----------------- |
 | identifier [url]           | url [url]         |
 | title or pref_label [dict] | pref_label [dict] |
+| in_scheme [str]            | in_scheme [str]   |
+
+Only the `url` needs to be provided for objects from reference data. The other related values (e.g. `pref_label`, `scheme`) are filled in from reference data.
+
 
 === "V2"
 

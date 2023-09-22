@@ -15,7 +15,7 @@ def dataset_with_provenance_json(dataset_a_json):
         {
             "title": {"fi": "otsikko"},
             "description": {"fi": "kuvaus"},
-            "spatial": {"url": "http://www.yso.fi/onto/onto/yso/c_9908ce39"},
+            "spatial": {"reference": {"url": "http://www.yso.fi/onto/onto/yso/c_9908ce39"}},
             "lifecycle_event": {
                 "url": "http://uri.suomi.fi/codelist/fairdata/lifecycle_event/code/planned",
             },
@@ -36,7 +36,7 @@ def dataset_with_provenance_json(dataset_a_json):
         {
             "title": {"en": "second provenance title"},
             "description": {"en": "descriptive description"},
-            "spatial": {"url": "http://www.yso.fi/onto/onto/yso/c_9908ce39"},
+            "spatial": {"reference": {"url": "http://www.yso.fi/onto/onto/yso/c_9908ce39"}},
             "lifecycle_event": {
                 "url": "http://uri.suomi.fi/codelist/fairdata/lifecycle_event/code/planned",
             },

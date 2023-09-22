@@ -1,9 +1,11 @@
 {
-  "in_scheme": "http://www.yso.fi/onto/yso/places",
-  "url": "http://www.yso.fi/onto/onto/yso/c_9908ce39",
-  "pref_label": {
-    "fi": "Alppikylä (Helsinki)",
-    "sv": "Alpbyn (Helsingfors)"
+  "reference": {
+    "in_scheme": "http://www.yso.fi/onto/yso/places",
+    "url": "http://www.yso.fi/onto/onto/yso/c_9908ce39",
+    "pref_label": {
+      "fi": "Alppikylä (Helsinki)",
+      "sv": "Alpbyn (Helsingfors)"
+    }
   },
   "full_address": "Alppikylä",
   "geographic_name": "Alppikylä"

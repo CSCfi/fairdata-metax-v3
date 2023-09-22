@@ -12,11 +12,11 @@
 
 ### :::tests.unit.apps.core.adapters.test_license.test_create_dataset_license_with_non_existing_url
 
-## test_udpate_dataset_license_with_invalid_url
+## test_update_dataset_license_with_invalid_url
 
-### :::tests.unit.apps.core.adapters.test_license.test_udpate_dataset_license_with_invalid_url
+### :::tests.unit.apps.core.adapters.test_license.test_update_dataset_license_with_invalid_url
 
-## test_udpate_dataset_license
+## test_update_dataset_license
 
-### :::tests.unit.apps.core.adapters.test_license.test_udpate_dataset_license
+### :::tests.unit.apps.core.adapters.test_license.test_update_dataset_license
 

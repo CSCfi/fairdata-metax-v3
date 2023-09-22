@@ -65,7 +65,6 @@ class LicenseModelSerializer(serializers.ModelSerializer):
     url = serializers.URLField(required=False)
     pref_label = serializers.HStoreField(read_only=True)
     in_scheme = serializers.URLField(max_length=255, read_only=True)
-    same_as = License.get_serializer_field(many=True, read_only=True)
 
     class Meta:
         model = DatasetLicense
@@ -75,7 +74,6 @@ class LicenseModelSerializer(serializers.ModelSerializer):
             "url",
             "pref_label",
             "in_scheme",
-            "same_as",
         ]
 
         ref_name = "DatasetLicense"

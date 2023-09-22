@@ -9,6 +9,7 @@ import logging
 from collections import OrderedDict
 from typing import Any
 
+import shapely.wkt
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
@@ -183,3 +184,13 @@ class ListValidChoicesField(serializers.ChoiceField):
         }
 
         super().__init__(*args, **kwargs)
+
+
+class WKTField(serializers.CharField):
+    """Serializer field that accepts a WKT string and normalizes it."""
+
+    def to_internal_value(self, data):
+        try:
+            return shapely.wkt.loads(data).wkt
+        except shapely.errors.GEOSException as error:
+            raise serializers.ValidationError(_("Invalid WKT: {}").format(str(error)))

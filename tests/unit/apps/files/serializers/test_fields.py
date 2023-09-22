@@ -1,6 +1,7 @@
 import pytest
 from rest_framework import serializers
 
+from apps.common.serializers.fields import WKTField
 from apps.files.serializers import fields
 
 
@@ -92,8 +93,18 @@ def test_list_valid_choices_field_error_text():
     field = fields.ListValidChoicesField(
         choices=(("first", "first choice"), ("second", "second choice"))
     )
-    try:
+    with pytest.raises(serializers.ValidationError) as excinfo:
         field.to_internal_value("moro")
-        assert False
-    except serializers.ValidationError as error:
-        assert "Valid choices are: ['first', 'second']" in error.detail[0]
+    assert "Valid choices are: ['first', 'second']" in excinfo.value.detail[0]
+
+
+def test_wktfield_ok():
+    field = WKTField()
+    field.to_internal_value("POINT(1.0 2.0)")
+
+
+def test_wktfield_invalid_wkt():
+    field = WKTField()
+    with pytest.raises(serializers.ValidationError) as excinfo:
+        field.to_internal_value("POINT(1")
+    assert "Invalid WKT:" in excinfo.value.detail[0]

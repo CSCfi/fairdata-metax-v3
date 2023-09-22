@@ -28,3 +28,11 @@
 
 ### :::tests.unit.apps.files.serializers.test_fields.test_list_valid_choices_field_error_text
 
+## test_wktfield_ok
+
+### :::tests.unit.apps.files.serializers.test_fields.test_wktfield_ok
+
+## test_wktfield_invalid_wkt
+
+### :::tests.unit.apps.files.serializers.test_fields.test_wktfield_invalid_wkt
+
