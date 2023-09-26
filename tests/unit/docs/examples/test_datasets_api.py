@@ -1,9 +1,11 @@
 import logging
 
 import pytest
+from django.utils.dateparse import parse_datetime
+from tests.unit.docs.examples.conftest import load_test_json
+from tests.utils import assert_nested_subdict
 
 from apps.core.models import Dataset
-from tests.unit.docs.examples.conftest import load_test_json
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +33,16 @@ def spatial_json():
 
 
 @pytest.fixture
+def temporal_json():
+    return load_test_json("dataset_api/temporal.json")
+
+
+@pytest.fixture
+def remote_resources_json():
+    return load_test_json("dataset_api/remote_resources.json")
+
+
+@pytest.fixture
 def dataset_v3_modify_json():
     return load_test_json("dataset_api/modify-dataset.json")
 
@@ -43,6 +55,8 @@ def test_dataset_snippets(
     access_rights_json,
     actors_json,
     spatial_json,
+    temporal_json,
+    remote_resources_json,
 ):
     data = {
         "title": {"fi": "datasetti"},
@@ -51,15 +65,38 @@ def test_dataset_snippets(
         "access_rights": access_rights_json["access_rights"],
         "actors": actors_json["actors"],
         "spatial": [spatial_json],
+        "temporal": temporal_json["temporal"],
+        "remote_resources": remote_resources_json["remote_resources"],
     }
     res = client.post("/v3/datasets", data, content_type="application/json")
     assert res.status_code == 201
     assert len(res.data["language"]) == 2
     assert len(res.data["actors"]) == 2
+
+    # can't compare datetimes directly due to time zones, need to parse first
+    assert len(res.data["temporal"]) == 2
+    assert parse_datetime(temporal_json["temporal"][0]["start_date"]) == parse_datetime(
+        res.data["temporal"][0]["start_date"]
+    )
+    assert parse_datetime(temporal_json["temporal"][0]["end_date"]) == parse_datetime(
+        res.data["temporal"][0]["end_date"]
+    )
+    assert parse_datetime(temporal_json["temporal"][1]["start_date"]) == parse_datetime(
+        res.data["temporal"][1]["start_date"]
+    )
+    assert res.data["temporal"][1]["end_date"] == None
+
     assert len(res.data["spatial"]) == 1
+    assert_nested_subdict(spatial_json, res.data["spatial"][0])
     assert (
         res.data["access_rights"]["description"]
         == access_rights_json["access_rights"]["description"]
+    )
+
+    assert_nested_subdict(
+        remote_resources_json["remote_resources"],
+        res.json()["remote_resources"],
+        check_list_length=True,
     )
 
 

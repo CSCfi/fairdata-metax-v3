@@ -8,13 +8,7 @@ from rest_framework import serializers
 from apps.actors.models import Organization, Person
 from apps.actors.serializers import ActorModelSerializer, PersonModelSerializer
 from apps.common.serializers.serializers import CommonListSerializer, NestedModelSerializer
-from apps.core.models import (
-    Dataset,
-    DatasetActor,
-    EventOutcome,
-    LifecycleEvent,
-    Provenance,
-)
+from apps.core.models import Dataset, DatasetActor, EventOutcome, LifecycleEvent, Provenance
 from apps.core.serializers import (
     DatasetActorProvenanceSerializer,
     SpatialModelSerializer,

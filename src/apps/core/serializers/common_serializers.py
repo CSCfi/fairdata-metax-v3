@@ -117,7 +117,7 @@ class LicenseModelSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
-        refdata_serializer = License.get_serializer()
+        refdata_serializer = License.get_serializer_class()
         refdata_serializer.omit_related = True
         serialized_ref = refdata_serializer(instance.reference).data
         rep = super().to_representation(instance)

@@ -57,7 +57,7 @@ def test_soft_delete_concept(model):
 @pytest.mark.django_db
 def test_serialize_concept(model):
     obj = model.all_objects.create(**{**fields, "id": UUID(int=0)})
-    serialized_data = model.get_serializer()(obj).data
+    serialized_data = model.get_serializer_class()(obj).data
     assert serialized_data == {
         "id": "00000000-0000-0000-0000-000000000000",
         "url": "https://example.com/test",

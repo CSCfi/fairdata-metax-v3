@@ -17,9 +17,9 @@ class ConceptProxyMixin:
     """Mixin class for Concept-based proxy models."""
 
     @classmethod
-    def get_serializer(cls):
+    def get_serializer_class(cls):
         """Make non-url fields read-only"""
-        serializer_class = super(ConceptProxyMixin, cls).get_serializer()
+        serializer_class = super(ConceptProxyMixin, cls).get_serializer_class()
         serializer_class.omit_related = True
         serializer_class.Meta.extra_kwargs = {
             field: {"read_only": True} for field in serializer_class.Meta.fields if field != "url"
@@ -33,7 +33,7 @@ class ConceptProxyMixin:
     @classmethod
     def get_serializer_field(cls, **kwargs):
         """Return serializer relation field for concept instances."""
-        serializer = cls.get_serializer()()
+        serializer = cls.get_serializer_class()()
         return URLReferencedModelField(child=serializer, **kwargs)
 
     class Meta:

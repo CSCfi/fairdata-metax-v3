@@ -1,0 +1,29 @@
+{% extends "drf-yasg/swagger-ui.html" %} {% block extra_styles %}
+<style>
+  .swagger-ui button.model-box-control {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .swagger-ui button.model-box-control > * {
+    top: 0px;
+  }
+
+  .swagger-ui table.model tbody tr.property-row > td:first-of-type {
+    padding-top: 2px;
+  }
+
+  .swagger-ui span.prop {
+    padding-top: 2px;
+    display: inline-block;
+  }
+
+  .swagger-ui .markdown p:first-child {
+    margin-top: 0;
+  }
+
+  .swagger-ui .markdown p:last-child {
+    margin-bottom: 0;
+  }
+</style>
+{% endblock %}

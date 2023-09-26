@@ -56,7 +56,7 @@ class AbstractConcept(AbstractBaseModel):
         ]
 
     @classmethod
-    def get_serializer(cls):
+    def get_serializer_class(cls):
         class BaseSerializer(serializers.ModelSerializer):
             omit_related = False
 
@@ -73,8 +73,12 @@ class AbstractConcept(AbstractBaseModel):
             class Meta:
                 model = cls
 
-                # ref_name is used as model name in swagger
-                ref_name = getattr(cls, "serializer_ref_name", "ConceptModel")
+                ref_name = getattr(cls, "serializer_ref_name", f"Reference{cls.__name__}")
+
+                # using reverse here would cause errors due to circular import, so use hardcoded url
+                swagger_description = _("Reference data from `{url}`").format(
+                    url=f"/v3/reference-data/{cls.get_model_url()}"
+                )
 
                 fields = (
                     "id",
@@ -142,7 +146,6 @@ class Theme(AbstractConcept):
 class Location(AbstractConcept):
     as_wkt = models.TextField(null=True, blank=True)
     serializer_extra_fields = ("as_wkt",)
-    serializer_ref_name = "LocationModel"
 
 
 class AccessType(AbstractConcept):
@@ -165,7 +168,6 @@ class FileFormatVersion(AbstractConcept):
     file_format = models.CharField(max_length=255)
     format_version = models.CharField(max_length=255, default="", blank=True)
     serializer_extra_fields = ("file_format", "format_version")
-    serializer_ref_name = "FileFormatVersionModel"
 
 
 class FileType(AbstractConcept):
@@ -181,7 +183,7 @@ class IdentifierType(AbstractConcept):
 
 
 class License(AbstractConcept):
-    serializer_ref_name = "LicenseModel"
+    pass
 
 
 class LifecycleEvent(AbstractConcept):

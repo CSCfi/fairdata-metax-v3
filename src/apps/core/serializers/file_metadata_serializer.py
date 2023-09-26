@@ -13,8 +13,8 @@ from apps.core.models.file_metadata import FileSetDirectoryMetadata, FileSetFile
 
 
 class FileMetadataSerializer(serializers.ModelSerializer):
-    file_type = FileType.get_serializer()(required=False)
-    use_category = UseCategory.get_serializer()(required=False)
+    file_type = FileType.get_serializer_class()(required=False)
+    use_category = UseCategory.get_serializer_class()(required=False)
 
     class Meta:
         model = FileSetFileMetadata
@@ -22,7 +22,7 @@ class FileMetadataSerializer(serializers.ModelSerializer):
 
 
 class DirectoryMetadataSerializer(serializers.ModelSerializer):
-    use_category = UseCategory.get_serializer()(required=False)
+    use_category = UseCategory.get_serializer_class()(required=False)
 
     class Meta:
         model = FileSetDirectoryMetadata

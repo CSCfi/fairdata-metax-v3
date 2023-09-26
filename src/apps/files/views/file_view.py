@@ -211,7 +211,8 @@ class FileViewSet(BaseFileViewSet):
         The request body should contain an array of file identifiers.
         By default, the file identifiers are internal Metax `id` values.
         If `storage_service` is set, the identifiers are `storage_identifier`
-        values specific to that storage service.
+        values specific to that storage service. The file identifiers in
+        the response will be of the same type as the input identifiers.
 
         `relations=false` (default): Return list of dataset ids.
 

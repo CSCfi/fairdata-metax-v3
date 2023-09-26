@@ -5,7 +5,7 @@
 A dataset has the following required properties.
 
 | Field         | key           | value                                                   |
-| ------------- | ------------- | ------------------------------------------------------- |
+|---------------|---------------|---------------------------------------------------------|
 | Title         | title         | dict                                                    |
 | Description   | description   | dict                                                    |
 | Language      | language      | list, reference data from `/v3/reference-data/language` |
@@ -29,15 +29,22 @@ Language field is a list of language reference data objects. Only url field is r
 Information about who can access the resource or an indication of its security status. [^2]
 
 | Field       | key         | value                                                 |
-| ----------- | ----------- | ----------------------------------------------------- |
+|-------------|-------------|-------------------------------------------------------|
 | Description | description | dict                                                  |
 | Access Type | access_type | reference data from `/v3/reference-data/access-types` |
 | License     | license     | list of objects                                       |
 
-License is special kind of reference data object, as it can have additional metadata properties:
+License is special kind of reference data object, as it can have additional metadata properties
+that are writable by the user:
 
 - custom_url
 - description
+
+The `custom_url` and `description` fields allow specifying additional information to the selected license.
+If `custom_url` is set without providing `url`, the "Other" license is used by default.
+
+If the dataset has a license that is not in the reference data, choose the best matching
+"Other" type license in `url` and add a URL to the actual license as `custom_url` and/or describe the license in `description`.
 
 Access type defines who can view your dataset metadata in Metax and Etsin.
 
@@ -50,6 +57,64 @@ Access type defines who can view your dataset metadata in Metax and Etsin.
 ### Data Catalog
 
 This is the id of the Data Catalog object that can be seen in `/v3/data-catalogs` list.
+
+## Optional properties
+
+There are multiple optional fields can be used to provide additional information about the dataset:
+
+| Field                   | key               | value                                                              |
+|-------------------------|-------------------|--------------------------------------------------------------------|
+| Issued date             | issued            | date                                                               |
+| Keywords                | keyword           | list of str                                                        |
+| Theme                   | theme             | list of reference data from `/v3/reference-data/themes`            |
+| Field of Science        | field_of_science  | list of reference data from `/v3/reference-data/fields-of-science` |
+| Research Infrastructure | infrastructure    | list of reference data from `/v3/reference-data/research-infras`   |
+| Other identifiers       | other_identifiers | list of object                                                     |
+| Provenance              | provenance        | list of object                                                     |
+| Spatial coverage        | spatial           | list of object                                                     |
+| Temporal coverage       | temporal          | list of object                                                     |
+| Remote resources        | remote_resources  | list of object                                                     |
+
+### Spatial coverage
+
+Spatial coverage describes the spatial characteristics of the dataset.
+The optional `reference` field should contain a location from reference data.
+The `custom_wkt` field allows specifying geometry as WKT strings in WGS84 coordinate system.
+
+!!! Example
+
+    ``` json
+    ---8<--- "tests/unit/docs/examples/test_data/dataset_api/spatial.json"
+    ```
+
+
+### Temporal coverage
+
+Temporal coverage describes the temporal characteristics of the resource.
+
+Specify `start_date` and `end_date` date values to indicate a period of time.
+Only one of the values is required, e.g. `end_date` can be left out to signify
+an ongoing process.
+
+!!! Example
+
+    ``` json
+    ---8<--- "tests/unit/docs/examples/test_data/dataset_api/temporal.json"
+    ```
+
+
+
+### Remote Resources
+
+Remote resources allow associating dataset with data available on the Internet.
+Dataset files and remote resources are exclusive with each other, so a dataset cannot have both.
+
+!!! Example
+
+    ``` json
+    ---8<--- "tests/unit/docs/examples/test_data/dataset_api/remote_resources.json"
+    ```
+
 
 ## Dataset files
 
@@ -142,7 +207,7 @@ files were added and how many files were removed by the operations.
 The following fields are supported in dataset-specific file and directory metadata:
 
 | Field                  | key          | value                                                   |
-| ---------------------- | ------------ | ------------------------------------------------------- |
+|------------------------|--------------|---------------------------------------------------------|
 | Title                  | title        | str                                                     |
 | Description            | description  | str                                                     |
 | File type (files only) | file_type    | reference data from `/v3/reference-data/file-type`      |

@@ -8,11 +8,11 @@ the [Swagger documentation](/swagger/), but this page tries to show the main dif
 <!-- prettier-ignore -->
 !!! INFO
     **Following markers are used to clarify changes:**
-    
+
     :star: known change from V1-V2 (and what it is), implemented
-    
+
     :clock: known change from V1-V2 (and what it is), not yet implemented
-    
+
     :question: change unknown, because of unknown third party library conventions or limitations
 
     :no_entry: N/A, not going to be implemented
@@ -31,7 +31,7 @@ V3 query parameters follow the hierarchy structure of the object schema. Conside
     ---8<--- "tests/unit/docs/examples/test_data/v1-v3-dataset-v3.json"
     ```
 
-In this example, if you would like to find the example dataset with person name, you would use query parameter `actors__person__name=teppo+testaaja`, as actors field has list of objects that have person object that has a name field.  
+In this example, if you would like to find the example dataset with person name, you would use query parameter `actors__person__name=teppo+testaaja`, as actors field has list of objects that have person object that has a name field.
 
 
 ## Dataset
@@ -101,23 +101,12 @@ For more information about the new dataset API, see [the user guide article](./d
 
 #### Reference data fields
 
-In dataset, reference data fields are:
-
-* language 
-* theme 
-* location
-* organization
-* spatial 
-* field_of_science 
-* other_identifiers
-
-These have been unified structurally. Now all of these share the same base fields and payload format.
+In dataset, reference data fields such as location and organization have been unified structurally. Now all of these share the same base fields and payload format.
 
 | V1-V2                      | V3 field name     |
 |----------------------------|-------------------|
 | identifier [url]           | url [url]         |
 | title or pref_label [dict] | pref_label [dict] |
-| in_scheme [str]            | in_scheme [str]   |
 
 Only the `url` needs to be provided for objects from reference data. The other related values (e.g. `pref_label`, `scheme`) are filled in from reference data.
 
@@ -125,13 +114,13 @@ Only the `url` needs to be provided for objects from reference data. The other r
 !!! example "Reference data JSON differences between V2 and V3"
 
     === "V3"
-    
+
         ``` json
         ---8<--- "tests/unit/docs/examples/test_data/dataset_api/spatial.json"
         ```
-    
+
     === "V2"
-    
+
         ``` json
         ---8<--- "tests/unit/docs/examples/test_data/v2/spatial-v2.json"
         ```
@@ -143,7 +132,7 @@ You can add most reference data using only the url field:
     ```json
     ---8<--- "tests/unit/docs/examples/test_data/dataset_api/only-urls-v3.json"
     ```
-    
+
 
 #### Access Rights
 
@@ -158,18 +147,18 @@ Dataset access rights is now top level object in dataset. Following table shows 
 !!! example "Access rights JSON differences between V2 and V3"
 
     === "V3"
-    
+
         ``` json
         ---8<--- "tests/unit/docs/examples/test_data/access_rights-v3.json"
         ```
-    
+
     === "V2"
-    
+
         ``` json
         ---8<--- "tests/unit/docs/examples/test_data/v2/access_rights-v2.json"
         ```
 
-Access rights object is composed of two main sub-objects: 
+Access rights object is composed of two main sub-objects:
 
 * license
 * access_type
@@ -212,13 +201,13 @@ been moved under actors field.
 !!! example "Actors JSON differences between V2 and V3"
 
     === "V3"
-    
+
         ``` json
         ---8<--- "tests/unit/docs/examples/test_data/dataset_api/actors.json"
         ```
-    
+
     === "V2"
-    
+
         ``` json
         ---8<--- "tests/unit/docs/examples/test_data/v2/actors-v2.json"
         ```
@@ -240,6 +229,30 @@ Using the POST endpoint, you can add actors only using the relevant body fields:
     ---8<--- "tests/unit/docs/examples/test_data/dataset_api/actor-post.json"
     ```
 
+#### Spatial coverage
+
+In Metax V2 `as_wkt` was filled in from reference data if it was empty.
+In V3, reference data geometry is in `reference.as_wkt` string and user-provided
+geometry in `custom_wkt` list.
+
+| V1-V2 field        | V3 field                                           |
+|--------------------|----------------------------------------------------|
+| alt [str]          | altitude_in_meters [int] :star:                    |
+| place_uri [object] | reference [object] :star:                          |
+| as_wkt [list]      | custom_wkt [list] or reference.as_wkt [str] :star: |
+
+
+#### Temporal coverage
+
+Temporal coverage objects now use dates instead of datetime values.
+
+| V1-V2 field             | V3 field                  |
+|-------------------------|---------------------------|
+| start_date [datetime]   | start_date [date] :clock: |
+| end_date [datetime]     | end_date [date] :clock:   |
+| temporal_coverage [str] | :question:                |
+
+
 #### Provenance
 
 Biggest change in provenance field is that it is its own object in database. Provenance fields are also their own objects and as such have their own id fields when created, as does provenance itself.
@@ -247,13 +260,13 @@ Biggest change in provenance field is that it is its own object in database. Pro
 !!! example "Provenance JSON differences between V2 and V3"
 
     === "V3"
-    
+
         ``` json
         ---8<--- "tests/unit/docs/examples/test_data/dataset_api/provenance.json"
         ```
-    
+
     === "V2"
-    
+
         ``` json
         ---8<--- "tests/unit/docs/examples/test_data/v2/provenance-v2.json"
         ```
@@ -269,19 +282,19 @@ Provenance events have their own endpoint under dataset that returns a list of p
 
 #### Dataset Project
 
-!!! warning 
+!!! warning
     Dataset project implementation is still in progress. Final specification might have minor deviations from the one described here.
 
 !!! example "Dataset project JSON differences between V2 and V3"
 
     === "V3"
-    
+
         ``` json
         ---8<--- "tests/unit/docs/examples/test_data/dataset_api/dataset-project.json"
         ```
-    
+
     === "V2"
-    
+
         ``` json
         ---8<--- "tests/unit/docs/examples/test_data/v2/project-v2.json"
         ```
@@ -296,6 +309,26 @@ Projects have their own endpoint under dataset that returns a list of associated
 * `PUT /v3/datasets/{id}/project/{project-id}`
 * `PATCH /v3/datasets/{id}/project/{project-id}`
 * `DELETE /v3/datasets/{id}/project/{project-id}`
+
+#### Remote resources
+
+Remote resources have gained support for title and description in multiple languages. Some
+other fields have been removed or simplified:
+
+| V1-V2 field                         | V3 field                                              |
+|-------------------------------------|-------------------------------------------------------|
+| identifier [str]                    | :no_entry:                                            |
+| title [str]                         | title [dict] :star:                                   |
+| description [str]                   | description [dict] :star:                             |
+| modified [date]                     | :no_entry:                                            |
+| byte_size [int]                     | :no_entry:                                            |
+| access_url [object]                 | access_url [url] :star:                               |
+| download_url [object]               | download_url [url] :star:                             |
+| checksum [object]                   | checksum [algorithm:value], e.g. "sha256:f00f" :star: |
+| license [list]                      | :no_entry:                                            |
+| resource_type [object]              | :no_entry:                                            |
+| has_object_characteristics [object] | :no_entry:                                            |
+
 
 ### Query parameters
 
@@ -369,14 +402,14 @@ They have been moved under `/v3/` together with the former `/rest/` style endpoi
 !!! example "Creating a dataset JSON payload"
 
     === "V3"
-        
+
         `POST /v3/datasets`
         ``` json
         ---8<--- "tests/unit/docs/examples/test_data/v1-v3-dataset-v3.json"
         ```
-    
+
     === "V2"
-    
+
         `POST /rest/v2/datasets`
         ``` json
         ---8<--- "tests/unit/docs/examples/test_data/v1-v3-dataset-v2.json"
@@ -443,9 +476,9 @@ You don't have to include every field when modifying dataset, only the ones you 
         ``` json
         ---8<--- "tests/unit/docs/examples/test_data/v1-v3-data-catalog-v3.json"
         ```
-    
+
     === "V2"
-    
+
         `POST /rest/v2/data-catalogs`
         ``` json
         ---8<--- "tests/unit/docs/examples/test_data/v1-v3-data-catalog-v2.json"
@@ -453,7 +486,7 @@ You don't have to include every field when modifying dataset, only the ones you 
 
 ## Contract
 
-!!! warning 
+!!! warning
     Contract implementation is still in progress, as it is part of Preservation model. Final specification might differ greatly from the one described here.
 
 ### Field names
@@ -610,9 +643,9 @@ fileset associated with a dataset:
 Dataset-specific directory metadata is only visible when browsing directories.
 
 [^1]: Is solved in Preservation Model implementation
-[^2]: Is solved in authorization implementation 
+[^2]: Is solved in authorization implementation
 [^3]: Is solved in versioning implementation. Django-simple-versioning is used as implementation base.
 [^4]: Is solved in the PublishingChannels implementation
 [^5]: PAS will have its own data-catalog in V3
-[^6]: django-model-utils third-party library SoftDeletableModel provides is_removed field, it can be customized, but it is unclear how much to just use removed timestamp without the bool field.  
-[^7]: currently removal_date in implementation, built on top of SoftDeletableModel. Changing it should be fairly easy, but will modify lots of models. 
+[^6]: django-model-utils third-party library SoftDeletableModel provides is_removed field, it can be customized, but it is unclear how much to just use removed timestamp without the bool field.
+[^7]: currently removal_date in implementation, built on top of SoftDeletableModel. Changing it should be fairly easy, but will modify lots of models.

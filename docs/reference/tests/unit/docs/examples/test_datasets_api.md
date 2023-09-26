@@ -16,6 +16,14 @@
 
 ### :::tests.unit.docs.examples.test_datasets_api.spatial_json
 
+## temporal_json
+
+### :::tests.unit.docs.examples.test_datasets_api.temporal_json
+
+## remote_resources_json
+
+### :::tests.unit.docs.examples.test_datasets_api.remote_resources_json
+
 ## dataset_v3_modify_json
 
 ### :::tests.unit.docs.examples.test_datasets_api.dataset_v3_modify_json

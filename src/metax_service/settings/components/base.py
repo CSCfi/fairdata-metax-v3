@@ -233,10 +233,12 @@ REST_FRAMEWORK = {
 SWAGGER_SETTINGS = {
     "DEEP_LINKING": True,  # Automatically update URL fragment with current operation in Swagger UI
     "DEFAULT_FIELD_INSPECTORS": [
+        "apps.common.inspectors.SwaggerDescriptionInspector",
         "apps.common.inspectors.URLReferencedModelFieldInspector",
         *SWAGGER_DEFAULTS["DEFAULT_FIELD_INSPECTORS"],
     ],
     "DEFAULT_AUTO_SCHEMA_CLASS": "apps.common.inspectors.ExtendedSwaggerAutoSchema",
+    "DEFAULT_GENERATOR_CLASS": "apps.common.inspectors.SortingOpenAPISchemaGenerator",
     "DEFAULT_INFO": "metax_service.urls.openapi_info",
 }
 REDOC_SETTINGS = {"HIDE_HOSTNAME": True}

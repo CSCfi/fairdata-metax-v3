@@ -8,7 +8,13 @@ from typing import List
 
 from drf_yasg import openapi
 from drf_yasg.errors import SwaggerGenerationError
-from drf_yasg.inspectors import NotHandled, ReferencingSerializerInspector, SwaggerAutoSchema
+from drf_yasg.generators import OpenAPISchemaGenerator
+from drf_yasg.inspectors import (
+    FieldInspector,
+    NotHandled,
+    ReferencingSerializerInspector,
+    SwaggerAutoSchema,
+)
 from drf_yasg.utils import force_serializer_instance, param_list_to_odict
 
 from .serializers.fields import URLReferencedModelField
@@ -23,6 +29,20 @@ class URLReferencedModelFieldInspector(ReferencingSerializerInspector):
                 field.child, swagger_object_type, use_references, **kwargs
             )
         return NotHandled
+
+
+class SwaggerDescriptionInspector(FieldInspector):
+    """Inspector that reads description from Serializer.Meta.swagger_description."""
+
+    def process_result(self, result, method_name, obj, **kwargs):
+        if isinstance(result, openapi.Schema.OR_REF):
+            # traverse any references and alter the Schema object in place
+            schema = openapi.resolve_ref(result, self.components)
+            if meta := getattr(obj, "Meta", None):
+                if description := getattr(meta, "swagger_description", None):
+                    schema["description"] = description
+
+        return result
 
 
 class ExtendedSwaggerAutoSchema(SwaggerAutoSchema):
@@ -52,3 +72,12 @@ class ExtendedSwaggerAutoSchema(SwaggerAutoSchema):
                 )
             parameters += serializer_parameters
         return parameters
+
+
+class SortingOpenAPISchemaGenerator(OpenAPISchemaGenerator):
+    """Schema generator that sorts definitions list by key."""
+
+    def get_schema(self, request=None, public=False):
+        schema = super().get_schema(request, public)
+        schema.definitions = {key: schema.definitions[key] for key in sorted(schema.definitions)}
+        return schema
