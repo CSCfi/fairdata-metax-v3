@@ -1,0 +1,16 @@
+{
+  "access_rights": {
+    "id": "ed1a5847-2db4-4a45-9505-916bd8e62407",
+    "license": [
+      {
+        "id": "706e9fd7-4299-4c4a-bc0c-a4438b2a33b5"
+      }
+    ],
+    "access_type": {
+      "id": "36e31df0-04cd-4178-ad56-81fc5f74ac31"
+    },
+    "description": {
+      "fi": "kuvaus"
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "is_output_of": [
+    {
+      "funder_type": {
+        "identifier": "http://uri.suomi.fi/codelist/fairdata/funder_type/code/eu-other",
+        "in_scheme": "http://uri.suomi.fi/codelist/fairdata/funder_type",
+        "pref_label": {
+          "en": "EU other funding",
+          "fi": "EU muu rahoitus",
+          "und": "EU muu rahoitus"
+        }
+      },
+      "has_funder_identifier": "funding_identifier",
+      "has_funding_agency": [
+        {
+          "@type": "Organization",
+          "identifier": "http://uri.suomi.fi/codelist/fairdata/organization/code/10076",
+          "name": {
+            "en": "Aalto University",
+            "fi": "Aalto-yliopisto",
+            "sv": "Aalto-universitetet",
+            "und": "Aalto-yliopisto"
+          }
+        }
+      ],
+      "identifier": "This is an identifier for a project",
+      "name": {
+        "en": "Test Project"
+      },
+      "source_organization": [
+        {
+          "@type": "Organization",
+          "identifier": "http://uri.suomi.fi/codelist/fairdata/organization/code/24053596",
+          "name": {
+            "en": "Agency for Rural Affairs in Finland",
+            "fi": "Maaseutuvirasto",
+            "sv": "Landsbygdsverket",
+            "und": "Maaseutuvirasto"
+          }
+        }
+      ]
+    }
+  ]
+}

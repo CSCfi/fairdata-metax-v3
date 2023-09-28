@@ -2,55 +2,119 @@
 
 Metax V3 Rest-API has number of changes from previous versions (v1-v2) and is incompatible in most API-endpoints.
 
-The most up-to-date information about the specific API version can always be found in the [Swagger documentation](/swagger/), but this page tries to show the main differences between the versions.
+The most up-to-date information about the specific API version can always be found in
+the [Swagger documentation](/swagger/), but this page tries to show the main differences between the versions.
 
 <!-- prettier-ignore -->
-!!! NOTE
-    Only changed field names, endpoint behaviour and query parameters are documented. The unchanged properties are omitted.
+!!! INFO
+    **Following markers are used to clarify changes:**
+    
+    :star: known change from V1-V2 (and what it is), implemented
+    
+    :clock: known change from V1-V2 (and what it is), not yet implemented
+    
+    :question: change unknown, because of unknown third party library conventions or limitations
+
+    :no_entry: N/A, not going to be implemented
+
+## Authentication and authorization
+
+Unlike Metax V1-V2, V3 does not use basic authentication headers, instead bearer token is provided to users and integration customers. More details in [End User Access](./end-user-access.md)
+
+## Changes in query parameters
+
+V3 query parameters follow the hierarchy structure of the object schema. Consider following V3 dataset:
+
+!!! example
+    `POST /v3/datasets`
+    ```json
+    ---8<--- "tests/unit/docs/examples/test_data/v1-v3-dataset-v3.json"
+    ```
+
+In this example, if you would like to find the example dataset with person name, you would use query parameter `actors__person__name=teppo+testaaja`, as actors field has list of objects that have person object that has a name field.  
+
 
 ## Dataset
 
-Also named CatalogRecord in V1-V2. Main difference is removing the research_dataset nested object and renaming fields to be more descriptive. All objects also now have their own id field that can be used when editing dataset properties.
+Also named CatalogRecord in V1-V2. Main difference is removing the research_dataset nested object and renaming fields to
+be more descriptive. All objects also now have their own id field that can be used when editing dataset properties.
+
+For more information about the new dataset API, see [the user guide article](./datasets-api.md)
 
 ### Field names
 
-| V1-V2                                    | V3 field name                       |
-|------------------------------------------|-------------------------------------|
-| dataset_version_set [list]               | not implemented yet                 |
-| date_created [datetime]                  | created [datetime]                  |
-| date_cumulation_started [datetime]       | cumulation_started [datetime]       |
-| date_last_cumulative_addition [datetime] | last_cumulative_addition [datetime] |
-| date_modified [datetime]                 | modified [datetime]                 |
-| deprecated [bool]                        | is_deprecated [bool]                |
-| identifier [uuid]                        | id [uuid]                           |
-| metadata_owner_org [str]                 | metadata_owner/organization [str]   |
-| metadata_provider_org [str]              | metadata_owner/organization [str]   |
-| metadata_provider_user [str]             | metadata_owner/user [object]        |
-| metadata_version_identifier              | not implemented yet                 |
-| previous_dataset_version [str]           | previous [str]                      |
-| removed [bool]                           | is_removed [bool]                   |
-| research_dataset [object]                | N/A                                 |
-| research_dataset/access_rights [object]  | access_rights [object]              |
-| research_dataset/creator [list]          | actors [list]                       |
-| research_dataset/description [dict]      | description [dict]                  |
-| research_dataset/field_of_science [list] | field_of_science [list]             |
-| research_dataset/issued [date]           | issued [datetime]                   |
-| research_dataset/keyword [list]          | keyword [list]                      |
-| research_dataset/language [list]         | language [list]                     |
-| research_dataset/modified [datetime]     | modified [datetime]                 |
-| research_dataset/preferred_identifier    | persistent_identifier               |
-| research_dataset/publisher [object]      | actors [list]                       |
-| research_dataset/theme [list]            | theme [list]                        |
-| research_dataset/title [dict]            | title [dict]                        |
-| service_created                          | N/A                                 |
-| service_modified                         | N/A                                 |
-| total_files_byte_size [int]              | N/A                                 |
+| V1-V2                                        | V3 field name                                 |
+|----------------------------------------------|-----------------------------------------------|
+| access_granter [object]                      | :question:                                    |
+| api_meta [object]                            | :no_entry:                                    |
+| data_catalog [object]                        | [data_catalog](#datacatalog) [uuid] :star:    |
+| dataset_version_set [list]                   | other_versions [list] :clock:                 |
+| date_created [datetime]                      | created [datetime] :star:                     |
+| date_cumulation_started [datetime]           | cumulation_started [datetime] :star:          |
+| date_last_cumulative_addition [datetime]     | last_cumulative_addition [datetime] :star:    |
+| date_modified [datetime]                     | modified [datetime] :star:                    |
+| date_removed [datetime]                      | removed [datetime] :clock: [^7]               |
+| deprecated [bool]                            | deprecated [datetime] :clock:                 |
+| identifier [uuid]                            | id [uuid] :star:                              |
+| metadata_owner_org [str]                     | metadata_owner/organization [str] :star:      |
+| metadata_provider_org [str]                  | metadata_owner/organization [str] :star:      |
+| metadata_provider_user [str]                 | metadata_owner/user [object] :star:           |
+| preservation_dataset_origin_version          | :no-entry: [^1]                               |
+| preservation_dataset_version [str]           | :no-entry: [^1]                               |
+| preservation_description [str]               | preservation/description [str] :clock: [^1]   |
+| preservation_identifier [str]                | preservation/id [uuid] :clock: [^1]           |
+| preservation_reason_description [str]        | preservation/reason [str] :clock:             |
+| preservation_state [int]                     | preservation/state [int] :clock: [^1]         |
+| preservation_state_modified [datetime]       | prevervation/modified [datetime] :clock: [^1] |
+| previous_dataset_version [object]            | previous_version [id] :clock:                 |
+| removed [bool]                               | :no-entry:                                    |
+| research_dataset [object]                    | :no-entry:                                    |
+| research_dataset/access_rights [object]      | access_rights [object] :star:                 |
+| research_dataset/available [date]            | :no-entry:                                    |
+| research_dataset/contributor [list]          | actors [list] :star:                          |
+| research_dataset/creator [list]              | actors [list]  :star:                         |
+| research_dataset/curator [list]              | actors [list] :star:                          |
+| research_dataset/description [dict]          | description [dict] :star:                     |
+| research_dataset/field_of_science [list]     | field_of_science [list] :star:                |
+| research_dataset/is_output_of [list]         | is_output_of [list] :clock:                   |
+| research_dataset/issued [date]               | issued [datetime] :star:                      |
+| research_dataset/keyword [list]              | keyword [list] :star:                         |
+| research_dataset/language [list]             | language [list] :star:                        |
+| research_dataset/metadata_version_identifier | :no_entry:                                    |
+| research_dataset/modified [datetime]         | modified [datetime] :star:                    |
+| research_dataset/other_identifier [list]     | other_identifiers [list] :star:               |
+| research_dataset/persistent_identifier       | persistent_identifier :star:                  |
+| research_dataset/preferred_identifier        | :no-entry:                                    |
+| research_dataset/provenance [list]           | provenance [list] :star:                      |
+| research_dataset/publisher [object]          | actors [list] :star:                          |
+| research_dataset/relation[list]              | :question:                                    |
+| research_dataset/rights_holder [list]        | actors [list] :star:                          |
+| research_dataset/theme [list]                | theme [list] :star:                           |
+| research_dataset/title [dict]                | title [dict] :star:                           |
+| service_created                              | :no_entry:                                    |
+| service_modified                             | :no_entry:                                    |
+| total_files_byte_size [int]                  | fileset/total_files_size [int] :star:         |
+| user_created                                 | :no_entry:                                    |
+| user_modified                                | :no_entry:                                    |
 
-### Reference data fields
+### Complex fields
 
-Reference data such as language, theme, location, organization and field_of_science have been unified structurally. Now all of these share the same base fields and payload format.
+#### Reference data fields
+
+In dataset, reference data fields are:
+
+* language 
+* theme 
+* location
+* organization
+* spatial 
+* field_of_science 
+* other_identifiers
+
+These have been unified structurally. Now all of these share the same base fields and payload format.
+
 | V1-V2                      | V3 field name     |
-| -------------------------- | ----------------- |
+|----------------------------|-------------------|
 | identifier [url]           | url [url]         |
 | title or pref_label [dict] | pref_label [dict] |
 | in_scheme [str]            | in_scheme [str]   |
@@ -58,19 +122,30 @@ Reference data such as language, theme, location, organization and field_of_scie
 Only the `url` needs to be provided for objects from reference data. The other related values (e.g. `pref_label`, `scheme`) are filled in from reference data.
 
 
-=== "V2"
+!!! example "Reference data JSON differences between V2 and V3"
 
-    ``` json
-    ---8<--- "tests/unit/docs/examples/test_data/spatial-v2.json"
+    === "V3"
+    
+        ``` json
+        ---8<--- "tests/unit/docs/examples/test_data/dataset_api/spatial.json"
+        ```
+    
+    === "V2"
+    
+        ``` json
+        ---8<--- "tests/unit/docs/examples/test_data/v2/spatial-v2.json"
+        ```
+
+You can add most reference data using only the url field:
+
+!!! example
+    `POST /v3/datasets`
+    ```json
+    ---8<--- "tests/unit/docs/examples/test_data/dataset_api/only-urls-v3.json"
     ```
+    
 
-=== "V3"
-
-    ``` json
-    ---8<--- "tests/unit/docs/examples/test_data/dataset_api/spatial.json"
-    ```
-
-### Access Rights
+#### Access Rights
 
 Dataset access rights is now top level object in dataset. Following table shows differences in object structure.
 
@@ -80,125 +155,264 @@ Dataset access rights is now top level object in dataset. Following table shows 
 | license/identifier [url]     | license/url [url]                   |
 | license/license [url]        | license/custom_url [url]            |
 
-=== "V2"
+!!! example "Access rights JSON differences between V2 and V3"
 
-    ``` json
-    ---8<--- "tests/unit/docs/examples/test_data/access_rights-v2.json"
+    === "V3"
+    
+        ``` json
+        ---8<--- "tests/unit/docs/examples/test_data/access_rights-v3.json"
+        ```
+    
+    === "V2"
+    
+        ``` json
+        ---8<--- "tests/unit/docs/examples/test_data/v2/access_rights-v2.json"
+        ```
+
+Access rights object is composed of two main sub-objects: 
+
+* license
+* access_type
+
+!!! info
+
+    License object needs either url or custom_url filled. Url must be part of [suomi.fi license collection](http://uri.suomi.fi/codelist/fairdata/license/"). Custom url is reserved for licenses not part of the collection.
+
+You don't have to submit the entire object again if you want to edit it. This is valid PATCH request body:
+
+!!! example
+    `PATCH /v3/datasets/{id}`
+    ```json
+    ---8<--- "tests/unit/docs/examples/test_data/dataset_api/access-rights-put.json"
     ```
 
-=== "V3"
+Access Rights have their own endpoint under dataset that returns the access_rights object associated with the dataset:
 
-    ``` json
-    ---8<--- "tests/unit/docs/examples/test_data/access_rights-v3.json"
+* `GET /v3/datasets/{id}/access_rights`
+* `PUT /v3/datasets/{id}/access_rights`
+* `PATCH /v3/datasets/{id}/access_rights`
+
+You can't create dataset without access rights, so there is no DELETE or POST endpoints.
+
+#### Actors
+
+Dataset related actors with roles such as creator, publisher, curator, rights_holder, provenance and contributor have
+been moved under actors field.
+
+| V1-V2                     | V3 field name                    |
+|---------------------------|----------------------------------|
+| @type [str]               | N/A                              |
+| email [str]               | person/email [str]               |
+| external_identifier [str] | person/external_identifier [str] |
+| identifier [url]          | organization/url [url]           |
+| member_of [object]        | organization [object]            |
+| name [str]                | person/name [str]                |
+| N/A                       | roles [list]                     |
+
+!!! example "Actors JSON differences between V2 and V3"
+
+    === "V3"
+    
+        ``` json
+        ---8<--- "tests/unit/docs/examples/test_data/dataset_api/actors.json"
+        ```
+    
+    === "V2"
+    
+        ``` json
+        ---8<--- "tests/unit/docs/examples/test_data/v2/actors-v2.json"
+        ```
+
+Actors have their own endpoint under dataset that returns a list of actors associated with the dataset:
+
+* `GET /v3/datasets/{id}/actors`
+* `POST /v3/datasets/{id}/actors`
+* `GET /v3/datasets/{id}/actors/{actor-id}`
+* `PUT /v3/datasets/{id}/actors/{actor-id}`
+* `PATCH /v3/datasets/{id}/actors/{actor-id}`
+* `DELETE /v3/datasets/{id}/actors/{actor-id}`
+
+Using the POST endpoint, you can add actors only using the relevant body fields:
+
+!!! example
+    `POST /v3/datasets/{id}/actors`
+    ```json
+    ---8<--- "tests/unit/docs/examples/test_data/dataset_api/actor-post.json"
     ```
 
-### Actors
+#### Provenance
 
-Dataset related actors with roles such as creator, publisher, curator, rights_holder, provenance and contributor have been moved under actors field.
+Biggest change in provenance field is that it is its own object in database. Provenance fields are also their own objects and as such have their own id fields when created, as does provenance itself.
 
-=== "V2"
+!!! example "Provenance JSON differences between V2 and V3"
 
-    ``` json
-    ---8<--- "tests/unit/docs/examples/test_data/actors-v2.json"
-    ```
+    === "V3"
+    
+        ``` json
+        ---8<--- "tests/unit/docs/examples/test_data/dataset_api/provenance.json"
+        ```
+    
+    === "V2"
+    
+        ``` json
+        ---8<--- "tests/unit/docs/examples/test_data/v2/provenance-v2.json"
+        ```
 
-=== "V3"
+Provenance events have their own endpoint under dataset that returns a list of provenance events associated with the dataset:
 
-    ``` json
-    ---8<--- "tests/unit/docs/examples/test_data/dataset_api/actors.json"
-    ```
+* `GET /v3/datasets/{id}/provenance`
+* `POST /v3/datasets/{id}/provenance`
+* `GET /v3/datasets/{id}/provenance/{provenance-id}`
+* `PUT /v3/datasets/{id}/provenance/{provenance-id}`
+* `PATCH /v3/datasets/{id}/provenance/{provenance-id}`
+* `DELETE /v3/datasets/{id}/provenance/{provenance-id}`
+
+#### Dataset Project
+
+!!! warning 
+    Dataset project implementation is still in progress. Final specification might have minor deviations from the one described here.
+
+!!! example "Dataset project JSON differences between V2 and V3"
+
+    === "V3"
+    
+        ``` json
+        ---8<--- "tests/unit/docs/examples/test_data/dataset_api/dataset-project.json"
+        ```
+    
+    === "V2"
+    
+        ``` json
+        ---8<--- "tests/unit/docs/examples/test_data/v2/project-v2.json"
+        ```
+
+
+
+Projects have their own endpoint under dataset that returns a list of associated projects with in the dataset:
+
+* `GET /v3/datasets/{id}/project`
+* `POST /v3/datasets/{id}/project`
+* `GET /v3/datasets/{id}/project/{project-id}`
+* `PUT /v3/datasets/{id}/project/{project-id}`
+* `PATCH /v3/datasets/{id}/project/{project-id}`
+* `DELETE /v3/datasets/{id}/project/{project-id}`
 
 ### Query parameters
 
-| V1-V2 parameter name    | V3 parameter name                         |
-|-------------------------|-------------------------------------------|
-| actor_filter            | `actors__actor__organization__pref_label` |
-| actor_filter            | `actors__actor__person`                   |
-| api_version             | N/A                                       |
-| contract_org_identifier | not implemented yet                       |
-| curator                 | not implemented yet                       |
-| data_catalog            | `data_catalog__id`                        |
-| editor_permissions_user | not implemented yet                       |
-| fields                  | N/A                                       |
-| include_legacy          | N/A                                       |
-| latest                  | N/A                                       |
-| metadata_owner_org      | `metadata_owner__organization`            |
-| metadata_provider_user  | `metadata_owner__user__username`          |
-| N/A                     | `data_catalog__title`                     |
-| N/A                     | `title`                                   |
-| owner_id                | N/A                                       |
-| pas_filter              | not implemented yet                       |
-| preferred_identifier    | N/A                                       |
-| projects                | not implemented yet                       |
-| research_dataset_fields | N/A                                       |
-| user_created            | not implemented yet                       |
+| V1-V2 parameter name    | V3 parameter name                          |
+|-------------------------|--------------------------------------------|
+| actor_filter            | `actors__organization__pref_label` :clock: |
+| actor_filter            | `actors__person` :clock:                   |
+| api_version             | :no_entry:                                 |
+| contract_org_identifier | :question: [^1]                            |
+| curator                 | `actors__roles__curator` :clock:           |
+| data_catalog            | `data_catalog__id` :star:                  |
+| editor_permissions_user | :question: [^2]                            |
+| fields                  | fields :clock:                             |
+| include_legacy          | :no_entry:                                 |
+| latest                  | :question: [^3]                            |
+| metadata_owner_org      | `metadata_owner__organization` :star:      |
+| metadata_provider_user  | `metadata_owner__user__username` :star:    |
+| N/A                     | `data_catalog__title` :star:               |
+| N/A                     | `title` :star:                             |
+| N/A                     | search :star:                              |
+| owner_id                | :no_entry:                                 |
+| pas_filter              | :question: [^5]                            |
+| preferred_identifier    | `persistent_identifier`                    |
+| projects                | :clock:                                    |
+| research_dataset_fields | :no_entry:                                 |
+| user_created            | `metadata_owner__user__username` :star:    |
 
 ### Endpoints
 
-| V1-V2 endpoint                              | V3 endpoint                 |
-|---------------------------------------------|-----------------------------|
-| `/datasets/identifiers`                     | not implemented yet         |
-| `/datasets/unique_preferred_identifiers`    | not going to be implemented |
-| `/datasets/list`                            | `/datasets`                 |
-| `/datasets/metadata_versions`               | not implemented yet         |
-| `/datasets/{CRID}/editor_permissions/users` | not implemented yet         |
+!!! NOTE
+    You can check the supported http methods from the [Swagger documentation](/swagger/), this table lists only the resource path changes.
+
+| V1-V2 endpoint                              | V3 endpoint                        |
+|---------------------------------------------|------------------------------------|
+| `/datasets/identifiers`                     | :clock:                            |
+| `/datasets/list`                            | `/datasets`                        |
+| `/datasets/metadata_versions`               | :no-entry:                         |
+| `/datasets/unique_preferred_identifiers`    | :no-entry:                         |
+| `/datasets/{CRID}/editor_permissions/users` | :question:                         |
+| N/A                                         | `/datasets/{id}/actors` :star:     |
+| N/A                                         | `/datasets/{id}/provenance` :star: |
 
 #### RPC endpoints
 
 There are no longer separate `/rpc/` endpoints.
 They have been moved under `/v3/` together with the former `/rest/` style endpoints.
 
-| V1-V2 endpoint                               | V3 endpoint                                                            |
-|----------------------------------------------|------------------------------------------------------------------------|
-| `/rpc/datasets/get_minimal_dataset_template` | not implemented yet                                                    |
-| `/rpc/datasets/set_preservation_identifier`  | not implemented yet                                                    |
-| `/rpc/datasets/refresh_directory_content`    | not going to be implemented                                            |
-| `/rpc/datasets/fix_deprecated`               | not going to be implemented                                            |
-| `/rpc/datasets/flush_user_data`              | `DELETE /v3/users/<id>` (only in testing)                              |
-| `/rpc/files/delete_project`                  | `POST /v3/files/delete-project` (only in testing)                      |
-| `/rpc/files/flush_project`                   | `POST /v3/files/delete-project` with `{flush: true}` (only in testing) |
-| `/rpc/statistics/*`                          | not implemented yet                                                    |
+!!! INFO
+    Endpoints with flush functionality (hard delete) will accept flush parameter only in non-production environments.
+
+| V1-V2 endpoint                               | V3 endpoint                                            |
+|----------------------------------------------|--------------------------------------------------------|
+| `/rpc/datasets/get_minimal_dataset_template` | :question:                                             |
+| `/rpc/datasets/set_preservation_identifier`  | :no_entry:                                             |
+| `/rpc/datasets/refresh_directory_content`    | :no_entry:                                             |
+| `/rpc/datasets/fix_deprecated`               | :no_entry:                                             |
+| `/rpc/datasets/flush_user_data`              | `DELETE /v3/users/<id>` :star:                         |
+| `/rpc/files/delete_project`                  | `DELETE /v3/files?project={project}` :star:            |
+| `/rpc/files/flush_project`                   | `DELETE /v3/files?project={project}&flush=true` :star: |
+| `/rpc/statistics/*`                          | :question:                                             |
 
 ### Examples
 
 #### Creating a dataset
 
 <!-- prettier-ignore -->
-!!! NOTE
-    If you want to try out the dataset creation with this example, create the data-catalog first. Example data-catalog creation request can be found under DataCatalog in this article.
+!!! TIP
+    If you want to try out the dataset creation with this example, create the data-catalog first. Example data-catalog
+    creation request can be found under DataCatalog in this article.
 
-`POST /datasets`
+!!! example "Creating a dataset JSON payload"
 
-=== "V2"
+    === "V3"
+        
+        `POST /v3/datasets`
+        ``` json
+        ---8<--- "tests/unit/docs/examples/test_data/v1-v3-dataset-v3.json"
+        ```
+    
+    === "V2"
+    
+        `POST /rest/v2/datasets`
+        ``` json
+        ---8<--- "tests/unit/docs/examples/test_data/v1-v3-dataset-v2.json"
+        ```
 
-    ``` json
-    ---8<--- "tests/unit/docs/examples/test_data/v1-v3-dataset-v2.json"
+#### Modifying a dataset
+
+You don't have to include every field when modifying dataset, only the ones you want to change. This is valid put request for above V3 dataset:
+
+!!! example
+    `PATCH /v3/datasets/{id}`
+    ```json
+    ---8<--- "tests/unit/docs/examples/test_data/dataset_api/modify-dataset.json"
     ```
 
-=== "V3"
-
-    ``` json
-    ---8<--- "tests/unit/docs/examples/test_data/v1-v3-dataset-v3.json"
-    ```
-
-## DataCatalog
+## Data Catalog
 
 ### Field names
 
-| V1-V2 field name                     | V3 field name              |
-|--------------------------------------|----------------------------|
-| catalog_json                         | N/A                        |
-| catalog_json/access_rights           | access_rights              |
-| catalog_json/dataset_versioning      | dataset_versioning_enabled |
-| catalog_json/harvested               | harvested                  |
-| catalog_json/language                | language                   |
-| catalog_json/publisher               | publisher                  |
-| catalog_json/research_dataset_schema | dataset_schema             |
-| catalog_json/title                   | title                      |
-| catalog_record_group_create          | N/A                        |
-| catalog_record_group_edit            | N/A                        |
-| catalog_record_services_create       | N/A                        |
-| catalog_record_services_edit         | N/A                        |
+| V1-V2 field name                       | V3 field name                            |
+|----------------------------------------|------------------------------------------|
+| catalog_json                           | :no_entry:                               |
+| catalog_json/access_rights [object]    | access_rights [object] :star:            |
+| catalog_json/dataset_versioning [bool] | dataset_versioning_enabled [bool] :star: |
+| catalog_json/harvested [bool]          | harvested [bool] :star:                  |
+| catalog_json/language [object]         | language [object] :star:                 |
+| catalog_json/publisher [object]        | publisher [object] :star:                |
+| catalog_json/research_dataset_schema   | :no_entry:                               |
+| catalog_json/title [dict]              | title [dict] :star:                      |
+| catalog_record_group_create            | :question: [^2]                          |
+| catalog_record_group_edit              | :question: [^2]                          |
+| catalog_record_services_create [str]   | :question: [^2]                          |
+| catalog_record_services_edit [str]     | :question: [^2]                          |
+| catalog_record_services_read [str]     | :question: [^2]                          |
+| publish_to_etsin [bool]                | :question: [^4]                          |
+| publish_to_ttv [bool]                  | :question: [^4]                          |
 
 ### Query parameters
 
@@ -222,28 +436,32 @@ They have been moved under `/v3/` together with the former `/rest/` style endpoi
 
 #### Creating a data-catalog
 
-`POST /data-catalog`
+!!! example
 
-=== "V2"
-
-    ``` json
-    ---8<--- "tests/unit/docs/examples/test_data/v1-v3-data-catalog-v2.json"
-    ```
-
-=== "V3"
-
-    ``` json
-    ---8<--- "tests/unit/docs/examples/test_data/v1-v3-data-catalog-v3.json"
-    ```
+    === "V3"
+        `POST /v3/data-catalogs`
+        ``` json
+        ---8<--- "tests/unit/docs/examples/test_data/v1-v3-data-catalog-v3.json"
+        ```
+    
+    === "V2"
+    
+        `POST /rest/v2/data-catalogs`
+        ``` json
+        ---8<--- "tests/unit/docs/examples/test_data/v1-v3-data-catalog-v2.json"
+        ```
 
 ## Contract
+
+!!! warning 
+    Contract implementation is still in progress, as it is part of Preservation model. Final specification might differ greatly from the one described here.
 
 ### Field names
 
 | V1-V2 field name          | V3 field name |
 |---------------------------|---------------|
 | contract_json             | N/A           |
-| contract_json/contact     | N/A           |
+| contract_json/contact     | contact       |
 | contract_json/created     | created       |
 | contract_json/description | description   |
 | contract_json/modified    | modified      |
@@ -259,29 +477,31 @@ File identifier in external storage service has been renamed from `identifier` t
 The `storage_identifier` value is only unique per storage service and the same value
 may exist in multiple services.
 
-| Field                                 | V1/V2                                                      | V3                                          |
-|---------------------------------------|------------------------------------------------------------|---------------------------------------------|
-| File id                               | id [int]                                                   | id [uuid]                                   |
-| File id in external service           | identifier [str]                                           | storage_identifier [str]                    |
-| External service                      | file_storage [str]<br>e.g. urn:nbn:fi:att:file-storage-ida | storage_service [str]<br>e.g. ida           |
-| Project identifier                    | project_identifier [str]                                   | project [str]                               |
-| Modification date in external service | file_modified [datetime]                                   | modified [datetime]                         |
-| Freeze date in external service       | file_frozen [datetime]                                     | frozen [datetime]                           |
-| File removal date from Metax          | file_removed                                               | removed [datetime]                          |
-| Deletion date                         | file_deleted [datetime]                                    | n/a                                         |
-| Upload date in external service       | file_uploaded [datetime]                                   | n/a                                         |
-| File extension                        | file_format [str]                                          | n/a                                         |
-| File characteristics                  | file_characteristics [object]                              | not implemented yet                         |
-| File characteristics extension        | file_characteristics_extension [object]                    | not implemented yet                         |
-| Parent directory                      | parent_directory [obj]                                     | n/a                                         |
-| Full file path                        | file_path [str]                                            | pathname [str]                              |
-| File name                             | file_name [str]                                            | filename, determined from pathname [str]    |
-| Open access                           | open_access [bool]                                         | n/a                                         |
-| PAS compatible                        | pas_compatible [bool]                                      | not implemented yet                         |
-| File size in bytes                    | byte_size                                                  | size                                        |
-| Checksum algorithm                    | checksum_algorithm                                         | checksum [algorithm:value], e.g. "md5:f00f" |
-| Checksum value                        | checksum_value                                             | merged with checksum_algorithm              |
-| Checksum check date                   | checksum_checked                                           | n/a                                         |
+#### Field names
+
+| Field                                 | V1/V2                                                      | V3                                                    |
+|---------------------------------------|------------------------------------------------------------|-------------------------------------------------------|
+| File id                               | id [int]                                                   | id [uuid] :star:                                      |
+| File id in external service           | identifier [str]                                           | storage_identifier [str] :star:                       |
+| External service                      | file_storage [str]<br>e.g. urn:nbn:fi:att:file-storage-ida | storage_service [str]<br>e.g. ida :star:              |
+| Project identifier                    | project_identifier [str]                                   | csc_project [str] :clock:                             |
+| Modification date in external service | file_modified [datetime]                                   | modified [datetime] :star:                            |
+| Freeze date in external service       | file_frozen [datetime]                                     | frozen [datetime] :star:                              |
+| File removal date from Metax          | file_removed                                               | removed [datetime] :star:                             |
+| Deletion date                         | file_deleted [datetime]                                    | :no-entry:                                            |
+| Upload date in external service       | file_uploaded [datetime]                                   | :no-entry:                                            |
+| File extension                        | file_format [str]                                          | :no-entry:                                            |
+| File characteristics                  | file_characteristics [object]                              | :question:                                            |
+| File characteristics extension        | file_characteristics_extension [object]                    | :question:                                            |
+| Parent directory                      | parent_directory [obj]                                     | :no-entry:                                            |
+| Full file path                        | file_path [str]                                            | pathname [str] :star:                                 |
+| File name                             | file_name [str]                                            | filename, determined from pathname [str] :star:       |
+| Open access                           | open_access [bool]                                         | :no-entry:                                            |
+| PAS compatible                        | pas_compatible [bool]                                      | is_pas_compatible [bool] :clock:                      |
+| File size in bytes                    | byte_size [int]                                            | size [int] :star:                                     |
+| Checksum algorithm                    | checksum_algorithm                                         | checksum [algorithm:value], e.g. "sha256:f00f" :star: |
+| Checksum value                        | checksum_value                                             | merged with checksum_algorithm :star:                 |
+| Checksum check date                   | checksum_checked                                           | :no-entry:                                            |
 
 ### Directories
 
@@ -317,8 +537,7 @@ Bulk file operations now have their own endpoints:
 The bulk endpoints support omitting the Metax file `id` if
 the storage service and file identifier in the storage are specified:
 `{"storage_identifier": <external id>, "storage_service": <service>}`.
-The `put-many` endpoint will attempt to clear any existing file fields
-that are not specified in the request.
+The `put-many` endpoint will clear any existing file fields that are not specified in the request.
 
 Directories no longer have an identifier, so the `​/rest​/directories​/<id>` endpoints
 have been removed. To get details for a directory,
@@ -327,6 +546,8 @@ contains the directory details for `<path>` in the `parent_directory` object.
 
 Many of the parameters for `/v3/files` and `/v3/directories` have been renamed or have other changes.
 For a full list of supported parameters, see the [Swagger documentation](/swagger/).
+
+#### Examples
 
 Here are some of the common files API requests and how they map to Metax V3:
 
@@ -338,30 +559,32 @@ Here are some of the common files API requests and how they map to Metax V3:
 | Get removed file (using Metax id) | `GET /rest/v1/files/<id>?removed=true` (includes non-removed)  | `GET /v3/files/<id>?include_removed=true` (includes non-removed files)                  |
 | Get file (using external id)      | `GET /rest/v1/files/<id>`                                      | `GET /v3/files?file_storage=*&storage_identifier=<id>&pagination=false`<br>returns list |
 | Create file                       | `POST /rest/v1/files`                                          | `POST /v3/files`                                                                        |
-| Create files (array)              | `POST /rest/v1/files`                                          | `POST /v3/files/insert-many`                                                            |
-| Update files (array)              | `PATCH /rest/v1/files`                                         | `POST /v3/files/update-many`                                                            |
-| Update or create files (array)    | n/a                                                            | `POST /v3/files/upsert-many`                                                            |
+| Create files (array)              | `POST /rest/v1/files`                                          | `POST /v3/files/post-many`                                                              |
+| Update files (array)              | `PATCH /rest/v1/files`                                         | `POST /v3/files/put-many`                                                               |
+| Update or create files (array)    | n/a                                                            | `POST /v3/files/patch-many`                                                             |
 | Delete files                      | `DELETE /rest/v1/files` (array of ids)                         | `POST /v3/files/delete-many` (array of file objects)                                    |
 | Restore files (array)             | `POST /rest/v1/files/restore`                                  | not implemented yet                                                                     |
 | File datasets (using Metax id)    | `POST /rest/v1/files/datasets`                                 | `POST /v3/files/datasets`                                                               |
-| File datasets (using external id) | `POST /rest/v1/files/datasets`                                 | `POST /v3/files/datasets?file_id_type=storage_identifier&storage_service=<service>`     |
+| File datasets (using external id) | `POST /rest/v1/files/datasets`                                 | `POST /v3/files/datasets?storage_service=<service>`                                     |
 | List directory contents by path   | `GET /rest/v1/directories/files?project=<project>&path=<path>` | `GET /v3/directories?storage_service=<service>&project=<project>&path=<path>`           |
 
 ### Dataset files
 
 In Metax V3 datasets provide a summary of contained files in the `fileset` object:
 
-```
-  "fileset": {
-      "storage_service": "ida",
-      "project": "project",
-      "total_files_count": 2,
-      "total_files_size": 2048
-  },
-```
+!!! example
+    ``` json
+      "fileset": {
+          "storage_service": "ida",
+          "project": "project",
+          "total_files_count": 2,
+          "total_files_size": 2048
+      },
+    ```
 
-Updating dataset files is performed by specifying `directory_actions` or `file_actions` in `fileset` object when updating dataset.
-See [Datasets API](../datasets-api/#adding-updating-or-removing-dataset-files) for details.
+Updating dataset files is performed by specifying `directory_actions` or `file_actions` in `fileset` object when
+updating dataset.
+See [Datasets API](datasets-api.md#adding-updating-or-removing-dataset-files) for details.
 
 There are endpoints for browsing files either as a flat list or as a directory tree:
 
@@ -385,3 +608,11 @@ fileset associated with a dataset:
 - viewing `/v3/directories` with `dataset=<id>`
 
 Dataset-specific directory metadata is only visible when browsing directories.
+
+[^1]: Is solved in Preservation Model implementation
+[^2]: Is solved in authorization implementation 
+[^3]: Is solved in versioning implementation. Django-simple-versioning is used as implementation base.
+[^4]: Is solved in the PublishingChannels implementation
+[^5]: PAS will have its own data-catalog in V3
+[^6]: django-model-utils third-party library SoftDeletableModel provides is_removed field, it can be customized, but it is unclear how much to just use removed timestamp without the bool field.  
+[^7]: currently removal_date in implementation, built on top of SoftDeletableModel. Changing it should be fairly easy, but will modify lots of models. 

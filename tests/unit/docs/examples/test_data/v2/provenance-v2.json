@@ -1,0 +1,72 @@
+{
+  "provenance": [
+    {
+      "title": {
+        "en": "Title"
+      },
+      "description": {
+        "en": "Description"
+      },
+      "event_outcome": {
+        "identifier": "http://uri.suomi.fi/codelist/fairdata/event_outcome/code/success",
+        "in_scheme": "http://uri.suomi.fi/codelist/fairdata/event_outcome",
+        "pref_label": {
+          "en": "Success",
+          "fi": "Onnistunut",
+          "sv": "Framgångsrik",
+          "und": "Onnistunut"
+        }
+      },
+      "lifecycle_event": {
+        "identifier": "http://uri.suomi.fi/codelist/fairdata/lifecycle_event/code/destroyed",
+        "in_scheme": "http://uri.suomi.fi/codelist/fairdata/lifecycle_event",
+        "pref_label": {
+          "en": "Destroyed",
+          "fi": "Tuhottu",
+          "und": "Tuhottu"
+        }
+      },
+      "outcome_description": {
+        "en": "Destruction complete"
+      },
+      "spatial": {
+        "full_address": "Annankatu 5",
+        "geographic_name": "Random Test Location"
+      },
+      "temporal": {
+        "end_date": "2023-06-20T00:00:00.000Z",
+        "start_date": "2023-06-19T00:00:00.000Z"
+      },
+      "was_associated_with": [
+        {
+          "@type": "Person",
+          "member_of": {
+            "@type": "Organization",
+            "identifier": "http://uri.suomi.fi/codelist/fairdata/organization/code/09206320",
+            "name": {
+              "en": "CSC – IT Center for Science",
+              "fi": "CSC - Tieteen tietotekniikan keskus Oy",
+              "sv": "CSC – IT Center for Science",
+              "und": "CSC - Tieteen tietotekniikan keskus Oy"
+            }
+          },
+          "name": "Olemassaolematon Henkilö"
+        },
+        {
+          "@type": "Person",
+          "member_of": {
+            "@type": "Organization",
+            "identifier": "http://uri.suomi.fi/codelist/fairdata/organization/code/09206320",
+            "name": {
+              "en": "CSC – IT Center for Science",
+              "fi": "CSC - Tieteen tietotekniikan keskus Oy",
+              "sv": "CSC – IT Center for Science",
+              "und": "CSC - Tieteen tietotekniikan keskus Oy"
+            }
+          },
+          "name": "Unexisting Entity"
+        }
+      ]
+    }
+  ]
+}

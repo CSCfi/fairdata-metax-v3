@@ -1,0 +1,42 @@
+{
+  "provenance": [
+    {
+      "title": {
+        "fi": "otsikko"
+      },
+      "description": {
+        "fi": "kuvaus"
+      },
+      "spatial": {
+        "url": "http://www.yso.fi/onto/onto/yso/c_9908ce39"
+      },
+      "lifecycle_event": {
+        "url": "http://uri.suomi.fi/codelist/fairdata/lifecycle_event/code/planned"
+      },
+      "event_outcome": {
+        "url": "http://uri.suomi.fi/codelist/fairdata/event_outcome/code/success"
+      },
+      "outcome_description": {
+        "en": "Descriptive outcome"
+      },
+      "temporal": {
+        "end_date": "2023-06-20T00:00:00.000Z",
+        "start_date": "2023-06-19T00:00:00.000Z"
+      },
+      "is_associated_with": [
+        {
+          "organization": {
+            "pref_label": {
+              "fi": "CSC"
+            },
+            "code": "20000",
+            "in_scheme": "https://joku.schema.fi"
+          },
+          "person": {
+            "name": "john"
+          }
+        }
+      ]
+    }
+  ]
+}

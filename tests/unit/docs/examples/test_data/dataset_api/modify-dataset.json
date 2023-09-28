@@ -1,0 +1,20 @@
+{
+  "data_catalog": "urn:nbn:fi:att:data-catalog-ida",
+  "title": {
+    "fi": "Toinen otsikko",
+    "en": "My new title"
+  },
+  "language": [
+    {
+      "url": "http://lexvo.org/id/iso639-3/fin"
+    },
+    {
+      "url": "http://lexvo.org/id/iso639-3/eng"
+    }
+  ],
+  "description": {
+    "fi": "Kuvaus",
+    "en": "Description"
+  },
+  "cumulative_state": 2
+}

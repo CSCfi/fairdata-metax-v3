@@ -24,44 +24,40 @@ class ProvenanceFilter(filters.FilterSet):
         lookup_expr="icontains",
         label="outcome description",
     )
-    dataset_id = filters.CharFilter(
+    dataset__id = filters.CharFilter(
         field_name="dataset__id",
         max_length=512,
         lookup_expr="icontains",
         label="dataset id",
     )
-    spatial_url = filters.CharFilter(
-        field_name="spatial__reference__url",
+    spatial__reference__url = filters.CharFilter(
         max_length=512,
         lookup_expr="icontains",
         label="spatial url",
     )
-    spatial_pref_label = filters.CharFilter(
+    spatial__reference__pref_label = filters.CharFilter(
         field_name="spatial__reference__pref_label__values",
         max_length=512,
         lookup_expr="icontains",
         label="Spatial location name",
     )
-    spatial_full_address = filters.CharFilter(
-        field_name="spatial__full_address",
+    spatial__full_address = filters.CharFilter(
         max_length=512,
         lookup_expr="icontains",
         label="Spatial location address",
     )
-    spatial_geographic_name = filters.CharFilter(
-        field_name="spatial__geographic_name",
+    spatial__geographic_name = filters.CharFilter(
         max_length=512,
         lookup_expr="icontains",
         label="Spatial geographic name",
     )
-    associated_organization = filters.CharFilter(
+    is_associated_with__actor__organization__pref_label = filters.CharFilter(
         field_name="is_associated_with__actor__organization__pref_label__values",
         max_length=512,
         lookup_expr="icontains",
         label="Associated organization name",
     )
-    associated_person = filters.CharFilter(
-        field_name="is_associated_with__actor__person",
+    is_associated_with__actor__person = filters.CharFilter(
         max_length=512,
         lookup_expr="icontains",
         label="Associated person name",

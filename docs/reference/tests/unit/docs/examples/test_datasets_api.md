@@ -16,7 +16,15 @@
 
 ### :::tests.unit.docs.examples.test_datasets_api.spatial_json
 
+## dataset_v3_modify_json
+
+### :::tests.unit.docs.examples.test_datasets_api.dataset_v3_modify_json
+
 ## test_dataset_snippets
 
 ### :::tests.unit.docs.examples.test_datasets_api.test_dataset_snippets
+
+## test_modify_dataset
+
+### :::tests.unit.docs.examples.test_datasets_api.test_modify_dataset
 

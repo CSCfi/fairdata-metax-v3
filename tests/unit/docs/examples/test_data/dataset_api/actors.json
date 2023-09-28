@@ -1,7 +1,7 @@
 {
   "actors": [
     {
-      "role": [
+      "roles": [
         "creator"
       ],
       "organization": {
@@ -20,7 +20,7 @@
       }
     },
     {
-      "role": [
+      "roles": [
         "publisher"
       ],
       "organization": {

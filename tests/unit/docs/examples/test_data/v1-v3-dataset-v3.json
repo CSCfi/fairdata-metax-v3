@@ -17,7 +17,7 @@
   },
   "actors": [
     {
-      "role": [
+      "roles": [
         "creator"
       ],
       "person": {
