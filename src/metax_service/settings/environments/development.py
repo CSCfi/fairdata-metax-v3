@@ -1,3 +1,5 @@
+from rest_framework import serializers
+
 from metax_service.settings.components.base import (
     ALLOWED_HOSTS,
     ENABLE_DEBUG_TOOLBAR,
@@ -9,6 +11,10 @@ from metax_service.settings.components.base import (
 DEBUG = True
 
 ALLOWED_HOSTS = ALLOWED_HOSTS + ["metax.localdomain", "127.0.0.1", "localhost", ".fd-dev.csc.fi"]
+
+
+SHELL_PLUS_SUBCLASSES_IMPORT = [serializers.Serializer]
+
 
 DEBUG_TOOLBAR_APPS = [
     "debug_toolbar",

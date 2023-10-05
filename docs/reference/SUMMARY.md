@@ -81,6 +81,7 @@
             - [index_reference_data](src/apps/refdata/management/commands/index_reference_data.md)
             - [update_default_essential_choices](src/apps/refdata/management/commands/update_default_essential_choices.md)
         - [models](src/apps/refdata/models.md)
+        - [serializers](src/apps/refdata/serializers.md)
         - services
             - importers
                 - [common](src/apps/refdata/services/importers/common.md)

@@ -101,7 +101,8 @@ For more information about the new dataset API, see [the user guide article](./d
 
 #### Reference data fields
 
-In dataset, reference data fields such as location and organization have been unified structurally. Now all of these share the same base fields and payload format.
+In dataset, reference data fields such as location and organization have been unified structurally.
+Now all of these share the same base fields and payload format.
 
 | V1-V2                      | V3 field name     |
 |----------------------------|-------------------|
@@ -501,6 +502,66 @@ You don't have to include every field when modifying dataset, only the ones you 
 | contract_json/quota       | quota         |
 | contract_json/title       | title         |
 | contract_json/validity    | valid_until   |
+
+## Reference data API changes
+
+Reference data has been moved from ElasticSearch to the Metax database. 
+Searching for an entry with a specific label can be done with the `pref_label`
+query parameter e.g. `?pref_label=somelabel`.
+
+| V1-V2 endpoint                                 | V3 endpoint                             |
+|------------------------------------------------|-----------------------------------------|
+| /es/reference_data/access_type/_search         | /v3/reference-data/access-types         |
+| /es/reference_data/contributor_role/_search    | /v3/reference-data/contributor-roles    |
+| /es/reference_data/contributor_type/_search    | /v3/reference-data/contributor-types    |
+| /es/reference_data/event_outcome/_search       | /v3/reference-data/event-outcomes       |
+| /es/reference_data/field_of_science/_search    | /v3/reference-data/fields-of-science    |
+| /es/reference_data/file_format_version/_search | /v3/reference-data/file-format-versions |
+| /es/reference_data/file_type/_search           | /v3/reference-data/file-types           |
+| /es/reference_data/funder_type/_search         | /v3/reference-data/funder-types         |
+| /es/reference_data/identifier_type/_search     | /v3/reference-data/identifier-types     |
+| /es/reference_data/keyword/_search             | /v3/reference-data/themes               |
+| /es/reference_data/language/_search            | /v3/reference-data/languages            |
+| /es/reference_data/license/_search             | /v3/reference-data/licenses             |
+| /es/reference_data/lifecycle_event/_search     | /v3/reference-data/lifecycle-events     |
+| /es/reference_data/location/_search            | /v3/reference-data/locations            |
+| /es/reference_data/mime_type/_search           | :no_entry:                              |
+| /es/reference_data/preservation_event/_search  | /v3/reference-data/preservation-events  |
+| /es/reference_data/relation_type/_search       | /v3/reference-data/relation-types       |
+| /es/reference_data/research_infra/_search      | /v3/reference-data/research-infra       |
+| /es/reference_data/resource_type/_search       | /v3/reference-data/resource-types       |
+| /es/reference_data/restriction_grounds/_search | /v3/reference-data/restriction-grounds  |
+| /es/reference_data/use_category/_search        | /v3/reference-data/use-categories       |
+| /es/organization_data/organization/_search     | /v3/organizations                       |
+
+### Reference data field changes
+
+In earlier Metax versions reference data fields were name differently in ElasticSearch and as part of a dataset.
+In V3 the fields have the same names as part of a dataset and in the reference data endpoints.
+
+| V1-V2 Dataset            | V1-V2 ElasticSearch   | V3 field name     |
+|--------------------------|-----------------------|-------------------|
+| identifier [url]         | uri [url]             | url [url]         |
+| in_scheme [url]          | scheme [url]          | in_scheme [url]   |
+| pref_label [dict]        | label [dict]          | pref_label [dict] |
+|                          | id [str]              | :no_entry:        |
+|                          | type [str]            | :no_entry:        |
+|                          | code [str]            | :no_entry:        |
+|                          | internal_code         | :no_entry:        |
+|                          | parent_ids            | broader [obj]     |
+|                          | child_ids [list]      | children [list]   |
+|                          | has_children [bool]   | :no_entry:        |
+|                          | same_as  [list]       | same_as [list]    |
+| name**\*** [dict]        | label [dict]          | pref_label [dict] |
+| is_part_of**\*** [obj]   | parent_id [str]       | parent [obj]      |
+| as_wkt**\*\*** [list]    | wkt [str]             | as_wkt [str]      |
+| file_format**\*\*\***    | input_file_format     | file_format       |
+| format_version**\*\*\*** | output_format_version | format_version    |
+
+**\*** Organization data.  
+**\*\*** Location data.  
+**\*\*\*** File format version data.
+
 
 ## Files API changes
 

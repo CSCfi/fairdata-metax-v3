@@ -4,10 +4,11 @@ import inflection
 from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.db import models
 from django.utils.translation import gettext as _
-from rest_framework import serializers
 
 from apps.common.models import AbstractBaseModel
 from apps.common.serializers.serializers import CommonModelSerializer
+
+from .serializers import get_refdata_serializer_class
 
 
 class AbstractConcept(AbstractBaseModel):
@@ -58,51 +59,7 @@ class AbstractConcept(AbstractBaseModel):
 
     @classmethod
     def get_serializer_class(cls):
-        class BaseSerializer(CommonModelSerializer):
-            omit_related = False
-
-            def get_fields(self):
-                fields = super().get_fields()
-                if self.omit_related:
-                    fields = {
-                        name: field
-                        for name, field in fields.items()
-                        if name not in {"broader", "narrower"}
-                    }
-                return fields
-
-            class Meta:
-                model = cls
-
-                ref_name = getattr(cls, "serializer_ref_name", f"Reference{cls.__name__}")
-
-                # using reverse here would cause errors due to circular import, so use hardcoded url
-                swagger_description = _("Reference data from `{url}`").format(
-                    url=f"/v3/reference-data/{cls.get_model_url()}"
-                )
-
-                fields = (
-                    "id",
-                    "url",
-                    "in_scheme",
-                    "pref_label",
-                    "broader",
-                    "narrower",
-                    # include fields defined in model.serializer_extra_fields
-                    *getattr(cls, "serializer_extra_fields", ()),
-                )
-
-            def to_representation(self, instance):
-                rep = super().to_representation(instance)
-                if len(rep["pref_label"].keys()) > 4:
-                    rep["pref_label"] = {
-                        key: rep["pref_label"][key]
-                        for key in ["fi", "en", "sv", "und"]
-                        if key in rep["pref_label"].keys()
-                    }
-                return rep
-
-        return BaseSerializer
+        return get_refdata_serializer_class(refdata_model=cls)
 
     def get_label(self):
         pref_label = self.pref_label if isinstance(self.pref_label, dict) else {}
