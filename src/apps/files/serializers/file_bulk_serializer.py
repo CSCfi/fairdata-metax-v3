@@ -9,12 +9,10 @@ from dataclasses import asdict, dataclass
 from enum import Enum
 from typing import Dict, List, Optional
 
-from django.core.exceptions import FieldDoesNotExist
 from django.db.models import F
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
-from rest_framework.fields import empty
 from rest_framework.settings import api_settings
 
 from apps.common.helpers import get_technical_metax_user
@@ -30,35 +28,6 @@ class PartialFileSerializer(FileSerializer, StrictSerializer):
     All fields have required=False and id is writable.
     Null id is treated as missing id.
     """
-
-    def assign_defaults_from_model(self, fields):
-        """Set default serializer field values from model fields.
-
-        Used for PUT-style update where fields that are not included in
-        the update are reset to their default values."""
-        for name, field in fields.items():
-            if name == "id" or field.required or field.read_only or (field.default is not empty):
-                continue
-
-            try:
-                source = field.source or name
-                model_field = self.Meta.model._meta.get_field(source)
-                if model_field.has_default():
-                    field.default = model_field.get_default()
-                elif model_field.null:
-                    field.default = None
-            except FieldDoesNotExist:
-                pass
-        return fields
-
-    def get_fields(self):
-        fields = super().get_fields()
-        if self.partial:
-            for field in fields.values():
-                field.required = False
-        else:
-            fields = self.assign_defaults_from_model(fields)
-        return fields
 
     class Meta(FileSerializer.Meta):
         extra_kwargs = {
@@ -143,7 +112,7 @@ class FileBulkSerializer(serializers.ListSerializer):
 
     def __init__(self, *args, action: BulkAction, ignore_errors=False, **kwargs):
         self.action: BulkAction = action
-        self.child = PartialFileSerializer(partial=action not in self.BULK_INSERT_ACTIONS)
+        self.child = PartialFileSerializer(patch=action not in self.BULK_INSERT_ACTIONS)
         self.ignore_errors = ignore_errors
         super().__init__(*args, **kwargs)
         self.failed: List[BulkFileFail] = []

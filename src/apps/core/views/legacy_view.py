@@ -1,6 +1,7 @@
 from django_filters import rest_framework as filters
 from rest_framework import viewsets
 
+from apps.common.views import CommonModelViewSet
 from apps.core.models import LegacyDataset
 from apps.core.serializers import LegacyDatasetModelSerializer
 
@@ -18,7 +19,7 @@ class LegacyDatasetFilter(filters.FilterSet):
     )
 
 
-class LegacyDatasetViewSet(viewsets.ModelViewSet):
+class LegacyDatasetViewSet(CommonModelViewSet):
     serializer_class = LegacyDatasetModelSerializer
     queryset = LegacyDataset.objects.all()
     lookup_field = "dataset_json__identifier"

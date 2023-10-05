@@ -33,13 +33,24 @@ def test_files_create_twice(client, ida_file_json):
 
 
 @pytest.mark.django_db
+def test_files_create_and_put(client, ida_file_json):
+    res = client.post("/v3/files", ida_file_json, content_type="application/json")
+    assert res.status_code == 201
+    del ida_file_json["size"]
+    res = client.put(f"/v3/files/{res.data['id']}", ida_file_json, content_type="application/json")
+    assert res.status_code == 200
+    assert res.data["size"] == 0
+
+
+@pytest.mark.django_db
 def test_files_create_and_patch(client, ida_file_json):
     res = client.post("/v3/files", ida_file_json, content_type="application/json")
     assert res.status_code == 201
-    res = client.patch(
-        f"/v3/files/{res.data['id']}", ida_file_json, content_type="application/json"
-    )
+    assert res.data["size"] == 1024
+    patch_json = {"size": 123456}
+    res = client.patch(f"/v3/files/{res.data['id']}", patch_json, content_type="application/json")
     assert res.status_code == 200
+    assert res.data["size"] == 123456
 
 
 @pytest.mark.django_db

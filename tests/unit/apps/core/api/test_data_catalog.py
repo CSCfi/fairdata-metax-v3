@@ -3,6 +3,7 @@ import logging
 
 import pytest
 from rest_framework.reverse import reverse
+from tests.utils import matchers
 
 from apps.core.models import DataCatalog
 
@@ -28,7 +29,6 @@ def test_create_minimal_datacatalog(
 def test_create_datacatalog_twice(
     client, datacatalog_a_json, reference_data, data_catalog_list_url
 ):
-    _now = datetime.datetime.now()
     res1 = client.post(data_catalog_list_url, datacatalog_a_json, content_type="application/json")
     assert res1.status_code == 201
     res2 = client.post(data_catalog_list_url, datacatalog_a_json, content_type="application/json")
@@ -151,3 +151,42 @@ def test_delete_datacatalog_by_id(client, post_datacatalog_payloads_a_b_c):
     assert response.status_code == 204
     response = client.get("/v3/data-catalogs/urn:nbn:fi:att:data-catalog-uusitesti")
     assert response.status_code == 404
+
+
+def test_put_datacatalog(client, datacatalog_a_json, reference_data, data_catalog_list_url):
+    datacatalog_a_json["dataset_schema"] = "att"
+    res1 = client.post(data_catalog_list_url, datacatalog_a_json, content_type="application/json")
+    assert res1.status_code == 201
+
+    put_json = {"id": res1.data["id"], "title": {"en": "Put Catalog"}}
+    res2 = client.put(
+        reverse("datacatalog-detail", kwargs={"pk": res1.data["id"]}),
+        put_json,
+        content_type="application/json",
+    )
+    assert res2.status_code == 200
+
+    # values not in put_json should be cleared to defaults
+    put_json["url"] = matchers.Any(type=str)
+    put_json["dataset_schema"] = "ida"  # ida is default
+    assert put_json == {key: value for key, value in res2.json().items() if value}
+
+
+def test_patch_datacatalog(client, datacatalog_a_json, reference_data, data_catalog_list_url):
+    datacatalog_a_json["dataset_schema"] = "att"
+    res1 = client.post(data_catalog_list_url, datacatalog_a_json, content_type="application/json")
+    assert res1.status_code == 201
+
+    patch_json = {"title": {"en": "Patch Catalog"}}
+    res2 = client.patch(
+        reverse("datacatalog-detail", kwargs={"pk": res1.data["id"]}),
+        patch_json,
+        content_type="application/json",
+    )
+    assert res2.status_code == 200
+
+    # fields in patch_json should replace original values, others unchanged
+    assert res2.json() == {
+        **res1.json(),
+        **patch_json,
+    }

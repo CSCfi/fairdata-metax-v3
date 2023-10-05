@@ -106,6 +106,15 @@ def field_of_science_reference_data():
     common_args = {
         "in_scheme": "http://www.yso.fi/onto/okm-tieteenala/conceptscheme",
     }
+    factories.FieldOfScienceFactory(
+        url="http://www.yso.fi/onto/okm-tieteenala/ta113",
+        pref_label={
+            "en": "Computer and information sciences",
+            "fi": "Tietojenkäsittely ja informaatiotieteet",
+            "sv": "Data- och informationsvetenskap",
+        },
+        **common_args,
+    )
     field_a = factories.FieldOfScienceFactory(
         url="http://www.yso.fi/onto/okm-tieteenala/ta111",
         pref_label={"en": "Mathematics", "fi": "Matematiikka", "sv": "Matematik"},
@@ -313,6 +322,20 @@ def location_reference_data():
         pref_label={"en": "Koitajoki", "fi": "Koitajoki", "sv": "Koitajoki"},
         **common_args,
     )
+    factories.LocationFactory(
+        url="http://www.yso.fi/onto/yso/p105747",
+        pref_label={"en": "Tapiola", "fi": "Tapiola (Espoo)", "sv": "Hagalund (Esbo)"},
+        **common_args,
+    )
+    factories.LocationFactory(
+        url="http://www.yso.fi/onto/yso/p189359",
+        pref_label={
+            "en": "Unioninkatu",
+            "fi": "Unioninkatu (Helsinki)",
+            "sv": "Unionsgatan (Helsingfors)",
+        },
+        **common_args,
+    )
 
 
 @pytest.fixture
@@ -351,6 +374,11 @@ def lifecycle_event_reference_data():
     factories.LifecycleEventFactory(
         url="http://uri.suomi.fi/codelist/fairdata/lifecycle_event/code/modified",
         pref_label={"en": "Modified", "fi": "Muokattu"},
+        **common_args,
+    )
+    factories.LifecycleEventFactory(
+        url="http://uri.suomi.fi/codelist/fairdata/lifecycle_event/code/destroyed",
+        pref_label={"en": "Destroyed", "fi": "Tuhottu"},
         **common_args,
     )
 

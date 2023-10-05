@@ -22,9 +22,10 @@ from apps.common.serializers import (
     AbstractDatasetPropertyModelSerializer,
     AnyOf,
     CommonListSerializer,
-    NestedModelSerializer,
+    CommonNestedModelSerializer,
 )
 from apps.common.serializers.fields import ChecksumField, MediaTypeField
+from apps.common.serializers.serializers import CommonModelSerializer
 from apps.core.models import (
     AccessRights,
     CatalogHomePage,
@@ -54,7 +55,7 @@ class CatalogHomePageModelSerializer(AbstractDatasetPropertyModelSerializer):
         list_serializer_class = CommonListSerializer
 
 
-class DatasetPublisherModelSerializer(NestedModelSerializer):
+class DatasetPublisherModelSerializer(CommonNestedModelSerializer):
     homepage = CatalogHomePageModelSerializer(many=True)
 
     class Meta:
@@ -62,15 +63,15 @@ class DatasetPublisherModelSerializer(NestedModelSerializer):
         fields = ("id", "name", "homepage")
 
 
-class LicenseModelSerializer(serializers.ModelSerializer):
+class LicenseModelSerializer(CommonModelSerializer):
     """Custom serializer for License that does not require pref_label
 
     Conforms use case where AccessRights object can be created with only url-field in license
 
     """
 
-    description = serializers.JSONField(required=False)
-    url = serializers.URLField(required=False)
+    description = serializers.JSONField(required=False, allow_null=True)
+    url = serializers.URLField(required=False, allow_null=True)
     pref_label = serializers.HStoreField(read_only=True)
     in_scheme = serializers.URLField(max_length=255, read_only=True)
 
@@ -124,7 +125,7 @@ class LicenseModelSerializer(serializers.ModelSerializer):
         return {**rep, **serialized_ref}
 
 
-class AccessRightsModelSerializer(NestedModelSerializer):
+class AccessRightsModelSerializer(CommonNestedModelSerializer):
     license = LicenseModelSerializer(required=False, many=True)
     access_type = AccessType.get_serializer_field(required=False, allow_null=True)
 
@@ -133,7 +134,7 @@ class AccessRightsModelSerializer(NestedModelSerializer):
         fields = ("id", "description", "license", "access_type")
 
 
-class DatasetActorModelSerializer(serializers.ModelSerializer):
+class DatasetActorModelSerializer(CommonModelSerializer):
     organization = OrganizationSerializer(many=False, required=False, allow_null=True)
     person = PersonModelSerializer(many=False, required=False, allow_null=True)
 
@@ -292,7 +293,7 @@ class TemporalModelSerializer(AbstractDatasetModelSerializer):
         return super().validate(attrs)
 
 
-class RemoteResourceSerializer(serializers.ModelSerializer):
+class RemoteResourceSerializer(CommonModelSerializer):
     use_category = UseCategory.get_serializer_field()
     file_type = FileType.get_serializer_field(required=False, allow_null=True)
     checksum = ChecksumField(required=False, allow_null=True)

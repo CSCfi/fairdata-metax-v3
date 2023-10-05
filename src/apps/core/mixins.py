@@ -5,12 +5,13 @@ from typing import Dict, List
 from django.contrib.auth import get_user_model
 from django.core.validators import EMPTY_VALUES
 from django.db.models import QuerySet
-from rest_framework import viewsets
+
+from apps.common.views import CommonModelViewSet
 
 logger = logging.getLogger(__name__)
 
 
-class DatasetNestedViewSetMixin(viewsets.ModelViewSet):
+class DatasetNestedViewSetMixin(CommonModelViewSet):
     def get_queryset(self):
         if getattr(
             self, "swagger_fake_view", None

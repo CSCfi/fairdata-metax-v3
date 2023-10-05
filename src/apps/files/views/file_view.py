@@ -12,12 +12,10 @@ from django.contrib.postgres.aggregates import ArrayAgg
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import F, Q, QuerySet
 from django.db.models.functions import Concat
-from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
-from django_filters import compat, rest_framework as filters
-from drf_yasg import openapi
+from django_filters import rest_framework as filters
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import serializers, status, viewsets
+from rest_framework import serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -28,7 +26,7 @@ from apps.common.serializers import (
     DeleteListReturnValueSerializer,
 )
 from apps.common.serializers.serializers import IncludeRemovedQueryParamsSerializer
-from apps.common.views import QueryParamsMixin
+from apps.common.views import CommonModelViewSet, QueryParamsMixin
 from apps.files.helpers import get_file_metadata_model
 from apps.files.models.file import File
 from apps.files.serializers import FileSerializer
@@ -104,7 +102,7 @@ class FilesDatasetsBodySerializer(serializers.ListSerializer):
     child = serializers.CharField()
 
 
-class BaseFileViewSet(QueryParamsMixin, viewsets.ModelViewSet):
+class BaseFileViewSet(QueryParamsMixin, CommonModelViewSet):
     """Basic read-only files view."""
 
     serializer_class = FileSerializer

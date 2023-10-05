@@ -1,12 +1,12 @@
 from django.middleware.csrf import get_token
 from knox.models import AuthToken
 from rest_framework import serializers
-from rest_framework.serializers import ModelSerializer
 
+from apps.common.serializers.serializers import CommonModelSerializer
 from apps.users.models import MetaxUser
 
 
-class MetaxUserModelSerializer(serializers.ModelSerializer):
+class MetaxUserModelSerializer(CommonModelSerializer):
     """User model serializer for use in datasets."""
 
     class Meta:
@@ -15,7 +15,7 @@ class MetaxUserModelSerializer(serializers.ModelSerializer):
         extra_kwargs = {"username": {"validators": []}}
 
 
-class UserInfoSerializer(serializers.ModelSerializer):
+class UserInfoSerializer(CommonModelSerializer):
     """User serializer with user details."""
 
     dataset_count = serializers.SerializerMethodField()
@@ -53,7 +53,7 @@ class AuthenticatedUserInfoSerializer(UserInfoSerializer):
         read_only_fields = fields
 
 
-class TokenSerializer(ModelSerializer):
+class TokenSerializer(CommonModelSerializer):
     """Serializer for AuthTokens in API token list."""
 
     # Show token key (first few characters of token) to allow identifying tokens

@@ -13,6 +13,7 @@ from rest_framework import serializers
 
 from apps.common.helpers import get_attr_or_item
 from apps.common.serializers.fields import ChecksumField, ListValidChoicesField
+from apps.common.serializers.serializers import CommonModelSerializer
 from apps.files.helpers import get_file_metadata_serializer
 from apps.files.models.file import File, FileStorage
 from apps.files.models.file_storage import FileStorage
@@ -50,7 +51,7 @@ class CreateOnlyFieldsMixin:
         return super().update(instance, validated_data)
 
 
-class FileSerializer(CreateOnlyFieldsMixin, serializers.ModelSerializer):
+class FileSerializer(CreateOnlyFieldsMixin, CommonModelSerializer):
     create_only_fields = [
         "pathname",
         "project",
@@ -87,9 +88,11 @@ class FileSerializer(CreateOnlyFieldsMixin, serializers.ModelSerializer):
     def to_internal_value(self, data):
         val = super().to_internal_value(data)
 
-        # FileStorage validation expects id in data for existing files.
+        # Fill identifying data for existing files.
         if self.instance:
             val.setdefault("id", self.instance.id)
+            val.setdefault("storage_service", self.instance.storage.storage_service)
+            val.setdefault("project", self.instance.storage.project)
 
         if not (self.parent and self.parent.many):
             # When in a list, this should be done in a parent serializer
@@ -123,5 +126,3 @@ class FileSerializer(CreateOnlyFieldsMixin, serializers.ModelSerializer):
             "user",
             "dataset_metadata",
         ]
-
-    # TODO: Partial update

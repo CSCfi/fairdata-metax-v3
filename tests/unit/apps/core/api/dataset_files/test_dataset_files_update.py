@@ -62,8 +62,8 @@ def test_dataset_files_post_multiple_file_sets(client, deep_file_tree, data_urls
 
     assert res.status_code == 400
     assert res.json() == {
-        "project": "Wrong project for FileSet.",
-        "storage_service": "Wrong storage_service for FileSet.",
+        "project": "Wrong project for fileset.",
+        "storage_service": "Wrong storage_service for fileset.",
     }
 
 

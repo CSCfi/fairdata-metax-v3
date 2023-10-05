@@ -202,4 +202,6 @@
             - [test_api_payloads](tests/unit/docs/examples/test_api_payloads.md)
             - [test_datasets_api](tests/unit/docs/examples/test_datasets_api.md)
         - [swagger.test_swagger](tests/unit/swagger/test_swagger.md)
-    - [utils.utils](tests/utils/utils.md)
+    - utils
+        - [matchers](tests/utils/matchers.md)
+        - [utils](tests/utils/utils.md)

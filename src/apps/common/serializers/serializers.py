@@ -8,6 +8,7 @@ import json
 import logging
 from uuid import UUID
 
+from django.core.exceptions import FieldDoesNotExist
 from django.core.validators import EMPTY_VALUES
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -15,41 +16,7 @@ from rest_framework import serializers
 from rest_framework.fields import empty
 from rest_framework.utils import model_meta
 
-from apps.common.helpers import update_or_create_instance
-
 logger = logging.getLogger(__name__)
-
-
-class AbstractDatasetModelSerializer(serializers.ModelSerializer):
-    class Meta:
-        fields = "__all__"
-        abstract = True
-
-
-class AbstractDatasetPropertyModelSerializer(serializers.ModelSerializer):
-    class Meta:
-        fields = ("id", "url", "title")
-        abstract = True
-
-    def to_representation(self, instance):
-        if isinstance(instance.title, str):
-            instance.title = json.loads(instance.title)
-        representation = super().to_representation(instance)
-
-        return representation
-
-    def to_internal_value(self, data):
-        internal_value = super().to_internal_value(data)
-        if "id" in data:
-            try:
-                UUID(data.get("id"))
-                internal_value["id"] = data.get("id")
-            except ValueError:
-                raise serializers.ValidationError(
-                    _("id: {} is not valid UUID").format(data.get("id"))
-                )
-
-        return internal_value
 
 
 class CommonListSerializer(serializers.ListSerializer):
@@ -92,21 +59,55 @@ class StrictSerializer(serializers.Serializer):
         return super().to_internal_value(data)
 
 
-class PatchSerializer(serializers.Serializer):
-    """Serializer which allows partial update that does not propagate to nested serializers.
+class PatchModelSerializer(serializers.ModelSerializer):
+    """ModelSerializer which allows PUT (full replacement) and PATCH (partial update) behavior.
 
-    For partial updates, use patch=True which does not make nested updates partial.
-    Using partial=True throws a ValueError to prevent accidentally using the
-    default (propagating) partial update style.
+    For partial updates, use patch=True which makes all fields non-required.
+    This differs from DRF partial=True in that it applies only to the root serializer,
+    not to fields in nested serializers. Using partial=True throws a ValueError
+    to prevent accidentally using the default partial update style.
+
+    When patch=False, unspecified fields use
+    - empty list for many-relations
+    - model default value for other values
+
+    For a viewset that uses patch=True for partial updates, see PatchModelMixin.
     """
 
     def __init__(self, *args, **kwargs):
         self.patch = kwargs.pop("patch", False)
         if kwargs.get("partial"):
             raise ValueError(
-                "PatchSerializer should not be used with partial=True. Use patch=True instead."
+                _(
+                    "PatchModelSerializer should not be used with partial=True. "
+                    "Use patch=True instead"
+                )
             )
         super().__init__(*args, **kwargs)
+
+    def assign_defaults_from_model(self, fields):
+        """Set default serializer field values from model fields.
+
+        Used for PUT-style update where fields that are not included in
+        the update are reset to their default values."""
+        for name, field in fields.items():
+            if name == "id" or field.required or field.read_only or (field.default is not empty):
+                continue
+
+            try:
+                source = field.source or name
+                model_field = self.Meta.model._meta.get_field(source)
+                if model_field.one_to_many or model_field.many_to_many:
+                    field.default = []
+                elif model_field.is_relation:
+                    field.default = None
+                elif model_field.has_default():
+                    field.default = model_field.get_default()
+                elif model_field.null:
+                    field.default = None
+            except FieldDoesNotExist:
+                pass
+        return fields
 
     def get_fields(self):
         """When patch is enabled, no fields are required."""
@@ -116,6 +117,8 @@ class PatchSerializer(serializers.Serializer):
                 field.required = False
                 if not field.read_only:
                     field.default = empty
+        else:
+            fields = self.assign_defaults_from_model(fields)
         return fields
 
 
@@ -180,6 +183,10 @@ class NestedModelSerializer(serializers.ModelSerializer):
                 else:
                     self.forward_serializers[name] = field
 
+    def get_reverse_field(self, serializer):
+        model_class = self.Meta.model
+        return model_class._meta.get_field(serializer.source).remote_field
+
     def inject_instance_to_data(self, serializer, instance, field_data):
         """Inject parent instance to reverse relation data.
 
@@ -197,8 +204,7 @@ class NestedModelSerializer(serializers.ModelSerializer):
         ```
         the data for nested update of a.b will have {"a": a} in validated_data.
         """
-        model_class = self.Meta.model
-        reverse_field = model_class._meta.get_field(serializer.source).remote_field
+        reverse_field = self.get_reverse_field(serializer)
         if reverse_field.concrete and not reverse_field.many_to_many:
             # field is defined on the other model and can be assigned directly
             if isinstance(field_data, dict):
@@ -213,9 +219,6 @@ class NestedModelSerializer(serializers.ModelSerializer):
         Instance should be None for simple forward relations."""
         related_instances = {}
         for serializer in serializers.values():
-            model_class = self.Meta.model
-            f = model_class._meta.get_field(serializer.source)
-            r = model_class._meta.get_field(serializer.source).remote_field
             data = related_data.pop(serializer.field_name, None)
             if data not in EMPTY_VALUES:
                 if instance:
@@ -236,16 +239,33 @@ class NestedModelSerializer(serializers.ModelSerializer):
         source = serializer.source
         return hasattr(instance, source) and getattr(instance, source) or None
 
-    def update_related(self, serializers, instance, related_data):
+    def clear_related_instance(self, serializer, related_instance) -> None:
+        """Clear related object instance.
+
+        (Soft) deletes a related object. For reverse related concrete field,
+        assign null if allowed, otherwise throw error.
+        """
+        reverse_field = self.get_reverse_field(serializer)
+        if reverse_field.concrete:
+            # Raise error when trying to clear non-nullable relation on child
+            if not reverse_field.null:
+                raise serializers.ValidationError(
+                    {serializer.field_name: _("Clearing existing value is not allowed.")}
+                )
+            setattr(related_instance, reverse_field.name, None)
+            related_instance.save(update_fields=[reverse_field.name])
+        related_instance.delete()  # May be soft delete
+        return None
+
+    def update_related(self, nested_serializers, instance, related_data):
         """Update related model instances."""
         related_instances = {}
-        for serializer in serializers.values():
+        for serializer in nested_serializers.values():
             if serializer.field_name not in related_data:
                 continue  # data missing from related_data, ignore field
 
             data = related_data.pop(serializer.field_name)
-            if instance:
-                self.inject_instance_to_data(serializer, instance, data)
+            self.inject_instance_to_data(serializer, instance, data)
 
             related_instance = self.get_related_instance(serializer, instance)
             if isinstance(related_instance, models.Manager):
@@ -258,7 +278,7 @@ class NestedModelSerializer(serializers.ModelSerializer):
                 serializer._errors = []  # data was already validated by parent serializer
                 related_instance = serializer.save()
             elif related_instance:
-                related_instance.delete()
+                related_instance = self.clear_related_instance(serializer, related_instance)
 
             related_instances[serializer.source] = related_instance
         return related_instances
@@ -323,3 +343,41 @@ class NestedModelSerializer(serializers.ModelSerializer):
             model_field.set(related_instance)  # Assign new relations
 
         return instance
+
+
+class CommonModelSerializer(PatchModelSerializer, serializers.ModelSerializer):
+    """ModelSerializer for behavior common for all model APIs."""
+
+
+class CommonNestedModelSerializer(CommonModelSerializer, NestedModelSerializer):
+    """NestedModelSerializer for behavior common for all model APIs."""
+
+
+class AbstractDatasetModelSerializer(CommonModelSerializer):
+    class Meta:
+        fields = "__all__"
+
+
+class AbstractDatasetPropertyModelSerializer(CommonModelSerializer):
+    class Meta:
+        fields = ("id", "url", "title")
+
+    def to_representation(self, instance):
+        if isinstance(instance.title, str):
+            instance.title = json.loads(instance.title)
+        representation = super().to_representation(instance)
+
+        return representation
+
+    def to_internal_value(self, data):
+        internal_value = super().to_internal_value(data)
+        if "id" in data:
+            try:
+                UUID(data.get("id"))
+                internal_value["id"] = data.get("id")
+            except ValueError:
+                raise serializers.ValidationError(
+                    _("id: {} is not valid UUID").format(data.get("id"))
+                )
+
+        return internal_value

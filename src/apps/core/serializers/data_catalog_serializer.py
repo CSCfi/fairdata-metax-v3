@@ -6,15 +6,14 @@
 # :license: MIT
 import logging
 
-from apps.common.helpers import update_or_create_instance
-from apps.common.serializers import NestedModelSerializer
+from apps.common.serializers import CommonNestedModelSerializer
 from apps.core.models import DataCatalog, Language
 from apps.core.serializers import AccessRightsModelSerializer, DatasetPublisherModelSerializer
 
 logger = logging.getLogger(__name__)
 
 
-class DataCatalogModelSerializer(NestedModelSerializer):
+class DataCatalogModelSerializer(CommonNestedModelSerializer):
     access_rights = AccessRightsModelSerializer(required=False)
     publisher = DatasetPublisherModelSerializer(required=False)
     language = Language.get_serializer_field(required=False, many=True)

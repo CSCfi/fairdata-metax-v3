@@ -1,13 +1,9 @@
 import logging
 from typing import Optional
 
-from django.core.exceptions import MultipleObjectsReturned
-from django.forms import model_to_dict
-from rest_framework import serializers
-
 from apps.actors.models import Organization, Person
-from apps.actors.serializers import ActorModelSerializer, PersonModelSerializer
-from apps.common.serializers.serializers import CommonListSerializer, NestedModelSerializer
+from apps.actors.serializers import ActorModelSerializer
+from apps.common.serializers.serializers import CommonListSerializer, CommonNestedModelSerializer
 from apps.core.models import Dataset, DatasetActor, EventOutcome, LifecycleEvent, Provenance
 from apps.core.serializers import (
     DatasetActorProvenanceSerializer,
@@ -18,7 +14,7 @@ from apps.core.serializers import (
 logger = logging.getLogger(__name__)
 
 
-class ProvenanceModelSerializer(NestedModelSerializer):
+class ProvenanceModelSerializer(CommonNestedModelSerializer):
     spatial = SpatialModelSerializer(required=False, allow_null=True)
     temporal = TemporalModelSerializer(required=False, allow_null=True)
     lifecycle_event = LifecycleEvent.get_serializer_field(required=False, allow_null=True)

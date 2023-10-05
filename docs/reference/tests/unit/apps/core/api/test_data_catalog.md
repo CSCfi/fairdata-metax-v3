@@ -48,3 +48,11 @@
 
 ### :::tests.unit.apps.core.api.test_data_catalog.test_delete_datacatalog_by_id
 
+## test_put_datacatalog
+
+### :::tests.unit.apps.core.api.test_data_catalog.test_put_datacatalog
+
+## test_patch_datacatalog
+
+### :::tests.unit.apps.core.api.test_data_catalog.test_patch_datacatalog
+

@@ -4,10 +4,11 @@ from unittest.mock import ANY
 
 import pytest
 from rest_framework.reverse import reverse
-from tests.utils import assert_nested_subdict
+from tests.utils import assert_nested_subdict, matchers
 
 from apps.core.models import OtherIdentifier
 from apps.core.models.concepts import IdentifierType
+from apps.files.factories import FileStorageFactory
 
 logger = logging.getLogger(__name__)
 
@@ -260,3 +261,74 @@ def test_update_dataset_with_other_identifiers(
     # Assert that the old other_identifiers don't exist in the db anymore
     new_count = OtherIdentifier.available_objects.all().count()
     assert new_count == 4
+
+
+def test_dataset_put_maximal_and_minimal(
+    client, dataset_maximal_json, reference_data, data_catalog
+):
+    res = client.post("/v3/datasets", dataset_maximal_json, content_type="application/json")
+    assert res.status_code == 201
+    assert_nested_subdict(dataset_maximal_json, res.json())
+
+    minimal_json = {
+        "data_catalog": dataset_maximal_json["data_catalog"],
+        "title": dataset_maximal_json["title"],
+    }
+    res = client.put(
+        f"/v3/datasets/{res.data['id']}", minimal_json, content_type="application/json"
+    )
+    assert res.status_code == 200
+
+    # writable fields not in minimal_json should be cleared to falsy values
+    assert list(sorted(key for key, value in res.data.items() if value)) == [
+        "created",
+        "data_catalog",
+        "id",
+        "modified",
+        "title",
+    ]
+
+
+def test_dataset_patch_maximal_and_minimal(
+    client, dataset_maximal_json, reference_data, data_catalog
+):
+    res = client.post("/v3/datasets", dataset_maximal_json, content_type="application/json")
+    assert res.status_code == 201
+    maximal_data = res.json()
+
+    minimal_json = {
+        "title": {"en": "new title"},
+    }
+    res = client.patch(
+        f"/v3/datasets/{res.data['id']}", minimal_json, content_type="application/json"
+    )
+    assert res.status_code == 200
+    minimal_data = res.json()
+
+    # fields in minimal_json should replace values in maximal, others unchanged
+    assert minimal_data == {
+        **maximal_data,
+        **minimal_json,
+        "modified": matchers.DateTime(),  # match any datetime
+    }
+
+
+def test_dataset_put_remove_fileset(client, dataset_maximal_json, reference_data, data_catalog):
+    FileStorageFactory(storage_service="ida", project="project")
+    dataset_maximal_json["fileset"] = {
+        "storage_service": "ida",
+        "project": "project",
+    }
+    res = client.post("/v3/datasets", dataset_maximal_json, content_type="application/json")
+    assert res.status_code == 201
+
+    # PUT without fileset would remove existing fileset which is not allowed
+    minimal_json = {
+        "data_catalog": dataset_maximal_json["data_catalog"],
+        "title": dataset_maximal_json["title"],
+    }
+    res = client.put(
+        f"/v3/datasets/{res.data['id']}", minimal_json, content_type="application/json"
+    )
+    assert res.status_code == 400
+    assert "not allowed" in res.json()["fileset"]

@@ -125,7 +125,7 @@ class FileStorageManagerMixin(ProxyBasePolymorphicManager):
             files: List of dicts containing file data
             allow_create: Create FileStorages that don't exist.
             raise_exception: Raise exception on error. Otherwise add errors to dict.
-            remove_filestorage_fields: When enabled, remove storage_location and
+            remove_filestorage_fields: When enabled, remove storage_service and
                 other FileStorage fields from the files.
 
         Returns:

@@ -95,6 +95,7 @@ class DatasetLicense(AbstractBaseModel):
     )
 
     class Meta:
+        ordering = ["created"]
         indexes = [
             models.Index(fields=["custom_url"]),
         ]

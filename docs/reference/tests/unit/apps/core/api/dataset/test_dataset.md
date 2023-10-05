@@ -72,3 +72,15 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_update_dataset_with_other_identifiers
 
+## test_dataset_put_maximal_and_minimal
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_dataset_put_maximal_and_minimal
+
+## test_dataset_patch_maximal_and_minimal
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_dataset_patch_maximal_and_minimal
+
+## test_dataset_put_remove_fileset
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_dataset_put_remove_fileset
+

@@ -3,11 +3,13 @@ from .serializers import (
     AbstractDatasetModelSerializer,
     AbstractDatasetPropertyModelSerializer,
     CommonListSerializer,
+    CommonModelSerializer,
+    CommonNestedModelSerializer,
     DeleteListQueryParamsSerializer,
     DeleteListReturnValueSerializer,
     IncludeRemovedQueryParamsSerializer,
     NestedModelSerializer,
-    PatchSerializer,
+    PatchModelSerializer,
     StrictSerializer,
 )
 from .validators import AnyOf

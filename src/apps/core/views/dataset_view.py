@@ -9,10 +9,10 @@ import logging
 
 from django_filters import rest_framework as filters
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import exceptions, response, viewsets
+from rest_framework import exceptions
 from watson import search
 
-from apps.common.views import PatchModelMixin
+from apps.common.views import CommonModelViewSet
 from apps.core.models.catalog_record import Dataset, FileSet
 from apps.core.serializers import DatasetSerializer
 from apps.files.models import File
@@ -79,7 +79,7 @@ class DatasetFilter(filters.FilterSet):
         return search.filter(queryset, value)
 
 
-class DatasetViewSet(PatchModelMixin, viewsets.ModelViewSet):
+class DatasetViewSet(CommonModelViewSet):
     serializer_class = DatasetSerializer
     queryset = Dataset.objects.prefetch_related(
         "access_rights__access_type",

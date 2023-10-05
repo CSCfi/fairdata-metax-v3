@@ -7,6 +7,7 @@ from django.utils.translation import gettext as _
 from rest_framework import serializers
 
 from apps.common.models import AbstractBaseModel
+from apps.common.serializers.serializers import CommonModelSerializer
 
 
 class AbstractConcept(AbstractBaseModel):
@@ -57,7 +58,7 @@ class AbstractConcept(AbstractBaseModel):
 
     @classmethod
     def get_serializer_class(cls):
-        class BaseSerializer(serializers.ModelSerializer):
+        class BaseSerializer(CommonModelSerializer):
             omit_related = False
 
             def get_fields(self):

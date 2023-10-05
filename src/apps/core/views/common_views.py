@@ -2,9 +2,8 @@ import logging
 
 from django_filters import rest_framework as filters
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import viewsets
 
-from apps.common.views import StandardResultsSetPagination
+from apps.common.views import CommonModelViewSet, StandardResultsSetPagination
 from apps.core.models import AccessRights
 from apps.core.models.catalog_record import DatasetActor, MetadataProvider
 from apps.core.models.data_catalog import DatasetPublisher
@@ -45,7 +44,7 @@ class DatasetPublisherFilter(filters.FilterSet):
 
 
 @swagger_auto_schema(operation_description="Publisher viewset")
-class PublisherViewSet(viewsets.ModelViewSet):
+class PublisherViewSet(CommonModelViewSet):
     serializer_class = DatasetPublisherModelSerializer
     queryset = DatasetPublisher.objects.all()
     filterset_class = DatasetPublisherFilter
@@ -110,7 +109,7 @@ class AccessRightsFilter(filters.FilterSet):
 
 
 @swagger_auto_schema(operation_description="DatasetActor viewset")
-class DatasetActorViewSet(viewsets.ModelViewSet):
+class DatasetActorViewSet(CommonModelViewSet):
     serializer_class = DatasetActorModelSerializer
     filter_backends = (filters.DjangoFilterBackend,)
 
@@ -169,7 +168,7 @@ class MetadataProviderFilter(filters.FilterSet):
     )
 
 
-class MetadataProviderViewSet(viewsets.ModelViewSet):
+class MetadataProviderViewSet(CommonModelViewSet):
     serializer_class = MetadataProviderModelSerializer
     queryset = MetadataProvider.objects.all()
     filter_backends = (filters.DjangoFilterBackend,)

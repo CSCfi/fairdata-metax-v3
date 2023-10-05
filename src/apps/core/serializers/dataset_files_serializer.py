@@ -101,8 +101,8 @@ class FileSetSerializer(StrictSerializer):
         urls = set()
         for action in actions:
             if metadata := action.get("dataset_metadata"):
-                if key in metadata:
-                    urls.add(metadata[key]["url"])
+                if item := metadata.get(key):
+                    urls.add(item["url"])
 
         # Get dict of model instances by url
         refdata_by_url = model.objects.distinct("url").in_bulk(urls, field_name="url")
@@ -113,8 +113,8 @@ class FileSetSerializer(StrictSerializer):
         # Assign model instances to dataset_metadata
         for action in actions:
             if metadata := action.get("dataset_metadata"):
-                if key in metadata:
-                    metadata[key] = refdata_by_url.get(metadata[key]["url"])
+                if item := metadata.get(key):
+                    metadata[key] = refdata_by_url.get(item["url"])
 
     def to_internal_value(self, data):
         value = super().to_internal_value(data)
@@ -202,9 +202,9 @@ class FileSetSerializer(StrictSerializer):
         if file_set:
             errors = {}
             if file_set.storage.project != attrs["storage"].project:
-                errors["project"] = _("Wrong project for FileSet.")
+                errors["project"] = _("Wrong project for fileset.")
             if file_set.storage.storage_service != attrs["storage"].storage_service:
-                errors["storage_service"] = _("Wrong storage_service for FileSet.")
+                errors["storage_service"] = _("Wrong storage_service for fileset.")
             if errors:
                 raise serializers.ValidationError(errors)
 

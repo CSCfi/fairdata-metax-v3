@@ -106,7 +106,7 @@ def test_modify_dataset(
     res = client.post("/v3/datasets", v1_v3_dataset_v3_json, content_type="application/json")
     assert res.status_code == 201
 
-    put = client.put(
+    put = client.patch(
         f"/v3/datasets/{res.data['id']}", dataset_v3_modify_json, content_type="application/json"
     )
     dataset = Dataset.objects.get(id=res.data["id"])

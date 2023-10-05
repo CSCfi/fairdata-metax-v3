@@ -20,6 +20,7 @@ class FileFactory(factory.django.DjangoModelFactory):
         model = models.File
         django_get_or_create = ("directory_path", "filename", "storage")
         exclude = ("checksum_value",)
+        skip_postgeneration_save = True
 
     id = factory.Faker("uuid4")
     modified = factory.LazyFunction(timezone.now)
@@ -51,6 +52,7 @@ class FileFactory(factory.django.DjangoModelFactory):
 
         self.filename = str(self.pathname).split("/")[-1]
         self.file_format = str(self.filename).split(".")[-1]
+        self.save()
 
 
 def create_file_tree(storage, file_paths, file_args={}) -> Dict[str, models.File]:

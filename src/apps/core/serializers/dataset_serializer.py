@@ -6,7 +6,7 @@
 # :license: MIT
 import logging
 
-from apps.common.serializers import NestedModelSerializer, PatchSerializer
+from apps.common.serializers import CommonNestedModelSerializer
 from apps.core.models import Dataset
 from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
 from apps.core.serializers.common_serializers import (
@@ -27,8 +27,8 @@ from .dataset_files_serializer import FileSetSerializer
 logger = logging.getLogger(__name__)
 
 
-class DatasetSerializer(PatchSerializer, NestedModelSerializer):
-    access_rights = AccessRightsModelSerializer(required=False)
+class DatasetSerializer(CommonNestedModelSerializer):
+    access_rights = AccessRightsModelSerializer(required=False, allow_null=True)
     field_of_science = FieldOfScience.get_serializer_field(required=False, many=True)
     infrastructure = ResearchInfra.get_serializer_field(required=False, many=True)
     actors = DatasetActorModelSerializer(required=False, many=True)

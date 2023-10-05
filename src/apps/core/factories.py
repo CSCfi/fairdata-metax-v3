@@ -36,6 +36,7 @@ class DatasetPublisherFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.DatasetPublisher
         django_get_or_create = ("name",)
+        skip_postgeneration_save = True
 
     name = factory.Dict({"en": factory.Sequence(lambda n: f"dataset-publisher-{n}")})
 
@@ -157,7 +158,9 @@ class DatasetLicenseFactory(factory.django.DjangoModelFactory):
         model = models.DatasetLicense
 
     reference = factory.SubFactory(
-        LicenseFactory, url="http://uri.suomi.fi/codelist/fairdata/license/code/other"
+        LicenseFactory,
+        url="http://uri.suomi.fi/codelist/fairdata/license/code/other",
+        in_scheme="http://uri.suomi.fi/codelist/fairdata/license",
     )
 
 
@@ -191,6 +194,7 @@ class AccessRightsFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.AccessRights
         django_get_or_create = ("description",)
+        skip_postgeneration_save = True
 
     access_type = factory.SubFactory(AccessTypeFactory)
     license = factory.RelatedFactory(DatasetLicenseFactory)  # create single license
@@ -201,6 +205,7 @@ class DataCatalogFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.DataCatalog
         django_get_or_create = ("id",)
+        skip_postgeneration_save = True
 
     @factory.sequence
     def id(self):
@@ -262,6 +267,7 @@ class FileSetFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.FileSet
         django_get_or_create = ("dataset", "storage")
+        skip_postgeneration_save = True
 
     dataset = factory.SubFactory(DatasetFactory)
     storage = factory.SubFactory(FileStorageFactory)

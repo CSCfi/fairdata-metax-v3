@@ -8,7 +8,7 @@ def generate_other_license(apps, schema_editor):
         url="http://uri.suomi.fi/codelist/fairdata/license/code/other",
         defaults={
             "pref_label": {"en": "Other", "fi": "Muu"},
-            "in_scheme": "http://uri.suomi.fi/codelist/fairdata/"})
+            "in_scheme": "http://uri.suomi.fi/codelist/fairdata/license"})
 
 class Migration(migrations.Migration):
 

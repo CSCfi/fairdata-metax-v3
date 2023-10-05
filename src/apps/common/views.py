@@ -1,5 +1,6 @@
 from typing import Optional
 
+from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
@@ -12,7 +13,11 @@ class StandardResultsSetPagination(PageNumberPagination):
 
 
 class PatchModelMixin:
-    """ViewSet mixin for patching stuff"""
+    """ViewSet mixin for patch support in partial update.
+
+    The ViewSet needs to use a serializer based on PatchModelSerializer.
+    Otherwise the serializer raises an error about unexpected 'patch' argument.
+    """
 
     def update(self, request, *args, **kwargs):
         """Like UpdateModelMixin.update but with support for 'patch' kwarg."""
@@ -90,3 +95,11 @@ class QueryParamsMixin(ViewSet):
             serializer.is_valid(raise_exception=True)
             params.update(serializer.validated_data)
         self.query_params = params
+
+
+class CommonModelViewSet(PatchModelMixin, viewsets.ModelViewSet):
+    """ViewSet with common functionality."""
+
+
+class CommonReadOnlyModelViewSet(viewsets.ReadOnlyModelViewSet):
+    """ViewSet with common functionality for read only models."""

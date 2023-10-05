@@ -1,9 +1,8 @@
-from rest_framework import serializers
-
+from apps.common.serializers.serializers import CommonModelSerializer
 from apps.core.models import LegacyDataset
 
 
-class LegacyDatasetModelSerializer(serializers.ModelSerializer):
+class LegacyDatasetModelSerializer(CommonModelSerializer):
     def create(self, validated_data):
         if instance := LegacyDataset.objects.filter(
             dataset_json__identifier=validated_data["dataset_json"]["identifier"]

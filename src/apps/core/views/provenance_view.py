@@ -1,5 +1,4 @@
 from django_filters import rest_framework as filters
-from rest_framework import viewsets
 
 from apps.core.mixins import DatasetNestedViewSetMixin
 from apps.core.serializers import ProvenanceModelSerializer

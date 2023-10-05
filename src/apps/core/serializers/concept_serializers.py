@@ -1,12 +1,12 @@
 from rest_framework import serializers
 
 from apps.common.serializers.fields import WKTField
-from apps.common.serializers.serializers import CommonListSerializer
+from apps.common.serializers.serializers import CommonListSerializer, CommonModelSerializer
 from apps.common.serializers.validators import AnyOf
 from apps.core.models import Spatial, concepts
 
 
-class SpatialModelSerializer(serializers.ModelSerializer):
+class SpatialModelSerializer(CommonModelSerializer):
     """Model Serializer for Spatial"""
 
     reference = concepts.Location.get_serializer_field(required=False)

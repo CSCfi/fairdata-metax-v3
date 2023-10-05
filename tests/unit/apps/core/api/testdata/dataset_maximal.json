@@ -1,0 +1,303 @@
+{
+  "access_rights": {
+    "access_type": {
+      "in_scheme": "http://uri.suomi.fi/codelist/fairdata/access_type",
+      "pref_label": {
+        "en": "Open",
+        "fi": "Avoin"
+      },
+      "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open"
+    },
+    "description": null,
+    "license": [
+      {
+        "custom_url": null,
+        "description": null,
+        "in_scheme": "http://uri.suomi.fi/codelist/fairdata/license",
+        "pref_label": {
+          "en": "Other",
+          "fi": "Muu"
+        },
+        "url": "http://uri.suomi.fi/codelist/fairdata/license/code/other"
+      },
+      {
+        "custom_url": "https://creativecommons.org/licenses/by/4.0/",
+        "description": null,
+        "in_scheme": "http://uri.suomi.fi/codelist/fairdata/license",
+        "pref_label": {
+          "en": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+          "fi": "Creative Commons Nimeä 4.0 Kansainvälinen (CC BY 4.0)"
+        },
+        "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0"
+      }
+    ]
+  },
+  "actors": [
+    {
+      "organization": {
+        "code": null,
+        "homepage": null,
+        "in_scheme": "http://uri.suomi.fi/codelist/fairdata/organization",
+        "pref_label": {
+          "en": "Kone Foundation",
+          "fi": "Koneen Säätiö",
+          "sv": "Koneen säätiö",
+          "und": "Koneen Säätiö"
+        },
+        "url": "http://uri.suomi.fi/codelist/fairdata/organization/code/02135371"
+      },
+      "person": {
+        "email": null,
+        "external_id": null,
+        "name": "Unexisting Entity"
+      },
+      "roles": [
+        "curator"
+      ]
+    },
+    {
+      "organization": {
+        "code": null,
+        "homepage": null,
+        "in_scheme": "http://uri.suomi.fi/codelist/fairdata/organization",
+        "pref_label": {
+          "en": "test dept."
+        },
+        "url": null
+      },
+      "person": {
+        "email": null,
+        "external_id": null,
+        "name": "Kuvitteellinen Henkilö"
+      },
+      "roles": [
+        "creator"
+      ]
+    },
+    {
+      "organization": {
+        "code": null,
+        "homepage": null,
+        "in_scheme": "http://uri.suomi.fi/codelist/fairdata/organization",
+        "pref_label": {
+          "en": "Testiorganisaatio"
+        },
+        "url": null
+      },
+      "person": null,
+      "roles": [
+        "creator"
+      ]
+    },
+    {
+      "organization": {
+        "code": null,
+        "homepage": null,
+        "in_scheme": "http://uri.suomi.fi/codelist/fairdata/organization",
+        "pref_label": {
+          "en": "Kone Foundation",
+          "fi": "Koneen Säätiö",
+          "sv": "Koneen säätiö",
+          "und": "Koneen Säätiö"
+        },
+        "url": "http://uri.suomi.fi/codelist/fairdata/organization/code/02135371"
+      },
+      "person": {
+        "email": null,
+        "external_id": null,
+        "name": "Unexisting Entity"
+      },
+      "roles": [
+        "creator"
+      ]
+    }
+  ],
+  "data_catalog": "urn:nbn:fi:att:data-catalog-ida",
+  "description": {
+    "en": "This dataset is used for testing all fields in the Etsin dataset page. Description, Data, Identifiers and Events, and Maps -tabs are included in this test as well. Another version was made to test the version picker as well.\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+    "fi": "Tällä aineistolla testataan kaikkia Etsimen aineistosivulta löytyviä kenttiä. Aineisto, Data, Tunnisteet ja Tapahtumat, sekä Kartat -välilehdet kuuluvat myös tähän testiin. Uusi versio tehtiin, jotta version valinta -painiketta voidaan testata.\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+  },
+  "field_of_science": [
+    {
+      "in_scheme": "http://www.yso.fi/onto/okm-tieteenala/conceptscheme",
+      "pref_label": {
+        "en": "Computer and information sciences",
+        "fi": "Tietojenkäsittely ja informaatiotieteet",
+        "sv": "Data- och informationsvetenskap"
+      },
+      "url": "http://www.yso.fi/onto/okm-tieteenala/ta113"
+    }
+  ],
+  "issued": "2023-06-28T00:00:00+03:00",
+  "keyword": [
+    "test",
+    "software development",
+    "web-development",
+    "testi",
+    "ohjelmistokehitys",
+    "web-kehitys"
+  ],
+  "language": [
+    {
+      "url": "http://lexvo.org/id/iso639-3/fin"
+    },
+    {
+      "url": "http://lexvo.org/id/iso639-3/eng"
+    }
+  ],
+  "metadata_owner": {
+    "organization": "csc.fi",
+    "user": {
+      "username": "fd_user5"
+    }
+  },
+  "other_identifiers": [
+    {
+      "notation": "https://www.example.com"
+    }
+  ],
+  "persistent_identifier": "doi:10.23729/ee43f42b-e455-4849-9d70-7e3a52b307f5",
+  "provenance": [
+    {
+      "description": {
+        "en": "And it was great"
+      },
+      "event_outcome": {
+        "in_scheme": "http://uri.suomi.fi/codelist/fairdata/event_outcome",
+        "pref_label": {
+          "en": "Success",
+          "fi": "Onnistunut",
+          "sv": "Framgångsrik"
+        },
+        "url": "http://uri.suomi.fi/codelist/fairdata/event_outcome/code/success"
+      },
+      "is_associated_with": [],
+      "lifecycle_event": {
+        "in_scheme": "http://uri.suomi.fi/codelist/fairdata/lifecycle_event",
+        "pref_label": {
+          "en": "Destroyed",
+          "fi": "Tuhottu"
+        },
+        "url": "http://uri.suomi.fi/codelist/fairdata/lifecycle_event/code/destroyed"
+      },
+      "outcome_description": {
+        "en": "Destruction complete"
+      },
+      "spatial": {
+        "altitude_in_meters": 512,
+        "custom_wkt": null,
+        "full_address": "Annankatu 5",
+        "geographic_name": "Random Test Location",
+        "reference": {
+          "in_scheme": "http://www.yso.fi/onto/yso/places",
+          "pref_label": {
+            "en": "Unioninkatu",
+            "fi": "Unioninkatu (Helsinki)",
+            "sv": "Unionsgatan (Helsingfors)"
+          },
+          "url": "http://www.yso.fi/onto/yso/p189359"
+        }
+      },
+      "title": {
+        "en": "This thing happened"
+      }
+    }
+  ],
+  "remote_resources": [
+    {
+      "access_url": "https://access.url",
+      "checksum": "md5:f00f",
+      "description": {
+        "en": "Description of resource"
+      },
+      "download_url": "https://download.url",
+      "file_type": {
+        "in_scheme": "http://uri.suomi.fi/codelist/fairdata/file_type",
+        "pref_label": {
+          "en": "Video",
+          "fi": "Video"
+        },
+        "url": "http://uri.suomi.fi/codelist/fairdata/file_type/code/video"
+      },
+      "mediatype": "text/csv",
+      "title": {
+        "en": "Dataset Remote Resource"
+      },
+      "use_category": {
+        "in_scheme": "http://uri.suomi.fi/codelist/fairdata/use_category",
+        "pref_label": {
+          "en": "Source material",
+          "fi": "Lähdeaineisto"
+        },
+        "url": "http://uri.suomi.fi/codelist/fairdata/use_category/code/source"
+      }
+    }
+  ],
+  "spatial": [
+    {
+      "altitude_in_meters": null,
+      "full_address": "Unioninkatu 6, Helsinki",
+      "geographic_name": "Random Address in Helsinki",
+      "reference": {
+        "in_scheme": "http://www.yso.fi/onto/yso/places",
+        "pref_label": {
+          "en": "Koitajoki",
+          "fi": "Koitajoki",
+          "sv": "Koitajoki"
+        },
+        "url": "http://www.yso.fi/onto/yso/p105080"
+      }
+    },
+    {
+      "altitude_in_meters": 1337,
+      "custom_wkt": [
+        "POINT (22 61)"
+      ],
+      "full_address": "Itätuulenkuja 3, Espoo",
+      "geographic_name": "Another Random Address in Espoo",
+      "reference": {
+        "in_scheme": "http://www.yso.fi/onto/yso/places",
+        "pref_label": {
+          "en": "Tapiola",
+          "fi": "Tapiola (Espoo)",
+          "sv": "Hagalund (Esbo)"
+        },
+        "url": "http://www.yso.fi/onto/yso/p105747"
+      }
+    }
+  ],
+  "temporal": [
+    {
+      "start_date": "2023-08-11T14:46:00.140339+03:00",
+      "end_date": "2024-08-11T14:46:00.140339+03:00"
+    },
+    {
+      "start_date": "2023-10-10T12:30:00+03:00"
+    }
+  ],
+  "theme": [
+    {
+      "in_scheme": "http://www.yso.fi/onto/koko/",
+      "pref_label": {
+        "en": "data systems designers",
+        "fi": "atk-suunnittelijat",
+        "sv": "adb-planerare"
+      },
+      "url": "http://www.yso.fi/onto/koko/p1"
+    },
+    {
+      "in_scheme": "http://www.yso.fi/onto/koko/",
+      "pref_label": {
+        "en": "testing",
+        "fi": "testaus",
+        "sv": "testning",
+        "sme": "testen"
+      },
+      "url": "http://www.yso.fi/onto/koko/p36817"
+    }
+  ],
+  "title": {
+    "en": "All Fields Test Dataset",
+    "fi": "Kaikkien kenttien testiaineisto testi"
+  }
+}

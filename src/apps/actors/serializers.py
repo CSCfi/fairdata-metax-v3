@@ -1,11 +1,11 @@
-from drf_writable_nested import WritableNestedModelSerializer
 from rest_framework import serializers
 
 from apps.actors.models import Actor, Organization, Person
 from apps.common.serializers import CommonListSerializer
+from apps.common.serializers.serializers import CommonModelSerializer
 
 
-class ChildOrganizationSerializer(serializers.ModelSerializer):
+class ChildOrganizationSerializer(CommonModelSerializer):
     """Serialize child organization tree without repeating parent organization."""
 
     children = serializers.SerializerMethodField(read_only=True, method_name="get_children")
@@ -24,7 +24,7 @@ class ChildOrganizationSerializer(serializers.ModelSerializer):
         return reps
 
 
-class ParentOrganizationSerializer(serializers.ModelSerializer):
+class ParentOrganizationSerializer(CommonModelSerializer):
     """Serialize parent organizations up to root."""
 
     parent = serializers.SerializerMethodField(read_only=True, method_name="get_parent")
@@ -40,7 +40,7 @@ class ParentOrganizationSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class OrganizationSerializer(serializers.ModelSerializer):
+class OrganizationSerializer(CommonModelSerializer):
     """Serialize organization
 
     Will include
@@ -56,13 +56,13 @@ class OrganizationSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class PersonModelSerializer(serializers.ModelSerializer):
+class PersonModelSerializer(CommonModelSerializer):
     class Meta:
         model = Person
         fields = ("name", "email", "external_id")
 
 
-class ActorModelSerializer(serializers.ModelSerializer):
+class ActorModelSerializer(CommonModelSerializer):
     organization = OrganizationSerializer(many=False, required=False, allow_null=True)
     person = PersonModelSerializer(many=False, required=False, allow_null=True)
 

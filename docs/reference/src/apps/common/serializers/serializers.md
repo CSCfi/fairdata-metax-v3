@@ -1,13 +1,5 @@
 # serializers
 
-## AbstractDatasetModelSerializer
-
-### :::src.apps.common.serializers.serializers.AbstractDatasetModelSerializer
-
-## AbstractDatasetPropertyModelSerializer
-
-### :::src.apps.common.serializers.serializers.AbstractDatasetPropertyModelSerializer
-
 ## CommonListSerializer
 
 ### :::src.apps.common.serializers.serializers.CommonListSerializer
@@ -16,9 +8,9 @@
 
 ### :::src.apps.common.serializers.serializers.StrictSerializer
 
-## PatchSerializer
+## PatchModelSerializer
 
-### :::src.apps.common.serializers.serializers.PatchSerializer
+### :::src.apps.common.serializers.serializers.PatchModelSerializer
 
 ## IncludeRemovedQueryParamsSerializer
 
@@ -35,4 +27,20 @@
 ## NestedModelSerializer
 
 ### :::src.apps.common.serializers.serializers.NestedModelSerializer
+
+## CommonModelSerializer
+
+### :::src.apps.common.serializers.serializers.CommonModelSerializer
+
+## CommonNestedModelSerializer
+
+### :::src.apps.common.serializers.serializers.CommonNestedModelSerializer
+
+## AbstractDatasetModelSerializer
+
+### :::src.apps.common.serializers.serializers.AbstractDatasetModelSerializer
+
+## AbstractDatasetPropertyModelSerializer
+
+### :::src.apps.common.serializers.serializers.AbstractDatasetPropertyModelSerializer
 
