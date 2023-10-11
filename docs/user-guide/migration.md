@@ -48,7 +48,7 @@ For more information about the new dataset API, see [the user guide article](./d
 | access_granter [object]                      | :question:                                    |
 | api_meta [object]                            | :no_entry:                                    |
 | data_catalog [object]                        | [data_catalog](#datacatalog) [uuid] :star:    |
-| dataset_version_set [list]                   | other_versions [list] :clock:                 |
+| dataset_version_set [list]                   | other_versions [list] :star:                  |
 | date_created [datetime]                      | created [datetime] :star:                     |
 | date_cumulation_started [datetime]           | cumulation_started [datetime] :star:          |
 | date_last_cumulative_addition [datetime]     | last_cumulative_addition [datetime] :star:    |
@@ -59,6 +59,9 @@ For more information about the new dataset API, see [the user guide article](./d
 | metadata_owner_org [str]                     | metadata_owner/organization [str] :star:      |
 | metadata_provider_org [str]                  | metadata_owner/organization [str] :star:      |
 | metadata_provider_user [str]                 | metadata_owner/user [object] :star:           |
+| N/A                                          | first_version [url] :star:                    |
+| N/A                                          | last_version [url] :star:                     |
+| N/A                                          | next_version [url] :star:                     |
 | preservation_dataset_origin_version          | :no-entry: [^1]                               |
 | preservation_dataset_version [str]           | :no-entry: [^1]                               |
 | preservation_description [str]               | preservation/description [str] :clock: [^1]   |
@@ -66,7 +69,7 @@ For more information about the new dataset API, see [the user guide article](./d
 | preservation_reason_description [str]        | preservation/reason [str] :clock:             |
 | preservation_state [int]                     | preservation/state [int] :clock: [^1]         |
 | preservation_state_modified [datetime]       | prevervation/modified [datetime] :clock: [^1] |
-| previous_dataset_version [object]            | previous_version [id] :clock:                 |
+| previous_dataset_version [object]            | previous_version [url] :star:                 |
 | removed [bool]                               | :no-entry:                                    |
 | research_dataset [object]                    | :no-entry:                                    |
 | research_dataset/access_rights [object]      | access_rights [object] :star:                 |

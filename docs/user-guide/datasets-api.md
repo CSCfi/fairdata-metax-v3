@@ -116,6 +116,22 @@ Dataset files and remote resources are exclusive with each other, so a dataset c
     ```
 
 
+### Versioning and revisions
+
+Whenever Dataset `state` field has value `published`, it will trigger new published revision on save. Published revisions are numbered, starting from 0. If new dataset is published without prior version in the database, it will have named revision `published-0`, if it did have previous revision that was draft, it will get named revision `published-1`. Drafts have named revisions in the format draft-{published-revision}-{draft-revision}, so for example `draft-1.1` is first draft revision on named published revision `published-1`.
+
+#### Versions vs revisions
+
+Revisions are named changes to singular dataset. Single dataset can have as many revisions as it needs. Versions are two or more datasets that represents series of datasets in the same set. Versions never share same persistent identifier or id. Versions are only created when user explicitly wants to create one. Revisions are created automatically. 
+
+#### Enabling versioning on dataset
+
+Dataset needs to be on datacatalog with `dataset_versioning_enabled` set to true.
+
+#### Working with versions
+
+Datasets have `previous_version`, `next_version`, `first_version`, `last_version` and `other_versions` fields that have links to other versions of the dataset. Published revisions can be queried from `/v3/datasets/{id}/revisions` endpoint. 
+
 ## Dataset files
 
 A dataset can have files associated with it, and associated files and directories can have

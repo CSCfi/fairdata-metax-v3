@@ -3,6 +3,7 @@ from django.db import models
 from django.utils.translation import gettext as _
 
 from apps.common.models import AbstractBaseModel, AbstractFreeformConcept
+from apps.common.helpers import prepare_for_copy, ensure_instance_id
 
 from .catalog_record import Dataset, DatasetActor, Temporal
 from .concepts import EventOutcome, LifecycleEvent, Spatial
@@ -43,6 +44,23 @@ class Provenance(AbstractBaseModel):
     )
     is_associated_with = models.ManyToManyField(DatasetActor, related_name="provenance")
     dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE, related_name="provenance")
+
+    @classmethod
+    def create_copy(cls, original, dataset=None):
+        copy_actors = original.is_associated_with.all()
+        copy = prepare_for_copy(original)
+
+        if dataset:
+            ensure_instance_id(dataset)
+            copy.dataset = dataset
+
+        if original.spatial:
+            new_spatial, _ = Spatial.create_copy(original.spatial, dataset)
+            copy.spatial = new_spatial
+
+        copy.save()
+        copy.is_associated_with.set(copy_actors)
+        return copy, original
 
     def __str__(self):
         if self.title is not None:

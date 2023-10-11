@@ -12,4 +12,4 @@ from .serializers import (
     PatchModelSerializer,
     StrictSerializer,
 )
-from .validators import AnyOf
+from .validators import AnyOf, OneOf

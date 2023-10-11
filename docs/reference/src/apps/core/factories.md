@@ -100,3 +100,7 @@
 
 ### :::src.apps.core.factories.ContributorTypeFactory
 
+## ProvenanceFactory
+
+### :::src.apps.core.factories.ProvenanceFactory
+

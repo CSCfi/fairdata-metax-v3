@@ -1,3 +1,4 @@
+import copy
 import logging
 from contextlib import contextmanager
 from typing import Dict
@@ -5,6 +6,7 @@ from typing import Dict
 from cachalot.api import cachalot_disabled
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db.models import Model
 from django.utils.dateparse import parse_datetime
 from django_filters import NumberFilter
 from django_filters.rest_framework import DjangoFilterBackend
@@ -143,3 +145,16 @@ def get_filter_openapi_parameters(filterset_class):
         )
         params.append(param)
     return params
+
+
+def prepare_for_copy(obj):
+    obj = copy.deepcopy(obj)
+    obj.id = None
+    obj.pk = None
+    obj._state.adding = True
+    return obj
+
+
+def ensure_instance_id(instance):
+    if not instance.id:
+        instance.save()

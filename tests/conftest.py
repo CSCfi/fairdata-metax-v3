@@ -54,7 +54,7 @@ def data_catalog() -> DataCatalog:
         "fi": "Fairdata IDA-aineistot",
         "sv": "Fairdata forskningsdata",
     }
-    return factories.DataCatalogFactory(id=identifier, title=title)
+    return factories.DataCatalogFactory(id=identifier, title=title, dataset_versioning_enabled=True)
 
 
 @pytest.mark.django_db

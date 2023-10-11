@@ -1,12 +1,19 @@
 import json
 import uuid
+from typing import Tuple
 
 from django.contrib.postgres.fields import HStoreField
 from django.db import models
 from simple_history.models import HistoricalRecords
 
-from apps.common.models import AbstractBaseModel, AbstractDatasetProperty, AbstractFreeformConcept
+from apps.common.models import (
+    AbstractBaseModel,
+    AbstractDatasetProperty,
+    AbstractFreeformConcept,
+)
 from apps.core.models.concepts import AccessType, DatasetLicense, Language
+from apps.common.helpers import prepare_for_copy
+from apps.common.mixins import CopyableModelMixin
 
 
 class DataCatalog(AbstractBaseModel):
@@ -20,7 +27,8 @@ class DataCatalog(AbstractBaseModel):
     Attributes:
         title (HStoreField): catalog title
         dataset_versioning_enabled (models.BooleanField): does the catalog have versioning enabled
-        harvested (models.BooleanField): are the catalog resources harvested from some other sources
+        harvested (models.BooleanField):
+            are the catalog resources harvested from some other sources
         language (models.ManyToManyField): default language of the catalog
         publisher (models.ForeignKey): publisher of the cataloged resources
         access_rights (models.ForeignKey): default access rights for the cataloged resources
@@ -115,7 +123,7 @@ class DatasetPublisher(AbstractBaseModel):
         return str(next(iter(name.items())))
 
 
-class AccessRights(AbstractBaseModel):
+class AccessRights(AbstractBaseModel, CopyableModelMixin):
     """Information about who can access the resource or an indication of its security status.
 
     RFD Property: dcterms:accessRights
@@ -155,6 +163,19 @@ class AccessRights(AbstractBaseModel):
             return self.access_type.pref_label.get("en", "access rights")
         else:
             return "Access Rights"
+
+    @classmethod
+    def create_copy(cls, original) -> Tuple["AccessRights", "AccessRights"]:
+        o_lics = original.license.all()
+        copy_lics = []
+        for lic in o_lics:
+            copy_lic, _ = lic.create_copy(lic)
+            copy_lics.append(copy_lic)
+
+        copy = prepare_for_copy(original)
+        copy.save()
+        copy.license.set(copy_lics)
+        return copy, original
 
 
 class AccessRightsRestrictionGrounds(AbstractFreeformConcept):

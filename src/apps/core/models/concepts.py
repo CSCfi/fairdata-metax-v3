@@ -1,4 +1,5 @@
 import uuid
+from typing import Tuple
 
 from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.db import models
@@ -7,6 +8,8 @@ from django.utils.translation import gettext as _
 from apps.common.models import AbstractBaseModel, AbstractFreeformConcept
 from apps.common.serializers.fields import URLReferencedModelField, URLReferencedModelListField
 from apps.refdata import models as refdata
+from apps.common.mixins import CopyableModelMixin
+from apps.common.helpers import prepare_for_copy
 
 
 def not_implemented_function(*args, **kwargs):
@@ -78,7 +81,7 @@ class License(ConceptProxyMixin, refdata.License):
     """License from reference data."""
 
 
-class DatasetLicense(AbstractBaseModel):
+class DatasetLicense(AbstractBaseModel, CopyableModelMixin):
     """A legal document under which the resource is made available.
 
     RFD Property: dcterms:license
@@ -144,7 +147,7 @@ class Location(ConceptProxyMixin, refdata.Location):
     """Location from reference data."""
 
 
-class Spatial(AbstractFreeformConcept):
+class Spatial(AbstractFreeformConcept, CopyableModelMixin):
     """The geographical area covered by the dataset.
 
     Attributes:
@@ -176,6 +179,15 @@ class Spatial(AbstractFreeformConcept):
     dataset = models.ForeignKey(
         "Dataset", on_delete=models.CASCADE, related_name="spatial", null=True, blank=True
     )
+
+    @classmethod
+    def create_copy(cls, original, dataset=None):
+        copy = prepare_for_copy(original)
+        if dataset:
+            dataset.save()
+            copy.dataset = dataset
+        copy.save()
+        return copy, original
 
     def __str__(self):
         return self.geographic_name or str(next(iter(self.reference.pref_label.items())))

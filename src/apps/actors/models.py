@@ -9,6 +9,7 @@ from django.db import models
 from django.utils.translation import gettext as _
 
 from apps.common.models import AbstractBaseModel
+from apps.common.mixins import CopyableModelMixin
 
 logger = logging.getLogger(__name__)
 
@@ -145,7 +146,7 @@ class Organization(AbstractBaseModel):
         return f"<{self.__class__.__name__} {self.id}: {self.get_label()}>"
 
 
-class Person(AbstractBaseModel):
+class Person(AbstractBaseModel, CopyableModelMixin):
     name = models.CharField(max_length=512)
     email = models.EmailField(max_length=512, blank=True, null=True)
     external_id = models.CharField(

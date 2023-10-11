@@ -1,5 +1,6 @@
 {
   "data_catalog": "urn:nbn:fi:att:data-catalog-ida",
+  "persistent_identifier": "doi:test-persistence-id",
   "issued": "2022-10-31T13:23Z",
   "title": {
     "en": "Test dataset"
@@ -43,5 +44,6 @@
       "end_date": "2023-11-25T09:43:48.000000+03:00"
     }
   ],
-  "cumulative_state": 1
+  "cumulative_state": 1,
+  "state": "published"
 }

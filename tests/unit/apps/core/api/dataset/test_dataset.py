@@ -285,6 +285,7 @@ def test_dataset_put_maximal_and_minimal(
         "data_catalog",
         "id",
         "modified",
+        "state",
         "title",
     ]
 

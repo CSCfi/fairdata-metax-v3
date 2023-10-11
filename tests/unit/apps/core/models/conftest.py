@@ -138,34 +138,27 @@ def catalog_record(data_catalog) -> CatalogRecord:
 
 @pytest.fixture
 def dataset() -> Dataset:
-    identifier = "12345678-51d3-4c25-ad20-75aff8ca37d7"
     title = {
         "en": "Title 2",
         "fi": "Otsikko 2",
         "sv": "Titel 2",
     }
-    return factories.DatasetFactory(id=identifier, title=title, cumulative_state=1)
+    persistent_id = "doi:1234"
+    catalog = factories.DataCatalogFactory(dataset_versioning_enabled=True)
+    return factories.DatasetFactory(
+        title=title,
+        cumulative_state=1,
+        persistent_identifier=persistent_id,
+        data_catalog=catalog,
+    )
 
 
 @pytest.fixture
 def dataset_with_foreign_keys(
     access_rights, language, field_of_science, keyword, dataset, data_catalog
 ) -> Dataset:
-    datasets = list(factories.DatasetFactory.create_batch(4))
     dataset.data_catalog = data_catalog
     dataset.access_rights = access_rights
-    dataset.first = datasets[0]
-    dataset.last = datasets[1]
-    dataset.previous = datasets[2]
-    dataset.replaces = datasets[3]
-    dataset.first.data_catalog = data_catalog
-    dataset.last.data_catalog = data_catalog
-    dataset.previous.data_catalog = data_catalog
-    dataset.replaces.data_catalog = data_catalog
-    dataset.first.save()
-    dataset.last.save()
-    dataset.previous.save()
-    dataset.replaces.save()
     dataset.save()
     dataset.language.add(language)
     dataset.field_of_science.add(field_of_science)

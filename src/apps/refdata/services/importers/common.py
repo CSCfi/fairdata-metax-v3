@@ -5,6 +5,8 @@ from typing import Protocol
 from django.db import transaction
 from django.db.models import prefetch_related_objects
 
+from apps.common.helpers import cachalot_toggle
+
 _logger = logging.getLogger(__name__)
 
 
@@ -116,7 +118,6 @@ class BaseDataImporter(ReferenceDataImporterInterface):
     @transaction.atomic
     def save(self, data):
         objects_by_url = self.get_existing_objects_by_url()
-
         counts = self.create_or_update_objects(data, objects_by_url)
         self.create_relationships(data, objects_by_url)
         _logger.info(
@@ -131,7 +132,8 @@ class BaseDataImporter(ReferenceDataImporterInterface):
 
         _logger.info("Saving objects")
         if data:
-            self.save(data)
+            with cachalot_toggle(enabled=False):
+                self.save(data)
 
     def __repr__(self):
         return f"<{self.__class__.__name__}: {self.source}>"

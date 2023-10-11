@@ -16,6 +16,7 @@
         - [helpers](src/apps/common/helpers.md)
         - [inspectors](src/apps/common/inspectors.md)
         - [managers](src/apps/common/managers.md)
+        - [mixins](src/apps/common/mixins.md)
         - [models](src/apps/common/models.md)
         - [pagination](src/apps/common/pagination.md)
         - [responses](src/apps/common/responses.md)
@@ -137,6 +138,7 @@
                         - [test_provenance](tests/unit/apps/core/api/dataset/test_provenance.md)
                         - [test_remote_resources](tests/unit/apps/core/api/dataset/test_remote_resources.md)
                         - [test_temporal](tests/unit/apps/core/api/dataset/test_temporal.md)
+                        - [test_versioning](tests/unit/apps/core/api/dataset/test_versioning.md)
                     - dataset_files
                         - [test_dataset_files_list](tests/unit/apps/core/api/dataset_files/test_dataset_files_list.md)
                         - [test_dataset_files_update](tests/unit/apps/core/api/dataset_files/test_dataset_files_update.md)
@@ -160,6 +162,7 @@
                     - [test_dataset_property](tests/unit/apps/core/models/test_dataset_property.md)
                     - [test_metadata_provider](tests/unit/apps/core/models/test_metadata_provider.md)
                     - [test_publisher](tests/unit/apps/core/models/test_publisher.md)
+                    - [test_versioning](tests/unit/apps/core/models/test_versioning.md)
             - files
                 - api
                     - [conftest](tests/unit/apps/files/api/conftest.md)

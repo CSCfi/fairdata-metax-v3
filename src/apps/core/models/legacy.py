@@ -455,7 +455,7 @@ class LegacyDataset(Dataset):
                     self.created_objects += 1
                 records.append(instance)
 
-        self.other_identifiers.set(records)
+        self.dataset.other_identifiers.set(records)
         return records
 
     def attach_contract(self) -> Contract:

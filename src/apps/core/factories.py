@@ -327,3 +327,16 @@ class ContributorTypeFactory(factory.django.DjangoModelFactory):
     @factory.sequence
     def url(self):
         return f"https://contributor-type-{self}.fi"
+
+
+class ProvenanceFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.Provenance
+
+    dataset = factory.SubFactory(DatasetFactory)
+    lifecycle_event = factory.SubFactory(LifecycleEventFactory)
+    event_outcome = factory.SubFactory(EventOutcomeFactory)
+    spatial = factory.SubFactory(SpatialFactory)
+
+    description = factory.Dict({"en": factory.Sequence(lambda n: f"provenance-desc-{n}")})
+    title = factory.Dict({"en": factory.Sequence(lambda n: f"provenance-{n}")})

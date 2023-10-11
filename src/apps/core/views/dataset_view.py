@@ -6,12 +6,16 @@
 # :license: MIT
 
 import logging
+from typing import Optional
 
 from django_filters import rest_framework as filters
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import exceptions
+from rest_framework import exceptions, response
+from rest_framework.decorators import action
+from rest_framework import status
 from watson import search
 
+from apps.common.views import QueryParamsMixin
 from apps.common.views import CommonModelViewSet
 from apps.core.models.catalog_record import Dataset, FileSet
 from apps.core.serializers import DatasetSerializer
@@ -19,6 +23,7 @@ from apps.files.models import File
 from apps.files.serializers import DirectorySerializer
 from apps.files.views.directory_view import DirectoryCommonQueryParams, DirectoryViewSet
 from apps.files.views.file_view import BaseFileViewSet, FileCommonFilterset
+from apps.core.serializers.dataset_serializer import DatasetRevisionsQueryParamsSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +84,14 @@ class DatasetFilter(filters.FilterSet):
         return search.filter(queryset, value)
 
 
-class DatasetViewSet(CommonModelViewSet):
+class DatasetViewSet(QueryParamsMixin, CommonModelViewSet):
+    query_serializers = [
+        {
+            "class": DatasetRevisionsQueryParamsSerializer,
+            "actions": ["revisions"],
+        }
+    ]
+
     serializer_class = DatasetSerializer
     queryset = Dataset.objects.prefetch_related(
         "access_rights__access_type",
@@ -103,6 +115,7 @@ class DatasetViewSet(CommonModelViewSet):
         "spatial__reference",
         "spatial",
         "theme",
+        "other_versions",
     )
 
     filterset_class = DatasetFilter
@@ -117,6 +130,47 @@ class DatasetViewSet(CommonModelViewSet):
             return obj
         except Dataset.DoesNotExist:
             return super().get_object()
+
+    @action(detail=True, methods=["post", "get"], url_path="new-version")
+    def new_version(self, request, pk=None):
+        if request.method == "POST":
+            dataset = self.get_object()
+            new_version, _ = Dataset.create_copy(dataset)
+            serializer = self.get_serializer(new_version)
+            return response.Response(serializer.data, status=status.HTTP_201_CREATED)
+        elif request.method == "GET":
+            dataset = self.get_object()
+            next_version = dataset.next_version
+            if next_version is None:
+                return response.Response(status=status.HTTP_404_NOT_FOUND)
+            else:
+                serializer = self.get_serializer(next_version)
+                return response.Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["get"])
+    def revisions(self, request, pk=None):
+        dataset: Dataset = self.get_object()
+        serializer: Optional[DatasetSerializer]
+        latest_published = self.query_params.get("latest_published")
+        published_version = self.query_params.get("published_revision")
+        all_published_versions = self.query_params.get("all_published_revisions")
+        if latest_published:
+            if published := dataset.latest_published_revision:
+                serializer = self.get_serializer(published, many=False)
+            else:
+                return response.Response(status=status.HTTP_404_NOT_FOUND)
+        elif published_version:
+            version = dataset.get_published_revision(published_version)
+            if version:
+                serializer = self.get_serializer(version)
+            else:
+                return response.Response(status=status.HTTP_404_NOT_FOUND)
+        elif all_published_versions:
+            versions = dataset.all_published_revisions()
+            serializer = self.get_serializer(versions, many=True)
+        else:
+            serializer = self.get_serializer(dataset)
+        return response.Response(serializer.data)
 
 
 class DatasetDirectoryViewSet(DirectoryViewSet):

@@ -7,6 +7,7 @@
 import logging
 
 from apps.common.serializers import CommonNestedModelSerializer
+from rest_framework import serializers
 from apps.core.models import Dataset
 from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
 from apps.core.serializers.common_serializers import (
@@ -21,6 +22,7 @@ from apps.core.serializers.concept_serializers import SpatialModelSerializer
 
 # for preventing circular import, using submodule instead of apps.core.serializers
 from apps.core.serializers.provenance_serializers import ProvenanceModelSerializer
+from apps.common.serializers import OneOf
 
 from .dataset_files_serializer import FileSetSerializer
 
@@ -41,6 +43,21 @@ class DatasetSerializer(CommonNestedModelSerializer):
     spatial = SpatialModelSerializer(required=False, many=True)
     temporal = TemporalModelSerializer(required=False, many=True)
     provenance = ProvenanceModelSerializer(required=False, many=True)
+    last_version = serializers.HyperlinkedRelatedField(
+        many=False, read_only=True, view_name="dataset-detail"
+    )
+    previous_version = serializers.HyperlinkedRelatedField(
+        many=False, read_only=True, view_name="dataset-detail"
+    )
+    next_version = serializers.HyperlinkedRelatedField(
+        many=False, read_only=True, view_name="dataset-detail"
+    )
+    first_version = serializers.HyperlinkedRelatedField(
+        many=False, read_only=True, view_name="dataset-detail"
+    )
+    other_versions = serializers.HyperlinkedRelatedField(
+        many=True, read_only=True, view_name="dataset-detail"
+    )
 
     class Meta:
         model = Dataset
@@ -66,17 +83,20 @@ class DatasetSerializer(CommonNestedModelSerializer):
             "spatial",
             "temporal",
             "remote_resources",
+            "state",
             # read only
             "created",
             "cumulation_started",
-            "first",
+            "first_version",
             "is_deprecated",
             "is_removed",
-            "last",
+            "last_version",
             "modified",
-            "previous",
+            "previous_version",
+            "next_version",
             "removal_date",
-            "replaces",
+            "other_versions",
+            "published_revision",
         )
         read_only_fields = (
             "created",
@@ -90,4 +110,28 @@ class DatasetSerializer(CommonNestedModelSerializer):
             "previous",
             "removal_date",
             "replaces",
+            "other_versions",
         )
+
+
+class DatasetRevisionsQueryParamsSerializer(serializers.Serializer):
+    latest_published = serializers.BooleanField(
+        help_text=("Get latest published revision."), required=False
+    )
+    published_revision = serializers.IntegerField(
+        help_text=("Get specific published revision."),
+        required=False,
+    )
+    all_published_revisions = serializers.BooleanField(
+        help_text=("Get all published revision. "),
+        required=False,
+    )
+
+    class Meta:
+        validators = [
+            OneOf(
+                ["latest_published", "published_revision", "all_published_versions"],
+                required=False,
+                count_all_falsy=True,
+            )
+        ]

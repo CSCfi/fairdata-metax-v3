@@ -8,3 +8,7 @@
 
 ### :::src.apps.common.serializers.validators.AnyOf
 
+## OneOf
+
+### :::src.apps.common.serializers.validators.OneOf
+

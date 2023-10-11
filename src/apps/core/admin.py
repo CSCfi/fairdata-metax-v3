@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth import get_user_model
+from simple_history.admin import SimpleHistoryAdmin
 
 from apps.common.admin import AbstractDatasetPropertyBaseAdmin
 
@@ -47,7 +48,7 @@ class AccessRightsRestrictionGroundsAdmin(admin.ModelAdmin):
 
 
 @admin.register(DataCatalog)
-class DataCatalogAdmin(AbstractDatasetPropertyBaseAdmin):
+class DataCatalogAdmin(AbstractDatasetPropertyBaseAdmin, SimpleHistoryAdmin):
     list_display = (
         "id",
         "dataset_versioning_enabled",
@@ -79,12 +80,13 @@ class CatalogRecordAdmin(AbstractDatasetPropertyBaseAdmin):
 
 
 @admin.register(Dataset)
-class DatasetAdmin(AbstractDatasetPropertyBaseAdmin):
+class DatasetAdmin(AbstractDatasetPropertyBaseAdmin, SimpleHistoryAdmin):
     list_display = (
         "title",
         "keyword",
         "access_rights",
         "is_deprecated",
+        "state",
     )
     list_filter = (
         "language",
@@ -94,6 +96,7 @@ class DatasetAdmin(AbstractDatasetPropertyBaseAdmin):
         "is_removed",
         "issued",
         "is_deprecated",
+        "state",
     )
     filter_horizontal = ("language", "theme", "field_of_science")
     list_select_related = ("access_rights", "data_catalog", "metadata_owner")

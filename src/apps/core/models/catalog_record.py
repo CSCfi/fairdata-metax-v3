@@ -8,9 +8,13 @@ from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.db import models
 from django.db.models import Count, Sum
 from django.db.models.functions import Coalesce
+from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
+from model_utils import FieldTracker
+from rest_framework.exceptions import ValidationError
 from simple_history.models import HistoricalRecords
+from typing_extensions import Self
 
 from apps.actors.models import Actor, Organization, Person
 from apps.common.models import AbstractBaseModel, MediaTypeValidator
@@ -18,11 +22,16 @@ from apps.core.mixins import V2DatasetMixin
 from apps.core.models.concepts import UseCategory
 from apps.files.models import File, FileStorage
 from apps.refdata import models as refdata
+from apps.common.helpers import prepare_for_copy, ensure_instance_id
+from apps.common.mixins import CopyableModelMixin
+
 
 from .concepts import FieldOfScience, FileType, IdentifierType, Language, ResearchInfra, Theme
 from .contract import Contract
 from .data_catalog import AccessRights, DataCatalog
 from .file_metadata import FileSetDirectoryMetadata, FileSetFileMetadata
+from simple_history.utils import update_change_reason
+
 
 logger = logging.getLogger(__name__)
 
@@ -133,7 +142,7 @@ class CatalogRecord(AbstractBaseModel):
         return str(self.id)
 
 
-class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
+class Dataset(V2DatasetMixin, CopyableModelMixin, CatalogRecord, AbstractBaseModel):
     """A collection of data available for access or download in one or many representations.
 
     RDF Class: dcat:Dataset
@@ -220,36 +229,12 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         choices=StateChoices.choices,
         default=StateChoices.DRAFT,
     )
+    # First, last replaces, next
 
-    first = models.ForeignKey(
-        "self",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="first_version",
+    other_versions = models.ManyToManyField("self", db_index=True)
+    history = HistoricalRecords(
+        m2m_fields=(language, theme, field_of_science, infrastructure, other_identifiers)
     )
-    last = models.ForeignKey(
-        "self",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="last_version",
-    )
-    previous = models.ForeignKey(
-        "self",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="next",
-    )
-    replaces = models.ForeignKey(
-        "self",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="replaced_by",
-    )
-    history = HistoricalRecords(m2m_fields=(language, theme, field_of_science))
 
     class CumulativeState(models.IntegerChoices):
         NOT_CUMULATIVE = 0, _("Not cumulative")
@@ -262,13 +247,190 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         help_text="Cumulative state",
     )
 
+    published_revision = models.IntegerField(default=0, blank=True, editable=False)
+    draft_revision = models.IntegerField(default=0, blank=True, editable=False)
+    tracker = FieldTracker(
+        fields=["state", "published_revision", "cumulative_state", "draft_revision"]
+    )
+
+    @cached_property
+    def latest_published_revision(self):
+        return self.get_published_revision(self.published_revision)
+
+    @cached_property
+    def first_published_revision(self):
+        return self.get_published_revision(1)
+
+    @cached_property
+    def first_version(self):
+        return self.other_versions.first()
+
+    @cached_property
+    def last_version(self):
+        return self.other_versions.last()
+
+    @cached_property
+    def next_version(self):
+        return self.other_versions.filter(created__gt=self.created).first()
+
+    @cached_property
+    def previous_version(self):
+        return self.other_versions.filter(created__lt=self.created).last()
+
+    def get_published_revision(self, version: int):
+        revision = self.history.filter(history_change_reason=f"published-{version}").first()
+        if revision:
+            return revision.instance
+
+    def all_published_revisions(self):
+        revisions = self.history.filter(history_change_reason__contains="published-")
+        return [revision.instance for revision in revisions if revision.instance]
+
+    @classmethod
+    def create_copy(cls, original: "Dataset") -> Tuple[Self, Self]:
+        copy_languages = original.language.all()
+        copy_themes = original.theme.all()
+        copy_field_of_sciences = original.field_of_science.all()
+
+        copy = prepare_for_copy(original)
+        if original.access_rights:
+            copy.access_rights, _ = AccessRights.create_copy(original.access_rights)
+
+        new_actors = []
+        # reverse foreign keys
+        for actor in original.actors.all():
+            new_actor, _ = DatasetActor.create_copy(actor, copy)
+            new_actors.append(new_actor)
+
+        new_provs = []
+        for prov in original.provenance.all():
+            from apps.core.models import Provenance
+
+            new_prov, _ = Provenance.create_copy(prov, copy)
+            new_provs.append(new_prov)
+
+        # Custom field values
+        copy.persistent_identifier = None
+        copy.catalogrecord_ptr = None
+        copy.state = cls.StateChoices.DRAFT
+        copy.published_revision = 0
+        copy.created = timezone.now()
+        copy.modified = timezone.now()
+        copy.save()
+
+        # reverse set
+        copy.actors.set(new_actors)
+        copy.provenance.set(new_provs)
+
+        # Many to Many
+        copy.language.set(copy_languages)
+        copy.theme.set(copy_themes)
+        copy.field_of_science.set(copy_field_of_sciences)
+
+        copy.other_versions.add(original)
+        for version in original.other_versions.exclude(id=copy.id):
+            copy.other_versions.add(version)
+
+        return copy, original
+
     def delete(self, *args, **kwargs):
         if self.access_rights:
             self.access_rights.delete(*args, **kwargs)
         return super().delete(*args, **kwargs)
 
+    def _deny_if_trying_to_change_to_cumulative(self):
+        cumulative_changed, previous_cumulative = self.tracker.has_changed(
+            "cumulative_state"
+        ), self.tracker.previous("cumulative_state")
+        if (
+            cumulative_changed
+            and previous_cumulative == self.CumulativeState.NOT_CUMULATIVE
+            and self.cumulative_state != self.CumulativeState.NOT_CUMULATIVE
+            and self.first_published_revision is not None
+        ):
+            raise ValidationError("Cannot change cumulative state from NOT_CUMULATIVE to ACTIVE")
+        else:
+            return False
 
-class DatasetActor(Actor):
+    def _should_increase_published_revision(self):
+        state_has_changed, previous_state = self.tracker.has_changed(
+            "state"
+        ), self.tracker.previous("state")
+        if (
+            state_has_changed
+            and previous_state == self.StateChoices.DRAFT
+            or previous_state == self.StateChoices.PUBLISHED
+            and self.state != self.StateChoices.DRAFT
+            or self.state == self.StateChoices.PUBLISHED
+            and self.published_revision == 0
+        ):
+            return True
+        else:
+            return False
+
+    def _should_increase_draft_revision(self):
+        state_has_changed, previous_state = self.tracker.has_changed(
+            "state"
+        ), self.tracker.previous("state")
+        if (
+            state_has_changed
+            and previous_state == self.StateChoices.DRAFT
+            and self.state == self.StateChoices.DRAFT
+            or previous_state == self.StateChoices.PUBLISHED
+            and self.state == self.StateChoices.DRAFT
+        ):
+            return True
+        else:
+            return False
+
+    def _should_use_versioning(self):
+        from apps.core.models import LegacyDataset
+
+        if isinstance(self, LegacyDataset):
+            return False
+        elif self.data_catalog and self.data_catalog.dataset_versioning_enabled:
+            return True
+        return False
+
+    def change_update_reason(self, reason: str):
+        from apps.core.models import LegacyDataset
+
+        if not isinstance(self, LegacyDataset):
+            update_change_reason(self, reason)
+
+    def publish(self):
+        if not self.persistent_identifier:
+            raise ValidationError("Dataset has to have persistent identifier when publishing")
+        self.published_revision += 1
+        self.draft_revision = 0
+        if not self.issued:
+            self.issued = timezone.now()
+
+    def save(self, *args, **kwargs):
+        if self._should_use_versioning():
+            self._deny_if_trying_to_change_to_cumulative()
+
+            if self._should_increase_published_revision():
+                self.publish()
+            if self._should_increase_draft_revision():
+                self.draft_revision += 1
+            published_version_changed = self.tracker.has_changed("published_revision")
+            draft_version_changed = self.tracker.has_changed("draft_revision")
+            super().save(*args, **kwargs)
+            if published_version_changed:
+                self.change_update_reason(f"{self.state}-{self.published_revision}")
+            elif draft_version_changed:
+                self.change_update_reason(
+                    f"{self.state}-{self.published_revision}.{self.draft_revision}"
+                )
+        else:
+            self.skip_history_when_saving = True
+            if self.state == self.StateChoices.PUBLISHED and self.published_revision == 0:
+                self.published_revision = 1
+            super().save(*args, **kwargs)
+
+
+class DatasetActor(Actor, CopyableModelMixin):
     """Actors associated with a Dataset.
 
     Attributes:
@@ -289,6 +451,19 @@ class DatasetActor(Actor):
         null=True,
     )
     dataset = models.ForeignKey("Dataset", on_delete=models.CASCADE, related_name="actors")
+
+    @classmethod
+    def create_copy(cls, original: Self, dataset=None) -> Tuple[Self, Self]:
+        person = original.person
+        copy = prepare_for_copy(original)
+        if person:
+            person_copy, _ = Person.create_copy(person)
+            copy.person = person_copy
+        if dataset:
+            ensure_instance_id(dataset)
+            copy.dataset = dataset
+        copy.save()
+        return copy, original
 
     def add_role(self, role: str) -> bool:
         """Adds a roles to the actor.
