@@ -20,6 +20,10 @@
 
 ### :::tests.unit.docs.examples.test_datasets_api.temporal_json
 
+## relation_json
+
+### :::tests.unit.docs.examples.test_datasets_api.relation_json
+
 ## remote_resources_json
 
 ### :::tests.unit.docs.examples.test_datasets_api.remote_resources_json

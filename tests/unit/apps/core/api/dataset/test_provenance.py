@@ -1,8 +1,11 @@
 import logging
 
 import pytest
+from tests.utils import matchers
 
 from apps.core.models import Dataset
+
+print("MATCHERS", matchers.DictContaining)
 
 pytestmark = [pytest.mark.django_db, pytest.mark.dataset, pytest.mark.provenance]
 
@@ -10,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.fixture
-def dataset_with_provenance_json(dataset_a_json):
+def dataset_with_provenance_json(dataset_a_json, entity_json):
     dataset_a_json["provenance"] = [
         {
             "title": {"fi": "otsikko"},
@@ -32,6 +35,7 @@ def dataset_with_provenance_json(dataset_a_json):
                     "person": {"name": "john"},
                 }
             ],
+            "used_entity": [entity_json],
         },
         {
             "title": {"en": "second provenance title"},
@@ -76,8 +80,12 @@ def provenance_a_request(admin_client, dataset_with_provenance_json, data_catalo
     )
 
 
-def test_create_dataset_with_provenance(provenance_a_request):
+def test_create_dataset_with_provenance(provenance_a_request, entity_json):
     assert provenance_a_request.status_code == 201
+
+    assert provenance_a_request.data["provenance"][0]["used_entity"] == [
+        {**entity_json, "type": matchers.DictContaining(entity_json["type"])}
+    ]
     dataset = Dataset.objects.get(id=provenance_a_request.data["id"])
     actors = dataset.actors.all()
     assert actors.count() == 1

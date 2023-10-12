@@ -26,7 +26,16 @@ from apps.core.models.concepts import UseCategory
 from apps.files.models import File, FileStorage
 from apps.refdata import models as refdata
 
-from .concepts import FieldOfScience, FileType, IdentifierType, Language, ResearchInfra, Theme
+from .concepts import (
+    FieldOfScience,
+    FileType,
+    IdentifierType,
+    Language,
+    RelationType,
+    ResearchInfra,
+    ResourceType,
+    Theme,
+)
 from .contract import Contract
 from .data_catalog import AccessRights, DataCatalog
 from .file_metadata import FileSetDirectoryMetadata, FileSetFileMetadata
@@ -177,7 +186,9 @@ class Dataset(V2DatasetMixin, CopyableModelMixin, CatalogRecord, AbstractBaseMod
         help_text="Date of formal issuance (e.g., publication) of the resource.",
     )
     title = HStoreField(help_text='example: {"en":"title", "fi":"otsikko"}')
-    description = HStoreField(max_length=255, null=True, blank=True)
+    description = HStoreField(
+        help_text='example: {"en":"description", "fi":"kuvaus"}', blank=True, null=True
+    )
 
     keyword = ArrayField(models.CharField(max_length=255), default=list, blank=True)
     language = models.ManyToManyField(
@@ -737,3 +748,26 @@ class RemoteResource(AbstractBaseModel):
     )
     use_category = models.ForeignKey(UseCategory, on_delete=models.CASCADE)
     file_type = models.ForeignKey(FileType, on_delete=models.CASCADE, blank=True, null=True)
+
+
+class EntityRelation(AbstractBaseModel):
+    """An entity related to the dataset.
+
+    RDF Class: dcterms:relation
+
+    Source: [DCAT Version 3](https://www.w3.org/TR/vocab-dcat-3/#Property:resource_relation)
+    """
+
+    entity = models.ForeignKey(
+        "Entity",
+        on_delete=models.CASCADE,
+        related_name="relation",
+    )
+    relation_type = models.ForeignKey(RelationType, on_delete=models.CASCADE)
+    dataset = models.ForeignKey(
+        "Dataset",
+        on_delete=models.CASCADE,
+        related_name="relation",
+        null=True,
+        blank=True,
+    )

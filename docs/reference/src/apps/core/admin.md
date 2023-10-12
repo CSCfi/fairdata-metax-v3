@@ -64,6 +64,14 @@
 
 ### :::src.apps.core.admin.LicenseAdmin
 
+## EntityInline
+
+### :::src.apps.core.admin.EntityInline
+
+## EntityRelationAdmin
+
+### :::src.apps.core.admin.EntityRelationAdmin
+
 ## FileSetAdmin
 
 ### :::src.apps.core.admin.FileSetAdmin

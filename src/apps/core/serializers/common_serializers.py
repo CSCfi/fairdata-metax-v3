@@ -33,16 +33,19 @@ from apps.core.models import (
     MetadataProvider,
     OtherIdentifier,
 )
-from apps.core.models.catalog_record import RemoteResource, Temporal
+from apps.core.models.catalog_record import EntityRelation, RemoteResource, Temporal
 from apps.core.models.concepts import (
     AccessType,
     DatasetLicense,
     FileType,
     IdentifierType,
     License,
+    RelationType,
+    ResourceType,
     RestrictionGrounds,
     UseCategory,
 )
+from apps.core.models.entity import Entity
 from apps.users.serializers import MetaxUserModelSerializer
 
 logger = logging.getLogger(__name__)
@@ -311,5 +314,33 @@ class RemoteResourceSerializer(CommonModelSerializer):
             "checksum",
             "file_type",
             "mediatype",
+        ]
+        list_serializer_class = CommonListSerializer
+
+
+class EntitySerializer(CommonModelSerializer):
+    type = ResourceType.get_serializer_field(required=False, allow_null=True)
+
+    class Meta:
+        model = Entity
+        fields = [
+            "title",
+            "description",
+            "entity_identifier",
+            "type",
+        ]
+        validators = [AnyOf(["title", "entity_identifier"])]
+        list_serializer_class = CommonListSerializer
+
+
+class EntityRelationSerializer(CommonNestedModelSerializer):
+    entity = EntitySerializer()
+    relation_type = RelationType.get_serializer_field()
+
+    class Meta:
+        model = EntityRelation
+        fields = [
+            "entity",
+            "relation_type",
         ]
         list_serializer_class = CommonListSerializer

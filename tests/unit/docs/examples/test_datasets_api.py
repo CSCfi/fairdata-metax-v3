@@ -38,6 +38,11 @@ def temporal_json():
 
 
 @pytest.fixture
+def relation_json():
+    return load_test_json("dataset_api/relation.json")
+
+
+@pytest.fixture
 def remote_resources_json():
     return load_test_json("dataset_api/remote_resources.json")
 
@@ -56,6 +61,7 @@ def test_dataset_snippets(
     actors_json,
     spatial_json,
     temporal_json,
+    relation_json,
     remote_resources_json,
 ):
     data = {
@@ -66,6 +72,7 @@ def test_dataset_snippets(
         "actors": actors_json["actors"],
         "spatial": [spatial_json],
         "temporal": temporal_json["temporal"],
+        "relation": relation_json["relation"],
         "remote_resources": remote_resources_json["remote_resources"],
     }
     res = admin_client.post("/v3/datasets", data, content_type="application/json")
@@ -92,6 +99,9 @@ def test_dataset_snippets(
         res.data["access_rights"]["description"]
         == access_rights_json["access_rights"]["description"]
     )
+
+    assert len(res.data["relation"]) == 1
+    assert_nested_subdict(relation_json, res.data)
 
     assert_nested_subdict(
         remote_resources_json["remote_resources"],

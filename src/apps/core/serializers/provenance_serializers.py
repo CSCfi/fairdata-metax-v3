@@ -10,6 +10,7 @@ from apps.core.serializers import (
     SpatialModelSerializer,
     TemporalModelSerializer,
 )
+from apps.core.serializers.common_serializers import EntitySerializer
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +21,7 @@ class ProvenanceModelSerializer(CommonNestedModelSerializer):
     lifecycle_event = LifecycleEvent.get_serializer_field(required=False, allow_null=True)
     event_outcome = EventOutcome.get_serializer_field(required=False, allow_null=True)
     is_associated_with = DatasetActorProvenanceSerializer(many=True, required=False)
+    used_entity = EntitySerializer(many=True, required=False)
 
     class Meta:
         model = Provenance
@@ -33,6 +35,7 @@ class ProvenanceModelSerializer(CommonNestedModelSerializer):
             "event_outcome",
             "outcome_description",
             "is_associated_with",
+            "used_entity",
         )
         read_only_fields = ("id",)
         list_serializer_class = CommonListSerializer
@@ -62,7 +65,7 @@ class ProvenanceModelSerializer(CommonNestedModelSerializer):
                 person: Optional[Person] = None
                 org: Optional[Organization] = None
 
-                if "person" in actor_data:
+                if person_data := actor_data.get("person"):
                     person_data = actor_data["person"]
                     person_name = person_data["name"]
                     email = person_data.get("email")
@@ -75,8 +78,7 @@ class ProvenanceModelSerializer(CommonNestedModelSerializer):
                     )
                     logger.info(f"{person=}, {created=}")
 
-                if "organization" in actor_data:
-                    org_data = actor_data["organization"]
+                if org_data := actor_data.get("organization"):
                     pref_label = org_data["pref_label"]
                     code = org_data.get("code")
                     in_scheme = org_data.get("in_scheme")

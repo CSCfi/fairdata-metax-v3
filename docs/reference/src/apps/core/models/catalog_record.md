@@ -40,3 +40,7 @@
 
 ### :::src.apps.core.models.catalog_record.RemoteResource
 
+## EntityRelation
+
+### :::src.apps.core.models.catalog_record.EntityRelation
+

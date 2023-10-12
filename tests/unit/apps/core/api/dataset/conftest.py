@@ -134,3 +134,8 @@ def legacy_dataset_a(admin_client, data_catalog, reference_data, legacy_dataset_
     return admin_client.post(
         reverse("migrated-dataset-list"), legacy_dataset_a_json, content_type="application/json"
     )
+
+
+@pytest.fixture
+def entity_json():
+    return load_test_json("entity.json")

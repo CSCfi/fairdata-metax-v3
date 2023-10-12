@@ -107,7 +107,15 @@ an ongoing process.
     ---8<--- "tests/unit/docs/examples/test_data/dataset_api/temporal.json"
     ```
 
+### Relations
 
+The `relation` list allows describing other entities that a dataset is related to.
+
+!!! Example
+
+    ``` json
+    ---8<--- "tests/unit/docs/examples/test_data/dataset_api/relation.json"
+    ```
 
 ### Remote Resources
 

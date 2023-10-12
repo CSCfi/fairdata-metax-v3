@@ -1,0 +1,12 @@
+{
+  "title": {
+    "en": "Some sound"
+  },
+  "description": {
+    "en": "This is an entity"
+  },
+  "entity_identifier": "https://example.com/some_sound",
+  "type": {
+    "url": "http://uri.suomi.fi/codelist/fairdata/resource_type/code/sound"
+  }
+}

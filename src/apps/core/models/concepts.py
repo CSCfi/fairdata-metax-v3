@@ -200,5 +200,13 @@ class ContributorType(ConceptProxyMixin, refdata.ContributorType):
     """Project Contributor"""
 
 
+class RelationType(ConceptProxyMixin, refdata.RelationType):
+    """Entity relation type"""
+
+
+class ResourceType(ConceptProxyMixin, refdata.ResourceType):
+    """Type of related entity"""
+
+
 class RestrictionGrounds(ConceptProxyMixin, refdata.RestrictionGrounds):
     """Reason for access restriction."""

@@ -60,3 +60,7 @@
 
 ### :::tests.unit.apps.core.api.dataset.conftest.legacy_dataset_a
 
+## entity_json
+
+### :::tests.unit.apps.core.api.dataset.conftest.entity_json
+

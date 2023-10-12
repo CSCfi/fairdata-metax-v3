@@ -74,8 +74,11 @@ class URLReferencedModelListField(serializers.ListField):
         missing_urls = urls - retrieved_urls
 
         if missing_urls:
+            model_name = self.child.Meta.model.__name__
             raise serializers.ValidationError(
-                "Entries not found for given URLs: {}".format(", ".join(missing_urls))
+                "{model_name} entries not found for given URLs: {urls}".format(
+                    model_name=model_name, urls=", ".join(missing_urls)
+                )
             )
 
         return entries
@@ -98,7 +101,7 @@ class URLReferencedModelField(serializers.RelatedField):
     """
 
     default_error_messages = {
-        "does_not_exist": _("Entry not found for url '{url_value}'."),
+        "does_not_exist": _("{model_name} entry not found for url '{url_value}'."),
     }
 
     def __init__(self, child: serializers.ModelSerializer, **kwargs):
@@ -128,7 +131,8 @@ class URLReferencedModelField(serializers.RelatedField):
         try:
             return self.get_queryset().get(url=data["url"])
         except ObjectDoesNotExist:
-            self.fail("does_not_exist", url_value=data["url"])
+            model_name = self.child.Meta.model.__name__
+            self.fail("does_not_exist", url_value=data["url"], model_name=model_name)
 
     def to_representation(self, value):
         return self.child.to_representation(value)

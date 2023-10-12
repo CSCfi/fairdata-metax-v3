@@ -44,6 +44,14 @@
 
 ### :::src.apps.core.factories.LanguageFactory
 
+## ResourceTypeFactory
+
+### :::src.apps.core.factories.ResourceTypeFactory
+
+## RelationTypeFactory
+
+### :::src.apps.core.factories.RelationTypeFactory
+
 ## LicenseFactory
 
 ### :::src.apps.core.factories.LicenseFactory

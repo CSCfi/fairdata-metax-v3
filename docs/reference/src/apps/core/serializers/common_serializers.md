@@ -44,3 +44,11 @@
 
 ### :::src.apps.core.serializers.common_serializers.RemoteResourceSerializer
 
+## EntitySerializer
+
+### :::src.apps.core.serializers.common_serializers.EntitySerializer
+
+## EntityRelationSerializer
+
+### :::src.apps.core.serializers.common_serializers.EntityRelationSerializer
+

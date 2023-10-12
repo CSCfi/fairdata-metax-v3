@@ -56,6 +56,14 @@
 
 ### :::tests.conftest.identifier_type_reference_data
 
+## resource_type_reference_data
+
+### :::tests.conftest.resource_type_reference_data
+
+## relation_type_reference_data
+
+### :::tests.conftest.relation_type_reference_data
+
 ## event_outcome_reference_data
 
 ### :::tests.conftest.event_outcome_reference_data

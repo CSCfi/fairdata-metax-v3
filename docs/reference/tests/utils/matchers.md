@@ -32,6 +32,10 @@
 
 ### :::tests.utils.matchers.DateTimeMatcher
 
+## DictContainingMatcher
+
+### :::tests.utils.matchers.DictContainingMatcher
+
 ## Matchers
 
 ### :::tests.utils.matchers.Matchers

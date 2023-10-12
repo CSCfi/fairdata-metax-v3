@@ -57,7 +57,7 @@ def test_create_dataset_invalid_catalog(admin_client, dataset_a_json):
 @pytest.mark.parametrize(
     "value,expected_error",
     [
-        ([{"url": "non_existent"}], "Entries not found for given URLs: non_existent"),
+        ([{"url": "non_existent"}], "Language entries not found for given URLs: non_existent"),
         ([{"foo": "bar"}], "'url' field must be defined for each object in the list"),
         (["FI"], "Each item in the list must be an object with the field 'url'"),
         ("FI", 'Expected a list of items but got type "str".'),

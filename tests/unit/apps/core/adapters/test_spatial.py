@@ -24,7 +24,7 @@ def test_create__with_non_existing_url(location_reference_data):
         ser = SpatialModelSerializer(data={"reference": {"url": "https://test.com"}})
         ser.is_valid(raise_exception=True)
         ser.save()
-    assert "Entry not found for url" in str(error.value)
+    assert "Location entry not found for url" in str(error.value)
 
 
 @pytest.mark.django_db
@@ -52,7 +52,7 @@ def test_update_spatial_with_invalid_url(location_reference_data):
         )
         ser.is_valid(raise_exception=True)
         spatial = ser.save()
-    assert "Entry not found for url " in str(error.value)
+    assert "Location entry not found for url " in str(error.value)
 
 
 @pytest.mark.django_db

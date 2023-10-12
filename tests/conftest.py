@@ -381,6 +381,36 @@ def identifier_type_reference_data():
 
 
 @pytest.fixture
+def resource_type_reference_data():
+    common_args = {"in_scheme": "http://uri.suomi.fi/codelist/fairdata/resource_type"}
+    factories.ResourceTypeFactory(
+        url="http://uri.suomi.fi/codelist/fairdata/resource_type/code/sound",
+        pref_label={"en": "Sound", "fi": "Ääni"},
+        **common_args,
+    )
+    factories.ResourceTypeFactory(
+        url="http://uri.suomi.fi/codelist/fairdata/resource_type/code/dataset",
+        pref_label={"en": "Dataset", "fi": "Tutkimusaineisto"},
+        **common_args,
+    )
+
+
+@pytest.fixture
+def relation_type_reference_data():
+    common_args = {"in_scheme": "http://uri.suomi.fi/codelist/fairdata/relation_type"}
+    factories.RelationTypeFactory(
+        url="http://purl.org/dc/terms/relation",
+        pref_label={"en": "Relation", "fi": "Liittyy"},
+        **common_args,
+    )
+    factories.RelationTypeFactory(
+        url="http://purl.org/spar/cito/cites",
+        pref_label={"en": "Cites", "fi": "Viittaa"},
+        **common_args,
+    )
+
+
+@pytest.fixture
 def event_outcome_reference_data():
     common_args = {"in_scheme": "http://uri.suomi.fi/codelist/fairdata/event_outcome"}
     factories.EventOutcomeFactory(
@@ -422,6 +452,8 @@ def reference_data(
     use_category_reference_data,
     location_reference_data,
     identifier_type_reference_data,
+    resource_type_reference_data,
+    relation_type_reference_data,
     event_outcome_reference_data,
     lifecycle_event_reference_data,
 ):

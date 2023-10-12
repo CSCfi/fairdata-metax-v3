@@ -1,0 +1,21 @@
+{
+  "relation": [
+    {
+      "entity": {
+        "title": {
+          "en": "Another dataset"
+        },
+        "description": {
+          "en": "This is the description of a dataset."
+        },
+        "entity_identifier": "doi:some_dataset",
+        "type": {
+          "url": "http://uri.suomi.fi/codelist/fairdata/resource_type/code/dataset"
+        }
+      },
+      "relation_type": {
+        "url": "http://purl.org/spar/cito/cites"
+      }
+    }
+  ]
+}

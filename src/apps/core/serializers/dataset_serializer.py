@@ -14,6 +14,7 @@ from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, T
 from apps.core.serializers.common_serializers import (
     AccessRightsModelSerializer,
     DatasetActorModelSerializer,
+    EntityRelationSerializer,
     MetadataProviderModelSerializer,
     OtherIdentifierModelSerializer,
     RemoteResourceSerializer,
@@ -42,6 +43,7 @@ class DatasetSerializer(CommonNestedModelSerializer):
     theme = Theme.get_serializer_field(required=False, many=True)
     spatial = SpatialModelSerializer(required=False, many=True)
     temporal = TemporalModelSerializer(required=False, many=True)
+    relation = EntityRelationSerializer(required=False, many=True)
     provenance = ProvenanceModelSerializer(required=False, many=True)
     last_version = serializers.HyperlinkedRelatedField(
         many=False, read_only=True, view_name="dataset-detail"
@@ -89,6 +91,7 @@ class DatasetSerializer(CommonNestedModelSerializer):
             "theme",
             "title",
             "provenance",
+            "relation",
             "spatial",
             "temporal",
             "remote_resources",

@@ -130,16 +130,36 @@ class DateTimeMatcher(BaseMatcher):
         return False
 
 
-class Matchers(dict):
-    """Allow getting items with dot syntax for readability."""
+class DictContainingMatcher(BaseMatcher):
+    """Match dicts that contain all keys and values from partial_dict."""
 
-    __getattr__ = dict.get
+    def __init__(self, partial_dict) -> None:
+        self.partial_dict = partial_dict
+        super().__init__(type=dict)
+
+    def _match(self, this: dict, other: dict):
+        for key, value in this.items():
+            if key not in other:
+                return False
+            other_value = other[key]
+            if isinstance(value, dict):
+                if not (isinstance(other_value, dict) and self._match(value, other_value)):
+                    return False
+            if other_value != value:
+                return False
+        return True
+
+    def match(self, other: dict):
+        return self._match(self.partial_dict, other)
 
 
-matchers = Matchers(
-    Any=AnyMatcher,
-    DateTime=DateTimeMatcher,
-    Length=LengthMatcher,
-    List=ListMatcher,
-    URL=URLMatcher,
-)
+class Matchers:
+    Any = AnyMatcher
+    DateTime = DateTimeMatcher
+    Length = LengthMatcher
+    List = ListMatcher
+    URL = URLMatcher
+    DictContaining = DictContainingMatcher
+
+
+matchers = Matchers()

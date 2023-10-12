@@ -72,6 +72,14 @@
 
 ### :::src.apps.core.models.concepts.ContributorType
 
+## RelationType
+
+### :::src.apps.core.models.concepts.RelationType
+
+## ResourceType
+
+### :::src.apps.core.models.concepts.ResourceType
+
 ## RestrictionGrounds
 
 ### :::src.apps.core.models.concepts.RestrictionGrounds

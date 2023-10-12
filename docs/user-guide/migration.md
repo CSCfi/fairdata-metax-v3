@@ -256,6 +256,12 @@ Temporal coverage objects now use dates instead of datetime values.
 | end_date [datetime]     | end_date [date] :star:   |
 | temporal_coverage [str] | :question:               |
 
+#### Entity relations
+
+| V1-V2 field              | V3 field                       |
+|--------------------------|--------------------------------|
+| entity.identifier [dict] | entity_identifier [str] :star: |
+
 
 #### Provenance
 

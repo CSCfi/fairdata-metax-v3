@@ -3,6 +3,7 @@ from .catalog_record import (
     Dataset,
     DatasetActor,
     DatasetProject,
+    EntityRelation,
     FileSet,
     MetadataProvider,
     OtherIdentifier,
@@ -19,7 +20,9 @@ from .concepts import (
     FileType,
     Language,
     LifecycleEvent,
+    RelationType,
     ResearchInfra,
+    ResourceType,
     RestrictionGrounds,
     Spatial,
     Theme,
@@ -27,6 +30,7 @@ from .concepts import (
 )
 from .contract import Contract
 from .data_catalog import AccessRights, CatalogHomePage, DataCatalog, DatasetPublisher
+from .entity import Entity
 from .file_metadata import FileSetDirectoryMetadata, FileSetFileMetadata
 from .legacy import LegacyDataset
 from .provenance import Provenance, ProvenanceVariable

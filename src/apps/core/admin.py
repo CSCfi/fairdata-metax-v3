@@ -16,6 +16,8 @@ from apps.core.models import (
     DatasetLicense,
     DatasetProject,
     DatasetPublisher,
+    Entity,
+    EntityRelation,
     FileSet,
     LegacyDataset,
     MetadataProvider,
@@ -182,6 +184,15 @@ class ContractAdmin(AbstractDatasetPropertyBaseAdmin):
 @admin.register(DatasetLicense)
 class LicenseAdmin(AbstractDatasetPropertyBaseAdmin):
     pass
+
+
+class EntityInline(admin.TabularInline):
+    model = EntityRelation
+
+
+@admin.register(Entity)
+class EntityRelationAdmin(AbstractDatasetPropertyBaseAdmin):
+    inlines = [EntityInline]
 
 
 @admin.register(FileSet)

@@ -88,7 +88,9 @@ for field, path in fields.items():
 refdata_fields = {key: refdata_fields[key] for key in sorted(refdata_fields)}
 
 
-print("| Reference data | Fields |")
+print("<!-- table generated with refdata_fields.py -->")
+print("")
+print("| Reference data | Used by fields |")
 print("|---|---|")
 for url, fields in refdata_fields.items():
     print(f"| `{url}` | {'<br>'.join(sorted(fields))} |")
