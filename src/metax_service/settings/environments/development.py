@@ -48,7 +48,6 @@ if ENABLE_SILK_PROFILER:
     INSTALLED_APPS = INSTALLED_APPS + SILK_APP
     MIDDLEWARE = SILK_MIDDLEWARE + MIDDLEWARE
 
-SILKY_DYNAMIC_PROFILING = [{
-    'module': 'apps.core.views.dataset_view',
-    'function': 'DatasetViewSet.list'
-}]
+SILKY_DYNAMIC_PROFILING = [
+    {"module": "apps.core.views.dataset_view", "function": "DatasetViewSet.list"}
+]

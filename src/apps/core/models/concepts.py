@@ -5,11 +5,11 @@ from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.db import models
 from django.utils.translation import gettext as _
 
+from apps.common.helpers import prepare_for_copy
+from apps.common.mixins import CopyableModelMixin
 from apps.common.models import AbstractBaseModel, AbstractFreeformConcept
 from apps.common.serializers.fields import URLReferencedModelField, URLReferencedModelListField
 from apps.refdata import models as refdata
-from apps.common.mixins import CopyableModelMixin
-from apps.common.helpers import prepare_for_copy
 
 
 def not_implemented_function(*args, **kwargs):

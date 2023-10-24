@@ -8,8 +8,8 @@ from django.core.exceptions import MultipleObjectsReturned
 from django.db import models
 from django.utils.translation import gettext as _
 
-from apps.common.models import AbstractBaseModel
 from apps.common.mixins import CopyableModelMixin
+from apps.common.models import AbstractBaseModel
 
 logger = logging.getLogger(__name__)
 

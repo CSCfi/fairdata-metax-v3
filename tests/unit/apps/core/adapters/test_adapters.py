@@ -98,7 +98,6 @@ def test_v2_to_v3_dataset_conversion(
         with open(test_data_path + files_path) as json_file:
             files_data = json.load(json_file)
     v2_dataset = LegacyDataset(dataset_json=data, files_json=files_data)
-
     v2_dataset.save()
 
     diff = v2_dataset.check_compatibility()

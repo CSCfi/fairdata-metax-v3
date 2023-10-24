@@ -6,14 +6,10 @@ from django.contrib.postgres.fields import HStoreField
 from django.db import models
 from simple_history.models import HistoricalRecords
 
-from apps.common.models import (
-    AbstractBaseModel,
-    AbstractDatasetProperty,
-    AbstractFreeformConcept,
-)
-from apps.core.models.concepts import AccessType, DatasetLicense, Language
 from apps.common.helpers import prepare_for_copy
 from apps.common.mixins import CopyableModelMixin
+from apps.common.models import AbstractBaseModel, AbstractDatasetProperty, AbstractFreeformConcept
+from apps.core.models.concepts import AccessType, DatasetLicense, Language
 
 
 class DataCatalog(AbstractBaseModel):

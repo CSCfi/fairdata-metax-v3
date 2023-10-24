@@ -2,8 +2,8 @@ from django.contrib.postgres.fields import HStoreField
 from django.db import models
 from django.utils.translation import gettext as _
 
+from apps.common.helpers import ensure_instance_id, prepare_for_copy
 from apps.common.models import AbstractBaseModel, AbstractFreeformConcept
-from apps.common.helpers import prepare_for_copy, ensure_instance_id
 
 from .catalog_record import Dataset, DatasetActor
 from .concepts import EventOutcome, LifecycleEvent, Spatial

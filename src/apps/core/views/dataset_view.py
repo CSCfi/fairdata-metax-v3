@@ -14,7 +14,7 @@ from django_filters import rest_framework as filters
 from django.http import Http404
 from drf_yasg.openapi import Response
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import response
+from rest_framework import exceptions, response, status
 from rest_framework.decorators import action
 from rest_framework.renderers import JSONRenderer
 
@@ -22,15 +22,14 @@ from rest_framework import status
 from rest_framework import exceptions
 from watson import search
 
-from apps.common.views import QueryParamsMixin
-from apps.common.views import CommonModelViewSet
+from apps.common.views import CommonModelViewSet, QueryParamsMixin
 from apps.core.models.catalog_record import Dataset, FileSet
 from apps.core.serializers import DatasetSerializer
+from apps.core.serializers.dataset_serializer import DatasetRevisionsQueryParamsSerializer
 from apps.files.models import File
 from apps.files.serializers import DirectorySerializer
 from apps.files.views.directory_view import DirectoryCommonQueryParams, DirectoryViewSet
 from apps.files.views.file_view import BaseFileViewSet, FileCommonFilterset
-from apps.core.serializers.dataset_serializer import DatasetRevisionsQueryParamsSerializer
 from apps.core.permissions import DatasetAccessPolicy
 
 logger = logging.getLogger(__name__)

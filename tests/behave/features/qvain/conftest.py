@@ -66,7 +66,7 @@ def published_dataset(ida_data_catalog: DataCatalog, qvain_publish_request, fake
 
     dataset = DatasetFactory(
         data_catalog=ida_data_catalog,
-        issued=timezone.now(),
+        issued=timezone.now().date(),
         persistent_identifier=faker.uuid4(),
     )
     yield dataset

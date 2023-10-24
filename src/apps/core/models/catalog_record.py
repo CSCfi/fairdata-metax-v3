@@ -14,24 +14,22 @@ from django.utils.translation import gettext as _
 from model_utils import FieldTracker
 from rest_framework.exceptions import ValidationError
 from simple_history.models import HistoricalRecords
+from simple_history.utils import update_change_reason
 from typing_extensions import Self
 
 from apps.actors.models import Actor, Organization, Person
+from apps.common.helpers import datetime_to_date, ensure_instance_id, prepare_for_copy
+from apps.common.mixins import CopyableModelMixin
 from apps.common.models import AbstractBaseModel, MediaTypeValidator
 from apps.core.mixins import V2DatasetMixin
 from apps.core.models.concepts import UseCategory
 from apps.files.models import File, FileStorage
 from apps.refdata import models as refdata
-from apps.common.helpers import prepare_for_copy, ensure_instance_id
-from apps.common.mixins import CopyableModelMixin
-
 
 from .concepts import FieldOfScience, FileType, IdentifierType, Language, ResearchInfra, Theme
 from .contract import Contract
 from .data_catalog import AccessRights, DataCatalog
 from .file_metadata import FileSetDirectoryMetadata, FileSetFileMetadata
-from simple_history.utils import update_change_reason
-
 
 logger = logging.getLogger(__name__)
 
@@ -173,7 +171,7 @@ class Dataset(V2DatasetMixin, CopyableModelMixin, CatalogRecord, AbstractBaseMod
     """
 
     persistent_identifier = models.CharField(max_length=255, null=True, blank=True)
-    issued = models.DateTimeField(
+    issued = models.DateField(
         null=True,
         blank=True,
         help_text="Date of formal issuance (e.g., publication) of the resource.",
@@ -446,11 +444,11 @@ class Dataset(V2DatasetMixin, CopyableModelMixin, CatalogRecord, AbstractBaseMod
 
     def publish(self):
         if not self.persistent_identifier:
-            raise ValidationError("Dataset has to have persistent identifier when publishing")
+            raise ValidationError("Dataset has to have a persistent identifier when publishing")
         self.published_revision += 1
         self.draft_revision = 0
         if not self.issued:
-            self.issued = timezone.now()
+            self.issued = datetime_to_date(timezone.now())
 
     def save(self, *args, **kwargs):
         if self._should_use_versioning():
@@ -580,8 +578,8 @@ class Temporal(AbstractBaseModel):
         provenance (Provenance): Provenance ForeignKey relation, if part of Provenance
     """
 
-    start_date = models.DateTimeField(null=True, blank=True)
-    end_date = models.DateTimeField(null=True, blank=True)
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
     dataset = models.ForeignKey(
         "Dataset",
         on_delete=models.CASCADE,

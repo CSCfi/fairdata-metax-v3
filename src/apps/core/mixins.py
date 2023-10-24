@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.core.validators import EMPTY_VALUES
 from django.db.models import QuerySet
 
+from apps.common.helpers import date_to_datetime
 from apps.common.views import CommonModelViewSet
 from apps.core.permissions import DatasetNestedAccessPolicy
 
@@ -198,15 +199,19 @@ class V2DatasetMixin:
             document["research_dataset"]["other_identifier"] = obj_list
         return obj_list
 
+    def _convert_v3_temporal_to_v2(self, temporal):
+        """Convert single temporal object to v2."""
+        v2_temporal = {}
+        if temporal.start_date:
+            v2_temporal["start_date"] = date_to_datetime(temporal.start_date).isoformat()
+        if temporal.end_date:
+            v2_temporal["end_date"] = date_to_datetime(temporal.end_date).isoformat()
+        return v2_temporal
+
     def _generate_v2_temporal(self, document: Dict):
         obj_list = []
         for temporal in self.temporal.filter(provenance=None):
-            obj_list.append(
-                {
-                    "start_date": temporal.start_date,
-                    "end_date": temporal.end_date,
-                }
-            )
+            obj_list.append(self._convert_v3_temporal_to_v2(temporal))
         if len(obj_list) != 0:
             document["research_dataset"]["temporal"] = obj_list
         return obj_list
@@ -232,10 +237,8 @@ class V2DatasetMixin:
                 data["spatial"] = self._construct_v2_spatial(provenance.spatial)
 
             if hasattr(provenance, "temporal"):
-                data["temporal"] = {
-                    "start_date": provenance.temporal.start_date,
-                    "end_date": provenance.temporal.end_date,
-                }
+                data["temporal"] = self._convert_v3_temporal_to_v2(provenance.temporal)
+
             if provenance.variables.all().count() != 0:
                 data["variable"] = []
                 for variable in provenance.variables.all():

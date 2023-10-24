@@ -1,13 +1,15 @@
 import copy
 import logging
 from contextlib import contextmanager
+from datetime import datetime
 from typing import Dict
 
 from cachalot.api import cachalot_disabled
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Model
-from django.utils.dateparse import parse_datetime
+from django.utils import timezone
+from django.utils.dateparse import parse_date, parse_datetime
 from django_filters import NumberFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg import openapi
@@ -53,6 +55,17 @@ def parse_iso_dates_in_nested_dict(d: Dict) -> Dict:
     Note:
         The returned dictionary is the same reference as the dictionary in the args."""
 
+    def parse_date_or_datetime(value):
+        try:
+            return parse_datetime(value)
+        except TypeError:
+            pass
+        try:
+            return parse_date(value)
+        except TypeError:
+            pass
+        return None
+
     for key, value in d.items():
         # If there is nested dictionary, recurse
         if isinstance(value, dict):
@@ -64,15 +77,12 @@ def parse_iso_dates_in_nested_dict(d: Dict) -> Dict:
                 if isinstance(item, dict):
                     parse_iso_dates_in_nested_dict(item)
                 else:
-                    try:
-                        if date := parse_datetime(item):
-                            value[i] = date
-                    except TypeError:
-                        pass
+                    if date := parse_date_or_datetime(item):
+                        value[i] = date
         # If the value is not a dictionary, try to parse it to date
         else:
             try:
-                if date := parse_datetime(value):
+                if date := parse_date_or_datetime(value):
                     d[key] = date
             except TypeError:
                 pass
@@ -158,3 +168,13 @@ def prepare_for_copy(obj):
 def ensure_instance_id(instance):
     if not instance.id:
         instance.save()
+
+
+def date_to_datetime(date):
+    """Convert UTC date to datetime."""
+    return datetime(year=date.year, month=date.month, day=date.day, tzinfo=timezone.utc)
+
+
+def datetime_to_date(dt):
+    """Convert datetime to UTC date."""
+    return dt.astimezone(timezone.utc).date()

@@ -12,7 +12,7 @@ from django.db import ProgrammingError, models
 from django.utils.dateparse import parse_datetime
 
 from apps.actors.models import Actor, Organization, Person
-from apps.common.helpers import parse_iso_dates_in_nested_dict
+from apps.common.helpers import datetime_to_date, parse_iso_dates_in_nested_dict
 from apps.core.models import FileSet
 from apps.files.models import File
 from apps.files.serializers.file_serializer import get_or_create_storage
@@ -198,9 +198,11 @@ class LegacyDataset(Dataset):
         if start_date := legacy_temporal.get("start_date"):
             if not isinstance(start_date, datetime):
                 start_date = parse_datetime(legacy_temporal["start_date"])
+            start_date = datetime_to_date(start_date)
         if end_date := legacy_temporal.get("end_date"):
             if not isinstance(end_date, datetime):
                 end_date = parse_datetime(legacy_temporal["end_date"])
+            end_date = datetime_to_date(end_date)
         return start_date, end_date
 
     def convert_root_level_fields(self):
@@ -586,7 +588,7 @@ class LegacyDataset(Dataset):
                     temporal, temporal_created = Temporal.objects.get_or_create(
                         provenance=provenance,
                         dataset=None,
-                        defaults={"end_date": end_date, "start_date": start_date},
+                        defaults={"start_date": start_date, "end_date": end_date},
                     )
                     if temporal_created:
                         self.created_objects += 1
@@ -802,6 +804,7 @@ class LegacyDataset(Dataset):
             v2_version,
             v3_version,
             ignore_order=True,
+            cutoff_intersection_for_pairs=0.9,
             exclude_paths=[
                 "identifier",
                 "id",

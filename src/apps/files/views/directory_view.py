@@ -381,8 +381,6 @@ class DirectoryViewSet(viewsets.ViewSet):
             if params.get("pagination"):
                 results = {"results": serialized_data}
 
-            # results["files"] = ["lol"]
-
             # empty results may be due to pagination, remove parent dir if it does not actually exist
             if (
                 "directory" in results

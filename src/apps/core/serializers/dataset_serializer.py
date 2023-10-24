@@ -6,8 +6,9 @@
 # :license: MIT
 import logging
 
-from apps.common.serializers import CommonNestedModelSerializer
 from rest_framework import serializers
+
+from apps.common.serializers import CommonNestedModelSerializer, OneOf
 from apps.core.models import Dataset
 from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
 from apps.core.serializers.common_serializers import (
@@ -22,7 +23,6 @@ from apps.core.serializers.concept_serializers import SpatialModelSerializer
 
 # for preventing circular import, using submodule instead of apps.core.serializers
 from apps.core.serializers.provenance_serializers import ProvenanceModelSerializer
-from apps.common.serializers import OneOf
 
 from .dataset_files_serializer import FileSetSerializer
 
