@@ -6,8 +6,8 @@ from apps.core.models import FileSetDirectoryMetadata
 from apps.files.models import FileStorage
 from apps.files.views.directory_view import DirectoryCommonQueryParams
 
+pytestmark = [pytest.mark.django_db, pytest.mark.file]
 
-@pytest.mark.django_db
 def test_directory_field_values(client, file_tree_b):
     res = client.get(
         "/v3/directories",
@@ -65,7 +65,6 @@ def test_directory_field_values(client, file_tree_b):
     )
 
 
-@pytest.mark.django_db
 def test_directory_file_fields(client, file_tree_b):
     res = client.get(
         "/v3/directories",
@@ -86,7 +85,6 @@ def test_directory_file_fields(client, file_tree_b):
     )
 
 
-@pytest.mark.django_db
 def test_directory_directory_fields(client, file_tree_b):
     res = client.get(
         "/v3/directories",
@@ -109,7 +107,6 @@ def test_directory_directory_fields(client, file_tree_b):
     )
 
 
-@pytest.mark.django_db
 def test_directory_all_directory_fields(client, file_tree_b):
     fields = set(DirectoryCommonQueryParams.allowed_directory_fields)
     fields = fields - {"dataset_metadata"}  # metadata not available without dataset
@@ -127,7 +124,6 @@ def test_directory_all_directory_fields(client, file_tree_b):
     assert "dataset_metadata" not in res.data["directories"][0]
 
 
-@pytest.mark.django_db
 def test_directory_all_file_fields(client, file_tree_b):
     fields = set(DirectoryCommonQueryParams.allowed_file_fields)
     fields = fields - {"dataset_metadata"}  # metadata not available without dataset

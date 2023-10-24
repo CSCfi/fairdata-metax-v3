@@ -6,8 +6,8 @@ from apps.files.factories import create_project_with_files
 pytestmark = [pytest.mark.django_db, pytest.mark.docs]
 
 
-def test_v1_v3_dataset_v3(client, data_catalog, reference_data, v1_v3_dataset_v3_json):
-    res = client.post("/v3/datasets", v1_v3_dataset_v3_json, content_type="application/json")
+def test_v1_v3_dataset_v3(admin_client, data_catalog, reference_data, v1_v3_dataset_v3_json):
+    res = admin_client.post("/v3/datasets", v1_v3_dataset_v3_json, content_type="application/json")
     assert res.status_code == 201
     dataset = Dataset.objects.get(id=res.data["id"])
     assert dataset.title == v1_v3_dataset_v3_json["title"]
@@ -21,20 +21,20 @@ def test_v1_v3_dataset_v3(client, data_catalog, reference_data, v1_v3_dataset_v3
     assert dataset.persistent_identifier == v1_v3_dataset_v3_json["persistent_identifier"]
 
 
-def test_v1_v3_data_catalog_v3(client, v1_v3_data_catalog_v3_json, reference_data):
-    res = client.post(
+def test_v1_v3_data_catalog_v3(admin_client, v1_v3_data_catalog_v3_json, reference_data):
+    res = admin_client.post(
         "/v3/data-catalogs", v1_v3_data_catalog_v3_json, content_type="application/json"
     )
     assert res.status_code == 201
 
 
-def test_post_file(client, post_file_payload_json):
-    res = client.post("/v3/files", post_file_payload_json, content_type="application/json")
+def test_post_file(admin_client, post_file_payload_json):
+    res = admin_client.post("/v3/files", post_file_payload_json, content_type="application/json")
     assert res.status_code == 201
 
 
 def test_minimal_dataset_with_files(
-    client, data_catalog, reference_data, minimal_dataset_with_files_json
+    admin_client, data_catalog, reference_data, minimal_dataset_with_files_json
 ):
     create_project_with_files(
         storage_service="ida",
@@ -43,7 +43,7 @@ def test_minimal_dataset_with_files(
         file_args={"*": {"size": 1024}},
     )
 
-    res = client.post(
+    res = admin_client.post(
         "/v3/datasets", minimal_dataset_with_files_json, content_type="application/json"
     )
     assert res.status_code == 201

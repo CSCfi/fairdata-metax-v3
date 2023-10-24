@@ -5,7 +5,7 @@ from django.utils.translation import gettext as _
 from apps.common.models import AbstractBaseModel, AbstractFreeformConcept
 from apps.common.helpers import prepare_for_copy, ensure_instance_id
 
-from .catalog_record import Dataset, DatasetActor, Temporal
+from .catalog_record import Dataset, DatasetActor
 from .concepts import EventOutcome, LifecycleEvent, Spatial
 
 

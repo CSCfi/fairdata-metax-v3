@@ -15,7 +15,7 @@ from django.db.models.functions import Concat
 from django.utils.translation import gettext_lazy as _
 from django_filters import rest_framework as filters
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import serializers
+from rest_framework import serializers, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -29,6 +29,7 @@ from apps.common.serializers.serializers import IncludeRemovedQueryParamsSeriali
 from apps.common.views import CommonModelViewSet, QueryParamsMixin
 from apps.files.helpers import get_file_metadata_model
 from apps.files.models.file import File
+from apps.files.permissions import FilesAccessPolicy
 from apps.files.serializers import FileSerializer
 from apps.files.serializers.fields import StorageServiceField
 from apps.files.serializers.file_bulk_serializer import (
@@ -109,6 +110,7 @@ class BaseFileViewSet(QueryParamsMixin, CommonModelViewSet):
     filterset_class = FileFilterSet
     http_method_names = ["get"]
     queryset = File.objects.prefetch_related("storage")
+    access_policy = FilesAccessPolicy
 
     # Query serializer info for query_params and swagger generation
     query_serializers = [
@@ -120,8 +122,10 @@ class BaseFileViewSet(QueryParamsMixin, CommonModelViewSet):
 
     def get_queryset(self):
         if self.query_params.get("include_removed"):
-            return File.all_objects.prefetch_related("storage")
-        return super().get_queryset()
+            return self.access_policy.scope_queryset(
+                self.request, File.all_objects.prefetch_related("storage")
+            )
+        return self.access_policy.scope_queryset(self.request, super().get_queryset())
 
     def retrieve(self, request, *args, **kwargs):
         return super().retrieve(request, *args, **kwargs)

@@ -3,7 +3,7 @@
 import pytest
 from tests.utils import assert_nested_subdict
 
-
+pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
 @pytest.fixture
 def dataset_json_with_files(deep_file_tree, data_catalog):
     return {
@@ -35,11 +35,10 @@ def dataset_json_with_no_files(deep_file_tree, data_catalog):
     }
 
 
-@pytest.mark.django_db
 def test_dataset_post_dataset_with_files(
-    client, deep_file_tree, dataset_json_with_files, data_urls
+    admin_client, deep_file_tree, dataset_json_with_files, data_urls
 ):
-    res = client.post(
+    res = admin_client.post(
         f"/v3/dataset",
         dataset_json_with_files,
         content_type="application/json",
@@ -50,7 +49,7 @@ def test_dataset_post_dataset_with_files(
     assert res.data["fileset"]["total_files_count"] == 3
 
     url = data_urls(res.data["id"])["directories"]
-    res = client.get(url, {"pagination": "false"})
+    res = admin_client.get(url, {"pagination": "false"})
     assert_nested_subdict(
         {
             "directories": [
@@ -62,16 +61,15 @@ def test_dataset_post_dataset_with_files(
     )
 
 
-@pytest.mark.django_db
-def test_dataset_get_dataset_with_files(client, deep_file_tree, dataset_json_with_files):
-    res = client.post(
+def test_dataset_get_dataset_with_files(admin_client, deep_file_tree, dataset_json_with_files):
+    res = admin_client.post(
         f"/v3/dataset",
         dataset_json_with_files,
         content_type="application/json",
     )
     assert res.status_code == 201
 
-    res = client.get(f"/v3/dataset/{res.data['id']}")
+    res = admin_client.get(f"/v3/dataset/{res.data['id']}")
     assert res.status_code == 200
     assert res.data["fileset"] == {
         # no added_files_count or removed_files_count should be present for GET
@@ -82,25 +80,23 @@ def test_dataset_get_dataset_with_files(client, deep_file_tree, dataset_json_wit
     }
 
 
-@pytest.mark.django_db
-def test_dataset_get_dataset_with_no_files(client, deep_file_tree, dataset_json_with_no_files):
-    res = client.post(
+def test_dataset_get_dataset_with_no_files(admin_client, deep_file_tree, dataset_json_with_no_files):
+    res = admin_client.post(
         f"/v3/dataset",
         dataset_json_with_no_files,
         content_type="application/json",
     )
     assert res.status_code == 201
 
-    res = client.get(f"/v3/dataset/{res.data['id']}")
+    res = admin_client.get(f"/v3/dataset/{res.data['id']}")
     assert res.status_code == 200
     assert "files" not in res.data  # no files dict should be present if dataset has no files
 
 
-@pytest.mark.django_db
 def test_dataset_modify_dataset_with_files(
-    client, deep_file_tree, dataset_json_with_files, data_urls
+    admin_client, deep_file_tree, dataset_json_with_files, data_urls
 ):
-    res = client.post(
+    res = admin_client.post(
         f"/v3/dataset",
         dataset_json_with_files,
         content_type="application/json",
@@ -117,7 +113,7 @@ def test_dataset_modify_dataset_with_files(
 
     dataset_id = res.data["id"]
     urls = data_urls(dataset_id)
-    res = client.put(
+    res = admin_client.put(
         urls["dataset"],
         {**dataset_json, "fileset": actions},
         content_type="application/json",
@@ -127,7 +123,7 @@ def test_dataset_modify_dataset_with_files(
     assert res.data["fileset"]["removed_files_count"] == 2
     assert res.data["fileset"]["total_files_count"] == 2
 
-    res = client.get(urls["directories"], {"pagination": "false"})
+    res = admin_client.get(urls["directories"], {"pagination": "false"})
     assert_nested_subdict(
         {
             "directories": [

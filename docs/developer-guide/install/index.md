@@ -25,7 +25,7 @@ docker run -d -p 5452:5432 --name metax-v3-postgres -v metax-v3-postgres:/var/li
 ## Setup memcached as cache with docker container
 
 ```bash
-docker run -d -p 11211:11211 memcached
+docker run -d -p 11211:11211 memcached -I 10m
 ```
 
 set ENABLE_MEMCACHED env-var in .env file:

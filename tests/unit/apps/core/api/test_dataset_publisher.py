@@ -7,32 +7,29 @@ from apps.core.models import DatasetPublisher
 
 logger = logging.getLogger(__name__)
 
+pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.dataset]
 
-@pytest.mark.django_db
-def test_create_publisher(client, publisher_a_json):
-    res = client.post("/v3/publishers", publisher_a_json, content_type="application/json")
+def test_create_publisher(admin_client, publisher_a_json):
+    res = admin_client.post("/v3/publishers", publisher_a_json, content_type="application/json")
     logger.info(f"{res.data=}")
     assert res.status_code == 201
 
 
-@pytest.mark.django_db
-def test_create_publisher_twice(client, publisher_b_json):
+def test_create_publisher_twice(admin_client, publisher_b_json):
     _now = datetime.datetime.now()
-    res1 = client.post("/v3/publishers", publisher_b_json, content_type="application/json")
+    res1 = admin_client.post("/v3/publishers", publisher_b_json, content_type="application/json")
     assert res1.status_code == 201
     logger.info(f"{res1.data=}")
-    res2 = client.post("/v3/publishers", publisher_b_json, content_type="application/json")
+    res2 = admin_client.post("/v3/publishers", publisher_b_json, content_type="application/json")
     assert res2.status_code == 201
     assert res1.data.get("id") != res2.data.get("id")
 
 
-@pytest.mark.django_db
-def test_create_publisher_error(client, publisher_error_json):
-    response = client.post("/v3/publishers", publisher_error_json, content_type="application/json")
+def test_create_publisher_error(admin_client, publisher_error_json):
+    response = admin_client.post("/v3/publishers", publisher_error_json, content_type="application/json")
     assert response.status_code == 400
 
 
-@pytest.mark.django_db
 def test_list_publishers(client, post_publisher_payloads_a_b_c_d):
     response = client.get("/v3/publishers")
     logger.info(f"{response.data=}")
@@ -50,7 +47,6 @@ def test_list_publishers(client, post_publisher_payloads_a_b_c_d):
         ("homepage__title", "C kotisivu", 1),
     ],
 )
-@pytest.mark.django_db
 def test_list_publishers_with_filter(
     client,
     post_publisher_payloads_a_b_c_d,
@@ -66,7 +62,6 @@ def test_list_publishers_with_filter(
     assert len(response.data.get("results")) == filter_result
 
 
-@pytest.mark.django_db
 def test_list_publishers_with_offset_pagination(client, post_publisher_payloads_a_b_c_d):
     url = "/v3/publishers?{0}={1}".format("limit", 2)
     logger.info(url)
@@ -76,13 +71,12 @@ def test_list_publishers_with_offset_pagination(client, post_publisher_payloads_
     assert response.data.get("next") is not None
 
 
-@pytest.mark.django_db
-def test_change_publisher(client, publisher_c_json, publisher_put_c_json):
+def test_change_publisher(admin_client, publisher_c_json, publisher_put_c_json):
     _now = datetime.datetime.now()
-    res1 = client.post("/v3/publishers", publisher_c_json, content_type="application/json")
+    res1 = admin_client.post("/v3/publishers", publisher_c_json, content_type="application/json")
     publisher_created = DatasetPublisher.objects.get(id=res1.data.get("id"))
     assert publisher_created.name["en"] == "Publisher C"
-    response = client.put(
+    response = admin_client.put(
         "/v3/publishers/{id}".format(id=res1.data.get("id")),
         publisher_put_c_json,
         content_type="application/json",
@@ -97,23 +91,21 @@ def test_change_publisher(client, publisher_c_json, publisher_put_c_json):
     assert homepages[0].title["en"] == "Publisher new C website"
 
 
-@pytest.mark.django_db
-def test_get_publisher_by_id(client, post_publisher_payloads_a_b_c_d):
-    response = client.get("/v3/publishers")
+def test_get_publisher_by_id(admin_client, post_publisher_payloads_a_b_c_d):
+    response = admin_client.get("/v3/publishers")
     results = response.data.get("results")
     for result in results:
-        publisher_by_id = client.get("/v3/publishers/{id}".format(id=result.get("id")))
+        publisher_by_id = admin_client.get("/v3/publishers/{id}".format(id=result.get("id")))
         assert response.status_code == 200
         assert publisher_by_id.data.get("name") == result.get("name")
 
 
-@pytest.mark.django_db
-def test_delete_publisher_by_id(client, post_publisher_payloads_a_b_c_d):
-    response = client.get("/v3/publishers")
+def test_delete_publisher_by_id(admin_client, post_publisher_payloads_a_b_c_d):
+    response = admin_client.get("/v3/publishers")
     publisher_count = DatasetPublisher.available_objects.all().count()
     assert response.data.get("count") == publisher_count
     results = response.data.get("results")
-    delete_result = client.delete("/v3/publishers/{id}".format(id=results[0].get("id")))
+    delete_result = admin_client.delete("/v3/publishers/{id}".format(id=results[0].get("id")))
     assert delete_result.status_code == 204
     assert publisher_count - 1 == DatasetPublisher.available_objects.all().count()
 
@@ -127,7 +119,6 @@ def test_delete_publisher_by_id(client, post_publisher_payloads_a_b_c_d):
         ("-url,created", "Publisher C"),
     ],
 )
-@pytest.mark.django_db
 def test_list_publishers_with_ordering(
     client, post_publisher_payloads_a_b_c_d, publisher_order, order_result
 ):

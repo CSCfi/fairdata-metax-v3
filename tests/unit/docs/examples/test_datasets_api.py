@@ -48,7 +48,7 @@ def dataset_v3_modify_json():
 
 
 def test_dataset_snippets(
-    client,
+    admin_client,
     data_catalog,
     reference_data,
     language_json,
@@ -68,7 +68,7 @@ def test_dataset_snippets(
         "temporal": temporal_json["temporal"],
         "remote_resources": remote_resources_json["remote_resources"],
     }
-    res = client.post("/v3/datasets", data, content_type="application/json")
+    res = admin_client.post("/v3/datasets", data, content_type="application/json")
     assert res.status_code == 201
     assert len(res.data["language"]) == 2
     assert len(res.data["actors"]) == 2
@@ -101,12 +101,12 @@ def test_dataset_snippets(
 
 
 def test_modify_dataset(
-    client, data_catalog, reference_data, v1_v3_dataset_v3_json, dataset_v3_modify_json
+    admin_client, data_catalog, reference_data, v1_v3_dataset_v3_json, dataset_v3_modify_json
 ):
-    res = client.post("/v3/datasets", v1_v3_dataset_v3_json, content_type="application/json")
+    res = admin_client.post("/v3/datasets", v1_v3_dataset_v3_json, content_type="application/json")
     assert res.status_code == 201
 
-    put = client.patch(
+    put = admin_client.patch(
         f"/v3/datasets/{res.data['id']}", dataset_v3_modify_json, content_type="application/json"
     )
     dataset = Dataset.objects.get(id=res.data["id"])

@@ -4,9 +4,11 @@ from django_filters import rest_framework as filters
 from drf_yasg.utils import swagger_auto_schema
 
 from apps.common.views import CommonModelViewSet, StandardResultsSetPagination
+from apps.core.mixins import DatasetNestedViewSetMixin
 from apps.core.models import AccessRights
-from apps.core.models.catalog_record import DatasetActor, MetadataProvider
+from apps.core.models.catalog_record import MetadataProvider
 from apps.core.models.data_catalog import DatasetPublisher
+from apps.core.permissions import DatasetNestedAccessPolicy, MetadataProviderAccessPolicy
 from apps.core.serializers import (
     DatasetActorModelSerializer,
     DatasetPublisherModelSerializer,
@@ -109,25 +111,10 @@ class AccessRightsFilter(filters.FilterSet):
 
 
 @swagger_auto_schema(operation_description="DatasetActor viewset")
-class DatasetActorViewSet(CommonModelViewSet):
+class DatasetActorViewSet(DatasetNestedViewSetMixin):
+    access_policy = DatasetNestedAccessPolicy
     serializer_class = DatasetActorModelSerializer
     filter_backends = (filters.DjangoFilterBackend,)
-
-    # filterset_class = DatasetActorFilter
-    def get_queryset(self):
-        if getattr(
-            self, "swagger_fake_view", None
-        ):  # kwargs are not available in swagger inspection
-            return DatasetActor.available_objects.none()
-        return DatasetActor.available_objects.filter(dataset=self.kwargs["dataset_pk"])
-
-    def perform_create(self, serializer):
-        return serializer.save(dataset_id=self.kwargs["dataset_pk"])
-
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context["dataset_pk"] = self.kwargs.get("dataset_pk")
-        return context
 
 
 class MetadataProviderFilter(filters.FilterSet):
@@ -175,6 +162,10 @@ class MetadataProviderViewSet(CommonModelViewSet):
     filterset_class = MetadataProviderFilter
     pagination_class = StandardResultsSetPagination
     http_method_names = ["get", "post", "put", "delete"]
+    access_policy = MetadataProviderAccessPolicy
+
+    def get_queryset(self):
+        return self.access_policy.scope_queryset(self.request, self.queryset)
 
 
 class DatasetFilter(filters.FilterSet):

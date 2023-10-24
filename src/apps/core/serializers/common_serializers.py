@@ -10,7 +10,6 @@ import logging
 from typing import Optional
 
 from django.contrib.auth import get_user_model
-from django.core.validators import EMPTY_VALUES
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 

@@ -59,6 +59,15 @@ class DatasetSerializer(CommonNestedModelSerializer):
         many=True, read_only=True, view_name="dataset-detail"
     )
 
+    def to_representation(self, instance):
+        request = self.context.get("request")
+        if request:
+            see_drafts = instance.has_permission_to_see_drafts(request.user)
+            is_historic = hasattr(instance, "_history")
+            if not see_drafts and not is_historic:
+                instance = instance.latest_published_revision
+        return super().to_representation(instance)
+
     class Meta:
         model = Dataset
         fields = (

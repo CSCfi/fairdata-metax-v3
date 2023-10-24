@@ -7,11 +7,14 @@ from django.core.validators import EMPTY_VALUES
 from django.db.models import QuerySet
 
 from apps.common.views import CommonModelViewSet
+from apps.core.permissions import DatasetNestedAccessPolicy
 
 logger = logging.getLogger(__name__)
 
 
 class DatasetNestedViewSetMixin(CommonModelViewSet):
+    access_policy = DatasetNestedAccessPolicy
+
     def get_queryset(self):
         if getattr(
             self, "swagger_fake_view", None
@@ -23,6 +26,20 @@ class DatasetNestedViewSetMixin(CommonModelViewSet):
 
     def perform_create(self, serializer):
         return serializer.save(dataset_id=self.kwargs["dataset_pk"])
+
+    def get_dataset_pk(self):
+        context = super().get_serializer_context()
+        return self.kwargs.get("dataset_pk") or context.get("dataset_pk")
+
+    def get_dataset_instance(self):
+        from .models import Dataset
+
+        return Dataset.objects.get(id=self.get_dataset_pk())
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["dataset_pk"] = self.kwargs.get("dataset_pk")
+        return context
 
 
 class V2DatasetMixin:

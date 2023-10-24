@@ -12,6 +12,7 @@ import django
 import factory.random
 import pytest
 from django.conf import settings
+from rest_framework.test import APIClient, RequestsClient
 
 from apps.core import factories
 from apps.core.models.data_catalog import DataCatalog
@@ -398,3 +399,39 @@ def reference_data(
     lifecycle_event_reference_data,
 ):
     """Collection of reference data"""
+
+
+@pytest.fixture
+def api_client() -> APIClient:
+    return APIClient()
+
+
+@pytest.fixture
+def requests_client():
+    return RequestsClient()
+
+
+@pytest.fixture(autouse=True)
+def tweaked_settings(settings):
+    import logging
+
+    logging.disable(logging.CRITICAL)
+    settings.CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.dummy.DummyCache",
+        }
+    }
+    settings.DEBUG = False
+    settings.PASSWORD_HASHERS = [
+        "django.contrib.auth.hashers.MD5PasswordHasher",
+    ]
+    settings.MIDDLEWARE = [
+        "django.contrib.sessions.middleware.SessionMiddleware",
+        "django.middleware.csrf.CsrfViewMiddleware",
+        "django.contrib.auth.middleware.AuthenticationMiddleware",
+        "django.contrib.messages.middleware.MessageMiddleware",
+        "simple_history.middleware.HistoryRequestMiddleware",
+    ]
+    settings.ENABLE_DEBUG_TOOLBAR = False
+    settings.ENABLE_SILK_PROFILER = False
+    settings.TEMPLATE_DEBUG = False

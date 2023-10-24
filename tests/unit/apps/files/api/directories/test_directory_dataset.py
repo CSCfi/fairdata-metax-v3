@@ -3,6 +3,8 @@ from tests.utils import assert_nested_subdict
 
 from apps.core import factories
 
+pytestmark = [pytest.mark.django_db, pytest.mark.file]
+
 
 @pytest.fixture
 def file_tree_with_datasets(file_tree_a):
@@ -36,7 +38,6 @@ def file_tree_with_datasets(file_tree_a):
     return file_tree_a
 
 
-@pytest.mark.django_db
 def test_directory_dataset_a(client, file_tree_with_datasets):
     res = client.get(
         "/v3/directories",
@@ -69,7 +70,6 @@ def test_directory_dataset_a(client, file_tree_with_datasets):
     )
 
 
-@pytest.mark.django_db
 def test_directory_dataset_b(client, file_tree_with_datasets):
     res = client.get(
         "/v3/directories",
@@ -99,7 +99,6 @@ def test_directory_dataset_b(client, file_tree_with_datasets):
     )
 
 
-@pytest.mark.django_db
 def test_directory_dataset_include_all(client, file_tree_with_datasets):
     res = client.get(
         "/v3/directories",
@@ -145,7 +144,6 @@ def test_directory_dataset_include_all(client, file_tree_with_datasets):
     )
 
 
-@pytest.mark.django_db
 def test_directory_dataset_no_files_dataset(client, file_tree_with_datasets):
     dataset = factories.DatasetFactory()
     res = client.get(
@@ -160,7 +158,6 @@ def test_directory_dataset_no_files_dataset(client, file_tree_with_datasets):
     assert res.json() == {"directories": [], "files": []}
 
 
-@pytest.mark.django_db
 def test_directory_exclude_dataset_a(client, file_tree_with_datasets):
     res = client.get(
         "/v3/directories",

@@ -5,6 +5,8 @@ from apps.core import factories as core_factories
 from apps.files import factories as file_factories
 from apps.files.models import File
 
+pytestmark = [pytest.mark.django_db, pytest.mark.file]
+
 
 @pytest.fixture
 def file_set():
@@ -40,7 +42,6 @@ def pas_files():
     )
 
 
-@pytest.mark.django_db
 @pytest.mark.parametrize(
     "flush, all_objects_count",
     [
@@ -48,16 +49,15 @@ def pas_files():
         (True, 0),
     ],
 )
-def test_delete_files_by_project_id(client, file_set, flush, all_objects_count):
+def test_delete_files_by_project_id(admin_client, file_set, flush, all_objects_count):
     assert file_set.total_files_count == 3
     url = f'{reverse("file-list")}?flush={flush}&project={file_set.project}'
-    res = client.delete(url)
+    res = admin_client.delete(url)
     assert File.available_objects.all().count() == 0
     assert File.all_objects.all().count() == all_objects_count
     assert res.status_code == 200
 
 
-@pytest.mark.django_db
 @pytest.mark.parametrize(
     "flush, all_objects_count",
     [
@@ -66,17 +66,16 @@ def test_delete_files_by_project_id(client, file_set, flush, all_objects_count):
     ],
 )
 def test_delete_files_by_project_id_delete_multiple_storages(
-    client, file_set, pas_files, flush, all_objects_count
+    admin_client, file_set, pas_files, flush, all_objects_count
 ):
     assert File.all_objects.count() == 7
     url = f'{reverse("file-list")}?flush={flush}&project={file_set.project}'
-    res = client.delete(url)
+    res = admin_client.delete(url)
     assert File.available_objects.all().count() == 0
     assert File.all_objects.all().count() == all_objects_count
     assert res.status_code == 200
 
 
-@pytest.mark.django_db
 @pytest.mark.parametrize(
     "flush, all_objects_count",
     [
@@ -85,11 +84,11 @@ def test_delete_files_by_project_id_delete_multiple_storages(
     ],
 )
 def test_delete_files_by_project_id_delete_single_storage(
-    client, file_set, pas_files, flush, all_objects_count
+    admin_client, file_set, pas_files, flush, all_objects_count
 ):
     assert File.all_objects.count() == 7
     url = f'{reverse("file-list")}?flush={flush}&project={file_set.project}&storage_service={file_set.storage_service}'
-    res = client.delete(url)
+    res = admin_client.delete(url)
     assert File.available_objects.all().count() == 4
     assert File.all_objects.all().count() == all_objects_count
     assert res.status_code == 200

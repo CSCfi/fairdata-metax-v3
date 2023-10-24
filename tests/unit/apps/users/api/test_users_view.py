@@ -12,7 +12,7 @@ from django.urls import clear_url_caches
 from apps.core import factories
 from apps.core.models import Dataset, FileSet
 
-
+pytestmark = [pytest.mark.django_db]
 @pytest.fixture
 def reload_router_urls(settings):
     """Reload router urls.
@@ -50,19 +50,16 @@ def users_view_disabled(reload_router_urls, settings):
     reload_router_urls()
 
 
-@pytest.mark.django_db
 def test_users_view_disabled(users_view_disabled, client):
     resp = client.get("/v3/users")
     assert resp.status_code == 404
 
 
-@pytest.mark.django_db
 def test_users_view_enabled(users_view_enabled, client):
     resp = client.get("/v3/users")
     assert resp.status_code == 200
 
 
-@pytest.mark.django_db
 def test_users_view(users_view_enabled, client):
     get_user_model().objects.create(username="test1")
     get_user_model().objects.create(username="test2")
@@ -71,7 +68,6 @@ def test_users_view(users_view_enabled, client):
     assert len(resp.data["results"]) == 2
 
 
-@pytest.mark.django_db
 def test_users_view_delete(users_view_enabled, client):
     get_user_model().objects.create(username="test1")
     resp = client.get("/v3/users/test1")
@@ -82,7 +78,6 @@ def test_users_view_delete(users_view_enabled, client):
     assert resp.status_code == 404
 
 
-@pytest.mark.django_db
 def test_users_view_delete_cascade(users_view_enabled, client, dataset_with_files):
     username = dataset_with_files.metadata_owner.user.username
     dataset_id = dataset_with_files.id
@@ -96,7 +91,6 @@ def test_users_view_delete_cascade(users_view_enabled, client, dataset_with_file
     assert FileSet.all_objects.filter(id=file_set_id).count() == 0
 
 
-@pytest.mark.django_db
 def test_users_view_delete_cascade_signals(users_view_enabled, client, dataset_with_files):
     username = dataset_with_files.metadata_owner.user.username
     dataset_handler = unittest.mock.MagicMock()

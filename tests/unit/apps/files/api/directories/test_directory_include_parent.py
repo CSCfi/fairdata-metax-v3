@@ -1,7 +1,8 @@
 import pytest
 
+pytestmark = [pytest.mark.django_db, pytest.mark.file]
 
-@pytest.mark.django_db
+
 def test_directory_include_parent_true(client, file_tree_a):
     res = client.get(
         "/v3/directories",
@@ -15,7 +16,6 @@ def test_directory_include_parent_true(client, file_tree_a):
     assert "parent_directory" not in res.data
 
 
-@pytest.mark.django_db
 def test_directory_include_parent_false(client, file_tree_a):
     res = client.get(
         "/v3/directories",

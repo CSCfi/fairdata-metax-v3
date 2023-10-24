@@ -1,5 +1,13 @@
 # conftest
 
+## DatasetData
+
+### :::tests.unit.apps.core.api.dataset.conftest.DatasetData
+
+## dataset_list_url
+
+### :::tests.unit.apps.core.api.dataset.conftest.dataset_list_url
+
 ## dataset_a_json
 
 ### :::tests.unit.apps.core.api.dataset.conftest.dataset_a_json
@@ -24,6 +32,10 @@
 
 ### :::tests.unit.apps.core.api.dataset.conftest.dataset_access_right_error_json
 
+## dataset
+
+### :::tests.unit.apps.core.api.dataset.conftest.dataset
+
 ## dataset_a
 
 ### :::tests.unit.apps.core.api.dataset.conftest.dataset_a
@@ -35,6 +47,10 @@
 ## dataset_c
 
 ### :::tests.unit.apps.core.api.dataset.conftest.dataset_c
+
+## dataset_actor
+
+### :::tests.unit.apps.core.api.dataset.conftest.dataset_actor
 
 ## dataset_actor_a
 

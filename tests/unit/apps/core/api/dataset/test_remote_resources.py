@@ -8,6 +8,7 @@ from apps.core.serializers import SpatialModelSerializer
 
 logger = logging.getLogger(__name__)
 
+pytestmark = [pytest.mark.django_db]
 
 @pytest.fixture
 def remote_dataset_json(dataset_a_json):
@@ -30,14 +31,14 @@ def remote_dataset_json(dataset_a_json):
     return dataset
 
 
-def test_remote_resources(client, remote_dataset_json, data_catalog, reference_data):
-    resp = client.post("/v3/datasets", remote_dataset_json, content_type="application/json")
+def test_remote_resources(admin_client, remote_dataset_json, data_catalog, reference_data):
+    resp = admin_client.post("/v3/datasets", remote_dataset_json, content_type="application/json")
     assert resp.status_code == 201
     assert_nested_subdict(remote_dataset_json["remote_resources"], resp.json()["remote_resources"])
 
 
-def test_remote_resources_update(client, remote_dataset_json, data_catalog, reference_data):
-    resp = client.post("/v3/datasets", remote_dataset_json, content_type="application/json")
+def test_remote_resources_update(admin_client, remote_dataset_json, data_catalog, reference_data):
+    resp = admin_client.post("/v3/datasets", remote_dataset_json, content_type="application/json")
     assert resp.status_code == 201
     patch_json = {
         "remote_resources": [
@@ -49,7 +50,7 @@ def test_remote_resources_update(client, remote_dataset_json, data_catalog, refe
             }
         ]
     }
-    resp = client.patch(
+    resp = admin_client.patch(
         f"/v3/datasets/{resp.data['id']}", patch_json, content_type="application/json"
     )
     assert resp.status_code == 200
@@ -60,21 +61,21 @@ def test_remote_resources_update(client, remote_dataset_json, data_catalog, refe
 
 
 def test_remote_resources_missing_fields(
-    client, remote_dataset_json, data_catalog, reference_data
+    admin_client, remote_dataset_json, data_catalog, reference_data
 ):
     del remote_dataset_json["remote_resources"][0]["title"]
     del remote_dataset_json["remote_resources"][0]["use_category"]
-    resp = client.post("/v3/datasets", remote_dataset_json, content_type="application/json")
+    resp = admin_client.post("/v3/datasets", remote_dataset_json, content_type="application/json")
     assert resp.status_code == 400
     assert "title" in resp.data["remote_resources"][0]
     assert "use_category" in resp.data["remote_resources"][0]
 
 
 def test_remote_resources_invalid_media_type(
-    client, remote_dataset_json, data_catalog, reference_data
+    admin_client, remote_dataset_json, data_catalog, reference_data
 ):
     remote_dataset_json["remote_resources"][0]["mediatype"] = "kuvatiedosto"
-    resp = client.post("/v3/datasets", remote_dataset_json, content_type="application/json")
+    resp = admin_client.post("/v3/datasets", remote_dataset_json, content_type="application/json")
     assert resp.status_code == 400
     assert "Value should contain a media type" in str(
         resp.data["remote_resources"][0]["mediatype"]

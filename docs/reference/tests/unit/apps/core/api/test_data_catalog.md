@@ -28,6 +28,10 @@
 
 ### :::tests.unit.apps.core.api.test_data_catalog.test_create_datacatalog_error
 
+## test_datacatalog_permissions
+
+### :::tests.unit.apps.core.api.test_data_catalog.test_datacatalog_permissions
+
 ## test_list_datacatalogs
 
 ### :::tests.unit.apps.core.api.test_data_catalog.test_list_datacatalogs

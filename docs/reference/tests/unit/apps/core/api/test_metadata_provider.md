@@ -40,3 +40,7 @@
 
 ### :::tests.unit.apps.core.api.test_metadata_provider.test_list_metadata_providers_with_ordering
 
+## test_metadata_provider_permissions
+
+### :::tests.unit.apps.core.api.test_metadata_provider.test_metadata_provider_permissions
+

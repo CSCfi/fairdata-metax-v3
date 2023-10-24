@@ -3,14 +3,14 @@
 from typing import Dict
 
 import pytest
-from rest_framework.reverse import reverse
 from tests.utils import assert_nested_subdict
 
 from apps.core import factories
 
+pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
 
-@pytest.mark.django_db
-def test_dataset_files_post_empty(client, deep_file_tree, data_urls):
+
+def test_dataset_files_post_empty(admin_client, deep_file_tree, data_urls):
     dataset = factories.DatasetFactory()
     actions = {
         **deep_file_tree["params"],
@@ -18,7 +18,7 @@ def test_dataset_files_post_empty(client, deep_file_tree, data_urls):
         "directory_actions": [],
     }
     urls = data_urls(dataset)
-    res = client.patch(
+    res = admin_client.patch(
         urls["dataset"],
         {"fileset": actions},
         content_type="application/json",
@@ -31,21 +31,20 @@ def test_dataset_files_post_empty(client, deep_file_tree, data_urls):
     assert fileset["total_files_size"] == 0
     assert fileset["project"] == deep_file_tree["params"]["project"]
 
-    res = client.get(urls["files"])
+    res = admin_client.get(urls["files"])
     assert res.status_code == 200
     assert res.json()["count"] == 0
 
-    res = client.get(urls["directories"])
+    res = admin_client.get(urls["directories"])
     assert res.status_code == 200
     assert res.json()["count"] == 0
 
 
-@pytest.mark.django_db
-def test_dataset_files_post_multiple_file_sets(client, deep_file_tree, data_urls):
+def test_dataset_files_post_multiple_file_sets(admin_client, deep_file_tree, data_urls):
     dataset = factories.DatasetFactory()
     actions = deep_file_tree["params"]
     urls = data_urls(dataset)
-    res = client.patch(
+    res = admin_client.patch(
         urls["dataset"],
         {"fileset": actions},
         content_type="application/json",
@@ -54,7 +53,7 @@ def test_dataset_files_post_multiple_file_sets(client, deep_file_tree, data_urls
 
     # Cannot alter storage for existing FileSet
     factories.FileStorageFactory(storage_service="test", project=None)
-    res = client.patch(
+    res = admin_client.patch(
         urls["dataset"],
         {"fileset": {"storage_service": "test"}},
         content_type="application/json",
@@ -67,8 +66,7 @@ def test_dataset_files_post_multiple_file_sets(client, deep_file_tree, data_urls
     }
 
 
-@pytest.mark.django_db
-def test_dataset_patch_fileset(client, deep_file_tree, data_urls):
+def test_dataset_patch_fileset(admin_client, deep_file_tree, data_urls):
     dataset = factories.DatasetFactory()
 
     actions = {
@@ -96,7 +94,7 @@ def test_dataset_patch_fileset(client, deep_file_tree, data_urls):
     }
 
     urls = data_urls(dataset)
-    res = client.patch(
+    res = admin_client.patch(
         urls["dataset"],
         {"fileset": actions},
         content_type="application/json",
@@ -108,7 +106,7 @@ def test_dataset_patch_fileset(client, deep_file_tree, data_urls):
     assert fileset["removed_files_count"] == 0
     assert fileset["total_files_count"] == 6
 
-    res = client.get(urls["files"])
+    res = admin_client.get(urls["files"])
     assert_nested_subdict(
         {
             "results": [
@@ -124,8 +122,7 @@ def test_dataset_patch_fileset(client, deep_file_tree, data_urls):
     )
 
 
-@pytest.mark.django_db
-def test_dataset_files_post_noop_add(client, deep_file_tree, data_urls):
+def test_dataset_files_post_noop_add(admin_client, deep_file_tree, data_urls):
     dataset = factories.DatasetFactory()
     factories.FileSetFactory(
         dataset=dataset,
@@ -145,7 +142,7 @@ def test_dataset_files_post_noop_add(client, deep_file_tree, data_urls):
     }
 
     urls = data_urls(dataset)
-    res = client.patch(
+    res = admin_client.patch(
         urls["dataset"],
         {"fileset": actions},
         content_type="application/json",
@@ -157,8 +154,7 @@ def test_dataset_files_post_noop_add(client, deep_file_tree, data_urls):
     assert fileset["total_files_count"] == len(deep_file_tree["files"])
 
 
-@pytest.mark.django_db
-def test_dataset_files_post_noop_remove(client, deep_file_tree, data_urls):
+def test_dataset_files_post_noop_remove(admin_client, deep_file_tree, data_urls):
     dataset = factories.DatasetFactory()
 
     # file to remove is not in dataset, nothing should happen
@@ -173,7 +169,7 @@ def test_dataset_files_post_noop_remove(client, deep_file_tree, data_urls):
     }
 
     urls = data_urls(dataset)
-    res = client.patch(
+    res = admin_client.patch(
         urls["dataset"],
         {"fileset": actions},
         content_type="application/json",
@@ -186,7 +182,7 @@ def test_dataset_files_post_noop_remove(client, deep_file_tree, data_urls):
 
 
 @pytest.fixture
-def dataset_with_metadata(client, deep_file_tree, data_urls) -> Dict:
+def dataset_with_metadata(admin_client, deep_file_tree, data_urls) -> Dict:
     dataset = factories.DatasetFactory()
     actions = {
         **deep_file_tree["params"],
@@ -203,7 +199,7 @@ def dataset_with_metadata(client, deep_file_tree, data_urls) -> Dict:
     }
 
     url = data_urls(dataset)["dataset"]
-    res = client.patch(
+    res = admin_client.patch(
         url,
         {"fileset": actions},
         content_type="application/json",
@@ -212,10 +208,9 @@ def dataset_with_metadata(client, deep_file_tree, data_urls) -> Dict:
     return dataset
 
 
-@pytest.mark.django_db
-def test_dataset_files_post_metadata_get_files(client, dataset_with_metadata, data_urls):
+def test_dataset_files_post_metadata_get_files(admin_client, dataset_with_metadata, data_urls):
     url = data_urls(dataset_with_metadata)["files"]
-    res = client.get(url)
+    res = admin_client.get(url)
     assert_nested_subdict(
         {
             "results": [
@@ -231,10 +226,11 @@ def test_dataset_files_post_metadata_get_files(client, dataset_with_metadata, da
     )
 
 
-@pytest.mark.django_db
-def test_dataset_files_post_metadata_get_directories(client, dataset_with_metadata, data_urls):
+def test_dataset_files_post_metadata_get_directories(
+    admin_client, dataset_with_metadata, data_urls
+):
     url = data_urls(dataset_with_metadata)["directories"]
-    res = client.get(url, {"path": "/dir2/subdir1", "pagination": "false"})
+    res = admin_client.get(url, {"path": "/dir2/subdir1", "pagination": "false"})
     assert_nested_subdict(
         {
             "directory": {
@@ -254,8 +250,7 @@ def test_dataset_files_post_metadata_get_directories(client, dataset_with_metada
     )
 
 
-@pytest.mark.django_db
-def test_dataset_files_post_multiple_metadata_updates(client, deep_file_tree, data_urls):
+def test_dataset_files_post_multiple_metadata_updates(admin_client, deep_file_tree, data_urls):
     dataset = factories.DatasetFactory()
     urls = data_urls(dataset)
     actions = {
@@ -282,13 +277,13 @@ def test_dataset_files_post_multiple_metadata_updates(client, deep_file_tree, da
             },
         ],
     }
-    res = client.patch(
+    res = admin_client.patch(
         urls["dataset"],
         {"fileset": actions},
         content_type="application/json",
     )
     assert res.status_code == 200
-    res = client.get(urls["files"])
+    res = admin_client.get(urls["files"])
 
     assert_nested_subdict(
         {
@@ -300,8 +295,7 @@ def test_dataset_files_post_multiple_metadata_updates(client, deep_file_tree, da
     )
 
 
-@pytest.mark.django_db
-def test_dataset_files_post_update_for_existing_metadata(client, deep_file_tree, data_urls):
+def test_dataset_files_post_update_for_existing_metadata(admin_client, deep_file_tree, data_urls):
     dataset = factories.DatasetFactory()
     urls = data_urls(dataset)
     actions = {
@@ -319,7 +313,7 @@ def test_dataset_files_post_update_for_existing_metadata(client, deep_file_tree,
             },
         ],
     }
-    res = client.patch(
+    res = admin_client.patch(
         urls["dataset"],
         {"fileset": actions},
         content_type="application/json",
@@ -341,14 +335,14 @@ def test_dataset_files_post_update_for_existing_metadata(client, deep_file_tree,
             },
         ],
     }
-    res = client.patch(
+    res = admin_client.patch(
         urls["dataset"],
         {"fileset": actions},
         content_type="application/json",
     )
     assert res.status_code == 200
 
-    res = client.get(urls["files"])
+    res = admin_client.get(urls["files"])
     assert_nested_subdict(
         {
             "results": [
@@ -358,12 +352,11 @@ def test_dataset_files_post_update_for_existing_metadata(client, deep_file_tree,
         res.json(),
     )
 
-    res = client.get(urls["directories"], {"pagination": "false"})
+    res = admin_client.get(urls["directories"], {"pagination": "false"})
     assert res.data["directory"]["dataset_metadata"]["title"] == "root dir updated"
 
 
-@pytest.mark.django_db
-def test_dataset_files_post_remove_file_metadata(client, deep_file_tree, data_urls):
+def test_dataset_files_post_remove_file_metadata(admin_client, deep_file_tree, data_urls):
     dataset = factories.DatasetFactory()
 
     actions = {
@@ -376,7 +369,7 @@ def test_dataset_files_post_remove_file_metadata(client, deep_file_tree, data_ur
         ],
     }
     urls = data_urls(dataset)
-    res = client.patch(
+    res = admin_client.patch(
         urls["dataset"],
         {"fileset": actions},
         content_type="application/json",
@@ -384,7 +377,7 @@ def test_dataset_files_post_remove_file_metadata(client, deep_file_tree, data_ur
     assert res.status_code == 200
 
     # check metadata is present
-    res = client.get(urls["files"])
+    res = admin_client.get(urls["files"])
     assert "dataset_metadata" in res.data["results"][0]
 
     # remove metadata by setting it to None
@@ -398,7 +391,7 @@ def test_dataset_files_post_remove_file_metadata(client, deep_file_tree, data_ur
             },
         ],
     }
-    res = client.patch(
+    res = admin_client.patch(
         urls["dataset"],
         {"fileset": actions},
         content_type="application/json",
@@ -406,12 +399,11 @@ def test_dataset_files_post_remove_file_metadata(client, deep_file_tree, data_ur
     fileset = res.data["fileset"]
     assert res.status_code == 200
 
-    res = client.get(urls["files"])
+    res = admin_client.get(urls["files"])
     assert res.data["results"][0]["dataset_metadata"] is None
 
 
-@pytest.mark.django_db
-def test_dataset_files_post_none_file_metadata(client, deep_file_tree, data_urls):
+def test_dataset_files_post_none_file_metadata(admin_client, deep_file_tree, data_urls):
     dataset = factories.DatasetFactory()
 
     actions = {
@@ -424,7 +416,7 @@ def test_dataset_files_post_none_file_metadata(client, deep_file_tree, data_urls
         ],
     }
     urls = data_urls(dataset)
-    res = client.patch(
+    res = admin_client.patch(
         urls["dataset"],
         {"fileset": actions},
         content_type="application/json",
@@ -432,12 +424,11 @@ def test_dataset_files_post_none_file_metadata(client, deep_file_tree, data_urls
     fileset = res.data["fileset"]
     assert res.status_code == 200
 
-    res = client.get(urls["files"])
+    res = admin_client.get(urls["files"])
     assert res.data["results"][0]["dataset_metadata"] is None
 
 
-@pytest.mark.django_db
-def test_dataset_files_post_remove_directory_metadata(client, deep_file_tree, data_urls):
+def test_dataset_files_post_remove_directory_metadata(admin_client, deep_file_tree, data_urls):
     dataset = factories.DatasetFactory()
 
     actions = {
@@ -450,7 +441,7 @@ def test_dataset_files_post_remove_directory_metadata(client, deep_file_tree, da
         ],
     }
     urls = data_urls(dataset)
-    res = client.patch(
+    res = admin_client.patch(
         urls["dataset"],
         {"fileset": actions},
         content_type="application/json",
@@ -458,7 +449,7 @@ def test_dataset_files_post_remove_directory_metadata(client, deep_file_tree, da
     assert res.status_code == 200
 
     # check metadata is present
-    res = client.get(urls["directories"], {"pagination": "false"})
+    res = admin_client.get(urls["directories"], {"pagination": "false"})
     assert "dataset_metadata" in res.data["directories"][0]
 
     # remove metadata by setting it to None
@@ -472,19 +463,18 @@ def test_dataset_files_post_remove_directory_metadata(client, deep_file_tree, da
             },
         ],
     }
-    res = client.patch(
+    res = admin_client.patch(
         urls["dataset"],
         {"fileset": actions},
         content_type="application/json",
     )
     assert res.status_code == 200
 
-    res = client.get(urls["directories"], {"pagination": "false"})
+    res = admin_client.get(urls["directories"], {"pagination": "false"})
     assert res.data["directories"][0]["dataset_metadata"] is None
 
 
-@pytest.mark.django_db
-def test_dataset_files_post_none_directory_metadata(client, deep_file_tree, data_urls):
+def test_dataset_files_post_none_directory_metadata(admin_client, deep_file_tree, data_urls):
     dataset = factories.DatasetFactory()
 
     actions = {
@@ -497,18 +487,17 @@ def test_dataset_files_post_none_directory_metadata(client, deep_file_tree, data
         ],
     }
     urls = data_urls(dataset)
-    res = client.patch(
+    res = admin_client.patch(
         urls["dataset"],
         {"fileset": actions},
         content_type="application/json",
     )
     assert res.status_code == 200
-    res = client.get(urls["directories"], {"pagination": "false"})
+    res = admin_client.get(urls["directories"], {"pagination": "false"})
     assert res.data["directories"][0]["dataset_metadata"] is None
 
 
-@pytest.mark.django_db
-def test_dataset_files_multiple_post_requests(client, deep_file_tree, data_urls):
+def test_dataset_files_multiple_post_requests(admin_client, deep_file_tree, data_urls):
     dataset = factories.DatasetFactory()
 
     actions = {
@@ -523,7 +512,7 @@ def test_dataset_files_multiple_post_requests(client, deep_file_tree, data_urls)
     }
 
     urls = data_urls(dataset)
-    res = client.patch(
+    res = admin_client.patch(
         urls["dataset"],
         {"fileset": actions},
         content_type="application/json",
@@ -545,7 +534,7 @@ def test_dataset_files_multiple_post_requests(client, deep_file_tree, data_urls)
             {"id": deep_file_tree["files"]["/dir2/subdir1/file2.txt"].id, "action": "remove"},
         ],
     }
-    res = client.patch(
+    res = admin_client.patch(
         urls["dataset"],
         {"fileset": actions},
         content_type="application/json",
@@ -555,7 +544,7 @@ def test_dataset_files_multiple_post_requests(client, deep_file_tree, data_urls)
     assert fileset["added_files_count"] == 1
     assert fileset["removed_files_count"] == 4
     assert fileset["total_files_count"] == 10
-    res = client.get(urls["files"])
+    res = admin_client.get(urls["files"])
 
     assert_nested_subdict(
         {
@@ -576,8 +565,9 @@ def test_dataset_files_multiple_post_requests(client, deep_file_tree, data_urls)
     )
 
 
-@pytest.mark.django_db
-def test_dataset_files_all_metadata_fields(client, deep_file_tree, reference_data, data_urls):
+def test_dataset_files_all_metadata_fields(
+    admin_client, deep_file_tree, reference_data, data_urls
+):
     dataset = factories.DatasetFactory()
 
     file_metadata = {
@@ -602,14 +592,14 @@ def test_dataset_files_all_metadata_fields(client, deep_file_tree, reference_dat
         "directory_actions": [{"pathname": "/dir1/", "dataset_metadata": directory_metadata}],
     }
     urls = data_urls(dataset)
-    res = client.patch(
+    res = admin_client.patch(
         urls["dataset"],
         {"fileset": actions},
         content_type="application/json",
     )
     assert res.status_code == 200
 
-    res = client.get(urls["directories"], {"pagination": "false"})
+    res = admin_client.get(urls["directories"], {"pagination": "false"})
     assert_nested_subdict(
         {
             "directories": [
@@ -621,8 +611,7 @@ def test_dataset_files_all_metadata_fields(client, deep_file_tree, reference_dat
     )
 
 
-@pytest.mark.django_db
-def test_dataset_files_invalid_file_type(client, deep_file_tree, reference_data, data_urls):
+def test_dataset_files_invalid_file_type(admin_client, deep_file_tree, reference_data, data_urls):
     dataset = factories.DatasetFactory()
 
     file_metadata = {
@@ -637,7 +626,7 @@ def test_dataset_files_invalid_file_type(client, deep_file_tree, reference_data,
         ],
     }
     urls = data_urls(dataset)
-    res = client.patch(
+    res = admin_client.patch(
         urls["dataset"],
         {"fileset": actions},
         content_type="application/json",
@@ -646,8 +635,9 @@ def test_dataset_files_invalid_file_type(client, deep_file_tree, reference_data,
     assert "Invalid values" in res.data["fileset"]["file_type"]
 
 
-@pytest.mark.django_db
-def test_dataset_files_invalid_use_category(client, deep_file_tree, reference_data, data_urls):
+def test_dataset_files_invalid_use_category(
+    admin_client, deep_file_tree, reference_data, data_urls
+):
     dataset = factories.DatasetFactory()
 
     file_metadata = {
@@ -664,7 +654,7 @@ def test_dataset_files_invalid_use_category(client, deep_file_tree, reference_da
         ],
     }
     urls = data_urls(dataset)
-    res = client.patch(
+    res = admin_client.patch(
         urls["dataset"],
         {"fileset": actions},
         content_type="application/json",
@@ -673,8 +663,7 @@ def test_dataset_files_invalid_use_category(client, deep_file_tree, reference_da
     assert "Invalid values" in res.data["fileset"]["use_category"]
 
 
-@pytest.mark.django_db
-def test_dataset_files_wrong_project_identifier(client, deep_file_tree, data_urls):
+def test_dataset_files_wrong_project_identifier(admin_client, deep_file_tree, data_urls):
     dataset = factories.DatasetFactory()
     other_storage = factories.FileStorageFactory(
         storage_service=deep_file_tree["storage"].storage_service
@@ -686,7 +675,7 @@ def test_dataset_files_wrong_project_identifier(client, deep_file_tree, data_url
         "file_actions": [{"id": deep_file_tree["files"]["/rootfile.txt"].id}],
     }
     urls = data_urls(dataset)
-    res = client.patch(
+    res = admin_client.patch(
         urls["dataset"],
         {"fileset": actions},
         content_type="application/json",
@@ -696,8 +685,7 @@ def test_dataset_files_wrong_project_identifier(client, deep_file_tree, data_url
     assert "Files not found" in str(res.data["fileset"]["file.id"])
 
 
-@pytest.mark.django_db
-def test_dataset_files_unknown_project_identifier(client, deep_file_tree, data_urls):
+def test_dataset_files_unknown_project_identifier(admin_client, deep_file_tree, data_urls):
     dataset = factories.DatasetFactory()
     actions = {
         "project": "bleh",
@@ -705,7 +693,7 @@ def test_dataset_files_unknown_project_identifier(client, deep_file_tree, data_u
         "directory_actions": [{"pathname": "/dir1/"}],
     }
     urls = data_urls(dataset)
-    res = client.patch(
+    res = admin_client.patch(
         urls["dataset"],
         {"fileset": actions},
         content_type="application/json",
@@ -714,8 +702,7 @@ def test_dataset_files_unknown_project_identifier(client, deep_file_tree, data_u
     assert "project" in str(res.data["fileset"])
 
 
-@pytest.mark.django_db
-def test_dataset_files_file_from_wrong_storage_service(client, data_urls, deep_file_tree):
+def test_dataset_files_file_from_wrong_storage_service(admin_client, data_urls, deep_file_tree):
     dataset = factories.DatasetFactory()
     factories.FileStorageFactory(storage_service="test", project=None)
     urls = data_urls(dataset)
@@ -723,7 +710,7 @@ def test_dataset_files_file_from_wrong_storage_service(client, data_urls, deep_f
         "storage_service": "test",
         "file_actions": [{"id": deep_file_tree["files"]["/dir1/file.csv"].id}],
     }
-    res = client.patch(
+    res = admin_client.patch(
         urls["dataset"],
         {"fileset": actions},
         content_type="application/json",
@@ -732,12 +719,11 @@ def test_dataset_files_file_from_wrong_storage_service(client, data_urls, deep_f
     assert "Files not found" in res.data["fileset"]["file.id"][0]
 
 
-@pytest.mark.django_db
-def test_dataset_files_missing_project_identifier(client, data_urls):
+def test_dataset_files_missing_project_identifier(admin_client, data_urls):
     dataset = factories.DatasetFactory()
     urls = data_urls(dataset)
     actions = {"storage_service": "ida"}
-    res = client.patch(
+    res = admin_client.patch(
         urls["dataset"],
         {"fileset": actions},
         content_type="application/json",

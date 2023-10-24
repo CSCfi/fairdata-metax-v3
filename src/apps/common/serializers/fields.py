@@ -42,7 +42,10 @@ class URLReferencedModelListField(serializers.ListField):
         super().__init__(**kwargs)
 
     def to_representation(self, manager):
-        return [self.child.to_representation(entry) for entry in manager.all()]
+        if isinstance(manager, list):
+            return [self.child.to_representation(entry) for entry in manager]
+        else:
+            return [self.child.to_representation(entry) for entry in manager.all()]
 
     def to_internal_value(self, data):
         if not isinstance(data, list) or isinstance(data, (str, dict)):

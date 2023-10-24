@@ -1,9 +1,20 @@
 from typing import Optional
 
+from rest_access_policy import AccessViewSetMixin
 from rest_framework import viewsets
+from rest_framework.exceptions import NotAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from rest_framework.viewsets import ViewSet
+
+from apps.common.permissions import BaseAccessPolicy
+
+class SystemCreatorViewSet(AccessViewSetMixin, viewsets.ModelViewSet ):
+    access_policy = BaseAccessPolicy
+
+    def perform_create(self, serializer):
+        if self.request.user.is_anonymous:
+            raise NotAuthenticated("You must be authenticated to perform this action.")
+        serializer.save(system_creator=self.request.user)
 
 
 class StandardResultsSetPagination(PageNumberPagination):
@@ -40,7 +51,7 @@ class PatchModelMixin:
         return self.update(request, *args, **kwargs)
 
 
-class QueryParamsMixin(ViewSet):
+class QueryParamsMixin(viewsets.ViewSet):
     """ViewSet mixin for parsing query params with serializers.
 
     Provides `query_params` attribute that validates query parameters
@@ -97,7 +108,7 @@ class QueryParamsMixin(ViewSet):
         self.query_params = params
 
 
-class CommonModelViewSet(PatchModelMixin, viewsets.ModelViewSet):
+class CommonModelViewSet(PatchModelMixin, SystemCreatorViewSet):
     """ViewSet with common functionality."""
 
 

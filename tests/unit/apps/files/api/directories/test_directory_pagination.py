@@ -1,8 +1,9 @@
 import pytest
 from tests.utils import assert_nested_subdict
 
+pytestmark = [pytest.mark.django_db, pytest.mark.file]
 
-@pytest.mark.django_db
+
 def test_directory_pagination(client, file_tree_a):
     res = client.get(
         "/v3/directories",
@@ -79,7 +80,6 @@ def test_directory_pagination(client, file_tree_a):
     )
 
 
-@pytest.mark.django_db
 def test_directory_pagination_empty_due_to_offset(client, file_tree_a):
     res = client.get(
         "/v3/directories",
@@ -105,7 +105,6 @@ def test_directory_pagination_empty_due_to_offset(client, file_tree_a):
     )
 
 
-@pytest.mark.django_db
 def test_directory_pagination_with_name(client, file_tree_a):
     res = client.get(
         "/v3/directories",

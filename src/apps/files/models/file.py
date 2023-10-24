@@ -6,16 +6,12 @@
 # :license: MIT
 
 import uuid
-from typing import Dict
 
-from django.contrib.auth import get_user_model
-from django.core import exceptions
-from django.core.validators import RegexValidator
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from model_utils.fields import AutoCreatedField, AutoLastModifiedField
-from model_utils.models import SoftDeletableModel, TimeStampedModel
+from model_utils.models import SoftDeletableModel
 
 from apps.common.models import SystemCreatorBaseModel
 from apps.common.serializers.fields import ChecksumField

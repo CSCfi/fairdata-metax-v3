@@ -5,7 +5,8 @@ from django.contrib import admin
 from django.db.models import TextField
 from django.forms import ModelForm, TextInput
 from polymorphic.admin import PolymorphicChildModelAdmin, PolymorphicParentModelAdmin
-from simple_history.admin import SimpleHistoryAdmin
+
+from apps.common.admin import AbstractDatasetPropertyBaseAdmin
 
 # Register your models here.
 from apps.files.models import (
@@ -15,11 +16,6 @@ from apps.files.models import (
     IDAFileStorage,
     ProjectFileStorage,
 )
-
-
-class AbstractDatasetPropertyBaseAdmin(SimpleHistoryAdmin):
-    list_filter = ("created", "modified")
-    exclude = ("is_removed", "removal_date")
 
 
 @admin.register(File)

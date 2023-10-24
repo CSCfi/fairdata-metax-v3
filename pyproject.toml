@@ -51,6 +51,8 @@ coreapi = "^2.3.3"
 mkdocstrings = {extras = ["python"], version = "^0.22.0"}
 pyyaml = "^6.0.1"
 shapely = "^2.0.1"
+drf-access-policy = "^1.5.0"
+django-hijack = "^3.4.1"
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.12.0"
@@ -69,6 +71,7 @@ pytest-bdd = "^6.1.1"
 jsonmodels = "^2.6.0"
 pyopenssl = "^23.2.0"
 black = "^23.9.1"
+bpython = "^0.24"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

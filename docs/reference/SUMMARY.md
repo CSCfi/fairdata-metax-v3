@@ -19,6 +19,7 @@
         - [mixins](src/apps/common/mixins.md)
         - [models](src/apps/common/models.md)
         - [pagination](src/apps/common/pagination.md)
+        - [permissions](src/apps/common/permissions.md)
         - [responses](src/apps/common/responses.md)
         - serializers
             - [fields](src/apps/common/serializers/fields.md)
@@ -41,6 +42,7 @@
             - [file_metadata](src/apps/core/models/file_metadata.md)
             - [legacy](src/apps/core/models/legacy.md)
             - [provenance](src/apps/core/models/provenance.md)
+        - [permissions](src/apps/core/permissions.md)
         - serializers
             - [common_serializers](src/apps/core/serializers/common_serializers.md)
             - [concept_serializers](src/apps/core/serializers/concept_serializers.md)
@@ -67,6 +69,7 @@
         - models
             - [file](src/apps/files/models/file.md)
             - [file_storage](src/apps/files/models/file_storage.md)
+        - [permissions](src/apps/files/permissions.md)
         - serializers
             - [directory_serializer](src/apps/files/serializers/directory_serializer.md)
             - [fields](src/apps/files/serializers/fields.md)
@@ -99,6 +102,7 @@
         - [factories](src/apps/users/factories.md)
         - [models](src/apps/users/models.md)
         - [serializers](src/apps/users/serializers.md)
+        - [signals](src/apps/users/signals.md)
         - [templatetags.users](src/apps/users/templatetags/users.md)
         - [views](src/apps/users/views.md)
 - tests
@@ -133,6 +137,7 @@
                     - [conftest](tests/unit/apps/core/api/conftest.md)
                     - dataset
                         - [conftest](tests/unit/apps/core/api/dataset/conftest.md)
+                        - [test_auth](tests/unit/apps/core/api/dataset/test_auth.md)
                         - [test_dataset](tests/unit/apps/core/api/dataset/test_dataset.md)
                         - [test_legacy](tests/unit/apps/core/api/dataset/test_legacy.md)
                         - [test_provenance](tests/unit/apps/core/api/dataset/test_provenance.md)
@@ -176,6 +181,7 @@
                         - [test_directory_path](tests/unit/apps/files/api/directories/test_directory_path.md)
                     - files
                         - [conftest](tests/unit/apps/files/api/files/conftest.md)
+                        - [test_auth](tests/unit/apps/files/api/files/test_auth.md)
                         - [test_files_bulk](tests/unit/apps/files/api/files/test_files_bulk.md)
                         - [test_files_create](tests/unit/apps/files/api/files/test_files_create.md)
                         - [test_files_datasets](tests/unit/apps/files/api/files/test_files_datasets.md)

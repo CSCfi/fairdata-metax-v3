@@ -57,6 +57,8 @@ Launch default development server with `python manage.py runserver <port-number>
 
 You can use enchanted development server with `python manage.py runserver_plus <port-number>`
 
+If you want to use enhanced interpreter with `runserver_plus`, you can add `--bpython` at the end of runserver_plus command
+
 ### Accessing the admin panel
 
 When the development server is running, admin panel can be accessed from `localhost:<port>/admin`. Use the credentials generated in the _"Creating superuser"_ part of this readme.

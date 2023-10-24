@@ -2,6 +2,8 @@ import pytest
 
 from apps.core import factories
 
+pytestmark = [pytest.mark.django_db, pytest.mark.file]
+
 
 @pytest.fixture
 def file_tree_with_datasets(file_tree_a):
@@ -42,10 +44,9 @@ def file_tree_with_datasets(file_tree_a):
     return tree
 
 
-@pytest.mark.django_db
-def test_files_datasets(client, file_tree_with_datasets):
+def test_files_datasets(admin_client, file_tree_with_datasets):
     tree = file_tree_with_datasets
-    res = client.post(
+    res = admin_client.post(
         "/v3/files/datasets",
         [
             tree["files"]["/dir/a.txt"].id,  # dataset a
@@ -66,10 +67,9 @@ def test_files_datasets(client, file_tree_with_datasets):
     )
 
 
-@pytest.mark.django_db
-def test_files_datasets_for_service(client, file_tree_with_datasets):
+def test_files_datasets_for_service(admin_client, file_tree_with_datasets):
     tree = file_tree_with_datasets
-    res = client.post(
+    res = admin_client.post(
         "/v3/files/datasets?storage_service=ida",
         [
             tree["files"]["/dir/a.txt"].storage_identifier,  # dataset a
@@ -89,10 +89,9 @@ def test_files_datasets_for_service(client, file_tree_with_datasets):
     )
 
 
-@pytest.mark.django_db
-def test_files_datasets_for_service_with_relations(client, file_tree_with_datasets):
+def test_files_datasets_for_service_with_relations(admin_client, file_tree_with_datasets):
     tree = file_tree_with_datasets
-    res = client.post(
+    res = admin_client.post(
         "/v3/files/datasets?storage_service=ida&relations=true",
         [
             tree["files"]["/dir/a.txt"].storage_identifier,  # dataset a
@@ -114,10 +113,9 @@ def test_files_datasets_for_service_with_relations(client, file_tree_with_datase
     }
 
 
-@pytest.mark.django_db
-def test_files_datasets_for_different_service(client, file_tree_with_datasets):
+def test_files_datasets_for_different_service(admin_client, file_tree_with_datasets):
     tree = file_tree_with_datasets
-    res = client.post(
+    res = admin_client.post(
         "/v3/files/datasets?storage_service=pas",
         [
             tree["files"]["/dir/a.txt"].storage_identifier,  # dataset a

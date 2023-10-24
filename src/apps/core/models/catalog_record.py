@@ -6,7 +6,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.db import models
-from django.db.models import Count, Sum
+from django.db.models import Count, Sum, F, Q, OuterRef, Max, Subquery
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -231,7 +231,7 @@ class Dataset(V2DatasetMixin, CopyableModelMixin, CatalogRecord, AbstractBaseMod
     )
     # First, last replaces, next
 
-    other_versions = models.ManyToManyField("self", db_index=True)
+    other_versions = models.ManyToManyField("self", db_index=True, blank=True)
     history = HistoricalRecords(
         m2m_fields=(language, theme, field_of_science, infrastructure, other_identifiers)
     )
@@ -253,13 +253,44 @@ class Dataset(V2DatasetMixin, CopyableModelMixin, CatalogRecord, AbstractBaseMod
         fields=["state", "published_revision", "cumulative_state", "draft_revision"]
     )
 
+    def has_permission_to_see_drafts(self, user: settings.AUTH_USER_MODEL):
+        if user.is_superuser:
+            return True
+        elif not user.is_authenticated:
+            return False
+        elif user == self.system_creator:
+            return True
+        elif self.metadata_owner:
+            if self.metadata_owner.user == user:
+                return True
+        return False
+
+    @staticmethod
+    def _historicals_to_instances(historicals):
+        return [historical.instance for historical in historicals if historical.instance]
+
+    @classmethod
+    def only_latest_published(cls, as_instance_list=False, as_instances=True, as_queryset=False):
+        # Get active historical dataset by using dataset relation
+        published = cls.history.filter(
+            published_revision=F("catalogrecord_ptr__dataset__published_revision"),
+            state="published",
+            history_change_reason__isnull=False
+        )
+        if as_instance_list:
+            return cls._historicals_to_instances(published)
+        elif as_instances:
+            return published.as_instances()
+        elif as_queryset:
+            return published
+
     @cached_property
     def latest_published_revision(self):
-        return self.get_published_revision(self.published_revision)
+        return self.get_revision(publication_number=self.published_revision)
 
     @cached_property
     def first_published_revision(self):
-        return self.get_published_revision(1)
+        return self.get_revision(publication_number=1)
 
     @cached_property
     def first_version(self):
@@ -277,14 +308,29 @@ class Dataset(V2DatasetMixin, CopyableModelMixin, CatalogRecord, AbstractBaseMod
     def previous_version(self):
         return self.other_versions.filter(created__lt=self.created).last()
 
-    def get_published_revision(self, version: int):
-        revision = self.history.filter(history_change_reason=f"published-{version}").first()
+    def get_revision(self, name: str = None, publication_number: int = None):
+        revision = None
+        if publication_number:
+            revision = self.history.filter(
+                history_change_reason=f"published-{publication_number}"
+            ).first()
+        elif name:
+            revision = self.history.filter(history_change_reason=name).first()
         if revision:
             return revision.instance
 
-    def all_published_revisions(self):
-        revisions = self.history.filter(history_change_reason__contains="published-")
-        return [revision.instance for revision in revisions if revision.instance]
+    def all_revisions(self, published_only=False, draft_only=False, as_instance_list=False):
+        revisions = []
+        if published_only:
+            revisions = self.history.filter(history_change_reason__contains="published-")
+        elif draft_only:
+            revisions = self.history.filter(history_change_reason__contains="draft-")
+        else:
+            revisions = self.history.all()
+        if as_instance_list:
+            return self._historicals_to_instances(revisions)
+        else:
+            return revisions.as_instances()
 
     @classmethod
     def create_copy(cls, original: "Dataset") -> Tuple[Self, Self]:

@@ -1,8 +1,9 @@
 import pytest
 from tests.utils import assert_nested_subdict
 
+pytestmark = [pytest.mark.django_db, pytest.mark.file]
 
-@pytest.mark.django_db
+
 def test_directory_path(client, file_tree_a):
     res = client.get(
         "/v3/directories",
@@ -38,7 +39,6 @@ def test_directory_path(client, file_tree_a):
     )
 
 
-@pytest.mark.django_db
 def test_directory_path_subdir(client, file_tree_a):
     res = client.get(
         "/v3/directories",
@@ -64,7 +64,6 @@ def test_directory_path_subdir(client, file_tree_a):
     )
 
 
-@pytest.mark.django_db
 def test_directory_path_nonexisting(client, file_tree_a):
     res = client.get(
         "/v3/directories",

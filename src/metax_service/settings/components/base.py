@@ -83,6 +83,8 @@ THIRD_PARTY_APPS = [
     "corsheaders",
     "watson",
     "cachalot",
+    "hijack",
+    "hijack.contrib.admin",
 ]
 LOCAL_APPS = [
     "common.apps.CommonConfig",
@@ -109,6 +111,7 @@ MIDDLEWARE = [
     "simple_history.middleware.HistoryRequestMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "watson.middleware.SearchContextMiddleware",
+    "hijack.middleware.HijackUserMiddleware",
 ]
 
 ROOT_URLCONF = "metax_service.urls"
@@ -229,6 +232,13 @@ REST_FRAMEWORK = {
     "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
     "EXCEPTION_HANDLER": "common.exceptions.exception_handler",
 }
+ENABLE_DRF_TOKEN_AUTH = env.bool("ENABLE_DRF_TOKEN_AUTH", False)
+if ENABLE_DRF_TOKEN_AUTH:
+    INSTALLED_APPS = INSTALLED_APPS + ["rest_framework.authtoken"]
+    AUTH_CLASSES = REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"]
+    REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] = AUTH_CLASSES + [
+        "rest_framework.authentication.TokenAuthentication"
+    ]
 
 SWAGGER_SETTINGS = {
     "DEEP_LINKING": True,  # Automatically update URL fragment with current operation in Swagger UI
@@ -240,6 +250,9 @@ SWAGGER_SETTINGS = {
     "DEFAULT_AUTO_SCHEMA_CLASS": "apps.common.inspectors.ExtendedSwaggerAutoSchema",
     "DEFAULT_GENERATOR_CLASS": "apps.common.inspectors.SortingOpenAPISchemaGenerator",
     "DEFAULT_INFO": "metax_service.urls.openapi_info",
+    "SECURITY_DEFINITIONS": {
+        "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"}
+    },
 }
 REDOC_SETTINGS = {"HIDE_HOSTNAME": True}
 

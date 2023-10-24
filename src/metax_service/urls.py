@@ -19,10 +19,12 @@ from django.urls import include, path, re_path
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
+from rest_framework.authtoken import views
 from rest_framework.schemas import get_schema_view as drf_schema_view
 
 from apps.core.views import IndexView
 from apps.router.urls import urlpatterns as router_urls
+
 
 openapi_info = openapi.Info(
     title="Metax Service",
@@ -56,9 +58,13 @@ urlpatterns = [
     path("__debug__/", include("debug_toolbar.urls")),
     path("v3/", include(router_urls)),
     path("auth/", include("users.urls")),
+    path("hijack/", include("hijack.urls")),
 ]
 if settings.ENABLE_DEBUG_TOOLBAR:
     urlpatterns = urlpatterns + [path("__debug__/", include("debug_toolbar.urls"))]
 
 if settings.ENABLE_SILK_PROFILER:
     urlpatterns = urlpatterns + [path("silk/", include("silk.urls", namespace="silk"))]
+
+if settings.ENABLE_DRF_TOKEN_AUTH:
+    urlpatterns = urlpatterns + [path("drf-token-auth/", views.obtain_auth_token)]

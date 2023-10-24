@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from typing import Dict
 
 import pytest
 from rest_framework.reverse import reverse
@@ -13,7 +14,7 @@ logger = logging.getLogger(__name__)
 test_data_path = os.path.dirname(os.path.abspath(__file__)) + "/testdata/"
 
 
-def load_test_json(filename):
+def load_test_json(filename) -> Dict:
     with open(test_data_path + filename) as json_file:
         data = json.load(json_file)
     return data
@@ -61,7 +62,7 @@ def data_catalog_list_url():
 
 @pytest.fixture
 def post_datacatalog_payloads_a_b_c(
-    client,
+    admin_client,
     datacatalog_a_json,
     datacatalog_b_json,
     datacatalog_c_json,
@@ -70,9 +71,9 @@ def post_datacatalog_payloads_a_b_c(
 ):
     logger.info(__name__)
     url = data_catalog_list_url
-    res1 = client.post(url, datacatalog_a_json, content_type="application/json")
-    res2 = client.post(url, datacatalog_b_json, content_type="application/json")
-    res3 = client.post(url, datacatalog_c_json, content_type="application/json")
+    res1 = admin_client.post(url, datacatalog_a_json, content_type="application/json")
+    res2 = admin_client.post(url, datacatalog_b_json, content_type="application/json")
+    res3 = admin_client.post(url, datacatalog_c_json, content_type="application/json")
     logger.info(f"{res1=}, {res2=}, {res3=}")
     return res1, res2, res3
 
@@ -112,14 +113,14 @@ def publisher_put_c_json():
 
 @pytest.fixture
 def post_publisher_payloads_a_b_c_d(
-    client, publisher_a_json, publisher_b_json, publisher_c_json, publisher_d_json
+    admin_client, publisher_a_json, publisher_b_json, publisher_c_json, publisher_d_json
 ):
     logger.info(__name__)
     url = "/v3/publishers"
-    res1 = client.post(url, publisher_a_json, content_type="application/json")
-    res2 = client.post(url, publisher_b_json, content_type="application/json")
-    res3 = client.post(url, publisher_c_json, content_type="application/json")
-    res4 = client.post(url, publisher_d_json, content_type="application/json")
+    res1 = admin_client.post(url, publisher_a_json, content_type="application/json")
+    res2 = admin_client.post(url, publisher_b_json, content_type="application/json")
+    res3 = admin_client.post(url, publisher_c_json, content_type="application/json")
+    res4 = admin_client.post(url, publisher_d_json, content_type="application/json")
     logger.info(f"{res1=}, {res2=}, {res3=}, {res4=}")
     return res1, res2, res3, res4
 
@@ -181,7 +182,7 @@ def metadata_provider_put_c_json():
 
 @pytest.fixture
 def post_metadata_provider_payloads_a_b_c_d(
-    client,
+    admin_client,
     metadata_provider_a_json,
     metadata_provider_b_json,
     metadata_provider_c_json,
@@ -189,9 +190,9 @@ def post_metadata_provider_payloads_a_b_c_d(
 ):
     logger.info(__name__)
     url = "/v3/metadata-provider"
-    res1 = client.post(url, metadata_provider_a_json, content_type="application/json")
-    res2 = client.post(url, metadata_provider_b_json, content_type="application/json")
-    res3 = client.post(url, metadata_provider_c_json, content_type="application/json")
-    res4 = client.post(url, metadata_provider_d_json, content_type="application/json")
+    res1 = admin_client.post(url, metadata_provider_a_json, content_type="application/json")
+    res2 = admin_client.post(url, metadata_provider_b_json, content_type="application/json")
+    res3 = admin_client.post(url, metadata_provider_c_json, content_type="application/json")
+    res4 = admin_client.post(url, metadata_provider_d_json, content_type="application/json")
     logger.info(f"{res1=}, {res2=}, {res3=}, {res4=}")
     return res1, res2, res3, res4

@@ -72,8 +72,3 @@ class ProvenanceFilter(filters.FilterSet):
 class ProvenanceViewSet(DatasetNestedViewSetMixin):
     serializer_class = ProvenanceModelSerializer
     filterset_class = ProvenanceFilter
-
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context["dataset_pk"] = self.kwargs.get("dataset_pk")
-        return context

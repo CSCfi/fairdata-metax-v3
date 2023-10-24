@@ -7,9 +7,9 @@
 
 
 from django.db.models import CharField, Count, F, Max, Min, Sum, Value
-from django.db.models.functions import Concat, JSONObject
+from django.db.models.functions import Concat
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import exceptions, fields, serializers, viewsets
+from rest_framework import fields, serializers, viewsets
 from rest_framework.response import Response
 
 from apps.common.helpers import cachalot_toggle, get_attr_or_item
@@ -21,6 +21,7 @@ from apps.files.helpers import (
     replace_query_param,
 )
 from apps.files.models.file import File, FileStorage
+from apps.files.permissions import FilesAccessPolicy
 from apps.files.serializers.directory_serializer import (
     DirectoryFileSerializer,
     DirectorySerializer,
@@ -127,6 +128,8 @@ class DirectoryViewSet(viewsets.ViewSet):
     Directories are transient and do not have a model of their own.
     Instead, they are generated dynamically from files that match
     the requested path."""
+
+    access_policy = FilesAccessPolicy
 
     def get_params(self):
         """Parse view query parameters."""

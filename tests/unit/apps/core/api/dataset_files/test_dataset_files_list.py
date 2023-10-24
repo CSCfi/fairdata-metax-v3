@@ -5,11 +5,12 @@ from tests.utils import assert_nested_subdict
 
 from apps.core import factories
 
+pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
 
-@pytest.mark.django_db
-def test_dataset_files(client, dataset_with_files, data_urls):
+
+def test_dataset_files(admin_client, dataset_with_files, data_urls):
     url = data_urls(dataset_with_files)["files"]
-    res = client.get(url)
+    res = admin_client.get(url)
     assert res.status_code == 200
     assert_nested_subdict(
         {
@@ -25,11 +26,10 @@ def test_dataset_files(client, dataset_with_files, data_urls):
     )
 
 
-@pytest.mark.django_db
-def test_dataset_files_single_file(client, dataset_with_files, data_urls):
+def test_dataset_files_single_file(admin_client, dataset_with_files, data_urls):
     file_id = dataset_with_files.file_set.files.get(filename="file.csv").id
     url = f'{data_urls(dataset_with_files)["files"]}/{file_id}'
-    res = client.get(url)
+    res = admin_client.get(url)
     assert res.status_code == 200
     assert_nested_subdict(
         {"pathname": "/dir1/file.csv"},
@@ -38,10 +38,9 @@ def test_dataset_files_single_file(client, dataset_with_files, data_urls):
     )
 
 
-@pytest.mark.django_db
-def test_dataset_files_no_pagination(client, dataset_with_files, data_urls):
+def test_dataset_files_no_pagination(admin_client, dataset_with_files, data_urls):
     url = data_urls(dataset_with_files)["files"]
-    res = client.get(url, {"pagination": "false"})
+    res = admin_client.get(url, {"pagination": "false"})
     assert res.status_code == 200
     assert_nested_subdict(
         [
@@ -55,10 +54,9 @@ def test_dataset_files_no_pagination(client, dataset_with_files, data_urls):
     )
 
 
-@pytest.mark.django_db
-def test_dataset_directories(client, dataset_with_files, data_urls):
+def test_dataset_directories(admin_client, dataset_with_files, data_urls):
     url = data_urls(dataset_with_files)["directories"]
-    res = client.get(
+    res = admin_client.get(
         url,
         {
             "pagination": False,
@@ -86,11 +84,10 @@ def test_dataset_directories(client, dataset_with_files, data_urls):
     )
 
 
-@pytest.mark.django_db
-def test_dataset_directories_no_files(client, dataset_with_files, data_urls):
+def test_dataset_directories_no_files(admin_client, dataset_with_files, data_urls):
     another_dataset = factories.DatasetFactory()
     url = data_urls(another_dataset)["directories"]
-    res = client.get(
+    res = admin_client.get(
         url,
         {
             "pagination": False,
@@ -99,11 +96,10 @@ def test_dataset_directories_no_files(client, dataset_with_files, data_urls):
     assert res.status_code == 404
 
 
-@pytest.mark.django_db
-def test_dataset_file_set_no_files(client, dataset_with_files, data_urls):
+def test_dataset_file_set_no_files(admin_client, dataset_with_files, data_urls):
     another_dataset = factories.DatasetFactory()
     url = data_urls(another_dataset)["dataset"]
-    res = client.get(
+    res = admin_client.get(
         url,
         {
             "pagination": False,

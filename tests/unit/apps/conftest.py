@@ -1,7 +1,11 @@
+from dataclasses import dataclass
 from typing import Union
 from uuid import UUID
 
 import pytest
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
+from knox.models import AuthToken
 from rest_framework.reverse import reverse
 
 from apps.core import factories
@@ -91,3 +95,57 @@ def dataset_with_files(file_tree):
         ]
     )
     return dataset
+
+
+@dataclass
+class TokenUsers:
+    user: get_user_model()
+    token: str
+
+
+@pytest.fixture
+def end_users(faker):
+    user1 = get_user_model().objects.create(
+        username=faker.simple_profile()["username"], password=faker.password()
+    )
+    user2 = get_user_model().objects.create(
+        username=faker.simple_profile()["username"], password=faker.password()
+    )
+    user3 = get_user_model().objects.create(
+        username=faker.simple_profile()["username"], password=faker.password()
+    )
+    instance1, token1 = AuthToken.objects.create(user=user1)
+    instance2, token2 = AuthToken.objects.create(user=user2)
+    instance3, token3 = AuthToken.objects.create(user=user3)
+    return (
+        TokenUsers(user=user1, token=token1),
+        TokenUsers(user=user2, token=token2),
+        TokenUsers(user=user3, token=token3),
+    )
+
+
+@pytest.fixture
+def service_user(faker):
+    group = Group.objects.create(name="service")
+    user = get_user_model().objects.create(
+        username=faker.simple_profile()["username"], password=faker.password()
+    )
+    instance, token = AuthToken.objects.create(user=user)
+    user.groups.add(group)
+    return TokenUsers(user=user, token=token)
+
+
+@pytest.fixture
+def ida_service_user(service_user):
+    group_ida = Group.objects.create(name="ida")
+    service_user.user.groups.add(group_ida)
+    return service_user
+
+
+@pytest.fixture
+def update_request_client_auth_token():
+    def _update_request_client_auth_token(client, token):
+        client.headers.update({"Authorization": f"Bearer {token}"})
+        return client
+
+    return _update_request_client_auth_token

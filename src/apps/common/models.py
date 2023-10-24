@@ -22,6 +22,8 @@ class SystemCreatorBaseModel(models.Model):
         on_delete=models.SET_NULL,
         related_name="%(app_label)s_%(class)ss",
         null=True,
+        editable=False,
+        blank=True,
     )
 
     class Meta:
