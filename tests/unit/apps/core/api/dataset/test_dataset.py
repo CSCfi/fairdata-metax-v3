@@ -333,3 +333,26 @@ def test_dataset_put_remove_fileset(client, dataset_maximal_json, reference_data
     )
     assert res.status_code == 400
     assert "not allowed" in res.json()["fileset"]
+
+def test_dataset_metadata_download_json(admin_client, dataset_a_json, dataset_a, reference_data, data_catalog):
+    assert dataset_a.status_code == 201
+    id = dataset_a.data["id"]
+    res = admin_client.get(f"/v3/datasets/{id}/metadata-download?format=json")
+    assert res.status_code == 200
+    assert_nested_subdict(dataset_a_json, res.data)
+    assert res.headers.get("Content-Disposition") == f"attachment; filename='{id}-metadata.json'"
+
+def test_dataset_metadata_download_datacite(admin_client, dataset_a_json, dataset_a, reference_data, data_catalog):
+    pytest.xfail("DataCite XML implementation missing")
+    assert dataset_a.status_code == 201
+    id = dataset_a.data["id"]
+    res = admin_client.get(f"/v3/datasets/{id}/metadata-download?format=datacite")
+    assert res.status_code == 200
+    #check dataset_a data in res.data
+    assert res.headers.get("Content-Disposition") == f"attachment; filename='{id}-metadata.xml'"
+
+def test_dataset_metadata_download_invalid_id(admin_client):
+    res = admin_client.get(f"/v3/datasets/invalid_id/metadata-download")
+    assert res.status_code == 404
+    assert res.headers.get("Content-Disposition") == None
+    assert res.data == "Dataset not found."

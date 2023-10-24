@@ -9,10 +9,12 @@ import logging
 from typing import Optional
 
 from django_filters import rest_framework as filters
+from django.http import Http404
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import exceptions, response
+from rest_framework import exceptions, response, status
 from rest_framework.decorators import action
-from rest_framework import status
+from rest_framework.renderers import JSONRenderer
+
 from watson import search
 
 from apps.common.views import QueryParamsMixin
@@ -130,6 +132,25 @@ class DatasetViewSet(QueryParamsMixin, CommonModelViewSet):
             return obj
         except Dataset.DoesNotExist:
             return super().get_object()
+        
+    @action(detail=True, url_path="metadata-download", renderer_classes=[JSONRenderer])
+    def metadata_download(self, request, pk=None):
+        try:
+            obj = self.get_object()
+        except Http404:
+            return response.Response("Dataset not found.", status=404, content_type="text/plain")
+        
+        serializer = self.serializer_class
+        extension = 'json'
+
+        if request.query_params.get("format") == ("datacite" or "fairdata_datacite"):
+            # serializer = serializer for datacite xml
+            extension = 'xml'
+
+        return response.Response(
+            serializer(obj).data, 
+            headers={
+                "Content-Disposition": f"attachment; filename='{pk}-metadata.{extension}'"})
 
     @action(detail=True, methods=["post", "get"], url_path="new-version")
     def new_version(self, request, pk=None):
