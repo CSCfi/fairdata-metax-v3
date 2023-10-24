@@ -198,3 +198,7 @@ class Spatial(AbstractFreeformConcept, CopyableModelMixin):
 
 class ContributorType(ConceptProxyMixin, refdata.ContributorType):
     """Project Contributor"""
+
+
+class RestrictionGrounds(ConceptProxyMixin, refdata.RestrictionGrounds):
+    """Reason for access restriction."""

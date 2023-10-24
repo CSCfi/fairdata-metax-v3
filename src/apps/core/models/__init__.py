@@ -20,18 +20,13 @@ from .concepts import (
     Language,
     LifecycleEvent,
     ResearchInfra,
+    RestrictionGrounds,
     Spatial,
     Theme,
     UseCategory,
 )
 from .contract import Contract
-from .data_catalog import (
-    AccessRights,
-    AccessRightsRestrictionGrounds,
-    CatalogHomePage,
-    DataCatalog,
-    DatasetPublisher,
-)
+from .data_catalog import AccessRights, CatalogHomePage, DataCatalog, DatasetPublisher
 from .file_metadata import FileSetDirectoryMetadata, FileSetFileMetadata
 from .legacy import LegacyDataset
 from .provenance import Provenance, ProvenanceVariable

@@ -16,6 +16,10 @@
 
 ### :::src.apps.core.factories.AccessTypeFactory
 
+## RestrictionGroundsFactory
+
+### :::src.apps.core.factories.RestrictionGroundsFactory
+
 ## FieldOfScienceFactory
 
 ### :::src.apps.core.factories.FieldOfScienceFactory

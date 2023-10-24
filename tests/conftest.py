@@ -104,6 +104,30 @@ def access_type_reference_data():
     )
 
 
+@pytest.mark.django_db
+@pytest.fixture
+def restriction_grounds_reference_data():
+    common_args = {
+        "in_scheme": "http://uri.suomi.fi/codelist/fairdata/restriction_grounds",
+    }
+    factories.RestrictionGroundsFactory(
+        url="http://uri.suomi.fi/codelist/fairdata/restriction_grounds/code/environmental",
+        pref_label={
+            "en": "Restricted access due to environmental preservation reasons",
+            "fi": "Saatavuutta rajoitettu luonnonsuojelun perusteella",
+        },
+        **common_args,
+    )
+    factories.RestrictionGroundsFactory(
+        url="http://uri.suomi.fi/codelist/fairdata/restriction_grounds/code/research",
+        pref_label={
+            "en": "Restriced access for research based on contract",
+            "fi": "Saatavuutta rajoitettu sopimuksen perusteella vain tutkimuskäyttöön",
+        },
+        **common_args,
+    )
+
+
 @pytest.fixture
 def field_of_science_reference_data():
     common_args = {
@@ -389,6 +413,7 @@ def lifecycle_event_reference_data():
 @pytest.fixture
 def reference_data(
     access_type_reference_data,
+    restriction_grounds_reference_data,
     field_of_science_reference_data,
     theme_reference_data,
     language_reference_data,

@@ -42,15 +42,19 @@ def test_creator_and_owner_sees_draft(
 
     # metadata owner can edit the dataset
     detail_url = f"{url}/{res1.json()['id']}"
-    res5 = requests_client.patch(detail_url, json={"state": "published", "title": {"en": "published title"}})
+    res5 = requests_client.patch(
+        detail_url, json={"state": "published", "title": {"en": "published title"}}
+    )
     assert res5.status_code == 200
 
     # metadata owner makes new draft
-    res6 = requests_client.patch(detail_url, json={"state": "draft", "title": {"en": "new draft title"}})
+    res6 = requests_client.patch(
+        detail_url, json={"state": "draft", "title": {"en": "new draft title"}}
+    )
     assert res6.status_code == 200
 
     # user2 should only see the published version
-    requests_client.headers.update({'Authorization': f"Bearer {user2.token}"})
+    requests_client.headers.update({"Authorization": f"Bearer {user2.token}"})
     res7 = requests_client.get(detail_url)
     assert res7.status_code == 200
     assert res7.json()["title"] == {"en": "published title"}

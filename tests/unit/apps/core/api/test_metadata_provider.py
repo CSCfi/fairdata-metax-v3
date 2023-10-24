@@ -68,7 +68,9 @@ def test_list_metadata_providers_with_filter(
     assert len(response.data.get("results")) == filter_result
 
 
-def test_list_metadata_providers_with_page_size(admin_client, post_metadata_provider_payloads_a_b_c_d):
+def test_list_metadata_providers_with_page_size(
+    admin_client, post_metadata_provider_payloads_a_b_c_d
+):
     url = "/v3/metadata-provider?{0}={1}".format("page_size", 2)
     logger.info(url)
     response = admin_client.get(url)
@@ -77,7 +79,9 @@ def test_list_metadata_providers_with_page_size(admin_client, post_metadata_prov
     assert response.data.get("next") is not None
 
 
-def test_change_metadata_provider(admin_client, metadata_provider_c_json, metadata_provider_put_c_json):
+def test_change_metadata_provider(
+    admin_client, metadata_provider_c_json, metadata_provider_put_c_json
+):
     _now = datetime.datetime.now()
     res1 = admin_client.post(
         "/v3/metadata-provider", metadata_provider_c_json, content_type="application/json"
@@ -117,7 +121,9 @@ def test_delete_metadata_provider_by_id(admin_client, post_metadata_provider_pay
     metadata_provider_count = MetadataProvider.available_objects.all().count()
     assert response.data.get("count") == metadata_provider_count
     results = response.data.get("results")
-    delete_result = admin_client.delete("/v3/metadata-provider/{id}".format(id=results[0].get("id")))
+    delete_result = admin_client.delete(
+        "/v3/metadata-provider/{id}".format(id=results[0].get("id"))
+    )
     assert delete_result.status_code == 204
     assert metadata_provider_count - 1 == MetadataProvider.available_objects.all().count()
 

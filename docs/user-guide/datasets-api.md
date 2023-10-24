@@ -28,11 +28,16 @@ Language field is a list of language reference data objects. Only url field is r
 
 Information about who can access the resource or an indication of its security status. [^2]
 
-| Field       | key         | value                                                 |
-|-------------|-------------|-------------------------------------------------------|
-| Description | description | dict                                                  |
-| Access Type | access_type | reference data from `/v3/reference-data/access-types` |
-| License     | license     | list of objects                                       |
+A dataset whose files are publicly available should have access type "Open" from the reference data.
+For more restrictive access types it is recommended to add one or more restriction grounds values to indicate why access
+to the data is restricted.
+
+| Field               | key                 | value                                                                |
+|---------------------|---------------------|----------------------------------------------------------------------|
+| Description         | description         | dict                                                                 |
+| Access Type         | access_type         | reference data from `/v3/reference-data/access-types`                |
+| Restriction Grounds | restriction_grounds | list of reference data from `/v3/reference-data/restriction-grounds` |
+| License             | license             | list of objects                                                      |
 
 License is special kind of reference data object, as it can have additional metadata properties
 that are writable by the user:

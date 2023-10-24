@@ -38,10 +38,11 @@ from .concepts import (
     Language,
     LifecycleEvent,
     ResearchInfra,
+    RestrictionGrounds,
     Spatial,
 )
 from .contract import Contract
-from .data_catalog import AccessRights, AccessRightsRestrictionGrounds, DataCatalog
+from .data_catalog import AccessRights, DataCatalog
 from .provenance import Provenance, ProvenanceVariable
 
 logger = logging.getLogger(__name__)
@@ -298,17 +299,19 @@ class LegacyDataset(Dataset):
                 self.created_objects += 1
             license_objects.append(license_instance)
 
+        restriction_grounds_objects = []
         for res_grounds in self.legacy_access_rights.get("restriction_grounds", []):
-            rg, rg_created = AccessRightsRestrictionGrounds.objects.get_or_create(
+            rg, rg_created = RestrictionGrounds.objects.get_or_create(
                 url=res_grounds["identifier"],
                 pref_label=res_grounds["pref_label"],
                 in_scheme=res_grounds["in_scheme"],
-                access_rights=self.access_rights,
             )
             if rg_created:
                 self.created_objects += 1
             logger.debug(f"restriction_grounds={rg}, created={rg_created}")
+            restriction_grounds_objects.append(rg)
         self.access_rights.license.set(license_objects)
+        self.access_rights.restriction_grounds.set(restriction_grounds_objects)
         return self.access_rights
 
     def attach_data_catalog(self) -> DataCatalog:

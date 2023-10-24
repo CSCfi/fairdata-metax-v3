@@ -25,7 +25,6 @@ from rest_framework.schemas import get_schema_view as drf_schema_view
 from apps.core.views import IndexView
 from apps.router.urls import urlpatterns as router_urls
 
-
 openapi_info = openapi.Info(
     title="Metax Service",
     default_version="v3",

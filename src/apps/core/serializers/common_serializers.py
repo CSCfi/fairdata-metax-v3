@@ -40,6 +40,7 @@ from apps.core.models.concepts import (
     FileType,
     IdentifierType,
     License,
+    RestrictionGrounds,
     UseCategory,
 )
 from apps.users.serializers import MetaxUserModelSerializer
@@ -126,11 +127,12 @@ class LicenseModelSerializer(CommonModelSerializer):
 
 class AccessRightsModelSerializer(CommonNestedModelSerializer):
     license = LicenseModelSerializer(required=False, many=True)
-    access_type = AccessType.get_serializer_field(required=False, allow_null=True)
+    access_type = AccessType.get_serializer_field(required=True)
+    restriction_grounds = RestrictionGrounds.get_serializer_field(required=False, many=True)
 
     class Meta:
         model = AccessRights
-        fields = ("id", "description", "license", "access_type")
+        fields = ("id", "description", "license", "access_type", "restriction_grounds")
 
 
 class DatasetActorModelSerializer(CommonModelSerializer):

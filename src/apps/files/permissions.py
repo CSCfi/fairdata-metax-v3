@@ -8,8 +8,8 @@ class FilesAccessPolicy(BaseAccessPolicy):
             "principal": ["group:ida"],
             "effect": "allow",
         },
-
     ] + BaseAccessPolicy.statements
+
     @classmethod
     def scope_queryset(cls, request, queryset):
         if q := super().scope_queryset(request, queryset):

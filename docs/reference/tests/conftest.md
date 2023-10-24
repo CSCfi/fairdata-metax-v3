@@ -20,6 +20,10 @@
 
 ### :::tests.conftest.access_type_reference_data
 
+## restriction_grounds_reference_data
+
+### :::tests.conftest.restriction_grounds_reference_data
+
 ## field_of_science_reference_data
 
 ### :::tests.conftest.field_of_science_reference_data

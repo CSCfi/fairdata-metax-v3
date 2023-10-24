@@ -88,3 +88,15 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_dataset_put_remove_fileset
 
+## test_dataset_restricted
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_dataset_restricted
+
+## test_dataset_metadata_download_datacite
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_dataset_metadata_download_datacite
+
+## test_dataset_metadata_download_invalid_id
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_dataset_metadata_download_invalid_id
+

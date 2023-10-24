@@ -9,28 +9,25 @@ import logging
 from typing import Optional
 
 from django.core.exceptions import FieldError
+from django.http import Http404
 from django.utils.decorators import method_decorator
 from django_filters import rest_framework as filters
-from django.http import Http404
 from drf_yasg.openapi import Response
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import exceptions, response, status
+from rest_framework import exceptions, response, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.renderers import JSONRenderer
-
-from rest_framework import status
-from rest_framework import exceptions
 from watson import search
 
 from apps.common.views import CommonModelViewSet, QueryParamsMixin
 from apps.core.models.catalog_record import Dataset, FileSet
+from apps.core.permissions import DatasetAccessPolicy
 from apps.core.serializers import DatasetSerializer
 from apps.core.serializers.dataset_serializer import DatasetRevisionsQueryParamsSerializer
 from apps.files.models import File
 from apps.files.serializers import DirectorySerializer
 from apps.files.views.directory_view import DirectoryCommonQueryParams, DirectoryViewSet
 from apps.files.views.file_view import BaseFileViewSet, FileCommonFilterset
-from apps.core.permissions import DatasetAccessPolicy
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +89,14 @@ class DatasetFilter(filters.FilterSet):
 
 
 @method_decorator(
-    name="create", decorator=swagger_auto_schema(responses={403: Response("unauthorized", )})
+    name="create",
+    decorator=swagger_auto_schema(
+        responses={
+            403: Response(
+                "unauthorized",
+            )
+        }
+    ),
 )
 class DatasetViewSet(QueryParamsMixin, CommonModelViewSet):
     query_serializers = [
@@ -149,16 +153,16 @@ class DatasetViewSet(QueryParamsMixin, CommonModelViewSet):
             return response.Response("Dataset not found.", status=404, content_type="text/plain")
 
         serializer = self.serializer_class
-        extension = 'json'
+        extension = "json"
 
         if request.query_params.get("format") == ("datacite" or "fairdata_datacite"):
             # serializer = serializer for datacite xml
-            extension = 'xml'
+            extension = "xml"
 
         return response.Response(
             serializer(obj).data,
-            headers={
-                "Content-Disposition": f"attachment; filename='{pk}-metadata.{extension}'"})
+            headers={"Content-Disposition": f"attachment; filename='{pk}-metadata.{extension}'"},
+        )
 
     def get_queryset(self):
         return self.access_policy.scope_queryset(self.request, self.queryset)

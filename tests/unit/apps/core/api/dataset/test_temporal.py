@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 pytestmark = [pytest.mark.django_db]
 
+
 def test_create_temporal_dataset(admin_client, dataset_a_json, data_catalog, reference_data):
     resp = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert resp.status_code == 201

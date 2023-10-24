@@ -6,7 +6,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.db import models
-from django.db.models import Count, Sum, F, Q, OuterRef, Max, Subquery
+from django.db.models import Count, F, Max, OuterRef, Q, Subquery, Sum
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -273,7 +273,7 @@ class Dataset(V2DatasetMixin, CopyableModelMixin, CatalogRecord, AbstractBaseMod
         published = cls.history.filter(
             published_revision=F("catalogrecord_ptr__dataset__published_revision"),
             state="published",
-            history_change_reason__isnull=False
+            history_change_reason__isnull=False,
         )
         if as_instance_list:
             return cls._historicals_to_instances(published)

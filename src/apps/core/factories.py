@@ -62,6 +62,19 @@ class AccessTypeFactory(factory.django.DjangoModelFactory):
         return f"https://dataset-access-type-{self}.fi"
 
 
+class RestrictionGroundsFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.RestrictionGrounds
+        django_get_or_create = ("url",)
+
+    pref_label = factory.Dict({"en": factory.Sequence(lambda n: f"restriction-grounds-{n}")})
+    in_scheme = factory.Faker("url")
+
+    @factory.sequence
+    def url(self):
+        return f"https://restriction-grounds-{self}.fi"
+
+
 class FieldOfScienceFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.FieldOfScience

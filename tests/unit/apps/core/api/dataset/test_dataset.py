@@ -220,7 +220,6 @@ def test_dataset_actor_permissions(
     assert res2.status_code == 403
 
 
-
 @pytest.mark.django_db
 def test_create_dataset_with_other_identifiers(
     admin_client, dataset_a_json, data_catalog, reference_data
@@ -344,7 +343,9 @@ def test_dataset_patch_maximal_and_minimal(
     }
 
 
-def test_dataset_put_remove_fileset(admin_client, dataset_maximal_json, reference_data, data_catalog):
+def test_dataset_put_remove_fileset(
+    admin_client, dataset_maximal_json, reference_data, data_catalog
+):
     FileStorageFactory(storage_service="ida", project="project")
     dataset_maximal_json["fileset"] = {
         "storage_service": "ida",
@@ -364,22 +365,30 @@ def test_dataset_put_remove_fileset(admin_client, dataset_maximal_json, referenc
     assert res.status_code == 400
     assert "not allowed" in res.json()["fileset"]
 
-def test_dataset_metadata_download_json(admin_client, dataset_a_json, dataset_a, reference_data, data_catalog):
-    assert dataset_a.response.status_code == 201
-    id = dataset_a.response.data["id"]
-    res = admin_client.get(f"/v3/datasets/{id}/metadata-download?format=json")
-    assert res.status_code == 200
-    assert_nested_subdict(dataset_a_json, res.data)
-    assert res.headers.get("Content-Disposition") == f"attachment; filename='{id}-metadata.json'"
 
-def test_dataset_metadata_download_datacite(admin_client, dataset_a_json, dataset_a, reference_data, data_catalog):
+def test_dataset_restricted(admin_client, dataset_a_json, reference_data, data_catalog):
+    dataset_a_json["access_rights"]["access_type"] = {
+        "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/restricted"
+    }
+    dataset_a_json["access_rights"]["restriction_grounds"] = [
+        {"url": "http://uri.suomi.fi/codelist/fairdata/restriction_grounds/code/research"}
+    ]
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    assert_nested_subdict(dataset_a_json, res.json())
+
+
+def test_dataset_metadata_download_datacite(
+    admin_client, dataset_a_json, dataset_a, reference_data, data_catalog
+):
     pytest.xfail("DataCite XML implementation missing")
     assert dataset_a.response.status_code == 201
     id = dataset_a.data["id"]
     res = admin_client.get(f"/v3/datasets/{id}/metadata-download?format=datacite")
     assert res.status_code == 200
-    #check dataset_a data in res.data
+    # check dataset_a data in res.data
     assert res.headers.get("Content-Disposition") == f"attachment; filename='{id}-metadata.xml'"
+
 
 def test_dataset_metadata_download_invalid_id(admin_client):
     res = admin_client.get(f"/v3/datasets/invalid_id/metadata-download")

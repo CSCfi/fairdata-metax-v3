@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.dataset]
 
+
 def test_create_publisher(admin_client, publisher_a_json):
     res = admin_client.post("/v3/publishers", publisher_a_json, content_type="application/json")
     logger.info(f"{res.data=}")
@@ -26,7 +27,9 @@ def test_create_publisher_twice(admin_client, publisher_b_json):
 
 
 def test_create_publisher_error(admin_client, publisher_error_json):
-    response = admin_client.post("/v3/publishers", publisher_error_json, content_type="application/json")
+    response = admin_client.post(
+        "/v3/publishers", publisher_error_json, content_type="application/json"
+    )
     assert response.status_code == 400
 
 

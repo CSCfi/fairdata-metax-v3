@@ -2,6 +2,7 @@ import pytest
 
 pytestmark = [pytest.mark.django_db, pytest.mark.file]
 
+
 def test_directory_ordering_name(client, file_tree_a):
     res = client.get(
         "/v3/directories",

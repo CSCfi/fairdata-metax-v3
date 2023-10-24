@@ -54,6 +54,7 @@ def legacy_dataset_a_json():
 def dataset_access_right_error_json():
     return load_test_json("access_right_error.json")
 
+
 @pytest.fixture
 def dataset(admin_client, data_catalog, reference_data, requests_client, dataset_list_url):
     def _dataset(
@@ -91,7 +92,6 @@ def dataset_a(
     return dataset("dataset_a.json")
 
 
-
 @pytest.fixture
 def dataset_b(admin_client, dataset_b_json, data_catalog, reference_data):
     return admin_client.post("/v3/datasets", dataset_b_json, content_type="application/json")
@@ -101,15 +101,21 @@ def dataset_b(admin_client, dataset_b_json, data_catalog, reference_data):
 def dataset_c(admin_client, dataset_c_json, data_catalog, reference_data):
     return admin_client.post("/v3/datasets", dataset_c_json, content_type="application/json")
 
+
 @pytest.fixture
 def dataset_actor():
-    def _dataset_actor(dataset_id, role=["creator"], person_name="teppo", org_pref_label={"fi": "CSC"}):
+    def _dataset_actor(
+        dataset_id, role=["creator"], person_name="teppo", org_pref_label={"fi": "CSC"}
+    ):
         return DatasetActor(
             dataset=dataset_id,
             person=Person(name=person_name),
-            organization=Organization(pref_label=org_pref_label, in_scheme="https://joku.scheme.fi"),
+            organization=Organization(
+                pref_label=org_pref_label, in_scheme="https://joku.scheme.fi"
+            ),
             role=role,
         )
+
     return _dataset_actor
 
 

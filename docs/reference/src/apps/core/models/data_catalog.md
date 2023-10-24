@@ -16,7 +16,3 @@
 
 ### :::src.apps.core.models.data_catalog.AccessRights
 
-## AccessRightsRestrictionGrounds
-
-### :::src.apps.core.models.data_catalog.AccessRightsRestrictionGrounds
-

@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 pytestmark = [pytest.mark.django_db]
 
+
 @pytest.fixture
 def remote_dataset_json(dataset_a_json):
     dataset = {

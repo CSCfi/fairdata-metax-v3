@@ -218,7 +218,9 @@ def test_delete_datacatalog_by_id(admin_client, post_datacatalog_payloads_a_b_c)
 
 def test_put_datacatalog(admin_client, datacatalog_a_json, reference_data, data_catalog_list_url):
     datacatalog_a_json["dataset_schema"] = "att"
-    res1 = admin_client.post(data_catalog_list_url, datacatalog_a_json, content_type="application/json")
+    res1 = admin_client.post(
+        data_catalog_list_url, datacatalog_a_json, content_type="application/json"
+    )
     assert res1.status_code == 201
 
     put_json = {"id": res1.data["id"], "title": {"en": "Put Catalog"}}
@@ -235,9 +237,13 @@ def test_put_datacatalog(admin_client, datacatalog_a_json, reference_data, data_
     assert put_json == {key: value for key, value in res2.json().items() if value}
 
 
-def test_patch_datacatalog(admin_client, datacatalog_a_json, reference_data, data_catalog_list_url):
+def test_patch_datacatalog(
+    admin_client, datacatalog_a_json, reference_data, data_catalog_list_url
+):
     datacatalog_a_json["dataset_schema"] = "att"
-    res1 = admin_client.post(data_catalog_list_url, datacatalog_a_json, content_type="application/json")
+    res1 = admin_client.post(
+        data_catalog_list_url, datacatalog_a_json, content_type="application/json"
+    )
     assert res1.status_code == 201
 
     patch_json = {"title": {"en": "Patch Catalog"}}

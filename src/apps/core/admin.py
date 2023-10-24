@@ -7,7 +7,6 @@ from apps.common.admin import AbstractDatasetPropertyBaseAdmin
 # Register your models here.
 from apps.core.models import (
     AccessRights,
-    AccessRightsRestrictionGrounds,
     CatalogHomePage,
     CatalogRecord,
     Contract,
@@ -39,11 +38,6 @@ class DatasetPublisherAdmin(AbstractDatasetPropertyBaseAdmin):
 
 @admin.register(AccessRights)
 class AccessRightsAdmin(AbstractDatasetPropertyBaseAdmin):
-    pass
-
-
-@admin.register(AccessRightsRestrictionGrounds)
-class AccessRightsRestrictionGroundsAdmin(admin.ModelAdmin):
     pass
 
 

@@ -8,6 +8,7 @@ from apps.files.views.directory_view import DirectoryCommonQueryParams
 
 pytestmark = [pytest.mark.django_db, pytest.mark.file]
 
+
 def test_directory_field_values(client, file_tree_b):
     res = client.get(
         "/v3/directories",

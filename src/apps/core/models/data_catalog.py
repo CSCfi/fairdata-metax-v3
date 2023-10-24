@@ -9,7 +9,7 @@ from simple_history.models import HistoricalRecords
 from apps.common.helpers import prepare_for_copy
 from apps.common.mixins import CopyableModelMixin
 from apps.common.models import AbstractBaseModel, AbstractDatasetProperty, AbstractFreeformConcept
-from apps.core.models.concepts import AccessType, DatasetLicense, Language
+from apps.core.models.concepts import AccessType, DatasetLicense, Language, RestrictionGrounds
 
 
 class DataCatalog(AbstractBaseModel):
@@ -141,6 +141,7 @@ class AccessRights(AbstractBaseModel, CopyableModelMixin):
     access_type = models.ForeignKey(
         AccessType, on_delete=models.SET_NULL, related_name="access_rights", null=True
     )
+    restriction_grounds = models.ManyToManyField(RestrictionGrounds, related_name="access_rights")
     description = HStoreField(
         help_text='example: {"en":"description", "fi":"kuvaus"}', null=True, blank=True
     )
@@ -172,15 +173,3 @@ class AccessRights(AbstractBaseModel, CopyableModelMixin):
         copy.save()
         copy.license.set(copy_lics)
         return copy, original
-
-
-class AccessRightsRestrictionGrounds(AbstractFreeformConcept):
-    """Justification for the restriction of a dataset.
-
-    Attributes:
-        access_rights(AccessRights): AccessRights ForeignKey relation
-    """
-
-    access_rights = models.ForeignKey(
-        AccessRights, on_delete=models.CASCADE, related_name="restriction_grounds"
-    )

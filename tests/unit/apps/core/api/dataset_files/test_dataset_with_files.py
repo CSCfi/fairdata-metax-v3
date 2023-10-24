@@ -4,6 +4,8 @@ import pytest
 from tests.utils import assert_nested_subdict
 
 pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
+
+
 @pytest.fixture
 def dataset_json_with_files(deep_file_tree, data_catalog):
     return {
@@ -80,7 +82,9 @@ def test_dataset_get_dataset_with_files(admin_client, deep_file_tree, dataset_js
     }
 
 
-def test_dataset_get_dataset_with_no_files(admin_client, deep_file_tree, dataset_json_with_no_files):
+def test_dataset_get_dataset_with_no_files(
+    admin_client, deep_file_tree, dataset_json_with_no_files
+):
     res = admin_client.post(
         f"/v3/dataset",
         dataset_json_with_no_files,

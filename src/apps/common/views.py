@@ -1,14 +1,14 @@
-from typing import Optional
-
 from rest_access_policy import AccessViewSetMixin
 from rest_framework import viewsets
 from rest_framework.exceptions import NotAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
+from rest_framework.viewsets import ViewSet
 
 from apps.common.permissions import BaseAccessPolicy
 
-class SystemCreatorViewSet(AccessViewSetMixin, viewsets.ModelViewSet ):
+
+class SystemCreatorViewSet(AccessViewSetMixin, viewsets.ModelViewSet):
     access_policy = BaseAccessPolicy
 
     def perform_create(self, serializer):

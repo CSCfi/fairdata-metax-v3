@@ -12,10 +12,6 @@
 
 ### :::src.apps.core.admin.AccessRightsAdmin
 
-## AccessRightsRestrictionGroundsAdmin
-
-### :::src.apps.core.admin.AccessRightsRestrictionGroundsAdmin
-
 ## DataCatalogAdmin
 
 ### :::src.apps.core.admin.DataCatalogAdmin
