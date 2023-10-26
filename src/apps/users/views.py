@@ -8,7 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import never_cache
 from knox.models import AuthToken
 from knox.views import LoginView as KnoxLoginView
-from rest_framework import exceptions, mixins, status, viewsets
+from rest_framework import exceptions, status
 from rest_framework.renderers import AdminRenderer, JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView

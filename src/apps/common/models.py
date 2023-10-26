@@ -1,14 +1,16 @@
 import functools
 import re
 import uuid
+import warnings
 from typing import Dict, Iterator
 
 from django.conf import settings
 from django.contrib.postgres.fields import HStoreField
 from django.core.validators import RegexValidator
 from django.db import models
+from django.db.models.query import QuerySet
 from django.utils import timezone
-from model_utils.models import SoftDeletableModel, TimeStampedModel
+from model_utils.models import TimeStampedModel
 from polymorphic.models import PolymorphicModel
 
 from apps.common.managers import ProxyBasePolymorphicManager
@@ -30,30 +32,85 @@ class SystemCreatorBaseModel(models.Model):
         abstract = True
 
 
-class AbstractBaseModel(SystemCreatorBaseModel, TimeStampedModel, SoftDeletableModel):
+class CustomSoftDeletableQuerySet(QuerySet):
+    """Customized version of model_utils SoftDeletableQuerySet
+    QuerySet for SoftDeletableModel. Instead of removing instance sets
+    its ``removed`` field to timestamp.
+    """
+
+    def delete(self):
+        """
+        Soft delete objects from queryset (set their ``removed``
+        field to current timestamp)
+        """
+        self.update(removed=timezone.now())
+
+
+class CustomSoftDeletableManager(models.Manager):
+    """Customized version of model_utils SoftDeletableManager
+    Manager that limits the queryset by default to show only not removed
+    instances of model.
+    """
+
+    _queryset_class = CustomSoftDeletableQuerySet
+
+    def __init__(self, *args, _emit_deprecation_warnings=False, **kwargs):
+        self.emit_deprecation_warnings = _emit_deprecation_warnings
+        super().__init__(*args, **kwargs)
+
+    def get_queryset(self):
+        """
+        Return queryset limited to not removed entries.
+        """
+
+        if self.emit_deprecation_warnings:
+            warning_message = (
+                "{0}.objects model manager will include soft-deleted objects in an "
+                "upcoming release; please use {0}.available_objects to continue "
+                "excluding soft-deleted objects. See "
+                "https://django-model-utils.readthedocs.io/en/stable/models.html"
+                "#softdeletablemodel for more information."
+            ).format(self.model.__class__.__name__)
+            warnings.warn(warning_message, DeprecationWarning)
+
+        kwargs = {"model": self.model, "using": self._db}
+        if hasattr(self, "_hints"):
+            kwargs["hints"] = self._hints
+
+        return self._queryset_class(**kwargs).filter(removed__isnull=True)
+
+
+class CustomSoftDeletableModel(models.Model):
+    """Customized version of model_utils SoftDeletableModel"""
+
+    objects = CustomSoftDeletableManager(_emit_deprecation_warnings=True)
+    available_objects = CustomSoftDeletableManager()
+    all_objects = models.Manager()
+    removed = models.DateTimeField(null=True, blank=True, editable=False)
+
+    def delete(self, using=None, soft=True, *args, **kwargs):
+        """
+        Soft delete object (set its ``removed`` field to current time).
+        Actually delete object if setting ``soft`` to False.
+        """
+        if soft:
+            self.removed = timezone.now()
+            self.save(using=using)
+        else:
+            return super().delete(using=using, *args, **kwargs)
+
+    class Meta:
+        abstract = True
+
+
+class AbstractBaseModel(SystemCreatorBaseModel, TimeStampedModel, CustomSoftDeletableModel):
     """Adds soft-delete and created / modified timestamp functionalities
 
     Added fields are:
      - created
      - modified
-     - is_removed
+     - removed
     """
-
-    removal_date = models.DateTimeField(null=True, blank=True)
-
-    def delete(self, using=None, soft=True, *args, **kwargs):
-        """Override delete method to add removal_date
-
-        Args:
-            using ():
-            soft (bool): is the instance soft deleted
-
-        Returns:
-            (int): count of deleted objects
-
-        """
-        self.removal_date = timezone.now()
-        return super().delete(using=using, soft=soft, *args, **kwargs)
 
     class Meta:
         abstract = True

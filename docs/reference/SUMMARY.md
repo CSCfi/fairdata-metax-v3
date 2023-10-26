@@ -20,6 +20,7 @@
         - [models](src/apps/common/models.md)
         - [pagination](src/apps/common/pagination.md)
         - [permissions](src/apps/common/permissions.md)
+        - [renderers](src/apps/common/renderers.md)
         - [responses](src/apps/common/responses.md)
         - serializers
             - [fields](src/apps/common/serializers/fields.md)
@@ -35,7 +36,10 @@
             - [migrate_v2_datasets](src/apps/core/management/commands/migrate_v2_datasets.md)
         - [mixins](src/apps/core/mixins.md)
         - models
-            - [catalog_record](src/apps/core/models/catalog_record.md)
+            - catalog_record
+                - [dataset](src/apps/core/models/catalog_record/dataset.md)
+                - [meta](src/apps/core/models/catalog_record/meta.md)
+                - [related](src/apps/core/models/catalog_record/related.md)
             - [concepts](src/apps/core/models/concepts.md)
             - [contract](src/apps/core/models/contract.md)
             - [data_catalog](src/apps/core/models/data_catalog.md)
@@ -60,7 +64,7 @@
             - [dataset_view](src/apps/core/views/dataset_view.md)
             - [index_view](src/apps/core/views/index_view.md)
             - [legacy_view](src/apps/core/views/legacy_view.md)
-            - [provenance_view](src/apps/core/views/provenance_view.md)
+            - [nested_views](src/apps/core/views/nested_views.md)
     - files
         - [admin](src/apps/files/admin.md)
         - [apps](src/apps/files/apps.md)
@@ -101,11 +105,13 @@
         - [apps](src/apps/users/apps.md)
         - [authentication](src/apps/users/authentication.md)
         - [factories](src/apps/users/factories.md)
+        - [management.commands.create_api_user](src/apps/users/management/commands/create_api_user.md)
         - [models](src/apps/users/models.md)
         - [serializers](src/apps/users/serializers.md)
         - [signals](src/apps/users/signals.md)
         - [templatetags.users](src/apps/users/templatetags/users.md)
         - [views](src/apps/users/views.md)
+- [src.apps.core.models.catalog_record](src/apps/core/models/catalog_record.md)
 - tests
     - behave.features
         - [conftest](tests/behave/features/conftest.md)

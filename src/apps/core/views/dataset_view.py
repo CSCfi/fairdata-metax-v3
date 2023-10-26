@@ -14,7 +14,7 @@ from django.utils.decorators import method_decorator
 from django_filters import rest_framework as filters
 from drf_yasg.openapi import Response
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import exceptions, response, status, viewsets
+from rest_framework import exceptions, response, status
 from rest_framework.decorators import action
 from rest_framework.renderers import JSONRenderer
 from watson import search

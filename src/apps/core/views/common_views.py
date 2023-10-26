@@ -1,5 +1,6 @@
 import logging
 
+
 from django_filters import rest_framework as filters
 from drf_yasg.utils import swagger_auto_schema
 
@@ -10,7 +11,6 @@ from apps.core.models.catalog_record import MetadataProvider
 from apps.core.models.data_catalog import DatasetPublisher
 from apps.core.permissions import DatasetNestedAccessPolicy, MetadataProviderAccessPolicy
 from apps.core.serializers import (
-    DatasetActorModelSerializer,
     DatasetPublisherModelSerializer,
     MetadataProviderModelSerializer,
 )
@@ -108,13 +108,6 @@ class AccessRightsFilter(filters.FilterSet):
             ("license__pref_label__values", "license__pref_label"),
         )
     )
-
-
-@swagger_auto_schema(operation_description="DatasetActor viewset")
-class DatasetActorViewSet(DatasetNestedViewSetMixin):
-    access_policy = DatasetNestedAccessPolicy
-    serializer_class = DatasetActorModelSerializer
-    filter_backends = (filters.DjangoFilterBackend,)
 
 
 class MetadataProviderFilter(filters.FilterSet):

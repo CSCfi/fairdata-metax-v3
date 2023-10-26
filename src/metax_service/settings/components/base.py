@@ -34,6 +34,9 @@ sys.path.append(APPS_DIR)
 
 # collect static files here
 STATIC_ROOT = os.environ.get("STATIC_ROOT", join(ROOT_DIR, "staticfiles"))
+STATIC_URL = "/static"
+
+NO_NGINX_PROXY = os.environ.get("NO_NGINX_PROXY", True)
 
 # collect media files here
 MEDIA_ROOT = join(ROOT_DIR, "media")
@@ -85,6 +88,7 @@ THIRD_PARTY_APPS = [
     "cachalot",
     "hijack",
     "hijack.contrib.admin",
+    "django_json_widget",
 ]
 LOCAL_APPS = [
     "common.apps.CommonConfig",
@@ -180,24 +184,34 @@ LOGGING = {
     "disable_existing_loggers": False,
     "formatters": {
         "verbose": {
-            "format": "%(levelname)s %(asctime)s %(module)s " "%(process)d %(thread)d %(message)s"
+            "format": "%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s"
+        },
+        "simple": {
+            "format": "{levelname} {asctime} {module} {message}",
+            "style": "{",
+        },
+    },
+    "filters": {
+        "require_debug_true": {
+            "()": "django.utils.log.RequireDebugTrue",
         }
     },
     "handlers": {
         "console": {
-            "level": "DEBUG",
+            "level": "INFO",
+            "filters": ["require_debug_true"],
             "class": "logging.StreamHandler",
-            "formatter": "verbose",
+            "formatter": "simple",
         },
     },
-    "root": {"level": "INFO", "handlers": ["console"]},
+    "root": {"level": os.environ.get("DJANGO_LOG_LEVEL", default="INFO"), "handlers": ["console"]},
 }
 
 
 LANGUAGE_CODE = "en-us"
 LANGUAGES = (("en-us", _("English")), ("fi", _("Finnish")))
 LOCALE_PATHS = (os.path.join(APPS_DIR, "core/locale"),)
-TIME_ZONE = "Europe/Helsinki"
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
@@ -231,6 +245,11 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "apps.common.pagination.OffsetPagination",
     "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
     "EXCEPTION_HANDLER": "common.exceptions.exception_handler",
+    "DEFAULT_RENDERER_CLASSES": [
+        "apps.common.renderers.CustomTimeJSONRenderer",  # Add the path to your custom renderer
+        "rest_framework.renderers.BrowsableAPIRenderer",
+    ],
+    "DATETIME_FORMAT": '%Y-%m-%dT%H:%M:%SZ'
 }
 ENABLE_DRF_TOKEN_AUTH = env.bool("ENABLE_DRF_TOKEN_AUTH", False)
 if ENABLE_DRF_TOKEN_AUTH:

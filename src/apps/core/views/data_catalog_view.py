@@ -8,7 +8,7 @@ from django.utils.decorators import method_decorator
 from django_filters import rest_framework as filters
 from drf_yasg.utils import swagger_auto_schema
 
-from apps.common.views import CommonModelViewSet, SystemCreatorViewSet
+from apps.common.views import CommonModelViewSet
 from apps.core.models import DataCatalog
 from apps.core.permissions import DataCatalogAccessPolicy
 from apps.core.serializers import DataCatalogModelSerializer

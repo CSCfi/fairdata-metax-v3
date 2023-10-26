@@ -3,10 +3,7 @@
 Metax is fully compatible with DCAT 3 data-model, but has some minor variations allowed by the specification. This article will explain how DCAT is integrated into Metax V3 data-model. 
 
 !!! NOTE
-    This comparison is comparing DCAT concepts to equivalent Metax database Models. V3 classes have Django application name in front of them. 
-
-!!! WARNING
-    This article does not compare API-endpoint responses to DCAT. This will be done later.
+    This comparison is comparing DCAT concepts to equivalent Metax database Models. V3 classes have Django application name in front of them.
 
 ## DCAT classes
 

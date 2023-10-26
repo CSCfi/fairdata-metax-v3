@@ -28,6 +28,11 @@ class DatasetNestedViewSetMixin(CommonModelViewSet):
     def perform_create(self, serializer):
         return serializer.save(dataset_id=self.kwargs["dataset_pk"])
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["dataset_pk"] = self.kwargs.get("dataset_pk")
+        return context
+
     def get_dataset_pk(self):
         context = super().get_serializer_context()
         return self.kwargs.get("dataset_pk") or context.get("dataset_pk")
@@ -36,11 +41,6 @@ class DatasetNestedViewSetMixin(CommonModelViewSet):
         from .models import Dataset
 
         return Dataset.objects.get(id=self.get_dataset_pk())
-
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context["dataset_pk"] = self.kwargs.get("dataset_pk")
-        return context
 
 
 class V2DatasetMixin:
@@ -372,6 +372,12 @@ class V2DatasetMixin:
             obj_list.append(project)
         return obj_list
 
+    def _construct_v2_removed_field(self):
+        if self.removed:
+            return True
+        else:
+            return False
+
     def as_v2_dataset(self) -> Dict:
         def add_actor(role: str, document: Dict):
             actors = self.actors.filter(roles__contains=[role])
@@ -397,7 +403,7 @@ class V2DatasetMixin:
             "state": self.state,
             "cumulative_state": self.cumulative_state.real,
             "date_created": self.created,
-            "removed": self.is_removed,
+            "removed": self._construct_v2_removed_field(),
             "metadata_provider_user": self.metadata_owner.user.username,
             "metadata_provider_org": self.metadata_owner.organization,
             "metadata_owner_org": self.metadata_owner.organization,

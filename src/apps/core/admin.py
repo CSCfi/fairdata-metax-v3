@@ -1,5 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth import get_user_model
+from django.db import models
+from django_json_widget.widgets import JSONEditorWidget
 from simple_history.admin import SimpleHistoryAdmin
 
 from apps.common.admin import AbstractDatasetPropertyBaseAdmin
@@ -89,7 +91,6 @@ class DatasetAdmin(AbstractDatasetPropertyBaseAdmin, SimpleHistoryAdmin):
         "keyword",
         "created",
         "modified",
-        "is_removed",
         "issued",
         "is_deprecated",
         "state",
@@ -159,6 +160,7 @@ class LegacyDatasetAdmin(DatasetAdmin):
         "created",
         "modified",
         "issued",
+        "v2_dataset_compatibility_diff",
     )
     readonly_fields = (
         "title",
@@ -169,7 +171,9 @@ class LegacyDatasetAdmin(DatasetAdmin):
         "access_rights",
         "keyword",
         "is_deprecated",
+        # "v2_dataset_compatibility_diff",
     )
+    formfield_overrides = {models.JSONField: {"widget": JSONEditorWidget}}
 
 
 @admin.register(Contract)

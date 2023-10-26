@@ -6,7 +6,6 @@ from django.db import models
 from django.utils.translation import gettext as _
 
 from apps.common.models import AbstractBaseModel
-from apps.common.serializers.serializers import CommonModelSerializer
 
 from .serializers import get_refdata_serializer_class
 

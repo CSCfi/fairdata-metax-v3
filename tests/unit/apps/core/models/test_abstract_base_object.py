@@ -29,5 +29,5 @@ def test_hard_delete_base_model(model, abstract_base_object_factory):
 def test_soft_delete_base_model(model, abstract_base_object_factory):
     obj = abstract_base_object_factory(model)
     obj.delete()
-    assert obj.is_removed is True
+    assert obj.removed is not None
     assert obj.__class__.all_objects.filter(id=obj.id).count() == 1

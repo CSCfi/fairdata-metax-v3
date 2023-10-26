@@ -4,6 +4,18 @@
 
 ### :::src.apps.common.models.SystemCreatorBaseModel
 
+## CustomSoftDeletableQuerySet
+
+### :::src.apps.common.models.CustomSoftDeletableQuerySet
+
+## CustomSoftDeletableManager
+
+### :::src.apps.common.models.CustomSoftDeletableManager
+
+## CustomSoftDeletableModel
+
+### :::src.apps.common.models.CustomSoftDeletableModel
+
 ## AbstractBaseModel
 
 ### :::src.apps.common.models.AbstractBaseModel

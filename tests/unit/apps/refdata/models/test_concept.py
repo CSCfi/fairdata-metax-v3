@@ -50,7 +50,7 @@ def test_hard_delete_concept(model):
 def test_soft_delete_concept(model):
     obj = model.all_objects.create(**fields)
     obj.delete()
-    assert obj.is_removed is True
+    assert obj.removed is not None
     assert obj.__class__.all_objects.filter(id=obj.id).count() == 1
 
 

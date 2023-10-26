@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 class DatasetSerializer(CommonNestedModelSerializer):
-    access_rights = AccessRightsModelSerializer(required=False, allow_null=True)
+    access_rights = AccessRightsModelSerializer(required=False, allow_null=True, many=False)
     field_of_science = FieldOfScience.get_serializer_field(required=False, many=True)
     infrastructure = ResearchInfra.get_serializer_field(required=False, many=True)
     actors = DatasetActorModelSerializer(required=False, many=True)
@@ -101,12 +101,11 @@ class DatasetSerializer(CommonNestedModelSerializer):
             "cumulation_started",
             "first_version",
             "is_deprecated",
-            "is_removed",
+            "removed",
             "last_version",
             "modified",
             "previous_version",
             "next_version",
-            "removal_date",
             "other_versions",
             "published_revision",
         )
@@ -116,11 +115,10 @@ class DatasetSerializer(CommonNestedModelSerializer):
             "first",
             "id",
             "is_deprecated",
-            "is_removed",
             "last",
             "modified",
             "previous",
-            "removal_date",
+            "removed",
             "replaces",
             "other_versions",
         )

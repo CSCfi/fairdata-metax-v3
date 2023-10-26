@@ -33,7 +33,7 @@ def test_create_dataset_property(
 def test_soft_delete_dataset_property(dataset_property, dataset_property_object_factory):
     obj = dataset_property_object_factory(dataset_property)
     obj.delete()
-    assert obj.is_removed is True
+    assert obj.removed is not None
     assert obj.__class__.all_objects.filter(id=obj.id).count() == 1
 
 

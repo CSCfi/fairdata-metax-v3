@@ -1,20 +1,9 @@
 from django.conf import settings
 from django.urls import include, path
-from rest_framework.routers import DefaultRouter
 from rest_framework_nested import routers
 
 from apps.actors.views import OrganizationViewSet
-from apps.core.views import (
-    DataCatalogView,
-    DatasetActorViewSet,
-    DatasetDirectoryViewSet,
-    DatasetFilesViewSet,
-    DatasetViewSet,
-    LegacyDatasetViewSet,
-    MetadataProviderViewSet,
-    ProvenanceViewSet,
-    PublisherViewSet,
-)
+from apps.core import views as core_views
 from apps.files.views import DirectoryViewSet, FileViewSet
 from apps.refdata.models import reference_data_models
 from apps.refdata.views import get_viewset_for_model
@@ -30,23 +19,27 @@ router.register(
     OrganizationViewSet,
 )
 # core app
-router.register(r"data-catalogs?", DataCatalogView, basename="datacatalog")
-router.register(r"datasets?", DatasetViewSet, basename="dataset")
+router.register(r"data-catalogs?", core_views.DataCatalogView, basename="datacatalog")
+router.register(r"datasets?", core_views.DatasetViewSet, basename="dataset")
 
 router.register(
     r"datasets?/(?P<dataset_id>[^/.]+)/files",
-    DatasetFilesViewSet,
+    core_views.DatasetFilesViewSet,
     basename="dataset-files",
 )
 router.register(
     r"datasets?/(?P<dataset_id>[^/.]+)/directories",
-    DatasetDirectoryViewSet,
+    core_views.DatasetDirectoryViewSet,
     basename="dataset-directories",
 )
 # router.register(r"dataset-actors?", DatasetActorViewSet, basename="dataset-actor")
-router.register(r"metadata-providers?", MetadataProviderViewSet, basename="metadata-provider")
-router.register(r"publishers?", PublisherViewSet, basename="publisher")
-router.register(r"migrated-datasets?", LegacyDatasetViewSet, basename="migrated-dataset")
+router.register(
+    r"metadata-providers?", core_views.MetadataProviderViewSet, basename="metadata-provider"
+)
+router.register(r"publishers?", core_views.PublisherViewSet, basename="publisher")
+router.register(
+    r"migrated-datasets?", core_views.LegacyDatasetViewSet, basename="migrated-dataset"
+)
 # files app
 router.register(r"files?", FileViewSet, basename="file")
 router.register(r"directories", DirectoryViewSet, basename="directory")
@@ -58,8 +51,13 @@ for model in reference_data_models:
     )
 # Nested routes
 dataset_router = routers.NestedSimpleRouter(router, r"datasets?", lookup="dataset")
-dataset_router.register(r"actors", DatasetActorViewSet, basename="dataset-actors")
-dataset_router.register(r"provenance", ProvenanceViewSet, basename="dataset-provenance")
+dataset_router.register(r"actors", core_views.DatasetActorViewSet, basename="dataset-actors")
+dataset_router.register(r"provenance", core_views.ProvenanceViewSet, basename="dataset-provenance")
+dataset_router.register(
+    r"access-rights",
+    core_views.AccessRightsViewSet,
+    basename="dataset-access-rights",
+)
 # Users list
 if settings.ENABLE_USERS_VIEW:
     router.register(r"users?", UserViewSet, basename="users")

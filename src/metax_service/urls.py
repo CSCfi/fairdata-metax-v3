@@ -14,6 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path, re_path
 from drf_yasg import openapi
@@ -54,7 +55,6 @@ urlpatterns = [
     path("schema/", drf_schema_view()),
     re_path(r"^watchman/", include("watchman.urls")),
     path("admin/", admin.site.urls),
-    path("__debug__/", include("debug_toolbar.urls")),
     path("v3/", include(router_urls)),
     path("auth/", include("users.urls")),
     path("hijack/", include("hijack.urls")),
@@ -64,6 +64,9 @@ if settings.ENABLE_DEBUG_TOOLBAR:
 
 if settings.ENABLE_SILK_PROFILER:
     urlpatterns = urlpatterns + [path("silk/", include("silk.urls", namespace="silk"))]
+
+if settings.NO_NGINX_PROXY:
+    urlpatterns = urlpatterns + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 if settings.ENABLE_DRF_TOKEN_AUTH:
     urlpatterns = urlpatterns + [path("drf-token-auth/", views.obtain_auth_token)]

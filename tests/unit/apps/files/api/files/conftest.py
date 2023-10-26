@@ -24,8 +24,8 @@ def ida_file_json():
     """
     return {
         "pathname": "/some/file/path/file.pdf",
-        "modified": "2017-09-27T12:38:18.700Z",
-        "frozen": "2017-09-27T12:38:18.700Z",
+        "modified": "2017-09-27T12:38:18Z",
+        "frozen": "2017-09-27T12:38:18Z",
         "size": 1024,
         "storage_service": "ida",
         "project": "string",

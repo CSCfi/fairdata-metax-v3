@@ -12,10 +12,6 @@
 
 ### :::src.apps.core.views.common_views.AccessRightsFilter
 
-## DatasetActorViewSet
-
-### :::src.apps.core.views.common_views.DatasetActorViewSet
-
 ## MetadataProviderFilter
 
 ### :::src.apps.core.views.common_views.MetadataProviderFilter

@@ -1,5 +1,4 @@
 from django_filters import rest_framework as filters
-from rest_framework import viewsets
 
 from apps.common.views import CommonModelViewSet
 from apps.core.models import LegacyDataset
