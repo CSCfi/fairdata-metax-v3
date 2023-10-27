@@ -111,7 +111,6 @@
         - [signals](src/apps/users/signals.md)
         - [templatetags.users](src/apps/users/templatetags/users.md)
         - [views](src/apps/users/views.md)
-- [src.apps.core.models.catalog_record](src/apps/core/models/catalog_record.md)
 - tests
     - behave.features
         - [conftest](tests/behave/features/conftest.md)

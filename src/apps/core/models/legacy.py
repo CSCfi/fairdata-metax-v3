@@ -315,7 +315,7 @@ class LegacyDataset(Dataset):
         return self.access_rights
 
     def attach_data_catalog(self) -> DataCatalog:
-        if hasattr(self, "data_catalog"):
+        if hasattr(self, "data_catalog") and self.data_catalog is not None:
             return self.data_catalog
         catalog_id = self.legacy_data_catalog["identifier"]
         catalog, created = DataCatalog.objects.get_or_create(

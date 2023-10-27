@@ -249,7 +249,7 @@ REST_FRAMEWORK = {
         "apps.common.renderers.CustomTimeJSONRenderer",  # Add the path to your custom renderer
         "rest_framework.renderers.BrowsableAPIRenderer",
     ],
-    "DATETIME_FORMAT": '%Y-%m-%dT%H:%M:%SZ'
+    "DATETIME_FORMAT": "%Y-%m-%dT%H:%M:%SZ",
 }
 ENABLE_DRF_TOKEN_AUTH = env.bool("ENABLE_DRF_TOKEN_AUTH", False)
 if ENABLE_DRF_TOKEN_AUTH:

@@ -395,3 +395,35 @@ def test_dataset_metadata_download_invalid_id(admin_client):
     assert res.status_code == 404
     assert res.headers.get("Content-Disposition") == None
     assert res.data == "Dataset not found."
+
+
+def test_create_dataset_require_data_catalog(
+    admin_client, dataset_a_json, data_catalog, reference_data
+):
+    dataset_a_json["state"] = "published"
+    dataset_a_json.pop("data_catalog")
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 400
+    assert "Dataset has to have a data catalog when publishing" in str(res.data["data_catalog"])
+
+
+def test_create_dataset_require_persistent_identifier(
+    admin_client, dataset_a_json, data_catalog, reference_data
+):
+    dataset_a_json["state"] = "published"
+    dataset_a_json.pop("persistent_identifier")
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 400
+    assert "Dataset has to have a persistent identifier when publishing" in str(
+        res.data["persistent_identifier"]
+    )
+
+
+def test_create_dataset_draft_without_catalog(
+    admin_client, dataset_a_json, data_catalog, reference_data
+):
+    dataset_a_json.pop("data_catalog")
+    dataset_a_json["state"] = "draft"
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    assert_nested_subdict(dataset_a_json, res.data)

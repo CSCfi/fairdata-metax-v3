@@ -14,7 +14,7 @@ from apps.actors.models import Actor, Organization, Person
 from apps.common.helpers import ensure_instance_id, prepare_for_copy
 from apps.common.mixins import CopyableModelMixin
 from apps.common.models import AbstractBaseModel, MediaTypeValidator
-from apps.core.models.concepts import FileType, UseCategory, RelationType
+from apps.core.models.concepts import FileType, RelationType, UseCategory
 from apps.core.models.file_metadata import FileSetDirectoryMetadata, FileSetFileMetadata
 from apps.files.models import File, FileStorage
 from apps.refdata import models as refdata

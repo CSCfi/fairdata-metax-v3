@@ -66,9 +66,7 @@ class CatalogRecord(AbstractBaseModel):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     data_catalog = models.ForeignKey(
-        DataCatalog,
-        on_delete=models.DO_NOTHING,
-        related_name="records",
+        DataCatalog, on_delete=models.DO_NOTHING, related_name="records", null=True, blank=True
     )
     contract = models.ForeignKey(
         Contract,

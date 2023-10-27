@@ -14,7 +14,7 @@ from simple_history.models import HistoricalRecords
 from simple_history.utils import update_change_reason
 from typing_extensions import Self
 
-from apps.common.helpers import prepare_for_copy, datetime_to_date
+from apps.common.helpers import datetime_to_date, prepare_for_copy
 from apps.common.mixins import CopyableModelMixin
 from apps.common.models import AbstractBaseModel
 from apps.core.mixins import V2DatasetMixin
@@ -374,8 +374,18 @@ class Dataset(V2DatasetMixin, CopyableModelMixin, CatalogRecord, AbstractBaseMod
             ValidationError: If the dataset does not have a persistent identifier.
         """
 
+        if not self.data_catalog:
+            raise ValidationError(
+                {"data_catalog": _("Dataset has to have a data catalog when publishing")}
+            )
         if not self.persistent_identifier:
-            raise ValidationError("Dataset has to have persistent identifier when publishing")
+            raise ValidationError(
+                {
+                    "persistent_identifier": _(
+                        "Dataset has to have a persistent identifier when publishing"
+                    )
+                }
+            )
         self.published_revision += 1
         self.draft_revision = 0
         if not self.issued:
@@ -384,31 +394,22 @@ class Dataset(V2DatasetMixin, CopyableModelMixin, CatalogRecord, AbstractBaseMod
     def save(self, *args, **kwargs):
         """Saves the dataset and increments the draft or published revision number as needed.
 
-        If the dataset is using version control, the function will also publish a new version  or
+        The function will also publish a new version  or
         increment the draft revision number as appropriate.
-
-        If the dataset is not using version control, the function will simply save the dataset
-        without incrementing the revision numbers.
         """
 
-        if self._should_use_versioning():
-            self._deny_if_trying_to_change_to_cumulative()
+        self._deny_if_trying_to_change_to_cumulative()
 
-            if self._should_increase_published_revision():
-                self.publish()
-            if self._should_increase_draft_revision():
-                self.draft_revision += 1
-            published_version_changed = self.tracker.has_changed("published_revision")
-            draft_version_changed = self.tracker.has_changed("draft_revision")
-            super().save(*args, **kwargs)
-            if published_version_changed:
-                self.change_update_reason(f"{self.state}-{self.published_revision}")
-            elif draft_version_changed:
-                self.change_update_reason(
-                    f"{self.state}-{self.published_revision}.{self.draft_revision}"
-                )
-        else:
-            self.skip_history_when_saving = True
-            if self.state == self.StateChoices.PUBLISHED and self.published_revision == 0:
-                self.published_revision = 1
-            super().save(*args, **kwargs)
+        if self._should_increase_published_revision():
+            self.publish()
+        if self._should_increase_draft_revision():
+            self.draft_revision += 1
+        published_version_changed = self.tracker.has_changed("published_revision")
+        draft_version_changed = self.tracker.has_changed("draft_revision")
+        super().save(*args, **kwargs)
+        if published_version_changed:
+            self.change_update_reason(f"{self.state}-{self.published_revision}")
+        elif draft_version_changed:
+            self.change_update_reason(
+                f"{self.state}-{self.published_revision}.{self.draft_revision}"
+            )
