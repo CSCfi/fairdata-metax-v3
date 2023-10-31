@@ -9,11 +9,13 @@ from typing import Dict
 
 from cachalot.api import cachalot_disabled
 from django.db.models import Model, Q, TextChoices
+from django.db.models.functions import Concat
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from apps.common.serializers import StrictSerializer
 from apps.common.serializers.fields import ListValidChoicesField
+from apps.common.serializers.validators import AnyOf
 from apps.core.models import FileSet
 from apps.core.models.concepts import FileType, UseCategory
 from apps.core.models.file_metadata import FileSetDirectoryMetadata, FileSetFileMetadata
@@ -38,8 +40,13 @@ class ActionSerializerBase(StrictSerializer):
 class FileActionSerializer(ActionSerializerBase):
     """Serializer for adding/removing a file and optionally updating dataset-specific metadata."""
 
-    id = serializers.UUIDField()
+    id = serializers.UUIDField(required=False, allow_null=True)
+    storage_identifier = serializers.CharField(required=False, allow_null=True)
+    pathname = serializers.CharField(required=False, allow_null=True)
     dataset_metadata = FileMetadataSerializer(required=False, allow_null=True)
+
+    class Meta:
+        validators = [AnyOf(["id", "storage_identifier", "pathname"])]
 
 
 class DirectoryActionSerializer(ActionSerializerBase):
@@ -116,6 +123,79 @@ class FileSetSerializer(StrictSerializer):
                 if item := metadata.get(key):
                     metadata[key] = refdata_by_url.get(item["url"])
 
+    def assign_file_ids(self, storage: FileStorage, file_actions: list):
+        """Assign file identifiers to actions based on unique fields.
+
+        Assigns the following uniquely identifying values to file actions
+        and checks them for conflicts:
+        - id
+        - storage_identifier (unique for FileStorage)
+        - pathname (unique for FileStorage)
+        Also sets `_found=True` if file was found.
+        """
+
+        if not file_actions:
+            return
+
+        def check_value_conflicts(action: dict, file: dict, field: str):
+            """Raise error if action field has different value than file in DB."""
+            if existing_value := action.get(field):
+                if existing_value != file[field]:
+                    raise serializers.ValidationError(
+                        {
+                            field: _(
+                                "Value conflict. Expected '{file_value}', got '{existing_value}'."
+                            ).format(
+                                field=field,
+                                file_value=file[field],
+                                existing_value=existing_value,
+                            )
+                        }
+                    )
+
+        def assign_values(actions_dict: dict, lookup_field: str, file_values: dict):
+            """Assign file values from DB to action."""
+            for file in file_values:
+                for action in actions_dict[file[lookup_field]]:
+                    for field in ("id", "storage_identifier", "pathname"):
+                        check_value_conflicts(action, file, field)
+                    action.update(file)
+                    action["_found"] = True
+
+        # Group files by the unique fields (note that a file is allowed to have multiple actions)
+        storage_files = storage.files.annotate(pathname=Concat("directory_path", "filename"))
+        by_id = {}
+        by_storage_identifier = {}
+        by_pathname = {}
+        for f in file_actions:
+            if "id" in f:
+                by_id.setdefault(f["id"], []).append(f)
+            if "storage_identifier" in f:
+                by_storage_identifier.setdefault(f["storage_identifier"], []).append(f)
+            if "pathname" in f:
+                by_pathname.setdefault(f["pathname"], []).append(f)
+
+        files_from_id = storage_files.filter(id__in=by_id).values(
+            "id", "storage_identifier", "pathname"
+        )
+        assign_values(by_id, "id", files_from_id)
+
+        files_from_storage_identifier = storage_files.filter(
+            storage_identifier__in=by_storage_identifier
+        ).values("id", "storage_identifier", "pathname")
+        assign_values(by_storage_identifier, "storage_identifier", files_from_storage_identifier)
+
+        files_from_pathname = (
+            storage_files.filter(
+                # prefilter results before doing a more expensive exact match with Concat
+                directory_path__in=set(p.rsplit("/", 1)[0] + "/" for p in by_pathname),
+                filename__in=set(p.rsplit("/", 1)[1] for p in by_pathname),
+            )
+            .filter(pathname__in=by_pathname)
+            .values("id", "storage_identifier", "pathname")
+        )
+        assign_values(by_pathname, "pathname", files_from_pathname)
+
     def to_internal_value(self, data):
         value = super().to_internal_value(data)
 
@@ -132,6 +212,8 @@ class FileSetSerializer(StrictSerializer):
             raise serializers.ValidationError(
                 {"storage": _("File storage not found with parameters {}.").format(storage_params)}
             )
+
+        self.assign_file_ids(storage=value["storage"], file_actions=value.get("file_actions"))
 
         # Convert file_type dicts to FileType instances
         self.assign_reference_data(value.get("file_actions"), key="file_type", model=FileType)
@@ -156,17 +238,15 @@ class FileSetSerializer(StrictSerializer):
     def get_file_exist_errors(self, attrs) -> Dict:
         """Validate that all requested files exist, return error if not."""
         if file_actions := attrs.get("file_actions"):
-            file_ids = set(f["id"] for f in file_actions)
-            found_files = set(
-                attrs["storage"].files.filter(id__in=file_ids).values_list("id", flat=True)
-            )
-            files_not_found = file_ids - found_files
-            if files_not_found:
-                return {
-                    "file.id": _("Files not found in FileStorage: {ids}").format(
-                        ids=sorted([str(f) for f in files_not_found])
-                    )
-                }
+            if missing_file := next((f for f in file_actions if not f.pop("_found", False)), None):
+                missing_file.pop("action")
+                raise serializers.ValidationError(
+                    {
+                        "file_actions": _("File not found in FileStorage: {}").format(
+                            dict(missing_file)
+                        )
+                    }
+                )
         return {}
 
     def get_directory_exist_errors(self, attrs) -> Dict:

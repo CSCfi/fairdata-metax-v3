@@ -88,3 +88,15 @@
 
 ### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_missing_project_identifier
 
+## test_dataset_add_files_by_pathname
+
+### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_add_files_by_pathname
+
+## test_dataset_add_files_by_storage_identifier
+
+### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_add_files_by_storage_identifier
+
+## test_dataset_add_files_by_conflicting_values
+
+### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_add_files_by_conflicting_values
+

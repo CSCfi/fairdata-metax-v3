@@ -217,6 +217,8 @@ where the optional action value is is one of
 - "update": Only update `dataset_metadata` without adding or removing files.
 - "remove": Remove file or all files in directory and subdirecories from dataset.
 
+In addition to `id`, file actions also support identifying files by `storage_identifier` or `pathname`.
+
 <!-- prettier-ignore -->
 !!! NOTE
     Operations are performed based on the end result of doing all actions in the listed order but

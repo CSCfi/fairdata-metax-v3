@@ -681,8 +681,7 @@ def test_dataset_files_wrong_project_identifier(admin_client, deep_file_tree, da
         content_type="application/json",
     )
     assert res.status_code == 400
-    assert "Directory not found" in str(res.data["fileset"]["pathname"])
-    assert "Files not found" in str(res.data["fileset"]["file.id"])
+    assert "File not found" in str(res.data["fileset"]["file_actions"])
 
 
 def test_dataset_files_unknown_project_identifier(admin_client, deep_file_tree, data_urls):
@@ -716,7 +715,7 @@ def test_dataset_files_file_from_wrong_storage_service(admin_client, data_urls, 
         content_type="application/json",
     )
     assert res.status_code == 400
-    assert "Files not found" in res.data["fileset"]["file.id"][0]
+    assert "File not found" in str(res.data["fileset"]["file_actions"])
 
 
 def test_dataset_files_missing_project_identifier(admin_client, data_urls):
@@ -730,3 +729,98 @@ def test_dataset_files_missing_project_identifier(admin_client, data_urls):
     )
     assert res.status_code == 400
     assert "Field is required" in res.data["fileset"]["project"]
+
+
+def test_dataset_add_files_by_pathname(admin_client, deep_file_tree, data_urls):
+    dataset = factories.DatasetFactory()
+
+    actions = {
+        **deep_file_tree["params"],
+        "file_actions": [{"pathname": "/dir1/sub/file.csv"}],
+    }
+
+    urls = data_urls(dataset)
+    res = admin_client.patch(
+        urls["dataset"],
+        {"fileset": actions},
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+
+    fileset = res.data["fileset"]
+    assert fileset["added_files_count"] == 1
+    assert fileset["removed_files_count"] == 0
+    assert fileset["total_files_count"] == 1
+
+    res = admin_client.get(urls["files"])
+    assert_nested_subdict(
+        {
+            "results": [
+                {"pathname": "/dir1/sub/file.csv"},
+            ]
+        },
+        res.json(),
+    )
+
+
+def test_dataset_add_files_by_storage_identifier(admin_client, deep_file_tree, data_urls):
+    dataset = factories.DatasetFactory()
+
+    actions = {
+        **deep_file_tree["params"],
+        "file_actions": [
+            {
+                "storage_identifier": deep_file_tree["files"][
+                    "/dir1/sub/file.csv"
+                ].storage_identifier
+            }
+        ],
+    }
+
+    urls = data_urls(dataset)
+    res = admin_client.patch(
+        urls["dataset"],
+        {"fileset": actions},
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+
+    fileset = res.data["fileset"]
+    assert fileset["added_files_count"] == 1
+    assert fileset["removed_files_count"] == 0
+    assert fileset["total_files_count"] == 1
+
+    res = admin_client.get(urls["files"])
+    assert_nested_subdict(
+        {
+            "results": [
+                {"pathname": "/dir1/sub/file.csv"},
+            ]
+        },
+        res.json(),
+    )
+
+
+def test_dataset_add_files_by_conflicting_values(admin_client, deep_file_tree, data_urls):
+    dataset = factories.DatasetFactory()
+
+    actions = {
+        **deep_file_tree["params"],
+        "file_actions": [
+            {
+                "storage_identifier": deep_file_tree["files"][
+                    "/dir1/sub/file.csv"
+                ].storage_identifier,
+                "pathname": "/wrongpath",
+            }
+        ],
+    }
+
+    urls = data_urls(dataset)
+    res = admin_client.patch(
+        urls["dataset"],
+        {"fileset": actions},
+        content_type="application/json",
+    )
+    assert res.status_code == 400
+    assert "Expected '/dir1/sub/file.csv'" in str(res.data["fileset"]["pathname"])
