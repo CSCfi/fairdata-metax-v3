@@ -8,6 +8,14 @@
 
 ### :::tests.unit.apps.core.api.conftest.api_client
 
+## contract_a_json
+
+### :::tests.unit.apps.core.api.conftest.contract_a_json
+
+## contract_a
+
+### :::tests.unit.apps.core.api.conftest.contract_a
+
 ## datacatalog_a_json
 
 ### :::tests.unit.apps.core.api.conftest.datacatalog_a_json

@@ -1,0 +1,6 @@
+{
+    "title": {"en": "Test contract A", "fi": "Testisopimus A"},
+    "description": "Description for test contract A",
+    "quota": 123456789,
+    "valid_until": "2029-12-31T23:59Z"
+}

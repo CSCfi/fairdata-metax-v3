@@ -19,6 +19,7 @@ router.register(
     OrganizationViewSet,
 )
 # core app
+router.register(r"contracts?", core_views.ContractViewSet, basename="contract")
 router.register(r"data-catalogs?", core_views.DataCatalogView, basename="datacatalog")
 router.register(r"datasets?", core_views.DatasetViewSet, basename="dataset")
 

@@ -18,4 +18,5 @@ from .dataset_allowed_actions import (
 from .dataset_files_serializer import FileSetSerializer
 from .dataset_serializer import DatasetSerializer
 from .legacy_serializer import LegacyDatasetModelSerializer
+from .preservation_serializers import ContractModelSerializer
 from .provenance_serializers import ProvenanceModelSerializer

@@ -58,6 +58,7 @@
             - [dataset_serializer](src/apps/core/serializers/dataset_serializer.md)
             - [file_metadata_serializer](src/apps/core/serializers/file_metadata_serializer.md)
             - [legacy_serializer](src/apps/core/serializers/legacy_serializer.md)
+            - [preservation_serializers](src/apps/core/serializers/preservation_serializers.md)
             - [provenance_serializers](src/apps/core/serializers/provenance_serializers.md)
         - [signals](src/apps/core/signals.md)
         - views
@@ -67,6 +68,7 @@
             - [index_view](src/apps/core/views/index_view.md)
             - [legacy_view](src/apps/core/views/legacy_view.md)
             - [nested_views](src/apps/core/views/nested_views.md)
+            - [preservation_view](src/apps/core/views/preservation_view.md)
     - files
         - [admin](src/apps/files/admin.md)
         - [apps](src/apps/files/apps.md)
@@ -159,6 +161,7 @@
                         - [test_dataset_files_update](tests/unit/apps/core/api/dataset_files/test_dataset_files_update.md)
                         - [test_dataset_with_files](tests/unit/apps/core/api/dataset_files/test_dataset_with_files.md)
                     - [json_models](tests/unit/apps/core/api/json_models.md)
+                    - [test_contract](tests/unit/apps/core/api/test_contract.md)
                     - [test_data_catalog](tests/unit/apps/core/api/test_data_catalog.md)
                     - [test_dataset_publisher](tests/unit/apps/core/api/test_dataset_publisher.md)
                     - [test_metadata_provider](tests/unit/apps/core/api/test_metadata_provider.md)

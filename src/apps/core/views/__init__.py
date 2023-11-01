@@ -4,3 +4,4 @@ from .dataset_view import DatasetDirectoryViewSet, DatasetFilesViewSet, DatasetV
 from .index_view import IndexView
 from .legacy_view import LegacyDatasetViewSet
 from .nested_views import AccessRightsViewSet, DatasetActorViewSet, ProvenanceViewSet
+from .preservation_view import ContractViewSet
