@@ -153,6 +153,7 @@ class DatasetViewSet(QueryParamsMixin, CommonModelViewSet):
             return response.Response("Dataset not found.", status=404, content_type="text/plain")
 
         serializer = self.serializer_class
+        serializer_context = self.get_serializer_context()
         extension = "json"
 
         if request.query_params.get("format") == ("datacite" or "fairdata_datacite"):
@@ -160,8 +161,8 @@ class DatasetViewSet(QueryParamsMixin, CommonModelViewSet):
             extension = "xml"
 
         return response.Response(
-            serializer(obj).data,
-            headers={"Content-Disposition": f"attachment; filename='{pk}-metadata.{extension}'"},
+            serializer(obj, context=serializer_context).data,
+            headers={"Content-Disposition": f"attachment; filename={pk}-metadata.{extension}"},
         )
 
     def get_queryset(self):
