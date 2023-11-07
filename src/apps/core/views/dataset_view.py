@@ -23,6 +23,9 @@ from apps.common.views import CommonModelViewSet, QueryParamsMixin
 from apps.core.models.catalog_record import Dataset, FileSet
 from apps.core.permissions import DatasetAccessPolicy
 from apps.core.serializers import DatasetSerializer
+from apps.core.serializers.dataset_allowed_actions import (
+    DatasetAllowedActionsQueryParamsSerializer,
+)
 from apps.core.serializers.dataset_serializer import DatasetRevisionsQueryParamsSerializer
 from apps.files.models import File
 from apps.files.serializers import DirectorySerializer
@@ -103,7 +106,11 @@ class DatasetViewSet(QueryParamsMixin, CommonModelViewSet):
         {
             "class": DatasetRevisionsQueryParamsSerializer,
             "actions": ["revisions"],
-        }
+        },
+        {
+            "class": DatasetAllowedActionsQueryParamsSerializer,
+            "actions": ["retrieve", "list", "create", "update", "partial_update", "revisions"],
+        },
     ]
     access_policy = DatasetAccessPolicy
     serializer_class = DatasetSerializer

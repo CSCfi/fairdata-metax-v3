@@ -135,7 +135,14 @@ class AccessRightsModelSerializer(CommonNestedModelSerializer):
 
     class Meta:
         model = AccessRights
-        fields = ("id", "description", "license", "access_type", "restriction_grounds")
+        fields = (
+            "id",
+            "description",
+            "license",
+            "access_type",
+            "restriction_grounds",
+            "available",
+        )
 
 
 class DatasetActorModelSerializer(CommonModelSerializer):

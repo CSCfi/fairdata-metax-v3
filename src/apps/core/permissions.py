@@ -15,6 +15,13 @@ class DatasetAccessPolicy(BaseAccessPolicy):
             "effect": "allow",
             "condition": "is_metadata_owner",
         },
+        {
+            # Note that there is no actual "download" action in the viewset at the moment.
+            "action": ["<op:download>"],
+            "principal": "*",
+            "effect": "allow",
+            "condition": "is_download_allowed",
+        },
         {"action": ["create"], "principal": "authenticated", "effect": "allow"},
     ] + BaseAccessPolicy.statements
 
@@ -25,6 +32,12 @@ class DatasetAccessPolicy(BaseAccessPolicy):
             return request.user == dataset.metadata_owner.user
         else:
             return False
+
+    def is_download_allowed(self, request, view, action) -> bool:
+        dataset = view.get_object()
+        if access_rights := dataset.access_rights:
+            return access_rights.is_data_available(request, dataset)
+        return False
 
     @classmethod
     def scope_queryset(cls, request, queryset):

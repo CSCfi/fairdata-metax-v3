@@ -36,6 +36,7 @@
             - [migrate_v2_datasets](src/apps/core/management/commands/migrate_v2_datasets.md)
         - [mixins](src/apps/core/mixins.md)
         - models
+            - [access_rights](src/apps/core/models/access_rights.md)
             - catalog_record
                 - [dataset](src/apps/core/models/catalog_record/dataset.md)
                 - [meta](src/apps/core/models/catalog_record/meta.md)
@@ -52,6 +53,7 @@
             - [common_serializers](src/apps/core/serializers/common_serializers.md)
             - [concept_serializers](src/apps/core/serializers/concept_serializers.md)
             - [data_catalog_serializer](src/apps/core/serializers/data_catalog_serializer.md)
+            - [dataset_allowed_actions](src/apps/core/serializers/dataset_allowed_actions.md)
             - [dataset_files_serializer](src/apps/core/serializers/dataset_files_serializer.md)
             - [dataset_serializer](src/apps/core/serializers/dataset_serializer.md)
             - [file_metadata_serializer](src/apps/core/serializers/file_metadata_serializer.md)
@@ -145,6 +147,7 @@
                         - [conftest](tests/unit/apps/core/api/dataset/conftest.md)
                         - [test_auth](tests/unit/apps/core/api/dataset/test_auth.md)
                         - [test_dataset](tests/unit/apps/core/api/dataset/test_dataset.md)
+                        - [test_dataset_allowed_actions](tests/unit/apps/core/api/dataset/test_dataset_allowed_actions.md)
                         - [test_legacy](tests/unit/apps/core/api/dataset/test_legacy.md)
                         - [test_provenance](tests/unit/apps/core/api/dataset/test_provenance.md)
                         - [test_relation](tests/unit/apps/core/api/dataset/test_relation.md)

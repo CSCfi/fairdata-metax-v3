@@ -19,9 +19,9 @@ def test_delete_dataset_with_foreign_keys(dataset_with_foreign_keys):
     dataset_with_foreign_keys.delete()
     assert dataset_with_foreign_keys.removed
     assert access_rights.removed
-    assert not access_rights.dataset.filter(id=dataset_with_foreign_keys.id).exists()
+    assert not access_rights.datasets.filter(id=dataset_with_foreign_keys.id).exists()
     assert (
-        access_rights.dataset(manager="all_objects")
+        access_rights.datasets(manager="all_objects")
         .filter(id=dataset_with_foreign_keys.id)
         .exists()
     )

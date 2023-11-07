@@ -19,6 +19,7 @@ from apps.files.serializers.file_serializer import get_or_create_storage
 from apps.refdata.models import FunderType, License, Location
 from apps.users.models import MetaxUser
 
+from .access_rights import AccessRights
 from .catalog_record import (
     Dataset,
     DatasetActor,
@@ -42,7 +43,7 @@ from .concepts import (
     Spatial,
 )
 from .contract import Contract
-from .data_catalog import AccessRights, DataCatalog
+from .data_catalog import DataCatalog
 from .provenance import Provenance, ProvenanceVariable
 
 logger = logging.getLogger(__name__)
@@ -288,7 +289,7 @@ class LegacyDataset(Dataset):
                 )
             custom_url = lic.get("license", None)
             license_instance, created = DatasetLicense.objects.get_or_create(
-                access_rights__dataset=self.id,
+                access_rights__datasets=self.id,
                 reference=lic_ref,
                 defaults={
                     "description": lic.get("description"),

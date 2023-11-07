@@ -1,15 +1,12 @@
 import json
 import uuid
-from typing import Tuple
 
 from django.contrib.postgres.fields import HStoreField
 from django.db import models
 from simple_history.models import HistoricalRecords
 
-from apps.common.helpers import prepare_for_copy
-from apps.common.mixins import CopyableModelMixin
-from apps.common.models import AbstractBaseModel, AbstractDatasetProperty, AbstractFreeformConcept
-from apps.core.models.concepts import AccessType, DatasetLicense, Language, RestrictionGrounds
+from apps.common.models import AbstractBaseModel, AbstractDatasetProperty
+from apps.core.models.concepts import Language
 
 
 class DataCatalog(AbstractBaseModel):
@@ -117,59 +114,3 @@ class DatasetPublisher(AbstractBaseModel):
         if isinstance(name, str):
             name = json.loads(name)
         return str(next(iter(name.items())))
-
-
-class AccessRights(AbstractBaseModel, CopyableModelMixin):
-    """Information about who can access the resource or an indication of its security status.
-
-    RFD Property: dcterms:accessRights
-
-    Source: DCAT Version 3, Draft 11,
-    https://www.w3.org/TR/vocab-dcat-3/#Property:resource_access_rights
-
-    Attributes:
-        license(models.ManyToManyField): ManyToMany relation to License
-        access_type(AccessType): AccessType ForeignKey relation
-        description(HStoreField): Description of the access rights
-    """
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    license = models.ManyToManyField(
-        DatasetLicense,
-        related_name="access_rights",
-    )
-    access_type = models.ForeignKey(
-        AccessType, on_delete=models.SET_NULL, related_name="access_rights", null=True
-    )
-    restriction_grounds = models.ManyToManyField(RestrictionGrounds, related_name="access_rights")
-    description = HStoreField(
-        help_text='example: {"en":"description", "fi":"kuvaus"}', null=True, blank=True
-    )
-    history = HistoricalRecords(m2m_fields=(license,))
-
-    class Meta:
-        verbose_name_plural = "Access rights"
-
-    def __str__(self):
-        description = self.description
-        if isinstance(description, str):
-            description = json.loads(description)
-        if description:
-            return str(next(iter(description.values())))
-        elif self.access_type:
-            return self.access_type.pref_label.get("en", "access rights")
-        else:
-            return "Access Rights"
-
-    @classmethod
-    def create_copy(cls, original) -> Tuple["AccessRights", "AccessRights"]:
-        o_lics = original.license.all()
-        copy_lics = []
-        for lic in o_lics:
-            copy_lic, _ = lic.create_copy(lic)
-            copy_lics.append(copy_lic)
-
-        copy = prepare_for_copy(original)
-        copy.save()
-        copy.license.set(copy_lics)
-        return copy, original

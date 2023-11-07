@@ -1,3 +1,4 @@
+from .access_rights import AccessRights, AccessTypeChoices
 from .catalog_record import (
     CatalogRecord,
     Dataset,
@@ -29,7 +30,7 @@ from .concepts import (
     UseCategory,
 )
 from .contract import Contract
-from .data_catalog import AccessRights, CatalogHomePage, DataCatalog, DatasetPublisher
+from .data_catalog import CatalogHomePage, DataCatalog, DatasetPublisher
 from .entity import Entity
 from .file_metadata import FileSetDirectoryMetadata, FileSetFileMetadata
 from .legacy import LegacyDataset

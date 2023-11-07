@@ -18,8 +18,8 @@ from apps.common.helpers import datetime_to_date, prepare_for_copy
 from apps.common.mixins import CopyableModelMixin
 from apps.common.models import AbstractBaseModel
 from apps.core.mixins import V2DatasetMixin
+from apps.core.models.access_rights import AccessRights
 from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
-from apps.core.models.data_catalog import AccessRights
 
 from .meta import CatalogRecord, OtherIdentifier
 
@@ -94,7 +94,7 @@ class Dataset(V2DatasetMixin, CopyableModelMixin, CatalogRecord, AbstractBaseMod
     access_rights = models.ForeignKey(
         AccessRights,
         on_delete=models.SET_NULL,
-        related_name="dataset",
+        related_name="datasets",
         null=True,
     )
     other_identifiers = models.ManyToManyField(
@@ -374,19 +374,17 @@ class Dataset(V2DatasetMixin, CopyableModelMixin, CatalogRecord, AbstractBaseMod
         Raises:
             ValidationError: If the dataset does not have a persistent identifier.
         """
-
+        errors = {}
         if not self.data_catalog:
-            raise ValidationError(
-                {"data_catalog": _("Dataset has to have a data catalog when publishing")}
-            )
+            errors["data_catalog"] = _("Dataset has to have a data catalog when publishing")
         if not self.persistent_identifier:
-            raise ValidationError(
-                {
-                    "persistent_identifier": _(
-                        "Dataset has to have a persistent identifier when publishing"
-                    )
-                }
+            errors["persistent_identifier"] = _(
+                "Dataset has to have a persistent identifier when publishing"
             )
+        if not self.access_rights:
+            errors["access_rights"] = _("Dataset has to have access rights when publishing")
+        if errors:
+            raise ValidationError(errors)
         self.published_revision += 1
         self.draft_revision = 0
         if not self.issued:

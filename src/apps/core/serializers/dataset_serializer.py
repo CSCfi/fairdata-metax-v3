@@ -6,6 +6,7 @@
 # :license: MIT
 import logging
 
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from apps.common.serializers import CommonNestedModelSerializer, OneOf
@@ -21,6 +22,7 @@ from apps.core.serializers.common_serializers import (
     TemporalModelSerializer,
 )
 from apps.core.serializers.concept_serializers import SpatialModelSerializer
+from apps.core.serializers.dataset_allowed_actions import DatasetAllowedActionsSerializer
 
 # for preventing circular import, using submodule instead of apps.core.serializers
 from apps.core.serializers.provenance_serializers import ProvenanceModelSerializer
@@ -60,6 +62,14 @@ class DatasetSerializer(CommonNestedModelSerializer):
     other_versions = serializers.HyperlinkedRelatedField(
         many=True, read_only=True, view_name="dataset-detail"
     )
+    allowed_actions = DatasetAllowedActionsSerializer(read_only=True, source="*")
+
+    def get_fields(self):
+        fields = super().get_fields()
+
+        if not self.context["view"].query_params.get("include_allowed_actions"):
+            fields.pop("allowed_actions", None)
+        return fields
 
     def to_representation(self, instance):
         request = self.context.get("request")
@@ -108,6 +118,7 @@ class DatasetSerializer(CommonNestedModelSerializer):
             "next_version",
             "other_versions",
             "published_revision",
+            "allowed_actions",
         )
         read_only_fields = (
             "created",

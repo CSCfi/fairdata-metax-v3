@@ -12,7 +12,3 @@
 
 ### :::src.apps.core.models.data_catalog.DatasetPublisher
 
-## AccessRights
-
-### :::src.apps.core.models.data_catalog.AccessRights
-

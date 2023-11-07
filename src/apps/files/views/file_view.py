@@ -15,7 +15,7 @@ from django.db.models.functions import Concat
 from django.utils.translation import gettext_lazy as _
 from django_filters import rest_framework as filters
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import serializers, viewsets
+from rest_framework import serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 

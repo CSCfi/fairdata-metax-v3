@@ -29,15 +29,26 @@ Language field is a list of language reference data objects. Only url field is r
 Information about who can access the resource or an indication of its security status. [^2]
 
 A dataset whose files are publicly available should have access type "Open" from the reference data.
-For more restrictive access types it is recommended to add one or more restriction grounds values to indicate why access
+Access type is used by Etsin to determine who can download IDA files from the dataset. The supported types are:
+
+- Open: Anyone can access the data.
+- Login: Only logged in users can access the data.
+- Embargo: Data can accessed starting from `available` date. If `available` is not set, data will not become accessible.
+- Permit: Data can be accessed only after requesting permission. Not implemented yet.
+- Restricted: Data access is not allowed.
+
+For the restrictive access types it is recommended to add one or more restriction grounds values to indicate why access
 to the data is restricted.
 
-| Field               | key                 | value                                                                |
-|---------------------|---------------------|----------------------------------------------------------------------|
-| Description         | description         | dict                                                                 |
-| Access Type         | access_type         | reference data from `/v3/reference-data/access-types`                |
-| Restriction Grounds | restriction_grounds | list of reference data from `/v3/reference-data/restriction-grounds` |
-| License             | license             | list of objects                                                      |
+The available access rights fields are:
+
+| Field               | key                    | value                                                                |
+|---------------------|------------------------|----------------------------------------------------------------------|
+| Description         | description            | dict                                                                 |
+| Access Type         | access_type (required) | reference data from `/v3/reference-data/access-types`                |
+| Restriction Grounds | restriction_grounds    | list of reference data from `/v3/reference-data/restriction-grounds` |
+| Available date      | available              | date when data is available for download                             |
+| License             | license                | list of objects                                                      |
 
 License is special kind of reference data object, as it can have additional metadata properties
 that are writable by the user:
@@ -51,7 +62,6 @@ If `custom_url` is set without providing `url`, the "Other" license is used by d
 If the dataset has a license that is not in the reference data, choose the best matching
 "Other" type license in `url` and add a URL to the actual license as `custom_url` and/or describe the license in `description`.
 
-Access type defines who can view your dataset metadata in Metax and Etsin.
 
 !!! example
 
