@@ -239,6 +239,16 @@ class Dataset(V2DatasetMixin, CopyableModelMixin, CatalogRecord, AbstractBaseMod
         copy_field_of_sciences = original.field_of_science.all()
 
         copy = prepare_for_copy(original)
+
+        # Custom field values
+        copy.catalogrecord_ptr = None
+        copy.state = cls.StateChoices.DRAFT
+        copy.published_revision = 0
+        copy.created = timezone.now()
+        copy.modified = timezone.now()
+        copy.persistent_identifier = None
+        copy.save()
+
         if original.access_rights:
             copy.access_rights, _ = AccessRights.create_copy(original.access_rights)
 
@@ -254,15 +264,6 @@ class Dataset(V2DatasetMixin, CopyableModelMixin, CatalogRecord, AbstractBaseMod
 
             new_prov, _ = Provenance.create_copy(prov, copy)
             new_provs.append(new_prov)
-
-        # Custom field values
-        copy.persistent_identifier = None
-        copy.catalogrecord_ptr = None
-        copy.state = cls.StateChoices.DRAFT
-        copy.published_revision = 0
-        copy.created = timezone.now()
-        copy.modified = timezone.now()
-        copy.save()
 
         # reverse set
         copy.actors.set(new_actors)
@@ -391,13 +392,35 @@ class Dataset(V2DatasetMixin, CopyableModelMixin, CatalogRecord, AbstractBaseMod
         if not self.issued:
             self.issued = datetime_to_date(timezone.now())
 
+    def validate_unique(self):
+        """Validate uniqueness constraints."""
+        if self.persistent_identifier and self.data_catalog:
+            # Validate pid. Note that there is no DB constraint for this
+            # because data_catalog and persistent_identifier live
+            # in separate tables.
+            if (
+                Dataset.available_objects.exclude(id=self.id)
+                .filter(
+                    data_catalog=self.data_catalog,
+                    persistent_identifier=self.persistent_identifier,
+                )
+                .exists()
+            ):
+                raise ValidationError(
+                    {
+                        "persistent_identifier": _(
+                            "Data catalog is not allowed to have multiple datasets with same value."
+                        )
+                    }
+                )
+
     def save(self, *args, **kwargs):
         """Saves the dataset and increments the draft or published revision number as needed.
 
         The function will also publish a new version  or
         increment the draft revision number as appropriate.
         """
-
+        self.validate_unique()
         self._deny_if_trying_to_change_to_cumulative()
 
         if self._should_increase_published_revision():

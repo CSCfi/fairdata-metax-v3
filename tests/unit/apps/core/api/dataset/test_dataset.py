@@ -452,3 +452,15 @@ def test_create_dataset_draft_without_catalog(
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 201
     assert_nested_subdict(dataset_a_json, res.data)
+
+
+def test_create_dataset_multiple_datasets_same_pid(
+    admin_client, dataset_a_json, data_catalog, reference_data
+):
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 400
+    assert "Data catalog is not allowed to have multiple datasets with same value" in str(
+        res.data["persistent_identifier"]
+    )
