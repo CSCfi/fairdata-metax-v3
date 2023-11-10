@@ -57,24 +57,15 @@ class CatalogRecord(AbstractBaseModel):
 
     Attributes:
         data_catalog(DataCatalog): DataCatalog ForeignKey relation
-        contract(Contract): Contract ForeignKey relation
         history(HistoricalRecords): Historical model changes
         metadata_owner(MetadataProvider): MetadataProvider ForeignKey relation
         preservation(Preservation): Preservation OneToOne relation
-        preservation_identifier(models.CharField): PAS identifier
         last_modified_by(Actor): Actor ForeignKey relation
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     data_catalog = models.ForeignKey(
         DataCatalog, on_delete=models.DO_NOTHING, related_name="records", null=True, blank=True
-    )
-    contract = models.ForeignKey(
-        Contract,
-        on_delete=models.SET_NULL,
-        related_name="records",
-        null=True,
-        blank=True,
     )
     preservation = models.OneToOneField(
         Preservation, on_delete=models.CASCADE, related_name="record", null=True, blank=True
@@ -89,35 +80,8 @@ class CatalogRecord(AbstractBaseModel):
         related_name="metadata_owner",
         null=True,
     )
-    preservation_identifier = models.CharField(max_length=512, null=True, blank=True)
     last_modified_by = models.ForeignKey(
         get_user_model(), on_delete=models.SET_NULL, null=True, blank=True
-    )
-
-    class PreservationState(models.IntegerChoices):
-        NONE = -1
-        INITIALIZED = 0
-        GENERATING_TECHNICAL_METADATA = 10
-        TECHNICAL_METADATA_GENERATED = 20
-        TECHNICAL_METADATA_GENERATED_FAILED = 30
-        INVALID_METADATA = 40
-        METADATA_VALIDATION_FAILED = 50
-        VALIDATED_METADATA_UPDATED = 60
-        VALIDATING_METADATA = 65
-        REJECTED_BY_USER = 70
-        METADATA_CONFIRMED = 75
-        ACCEPTED_TO_PAS = 80
-        IN_PACKAGING_SERVICE = 90
-        PACKAGING_FAILED = 100
-        SIP_IN_INGESTION = 110
-        IN_PAS = 120
-        REJECTED_FROM_PAS = 130
-        IN_DISSEMINATION = 140
-
-    preservation_state = models.IntegerField(
-        choices=PreservationState.choices,
-        default=PreservationState.NONE,
-        help_text="Record state in PAS.",
     )
 
     def __str__(self):
