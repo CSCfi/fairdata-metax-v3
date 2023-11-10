@@ -20,3 +20,4 @@ from .dataset_serializer import DatasetSerializer
 from .legacy_serializer import LegacyDatasetModelSerializer
 from .preservation_serializers import ContractModelSerializer
 from .provenance_serializers import ProvenanceModelSerializer
+from .preservation_serializers import PreservationModelSerializer

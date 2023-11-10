@@ -9,7 +9,7 @@ from simple_history.models import HistoricalRecords
 from apps.actors.models import Actor
 from apps.common.models import AbstractBaseModel
 from apps.core.models.concepts import IdentifierType
-from apps.core.models.contract import Contract
+from apps.core.models.preservation import Contract, Preservation
 from apps.core.models.data_catalog import DataCatalog
 
 logger = logging.getLogger(__name__)
@@ -60,6 +60,7 @@ class CatalogRecord(AbstractBaseModel):
         contract(Contract): Contract ForeignKey relation
         history(HistoricalRecords): Historical model changes
         metadata_owner(MetadataProvider): MetadataProvider ForeignKey relation
+        preservation(Preservation): Preservation OneToOne relation
         preservation_identifier(models.CharField): PAS identifier
         last_modified_by(Actor): Actor ForeignKey relation
     """
@@ -75,6 +76,10 @@ class CatalogRecord(AbstractBaseModel):
         null=True,
         blank=True,
     )
+    preservation = models.OneToOneField(
+        Preservation, on_delete=models.CASCADE, related_name="record", null=True, blank=True
+    )
+
     history = HistoricalRecords()
 
     # TODO make this field required when purging migrations

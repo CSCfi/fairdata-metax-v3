@@ -4,6 +4,10 @@
 
 ### :::src.apps.core.factories.ContractFactory
 
+## PreservationFactory
+
+### :::src.apps.core.factories.PreservationFactory
+
 ## CatalogHomePageFactory
 
 ### :::src.apps.core.factories.CatalogHomePageFactory

@@ -42,8 +42,8 @@ from .concepts import (
     RestrictionGrounds,
     Spatial,
 )
-from .contract import Contract
 from .data_catalog import DataCatalog
+from .preservation import Contract
 from .provenance import Provenance, ProvenanceVariable
 
 logger = logging.getLogger(__name__)

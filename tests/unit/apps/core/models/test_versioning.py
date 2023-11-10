@@ -34,6 +34,10 @@ def test_create_new_version(language, keyword, dataset):
     assert old_version.actors.difference(new_version.actors.all()).count() == 2
     assert old_version.provenance.difference(new_version.provenance.all()).count() == 1
 
+    # Preservation status is reset for new version
+    assert old_version.preservation
+    assert not new_version.preservation
+
 
 def test_edit_new_version(dataset_with_foreign_keys):
     lic = DatasetLicenseFactory()

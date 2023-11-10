@@ -241,6 +241,7 @@ class Dataset(V2DatasetMixin, CopyableModelMixin, CatalogRecord, AbstractBaseMod
         copy = prepare_for_copy(original)
 
         # Custom field values
+        copy.preservation = None
         copy.catalogrecord_ptr = None
         copy.state = cls.StateChoices.DRAFT
         copy.published_revision = 0

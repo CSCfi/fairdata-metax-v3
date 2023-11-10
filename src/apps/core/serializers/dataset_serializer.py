@@ -23,6 +23,7 @@ from apps.core.serializers.common_serializers import (
 )
 from apps.core.serializers.concept_serializers import SpatialModelSerializer
 from apps.core.serializers.dataset_allowed_actions import DatasetAllowedActionsSerializer
+from apps.core.serializers.preservation_serializers import PreservationModelSerializer
 
 # for preventing circular import, using submodule instead of apps.core.serializers
 from apps.core.serializers.provenance_serializers import ProvenanceModelSerializer
@@ -46,6 +47,7 @@ class DatasetSerializer(CommonNestedModelSerializer):
     spatial = SpatialModelSerializer(required=False, many=True)
     temporal = TemporalModelSerializer(required=False, many=True)
     relation = EntityRelationSerializer(required=False, many=True)
+    preservation = PreservationModelSerializer(required=False, many=False)
     provenance = ProvenanceModelSerializer(required=False, many=True)
     last_version = serializers.HyperlinkedRelatedField(
         many=False, read_only=True, view_name="dataset-detail"
@@ -100,6 +102,7 @@ class DatasetSerializer(CommonNestedModelSerializer):
             "persistent_identifier",
             "theme",
             "title",
+            "preservation",
             "provenance",
             "relation",
             "spatial",

@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.urls import include, path
+from django.urls import include, path, re_path
 from rest_framework_nested import routers
 
 from apps.actors.views import OrganizationViewSet
@@ -33,6 +33,7 @@ router.register(
     core_views.DatasetDirectoryViewSet,
     basename="dataset-directories",
 )
+
 # router.register(r"dataset-actors?", DatasetActorViewSet, basename="dataset-actor")
 router.register(
     r"metadata-providers?", core_views.MetadataProviderViewSet, basename="metadata-provider"
@@ -63,4 +64,15 @@ dataset_router.register(
 if settings.ENABLE_USERS_VIEW:
     router.register(r"users?", UserViewSet, basename="users")
 
-urlpatterns = [path("", include(router.urls)), path("", include(dataset_router.urls))]
+urlpatterns = [
+    # Custom patterns
+    re_path(
+        r"^datasets?/(?P<dataset_pk>[^/.]+)/preservation$",
+        core_views.PreservationViewSet.as_view(
+            {"get": "retrieve", "patch": "partial_update", "put": "update"}
+        ),
+        name="dataset-preservation-detail",
+    ),
+    path("", include(router.urls)),
+    path("", include(dataset_router.urls)),
+]

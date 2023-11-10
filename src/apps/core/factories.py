@@ -20,6 +20,20 @@ class ContractFactory(factory.django.DjangoModelFactory):
     valid_until = factory.LazyFunction(timezone.now)
 
 
+class PreservationFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.Preservation
+
+    contract = factory.SubFactory(ContractFactory)
+    state = factory.Iterator(
+        iter(models.Preservation.PreservationState.choices), getter=lambda value: value[0]
+    )
+    description = factory.Sequence(lambda n: {"en": f"description-for-preservation-entry-{n}"})
+    reason_description = factory.Sequence(
+        lambda n: f"reason-description-for-preservation-entry-{n}"
+    )
+
+
 class CatalogHomePageFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.CatalogHomePage
@@ -269,7 +283,6 @@ class CatalogRecordFactory(factory.django.DjangoModelFactory):
         model = models.CatalogRecord
 
     data_catalog = factory.SubFactory(DataCatalogFactory)
-    contract = factory.SubFactory(ContractFactory)
 
 
 class MetadataProviderFactory(factory.django.DjangoModelFactory):
@@ -287,7 +300,7 @@ class DatasetFactory(factory.django.DjangoModelFactory):
 
     data_catalog = factory.SubFactory(DataCatalogFactory)
     title = factory.Dict({"en": factory.Sequence(lambda n: f"research-dataset-{n}")})
-    contract = factory.SubFactory(ContractFactory)
+    preservation = factory.SubFactory(PreservationFactory)
     access_rights = factory.SubFactory(AccessRightsFactory)
     system_creator = factory.SubFactory(MetaxUserFactory)
     metadata_owner = factory.SubFactory(MetadataProviderFactory)

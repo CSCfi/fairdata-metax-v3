@@ -14,6 +14,7 @@ from apps.core.models import (
     FieldOfScience,
     Language,
     MetadataProvider,
+    Preservation,
     ResearchInfra,
     Theme,
 )
@@ -167,10 +168,9 @@ def dataset_with_foreign_keys(
 
 
 @pytest.fixture
-def catalog_record(data_catalog, contract) -> CatalogRecord:
+def catalog_record(data_catalog) -> CatalogRecord:
     identifier = "12345678-51d3-4c25-ad20-75aff8ca19d7"
-    contract.save()
-    return CatalogRecord(id=identifier, data_catalog=data_catalog, contract=contract)
+    return CatalogRecord(id=identifier, data_catalog=data_catalog)
 
 
 @pytest.fixture

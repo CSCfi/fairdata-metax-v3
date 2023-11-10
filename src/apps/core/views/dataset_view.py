@@ -17,11 +17,13 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import exceptions, response, status
 from rest_framework.decorators import action
 from rest_framework.renderers import JSONRenderer
+from rest_framework.reverse import reverse
 from watson import search
 
 from apps.common.views import CommonModelViewSet, QueryParamsMixin
 from apps.core.models.catalog_record import Dataset, FileSet
 from apps.core.permissions import DatasetAccessPolicy
+from apps.core.models.preservation import Preservation
 from apps.core.serializers import DatasetSerializer
 from apps.core.serializers.dataset_allowed_actions import (
     DatasetAllowedActionsQueryParamsSerializer,
@@ -79,6 +81,17 @@ class DatasetFilter(filters.FilterSet):
         label="persistent identifier",
     )
     state = filters.ChoiceFilter(choices=Dataset.StateChoices.choices, label="state")
+    preservation__contract = filters.CharFilter(
+        max_length=512,
+        label="preservation contract",
+        lookup_expr="icontains",
+        field_name="preservation__contract",
+    )
+    preservation__state = filters.MultipleChoiceFilter(
+        choices=Preservation.PreservationState.choices,
+        label="preservation_state",
+        field_name="preservation__state",
+    )
     ordering = filters.OrderingFilter(
         fields=(
             ("created", "created"),
@@ -127,6 +140,7 @@ class DatasetViewSet(QueryParamsMixin, CommonModelViewSet):
         "metadata_owner",
         "other_identifiers__identifier_type",
         "other_identifiers",
+        "preservation",
         "provenance__is_associated_with",
         "provenance__spatial__reference",
         "provenance__spatial",
@@ -215,6 +229,19 @@ class DatasetViewSet(QueryParamsMixin, CommonModelViewSet):
         else:
             serializer = self.get_serializer(dataset)
         return response.Response(serializer.data)
+
+    def get_extra_action_url_map(self):
+        url_map = super().get_extra_action_url_map()
+
+        if self.detail:
+            url_map["Preservation"] = reverse(
+                "dataset-preservation-detail",
+                self.args,
+                {"dataset_pk": self.kwargs["pk"]},
+                request=self.request,
+            )
+
+        return url_map
 
 
 class DatasetDirectoryViewSet(DirectoryViewSet):
