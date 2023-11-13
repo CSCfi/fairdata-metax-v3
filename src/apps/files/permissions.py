@@ -4,7 +4,7 @@ from apps.common.permissions import BaseAccessPolicy
 class FilesAccessPolicy(BaseAccessPolicy):
     statements = [
         {
-            "action": ["update", "partial_update", "destroy", "create"],
+            "action": ["*"],
             "principal": ["group:ida"],
             "effect": "allow",
         },
