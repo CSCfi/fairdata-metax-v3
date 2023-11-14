@@ -28,6 +28,7 @@ def test_file_permissions(
     res3 = requests_client.post(url, json=ida_file_json)
     assert res3.status_code == 403
 
+    # files are not public unless in a dataset
     res4 = requests_client.get(url)
     assert res4.status_code == 200
-    assert res4.json()["count"] == 1
+    assert res4.json()["count"] == 0

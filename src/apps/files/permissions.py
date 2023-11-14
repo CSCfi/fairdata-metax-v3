@@ -14,7 +14,7 @@ class FilesAccessPolicy(BaseAccessPolicy):
     def scope_queryset(cls, request, queryset):
         if q := super().scope_queryset(request, queryset):
             return q
-        elif request.user.is_anonymous:
-            return queryset.filter(file_sets__dataset__state="published")
-        elif "ida" in request.user.groups.all():
+        elif request.user.groups.filter(name="ida").exists():
             return queryset
+        else:
+            return queryset.filter(file_sets__dataset__state="published")
