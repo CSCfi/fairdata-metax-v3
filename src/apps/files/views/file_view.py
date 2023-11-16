@@ -51,8 +51,7 @@ class FileCommonFilterset(filters.FilterSet):
 
     storage_identifier = filters.CharFilter()
 
-    size_gt = filters.NumberFilter(field_name="size", lookup_expr="gt")
-    size_lt = filters.NumberFilter(field_name="size", lookup_expr="lt")
+    frozen__gt = filters.DateTimeFilter(field_name="frozen", lookup_expr="gt")
 
     def pathname_filter(self, queryset, name, value):
         if value.endswith("/"):

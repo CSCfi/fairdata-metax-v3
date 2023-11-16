@@ -41,7 +41,7 @@ class File(SystemCreatorBaseModel, SoftDeletableModel):
         ).format(ChecksumField.allowed_algorithms)
     )
 
-    frozen = models.DateTimeField(null=True, blank=True)
+    frozen = models.DateTimeField(null=True, blank=True, db_index=True)
     modified = models.DateTimeField()
     removed = models.DateTimeField(null=True, blank=True)
 
