@@ -105,57 +105,6 @@ class AccessRightsFilter(filters.FilterSet):
     )
 
 
-class MetadataProviderFilter(filters.FilterSet):
-    organization = filters.CharFilter(
-        field_name="organization",
-        max_length=512,
-        lookup_expr="icontains",
-        label="organization",
-    )
-
-    user__first_name = filters.CharFilter(
-        max_length=150,
-        lookup_expr="icontains",
-        label="user__first_name",
-    )
-
-    user__last_name = filters.CharFilter(
-        max_length=150,
-        lookup_expr="icontains",
-        label="user__last_name",
-    )
-
-    user__email = filters.CharFilter(
-        max_length=254,
-        lookup_expr="icontains",
-        label="user__email",
-    )
-
-    ordering = filters.OrderingFilter(
-        fields=(
-            ("created", "created"),
-            ("modified", "modified"),
-            ("organization", "organization"),
-            ("user__first_name", "user__first_name"),
-            ("user__last_name", "user__last_name"),
-            ("user__email", "user__email"),
-        )
-    )
-
-
-class MetadataProviderViewSet(CommonModelViewSet):
-    serializer_class = MetadataProviderModelSerializer
-    queryset = MetadataProvider.objects.all()
-    filter_backends = (filters.DjangoFilterBackend,)
-    filterset_class = MetadataProviderFilter
-    pagination_class = StandardResultsSetPagination
-    http_method_names = ["get", "post", "put", "delete"]
-    access_policy = MetadataProviderAccessPolicy
-
-    def get_queryset(self):
-        return self.access_policy.scope_queryset(self.request, self.queryset)
-
-
 class DatasetFilter(filters.FilterSet):
     title = filters.CharFilter(
         field_name="title",

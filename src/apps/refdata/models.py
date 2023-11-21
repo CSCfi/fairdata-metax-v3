@@ -69,7 +69,7 @@ class AbstractConcept(AbstractBaseModel):
 
     @classmethod
     def get_model_url(cls) -> str:
-        return f"{inflection.dasherize(inflection.underscore(cls.__name__))}s?"
+        return f"{inflection.dasherize(inflection.underscore(cls.__name__))}s"
 
 
 class FieldOfScience(AbstractConcept):

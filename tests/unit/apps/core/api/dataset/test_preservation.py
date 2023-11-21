@@ -137,7 +137,7 @@ def test_delete_dataset_with_preservation(admin_client, preservation_dataset):
 @pytest.mark.usefixtures("data_catalog", "reference_data")
 def test_update_dataset_preservation_indirect(admin_client, preservation_dataset):
     """
-    Try updating dataset's preservation state via the `/v3/dataset/<id>` endpoint
+    Try updating dataset's preservation state via the `/v3/datasets/<id>` endpoint
     and ensure preservation data must be complete in order to be accepted
     """
     preservation_dataset = {

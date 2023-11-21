@@ -41,7 +41,7 @@ def test_dataset_post_dataset_with_files(
     admin_client, deep_file_tree, dataset_json_with_files, data_urls
 ):
     res = admin_client.post(
-        f"/v3/dataset",
+        f"/v3/datasets",
         dataset_json_with_files,
         content_type="application/json",
     )
@@ -65,13 +65,13 @@ def test_dataset_post_dataset_with_files(
 
 def test_dataset_get_dataset_with_files(admin_client, deep_file_tree, dataset_json_with_files):
     res = admin_client.post(
-        f"/v3/dataset",
+        f"/v3/datasets",
         dataset_json_with_files,
         content_type="application/json",
     )
     assert res.status_code == 201
 
-    res = admin_client.get(f"/v3/dataset/{res.data['id']}")
+    res = admin_client.get(f"/v3/datasets/{res.data['id']}")
     assert res.status_code == 200
     assert res.data["fileset"] == {
         # no added_files_count or removed_files_count should be present for GET
@@ -86,13 +86,13 @@ def test_dataset_get_dataset_with_no_files(
     admin_client, deep_file_tree, dataset_json_with_no_files
 ):
     res = admin_client.post(
-        f"/v3/dataset",
+        f"/v3/datasets",
         dataset_json_with_no_files,
         content_type="application/json",
     )
     assert res.status_code == 201
 
-    res = admin_client.get(f"/v3/dataset/{res.data['id']}")
+    res = admin_client.get(f"/v3/datasets/{res.data['id']}")
     assert res.status_code == 200
     assert "files" not in res.data  # no files dict should be present if dataset has no files
 
@@ -101,7 +101,7 @@ def test_dataset_modify_dataset_with_files(
     admin_client, deep_file_tree, dataset_json_with_files, data_urls
 ):
     res = admin_client.post(
-        f"/v3/dataset",
+        f"/v3/datasets",
         dataset_json_with_files,
         content_type="application/json",
     )

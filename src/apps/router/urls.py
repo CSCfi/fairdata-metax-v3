@@ -15,35 +15,30 @@ router = CommonRouter(trailing_slash=False)
 
 # actors app
 router.register(
-    "organizations?",
+    "organizations",
     OrganizationViewSet,
 )
 # core app
-router.register(r"contracts?", core_views.ContractViewSet, basename="contract")
-router.register(r"data-catalogs?", core_views.DataCatalogView, basename="datacatalog")
-router.register(r"datasets?", core_views.DatasetViewSet, basename="dataset")
+router.register(r"contracts", core_views.ContractViewSet, basename="contract")
+router.register(r"data-catalogs", core_views.DataCatalogView, basename="datacatalog")
+router.register(r"datasets", core_views.DatasetViewSet, basename="dataset")
 
 router.register(
-    r"datasets?/(?P<dataset_id>[^/.]+)/files",
+    r"datasets/(?P<dataset_id>[^/.]+)/files",
     core_views.DatasetFilesViewSet,
     basename="dataset-files",
 )
 router.register(
-    r"datasets?/(?P<dataset_id>[^/.]+)/directories",
+    r"datasets/(?P<dataset_id>[^/.]+)/directories",
     core_views.DatasetDirectoryViewSet,
     basename="dataset-directories",
 )
 
-# router.register(r"dataset-actors?", DatasetActorViewSet, basename="dataset-actor")
-router.register(
-    r"metadata-providers?", core_views.MetadataProviderViewSet, basename="metadata-provider"
-)
-router.register(r"publishers?", core_views.PublisherViewSet, basename="publisher")
-router.register(
-    r"migrated-datasets?", core_views.LegacyDatasetViewSet, basename="migrated-dataset"
-)
+# router.register(r"dataset-actors", DatasetActorViewSet, basename="dataset-actor")
+router.register(r"publishers", core_views.PublisherViewSet, basename="publisher")
+router.register(r"migrated-datasets", core_views.LegacyDatasetViewSet, basename="migrated-dataset")
 # files app
-router.register(r"files?", FileViewSet, basename="file")
+router.register(r"files", FileViewSet, basename="file")
 router.register(r"directories", DirectoryViewSet, basename="directory")
 # Refdata app
 for model in reference_data_models:
@@ -52,7 +47,7 @@ for model in reference_data_models:
         get_viewset_for_model(model),
     )
 # Nested routes
-dataset_router = routers.NestedSimpleRouter(router, r"datasets?", lookup="dataset")
+dataset_router = routers.NestedSimpleRouter(router, r"datasets", lookup="dataset")
 dataset_router.register(r"actors", core_views.DatasetActorViewSet, basename="dataset-actors")
 dataset_router.register(r"provenance", core_views.ProvenanceViewSet, basename="dataset-provenance")
 dataset_router.register(
@@ -62,12 +57,12 @@ dataset_router.register(
 )
 # Users list
 if settings.ENABLE_USERS_VIEW:
-    router.register(r"users?", UserViewSet, basename="users")
+    router.register(r"users", UserViewSet, basename="users")
 
 urlpatterns = [
     # Custom patterns
     re_path(
-        r"^datasets?/(?P<dataset_pk>[^/.]+)/preservation$",
+        r"^datasets/(?P<dataset_pk>[^/.]+)/preservation$",
         core_views.PreservationViewSet.as_view(
             {"get": "retrieve", "patch": "partial_update", "put": "update"}
         ),
