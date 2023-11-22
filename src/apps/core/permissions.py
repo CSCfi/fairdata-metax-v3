@@ -22,6 +22,11 @@ class DatasetAccessPolicy(BaseAccessPolicy):
             "effect": "allow",
             "condition": "is_download_allowed",
         },
+        {
+            "action": ["<op:custom_metadata_owner>"],
+            "principal": "group:service",
+            "effect": "allow",
+        },
         {"action": ["create"], "principal": "authenticated", "effect": "allow"},
     ] + BaseAccessPolicy.statements
 
@@ -91,25 +96,3 @@ class DatasetNestedAccessPolicy(BaseAccessPolicy):
                 request.user == dataset.metadata_owner.user
                 or request.user == dataset.system_creator
             )
-
-
-class MetadataProviderAccessPolicy(BaseAccessPolicy):
-    statements = [
-        {
-            "action": ["create", "update", "partial_update", "destroy"],
-            "principal": "group:service",
-            "effect": "allow",
-        },
-        {
-            "action": ["update", "retrieve"],
-            "principal": "authenticated",
-            "effect": "allow",
-            "condition": "is_system_creator",
-        },
-    ] + BaseAccessPolicy.statements
-
-    @classmethod
-    def scope_queryset(cls, request, queryset):
-        if request.user.is_anonymous:
-            return queryset.none()
-        return queryset

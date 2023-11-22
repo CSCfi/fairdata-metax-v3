@@ -22,7 +22,7 @@ def create_dataset(admin_client, end_users, dataset_a_json):
     def _create(access_rights, state=Dataset.StateChoices.PUBLISHED):
         user = end_users[0].user
         dataset_a_json["metadata_owner"] = {
-            "user": {"username": user.username},
+            "user": user.username,
             "organization": "test",
         }
         dataset_a_json["access_rights"] = access_rights

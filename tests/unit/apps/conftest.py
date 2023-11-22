@@ -11,17 +11,6 @@ from rest_framework.reverse import reverse
 from apps.core import factories
 from apps.core.models import Dataset
 from apps.files.factories import create_project_with_files
-from apps.users.models import MetaxUser
-
-
-@pytest.fixture
-def user():
-    user, created = MetaxUser.objects.get_or_create(
-        username="test_user", first_name="Teppo", last_name="Testaaja", is_hidden=False
-    )
-    user.set_password("teppo")
-    user.save()
-    return user
 
 
 @pytest.fixture
@@ -106,13 +95,13 @@ class TokenUsers:
 @pytest.fixture
 def end_users(faker):
     user1 = get_user_model().objects.create(
-        username=faker.simple_profile()["username"], password=faker.password()
+        username=faker.simple_profile()["username"], password=faker.password(), organization="test"
     )
     user2 = get_user_model().objects.create(
-        username=faker.simple_profile()["username"], password=faker.password()
+        username=faker.simple_profile()["username"], password=faker.password(), organization="test"
     )
     user3 = get_user_model().objects.create(
-        username=faker.simple_profile()["username"], password=faker.password()
+        username=faker.simple_profile()["username"], password=faker.password(), organization="test"
     )
     instance1, token1 = AuthToken.objects.create(user=user1)
     instance2, token2 = AuthToken.objects.create(user=user2)

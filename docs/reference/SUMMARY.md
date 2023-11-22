@@ -58,6 +58,7 @@
             - [dataset_serializer](src/apps/core/serializers/dataset_serializer.md)
             - [file_metadata_serializer](src/apps/core/serializers/file_metadata_serializer.md)
             - [legacy_serializer](src/apps/core/serializers/legacy_serializer.md)
+            - [metadata_provider_serializer](src/apps/core/serializers/metadata_provider_serializer.md)
             - [preservation_serializers](src/apps/core/serializers/preservation_serializers.md)
             - [provenance_serializers](src/apps/core/serializers/provenance_serializers.md)
         - [signals](src/apps/core/signals.md)

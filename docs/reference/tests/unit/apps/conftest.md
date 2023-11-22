@@ -1,9 +1,5 @@
 # conftest
 
-## user
-
-### :::tests.unit.apps.conftest.user
-
 ## data_urls
 
 ### :::tests.unit.apps.conftest.data_urls

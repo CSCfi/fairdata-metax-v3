@@ -32,6 +32,10 @@
 
 ### :::tests.unit.docs.examples.test_datasets_api.dataset_v3_modify_json
 
+## metadata_owner_json
+
+### :::tests.unit.docs.examples.test_datasets_api.metadata_owner_json
+
 ## test_dataset_snippets
 
 ### :::tests.unit.docs.examples.test_datasets_api.test_dataset_snippets

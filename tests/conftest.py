@@ -18,6 +18,17 @@ from rest_framework.test import APIClient, RequestsClient
 from apps.core import factories
 from apps.core.models.data_catalog import DataCatalog
 from apps.users.factories import MetaxUserFactory
+from apps.users.models import MetaxUser
+
+
+@pytest.fixture
+def user():
+    user, created = MetaxUser.objects.get_or_create(
+        username="test_user", first_name="Teppo", last_name="Testaaja", is_hidden=False
+    )
+    user.set_password("teppo")
+    user.save()
+    return user
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -479,6 +490,12 @@ def api_client() -> APIClient:
 @pytest.fixture
 def requests_client():
     return RequestsClient()
+
+
+@pytest.fixture
+def user_client(client, user):
+    client.force_login(user)
+    return client
 
 
 @pytest.fixture(autouse=True)

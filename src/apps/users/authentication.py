@@ -102,7 +102,7 @@ class SSOAuthentication(authentication.SessionAuthentication):
                 detail=_("Missing user identifier."), code="missing_fairdata_user_id"
             )
 
-        if not sso_user.get("organization").get("id"):
+        if not sso_user.get("organization", {}).get("id"):
             logger.warning("Authentication failed: missing organization id")
             raise exceptions.AuthenticationFailed(
                 detail=_("Missing organization identifier."), code="missing_organization_id"
@@ -130,6 +130,9 @@ class SSOAuthentication(authentication.SessionAuthentication):
             sso_user = sso_session.get("authenticated_user", {})
             user.first_name = sso_user.get("firstname", "")
             user.last_name = sso_user.get("lastname", "")
+            user.organization = (
+                sso_session.get("authenticated_user").get("organization", {}).get("id")
+            )
 
             fairdata_user = sso_session.get("fairdata_user", {})
             user.is_active = not fairdata_user.get("locked", True)

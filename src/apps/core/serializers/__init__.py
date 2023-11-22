@@ -5,7 +5,6 @@ from .common_serializers import (
     DatasetActorProvenanceSerializer,
     DatasetPublisherModelSerializer,
     LicenseModelSerializer,
-    MetadataProviderModelSerializer,
     MetaxUserModelSerializer,
     TemporalModelSerializer,
 )
@@ -18,5 +17,6 @@ from .dataset_allowed_actions import (
 from .dataset_files_serializer import FileSetSerializer
 from .dataset_serializer import DatasetSerializer
 from .legacy_serializer import LegacyDatasetModelSerializer
+from .metadata_provider_serializer import MetadataProviderModelSerializer
 from .preservation_serializers import ContractModelSerializer, PreservationModelSerializer
 from .provenance_serializers import ProvenanceModelSerializer

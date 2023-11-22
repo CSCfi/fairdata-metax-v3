@@ -220,7 +220,7 @@ class NestedModelSerializer(serializers.ModelSerializer):
         related_instances = {}
         for serializer in serializers.values():
             data = related_data.pop(serializer.field_name, None)
-            if data not in EMPTY_VALUES:
+            if data is not None:
                 if instance:
                     self.inject_instance_to_data(serializer, instance, data)
                 serializer.instance = (

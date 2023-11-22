@@ -12,7 +12,3 @@
 
 ### :::src.apps.core.permissions.DatasetNestedAccessPolicy
 
-## MetadataProviderAccessPolicy
-
-### :::src.apps.core.permissions.MetadataProviderAccessPolicy
-

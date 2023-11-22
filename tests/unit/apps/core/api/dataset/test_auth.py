@@ -11,11 +11,11 @@ def test_creator_and_owner_sees_draft(
 
     endpoint = reverse("dataset-list")
     url = f"{live_server.url}{endpoint}"
-    requests_client.headers.update({"Authorization": f"Bearer {user1.token}"})
+    requests_client.headers.update({"Authorization": f"Bearer {user3.token}"})
 
     dataset_a_json["metadata_owner"] = {
-        "user": {"username": user3.user.username},
-        "organization": "CSC",
+        "user": user3.user.username,
+        "organization": "test",
     }
     dataset_a_json["state"] = "draft"
 

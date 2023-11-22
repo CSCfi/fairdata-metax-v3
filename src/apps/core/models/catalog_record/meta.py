@@ -77,7 +77,7 @@ class CatalogRecord(AbstractBaseModel):
     metadata_owner = models.ForeignKey(
         MetadataProvider,
         on_delete=models.CASCADE,
-        related_name="metadata_owner",
+        related_name="records",
         null=True,
     )
     last_modified_by = models.ForeignKey(

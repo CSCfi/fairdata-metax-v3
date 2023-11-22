@@ -332,9 +332,15 @@ class LegacyDataset(Dataset):
         metadata_user, user_created = MetaxUser.objects.get_or_create(
             username=self.metadata_provider_user
         )
-        metadata_owner, owner_created = MetadataProvider.objects.get_or_create(
+        owner_created = False
+        metadata_owner = MetadataProvider.objects.filter(
             user=metadata_user, organization=self.metadata_provider_org
-        )
+        ).first()
+        if not metadata_owner:
+            metadata_owner = MetadataProvider.objects.create(
+                user=metadata_user, organization=self.metadata_provider_org
+            )
+            owner_created = True
         if owner_created:
             self.created_objects += 1
         if user_created:

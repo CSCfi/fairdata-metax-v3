@@ -52,6 +52,11 @@ def dataset_v3_modify_json():
     return load_test_json("dataset_api/modify-dataset.json")
 
 
+@pytest.fixture
+def metadata_owner_json():
+    return load_test_json("dataset_api/metadata_owner.json")
+
+
 def test_dataset_snippets(
     admin_client,
     data_catalog,
@@ -63,6 +68,7 @@ def test_dataset_snippets(
     temporal_json,
     relation_json,
     remote_resources_json,
+    metadata_owner_json,
 ):
     data = {
         "title": {"fi": "datasetti"},
@@ -74,6 +80,7 @@ def test_dataset_snippets(
         "temporal": temporal_json["temporal"],
         "relation": relation_json["relation"],
         "remote_resources": remote_resources_json["remote_resources"],
+        "metadata_owner": metadata_owner_json["metadata_owner"],
     }
     res = admin_client.post("/v3/datasets", data, content_type="application/json")
     assert res.status_code == 201
@@ -107,6 +114,11 @@ def test_dataset_snippets(
         remote_resources_json["remote_resources"],
         res.json()["remote_resources"],
         check_list_length=True,
+    )
+
+    assert_nested_subdict(
+        metadata_owner_json["metadata_owner"],
+        res.json()["metadata_owner"],
     )
 
 

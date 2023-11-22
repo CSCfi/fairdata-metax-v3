@@ -77,12 +77,7 @@
   "state": "published",
   "cumulative_state": 1,
   "metadata_owner": {
-    "user": {
-      "username": "teppo",
-      "email": "teppo@csc.fi",
-      "first_name": "Teppo",
-      "last_name": "Teppo"
-    },
+    "user": "teppo",
     "organization": "CSC"
   }
 }

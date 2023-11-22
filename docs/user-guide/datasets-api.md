@@ -89,6 +89,9 @@ There are multiple optional fields can be used to provide additional information
 | Spatial coverage        | spatial           | list of object                                                     |
 | Temporal coverage       | temporal          | list of object                                                     |
 | Remote resources        | remote_resources  | list of object                                                     |
+| Metadata owner          | metadata_owner    | object                                                             |
+
+
 
 ### Spatial coverage
 
@@ -137,6 +140,17 @@ Dataset files and remote resources are exclusive with each other, so a dataset c
     ``` json
     ---8<--- "tests/unit/docs/examples/test_data/dataset_api/remote_resources.json"
     ```
+
+### Metadata owner
+
+Metadata owner describes who owns the dataset. Normally this is determined
+automatically on dataset creation based on authenticated user and can be omitted.
+Special privileges are required to change the automatically assigned values.
+
+``` json
+---8<--- "tests/unit/docs/examples/test_data/dataset_api/metadata_owner.json"
+```
+
 
 
 ### Versioning and revisions

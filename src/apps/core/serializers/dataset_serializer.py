@@ -16,13 +16,13 @@ from apps.core.serializers.common_serializers import (
     AccessRightsModelSerializer,
     DatasetActorModelSerializer,
     EntityRelationSerializer,
-    MetadataProviderModelSerializer,
     OtherIdentifierModelSerializer,
     RemoteResourceSerializer,
     TemporalModelSerializer,
 )
 from apps.core.serializers.concept_serializers import SpatialModelSerializer
 from apps.core.serializers.dataset_allowed_actions import DatasetAllowedActionsSerializer
+from apps.core.serializers.metadata_provider_serializer import MetadataProviderModelSerializer
 from apps.core.serializers.preservation_serializers import PreservationModelSerializer
 
 # for preventing circular import, using submodule instead of apps.core.serializers
@@ -72,6 +72,15 @@ class DatasetSerializer(CommonNestedModelSerializer):
         if not self.context["view"].query_params.get("include_allowed_actions"):
             fields.pop("allowed_actions", None)
         return fields
+
+    def save(self, **kwargs):
+        # If missing, assign metadata owner with metadata_owner.save()
+        if not (self.instance and self.instance.metadata_owner):
+            # Nested serializer is not called with None,
+            # so use {} as "empty" value.
+            if not self._validated_data.get("metadata_owner"):
+                self._validated_data["metadata_owner"] = {}
+        super().save(**kwargs)
 
     def to_representation(self, instance):
         request = self.context.get("request")

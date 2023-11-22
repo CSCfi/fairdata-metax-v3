@@ -355,7 +355,7 @@ other fields have been removed or simplified:
 | include_legacy          | :no_entry:                                 |
 | latest                  | :question: [^3]                            |
 | metadata_owner_org      | `metadata_owner__organization` :star:      |
-| metadata_provider_user  | `metadata_owner__user__username` :star:    |
+| metadata_provider_user  | `metadata_owner__user` :star:              |
 | N/A                     | `data_catalog__title` :star:               |
 | N/A                     | `title` :star:                             |
 | N/A                     | search :star:                              |
@@ -364,7 +364,7 @@ other fields have been removed or simplified:
 | preferred_identifier    | `persistent_identifier`                    |
 | projects                | :clock:                                    |
 | research_dataset_fields | :no_entry:                                 |
-| user_created            | `metadata_owner__user__username` :star:    |
+| user_created            | `metadata_owner__user` :star:              |
 
 ### Endpoints
 

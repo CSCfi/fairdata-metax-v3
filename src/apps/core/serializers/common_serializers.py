@@ -12,6 +12,7 @@ from typing import Optional
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
+from rest_framework.settings import api_settings
 
 from apps.actors.models import Organization, Person
 from apps.actors.serializers import OrganizationSerializer, PersonModelSerializer
@@ -24,7 +25,7 @@ from apps.common.serializers import (
     CommonNestedModelSerializer,
 )
 from apps.common.serializers.fields import ChecksumField, MediaTypeField
-from apps.common.serializers.serializers import CommonModelSerializer
+from apps.common.serializers.serializers import CommonModelSerializer, StrictSerializer
 from apps.core.models import (
     AccessRights,
     CatalogHomePage,
@@ -46,6 +47,8 @@ from apps.core.models.concepts import (
     UseCategory,
 )
 from apps.core.models.entity import Entity
+from apps.core.permissions import DatasetAccessPolicy
+from apps.users.models import MetaxUser
 from apps.users.serializers import MetaxUserModelSerializer
 
 logger = logging.getLogger(__name__)
@@ -210,35 +213,6 @@ class DatasetActorModelSerializer(CommonModelSerializer):
 class DatasetActorProvenanceSerializer(DatasetActorModelSerializer):
     class Meta(DatasetActorModelSerializer.Meta):
         fields = ("id", "person", "organization")
-
-
-class MetadataProviderModelSerializer(AbstractDatasetModelSerializer):
-    user = MetaxUserModelSerializer()
-
-    class Meta:
-        model = MetadataProvider
-        fields = ("id", "user", "organization")
-
-    def create(self, validated_data):
-        user = None
-
-        if user_data := validated_data.pop("user", None):
-            user, created = get_user_model().objects.get_or_create(**user_data)
-
-        new_metadata_provider: MetadataProvider = MetadataProvider.objects.create(
-            user=user, **validated_data
-        )
-
-        return new_metadata_provider
-
-    def update(self, instance, validated_data):
-        user_serializer = self.fields["user"]
-        user_instance = instance.user
-
-        if user_data := validated_data.pop("user", None):
-            instance.user = update_or_create_instance(user_serializer, user_instance, user_data)
-
-        return super().update(instance, validated_data)
 
 
 class OtherIdentifierListSerializer(serializers.ListSerializer):

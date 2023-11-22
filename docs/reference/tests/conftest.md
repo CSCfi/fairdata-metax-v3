@@ -1,5 +1,9 @@
 # conftest
 
+## user
+
+### :::tests.conftest.user
+
 ## faker_session_locale
 
 ### :::tests.conftest.faker_session_locale
@@ -87,6 +91,10 @@
 ## requests_client
 
 ### :::tests.conftest.requests_client
+
+## user_client
+
+### :::tests.conftest.user_client
 
 ## tweaked_settings
 

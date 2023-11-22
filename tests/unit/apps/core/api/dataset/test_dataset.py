@@ -18,6 +18,7 @@ pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
 def test_create_dataset(admin_client, dataset_a_json, data_catalog, reference_data):
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 201
+    assert_nested_subdict({"user": "admin", "organization": "admin"}, res.data["metadata_owner"])
     assert_nested_subdict(dataset_a_json, res.data)
 
 
@@ -139,11 +140,46 @@ def test_create_dataset_with_metadata_owner(
 ):
     dataset_a_json["metadata_owner"] = {
         "organization": "organization-a.fi",
-        "user": {"username": "metax-user-a"},
+        "user": "metax-user-a",
     }
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
 
     assert res.status_code == 201
+    assert_nested_subdict(dataset_a_json["metadata_owner"], res.data["metadata_owner"])
+
+
+def test_patch_metadata_owner(admin_client, dataset_a_json, data_catalog, reference_data):
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    new_owner = {
+        "organization": "organization-a.fi",
+        "user": "metax-user-a",
+    }
+    dataset_id = res.data["id"]
+    res = admin_client.patch(
+        f"/v3/datasets/{dataset_id}",
+        {"metadata_owner": new_owner},
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert_nested_subdict(new_owner, res.data["metadata_owner"])
+
+
+def test_patch_metadata_owner_not_allowed(
+    user_client, dataset_a_json, data_catalog, reference_data
+):
+    """End-user cannot use custom metadata owner values."""
+    res = user_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    new_owner = {
+        "organization": "organization-a.fi",
+        "user": "metax-user-a",
+    }
+    dataset_id = res.data["id"]
+    res = user_client.patch(
+        f"/v3/datasets/{dataset_id}",
+        {"metadata_owner": new_owner},
+        content_type="application/json",
+    )
+    assert res.status_code == 400
 
 
 def test_create_dataset_with_actor(dataset_c, data_catalog, reference_data):
