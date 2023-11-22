@@ -22,7 +22,7 @@ def test_directory_field_values(client, file_tree_b):
         {
             "directory": {
                 "storage_service": "ida",
-                "project": "project_x",
+                "csc_project": "project_x",
                 "name": "",
                 "pathname": "/",
                 "file_count": 3,
@@ -34,14 +34,14 @@ def test_directory_field_values(client, file_tree_b):
             "directories": [
                 {
                     "storage_service": "ida",
-                    "project": "project_x",
+                    "csc_project": "project_x",
                     "name": "dir",
                     "pathname": "/dir/",
                     "file_count": 2,
                     "size": 3200,
                     "created": file_tree_b["files"]["/dir/first"].modified,
                     "modified": file_tree_b["files"]["/dir/last"].modified,
-                    "url": "http://testserver/v3/directories?pagination=False&project=project_x&storage_service=ida&path=/dir/",
+                    "url": "http://testserver/v3/directories?pagination=False&csc_project=project_x&storage_service=ida&path=/dir/",
                 }
             ],
             "files": [
@@ -50,7 +50,7 @@ def test_directory_field_values(client, file_tree_b):
                     "pathname": "/rootfile.txt",
                     "filename": "rootfile.txt",
                     "size": 10,
-                    "project": "project_x",
+                    "csc_project": "project_x",
                     "storage_service": "ida",
                     "storage_identifier": "file_rootfile.txt_00000000-0000-0000-0000-000000000000",
                     "checksum": "md5:f00f",

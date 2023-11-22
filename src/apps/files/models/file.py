@@ -64,9 +64,9 @@ class File(SystemCreatorBaseModel, SoftDeletableModel):
         self.directory_path = f"{path}/"
 
     @property
-    def project(self) -> str:
+    def csc_project(self) -> str:
         if self.storage:
-            return self.storage.project
+            return self.storage.csc_project
 
     @property
     def storage_service(self) -> str:

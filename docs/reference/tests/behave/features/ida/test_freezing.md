@@ -1,8 +1,8 @@
 # test_freezing
 
-## project
+## csc_project
 
-### :::tests.behave.features.ida.test_freezing.project
+### :::tests.behave.features.ida.test_freezing.csc_project
 
 ## files_json
 

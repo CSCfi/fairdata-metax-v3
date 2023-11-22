@@ -210,8 +210,8 @@ class FileSet(AbstractBaseModel):
         return self.total_files_aggregates["total_files_count"]
 
     @property
-    def project(self) -> str:
-        return self.storage.project
+    def csc_project(self) -> str:
+        return self.storage.csc_project
 
     @property
     def storage_service(self) -> str:

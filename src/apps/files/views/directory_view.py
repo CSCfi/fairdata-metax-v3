@@ -85,7 +85,7 @@ class DirectoryQueryParams(DirectoryCommonQueryParams):
     """Add project, storage and dataset specific parameters for directory."""
 
     storage_service = StorageServiceField(write_only=True)
-    project = fields.CharField(write_only=True, default=None)
+    csc_project = fields.CharField(write_only=True, default=None)
 
     # FileStorage is determined from project and storage_service
     storage_id = fields.CharField(read_only=True)
@@ -168,8 +168,8 @@ class DirectoryViewSet(viewsets.ViewSet):
         used_fields = used_file_fields | used_ordering_fields
         if "pathname" in used_fields or "-pathname" in used_fields:
             files = files.annotate(pathname=Concat("directory_path", "filename"))
-        if "project" in used_file_fields:
-            files = files.annotate(project=F("storage__project"))
+        if "csc_project" in used_file_fields:
+            files = files.annotate(csc_project=F("storage__csc_project"))
         return files
 
     def get_directory_files(self, params):

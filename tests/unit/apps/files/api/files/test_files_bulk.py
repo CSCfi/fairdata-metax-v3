@@ -16,7 +16,7 @@ pytestmark = [pytest.mark.django_db, pytest.mark.file]
 def build_files_json(file_kwargs: List[dict], storage=None):
     if storage is None:
         storage = factories.FileStorageFactory(
-            project="project_x",
+            csc_project="project_x",
             storage_service="ida",
         )
 
@@ -45,17 +45,17 @@ def build_files_json(file_kwargs: List[dict], storage=None):
 
 
 @pytest.fixture
-def project() -> FileStorage:
+def csc_project() -> FileStorage:
     return factories.FileStorageFactory(
-        project="project_x",
+        csc_project="project_x",
         storage_service="ida",
     )
 
 
 @pytest.fixture
-def another_project() -> FileStorage:
+def another_csc_project() -> FileStorage:
     return factories.FileStorageFactory(
-        project="project_abc",
+        csc_project="project_abc",
         storage_service="ida",
     )
 
@@ -144,9 +144,11 @@ def test_files_insert_many_missing_storage_identifier(admin_client, action_url):
     )
 
 
-def test_files_insert_many_multiple_storages(admin_client, project, another_project, action_url):
-    files = build_files_json([{"id": None}], storage=project)
-    files += build_files_json([{"id": None}], storage=another_project)
+def test_files_insert_many_multiple_storages(
+    admin_client, csc_project, another_csc_project, action_url
+):
+    files = build_files_json([{"id": None}], storage=csc_project)
+    files += build_files_json([{"id": None}], storage=another_csc_project)
     res = admin_client.post(action_url("insert"), files, content_type="application/json")
     assert res.status_code == 200
     assert_nested_subdict(
@@ -161,7 +163,7 @@ def test_files_insert_many_multiple_storages(admin_client, project, another_proj
 def test_files_insert_many_missing_required_fields(admin_client, action_url):
     files = build_files_json(
         [
-            {"exists": False, "fields": ["project", "storage"]},
+            {"exists": False, "fields": ["csc_project", "storage"]},
         ]
     )
     res = admin_client.post(action_url("insert"), files, content_type="application/json")
@@ -217,12 +219,12 @@ def test_files_insert_many_id_not_allowed(admin_client, action_url):
     )
 
 
-def test_files_insert_many_file_path_already_exists(admin_client, project, action_url):
+def test_files_insert_many_file_path_already_exists(admin_client, csc_project, action_url):
     existing_files = build_files_json(
-        [{"exists": True, "pathname": "/data/1.txt"}], storage=project
+        [{"exists": True, "pathname": "/data/1.txt"}], storage=csc_project
     )
     files = build_files_json(
-        [{"exists": False, "id": None, "pathname": "/data/1.txt"}], storage=project
+        [{"exists": False, "id": None, "pathname": "/data/1.txt"}], storage=csc_project
     )
     res = admin_client.post(
         action_url("insert", ignore_errors=True), files, content_type="application/json"
@@ -312,11 +314,11 @@ def test_files_insert_many_with_external_id(admin_client, action_url):
 
 def test_files_insert_many_same_external_id_different_storage(admin_client, action_url):
     storage_ida = factories.FileStorageFactory(
-        project="project_x",
+        csc_project="project_x",
         storage_service="ida",
     )
     storage_pas = factories.FileStorageFactory(
-        project="project_x",
+        csc_project="project_x",
         storage_service="pas",
     )
     files = [
@@ -423,10 +425,10 @@ def test_files_update_many_read_only_field(admin_client, action_url):
 def test_files_update_many_change_project_for_existing(admin_client, action_url):
     files = build_files_json([{"exists": True}])
     factories.FileStorageFactory(
-        project="another_project",
+        csc_project="another_project",
         storage_service="ida",
     )
-    files[0].update(project="another_project")
+    files[0].update(csc_project="another_project")
     res = admin_client.post(action_url("update"), files, content_type="application/json")
     assert res.status_code == 400
     match_readonly = RegexField("Cannot change value")
@@ -437,7 +439,7 @@ def test_files_update_many_change_project_for_existing(admin_client, action_url)
                 {
                     "object": files[0],
                     "errors": {
-                        "project": match_readonly,
+                        "csc_project": match_readonly,
                     },
                 }
             ],
@@ -635,9 +637,11 @@ def test_files_delete_many_non_existing(admin_client):
     File.all_objects.filter(id__in=[f["id"] for f in files], is_removed=True).count() == 3
 
 
-def test_files_delete_many_multiple_projects(admin_client, project, another_project, action_url):
-    files = build_files_json([{"exists": True}], storage=project)
-    files += build_files_json([{"exists": True}], storage=another_project)
+def test_files_delete_many_multiple_projects(
+    admin_client, csc_project, another_csc_project, action_url
+):
+    files = build_files_json([{"exists": True}], storage=csc_project)
+    files += build_files_json([{"exists": True}], storage=another_csc_project)
     res = admin_client.post(action_url("delete"), files, content_type="application/json")
     assert res.status_code == 200
     assert_nested_subdict(
@@ -649,8 +653,8 @@ def test_files_delete_many_multiple_projects(admin_client, project, another_proj
     )
 
 
-def test_files_delete_duplicate_id(admin_client, project, another_project, action_url):
-    files = build_files_json([{"exists": True}], storage=project)
+def test_files_delete_duplicate_id(admin_client, csc_project, another_csc_project, action_url):
+    files = build_files_json([{"exists": True}], storage=csc_project)
     files += files
     res = admin_client.post(
         action_url("delete", ignore_errors=True), files, content_type="application/json"

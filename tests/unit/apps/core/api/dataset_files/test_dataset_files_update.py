@@ -29,7 +29,7 @@ def test_dataset_files_post_empty(admin_client, deep_file_tree, data_urls):
     assert fileset["removed_files_count"] == 0
     assert fileset["total_files_count"] == 0
     assert fileset["total_files_size"] == 0
-    assert fileset["project"] == deep_file_tree["params"]["project"]
+    assert fileset["csc_project"] == deep_file_tree["params"]["csc_project"]
 
     res = admin_client.get(urls["files"])
     assert res.status_code == 200
@@ -52,7 +52,7 @@ def test_dataset_files_post_multiple_file_sets(admin_client, deep_file_tree, dat
     assert res.status_code == 200
 
     # Cannot alter storage for existing FileSet
-    factories.FileStorageFactory(storage_service="test", project=None)
+    factories.FileStorageFactory(storage_service="test", csc_project=None)
     res = admin_client.patch(
         urls["dataset"],
         {"fileset": {"storage_service": "test"}},
@@ -61,7 +61,7 @@ def test_dataset_files_post_multiple_file_sets(admin_client, deep_file_tree, dat
 
     assert res.status_code == 400
     assert res.json() == {
-        "project": "Wrong project for fileset.",
+        "csc_project": "Wrong csc_project for fileset.",
         "storage_service": "Wrong storage_service for fileset.",
     }
 
@@ -669,7 +669,7 @@ def test_dataset_files_wrong_project_identifier(admin_client, deep_file_tree, da
         storage_service=deep_file_tree["storage"].storage_service
     )
     actions = {
-        "project": other_storage.project,
+        "csc_project": other_storage.csc_project,
         "storage_service": other_storage.storage_service,
         "directory_actions": [{"pathname": "/dir1/"}],
         "file_actions": [{"id": deep_file_tree["files"]["/rootfile.txt"].id}],
@@ -687,7 +687,7 @@ def test_dataset_files_wrong_project_identifier(admin_client, deep_file_tree, da
 def test_dataset_files_unknown_project_identifier(admin_client, deep_file_tree, data_urls):
     dataset = factories.DatasetFactory()
     actions = {
-        "project": "bleh",
+        "csc_project": "bleh",
         "storage_service": deep_file_tree["params"]["storage_service"],
         "directory_actions": [{"pathname": "/dir1/"}],
     }
@@ -698,12 +698,12 @@ def test_dataset_files_unknown_project_identifier(admin_client, deep_file_tree, 
         content_type="application/json",
     )
     assert res.status_code == 400
-    assert "project" in str(res.data["fileset"])
+    assert "csc_project" in str(res.data["fileset"])
 
 
 def test_dataset_files_file_from_wrong_storage_service(admin_client, data_urls, deep_file_tree):
     dataset = factories.DatasetFactory()
-    factories.FileStorageFactory(storage_service="test", project=None)
+    factories.FileStorageFactory(storage_service="test", csc_project=None)
     urls = data_urls(dataset)
     actions = {
         "storage_service": "test",
@@ -728,7 +728,7 @@ def test_dataset_files_missing_project_identifier(admin_client, data_urls):
         content_type="application/json",
     )
     assert res.status_code == 400
-    assert "Field is required" in res.data["fileset"]["project"]
+    assert "Field is required" in res.data["fileset"]["csc_project"]
 
 
 def test_dataset_add_files_by_pathname(admin_client, deep_file_tree, data_urls):

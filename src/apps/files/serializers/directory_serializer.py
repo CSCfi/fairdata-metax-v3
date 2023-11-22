@@ -20,14 +20,14 @@ class ContextFileStorageMixin(serializers.Serializer):
     """Serializer mixin that gets FileStorage fields from context."""
 
     storage_service = serializers.SerializerMethodField()
-    project = serializers.SerializerMethodField()
+    csc_project = serializers.SerializerMethodField()
 
     def get_storage(self, obj) -> FileStorage:
         return self.context.get("storage")
 
-    def get_project(self, obj):
+    def get_csc_project(self, obj):
         if "storage" in self.context:
-            return self.context["storage"].project
+            return self.context["storage"].csc_project
 
     def get_storage_service(self, obj):
         if "storage" in self.context:

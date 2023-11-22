@@ -9,9 +9,9 @@ from . import models
 class FileStorageFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.FileStorage
-        django_get_or_create = ("project", "storage_service")
+        django_get_or_create = ("csc_project", "storage_service")
 
-    project = factory.Faker("numerify", text="#######")
+    csc_project = factory.Faker("numerify", text="#######")
     storage_service = "ida"
 
 
@@ -90,7 +90,7 @@ def create_file_tree(storage, file_paths, file_args={}) -> Dict[str, models.File
     return files
 
 
-def create_project_with_files(*args, project=None, storage_service=None, **kwargs) -> dict:
+def create_project_with_files(*args, csc_project=None, storage_service=None, **kwargs) -> dict:
     """Create a storage project and add files to it.
 
     Passes arguments to create_file_tree.
@@ -99,7 +99,7 @@ def create_project_with_files(*args, project=None, storage_service=None, **kwarg
         key: value
         for key, value in {
             "storage_service": storage_service,
-            "project": project,
+            "csc_project": csc_project,
         }.items()
         if value is not None  # remove "None" values so defaults will be used instead
     }
@@ -114,7 +114,7 @@ def create_project_with_files(*args, project=None, storage_service=None, **kwarg
         "files": files,
         "storage": storage,
         "params": {
-            "project": storage.project,
+            "csc_project": storage.csc_project,
             "storage_service": storage.storage_service,
         },
     }

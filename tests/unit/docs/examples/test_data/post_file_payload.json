@@ -1,7 +1,7 @@
 {
   "storage_identifier": "file-id",
   "pathname": "/data/file.txt",
-  "project": "project",
+  "csc_project": "csc_project",
   "size": 1024,
   "storage_service": "ida",
   "checksum": "md5:f00f1234",

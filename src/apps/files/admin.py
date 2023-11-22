@@ -20,14 +20,14 @@ from apps.files.models import (
 
 @admin.register(File)
 class FileAdmin(AbstractDatasetPropertyBaseAdmin):
-    list_display = ("filename", "pathname", "project", "storage")
+    list_display = ("filename", "pathname", "csc_project", "storage")
 
     def get_name(self, obj):
         return obj.author.name
 
     list_filter = [
         "frozen",
-        "storage__project",
+        "storage__csc_project",
     ]
     formfield_overrides = {
         TextField: {"widget": TextInput()},
@@ -36,7 +36,7 @@ class FileAdmin(AbstractDatasetPropertyBaseAdmin):
 
 @admin.register(FileStorage)
 class FileStorageAdmin(AbstractDatasetPropertyBaseAdmin, PolymorphicParentModelAdmin):
-    list_display = ("id", "storage_service", "project")
+    list_display = ("id", "storage_service", "csc_project")
     readonly_fields = ("file_count",)
 
     def get_readonly_fields(self, request, obj=None):

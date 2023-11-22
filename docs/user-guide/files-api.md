@@ -27,17 +27,17 @@ Each file is associated with a storage service such as IDA,
 defined with `storage_service` field.
 Storage services may have additional parameters that are used
 for organizing files. For example, each file in IDA belongs
-to a project as specified by the `project` field.
+to a project as specified by the `csc_project` field.
 A set of `storage_service` and related parameters define
 a file storage in Metax. A single dataset may only have
 files from a single file storage.
 
 Below is a list of currently supported services.
 
-| Service      | storage_service value | project required |
-| ------------ | --------------------- | ---------------- |
-| Fairdata IDA | ida                   | yes              |
-| Fairdata PAS | pas                   | yes              |
+| Service      | storage_service value | csc_project required |
+|--------------|-----------------------|----------------------|
+| Fairdata IDA | ida                   | yes                  |
+| Fairdata PAS | pas                   | yes                  |
 
 ## Browsing files in Metax
 
@@ -45,11 +45,11 @@ Files are accessed with the `/v3/files` endpoint. There is also a separate read-
 
 For example, to browse frozen IDA files:
 
-- `GET /v3/files?storage_service=ida&project=<project>` List of all files in IDA project with pagination.
-- `GET /v3/files?storage_service=ida&project=<project>&pagination=false` List all files in IDA project without pagination. Not recommended for large projects.
+- `GET /v3/files?storage_service=ida&csc_project=<project>` List of all files in IDA project with pagination.
+- `GET /v3/files?storage_service=ida&csc_project=<project>&pagination=false` List all files in IDA project without pagination. Not recommended for large projects.
 - `GET /v3/files?file_storage=ida&storage_identifier=<id>&pagination=false` Returns IDA file with specified `storage_identifier` in a list.
-- `GET /v3/directories?storage_service=ida&project=<project>` View root directory contents of an IDA project.
-- `GET /v3/directories?storage_service=ida&project=<project>&path=/dir/subdir/` View contents of `/dir/subdir/` of an IDA project.
+- `GET /v3/directories?storage_service=ida&csc_project=<project>` View root directory contents of an IDA project.
+- `GET /v3/directories?storage_service=ida&csc_project=<project>&path=/dir/subdir/` View contents of `/dir/subdir/` of an IDA project.
 
 For examples on browsing dataset files or directories, see [Datasets API](datasets-api.md#dataset-files).
 
@@ -72,7 +72,7 @@ in a directory, including subdirectories.
 <details><summary>Example directory response</summary>
 
 This is an example of what the response for
-GET /v3/directories?storage_service=ida&project=project&path=/data/
+GET /v3/directories?storage_service=ida&csc_project=project&path=/data/
 might look like.
 
 ```json
@@ -83,19 +83,19 @@ might look like.
   "results": {
     "directory": {
       "storage_service": "ida",
-      "project": "project",
+      "csc_project": "project",
       "name": "data",
       "pathname": "/data/",
       "file_count": 5,
       "size": 1024,
       "created": "2022-11-12T12:34:00+02:00",
       "modified": "2022-11-13T14:34:00+02:00",
-      "parent_url": "https://m3.fd-dev.csc.fi:8100/v3/directories?storage_service=ida&project=project&path=/"
+      "parent_url": "https://m3.fd-dev.csc.fi:8100/v3/directories?storage_service=ida&csc_project=project&path=/"
     },
     "directories": [
       {
         "storage_service": "ida",
-        "project": "project",
+        "csc_project": "project",
         "name": "subdirectory",
         "pathname": "/data/subdirectory/",
         "file_count": 4,
@@ -113,7 +113,7 @@ might look like.
         "filename": "file1.txt",
         "size": 1024,
         "storage_service": "ida",
-        "project": "project",
+        "csc_project": "project",
         "checksum": "md5:bd0f1dff407071e5db8eb57dde4847a3",
         "frozen": "2022-11-12T13:20:00+02:00",
         "modified": "2022-11-12T12:34:00+02:00",
@@ -189,10 +189,10 @@ array contains objects that were updated and `failed` array contains objects tha
 Bolded fields are required when creating a file.
 
 | Field                                 | key                      | value                          | read only |
-| ------------------------------------- | ------------------------ | ------------------------------ | --------- |
+|---------------------------------------|--------------------------|--------------------------------|-----------|
 | Metax identifier                      | id                       | uuid                           | x         |
 | Storage service                       | **storage_service**      | str                            |           |
-| Service-specific project identifier   | **project\***            | str                            |           |
+| CSC project identifier                | **csc_project\***        | str                            |           |
 | File identifier in external service   | **storage_identifier\*** | str                            |           |
 | File path                             | **pathname**             | str, e.g. /data/file.txt       |           |
 | File name (determined from path)      | filename                 | str, e.g. file.txt             | x         |
@@ -212,11 +212,11 @@ Bolded fields are required when creating a file.
 ### Directory object fields
 
 | Field                                 | key                    | value                                   |
-| ------------------------------------- | ---------------------- | --------------------------------------- |
+|---------------------------------------|------------------------|-----------------------------------------|
 | Earliest file modification date       | created                | datetime                                |
 | Most recent modification date of file | modified               | datetime                                |
 | Storage service                       | storage_service        | str                                     |
-| Service-specific project identifier   | project                | str                                     |
+| CSC project identifier                | csc_project            | str                                     |
 | Directory name                        | name                   | str, e.g. subdir                        |
 | Directory path                        | pathname               | str ending with `/`, e.g. /data/subdir/ |
 | Dataset-specific metadata             | dataset_metadata**\*** | object                                  |

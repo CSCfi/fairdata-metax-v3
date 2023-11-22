@@ -13,18 +13,18 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.fixture
-def project():
+def csc_project():
     return "project_x"
 
 
 @pytest.fixture
-def files_json(project):
+def files_json(csc_project):
     return [
         {
             "storage_identifier": "ida-file-1",
             "pathname": "/data/1.csv",
             "modified": "2022-11-13T12:34:00Z",
-            "project": project,
+            "csc_project": csc_project,
             "storage_service": "ida",
             "size": 1024,
             "checksum": "md5:123",
@@ -33,7 +33,7 @@ def files_json(project):
             "storage_identifier": "ida-file-2",
             "pathname": "/data/2.csv",
             "modified": "2022-11-13T12:34:00Z",
-            "project": project,
+            "csc_project": csc_project,
             "storage_service": "ida",
             "size": 1024,
             "checksum": "md5:123",
@@ -42,7 +42,7 @@ def files_json(project):
             "storage_identifier": "ida-file-3",
             "pathname": "/data/3.csv",
             "modified": "2022-11-13T12:34:00Z",
-            "project": project,
+            "csc_project": csc_project,
             "storage_service": "ida",
             "size": 1024,
             "checksum": "md5:123",
@@ -66,7 +66,7 @@ def post_ida_file(admin_client, files_json):
 
 
 @then("a new file storage is created", target_fixture="created_file_storage")
-def created_file_storage(project) -> FileStorage:
+def created_file_storage(csc_project) -> FileStorage:
     """
 
     Args:
@@ -76,7 +76,7 @@ def created_file_storage(project) -> FileStorage:
         FileStorage: Dataset FileStorage
 
     """
-    return FileStorage.available_objects.get(storage_service="ida", project=project)
+    return FileStorage.available_objects.get(storage_service="ida", csc_project=csc_project)
 
 
 @then("the file storage has the files associated with it")

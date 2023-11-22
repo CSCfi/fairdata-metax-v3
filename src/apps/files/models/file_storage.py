@@ -38,7 +38,7 @@ class FileStorageManagerMixin(ProxyBasePolymorphicManager):
         self.model.validate_object(object)
         try:
             return self.get(
-                project=object["project"],
+                csc_project=object["csc_project"],
                 storage_service=object["storage_service"],
             )
         except self.model.DoesNotExist:
@@ -185,8 +185,8 @@ class FileStorage(ProxyBasePolymorphicModel, AbstractBaseModel):
     storage_service = models.CharField(max_length=64, choices=STORAGE_SERVICE_CHOICES)
 
     # Extra identification fields used only by specific FileStorage types
-    project = models.CharField(max_length=200, null=True, blank=True)
-    all_extra_fields = ["project"]
+    csc_project = models.CharField(max_length=200, null=True, blank=True)
+    all_extra_fields = ["csc_project"]
 
     # A key should uniquely identify a FileStorage instance
     key_type = namedtuple("FileStorageKey", ["storage_service", *all_extra_fields])
@@ -205,7 +205,7 @@ class FileStorage(ProxyBasePolymorphicModel, AbstractBaseModel):
     required_file_fields = set()
 
     class Meta:
-        unique_together = [("project", "storage_service")]
+        unique_together = [("csc_project", "storage_service")]
 
     @classmethod
     @functools.lru_cache
@@ -482,7 +482,7 @@ class BasicFileStorage(FileStorage):
 class ProjectFileStorage(FileStorage):
     """FileStorage that requires project to be set."""
 
-    required_extra_fields = {"project"}
+    required_extra_fields = {"csc_project"}
 
     class Meta:
         proxy = True

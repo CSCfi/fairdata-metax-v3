@@ -22,7 +22,7 @@ from .fields import FileNameField, FilePathField
 logger = logging.getLogger(__name__)
 
 
-def get_or_create_storage(project: str, storage_service: str) -> FileStorage:
+def get_or_create_storage(csc_project: str, storage_service: str) -> FileStorage:
     if storage_service not in settings.STORAGE_SERVICE_FILE_STORAGES:
         raise serializers.ValidationError(
             {
@@ -32,7 +32,7 @@ def get_or_create_storage(project: str, storage_service: str) -> FileStorage:
             }
         )
     storage, created = FileStorage.available_objects.get_or_create(
-        project=project,
+        csc_project=csc_project,
         storage_service=storage_service,
     )
     return storage
@@ -53,14 +53,14 @@ class CreateOnlyFieldsMixin:
 class FileSerializer(CreateOnlyFieldsMixin, CommonModelSerializer):
     create_only_fields = [
         "pathname",
-        "project",
+        "csc_project",
         "storage_service",
         "storage_identifier",
     ]
 
     # FileStorage specific fields
     storage_service = ListValidChoicesField(choices=list(settings.STORAGE_SERVICE_FILE_STORAGES))
-    project = serializers.CharField(max_length=200, default=None)
+    csc_project = serializers.CharField(max_length=200, default=None)
 
     checksum = ChecksumField(max_length=200)
 
@@ -91,7 +91,7 @@ class FileSerializer(CreateOnlyFieldsMixin, CommonModelSerializer):
         if self.instance:
             val.setdefault("id", self.instance.id)
             val.setdefault("storage_service", self.instance.storage.storage_service)
-            val.setdefault("project", self.instance.storage.project)
+            val.setdefault("csc_project", self.instance.storage.csc_project)
 
         if not (self.parent and self.parent.many):
             # When in a list, this should be done in a parent serializer
@@ -117,7 +117,7 @@ class FileSerializer(CreateOnlyFieldsMixin, CommonModelSerializer):
             "filename",
             "size",
             "storage_service",
-            "project",
+            "csc_project",
             "checksum",
             "frozen",
             "modified",

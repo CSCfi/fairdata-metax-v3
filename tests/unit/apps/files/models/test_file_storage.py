@@ -16,7 +16,7 @@ def file_storage_settings(settings):
     settings.STORAGE_SERVICE_FILE_STORAGES.update(
         {
             "basic": "BasicFileStorage",
-            "project": "ProjectFileStorage",
+            "csc_project": "ProjectFileStorage",
             "ida": "IDAFileStorage",
         }
     )
@@ -29,21 +29,21 @@ def test_create_file_storage_basic():
 
 def test_create_file_storage_basic_with_project():
     with pytest.raises(ValueError):
-        FileStorage.objects.create(storage_service="basic", project="x")
+        FileStorage.objects.create(storage_service="basic", csc_project="x")
 
 
 def test_create_file_storage_project():
-    storage = FileStorage.objects.create(storage_service="project", project="x")
+    storage = FileStorage.objects.create(storage_service="csc_project", csc_project="x")
     assert type(storage) == ProjectFileStorage
 
 
 def test_create_file_storage_project_without_project():
     with pytest.raises(ValueError):
-        FileStorage.objects.create(storage_service="project")
+        FileStorage.objects.create(storage_service="csc_project")
 
 
 def test_create_file_storage_ida():
-    storage = FileStorage.objects.create(storage_service="ida", project="x")
+    storage = FileStorage.objects.create(storage_service="ida", csc_project="x")
     assert type(storage) == IDAFileStorage
 
 
@@ -54,9 +54,9 @@ def test_create_file_storage_ida_without_project():
 
 @pytest.fixture
 def multiple_file_storages():
-    FileStorage.objects.create(storage_service="ida", project="x")
-    FileStorage.objects.create(storage_service="ida", project="y")
-    FileStorage.objects.create(storage_service="project", project="x")
+    FileStorage.objects.create(storage_service="ida", csc_project="x")
+    FileStorage.objects.create(storage_service="ida", csc_project="y")
+    FileStorage.objects.create(storage_service="csc_project", csc_project="x")
     FileStorage.objects.create(storage_service="basic")
 
 

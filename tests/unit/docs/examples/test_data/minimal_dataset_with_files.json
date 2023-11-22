@@ -4,7 +4,7 @@
     "en": "Test dataset"
   },
   "fileset": {
-    "project": "test_project",
+    "csc_project": "test_project",
     "storage_service": "ida",
     "directory_actions": [
       {

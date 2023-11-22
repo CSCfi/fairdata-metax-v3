@@ -4,13 +4,13 @@
 
 ### :::tests.unit.apps.files.api.files.test_files_bulk.build_files_json
 
-## project
+## csc_project
 
-### :::tests.unit.apps.files.api.files.test_files_bulk.project
+### :::tests.unit.apps.files.api.files.test_files_bulk.csc_project
 
-## another_project
+## another_csc_project
 
-### :::tests.unit.apps.files.api.files.test_files_bulk.another_project
+### :::tests.unit.apps.files.api.files.test_files_bulk.another_csc_project
 
 ## action_url
 

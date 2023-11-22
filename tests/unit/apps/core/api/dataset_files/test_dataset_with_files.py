@@ -76,7 +76,7 @@ def test_dataset_get_dataset_with_files(admin_client, deep_file_tree, dataset_js
     assert res.data["fileset"] == {
         # no added_files_count or removed_files_count should be present for GET
         "storage_service": deep_file_tree["params"]["storage_service"],
-        "project": deep_file_tree["params"]["project"],
+        "csc_project": deep_file_tree["params"]["csc_project"],
         "total_files_count": 3,
         "total_files_size": 3 * 1024,
     }

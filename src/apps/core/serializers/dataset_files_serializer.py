@@ -65,7 +65,7 @@ class FileSetSerializer(StrictSerializer):
     ```
     {
         "storage_service": ...
-        "project": ...
+        "csc_project": ...
         "directory_actions": [{"action": "add", "pathname": ..., "dataset_metadata": ...}]
         "file_actions": [{"action": "update", "id": ..., "dataset_metadata": ...}]
     }
@@ -92,7 +92,7 @@ class FileSetSerializer(StrictSerializer):
     file_actions = FileActionSerializer(many=True, required=False, write_only=True)
 
     storage_service = StorageServiceField(source="storage.storage_service")
-    project = serializers.CharField(source="storage.project", required=False)
+    csc_project = serializers.CharField(source="storage.csc_project", required=False)
 
     added_files_count = serializers.IntegerField(read_only=True)
     removed_files_count = serializers.IntegerField(read_only=True)
@@ -204,7 +204,7 @@ class FileSetSerializer(StrictSerializer):
         try:
             FileStorage.validate_object(storage_params)
             storage = FileStorage.available_objects.get(
-                project=storage_params.get("project"),
+                csc_project=storage_params.get("csc_project"),
                 storage_service=storage_params.get("storage_service"),
             )
             value["storage"] = storage
@@ -281,8 +281,8 @@ class FileSetSerializer(StrictSerializer):
         """Check that new files don't belong to different FileStorage than FileSet."""
         if file_set:
             errors = {}
-            if file_set.storage.project != attrs["storage"].project:
-                errors["project"] = _("Wrong project for fileset.")
+            if file_set.storage.csc_project != attrs["storage"].csc_project:
+                errors["csc_project"] = _("Wrong csc_project for fileset.")
             if file_set.storage.storage_service != attrs["storage"].storage_service:
                 errors["storage_service"] = _("Wrong storage_service for fileset.")
             if errors:

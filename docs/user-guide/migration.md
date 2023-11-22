@@ -396,8 +396,8 @@ They have been moved under `/v3/` together with the former `/rest/` style endpoi
 | `/rpc/datasets/refresh_directory_content`    | :no_entry:                                             |
 | `/rpc/datasets/fix_deprecated`               | :no_entry:                                             |
 | `/rpc/datasets/flush_user_data`              | `DELETE /v3/users/<id>` :star:                         |
-| `/rpc/files/delete_project`                  | `DELETE /v3/files?project={project}` :star:            |
-| `/rpc/files/flush_project`                   | `DELETE /v3/files?project={project}&flush=true` :star: |
+| `/rpc/files/delete_project`                  | `DELETE /v3/files?csc_project={project}` :star:            |
+| `/rpc/files/flush_project`                   | `DELETE /v3/files?csc_project={project}&flush=true` :star: |
 | `/rpc/statistics/*`                          | :question:                                             |
 
 ### Examples
@@ -623,7 +623,7 @@ See [Directory object fields](./files-api.md#directory-object-fields) for availa
 In V1/V2, a file storage is an object reprenting an external service where files are stored.
 In V3, file storages represent a collection of files in an external service. For example,
 each IDA project has its own file storage object, identified by
-`{"storage_service": "ida", "project": <project> }`.
+`{"storage_service": "ida", "csc_project": <project> }`.
 
 File storages are created automatically when files are added and are not exposed directly through the API.
 
@@ -644,7 +644,7 @@ The `put-many` endpoint will clear any existing file fields that are not specifi
 
 Directories no longer have an identifier, so the `​/rest​/directories​/<id>` endpoints
 have been removed. To get details for a directory,
-`/v3/directories?storage_service=<service>&project_identifier=<project>&path=<path>`
+`/v3/directories?storage_service=<service>&csc_project=<project>&path=<path>`
 contains the directory details for `<path>` in the `parent_directory` object.
 
 Many of the parameters for `/v3/files` and `/v3/directories` have been renamed or have other changes.
@@ -669,7 +669,7 @@ Here are some of the common files API requests and how they map to Metax V3:
 | Restore files (array)             | `POST /rest/v1/files/restore`                                  | not implemented yet                                                                     |
 | File datasets (using Metax id)    | `POST /rest/v1/files/datasets`                                 | `POST /v3/files/datasets`                                                               |
 | File datasets (using external id) | `POST /rest/v1/files/datasets`                                 | `POST /v3/files/datasets?storage_service=<service>`                                     |
-| List directory contents by path   | `GET /rest/v1/directories/files?project=<project>&path=<path>` | `GET /v3/directories?storage_service=<service>&project=<project>&path=<path>`           |
+| List directory contents by path   | `GET /rest/v1/directories/files?csc_project=<project>&path=<path>` | `GET /v3/directories?storage_service=<service>&csc_project=<project>&path=<path>`           |
 
 ### Dataset files
 
@@ -679,7 +679,7 @@ In Metax V3 datasets provide a summary of contained files in the `fileset` objec
     ``` json
       "fileset": {
           "storage_service": "ida",
-          "project": "project",
+          "csc_project": "project",
           "total_files_count": 2,
           "total_files_size": 2048
       },

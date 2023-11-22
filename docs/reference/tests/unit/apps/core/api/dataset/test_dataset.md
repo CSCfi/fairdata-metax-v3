@@ -92,6 +92,14 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_dataset_restricted
 
+## test_dataset_metadata_download_json
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_dataset_metadata_download_json
+
+## test_dataset_metadata_download_json_with_versions
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_dataset_metadata_download_json_with_versions
+
 ## test_dataset_metadata_download_datacite
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_dataset_metadata_download_datacite

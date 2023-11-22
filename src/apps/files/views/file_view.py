@@ -69,8 +69,8 @@ class FileCommonFilterset(filters.FilterSet):
 class FileFilterSet(FileCommonFilterset):
     """Add project and dataset filters to file filterset."""
 
-    project = filters.CharFilter(
-        field_name="storage__project",
+    csc_project = filters.CharFilter(
+        field_name="storage__csc_project",
         max_length=200,
     )
     storage_service = VerboseChoiceFilter(
@@ -88,7 +88,9 @@ class FileFilterSet(FileCommonFilterset):
 class FileDeleteListFilterSet(FileFilterSet):
     """Add project and dataset filters to file filterset."""
 
-    project = filters.CharFilter(field_name="storage__project", max_length=200, required=True)
+    csc_project = filters.CharFilter(
+        field_name="storage__csc_project", max_length=200, required=True
+    )
 
 
 class FilesDatasetsQueryParamsSerializer(serializers.Serializer):
@@ -319,7 +321,7 @@ class FileViewSet(BaseFileViewSet):
     def destroy_list(self, *args, **kwargs):
         """Delete files matching query parameters.
 
-        The `project` parameter is required. If no `storage_service` is defined,
+        The `csc_project` parameter is required. If no `storage_service` is defined,
         matching files from all storage services are deleted.
 
         By default the files are flagged as removed.

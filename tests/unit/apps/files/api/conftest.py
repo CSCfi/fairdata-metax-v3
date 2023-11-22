@@ -87,7 +87,7 @@ def file_tree_a() -> dict:
 def file_tree_b() -> dict:
     return factories.create_project_with_files(
         storage_service="ida",
-        project="project_x",
+        csc_project="project_x",
         file_paths=[
             "/dir/first",
             "/dir/last",

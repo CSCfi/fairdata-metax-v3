@@ -179,15 +179,15 @@ class FileBulkSerializer(serializers.ListSerializer):
             ).values(
                 "storage_identifier",
                 "id",
-                project=F("storage__project"),
+                csc_project=F("storage__csc_project"),
             )
 
             for existing_file in existing_files:
                 for file in files_by_external_id[existing_file["storage_identifier"]]:
                     file["id"] = existing_file["id"]
                     # Project id can also be determined from external id when storage_service is known
-                    if not file.get("project"):
-                        file["project"] = existing_file["project"]
+                    if not file.get("csc_project"):
+                        file["csc_project"] = existing_file["csc_project"]
 
         return files
 
@@ -235,14 +235,14 @@ class FileBulkSerializer(serializers.ListSerializer):
     def assign_existing_storage_data(self, files: List[dict]) -> List[dict]:
         """Assign storage and related fields to existing file data."""
         existing_files_with_missing_project_data = [
-            f for f in files if "id" in f and not ("storage_service" in f and "project" in f)
+            f for f in files if "id" in f and not ("storage_service" in f and "csc_project" in f)
         ]
         project_data = File.objects.filter(
             id__in=[f["id"] for f in existing_files_with_missing_project_data]
         ).values(
             "id",
             storage_service=F("storage__storage_service"),
-            project=F("storage__project"),
+            csc_project=F("storage__csc_project"),
         )
         project_data_by_id = {f["id"]: f for f in project_data}
 
@@ -252,12 +252,12 @@ class FileBulkSerializer(serializers.ListSerializer):
             if project_data := project_data_by_id.get(f["id"]):
                 if f.get("storage_service") is None:
                     f["storage_service"] = project_data["storage_service"]
-                if f.get("project") is None:
-                    f["project"] = project_data["project"]
+                if f.get("csc_project") is None:
+                    f["csc_project"] = project_data["csc_project"]
         return files
 
     def assign_storage_to_files(self, files: List[dict]) -> List[dict]:
-        """Assign StorageProject instances to files."""
+        """Assign FileStorage instances to files."""
         if not files:
             return files
 
@@ -349,7 +349,7 @@ class FileBulkSerializer(serializers.ListSerializer):
                 # `id is None` won't work.
                 original_data = f.pop("original_data")
                 f.pop("storage_service", None)  # included in FileStorage
-                f.pop("project", None)  # included in FileStorage
+                f.pop("csc_project", None)  # included in FileStorage
                 file = File(**f, system_creator_id=system_creator)
                 file._original_data = original_data
                 files.append(file)

@@ -38,7 +38,7 @@ def test_minimal_dataset_with_files(
 ):
     create_project_with_files(
         storage_service="ida",
-        project="test_project",
+        csc_project="test_project",
         file_paths=["/data/file1.csv", "/data/file2.csv", "/data/file3.csv", "/not-this.txt"],
         file_args={"*": {"size": 1024}},
     )
@@ -49,7 +49,7 @@ def test_minimal_dataset_with_files(
     assert res.status_code == 201
     assert res.json()["fileset"] == {
         "storage_service": "ida",
-        "project": "test_project",
+        "csc_project": "test_project",
         "added_files_count": 3,
         "removed_files_count": 0,
         "total_files_count": 3,

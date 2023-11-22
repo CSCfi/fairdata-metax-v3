@@ -18,7 +18,7 @@ def ida_file_json():
        * file_frozen -> frozen
        * identifier -> storage_identifier
        * byte_size -> size
-       * project_identifier -> project
+       * project_identifier -> csc_project
        * user_created -> user
 
     """
@@ -28,7 +28,7 @@ def ida_file_json():
         "frozen": "2017-09-27T12:38:18Z",
         "size": 1024,
         "storage_service": "ida",
-        "project": "string",
+        "csc_project": "string",
         "checksum": "md5:string",
         "storage_identifier": "identifier",
         "user": "string",

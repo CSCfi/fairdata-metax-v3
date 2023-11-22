@@ -169,7 +169,7 @@ When viewing a dataset with `GET /v3/datasets/<id>`, the response includes a sum
       ...
       "fileset": {
           "storage_service": "ida",
-          "project": "project",
+          "csc_project": "project",
           "total_files_count": 2,
           "total_files_size": 2048
       }
@@ -203,7 +203,7 @@ The fileset object should look like
 ```
 {
   "storage_service": <service, e.g. ida>,
-  "project": <project>,
+  "csc_project": <project>,
   "directory_actions": [
     {
       "pathname": <path, e.g. /data/>,

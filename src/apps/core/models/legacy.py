@@ -513,7 +513,7 @@ class LegacyDataset(Dataset):
                     f["file_storage"]["identifier"]
                 ]
                 storage = get_or_create_storage(
-                    project=f["project_identifier"],
+                    csc_project=f["project_identifier"],
                     storage_service=storage_service,
                 )
                 new_file, created = File.objects.get_or_create(

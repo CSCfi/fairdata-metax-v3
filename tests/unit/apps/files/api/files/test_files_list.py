@@ -55,7 +55,7 @@ def test_files_get_dataset_files(admin_client, dataset):
 def test_files_get_dataset_files_empty(admin_client, dataset):
     res = admin_client.get(
         "/v3/files",
-        {"dataset": dataset.id, "project": "pröject_does_not_exist"},
+        {"dataset": dataset.id, "csc_project": "pröject_does_not_exist"},
         content_type="application/json",
     )
     assert res.data["results"] == []
