@@ -12,10 +12,12 @@ import django
 import factory.random
 import pytest
 from django.conf import settings
+from django.contrib.auth.models import Group
 from rest_framework.test import APIClient, RequestsClient
 
 from apps.core import factories
 from apps.core.models.data_catalog import DataCatalog
+from apps.users.factories import MetaxUserFactory
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -26,6 +28,15 @@ def faker_session_locale():
 @pytest.fixture(scope="session", autouse=True)
 def faker_seed():
     return settings.FACTORY_BOY_RANDOM_SEED
+
+
+@pytest.fixture
+def service_client(client):
+    user = MetaxUserFactory(username="service_test")
+    group, _ = Group.objects.get_or_create(name="service")
+    user.groups.set([group])
+    client.force_login(user)
+    return client
 
 
 def pytest_collection_modifyitems(items):

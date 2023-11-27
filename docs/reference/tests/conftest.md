@@ -8,6 +8,10 @@
 
 ### :::tests.conftest.faker_seed
 
+## service_client
+
+### :::tests.conftest.service_client
+
 ## pytest_collection_modifyitems
 
 ### :::tests.conftest.pytest_collection_modifyitems

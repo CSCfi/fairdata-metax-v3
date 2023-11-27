@@ -111,6 +111,7 @@
         - [factories](src/apps/users/factories.md)
         - [management.commands.create_api_user](src/apps/users/management/commands/create_api_user.md)
         - [models](src/apps/users/models.md)
+        - [permissions](src/apps/users/permissions.md)
         - [serializers](src/apps/users/serializers.md)
         - [signals](src/apps/users/signals.md)
         - [templatetags.users](src/apps/users/templatetags/users.md)

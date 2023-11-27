@@ -5,6 +5,7 @@ from argparse import ArgumentParser
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand
+from django.db import transaction
 from rest_framework.authtoken.models import Token
 
 logger = logging.getLogger(__name__)
@@ -29,16 +30,18 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        User = get_user_model()
-        user = User.objects.create(username=options["username"])
-        groups = options.get("groups")
-        token_override = options.get("token_override")
+        with transaction.atomic():
+            User = get_user_model()
+            user, created = User.objects.get_or_create(username=options["username"])
+            groups = options.get("groups")
+            token_override = options.get("token_override")
 
-        if groups:
-            for group in groups:
-                obj, created = Group.objects.get_or_create(name=group)
-                user.groups.add(obj)
-        if token_override:
-            Token.objects.filter(user=user).delete()
-            token_value = os.environ.get("AUTH_TOKEN_VALUE")
-            Token.objects.create(user=user, key=token_value)
+            if groups:
+                user.groups.clear()
+                for group in groups:
+                    obj, created = Group.objects.get_or_create(name=group)
+                    user.groups.add(obj)
+            if token_override:
+                Token.objects.filter(user=user).delete()
+                token_value = os.environ.get("AUTH_TOKEN_VALUE")
+                Token.objects.create(user=user, key=token_value)

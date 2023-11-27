@@ -20,6 +20,10 @@
 
 ### :::src.apps.users.views.APITokenListView
 
+## DeleteDataQueryParamsSerializer
+
+### :::src.apps.users.views.DeleteDataQueryParamsSerializer
+
 ## UserViewSet
 
 ### :::src.apps.users.views.UserViewSet

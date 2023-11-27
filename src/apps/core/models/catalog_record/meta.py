@@ -9,8 +9,8 @@ from simple_history.models import HistoricalRecords
 from apps.actors.models import Actor
 from apps.common.models import AbstractBaseModel
 from apps.core.models.concepts import IdentifierType
-from apps.core.models.preservation import Contract, Preservation
 from apps.core.models.data_catalog import DataCatalog
+from apps.core.models.preservation import Contract, Preservation
 
 logger = logging.getLogger(__name__)
 

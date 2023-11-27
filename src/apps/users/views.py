@@ -8,14 +8,17 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import never_cache
 from knox.models import AuthToken
 from knox.views import LoginView as KnoxLoginView
-from rest_framework import exceptions, status
+from rest_access_policy.access_view_set_mixin import AccessViewSetMixin
+from rest_framework import exceptions, serializers, status
+from rest_framework.decorators import action
 from rest_framework.renderers import AdminRenderer, JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.common.responses import HttpResponseSeeOther
-from apps.common.views import CommonReadOnlyModelViewSet
+from apps.common.views import CommonReadOnlyModelViewSet, QueryParamsMixin
 from apps.users.authentication import SSOAuthentication
+from apps.users.permissions import UsersViewAccessPolicy
 from apps.users.serializers import (
     AuthenticatedUserInfoSerializer,
     TokenSerializer,
@@ -117,12 +120,45 @@ class APITokenListView(KnoxLoginView):
         return HttpResponseSeeOther(reverse("tokens"))
 
 
-class UserViewSet(CommonReadOnlyModelViewSet):
+class DeleteDataQueryParamsSerializer(serializers.Serializer):
+    flush = serializers.BooleanField(default=False)
+
+
+class UserViewSet(QueryParamsMixin, AccessViewSetMixin, CommonReadOnlyModelViewSet):
     """API for listing and deleting users. Not for production use."""
 
     queryset = get_user_model().objects.all()
     serializer_class = UserInfoSerializer
     lookup_field = "username"
+    access_policy = UsersViewAccessPolicy
+    query_serializers = [{"action": "delete_data", "class": DeleteDataQueryParamsSerializer}]
+
+    @action(detail=True, methods=["delete"], url_path="data")
+    def delete_data(self, request, *args, **kwargs):
+        username = kwargs[self.lookup_field]
+        logger.info(
+            f"Deleting data for user {username} on the request of user: {request.user.username}"
+        )
+
+        user = self.get_object()
+        if self.query_params["flush"]:
+            dataset_count = user.metadataprovider_set(manager="all_objects").count()
+            user.metadataprovider_set(manager="all_objects").all().delete()
+            new_dataset_count = user.metadataprovider_set(manager="all_objects").count()
+            logger.info(
+                f"Permantently deleted {dataset_count - new_dataset_count} datasets created by user {user}"
+            )
+        else:
+            from apps.core.models import Dataset
+
+            datasets = Dataset.objects.filter(metadata_owner__user__username=username)
+            dataset_count = datasets.count()
+            datasets.delete()
+            new_dataset_count = datasets.count()
+            logger.info(
+                f"Soft deleted {dataset_count - new_dataset_count} datasets created by user {user}"
+            )
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def destroy(self, request, *args, **kwargs):
         """Delete user and related data. Not for production use."""
@@ -130,11 +166,9 @@ class UserViewSet(CommonReadOnlyModelViewSet):
         logger.info(f"Deleting user {username} on the request of user: {request.user.username}")
 
         user = self.get_object()
-        dataset_count = user.metadataprovider_set.count()
-        user.delete(soft=False)  # cascade delete will remove datasets and their linked filesets
-        new_dataset_count = user.metadataprovider_set.count()
+        if user == request.user:
+            return Response(_("Deleting self is not allowed."), status=status.HTTP_403_FORBIDDEN)
 
-        logger.info(
-            f"Permanently deleted {dataset_count - new_dataset_count} datasets created by user {user}"
-        )
+        user.delete(soft=False)  # cascade delete will remove datasets and their linked filesets
+        logger.info(f"Permanently deleted user {user}")
         return Response(status=status.HTTP_204_NO_CONTENT)
