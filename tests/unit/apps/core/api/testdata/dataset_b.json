@@ -32,5 +32,6 @@
         "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0"
       }
     ]
-  }
+  },
+  "pid_type": "URN"
 }

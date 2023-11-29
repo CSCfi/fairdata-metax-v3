@@ -66,6 +66,14 @@ class DatasetAccessPolicy(BaseAccessPolicy):
             | Q(published_revision__gt=0)
         )
 
+    @classmethod
+    def scope_queryset_owned_or_shared(cls, request, queryset):
+        from .models import Dataset
+
+        if request.user.is_anonymous:
+            return Dataset.available_objects.none()
+        return queryset.filter(metadata_owner__user=request.user)
+
 
 class DataCatalogAccessPolicy(BaseAccessPolicy):
     statements = [

@@ -107,6 +107,14 @@ class DatasetFilter(filters.FilterSet):
     def search_dataset(self, queryset, name, value):
         return search.filter(queryset, value)
 
+    only_owned_or_shared = filters.BooleanFilter(method="filter_owned_or_shared")
+
+    def filter_owned_or_shared(self, queryset, name, value):
+        """Filter datasets owned by or shared with the authenticated user."""
+        if value:
+            return DatasetAccessPolicy.scope_queryset_owned_or_shared(self.request, queryset)
+        return queryset
+
 
 @method_decorator(
     name="create",

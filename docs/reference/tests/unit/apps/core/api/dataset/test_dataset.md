@@ -60,6 +60,10 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_patch_metadata_owner_not_allowed
 
+## test_owned_dataset
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_owned_dataset
+
 ## test_create_dataset_with_actor
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_create_dataset_with_actor
