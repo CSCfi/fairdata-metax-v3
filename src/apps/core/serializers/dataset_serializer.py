@@ -6,6 +6,7 @@
 # :license: MIT
 import logging
 
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
@@ -65,6 +66,8 @@ class DatasetSerializer(CommonNestedModelSerializer):
         many=True, read_only=True, view_name="dataset-detail"
     )
     allowed_actions = DatasetAllowedActionsSerializer(read_only=True, source="*")
+    created = serializers.DateTimeField(required=False, read_only=False)
+    modified = serializers.DateTimeField(required=False, read_only=False)
 
     def get_fields(self):
         fields = super().get_fields()
@@ -90,6 +93,27 @@ class DatasetSerializer(CommonNestedModelSerializer):
             if not see_drafts and not is_historic:
                 instance = instance.latest_published_revision
         return super().to_representation(instance)
+
+    def to_internal_value(self, data):
+        _data = super().to_internal_value(data)
+        errors = {}
+        _now = timezone.now()
+        if "modified" in _data and _data["modified"] > _now:
+            errors["modified"] = "Timestamp cannot be in the future"
+        if "created" in _data and _data["created"] > _now:
+            errors["created"] = "Timestamp cannot be in the future"
+
+        if self.context['request'].method == "POST":
+            if _data["modified"] < _data["created"]:
+                errors["timestamps"] = "Date modified earlier than date created"
+
+        elif self.context['request'].method in {"PUT", "PATCH"}:
+            _data["created"] = self.instance.created
+            if "modified" in _data and _data["modified"] < _data["created"].replace(microsecond=0):
+                errors["timestamps"] = "Date modified earlier than date created"
+        if errors:
+            raise serializers.ValidationError(errors)
+        return _data
 
     class Meta:
         model = Dataset
@@ -133,13 +157,11 @@ class DatasetSerializer(CommonNestedModelSerializer):
             "allowed_actions",
         )
         read_only_fields = (
-            "created",
             "cumulation_started",
             "first",
             "id",
             "is_deprecated",
             "last",
-            "modified",
             "previous",
             "removed",
             "replaces",

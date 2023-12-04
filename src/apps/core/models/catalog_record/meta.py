@@ -1,9 +1,11 @@
+import datetime
 import logging
 import uuid
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.utils import timezone
 from simple_history.models import HistoricalRecords
 
 from apps.actors.models import Actor
@@ -83,6 +85,9 @@ class CatalogRecord(AbstractBaseModel):
     last_modified_by = models.ForeignKey(
         get_user_model(), on_delete=models.SET_NULL, null=True, blank=True
     )
+
+    created = models.DateTimeField(default=timezone.now, editable=False)
+    modified = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return str(self.id)
