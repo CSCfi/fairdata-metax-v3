@@ -2,7 +2,7 @@ from typing import Dict
 
 import factory
 from django.utils import timezone
-
+from uuid import uuid4
 from . import models
 
 
@@ -11,7 +11,17 @@ class FileStorageFactory(factory.django.DjangoModelFactory):
         model = models.FileStorage
         django_get_or_create = ("csc_project", "storage_service")
 
-    csc_project = factory.Faker("numerify", text="#######")
+    @factory.lazy_attribute
+    def csc_project(self):
+        model = models.FileStorage.get_proxy_model(self.storage_service)
+        if "csc_project" not in model.required_extra_fields:
+            return None
+        return self.fallback_project
+
+    class Params:
+        fallback_project = factory.Faker("numerify", text="#######")
+
+
     storage_service = "ida"
 
 
@@ -22,7 +32,7 @@ class FileFactory(factory.django.DjangoModelFactory):
         exclude = ("checksum_value",)
         skip_postgeneration_save = True
 
-    id = factory.Faker("uuid4")
+    id = factory.LazyFunction(uuid4)
     modified = factory.LazyFunction(timezone.now)
     pathname = factory.Faker("file_path")
     storage = factory.SubFactory(FileStorageFactory)
