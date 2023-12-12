@@ -15,13 +15,13 @@ from apps.core.models import Dataset
 from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
 from apps.core.serializers.common_serializers import (
     AccessRightsModelSerializer,
-    DatasetActorModelSerializer,
     EntityRelationSerializer,
     OtherIdentifierModelSerializer,
     RemoteResourceSerializer,
     TemporalModelSerializer,
 )
 from apps.core.serializers.concept_serializers import SpatialModelSerializer
+from apps.core.serializers.dataset_actor_serializers import DatasetActorSerializer
 from apps.core.serializers.dataset_allowed_actions import DatasetAllowedActionsSerializer
 from apps.core.serializers.metadata_provider_serializer import MetadataProviderModelSerializer
 from apps.core.serializers.preservation_serializers import PreservationModelSerializer
@@ -38,7 +38,7 @@ class DatasetSerializer(CommonNestedModelSerializer):
     access_rights = AccessRightsModelSerializer(required=False, allow_null=True, many=False)
     field_of_science = FieldOfScience.get_serializer_field(required=False, many=True)
     infrastructure = ResearchInfra.get_serializer_field(required=False, many=True)
-    actors = DatasetActorModelSerializer(required=False, many=True)
+    actors = DatasetActorSerializer(required=False, many=True)
     fileset = FileSetSerializer(required=False, source="file_set")
     remote_resources = RemoteResourceSerializer(many=True, required=False)
     language = Language.get_serializer_field(required=False, many=True)
@@ -95,6 +95,9 @@ class DatasetSerializer(CommonNestedModelSerializer):
         return super().to_representation(instance)
 
     def to_internal_value(self, data):
+        if self.instance: # dataset actors need dataset in context
+            self.context["dataset"] = self.instance
+
         _data = super().to_internal_value(data)
         errors = {}
         _now = timezone.now()

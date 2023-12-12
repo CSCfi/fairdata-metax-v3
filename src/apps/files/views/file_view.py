@@ -104,7 +104,7 @@ class FilesDatasetsBodySerializer(serializers.ListSerializer):
     child = serializers.CharField()
 
 
-class BaseFileViewSet(QueryParamsMixin, CommonModelViewSet):
+class BaseFileViewSet(CommonModelViewSet):
     """Basic read-only files view."""
 
     serializer_class = FileSerializer

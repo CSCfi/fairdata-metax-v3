@@ -29,8 +29,6 @@ def dataset_with_provenance_json(dataset_a_json, entity_json):
                 {
                     "organization": {
                         "pref_label": {"fi": "CSC"},
-                        "code": "20000",
-                        "in_scheme": "https://joku.schema.fi",
                     },
                     "person": {"name": "john"},
                 }
@@ -51,8 +49,6 @@ def dataset_with_provenance_json(dataset_a_json, entity_json):
                 {
                     "organization": {
                         "pref_label": {"fi": "CSC"},
-                        "code": "20000",
-                        "in_scheme": "https://joku.schema.fi",
                     },
                     "person": {"name": "john"},
                 }
@@ -64,8 +60,6 @@ def dataset_with_provenance_json(dataset_a_json, entity_json):
             "person": {"name": "john"},
             "organization": {
                 "pref_label": {"fi": "CSC"},
-                "code": "20000",
-                "in_scheme": "https://joku.schema.fi",
             },
             "roles": ["creator"],
         }
@@ -91,7 +85,7 @@ def test_create_dataset_with_provenance(provenance_a_request, entity_json):
     assert actors.count() == 1
     assert dataset.provenance.count() == 2
     actor = actors.first()
-    assert len(set(actor.roles)) == 2
+    assert len(set(actor.roles)) == 1
 
 
 def test_update_dataset_with_provenance(
@@ -113,7 +107,7 @@ def test_update_dataset_with_provenance(
     assert actors.count() == 1
     assert dataset.provenance.count() == 2
     actor = actors.first()
-    assert len(set(actor.roles)) == 2
+    assert len(set(actor.roles)) == 1
 
 
 def test_edit_provenance(dataset_with_provenance_json, provenance_a_request, admin_client):

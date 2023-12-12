@@ -46,3 +46,19 @@ class OneOf(RequiredFieldCombinationValidatorBase):
             else:  # allow 0 or 1
                 message = _("Only one of fields {} is allowed.").format(self.msg_fields)
             raise serializers.ValidationError(message)
+
+
+class AllOf(RequiredFieldCombinationValidatorBase):
+    """Require all of listed fields."""
+
+    def __call__(self, value):
+        errors = {}
+        for field in self.fields:
+            if self.count_all_falsy:
+                if not value.get(field):
+                    errors[field] = _("Field is required.")
+            else:
+                if value.get(field) in EMPTY_VALUES:
+                    errors[field] = _("Field is required.")
+        if errors:
+            raise serializers.ValidationError(errors)

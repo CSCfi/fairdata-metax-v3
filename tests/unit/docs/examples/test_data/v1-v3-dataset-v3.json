@@ -24,8 +24,6 @@
         "name": "teppo testaaja"
       },
       "organization": {
-        "code": "20000",
-        "in_scheme": "https://joku.schema.fi",
         "pref_label": {
           "fi": "CSC"
         }

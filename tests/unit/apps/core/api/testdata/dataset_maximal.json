@@ -35,20 +35,17 @@
   "actors": [
     {
       "organization": {
-        "code": null,
         "homepage": null,
         "in_scheme": "http://uri.suomi.fi/codelist/fairdata/organization",
         "pref_label": {
           "en": "Kone Foundation",
-          "fi": "Koneen Säätiö",
-          "sv": "Koneen säätiö",
-          "und": "Koneen Säätiö"
+          "fi": "Koneen Säätiö"
         },
         "url": "http://uri.suomi.fi/codelist/fairdata/organization/code/02135371"
       },
       "person": {
         "email": null,
-        "external_id": null,
+        "external_identifier": null,
         "name": "Unexisting Entity"
       },
       "roles": [
@@ -57,9 +54,7 @@
     },
     {
       "organization": {
-        "code": null,
         "homepage": null,
-        "in_scheme": "http://uri.suomi.fi/codelist/fairdata/organization",
         "pref_label": {
           "en": "test dept."
         },
@@ -67,7 +62,7 @@
       },
       "person": {
         "email": null,
-        "external_id": null,
+        "external_identifier": null,
         "name": "Kuvitteellinen Henkilö"
       },
       "roles": [
@@ -76,9 +71,7 @@
     },
     {
       "organization": {
-        "code": null,
         "homepage": null,
-        "in_scheme": "http://uri.suomi.fi/codelist/fairdata/organization",
         "pref_label": {
           "en": "Testiorganisaatio"
         },
@@ -91,21 +84,18 @@
     },
     {
       "organization": {
-        "code": null,
         "homepage": null,
         "in_scheme": "http://uri.suomi.fi/codelist/fairdata/organization",
         "pref_label": {
           "en": "Kone Foundation",
-          "fi": "Koneen Säätiö",
-          "sv": "Koneen säätiö",
-          "und": "Koneen Säätiö"
+          "fi": "Koneen Säätiö"
         },
         "url": "http://uri.suomi.fi/codelist/fairdata/organization/code/02135371"
       },
       "person": {
         "email": null,
-        "external_id": null,
-        "name": "Unexisting Entity"
+        "external_identifier": null,
+        "name": "Another person"
       },
       "roles": [
         "creator"

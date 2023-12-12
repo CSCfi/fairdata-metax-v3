@@ -4,8 +4,10 @@
 #
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
+import copy
 import json
 import logging
+from contextlib import contextmanager
 from uuid import UUID
 
 from django.core.exceptions import FieldDoesNotExist
@@ -14,35 +16,65 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.fields import empty
+from rest_framework.serializers import ValidationError
+from rest_framework.settings import api_settings
 from rest_framework.utils import model_meta
 
 logger = logging.getLogger(__name__)
 
 
 class CommonListSerializer(serializers.ListSerializer):
+    def create(self, validated_data):
+        errors = []  # Collect errors to match serializer validation reporting error style
+        instances = []
+
+        # Create new instances
+        item_serializer = self.child
+        for item_data in validated_data:
+            try:
+                item_serializer.instance = None  # Create a new instance
+                item_serializer._validated_data = item_data
+                item_serializer._errors = []  # data was already validated by parent serializer
+                instances.append(item_serializer.save())
+                errors.append({})
+            except serializers.ValidationError as exc:
+                errors.append(exc.detail)
+        if any(errors):
+            raise ValidationError(errors)
+
+        return instances
+
     def update(self, instance, validated_data):
         # Map the instance objects by their unique identifiers
         instance_mapping = {obj.id: obj for obj in instance}
         updated_instances = []
 
         # Perform updates or create new instances
+        item_serializer = self.child
+        errors = []  # Collect errors to match serializer validation reporting error style
         for item_data in validated_data:
-            item_id = item_data.get("id", None)
-            if item_id is not None:
-                # Update the existing instance
-                item_instance = instance_mapping.get(item_id, None)
-                if item_instance is not None:
-                    item_serializer = self.child._default_class(data=item_data)
-                    item_serializer.is_valid(raise_exception=True)
-                    updated_instances.append(item_serializer.update(item_instance, item_data))
-            else:
-                # Create a new instance
-                new_item = self.child.create(item_data)
-                updated_instances.append(new_item)
+            try:
+                item_id = item_data.get("id", None)
+                if item_id is not None:
+                    # Update the existing instance
+                    item_serializer.instance = instance_mapping.get(item_id, None)
+                else:
+                    item_serializer.instance = None  # Create a new instance
+
+                item_serializer._validated_data = item_data
+                item_serializer._errors = []  # data was already validated by parent serializer
+                updated_instances.append(item_serializer.save())
+                errors.append({})
+            except serializers.ValidationError as exc:
+                errors.append(exc.detail)
+
+        if any(errors):
+            raise ValidationError(errors)
 
         # Delete instances that were not included in the update
+        updated_items = {str(item_data.get("id", None)) for item_data in validated_data}
         for item in instance:
-            if item.id not in [item_data.get("id", None) for item_data in validated_data]:
+            if str(item.id) not in updated_items:
                 item.delete()
 
         return updated_instances
@@ -107,6 +139,7 @@ class PatchModelSerializer(serializers.ModelSerializer):
                     field.default = None
             except FieldDoesNotExist:
                 pass
+
         return fields
 
     def get_fields(self):
@@ -217,7 +250,9 @@ class NestedModelSerializer(serializers.ModelSerializer):
         """Create related model instances.
 
         Instance should be None for simple forward relations."""
+        errors = {}  # Collect errors that happen during save
         related_instances = {}
+
         for serializer in serializers.values():
             data = related_data.pop(serializer.field_name, None)
             if data is not None:
@@ -228,7 +263,13 @@ class NestedModelSerializer(serializers.ModelSerializer):
                 )
                 serializer._validated_data = data
                 serializer._errors = []  # data was already validated by parent serializer
-                related_instances[serializer.source] = serializer.save()
+
+                try:
+                    related_instances[serializer.source] = serializer.save()
+                except ValidationError as exc:
+                    errors[serializer.field_name] = exc.detail  # Report validation errors by field
+        if errors:
+            raise ValidationError(errors)
         return related_instances
 
     def get_related_instance(self, serializer, instance):
@@ -259,6 +300,7 @@ class NestedModelSerializer(serializers.ModelSerializer):
 
     def update_related(self, nested_serializers, instance, related_data):
         """Update related model instances."""
+        errors = {}  # Collect errors that happen during save
         related_instances = {}
         for serializer in nested_serializers.values():
             if serializer.field_name not in related_data:
@@ -276,11 +318,19 @@ class NestedModelSerializer(serializers.ModelSerializer):
                 serializer.instance = related_instance
                 serializer._validated_data = data
                 serializer._errors = []  # data was already validated by parent serializer
-                related_instance = serializer.save()
+
+                try:
+                    related_instance = serializer.save()
+                except ValidationError as exc:
+                    errors[serializer.field_name] = exc.detail  # Report validation errors by field
+
             elif related_instance:
                 related_instance = self.clear_related_instance(serializer, related_instance)
 
             related_instances[serializer.source] = related_instance
+
+        if errors:
+            raise ValidationError(errors)
         return related_instances
 
     def pop_related_data(self, validated_data):
@@ -381,3 +431,63 @@ class AbstractDatasetPropertyModelSerializer(CommonModelSerializer):
                 )
 
         return internal_value
+
+
+class RecursiveSerializer(serializers.Serializer):
+    """Serializer that reuses its parent serializer recursively.
+
+    Note: Does not currently support `many=True`.
+    """
+
+    def __init__(self):
+        super().__init__(required=False, allow_null=True)
+        self.serializer = None
+
+    @contextmanager
+    def push_serializer_attrs(self):
+        """Store serializer attributes before assigning them from self."""
+        try:
+            prev_instance = self.serializer.instance
+            prev_errors = getattr(self.serializer, "_errors", None)
+            prev_validated_data = getattr(self.serializer, "_validated_data", None)
+            self.serializer.instance = self.instance
+            self.serializer._errors = self._errors
+            self.serializer._validated_data = self._validated_data
+            yield
+        finally:
+            self.instance = self.serializer.instance
+            self._errors = self.serializer._errors
+            self._validated_data = self.serializer._validated_data
+            self.serializer.instance = prev_instance
+            self.serializer._errors = prev_errors
+            self.serializer._validated_data = prev_validated_data
+
+    def ensure_serializer(self):
+        """Parent is not available in init so we copy it later when needed."""
+        if not self.serializer:
+            # Copy parent serializer so it can be assigned a different field_name
+            self.serializer = copy.deepcopy(self.parent)
+            self.serializer.field_name = self.field_name
+            self.serializer.parent = self.parent
+
+    def save(self, **kwargs):
+        self.ensure_serializer()
+        with self.push_serializer_attrs():
+            self.serializer.save(**kwargs)
+        return self.instance
+
+    def create(self, validated_data):
+        self.ensure_serializer()
+        return self.serializer.create(validated_data)
+
+    def update(self, validated_data, instance):
+        self.ensure_serializer()
+        return self.serializer.update(validated_data, instance)
+
+    def to_internal_value(self, data):
+        self.ensure_serializer()
+        return self.serializer.to_internal_value(data)
+
+    def to_representation(self, instance):
+        self.ensure_serializer()
+        return self.serializer.to_representation(instance)

@@ -11,7 +11,10 @@ class ChildOrganizationSerializer(CommonModelSerializer):
     children = serializers.SerializerMethodField(read_only=True, method_name="get_children")
 
     def get_children(self, obj):
-        serializer = ChildOrganizationSerializer(instance=obj.children.all(), many=True)
+        children = [child for child in obj.children.all() if child.is_reference_data]
+        serializer = ChildOrganizationSerializer(
+            instance=children, many=True, context=self.context
+        )
         return serializer.data
 
     class Meta:
@@ -19,6 +22,9 @@ class ChildOrganizationSerializer(CommonModelSerializer):
         fields = "__all__"
 
     def to_representation(self, instance):
+        if not self.context.get("expand_child_organizations"):
+            return instance.id
+
         reps = super().to_representation(instance)
         reps.pop("parent")
         return reps
@@ -51,6 +57,13 @@ class OrganizationSerializer(CommonModelSerializer):
     children = ChildOrganizationSerializer(many=True, read_only=True)
     parent = ParentOrganizationSerializer(read_only=True)
 
+    def get_children(self, obj):
+        children = [child for child in obj.children.all() if child.is_reference_data]
+        serializer = ChildOrganizationSerializer(
+            instance=children, many=True, context=self.context
+        )
+        return serializer.data
+
     class Meta:
         model = Organization
         fields = "__all__"
@@ -59,7 +72,7 @@ class OrganizationSerializer(CommonModelSerializer):
 class PersonModelSerializer(CommonModelSerializer):
     class Meta:
         model = Person
-        fields = ("name", "email", "external_id")
+        fields = ("id", "name", "email", "external_identifier")
 
 
 class ActorModelSerializer(CommonModelSerializer):

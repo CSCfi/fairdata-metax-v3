@@ -24,7 +24,7 @@ from .dataset import Dataset
 logger = logging.getLogger(__name__)
 
 
-class DatasetActor(Actor, CopyableModelMixin):
+class DatasetActor(CopyableModelMixin, Actor):
     """Actors associated with a Dataset.
 
     Attributes:
@@ -38,13 +38,15 @@ class DatasetActor(Actor, CopyableModelMixin):
         PUBLISHER = "publisher", _("Publisher")
         CURATOR = "curator", _("Curator")
         RIGHTS_HOLDER = "rights_holder", _("Rights holder")
-        PROVENANCE = "provenance", _("Provenance")
 
     roles = ArrayField(
         models.CharField(choices=RoleChoices.choices, default=RoleChoices.CREATOR, max_length=30),
-        null=True,
+        default=list,
+        blank=True,
     )
-    dataset = models.ForeignKey("Dataset", on_delete=models.CASCADE, related_name="actors")
+    dataset = models.ForeignKey(
+        "Dataset", on_delete=models.CASCADE, related_name="actors", null=True, blank=True
+    )
 
     @classmethod
     def create_copy(cls, original: Self, dataset=None) -> Tuple[Self, Self]:

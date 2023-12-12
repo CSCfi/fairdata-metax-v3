@@ -82,14 +82,20 @@ class Organization(AbstractBaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     url = models.URLField(max_length=255, blank=True, null=True)
     code = models.CharField(max_length=64, null=True)
-    in_scheme = models.URLField(max_length=255, null=False, blank=False)
+    in_scheme = models.URLField(max_length=255, null=True, blank=True)
     pref_label = HStoreField(help_text='example: {"en":"title", "fi":"otsikko"}')
     homepage = HStoreField(
         blank=True,
         null=True,
         help_text='example: {"title": {"en": "webpage"}, "identifier": "url"}',
     )
-    # TODO: Other identifier field
+    external_identifier = models.CharField(
+        max_length=512,
+        null=True,
+        blank=True,
+        help_text=_("External identifier for the organization."),
+    )
+    email = models.EmailField(max_length=512, blank=True, null=True)
 
     parent = models.ForeignKey(
         "self",
@@ -133,7 +139,8 @@ class Organization(AbstractBaseModel):
             ),
             # Reference organizations should have a scheme.
             models.CheckConstraint(
-                check=~models.Q(in_scheme="") | models.Q(is_reference_data=False),
+                check=(models.Q(in_scheme__isnull=False) & ~models.Q(in_scheme=""))
+                | models.Q(is_reference_data=False),
                 name="%(app_label)s_%(class)s_require_reference_data_scheme",
             ),
         ]
@@ -149,7 +156,7 @@ class Organization(AbstractBaseModel):
 class Person(AbstractBaseModel, CopyableModelMixin):
     name = models.CharField(max_length=512)
     email = models.EmailField(max_length=512, blank=True, null=True)
-    external_id = models.CharField(
+    external_identifier = models.CharField(
         max_length=512,
         null=True,
         blank=True,
@@ -170,8 +177,8 @@ class Actor(AbstractBaseModel):
         organization(Organization): Organization if any associated with this actor.
     """
 
-    person = models.OneToOneField(
-        Person, related_name="part_of_actor", null=True, blank=True, on_delete=models.CASCADE
+    person = models.ForeignKey(
+        Person, related_name="part_of_actors", null=True, blank=True, on_delete=models.CASCADE
     )
     organization = models.ForeignKey(
         Organization,

@@ -16,14 +16,6 @@
 
 ### :::src.apps.core.serializers.common_serializers.AccessRightsModelSerializer
 
-## DatasetActorModelSerializer
-
-### :::src.apps.core.serializers.common_serializers.DatasetActorModelSerializer
-
-## DatasetActorProvenanceSerializer
-
-### :::src.apps.core.serializers.common_serializers.DatasetActorProvenanceSerializer
-
 ## OtherIdentifierListSerializer
 
 ### :::src.apps.core.serializers.common_serializers.OtherIdentifierListSerializer

@@ -189,18 +189,35 @@ You can't create dataset without access rights, so there is no DELETE or POST en
 
 #### Actors
 
-Dataset related actors with roles such as creator, publisher, curator, rights_holder, provenance and contributor have
-been moved under actors field.
+Dataset related actors with roles such as creator, publisher, curator, rights_holder and contributor have
+been moved under actors field. Instead of having a typed actor object like `@type: "Person"` or `@type: "Organization`, actors have `person` and `organization` fields. The fields for `person` are:
 
-| V1-V2                     | V3 field name                    |
-|---------------------------|----------------------------------|
-| @type [str]               | N/A                              |
-| email [str]               | person/email [str]               |
-| external_identifier [str] | person/external_identifier [str] |
-| identifier [url]          | organization/url [url]           |
-| member_of [object]        | organization [object]            |
-| name [str]                | person/name [str]                |
-| N/A                       | roles [list]                     |
+| V1-V2 person actor field | V3 actor field                   |
+|--------------------------|----------------------------------|
+| @type [str]              | N/A                              |
+| email [str]              | person.email [str]               |
+| identifier [str]         | person.external_identifier [str] |
+| member_of [object]       | organization [object]            |
+| name [str]               | person.name [str]                |
+| telephone [str]          | N/A                              |
+| N/A                      | roles [list]                     |
+
+Organizations have some fields specific only to reference data organizations: `url` and `in_scheme`.
+Only `url` is writable for reference data organizations, other values are determined automtically.
+The fields for `organization` are:
+
+| V1-V2 organization actor field | V3 actor field                                     |
+|--------------------------------|----------------------------------------------------|
+| @type [str]                    | N/A                                                |
+| name [str]                     | organization.pref_label [str]                      |
+| is_part_of [object]            | organization.parent [object]                       |
+| identifier [str]               | organization.external_identifier [str]             |
+| identifier [str]               | organization.url [url] (only reference data)       |
+| N/A                            | organization.in_scheme [url] (only reference data) |
+| email [str]                    | organization.email [str]                           |
+| telephone [str]                | N/A                                                |
+| N/A                            | roles [list]                                       |
+
 
 !!! example "Actors JSON differences between V2 and V3"
 

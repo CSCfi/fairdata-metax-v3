@@ -110,9 +110,7 @@ def dataset_actor():
         return DatasetActor(
             dataset=dataset_id,
             person=Person(name=person_name),
-            organization=Organization(
-                pref_label=org_pref_label, in_scheme="https://joku.scheme.fi"
-            ),
+            organization=Organization(pref_label=org_pref_label),
             role=role,
         )
 
@@ -124,8 +122,8 @@ def dataset_actor_a(dataset_a):
     return DatasetActor(
         dataset=dataset_a.response.data["id"],
         person=Person(name="teppo"),
-        organization=Organization(pref_label={"fi": "CSC"}, in_scheme="https://joku.scheme.fi"),
-        role=["creator"],
+        organization=Organization(pref_label={"fi": "CSC"}),
+        roles=["creator"],
     )
 
 

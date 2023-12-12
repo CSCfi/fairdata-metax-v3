@@ -17,4 +17,5 @@ class FilesAccessPolicy(BaseAccessPolicy):
         elif request.user.groups.filter(name="ida").exists():
             return queryset
         else:
-            return queryset.filter(file_sets__dataset__state="published")
+            ida_projects = getattr(request.user, "ida_projects", [])
+            return queryset.filter(storage__csc_project__in=ida_projects)

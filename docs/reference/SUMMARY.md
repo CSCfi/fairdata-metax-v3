@@ -53,6 +53,11 @@
             - [common_serializers](src/apps/core/serializers/common_serializers.md)
             - [concept_serializers](src/apps/core/serializers/concept_serializers.md)
             - [data_catalog_serializer](src/apps/core/serializers/data_catalog_serializer.md)
+            - dataset_actor_serializers
+                - [actor_serializer](src/apps/core/serializers/dataset_actor_serializers/actor_serializer.md)
+                - [member_serializer](src/apps/core/serializers/dataset_actor_serializers/member_serializer.md)
+                - [organization_serializer](src/apps/core/serializers/dataset_actor_serializers/organization_serializer.md)
+                - [person_serializer](src/apps/core/serializers/dataset_actor_serializers/person_serializer.md)
             - [dataset_allowed_actions](src/apps/core/serializers/dataset_allowed_actions.md)
             - [dataset_files_serializer](src/apps/core/serializers/dataset_files_serializer.md)
             - [dataset_serializer](src/apps/core/serializers/dataset_serializer.md)
@@ -149,6 +154,7 @@
                     - [conftest](tests/unit/apps/core/api/conftest.md)
                     - dataset
                         - [conftest](tests/unit/apps/core/api/dataset/conftest.md)
+                        - [test_actors](tests/unit/apps/core/api/dataset/test_actors.md)
                         - [test_auth](tests/unit/apps/core/api/dataset/test_auth.md)
                         - [test_dataset](tests/unit/apps/core/api/dataset/test_dataset.md)
                         - [test_dataset_allowed_actions](tests/unit/apps/core/api/dataset/test_dataset_allowed_actions.md)

@@ -31,6 +31,7 @@ class DatasetNestedViewSetMixin(CommonModelViewSet):
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context["dataset_pk"] = self.kwargs.get("dataset_pk")
+        context["dataset"] = self.get_dataset_instance()
         return context
 
     def get_dataset_pk(self):

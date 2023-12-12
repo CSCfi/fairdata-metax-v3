@@ -6,7 +6,6 @@
       ],
       "organization": {
         "url": "http://uri.suomi.fi/codelist/fairdata/organization/code/09206320",
-        "code": "09206320",
         "in_scheme": "http://uri.suomi.fi/codelist/fairdata/organization",
         "pref_label": {
           "en": "CSC – IT Center for Science",
@@ -25,7 +24,6 @@
       ],
       "organization": {
         "url": "http://uri.suomi.fi/codelist/fairdata/organization/code/09206320",
-        "code": "09206320",
         "in_scheme": "http://uri.suomi.fi/codelist/fairdata/organization",
         "pref_label": {
           "en": "CSC – IT Center for Science",

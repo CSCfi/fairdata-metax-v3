@@ -44,3 +44,7 @@
 
 ### :::src.apps.common.serializers.serializers.AbstractDatasetPropertyModelSerializer
 
+## RecursiveSerializer
+
+### :::src.apps.common.serializers.serializers.RecursiveSerializer
+

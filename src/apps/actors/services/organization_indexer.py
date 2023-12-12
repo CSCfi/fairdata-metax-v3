@@ -1,6 +1,7 @@
 import csv
 import logging
 
+from cachalot.api import cachalot_disabled
 from django.conf import settings
 from django.db import transaction
 
@@ -116,4 +117,5 @@ class OrganizationIndexer:
 
     def index(self):
         orgs_dict = self.read_organizations()
-        self.update_orgs(orgs_dict)
+        with cachalot_disabled():
+            self.update_orgs(orgs_dict)

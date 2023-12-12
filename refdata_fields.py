@@ -73,12 +73,22 @@ def get_refdata_fields(serializer: serializers.Serializer, path="") -> Dict[str,
     return nested_fields
 
 
+class DummyView:
+    query_params = {}
+
+
+context = {"view": DummyView()}
+
 # map refdata field -> url
 fields = {}
-fields.update(get_refdata_fields(DatasetSerializer(), path="Dataset"))
-fields.update(get_refdata_fields(DataCatalogModelSerializer(), path="DataCatalog"))
+fields.update(get_refdata_fields(DatasetSerializer(context=context), path="Dataset"))
+fields.update(get_refdata_fields(DataCatalogModelSerializer(context=context), path="DataCatalog"))
 # File.dataset_metadata is a SerializerMethodField so it doesn't get handled automatically
-fields.update(get_refdata_fields(get_file_metadata_serializer()(), path="File.dataset_metadata"))
+fields.update(
+    get_refdata_fields(
+        get_file_metadata_serializer()(context=context), path="File.dataset_metadata"
+    )
+)
 
 # map refdata url -> field
 refdata_fields = {}

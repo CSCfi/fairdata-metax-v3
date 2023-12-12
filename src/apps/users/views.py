@@ -60,7 +60,9 @@ class AuthenticatedUserView(APIView):
         if not request.user.is_authenticated:
             raise exceptions.NotAuthenticated()
 
-        serializer = AuthenticatedUserInfoSerializer(request.user, context={"request": request})
+        serializer = AuthenticatedUserInfoSerializer(
+            request.user, context={"request": request, "view": self}
+        )
         return Response(serializer.data)
 
 
@@ -124,7 +126,7 @@ class DeleteDataQueryParamsSerializer(serializers.Serializer):
     flush = serializers.BooleanField(default=False)
 
 
-class UserViewSet(QueryParamsMixin, AccessViewSetMixin, CommonReadOnlyModelViewSet):
+class UserViewSet(AccessViewSetMixin, CommonReadOnlyModelViewSet):
     """API for listing and deleting users. Not for production use."""
 
     queryset = get_user_model().objects.all()

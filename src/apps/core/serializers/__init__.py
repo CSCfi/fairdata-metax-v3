@@ -1,15 +1,13 @@
 from .common_serializers import (
     AccessRightsModelSerializer,
     CatalogHomePageModelSerializer,
-    DatasetActorModelSerializer,
-    DatasetActorProvenanceSerializer,
     DatasetPublisherModelSerializer,
     LicenseModelSerializer,
-    MetaxUserModelSerializer,
     TemporalModelSerializer,
 )
 from .concept_serializers import SpatialModelSerializer
 from .data_catalog_serializer import DataCatalogModelSerializer
+from .dataset_actor_serializers import DatasetActorProvenanceSerializer, DatasetActorSerializer
 from .dataset_allowed_actions import (
     DatasetAllowedActionsQueryParamsSerializer,
     DatasetAllowedActionsSerializer,

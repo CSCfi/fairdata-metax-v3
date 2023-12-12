@@ -196,7 +196,7 @@ def test_edit_dataset_actor(admin_client, dataset_c, data_catalog, reference_dat
         ),
         {
             "person": {"name": "hannah"},
-            "organization": {"pref_label": {"fi": "CSC"}, "in_scheme": "https://testischeema.fi"},
+            "organization": {"pref_label": {"fi": "CSC"}},
         },
         content_type="application/json",
     )

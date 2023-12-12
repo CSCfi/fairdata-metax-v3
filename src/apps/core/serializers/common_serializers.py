@@ -4,19 +4,11 @@
 #
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
-
-import json
 import logging
-from typing import Optional
 
-from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
-from rest_framework.settings import api_settings
 
-from apps.actors.models import Organization, Person
-from apps.actors.serializers import OrganizationSerializer, PersonModelSerializer
-from apps.common.helpers import update_or_create_instance
 from apps.common.serializers import (
     AbstractDatasetModelSerializer,
     AbstractDatasetPropertyModelSerializer,
@@ -25,15 +17,8 @@ from apps.common.serializers import (
     CommonNestedModelSerializer,
 )
 from apps.common.serializers.fields import ChecksumField, MediaTypeField
-from apps.common.serializers.serializers import CommonModelSerializer, StrictSerializer
-from apps.core.models import (
-    AccessRights,
-    CatalogHomePage,
-    DatasetActor,
-    DatasetPublisher,
-    MetadataProvider,
-    OtherIdentifier,
-)
+from apps.common.serializers.serializers import CommonModelSerializer
+from apps.core.models import AccessRights, CatalogHomePage, DatasetPublisher, OtherIdentifier
 from apps.core.models.catalog_record import EntityRelation, RemoteResource, Temporal
 from apps.core.models.concepts import (
     AccessType,
@@ -47,9 +32,6 @@ from apps.core.models.concepts import (
     UseCategory,
 )
 from apps.core.models.entity import Entity
-from apps.core.permissions import DatasetAccessPolicy
-from apps.users.models import MetaxUser
-from apps.users.serializers import MetaxUserModelSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -146,73 +128,6 @@ class AccessRightsModelSerializer(CommonNestedModelSerializer):
             "restriction_grounds",
             "available",
         )
-
-
-class DatasetActorModelSerializer(CommonModelSerializer):
-    organization = OrganizationSerializer(many=False, required=False, allow_null=True)
-    person = PersonModelSerializer(many=False, required=False, allow_null=True)
-
-    def create(self, validated_data):
-        # Object extraction from payload
-        org_data = validated_data.pop("organization", None)
-        person_data = validated_data.pop("person", None)
-
-        # Final foreign key model objects
-        org: Optional[Organization] = None
-        person: Optional[Person] = None
-
-        # Organizations are global, persons are local to dataset
-        if org_data:
-            org, created = Organization.available_objects.get_or_create(**org_data)
-        if person_data:
-            person = self.fields["person"].create(person_data)
-
-        # dataset id context binding
-        if dataset := validated_data.get("dataset"):
-            validated_data["dataset_id"] = dataset.id
-        if validated_data.get("dataset_id") is None:
-            validated_data["dataset_id"] = self.context.get("dataset_pk")
-        if validated_data.get("dataset_id") is None:
-            raise serializers.ValidationError(detail="dataset_id is required for DatasetActor")
-        return DatasetActor.objects.create(organization=org, person=person, **validated_data)
-
-    def update(self, instance, validated_data):
-        org_data = validated_data.pop("organization", None)
-        person_data = validated_data.pop("person", None)
-
-        if org_data:
-            instance.organization = update_or_create_instance(
-                self.fields["organization"], instance.organization, org_data
-            )
-        if person_data:
-            instance.person = update_or_create_instance(
-                self.fields["person"], instance.person, person_data
-            )
-
-        return instance
-
-    def to_representation(self, instance):
-        rep = super().to_representation(instance)
-        if org := rep.get("organization"):
-            rep["organization"] = {
-                "id": org.get("id"),
-                "pref_label": org.get("pref_label"),
-                "url": org.get("url"),
-                "code": org.get("code"),
-                "in_scheme": org.get("in_scheme"),
-                "homepage": org.get("homepage"),
-            }
-        return rep
-
-    class Meta:
-        model = DatasetActor
-        fields = ("id", "roles", "person", "organization")
-        list_serializer_class = CommonListSerializer
-
-
-class DatasetActorProvenanceSerializer(DatasetActorModelSerializer):
-    class Meta(DatasetActorModelSerializer.Meta):
-        fields = ("id", "person", "organization")
 
 
 class OtherIdentifierListSerializer(serializers.ListSerializer):

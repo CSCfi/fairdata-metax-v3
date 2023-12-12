@@ -16,6 +16,10 @@
 
 ### :::src.apps.common.views.QueryParamsMixin
 
+## NonFilteringGetObjectMixin
+
+### :::src.apps.common.views.NonFilteringGetObjectMixin
+
 ## CommonModelViewSet
 
 ### :::src.apps.common.views.CommonModelViewSet

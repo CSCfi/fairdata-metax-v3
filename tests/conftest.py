@@ -84,6 +84,34 @@ def data_catalog() -> DataCatalog:
 
 @pytest.mark.django_db
 @pytest.fixture
+def organization_reference_data():
+    scheme = settings.ORGANIZATION_SCHEME
+    return [
+        factories.OrganizationFactory(
+            pref_label={"en": "Aalto University", "fi": "Aalto-yliopisto"},
+            in_scheme=scheme,
+            url="http://uri.suomi.fi/codelist/fairdata/organization/code/10076",
+        ),
+        factories.OrganizationFactory(
+            pref_label={"en": "Kone Foundation", "fi": "Koneen Säätiö"},
+            in_scheme=scheme,
+            url="http://uri.suomi.fi/codelist/fairdata/organization/code/02135371",
+        ),
+        factories.OrganizationFactory(
+            pref_label={
+                "en": "CSC – IT Center for Science",
+                "fi": "CSC - Tieteen tietotekniikan keskus Oy",
+                "sv": "CSC – IT Center for Science",
+                "und": "CSC - Tieteen tietotekniikan keskus Oy",
+            },
+            url="http://uri.suomi.fi/codelist/fairdata/organization/code/09206320",
+            in_scheme="http://uri.suomi.fi/codelist/fairdata/organization",
+        ),
+    ]
+
+
+@pytest.mark.django_db
+@pytest.fixture
 def access_type_reference_data():
     common_args = {
         "in_scheme": "http://uri.suomi.fi/codelist/fairdata/access_type",
@@ -478,6 +506,7 @@ def reference_data(
     relation_type_reference_data,
     event_outcome_reference_data,
     lifecycle_event_reference_data,
+    organization_reference_data,
 ):
     """Collection of reference data"""
 

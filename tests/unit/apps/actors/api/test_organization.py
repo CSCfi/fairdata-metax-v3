@@ -14,7 +14,7 @@ def organization_tree():
     org1_2 = OrganizationFactory.create(parent=org1)
     org1_2_3 = OrganizationFactory.create(parent=org1_2)
     org1_2_4 = OrganizationFactory.create(parent=org1_2)
-    org1_3 = OrganizationFactory.create(parent=org1)
+    org1_5 = OrganizationFactory.create(parent=org1)
 
 
 def get_code_trees(orgs):
@@ -49,12 +49,14 @@ def check_org_trees(organization_tree):
         if org_code:
             # single org
             org_id = Organization.available_objects.get(code=org_code).id
-            resp = client.get(f"{reverse('organization-detail', args=[org_id])}")
+            resp = client.get(
+                f"{reverse('organization-detail', args=[org_id])}", {"expand_children": True}
+            )
             assert resp.status_code == 200
             code_trees = get_code_trees([resp.data])
         else:
             # list of orgs
-            resp = client.get(f"{reverse('organization-list')}")
+            resp = client.get(f"{reverse('organization-list')}", {"expand_children": True})
             assert resp.status_code == 200
             code_trees = get_code_trees(resp.data["results"])
         assert code_trees == expected_code_tree

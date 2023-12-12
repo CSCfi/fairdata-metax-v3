@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from apps.core.mixins import DatasetNestedViewSetMixin
 from apps.core.serializers import (
     AccessRightsModelSerializer,
-    DatasetActorModelSerializer,
+    DatasetActorSerializer,
     ProvenanceModelSerializer,
 )
 
@@ -82,7 +82,7 @@ class ProvenanceViewSet(DatasetNestedViewSetMixin):
 
 @swagger_auto_schema(operation_description="DatasetActor viewset")
 class DatasetActorViewSet(DatasetNestedViewSetMixin):
-    serializer_class = DatasetActorModelSerializer
+    serializer_class = DatasetActorSerializer
     filter_backends = (filters.DjangoFilterBackend,)
 
 

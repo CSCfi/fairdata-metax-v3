@@ -61,8 +61,10 @@ def test_dataset_files_post_multiple_file_sets(admin_client, deep_file_tree, dat
 
     assert res.status_code == 400
     assert res.json() == {
-        "csc_project": "Wrong csc_project for fileset.",
-        "storage_service": "Wrong storage_service for fileset.",
+        "fileset": {
+            "csc_project": "Wrong csc_project for fileset.",
+            "storage_service": "Wrong storage_service for fileset.",
+        }
     }
 
 

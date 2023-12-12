@@ -1,6 +1,7 @@
 from rest_access_policy import AccessViewSetMixin
 from rest_framework import viewsets
 from rest_framework.exceptions import NotAuthenticated
+from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
@@ -108,9 +109,46 @@ class QueryParamsMixin(viewsets.ViewSet):
         self.query_params = params
 
 
-class CommonModelViewSet(PatchModelMixin, SystemCreatorViewSet):
+class NonFilteringGetObjectMixin:
+    """ViewSet mixin that doesn't call filter_queryset in get_object.
+
+    Normally, e.g. `/datasets/<id>?title=something` will
+    return 404 if the title does not contain 'something'.
+    This is counterintuitive since it's not anywhere in
+    the Swagger docs. Disabling the feature should be
+    ok since we're not using django-filters for enforcing
+    permissions.
+    """
+
+    def get_object(self):
+        """Identical to GenericAPIView.get_object but doesn't use filter_queryset."""
+        queryset = self.get_queryset()  # removed filter_queryset here
+
+        # Perform the lookup filtering.
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+
+        assert lookup_url_kwarg in self.kwargs, (
+            "Expected view %s to be called with a URL keyword argument "
+            'named "%s". Fix your URL conf, or set the `.lookup_field` '
+            "attribute on the view correctly." % (self.__class__.__name__, lookup_url_kwarg)
+        )
+
+        filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
+        obj = get_object_or_404(queryset, **filter_kwargs)
+
+        # May raise a permission denied
+        self.check_object_permissions(self.request, obj)
+
+        return obj
+
+
+class CommonModelViewSet(
+    QueryParamsMixin, NonFilteringGetObjectMixin, PatchModelMixin, SystemCreatorViewSet
+):
     """ViewSet with common functionality."""
 
 
-class CommonReadOnlyModelViewSet(viewsets.ReadOnlyModelViewSet):
+class CommonReadOnlyModelViewSet(
+    QueryParamsMixin, NonFilteringGetObjectMixin, viewsets.ReadOnlyModelViewSet
+):
     """ViewSet with common functionality for read only models."""

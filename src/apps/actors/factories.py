@@ -23,7 +23,7 @@ class OrganizationFactory(factory.django.DjangoModelFactory):
 
     @factory.lazy_attribute
     def url(obj):
-        return f"https://{settings.ORGANIZATION_BASE_URI}/{obj.code}"
+        return f"https://{settings.ORGANIZATION_BASE_URI}{obj.code}"
 
 
 class PersonFactory(factory.django.DjangoModelFactory):

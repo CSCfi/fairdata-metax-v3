@@ -1,5 +1,6 @@
 import copy
 import logging
+import uuid
 from contextlib import contextmanager
 from datetime import datetime
 from typing import Dict
@@ -14,6 +15,7 @@ from django_filters import NumberFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg import openapi
 from drf_yasg.inspectors import CoreAPICompatInspector
+from rest_framework.fields import empty
 
 logger = logging.getLogger(__name__)
 
@@ -178,3 +180,30 @@ def date_to_datetime(date):
 def datetime_to_date(dt):
     """Convert datetime to UTC date."""
     return dt.astimezone(timezone.utc).date()
+
+
+def changed_fields(a: dict, b: dict) -> dict:
+    all_keys = set(a) | set(b)
+    return sorted(key for key in all_keys if a.get(key, empty) != b.get(key, empty))
+
+
+def is_valid_uuid(val):
+    if isinstance(val, uuid.UUID):
+        return True
+    try:
+        uuid.UUID(str(val))
+        return True
+    except ValueError:
+        return False
+
+
+def deduplicate_list(lst: list):
+    """Deduplicate list of hashable items."""
+    added = {}
+    return [added.setdefault(item, item) for item in lst if item not in added]
+
+
+def has_values(obj: dict, exclude=None):
+    if exclude is None:
+        exclude = set()
+    return any({1 for key, value in obj.items() if key not in exclude})

@@ -20,7 +20,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.reverse import reverse
 from watson import search
 
-from apps.common.views import CommonModelViewSet, QueryParamsMixin
+from apps.common.views import CommonModelViewSet
 from apps.core.models.catalog_record import Dataset, FileSet
 from apps.core.models.preservation import Preservation
 from apps.core.permissions import DatasetAccessPolicy
@@ -114,7 +114,7 @@ class DatasetFilter(filters.FilterSet):
         }
     ),
 )
-class DatasetViewSet(QueryParamsMixin, CommonModelViewSet):
+class DatasetViewSet(CommonModelViewSet):
     query_serializers = [
         {
             "class": DatasetRevisionsQueryParamsSerializer,
