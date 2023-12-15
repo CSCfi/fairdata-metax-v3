@@ -41,7 +41,7 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         description (HStoreField): Description of the dataset
         draft_revision (models.IntegerField): Draft number
         field_of_science (models.ManyToManyField): FieldOfScience ManyToMany relation
-        is_deprecated (models.BooleanField): Is the dataset deprecated
+        deprecated (models.DateTimeField): Is the dataset deprecated
         issued (models.DateTimeField): Publication date of the dataset
         keyword (ArrayField): Dataset keywords
         language (models.ManyToManyField): Language ManyToMany relation
@@ -118,7 +118,7 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         OtherIdentifier,
         blank=True,
     )
-    is_deprecated = models.BooleanField(default=False)
+    deprecated = models.DateTimeField(null=True)
     cumulation_started = models.DateTimeField(null=True, blank=True)
     cumulation_ended = models.DateTimeField(null=True, blank=True)
     last_cumulative_addition = models.DateTimeField(null=True, blank=True)
@@ -190,6 +190,7 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
             published_revision=F("catalogrecord_ptr__dataset__published_revision"),
             state="published",
             history_change_reason__isnull=False,
+            removed__isnull=True,
         )
         if as_instance_list:
             return cls._historicals_to_instances(published)

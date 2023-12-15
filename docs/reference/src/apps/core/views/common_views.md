@@ -12,7 +12,3 @@
 
 ### :::src.apps.core.views.common_views.AccessRightsFilter
 
-## DatasetFilter
-
-### :::src.apps.core.views.common_views.DatasetFilter
-

@@ -36,7 +36,7 @@ def mark_files_deleted():
 @when("datasets with the deleted file are marked as deprecated")
 def deprecate_dataset(mark_files_deleted):
     dataset, file_id = mark_files_deleted
-    dataset.is_deprecated = True
+    dataset.deprecated = timezone.now()
     dataset.save()
     return dataset, file_id
 
@@ -51,5 +51,5 @@ def delete_ok(user_unfreeze_request):
 @pytest.mark.django_db
 def test_file_unfreeze(deprecate_dataset):
     dataset, file_id = deprecate_dataset
-    assert dataset.is_deprecated is True
+    assert dataset.deprecated is not None
     assert File.available_objects.filter(id=file_id).count() == 0

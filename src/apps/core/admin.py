@@ -83,7 +83,7 @@ class DatasetAdmin(AbstractDatasetPropertyBaseAdmin, SimpleHistoryAdmin):
         "title",
         "keyword",
         "access_rights",
-        "is_deprecated",
+        "deprecated",
         "state",
     )
     list_filter = (
@@ -92,7 +92,7 @@ class DatasetAdmin(AbstractDatasetPropertyBaseAdmin, SimpleHistoryAdmin):
         "created",
         "modified",
         "issued",
-        "is_deprecated",
+        "deprecated",
         "state",
     )
     filter_horizontal = ("language", "theme", "field_of_science")
@@ -156,7 +156,7 @@ class LegacyDatasetAdmin(DatasetAdmin):
         "data_catalog",
         "access_rights",
         "keyword",
-        "is_deprecated",
+        "deprecated",
         "created",
         "modified",
         "issued",
@@ -170,7 +170,7 @@ class LegacyDatasetAdmin(DatasetAdmin):
         "issued",
         "access_rights",
         "keyword",
-        "is_deprecated",
+        "deprecated",
         # "v2_dataset_compatibility_diff",
     )
     formfield_overrides = {models.JSONField: {"widget": JSONEditorWidget}}

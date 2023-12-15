@@ -53,8 +53,8 @@ For more information about the new dataset API, see [the user guide article](./d
 | date_cumulation_started [datetime]           | cumulation_started [datetime] :star:          |
 | date_last_cumulative_addition [datetime]     | last_cumulative_addition [datetime] :star:    |
 | date_modified [datetime]                     | modified [datetime] :star:                    |
-| date_removed [datetime]                      | removed [datetime] :clock: [^7]               |
-| deprecated [bool]                            | deprecated [datetime] :clock:                 |
+| date_removed [datetime]                      | removed [datetime] :star:                     |
+| deprecated [bool]                            | deprecated [datetime] :star:                  |
 | identifier [uuid]                            | id [uuid] :star:                              |
 | metadata_owner_org [str]                     | metadata_owner/organization [str] :star:      |
 | metadata_provider_org [str]                  | metadata_owner/organization [str] :star:      |
@@ -735,4 +735,3 @@ Dataset-specific directory metadata is only visible when browsing directories.
 [^4]: Is solved in the PublishingChannels implementation
 [^5]: PAS will have its own data-catalog in V3
 [^6]: django-model-utils third-party library SoftDeletableModel provides is_removed field, it can be customized, but it is unclear how much to just use removed timestamp without the bool field.
-[^7]: currently removal_date in implementation, built on top of SoftDeletableModel. Changing it should be fairly easy, but will modify lots of models.

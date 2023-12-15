@@ -12,6 +12,10 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_legacy.test_edit_legacy_dataset
 
+## test_edit_legacy_dataset_deprecation
+
+### :::tests.unit.apps.core.api.dataset.test_legacy.test_edit_legacy_dataset_deprecation
+
 ## test_delete_legacy_dataset
 
 ### :::tests.unit.apps.core.api.dataset.test_legacy.test_delete_legacy_dataset

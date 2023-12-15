@@ -7,7 +7,7 @@ from rest_framework.pagination import LimitOffsetPagination
 
 
 class OffsetPagination(LimitOffsetPagination):
-    default_limit = 100
+    default_limit = 50
 
     # Allow disabling pagination with pagination=false
     pagination_param = "pagination"

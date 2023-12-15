@@ -96,6 +96,7 @@ class DatasetFilter(filters.FilterSet):
         label="preservation_state",
         field_name="preservation__state",
     )
+    deprecated = filters.BooleanFilter(lookup_expr="isnull", exclude=True)
     ordering = filters.OrderingFilter(
         fields=(
             ("created", "created"),

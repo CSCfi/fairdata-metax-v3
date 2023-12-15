@@ -101,19 +101,3 @@ class AccessRightsFilter(filters.FilterSet):
             ("license__pref_label__values", "license__pref_label"),
         )
     )
-
-
-class DatasetFilter(filters.FilterSet):
-    title = filters.CharFilter(
-        field_name="title",
-        max_length=512,
-        lookup_expr="icontains",
-        label="title",
-    )
-
-    ordering = filters.OrderingFilter(
-        fields=(
-            ("created", "created"),
-            ("modified", "modified"),
-        )
-    )

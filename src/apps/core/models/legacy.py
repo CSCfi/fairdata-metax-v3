@@ -213,7 +213,6 @@ class LegacyDataset(Dataset):
         Returns:
 
         """
-        self.is_deprecated = self.dataset_json.get("deprecated") or False
         self.cumulation_started = self.dataset_json.get("date_cumulation_started")
         self.cumulation_ended = self.dataset_json.get("date_cumulation_ended")
         self.last_cumulative_addition = self.dataset_json.get("date_last_cumulative_addition")
@@ -227,6 +226,13 @@ class LegacyDataset(Dataset):
             self.modified = modified
         else:
             self.modified = self.created
+
+        if self.dataset_json.get("deprecated"):
+            # Use modification date for deprecation date if not already set
+            if not self.deprecated:
+                self.deprecated = self.modified
+        else:
+            self.deprecated = None
 
         if user_modified := self.dataset_json.get("user_modified"):
             user, created = get_user_model().objects.get_or_create(username=user_modified)

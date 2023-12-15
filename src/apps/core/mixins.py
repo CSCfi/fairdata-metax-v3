@@ -66,12 +66,12 @@ class V2DatasetMixin:
         access_rights (object): Object must be compatible with AccessRights model attributes
         is_output_of (QuerySet): Set members must have DatasetProject compatible attributes.
         actors (QuerySet): Set members must have DatasetActor compatible attributes.
-        is_deprecated (bool): Indicates if dataset is deprecated
+        deprecated (datetime): Indicates when dataset was deprecated
         preservation_state (int): Long term preservation state of the dataset
         state (str): State of the dataset, can be draft or published
         cumulative_state (int): Cumulative state of the dataset
         created (datetime): Datetime when the dataset was created
-        is_removed (bool): Indicates if dataset is removed
+        removed (datetime): Indicates when dataset was removed
         metadata_owner (object): Object must be compatible with MetadataProvider model attributes
         title (dict): Dataset title in form of {"fi": "otsikko", "en": "title"}
         description (dict): Dataset description in form of {"fi": "kuvaus", "en": "description"}
@@ -94,7 +94,7 @@ class V2DatasetMixin:
     access_rights: object
     is_output_of: QuerySet
     actors: QuerySet
-    is_deprecated: bool
+    deprecated: datetime
     preservation_state: int
     state: str
     cumulative_state: int
@@ -399,7 +399,7 @@ class V2DatasetMixin:
 
         doc = {
             "identifier": str(self.id),
-            "deprecated": self.is_deprecated,
+            "deprecated": self.deprecated is not None,
             "preservation_state": self.preservation_state,
             "state": self.state,
             "cumulative_state": self.cumulative_state.real,

@@ -83,7 +83,7 @@ class AccessRights(AbstractBaseModel):
         Returns:
             bool: True if data should be downloadable by request user.
         """
-        if dataset.removed or dataset.is_deprecated:
+        if dataset.removed or dataset.deprecated:
             return False
 
         is_published = dataset.state == dataset.StateChoices.PUBLISHED
