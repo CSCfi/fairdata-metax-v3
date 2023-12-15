@@ -12,7 +12,7 @@ from rest_framework import serializers
 from rest_framework.fields import empty
 
 from apps.common.serializers import CommonNestedModelSerializer, OneOf
-from apps.core.models import Dataset, DataCatalog
+from apps.core.models import DataCatalog, Dataset
 from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
 from apps.core.serializers.common_serializers import (
     AccessRightsModelSerializer,

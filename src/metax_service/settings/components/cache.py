@@ -10,7 +10,7 @@ CACHES = {
 if ENABLE_MEMCACHED:
     CACHES = {
         "default": {
-            "BACKEND": "django.core.cache.backends.memcached.PyMemcacheCache",
+            "BACKEND": "apps.cache.caches.IgnoreTooLargePyMemcacheCache",
             "LOCATION": "localhost:11211",
         }
     }

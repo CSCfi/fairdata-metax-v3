@@ -1,13 +1,12 @@
-from django.conf import settings
-from django.utils.module_loading import import_string
-
 import json
 import logging
-from requests.auth import HTTPBasicAuth
-import requests
-from rest_framework.exceptions import APIException
 import uuid
 
+import requests
+from django.conf import settings
+from django.utils.module_loading import import_string
+from requests.auth import HTTPBasicAuth
+from rest_framework.exceptions import APIException
 
 _logger = logging.getLogger(__name__)
 

@@ -6,7 +6,9 @@ from apps.files.factories import create_project_with_files
 pytestmark = [pytest.mark.django_db, pytest.mark.docs]
 
 
-def test_v1_v3_dataset_v3(admin_client, data_catalog, reference_data, v1_v3_dataset_v3_json, harvested_datacatalog):
+def test_v1_v3_dataset_v3(
+    admin_client, data_catalog, reference_data, v1_v3_dataset_v3_json, harvested_datacatalog
+):
     v1_v3_dataset_v3_json["data_catalog"] = harvested_datacatalog["id"]
     res = admin_client.post("/v3/datasets", v1_v3_dataset_v3_json, content_type="application/json")
     assert res.status_code == 201

@@ -96,6 +96,7 @@ LOCAL_APPS = [
     "actors.apps.ActorsConfig",
     "files.apps.FilesConfig",
     "router.apps.RouterConfig",
+    "cache.apps.CacheConfig",
 ]
 
 INSTALLED_APPS = LOCAL_APPS + DEFAULT_APPS + THIRD_PARTY_APPS
@@ -340,7 +341,9 @@ REST_KNOX = {
 ENABLE_USERS_VIEW = env.bool("ENABLE_USERS_VIEW", False)
 
 # PID Microservice
-PID_MS_CLIENT_INSTANCE = env.str("PID_MS_CLIENT_INSTANCE", "apps.core.services.pid_ms_client._DummyPIDMSClient")
+PID_MS_CLIENT_INSTANCE = env.str(
+    "PID_MS_CLIENT_INSTANCE", "apps.core.services.pid_ms_client._DummyPIDMSClient"
+)
 PID_MS_BASEURL = env.str("PID_MS_BASEURL", None)
 PID_MS_APIKEY = env.str("PID_MS_APIKEY", None)
 ETSIN_URL = env.str("ETSIN_URL", None)

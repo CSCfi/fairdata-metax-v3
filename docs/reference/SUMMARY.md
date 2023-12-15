@@ -8,6 +8,9 @@
         - [serializers](src/apps/actors/serializers.md)
         - [services.organization_indexer](src/apps/actors/services/organization_indexer.md)
         - [views](src/apps/actors/views.md)
+    - cache
+        - [apps](src/apps/cache/apps.md)
+        - [caches](src/apps/cache/caches.md)
     - common
         - [admin](src/apps/common/admin.md)
         - [apps](src/apps/common/apps.md)
@@ -144,6 +147,7 @@
                 - [api.test_organization](tests/unit/apps/actors/api/test_organization.md)
                 - [commands.test_index_organizations](tests/unit/apps/actors/commands/test_index_organizations.md)
                 - [models.test_organization](tests/unit/apps/actors/models/test_organization.md)
+            - [cache.test_cache](tests/unit/apps/cache/test_cache.md)
             - [conftest](tests/unit/apps/conftest.md)
             - core
                 - adapters

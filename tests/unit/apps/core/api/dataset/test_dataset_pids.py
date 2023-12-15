@@ -5,7 +5,6 @@ import pytest
 from apps.core.models import CatalogRecord
 from apps.core.services.pid_ms_client import PIDMSClient, ServiceUnavailableError
 
-
 pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
 
 

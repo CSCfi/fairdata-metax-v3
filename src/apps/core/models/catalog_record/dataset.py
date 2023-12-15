@@ -123,7 +123,6 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
     cumulation_ended = models.DateTimeField(null=True, blank=True)
     last_cumulative_addition = models.DateTimeField(null=True, blank=True)
 
-
     class PIDTypes(models.TextChoices):
         URN = "URN", _("URN")
         DOI = "DOI", _("DOI")
