@@ -7,6 +7,7 @@ from rest_framework.reverse import reverse
 from tests.utils import assert_nested_subdict, matchers
 
 from apps.core.models import OtherIdentifier
+from apps.core.models.catalog_record.dataset import Dataset
 from apps.core.models.concepts import IdentifierType
 from apps.files.factories import FileStorageFactory
 
@@ -97,7 +98,7 @@ def test_get_removed_dataset(admin_client, dataset_a_json, data_catalog, referen
     # create a dataset and check it works
     res1 = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res1.status_code == 201
-    id = res1.data['id']
+    id = res1.data["id"]
     res2 = admin_client.get(f"/v3/datasets/{id}")
     assert res2.status_code == 200
     assert_nested_subdict(dataset_a_json, res2.data)
@@ -114,6 +115,7 @@ def test_get_removed_dataset(admin_client, dataset_a_json, data_catalog, referen
     res5 = admin_client.get(f"/v3/datasets/{id}?include_removed=True")
     assert res5.status_code == 200
     assert_nested_subdict(dataset_a_json, res5.data)
+
 
 def test_list_datasets_with_ordering(
     admin_client, dataset_a_json, dataset_b_json, data_catalog, reference_data
@@ -514,3 +516,27 @@ def test_create_dataset_draft_without_catalog(
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 201
     assert_nested_subdict(dataset_a_json, res.data)
+
+
+def test_flush_dataset_by_service(service_client, dataset_a_json, data_catalog, reference_data):
+    """Flush should delete dataset from database."""
+    res = service_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    id = res.data["id"]
+    res = service_client.delete(f"/v3/datasets/{id}?flush=true")
+    assert res.status_code == 204
+    assert not Dataset.all_objects.filter(id=id).exists()
+
+
+def test_flush_dataset_by_user(user_client, dataset_a_json, data_catalog, reference_data):
+    """Flush should not be allowed for regular user."""
+    res = user_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    id = res.data["id"]
+    res = user_client.delete(f"/v3/datasets/{id}?flush=true")
+    assert res.status_code == 403
+    assert Dataset.available_objects.filter(id=id).exists()
+
+    # Delete without flush should only soft delete
+    res = user_client.delete(f"/v3/datasets/{id}")
+    assert res.status_code == 204
+    assert Dataset.all_objects.filter(id=id).exists()
+    assert not Dataset.available_objects.filter(id=id).exists()

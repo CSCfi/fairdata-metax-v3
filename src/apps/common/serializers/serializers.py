@@ -161,10 +161,12 @@ class IncludeRemovedQueryParamsSerializer(serializers.Serializer):
     )
 
 
-class DeleteListQueryParamsSerializer(serializers.Serializer):
+class FlushQueryParamsSerializer(serializers.Serializer):
     """Non-filter query parameters for deleting a list."""
 
-    flush = serializers.BooleanField(required=False, default=False)
+    flush = serializers.BooleanField(
+        required=False, default=False, help_text=_("Completely remove object from database.")
+    )
 
 
 class DeleteListReturnValueSerializer(serializers.Serializer):

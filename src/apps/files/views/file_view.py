@@ -21,10 +21,7 @@ from rest_framework.response import Response
 
 from apps.common.filters import VerboseChoiceFilter
 from apps.common.helpers import cachalot_toggle, get_filter_openapi_parameters
-from apps.common.serializers import (
-    DeleteListQueryParamsSerializer,
-    DeleteListReturnValueSerializer,
-)
+from apps.common.serializers import DeleteListReturnValueSerializer, FlushQueryParamsSerializer
 from apps.common.serializers.serializers import IncludeRemovedQueryParamsSerializer
 from apps.common.views import CommonModelViewSet, QueryParamsMixin
 from apps.files.helpers import get_file_metadata_model
@@ -193,7 +190,7 @@ class FileViewSet(BaseFileViewSet):
             "class": FileBulkQuerySerializer,
             "actions": ["post_many", "patch_many", "put_many", "delete_many"],
         },
-        {"class": DeleteListQueryParamsSerializer, "actions": ["destroy_list"]},
+        {"class": FlushQueryParamsSerializer, "actions": ["destroy_list"]},
     ]
 
     @property

@@ -16,9 +16,9 @@
 
 ### :::src.apps.common.serializers.serializers.IncludeRemovedQueryParamsSerializer
 
-## DeleteListQueryParamsSerializer
+## FlushQueryParamsSerializer
 
-### :::src.apps.common.serializers.serializers.DeleteListQueryParamsSerializer
+### :::src.apps.common.serializers.serializers.FlushQueryParamsSerializer
 
 ## DeleteListReturnValueSerializer
 

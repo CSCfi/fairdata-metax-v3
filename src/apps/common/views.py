@@ -86,8 +86,8 @@ class QueryParamsMixin(viewsets.ViewSet):
 
     def initial(self, request, *args, **kwargs):
         """Initialization before method handler is called."""
-        super().initial(request, *args, **kwargs)
         self.validate_query_params()
+        super().initial(request, *args, **kwargs)
 
     def get_query_serializer_classes(self):
         """Get query serializer classes for current action."""

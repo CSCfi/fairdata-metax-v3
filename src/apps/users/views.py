@@ -16,6 +16,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.common.responses import HttpResponseSeeOther
+from apps.common.serializers.serializers import FlushQueryParamsSerializer
 from apps.common.views import CommonReadOnlyModelViewSet, QueryParamsMixin
 from apps.users.authentication import SSOAuthentication
 from apps.users.permissions import UsersViewAccessPolicy
@@ -122,10 +123,6 @@ class APITokenListView(KnoxLoginView):
         return HttpResponseSeeOther(reverse("tokens"))
 
 
-class DeleteDataQueryParamsSerializer(serializers.Serializer):
-    flush = serializers.BooleanField(default=False)
-
-
 class UserViewSet(AccessViewSetMixin, CommonReadOnlyModelViewSet):
     """API for listing and deleting users. Not for production use."""
 
@@ -133,7 +130,7 @@ class UserViewSet(AccessViewSetMixin, CommonReadOnlyModelViewSet):
     serializer_class = UserInfoSerializer
     lookup_field = "username"
     access_policy = UsersViewAccessPolicy
-    query_serializers = [{"action": "delete_data", "class": DeleteDataQueryParamsSerializer}]
+    query_serializers = [{"action": "delete_data", "class": FlushQueryParamsSerializer}]
 
     @action(detail=True, methods=["delete"], url_path="data")
     def delete_data(self, request, *args, **kwargs):

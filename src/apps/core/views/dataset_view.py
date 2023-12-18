@@ -20,7 +20,10 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.reverse import reverse
 from watson import search
 
-from apps.common.serializers.serializers import IncludeRemovedQueryParamsSerializer
+from apps.common.serializers.serializers import (
+    FlushQueryParamsSerializer,
+    IncludeRemovedQueryParamsSerializer,
+)
 from apps.common.views import CommonModelViewSet
 from apps.core.models.catalog_record import Dataset, FileSet
 from apps.core.models.preservation import Preservation
@@ -129,6 +132,10 @@ class DatasetViewSet(CommonModelViewSet):
             "class": IncludeRemovedQueryParamsSerializer,
             "actions": ["list", "retrieve"],
         },
+        {
+            "class": FlushQueryParamsSerializer,
+            "actions": ["destroy"],
+        },
     ]
     access_policy = DatasetAccessPolicy
     serializer_class = DatasetSerializer
@@ -196,7 +203,10 @@ class DatasetViewSet(CommonModelViewSet):
         )
 
     def get_queryset(self):
-        if self.query_params.get("include_removed"):
+        include_all_datasets = self.query_params.get("include_removed") or self.query_params.get(
+            "flush"
+        )
+        if include_all_datasets:
             return self.access_policy.scope_queryset(self.request, self.queryset_include_removed)
         return self.access_policy.scope_queryset(self.request, self.queryset)
 
@@ -240,6 +250,15 @@ class DatasetViewSet(CommonModelViewSet):
         else:
             serializer = self.get_serializer(dataset)
         return response.Response(serializer.data)
+
+    def perform_destroy(self, instance):
+        """Called by 'destroy' action."""
+        flush = self.query_params["flush"]
+        if flush and not DatasetAccessPolicy().query_object_permission(
+            self.request, instance, action="<op:flush>"
+        ):
+            raise exceptions.PermissionDenied()
+        instance.delete(soft=not flush)
 
     def get_extra_action_url_map(self):
         url_map = super().get_extra_action_url_map()

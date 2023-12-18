@@ -27,6 +27,12 @@ class DatasetAccessPolicy(BaseAccessPolicy):
             "principal": "group:service",
             "effect": "allow",
         },
+        {
+            "action": ["<op:flush>"],  # hard delete dataset
+            "principal": "group:service",
+            "effect": "allow",
+            "condition": "is_metadata_owner",
+        },
         {"action": ["create"], "principal": "authenticated", "effect": "allow"},
     ] + BaseAccessPolicy.statements
 
