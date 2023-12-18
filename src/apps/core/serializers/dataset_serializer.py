@@ -106,11 +106,11 @@ class DatasetSerializer(CommonNestedModelSerializer):
         if "created" in _data and _data["created"] > _now:
             errors["created"] = "Timestamp cannot be in the future"
 
-        if self.context['request'].method == "POST":
+        if self.context["request"].method == "POST":
             if _data["modified"] < _data["created"]:
                 errors["timestamps"] = "Date modified earlier than date created"
 
-        elif self.context['request'].method in {"PUT", "PATCH"}:
+        elif self.context["request"].method in {"PUT", "PATCH"}:
             _data["created"] = self.instance.created
             if "modified" in _data and _data["modified"] < _data["created"].replace(microsecond=0):
                 errors["timestamps"] = "Date modified earlier than date created"

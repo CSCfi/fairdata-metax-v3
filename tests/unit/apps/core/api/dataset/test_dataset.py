@@ -85,6 +85,28 @@ def test_delete_dataset(admin_client, dataset_a_json, data_catalog, reference_da
     assert res.status_code == 204
 
 
+def test_get_removed_dataset(admin_client, dataset_a_json, data_catalog, reference_data):
+    # create a dataset and check it works
+    res1 = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res1.status_code == 201
+    id = res1.data['id']
+    res2 = admin_client.get(f"/v3/datasets/{id}")
+    assert res2.status_code == 200
+    assert_nested_subdict(dataset_a_json, res2.data)
+
+    # delete the dataset...
+    res3 = admin_client.delete(f"/v3/datasets/{id}")
+    assert res3.status_code == 204
+
+    # ...and check that it
+    # 1. cannot be found without query parameter
+    res4 = admin_client.get(f"/v3/datasets/{id}")
+    assert res4.status_code == 404
+    # 2. can be found with the query parameter
+    res5 = admin_client.get(f"/v3/datasets/{id}?include_removed=True")
+    assert res5.status_code == 200
+    assert_nested_subdict(dataset_a_json, res5.data)
+
 def test_list_datasets_with_ordering(
     admin_client, dataset_a_json, dataset_b_json, data_catalog, reference_data
 ):

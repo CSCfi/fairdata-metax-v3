@@ -28,6 +28,10 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_delete_dataset
 
+## test_get_removed_dataset
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_get_removed_dataset
+
 ## test_list_datasets_with_ordering
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_list_datasets_with_ordering

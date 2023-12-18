@@ -158,6 +158,7 @@
                         - [test_auth](tests/unit/apps/core/api/dataset/test_auth.md)
                         - [test_dataset](tests/unit/apps/core/api/dataset/test_dataset.md)
                         - [test_dataset_allowed_actions](tests/unit/apps/core/api/dataset/test_dataset_allowed_actions.md)
+                        - [test_dataset_timestamps](tests/unit/apps/core/api/dataset/test_dataset_timestamps.md)
                         - [test_legacy](tests/unit/apps/core/api/dataset/test_legacy.md)
                         - [test_preservation](tests/unit/apps/core/api/dataset/test_preservation.md)
                         - [test_provenance](tests/unit/apps/core/api/dataset/test_provenance.md)

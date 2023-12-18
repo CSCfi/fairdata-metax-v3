@@ -20,6 +20,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.reverse import reverse
 from watson import search
 
+from apps.common.serializers.serializers import IncludeRemovedQueryParamsSerializer
 from apps.common.views import CommonModelViewSet
 from apps.core.models.catalog_record import Dataset, FileSet
 from apps.core.models.preservation import Preservation
@@ -124,10 +125,15 @@ class DatasetViewSet(CommonModelViewSet):
             "class": DatasetAllowedActionsQueryParamsSerializer,
             "actions": ["retrieve", "list", "create", "update", "partial_update", "revisions"],
         },
+        {
+            "class": IncludeRemovedQueryParamsSerializer,
+            "actions": ["list", "retrieve"],
+        },
     ]
     access_policy = DatasetAccessPolicy
     serializer_class = DatasetSerializer
-    queryset = Dataset.objects.prefetch_related(
+
+    prefetch_fields = (
         "access_rights__access_type",
         "access_rights__license__reference",
         "access_rights__license",
@@ -152,6 +158,9 @@ class DatasetViewSet(CommonModelViewSet):
         "theme",
         "other_versions",
     )
+
+    queryset = Dataset.available_objects.prefetch_related(*prefetch_fields)
+    queryset_include_removed = Dataset.all_objects.prefetch_related(*prefetch_fields)
 
     filterset_class = DatasetFilter
     http_method_names = ["get", "post", "put", "patch", "delete", "options"]
@@ -187,6 +196,8 @@ class DatasetViewSet(CommonModelViewSet):
         )
 
     def get_queryset(self):
+        if self.query_params.get("include_removed"):
+            return self.access_policy.scope_queryset(self.request, self.queryset_include_removed)
         return self.access_policy.scope_queryset(self.request, self.queryset)
 
     @action(detail=True, methods=["post", "get"], url_path="new-version")
