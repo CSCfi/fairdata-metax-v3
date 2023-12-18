@@ -2,6 +2,7 @@ from django.contrib.postgres.fields import HStoreField
 from django.db import models
 from django.utils.translation import gettext as _
 
+from apps.common.copier import ModelCopier
 from apps.common.models import AbstractBaseModel
 
 from .concepts import ResourceType
@@ -12,6 +13,8 @@ class Entity(AbstractBaseModel):
 
     Source: http://www.w3.org/ns/prov#Entity
     """
+
+    copier = ModelCopier(copied_relations=[], parent_relations=["provenance", "relation"])
 
     title = HStoreField(help_text='example: {"en":"title", "fi":"otsikko"}', blank=True, null=True)
     description = HStoreField(

@@ -8,11 +8,9 @@ from django.db.models import Count, Sum
 from django.db.models.functions import Coalesce
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
-from typing_extensions import Self
 
 from apps.actors.models import Actor, Organization, Person
-from apps.common.helpers import ensure_instance_id, prepare_for_copy
-from apps.common.mixins import CopyableModelMixin
+from apps.common.copier import ModelCopier
 from apps.common.models import AbstractBaseModel, MediaTypeValidator
 from apps.core.models.concepts import FileType, RelationType, UseCategory
 from apps.core.models.file_metadata import FileSetDirectoryMetadata, FileSetFileMetadata
@@ -24,13 +22,17 @@ from .dataset import Dataset
 logger = logging.getLogger(__name__)
 
 
-class DatasetActor(CopyableModelMixin, Actor):
+class DatasetActor(Actor):
     """Actors associated with a Dataset.
 
     Attributes:
         dataset (Dataset): Dataset ForeignKey relation
         role (models.CharField): Role of the actor
     """
+
+    copier = ModelCopier(
+        copied_relations=["person", "organization"], parent_relations=["dataset", "provenance"]
+    )
 
     class RoleChoices(models.TextChoices):
         CREATOR = "creator", _("Creator")
@@ -47,19 +49,6 @@ class DatasetActor(CopyableModelMixin, Actor):
     dataset = models.ForeignKey(
         "Dataset", on_delete=models.CASCADE, related_name="actors", null=True, blank=True
     )
-
-    @classmethod
-    def create_copy(cls, original: Self, dataset=None) -> Tuple[Self, Self]:
-        person = original.person
-        copy = prepare_for_copy(original)
-        if person:
-            person_copy, _ = Person.create_copy(person)
-            copy.person = person_copy
-        if dataset:
-            ensure_instance_id(dataset)
-            copy.dataset = dataset
-        copy.save()
-        return copy, original
 
     def add_role(self, role: str) -> bool:
         """Adds a roles to the actor.
@@ -130,6 +119,8 @@ class Temporal(AbstractBaseModel):
         start_date (models.DateTimeField): Start of the pediod
     """
 
+    copier = ModelCopier(copied_relations=[], parent_relations=["dataset", "provenance"])
+
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
     dataset = models.ForeignKey(
@@ -163,6 +154,8 @@ class DatasetProject(AbstractBaseModel):
         project_identifier(models.CharField): Project identifier
     """
 
+    copier = ModelCopier(copied_relations=["funding_agency"], parent_relations=["dataset"])
+
     dataset = models.ManyToManyField(Dataset, related_name="is_output_of")
     project_identifier = models.CharField(max_length=512, blank=True, null=True)
     funding_agency = models.ManyToManyField("ProjectContributor", related_name="is_funding")
@@ -185,6 +178,10 @@ class FileSet(AbstractBaseModel):
         storage(models.ForeignKey): FileStorage of the fileset
 
     """
+
+    copier = ModelCopier(
+        copied_relations=["file_metadata", "directory_metadata"], parent_relations=["dataset"]
+    )
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     storage = models.ForeignKey(FileStorage, related_name="file_sets", on_delete=models.CASCADE)
@@ -293,6 +290,8 @@ class RemoteResource(AbstractBaseModel):
         use_category(models.ForeignKey): Category of the resource
     """
 
+    copier = ModelCopier(copied_relations=[], parent_relations=["dataset"])
+
     dataset = models.ForeignKey(
         "Dataset", on_delete=models.CASCADE, related_name="remote_resources"
     )
@@ -320,6 +319,8 @@ class EntityRelation(AbstractBaseModel):
 
     Source: [DCAT Version 3](https://www.w3.org/TR/vocab-dcat-3/#Property:resource_relation)
     """
+
+    copier = ModelCopier(copied_relations=["entity"], parent_relations=["dataset"])
 
     entity = models.ForeignKey(
         "Entity",

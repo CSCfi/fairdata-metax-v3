@@ -222,7 +222,7 @@ class DatasetViewSet(CommonModelViewSet):
     def new_version(self, request, pk=None):
         if request.method == "POST":
             dataset = self.get_object()
-            new_version, _ = Dataset.create_copy(dataset)
+            new_version = Dataset.create_copy(dataset)
             serializer = self.get_serializer(new_version)
             return response.Response(serializer.data, status=status.HTTP_201_CREATED)
         elif request.method == "GET":

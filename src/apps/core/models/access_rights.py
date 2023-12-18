@@ -1,15 +1,14 @@
 import json
 import uuid
 from datetime import date
-from typing import Tuple
 
 from django.contrib.postgres.fields import HStoreField
 from django.db import models
 from django.utils import timezone
 from simple_history.models import HistoricalRecords
 
-from apps.common.helpers import datetime_to_date, prepare_for_copy
-from apps.common.mixins import CopyableModelMixin
+from apps.common.copier import ModelCopier
+from apps.common.helpers import datetime_to_date
 from apps.common.models import AbstractBaseModel
 from apps.core.models.concepts import AccessType, DatasetLicense, RestrictionGrounds
 
@@ -22,7 +21,7 @@ class AccessTypeChoices(models.TextChoices):
     RESTRICTED = "http://uri.suomi.fi/codelist/fairdata/access_type/code/restricted"
 
 
-class AccessRights(AbstractBaseModel, CopyableModelMixin):
+class AccessRights(AbstractBaseModel):
     """Information about who can access the resource or an indication of its security status.
 
     RFD Property: dcterms:accessRights
@@ -35,6 +34,9 @@ class AccessRights(AbstractBaseModel, CopyableModelMixin):
         access_type(AccessType): AccessType ForeignKey relation
         description(HStoreField): Description of the access rights
     """
+
+    # Model nested copying configuration
+    copier = ModelCopier(copied_relations=["license"], parent_relations=["datasets", "catalogs"])
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     license = models.ManyToManyField(
@@ -69,19 +71,6 @@ class AccessRights(AbstractBaseModel, CopyableModelMixin):
             return self.access_type.pref_label.get("en", "access rights")
         else:
             return "Access Rights"
-
-    @classmethod
-    def create_copy(cls, original) -> Tuple["AccessRights", "AccessRights"]:
-        o_lics = original.license.all()
-        copy_lics = []
-        for lic in o_lics:
-            copy_lic, _ = lic.create_copy(lic)
-            copy_lics.append(copy_lic)
-
-        copy = prepare_for_copy(original)
-        copy.save()
-        copy.license.set(copy_lics)
-        return copy, original
 
     def _embargo_passed(self, date: date):
         if not self.available:

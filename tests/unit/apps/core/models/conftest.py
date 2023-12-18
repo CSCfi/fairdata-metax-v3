@@ -88,7 +88,7 @@ def infrastructure() -> ResearchInfra:
 
 
 @pytest.fixture
-def keyword() -> Theme:
+def theme() -> Theme:
     return factories.ThemeFactory(
         url="http://www.yso.fi/onto/koko/p1",
         pref_label={
@@ -156,14 +156,14 @@ def dataset() -> Dataset:
 
 @pytest.fixture
 def dataset_with_foreign_keys(
-    access_rights, language, field_of_science, keyword, dataset, data_catalog
+    access_rights, language, field_of_science, theme, dataset, data_catalog
 ) -> Dataset:
     dataset.data_catalog = data_catalog
     dataset.access_rights = access_rights
     dataset.save()
     dataset.language.add(language)
     dataset.field_of_science.add(field_of_science)
-    dataset.theme.add(keyword)
+    dataset.theme.add(theme)
     return dataset
 
 

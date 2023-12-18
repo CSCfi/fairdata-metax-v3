@@ -9,6 +9,7 @@ import logging
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
+from rest_framework.fields import empty
 
 from apps.common.serializers import CommonNestedModelSerializer, OneOf
 from apps.core.models import Dataset, DataCatalog

@@ -1,12 +1,10 @@
 import uuid
-from typing import Tuple
 
 from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.db import models
 from django.utils.translation import gettext as _
 
-from apps.common.helpers import prepare_for_copy
-from apps.common.mixins import CopyableModelMixin
+from apps.common.copier import ModelCopier
 from apps.common.models import AbstractBaseModel, AbstractFreeformConcept
 from apps.common.serializers.fields import URLReferencedModelField, URLReferencedModelListField
 from apps.refdata import models as refdata
@@ -81,7 +79,7 @@ class License(ConceptProxyMixin, refdata.License):
     """License from reference data."""
 
 
-class DatasetLicense(AbstractBaseModel, CopyableModelMixin):
+class DatasetLicense(AbstractBaseModel):
     """A legal document under which the resource is made available.
 
     RFD Property: dcterms:license
@@ -89,6 +87,8 @@ class DatasetLicense(AbstractBaseModel, CopyableModelMixin):
     Source: DCAT Version 3, Draft 11,
     https://www.w3.org/TR/vocab-dcat-3/#Property:resource_license
     """
+
+    copier = ModelCopier(copied_relations=[], parent_relations=["access_rights"])
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     custom_url = models.URLField(max_length=512, blank=True, null=True)
@@ -147,7 +147,7 @@ class Location(ConceptProxyMixin, refdata.Location):
     """Location from reference data."""
 
 
-class Spatial(AbstractFreeformConcept, CopyableModelMixin):
+class Spatial(AbstractFreeformConcept):
     """The geographical area covered by the dataset.
 
     Attributes:
@@ -159,6 +159,8 @@ class Spatial(AbstractFreeformConcept, CopyableModelMixin):
         dataset(Dataset): Dataset ForeignKey relation
 
     """
+
+    copier = ModelCopier(copied_relations=[], parent_relations=["dataset", "provenance"])
 
     reference = models.ForeignKey(
         refdata.Location, on_delete=models.CASCADE, blank=True, null=True
@@ -179,15 +181,6 @@ class Spatial(AbstractFreeformConcept, CopyableModelMixin):
     dataset = models.ForeignKey(
         "Dataset", on_delete=models.CASCADE, related_name="spatial", null=True, blank=True
     )
-
-    @classmethod
-    def create_copy(cls, original, dataset=None):
-        copy = prepare_for_copy(original)
-        if dataset:
-            dataset.save()
-            copy.dataset = dataset
-        copy.save()
-        return copy, original
 
     def __str__(self):
         return self.geographic_name or str(next(iter(self.reference.pref_label.items())))

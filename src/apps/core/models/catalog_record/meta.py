@@ -8,11 +8,11 @@ from django.db import models
 from django.utils import timezone
 from simple_history.models import HistoricalRecords
 
-from apps.actors.models import Actor
+from apps.common.copier import ModelCopier
 from apps.common.models import AbstractBaseModel
 from apps.core.models.concepts import IdentifierType
 from apps.core.models.data_catalog import DataCatalog
-from apps.core.models.preservation import Contract, Preservation
+from apps.core.models.preservation import Preservation
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +37,8 @@ class OtherIdentifier(AbstractBaseModel):
         notation(models.CharField): Identifier
         old_notation(models.CharField): Legacy notation value from V1-V2 metax
     """
+
+    copier = ModelCopier(copied_relations=[], parent_relations=["dataset"])
 
     notation = models.CharField(max_length=512)
     old_notation = models.CharField(max_length=512, blank=True, null=True)

@@ -130,3 +130,27 @@ def test_edit_provenance(dataset_with_provenance_json, provenance_a_request, adm
     assert res.status_code == 200
     assert res.data["title"]["fi"] == "new title"
     assert len(res.data["is_associated_with"]) == 2
+
+
+def test_provenance_new_version(dataset_with_provenance_json, provenance_a_request, admin_client):
+    dataset_id = provenance_a_request.data["id"]
+    res = admin_client.post(
+        f"/v3/datasets/{dataset_id}/new-version",
+        content_type="application/json",
+    )
+    new_id = res.data["id"]
+    assert res.status_code == 201
+
+    original = Dataset.objects.get(id=dataset_id)
+    new = Dataset.objects.get(id=new_id)
+    assert new.provenance.first().id != original.provenance.first().id
+    assert (
+        new.provenance.first().is_associated_with.first().person.name
+        == original.provenance.first().is_associated_with.first().person.name
+    )
+    assert (
+        new.provenance.first().is_associated_with.first().id
+        != original.provenance.first().is_associated_with.first().id
+    )
+
+    assert new.provenance.first().is_associated_with.first().id == new.actors.first().id

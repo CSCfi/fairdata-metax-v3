@@ -6,20 +6,21 @@ from django.db.models import Q
 from django.utils.translation import gettext as _
 from simple_history.models import HistoricalRecords
 
-from apps.common.helpers import ensure_instance_id, prepare_for_copy
-from apps.common.mixins import CopyableModelMixin
+from apps.common.copier import ModelCopier
 from apps.common.models import AbstractBaseModel, AbstractDatasetProperty
 
 
-class Contract(AbstractDatasetProperty, CopyableModelMixin):
+class Contract(AbstractDatasetProperty):
     description = models.CharField(max_length=200, blank=True, null=True)
     quota = models.BigIntegerField()
     valid_until = models.DateTimeField()
     history = HistoricalRecords()
 
 
-class Preservation(AbstractBaseModel, CopyableModelMixin):
+class Preservation(AbstractBaseModel):
     """Model describing dataset's preservation status"""
+
+    copier = ModelCopier(copied_relations=[])
 
     contract = models.ForeignKey(
         Contract,

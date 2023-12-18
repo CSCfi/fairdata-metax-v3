@@ -3,6 +3,8 @@
 import pytest
 from tests.utils import assert_nested_subdict
 
+from apps.core.models import Dataset
+
 pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
 
 
@@ -60,6 +62,61 @@ def test_dataset_post_dataset_with_files(
             "files": [{"pathname": "/rootfile.txt", "dataset_metadata": {"title": "file"}}],
         },
         res.json(),
+    )
+
+
+def test_dataset_post_dataset_with_files_new_version(
+    admin_client, deep_file_tree, dataset_json_with_files, data_urls
+):
+    res = admin_client.post(
+        f"/v3/datasets",
+        dataset_json_with_files,
+        content_type="application/json",
+    )
+    original_id = res.data["id"]
+    assert res.status_code == 201
+
+    # Create new version of dataset with files
+    res = admin_client.post(
+        f"/v3/datasets/{res.data['id']}/new-version",
+        dataset_json_with_files,
+        content_type="application/json",
+    )
+    new_id = res.data["id"]
+    assert new_id != original_id
+
+    url = data_urls(new_id)["directories"]
+    res = admin_client.get(url, {"pagination": "false"})
+    assert_nested_subdict(
+        {
+            "directories": [
+                {"pathname": "/dir1/", "dataset_metadata": {"title": "directory"}},
+            ],
+            "files": [{"pathname": "/rootfile.txt", "dataset_metadata": {"title": "file"}}],
+        },
+        res.json(),
+    )
+
+    # Check that versions have separate but identical file sets
+    original = Dataset.objects.get(id=original_id)
+    new = Dataset.objects.get(id=new_id)
+    assert new.file_set.id != original.file_set.id
+    assert set(new.file_set.files.all()) == set(
+        original.file_set.files.all()
+    )  # files should be the same
+    assert new.file_set.file_metadata.count() == original.file_set.file_metadata.count()
+    assert new.file_set.file_metadata.first().id != original.file_set.file_metadata.first().id
+    assert (
+        new.file_set.file_metadata.first().title == original.file_set.file_metadata.first().title
+    )
+    assert new.file_set.directory_metadata.count() == original.file_set.directory_metadata.count()
+    assert (
+        new.file_set.directory_metadata.first().id
+        != original.file_set.directory_metadata.first().id
+    )
+    assert (
+        new.file_set.directory_metadata.first().title
+        == original.file_set.directory_metadata.first().title
     )
 
 

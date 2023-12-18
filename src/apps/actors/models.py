@@ -6,12 +6,22 @@ from django.conf import settings
 from django.contrib.postgres.fields import HStoreField
 from django.core.exceptions import MultipleObjectsReturned
 from django.db import models
+from django.db.models import Model
 from django.utils.translation import gettext as _
 
-from apps.common.mixins import CopyableModelMixin
+from apps.common.copier import ModelCopier
 from apps.common.models import AbstractBaseModel
 
 logger = logging.getLogger(__name__)
+
+
+class OrganizationModelCopier(ModelCopier):
+    def copy(self, original: Model, new_values: dict = None, copied_objects: dict = None) -> Model:
+        if original.is_reference_data:
+            return (
+                original  # Reference data organizations should be used as-is instead of copying.
+            )
+        return super().copy(original, new_values, copied_objects)
 
 
 class Organization(AbstractBaseModel):
@@ -21,6 +31,11 @@ class Organization(AbstractBaseModel):
     Source: skos:Concept
     https://www.w3.org/TR/skos-reference/#concepts
     """
+
+    # Copying a sub-organization in a dataset should also copy its parents
+    copier = OrganizationModelCopier(
+        copied_relations=["parent"], parent_relations=["actor_organizations"]
+    )
 
     def choose_between(self, other) -> "Organization":
         if isinstance(other, self.__class__):
@@ -153,7 +168,9 @@ class Organization(AbstractBaseModel):
         return f"<{self.__class__.__name__} {self.id}: {self.get_label()}>"
 
 
-class Person(AbstractBaseModel, CopyableModelMixin):
+class Person(AbstractBaseModel):
+    copier = ModelCopier(copied_relations=[], parent_relations=["part_of_actors"])
+
     name = models.CharField(max_length=512)
     email = models.EmailField(max_length=512, blank=True, null=True)
     external_identifier = models.CharField(

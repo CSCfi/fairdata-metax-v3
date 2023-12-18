@@ -1,5 +1,9 @@
 # models
 
+## OrganizationModelCopier
+
+### :::src.apps.actors.models.OrganizationModelCopier
+
 ## Organization
 
 ### :::src.apps.actors.models.Organization

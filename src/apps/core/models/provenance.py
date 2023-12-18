@@ -2,6 +2,7 @@ from django.contrib.postgres.fields import HStoreField
 from django.db import models
 from django.utils.translation import gettext as _
 
+from apps.common.copier import ModelCopier
 from apps.common.helpers import ensure_instance_id, prepare_for_copy
 from apps.common.models import AbstractBaseModel, AbstractFreeformConcept
 
@@ -22,6 +23,11 @@ class Provenance(AbstractBaseModel):
         is_associated_with(models.ManyToManyField): actors associated with the event
         dataset(Dataset): Dataset ForeignKey relation
     """
+
+    copier = ModelCopier(
+        copied_relations=["spatial", "temporal", "is_associated_with", "used_entity", "variables"],
+        parent_relations=["dataset"],
+    )
 
     title = HStoreField(help_text=_('example: {"en":"title", "fi":"otsikko"}'), null=True)
     description = HStoreField(help_text=_('example: {"en":"description", "fi": "kuvaus"}'))
@@ -46,7 +52,7 @@ class Provenance(AbstractBaseModel):
     dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE, related_name="provenance")
 
     @classmethod
-    def create_copy(cls, original, dataset=None):
+    def _create_copy(cls, original, dataset=None):
         copy_actors = original.is_associated_with.all()
         copy = prepare_for_copy(original)
 
@@ -55,7 +61,7 @@ class Provenance(AbstractBaseModel):
             copy.dataset = dataset
 
         if original.spatial:
-            new_spatial, _ = Spatial.create_copy(original.spatial, dataset)
+            new_spatial = Spatial.create_copy(original.spatial, dataset)
             copy.spatial = new_spatial
 
         copy.save()
@@ -70,4 +76,6 @@ class Provenance(AbstractBaseModel):
 
 
 class ProvenanceVariable(AbstractFreeformConcept):
+    copier = ModelCopier(copied_relations=[], parent_relations=["provenance"])
+
     provenance = models.ForeignKey(Provenance, on_delete=models.CASCADE, related_name="variables")

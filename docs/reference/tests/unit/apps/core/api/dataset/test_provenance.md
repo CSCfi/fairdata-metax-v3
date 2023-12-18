@@ -20,3 +20,7 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_provenance.test_edit_provenance
 
+## test_provenance_new_version
+
+### :::tests.unit.apps.core.api.dataset.test_provenance.test_provenance_new_version
+

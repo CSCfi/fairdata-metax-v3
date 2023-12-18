@@ -2,6 +2,7 @@ import logging
 
 from django.db import models
 
+from apps.common.copier import ModelCopier
 from apps.files.models import File, FileStorage
 
 from .concepts import FileType, UseCategory
@@ -11,6 +12,8 @@ logger = logging.getLogger(__name__)
 
 class FileSetFileMetadata(models.Model):
     """Model for additional metadata for dataset-file relation."""
+
+    copier = ModelCopier(copied_relations=[], parent_relations=["file_set"])
 
     file_set = models.ForeignKey(
         "core.FileSet", related_name="file_metadata", editable=False, on_delete=models.CASCADE
@@ -27,6 +30,8 @@ class FileSetFileMetadata(models.Model):
 
 class FileSetDirectoryMetadata(models.Model):
     """Model for additional metadata for dataset-directory relation."""
+
+    copier = ModelCopier(copied_relations=[], parent_relations=["file_set"])
 
     file_set = models.ForeignKey(
         "core.FileSet", related_name="directory_metadata", editable=False, on_delete=models.CASCADE

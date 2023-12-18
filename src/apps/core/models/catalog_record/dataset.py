@@ -1,5 +1,4 @@
 import logging
-from typing import Tuple
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, HStoreField
@@ -14,8 +13,8 @@ from simple_history.models import HistoricalRecords
 from simple_history.utils import update_change_reason
 from typing_extensions import Self
 
+from apps.common.copier import ModelCopier
 from apps.common.helpers import datetime_to_date, prepare_for_copy
-from apps.common.mixins import CopyableModelMixin
 from apps.common.models import AbstractBaseModel
 from apps.core.mixins import V2DatasetMixin
 from apps.core.models.access_rights import AccessRights
@@ -27,7 +26,7 @@ from .meta import CatalogRecord, OtherIdentifier
 logger = logging.getLogger(__name__)
 
 
-class Dataset(V2DatasetMixin, CopyableModelMixin, CatalogRecord, AbstractBaseModel):
+class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
     """A collection of data available for access or download in one or many representations.
 
     RDF Class: dcat:Dataset
@@ -56,6 +55,23 @@ class Dataset(V2DatasetMixin, CopyableModelMixin, CatalogRecord, AbstractBaseMod
         theme (models.ManyToManyField): Keyword ManyToMany relation
         title (HStoreField): Title of the dataset
     """
+
+    # Model nested copying configuration
+    copier = ModelCopier(
+        copied_relations=[
+            "access_rights",
+            "other_identifiers",
+            "actors",
+            "provenance",
+            # "projects",
+            "file_set",
+            "spatial",
+            "temporal",
+            "remote_resources",
+            "relation",
+            "preservation",
+        ]
+    )
 
     persistent_identifier = models.CharField(max_length=255, null=True, blank=True)
     issued = models.DateField(
@@ -232,8 +248,8 @@ class Dataset(V2DatasetMixin, CopyableModelMixin, CatalogRecord, AbstractBaseMod
             return revisions.as_instances()
 
     @classmethod
-    def create_copy(cls, original: "Dataset") -> Tuple[Self, Self]:
-        """Creates a copy of the given dataset and all its related objects.
+    def create_copy(cls, original: Self) -> Self:
+        """Creates a copy of the given dataset and its related objects.
 
         This method is used when a dataset is being published as a new version.
 
@@ -241,58 +257,23 @@ class Dataset(V2DatasetMixin, CopyableModelMixin, CatalogRecord, AbstractBaseMod
             original (Dataset): The original dataset to be copied
 
         Returns:
-            Tuple[Dataset, Dataset]: A tuple containing the new and original dataset
+            Dataset: The copied dataset
         """
-
-        from .related import DatasetActor
-
-        # Many to Many
-        copy_languages = original.language.all()
-        copy_themes = original.theme.all()
-        copy_field_of_sciences = original.field_of_science.all()
-
-        copy = prepare_for_copy(original)
-
-        # Custom field values
-        copy.preservation = None
-        copy.catalogrecord_ptr = None
-        copy.state = cls.StateChoices.DRAFT
-        copy.published_revision = 0
-        copy.created = timezone.now()
-        copy.modified = timezone.now()
-        copy.persistent_identifier = None
-        copy.save()
-
-        if original.access_rights:
-            copy.access_rights, _ = AccessRights.create_copy(original.access_rights)
-
-        new_actors = []
-        # reverse foreign keys
-        for actor in original.actors.all():
-            new_actor, _ = DatasetActor.create_copy(actor, copy)
-            new_actors.append(new_actor)
-
-        new_provs = []
-        for prov in original.provenance.all():
-            from apps.core.models import Provenance
-
-            new_prov, _ = Provenance.create_copy(prov, copy)
-            new_provs.append(new_prov)
-
-        # reverse set
-        copy.actors.set(new_actors)
-        copy.provenance.set(new_provs)
-
-        # Many to Many
-        copy.language.set(copy_languages)
-        copy.theme.set(copy_themes)
-        copy.field_of_science.set(copy_field_of_sciences)
+        new_values = dict(
+            preservation=None,
+            catalogrecord_ptr=None,
+            state=cls.StateChoices.DRAFT,
+            published_revision=0,
+            created=timezone.now(),
+            modified=timezone.now(),
+            persistent_identifier=None,
+        )
+        copy = original.copier.copy(original, new_values=new_values)
 
         copy.other_versions.add(original)
         for version in original.other_versions.exclude(id=copy.id):
             copy.other_versions.add(version)
-
-        return copy, original
+        return copy
 
     def delete(self, *args, **kwargs):
         if self.access_rights:

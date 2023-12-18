@@ -164,6 +164,9 @@ def prepare_for_copy(obj):
     obj.id = None
     obj.pk = None
     obj._state.adding = True
+    # Clear prefetch cache to avoid false reverse and m2m relations
+    if cache := getattr(obj, "_prefetched_objects_cache", None):
+        cache.clear()
     return obj
 
 
