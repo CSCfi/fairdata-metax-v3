@@ -338,3 +338,9 @@ REST_KNOX = {
 
 # Enable view that allows listing and deleting users (and user data) for testing purposes
 ENABLE_USERS_VIEW = env.bool("ENABLE_USERS_VIEW", False)
+
+# PID Microservice
+PID_MS_CLIENT_INSTANCE = env.str("PID_MS_CLIENT_INSTANCE", "apps.core.services.pid_ms_client._DummyPIDMSClient")
+PID_MS_BASEURL = env.str("PID_MS_BASEURL", None)
+PID_MS_APIKEY = env.str("PID_MS_APIKEY", None)
+ETSIN_URL = env.str("ETSIN_URL", None)

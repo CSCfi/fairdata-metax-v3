@@ -20,6 +20,7 @@ from apps.common.models import AbstractBaseModel
 from apps.core.mixins import V2DatasetMixin
 from apps.core.models.access_rights import AccessRights
 from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
+from apps.core.services.pid_ms_client import PIDMSClient, ServiceUnavailableError
 
 from .meta import CatalogRecord, OtherIdentifier
 
@@ -105,6 +106,18 @@ class Dataset(V2DatasetMixin, CopyableModelMixin, CatalogRecord, AbstractBaseMod
     cumulation_started = models.DateTimeField(null=True, blank=True)
     cumulation_ended = models.DateTimeField(null=True, blank=True)
     last_cumulative_addition = models.DateTimeField(null=True, blank=True)
+
+
+    class PIDTypes(models.TextChoices):
+        URN = "URN", _("URN")
+        DOI = "DOI", _("DOI")
+
+    pid_type = models.CharField(
+        max_length=4,
+        choices=PIDTypes.choices,
+        null=True,
+        blank=True,
+    )
 
     class StateChoices(models.TextChoices):
         PUBLISHED = "published", _("Published")
@@ -318,6 +331,9 @@ class Dataset(V2DatasetMixin, CopyableModelMixin, CatalogRecord, AbstractBaseMod
         state_has_changed, previous_state = self.tracker.has_changed(
             "state"
         ), self.tracker.previous("state")
+        if not self.persistent_identifier:
+            logger.info(f"Dataset {self.id} has no persistent_identifier. Not publishing")
+            return False
         if (
             state_has_changed
             and previous_state == self.StateChoices.DRAFT
@@ -345,6 +361,7 @@ class Dataset(V2DatasetMixin, CopyableModelMixin, CatalogRecord, AbstractBaseMod
             and self.state == self.StateChoices.DRAFT
             or previous_state == self.StateChoices.PUBLISHED
             and self.state == self.StateChoices.DRAFT
+            and self.published_revision != 0
         ):
             return True
         else:
@@ -359,11 +376,30 @@ class Dataset(V2DatasetMixin, CopyableModelMixin, CatalogRecord, AbstractBaseMod
             return True
         return False
 
+    def _can_create_urn(self):
+        return self.pid_type == self.PIDTypes.URN
+
     def change_update_reason(self, reason: str):
         from apps.core.models import LegacyDataset
 
         if not isinstance(self, LegacyDataset):
             update_change_reason(self, reason)
+
+    def create_persistent_identifier(self):
+        if self.state == self.StateChoices.DRAFT:
+            logger.info("State is DRAFT. PID is not created")
+            return
+        if self.persistent_identifier != None:
+            return
+        if self.pid_type == self.PIDTypes.URN and self._can_create_urn():
+            dataset_id = self.id
+            try:
+                pid = PIDMSClient.createURN(dataset_id)
+                self.persistent_identifier = pid
+                self.save()
+            except ServiceUnavailableError as e:
+                e.detail = f"Error when creating persistent identifier. Please try again later."
+                raise e
 
     def publish(self):
         """Publishes the dataset by creating a new revision and setting the
@@ -390,6 +426,7 @@ class Dataset(V2DatasetMixin, CopyableModelMixin, CatalogRecord, AbstractBaseMod
         self.draft_revision = 0
         if not self.issued:
             self.issued = datetime_to_date(timezone.now())
+        return True
 
     def validate_unique(self):
         """Validate uniqueness constraints."""
@@ -422,12 +459,13 @@ class Dataset(V2DatasetMixin, CopyableModelMixin, CatalogRecord, AbstractBaseMod
         self.validate_unique()
         self._deny_if_trying_to_change_to_cumulative()
 
+        published_version_changed = False
+        draft_version_changed = False
         if self._should_increase_published_revision():
-            self.publish()
+            published_version_changed = self.publish()
         if self._should_increase_draft_revision():
+            draft_version_changed = True
             self.draft_revision += 1
-        published_version_changed = self.tracker.has_changed("published_revision")
-        draft_version_changed = self.tracker.has_changed("draft_revision")
         super().save(*args, **kwargs)
         if published_version_changed:
             self.change_update_reason(f"{self.state}-{self.published_revision}")

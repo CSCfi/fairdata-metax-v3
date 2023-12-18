@@ -1,0 +1,44 @@
+{
+  "title": {
+    "en": "Testing catalog",
+    "fi": "Testi katalogi"
+  },
+  "language": [
+    {
+      "url": "http://lexvo.org/id/iso639-3/fin"
+    }
+  ],
+  "harvested": true,
+  "publisher": {
+    "name": {
+      "en": "Testing",
+      "fi": "Testi"
+    },
+    "homepage": [
+      {
+        "title": {
+          "en": "Publisher organization website",
+          "fi": "Julkaisijaorganisaation kotisivu"
+        },
+        "url": "http://www.testi.fi/"
+      }
+    ]
+  },
+  "id": "urn:nbn:fi:att:data-catalog-harvested",
+  "access_rights": {
+    "license": [
+      {
+        "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC0-1.0"
+      }
+    ],
+    "access_type": {
+      "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open"
+    },
+    "description": {
+      "en": "Contains datasets from IDA service",
+      "fi": "Sisältää aineistoja IDA-palvelusta"
+    }
+  },
+  "dataset_versioning_enabled": false,
+  "dataset_schema": "att"
+}

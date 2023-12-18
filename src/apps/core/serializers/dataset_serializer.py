@@ -11,7 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from apps.common.serializers import CommonNestedModelSerializer, OneOf
-from apps.core.models import Dataset
+from apps.core.models import Dataset, DataCatalog
 from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
 from apps.core.serializers.common_serializers import (
     AccessRightsModelSerializer,
@@ -94,30 +94,6 @@ class DatasetSerializer(CommonNestedModelSerializer):
                 instance = instance.latest_published_revision
         return super().to_representation(instance)
 
-    def to_internal_value(self, data):
-        if self.instance: # dataset actors need dataset in context
-            self.context["dataset"] = self.instance
-
-        _data = super().to_internal_value(data)
-        errors = {}
-        _now = timezone.now()
-        if "modified" in _data and _data["modified"] > _now:
-            errors["modified"] = "Timestamp cannot be in the future"
-        if "created" in _data and _data["created"] > _now:
-            errors["created"] = "Timestamp cannot be in the future"
-
-        if self.context["request"].method == "POST":
-            if _data["modified"] < _data["created"]:
-                errors["timestamps"] = "Date modified earlier than date created"
-
-        elif self.context["request"].method in {"PUT", "PATCH"}:
-            _data["created"] = self.instance.created
-            if "modified" in _data and _data["modified"] < _data["created"].replace(microsecond=0):
-                errors["timestamps"] = "Date modified earlier than date created"
-        if errors:
-            raise serializers.ValidationError(errors)
-        return _data
-
     class Meta:
         model = Dataset
         fields = (
@@ -138,13 +114,14 @@ class DatasetSerializer(CommonNestedModelSerializer):
             "persistent_identifier",
             "theme",
             "title",
+            "pid_type",
             "preservation",
             "provenance",
             "relation",
-            "spatial",
-            "temporal",
             "remote_resources",
+            "spatial",
             "state",
+            "temporal",
             # read only
             "created",
             "cumulation_started",
@@ -170,6 +147,98 @@ class DatasetSerializer(CommonNestedModelSerializer):
             "replaces",
             "other_versions",
         )
+
+    def _dc_is_harvested(self, data):
+        if self.context["request"].method == "POST":
+            if data.get("data_catalog") != None:
+                return DataCatalog.objects.get(id=data["data_catalog"]).harvested
+        elif self.context["request"].method in {"PUT", "PATCH"}:
+            return DataCatalog.objects.get(id=self.instance.data_catalog).harvested
+        return None
+
+    def _validate_timestamps(self, data, errors):
+        _now = timezone.now()
+
+        if "modified" in data and data["modified"] > _now:
+            errors["modified"] = "Timestamp cannot be in the future"
+        if "created" in data and data["created"] > _now:
+            errors["created"] = "Timestamp cannot be in the future"
+
+        if self.context["request"].method == "POST":
+            if data["modified"] < data["created"]:
+                errors["timestamps"] = "Date modified earlier than date created"
+
+        elif self.context["request"].method in {"PUT", "PATCH"}:
+            data["created"] = self.instance.created
+            if "modified" in data and data["modified"] < data["created"].replace(microsecond=0):
+                errors["timestamps"] = "Date modified earlier than date created"
+        return errors
+
+    def _validate_pids(self, data, errors):
+        dc_is_harvested = self._dc_is_harvested(data)
+        if self.context["request"].method == "POST":
+            if data.get("persistent_identifier") != None and data.get("data_catalog") == None:
+                errors["persistent_identifier"] = serializers.ValidationError(
+                    detail="Can't assign persistent_identifier if data_catalog isn't given"
+                )
+            elif data.get("data_catalog") != None:
+                if data.get("persistent_identifier") != None and dc_is_harvested == False:
+                    errors["persistent_identifier"] = serializers.ValidationError(
+                        detail="persistent_identifier can't be assigned to a dataset in a non-harvested data catalog"
+                    )
+                if data.get("persistent_identifier") == None and dc_is_harvested == True:
+                    errors["persistent_identifier"] = serializers.ValidationError(
+                        detail="Dataset in a harvested catalog has to have a persistent identifier"
+                    )
+
+        elif self.context["request"].method in {"PUT", "PATCH"}:
+            if data.get("persistent_identifier") != None and dc_is_harvested == False:
+                errors["persistent_identifier"] = serializers.ValidationError(
+                    detail="persistent_identifier can't be assigned to a dataset in a non-harvested data catalog"
+                )
+            if (
+                self.instance.persistent_identifier == None
+                and data.get("persistent_identifier") == None
+                and dc_is_harvested == True
+            ):
+                errors["persistent_identifier"] = serializers.ValidationError(
+                    detail="Dataset in a harvested catalog has to have a persistent identifier"
+                )
+
+        return errors
+
+    def _validate_catalog(self, data, errors):
+        if self.context["request"].method == "POST":
+            if data.get("data_catalog") == None and data.get("state") == "published":
+                errors["data_catalog"] = serializers.ValidationError(
+                    detail="Dataset has to have a data catalog when publishing"
+                )
+        return errors
+
+    def to_internal_value(self, data):
+        if self.instance:  # dataset actors need dataset in context
+            self.context["dataset"] = self.instance
+        _data = super().to_internal_value(data)
+
+        errors = {}
+        errors = self._validate_catalog(_data, errors)
+        errors = self._validate_timestamps(_data, errors)
+        errors = self._validate_pids(_data, errors)
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
+        return _data
+
+    def update(self, instance, validated_data):
+        dataset = super().update(instance, validated_data=validated_data)
+        dataset.create_persistent_identifier()
+        return dataset
+
+    def create(self, validated_data):
+        dataset = super().create(validated_data=validated_data)
+        dataset.create_persistent_identifier()
+        return dataset
 
 
 class DatasetRevisionsQueryParamsSerializer(serializers.Serializer):
