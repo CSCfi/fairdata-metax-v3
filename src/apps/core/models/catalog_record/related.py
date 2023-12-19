@@ -49,6 +49,10 @@ class DatasetActor(Actor):
     dataset = models.ForeignKey(
         "Dataset", on_delete=models.CASCADE, related_name="actors", null=True, blank=True
     )
+    actors_order = models.IntegerField(default=0, help_text=_("Position in dataset actors list."))
+
+    class Meta:
+        ordering = ["actors_order", "created"]
 
     def add_role(self, role: str) -> bool:
         """Adds a roles to the actor.

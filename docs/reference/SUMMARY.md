@@ -69,6 +69,7 @@
             - [metadata_provider_serializer](src/apps/core/serializers/metadata_provider_serializer.md)
             - [preservation_serializers](src/apps/core/serializers/preservation_serializers.md)
             - [provenance_serializers](src/apps/core/serializers/provenance_serializers.md)
+        - [services.pid_ms_client](src/apps/core/services/pid_ms_client.md)
         - [signals](src/apps/core/signals.md)
         - views
             - [common_views](src/apps/core/views/common_views.md)
@@ -122,7 +123,6 @@
         - [models](src/apps/users/models.md)
         - [permissions](src/apps/users/permissions.md)
         - [serializers](src/apps/users/serializers.md)
-        - [signals](src/apps/users/signals.md)
         - [templatetags.users](src/apps/users/templatetags/users.md)
         - [views](src/apps/users/views.md)
 - tests
@@ -162,6 +162,7 @@
                         - [test_auth](tests/unit/apps/core/api/dataset/test_auth.md)
                         - [test_dataset](tests/unit/apps/core/api/dataset/test_dataset.md)
                         - [test_dataset_allowed_actions](tests/unit/apps/core/api/dataset/test_dataset_allowed_actions.md)
+                        - [test_dataset_pids](tests/unit/apps/core/api/dataset/test_dataset_pids.md)
                         - [test_dataset_timestamps](tests/unit/apps/core/api/dataset/test_dataset_timestamps.md)
                         - [test_legacy](tests/unit/apps/core/api/dataset/test_legacy.md)
                         - [test_preservation](tests/unit/apps/core/api/dataset/test_preservation.md)

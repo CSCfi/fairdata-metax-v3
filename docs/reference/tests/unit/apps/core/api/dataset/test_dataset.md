@@ -128,17 +128,9 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_create_dataset_require_data_catalog
 
-## test_create_dataset_require_persistent_identifier
-
-### :::tests.unit.apps.core.api.dataset.test_dataset.test_create_dataset_require_persistent_identifier
-
 ## test_create_dataset_draft_without_catalog
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_create_dataset_draft_without_catalog
-
-## test_create_dataset_multiple_datasets_same_pid
-
-### :::tests.unit.apps.core.api.dataset.test_dataset.test_create_dataset_multiple_datasets_same_pid
 
 ## test_flush_dataset_by_service
 

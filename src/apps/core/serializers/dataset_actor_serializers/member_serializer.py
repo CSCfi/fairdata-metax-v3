@@ -95,6 +95,10 @@ class DatasetMemberSerializer(StrictSerializer, CommonNestedModelSerializer):
 
     partial_update_fields = {"id"}  # Fields allowed for partial update
 
+    # Fields that may be updated after object has already been saved once,
+    # e.g. parent ForeignKey for multi-parent object
+    extra_save_data_fields = set()
+
     # Validator should return True if data can be used to create new instance
     save_validator = lambda self, value: True
 
@@ -174,12 +178,19 @@ class DatasetMemberSerializer(StrictSerializer, CommonNestedModelSerializer):
                 errors[field] = _("Value conflicts with another in request")
             raise serializers.ValidationError(errors)
 
+    def get_extra_attrs(self):
+        """Data that is provided by parent serializer but is not in a serializer field."""
+        if self.parent:
+            return getattr(self.parent, "child_extra_attrs", {})
+        return {}
+
     def to_internal_value(self, data) -> dict:
         attrs = super().to_internal_value(data)
 
         # If doing only partial update, remove default values
         if not has_values(data, exclude=self.partial_update_fields):
             attrs = {key: value for key, value in attrs.items() if key in data}
+        attrs.update(self.get_extra_attrs())
 
         comparison_data = self.get_comparison_data(attrs)
         id = self.ensure_id(attrs, comparison_data)

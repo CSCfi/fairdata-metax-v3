@@ -20,3 +20,7 @@
 
 ### :::tests.unit.docs.examples.conftest.minimal_dataset_with_files_json
 
+## harvested_datacatalog
+
+### :::tests.unit.docs.examples.conftest.harvested_datacatalog
+

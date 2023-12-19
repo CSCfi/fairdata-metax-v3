@@ -425,6 +425,30 @@ def test_update_existing_actor_roles(patch_dataset, existing_actors):
     )
 
 
+def test_update_actor_order(patch_dataset, existing_actors):
+    leena_org = {"pref_label": {"en": "leena org"}}
+    new_person = {"person": {"name": "leena"}, "organization": leena_org}
+    data = patch_dataset(
+        {
+            "actors": [
+                {"id": existing_actors[1]["id"]},
+                new_person,
+                {"id": existing_actors[0]["id"]},
+                {"id": existing_actors[1]["id"]}, # should get merged with first actor
+            ]
+        }
+    )
+    print(data["actors"])
+    assert_nested_subdict(
+        [
+            existing_actors[1],
+            new_person,
+            existing_actors[0],
+        ],
+        data["actors"],
+    )
+
+
 def test_update_existing_organizations(patch_dataset, existing_actors):
     org1 = {**existing_actors[0]["organization"]}
     org1["email"] = "testi@example.com"

@@ -37,7 +37,7 @@ class DatasetActorSerializer(DatasetMemberSerializer):
     organization = DatasetOrganizationSerializer(required=False, allow_null=True)
     person = DatasetPersonSerializer(required=False, allow_null=True)
 
-    partial_update_fields = {"id", "roles"}  # Fields allowed for partial update
+    partial_update_fields = {"id", "roles", "actors_order"}  # Fields allowed for partial update
     save_validator = AnyOf(["person", "organization"])
 
     def get_dataset_actors(self, dataset) -> Dict[str, DatasetMemberContext]:
@@ -71,6 +71,7 @@ class DatasetActorSerializer(DatasetMemberSerializer):
         if depth == 0:  # allow multiple actor references have different roles
             value = {**value}
             value.pop("roles", None)
+            value.pop("actors_order", None)
             if not has_values(value, exclude=self.partial_update_fields):
                 return None
         return super().get_comparison_data(value, depth)
@@ -86,14 +87,30 @@ class DatasetActorSerializer(DatasetMemberSerializer):
             new_roles = validated_data.get("roles") or []
             roles = deduplicate_list([*old_roles, *new_roles])
 
+        actors_order = validated_data.get("actors_order")
+        if (
+            actors_order is not None
+            and member.save_data
+            and member.save_data.get("actors_order") is not None
+        ):
+            # Use first order position if there are multiple
+            actors_order = min(actors_order, member.save_data.get("actors_order"))
+
         super().update_save_data(member, validated_data)
 
         if roles is not None:
             member.save_data["roles"] = roles
 
+        if actors_order is not None:
+            member.save_data["actors_order"] = actors_order
+
     class Meta:
         model = DatasetActor
         fields = ("id", "roles", "person", "organization")
+
+        # Make CommonListSerializer assign actors_order field when serializing Dataset.actors
+        ordering_fields = {"Dataset.actors": "actors_order"}
+
         list_serializer_class = CommonListSerializer
 
 

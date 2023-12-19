@@ -18,12 +18,91 @@ from rest_framework import serializers
 from rest_framework.fields import empty
 from rest_framework.serializers import ValidationError
 from rest_framework.settings import api_settings
-from rest_framework.utils import model_meta
+from rest_framework.utils import html, model_meta
 
 logger = logging.getLogger(__name__)
 
 
 class CommonListSerializer(serializers.ListSerializer):
+    def get_child_ordering_field(self):
+        """Get field which is used for order value of child model.
+
+        For example, child serializer with
+        ```
+        class Meta:
+            ordering_fields = {"Dataset.actors": "actors_order"}
+        ```
+        will have `self.parent.child_extra_attrs = {"actors_order": idx}`
+        during validation, where `idx` is the position in `actors` list
+        of `Dataset` serializer. This can then be used in
+        `to_internal_value` of the child to assign the list position.
+
+        Note: When calling the list serializer directly (not nested),
+        the parent and field name information is missing. Supporting
+        such cases needs further develpment.
+        """
+        parent_name = ""
+        try:
+            parent_name = self.parent.Meta.model.__name__ + "."
+        except AttributeError:
+            pass
+        field_key = f"{parent_name}{self.field_name}"  # e.g. "Dataset.actors"
+
+        try:
+            return self.child.Meta.ordering_fields.get(field_key)
+        except AttributeError:
+            pass
+
+        return None
+
+    def to_internal_value(self, data):
+        """Same as original to_internal_value but with ordering field in child_extra_attrs."""
+        if html.is_html_input(data):
+            data = html.parse_html_list(data, default=[])
+
+        if not isinstance(data, list):
+            message = self.error_messages["not_a_list"].format(input_type=type(data).__name__)
+            raise ValidationError(
+                {api_settings.NON_FIELD_ERRORS_KEY: [message]}, code="not_a_list"
+            )
+
+        if not self.allow_empty and len(data) == 0:
+            message = self.error_messages["empty"]
+            raise ValidationError({api_settings.NON_FIELD_ERRORS_KEY: [message]}, code="empty")
+
+        if self.max_length is not None and len(data) > self.max_length:
+            message = self.error_messages["max_length"].format(max_length=self.max_length)
+            raise ValidationError(
+                {api_settings.NON_FIELD_ERRORS_KEY: [message]}, code="max_length"
+            )
+
+        if self.min_length is not None and len(data) < self.min_length:
+            message = self.error_messages["min_length"].format(min_length=self.min_length)
+            raise ValidationError(
+                {api_settings.NON_FIELD_ERRORS_KEY: [message]}, code="min_length"
+            )
+
+        ret = []
+        errors = []
+
+        self.child_extra_attrs = {}
+        ordering_field = self.get_child_ordering_field()
+        for idx, item in enumerate(data):
+            if ordering_field:
+                self.child_extra_attrs = {ordering_field: idx}
+            try:
+                validated = self.child.run_validation(item)
+            except ValidationError as exc:
+                errors.append(exc.detail)
+            else:
+                ret.append(validated)
+                errors.append({})
+
+        if any(errors):
+            raise ValidationError(errors)
+
+        return ret
+
     def create(self, validated_data):
         errors = []  # Collect errors to match serializer validation reporting error style
         instances = []
