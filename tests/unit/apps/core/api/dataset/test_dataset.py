@@ -581,3 +581,14 @@ def test_flush_dataset_by_user(user_client, dataset_a_json, data_catalog, refere
     assert res.status_code == 204
     assert Dataset.all_objects.filter(id=id).exists()
     assert not Dataset.available_objects.filter(id=id).exists()
+
+
+def test_filter_by_has_files(admin_client, dataset_a, dataset_with_files, data_catalog, reference_data):
+    res = admin_client.get(
+        "/v3/datasets?has_files=false&pagination=false", content_type="application/json"
+    )
+    assert [d["id"] for d in res.data] == [dataset_a.dataset_id]
+    res = admin_client.get(
+        "/v3/datasets?has_files=true&pagination=false", content_type="application/json"
+    )
+    assert [d["id"] for d in res.data] == [str(dataset_with_files.id)]

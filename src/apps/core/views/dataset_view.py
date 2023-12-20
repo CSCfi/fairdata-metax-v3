@@ -108,6 +108,10 @@ class DatasetFilter(filters.FilterSet):
     def search_dataset(self, queryset, name, value):
         return search.filter(queryset, value)
 
+    has_files = filters.BooleanFilter(
+        field_name="file_set__files", lookup_expr="isnull", exclude=True
+    )
+
     only_owned_or_shared = filters.BooleanFilter(method="filter_owned_or_shared")
 
     def filter_owned_or_shared(self, queryset, name, value):
