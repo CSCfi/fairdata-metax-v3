@@ -5,8 +5,6 @@ from tests.utils import matchers
 
 from apps.core.models import Dataset
 
-print("MATCHERS", matchers.DictContaining)
-
 pytestmark = [pytest.mark.django_db, pytest.mark.dataset, pytest.mark.provenance]
 
 logger = logging.getLogger(__name__)

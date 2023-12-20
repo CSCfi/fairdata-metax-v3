@@ -18,7 +18,7 @@ class Command(BaseCommand):
 
         Migrate only specified V2 datasets
 
-            $ python manage.py migrate_v2_datasets -ids cr955e904-e3dd-4d7e-99f1-3fed446f96d1 cr955e904-e3dd-4d7e-99f1-3fed446f96d3 -mi https://metax.fairdata.fi
+            $ python manage.py migrate_v2_datasets -ids c955e904-e3dd-4d7e-99f1-3fed446f96d1 c955e904-e3dd-4d7e-99f1-3fed446f96d3 -mi https://metax.fairdata.fi
     """
 
     allow_fail = False
@@ -88,7 +88,7 @@ class Command(BaseCommand):
     def get_or_create_dataset(self, data):
         try:
             dataset, created = LegacyDataset.objects.get_or_create(
-                dataset_json__identifier=data["identifier"],
+                id=data["identifier"],
                 defaults={"dataset_json": data},
             )
             if self.force_update:

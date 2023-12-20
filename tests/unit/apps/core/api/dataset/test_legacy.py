@@ -53,7 +53,9 @@ def test_edit_legacy_dataset_deprecation(admin_client, legacy_dataset_a, legacy_
     dataset_deprecation_date = dataset.deprecated
 
     # deprecation timestamp should not change for already deprecated legacy dataset
-    legacy_dataset_a_json["dataset_json"]["research_dataset"]["modified"] = "2023-12-24 18:00:00+00:00"
+    legacy_dataset_a_json["dataset_json"]["research_dataset"][
+        "modified"
+    ] = "2023-12-24 18:00:00+00:00"
     res = admin_client.put(
         reverse(
             "migrated-dataset-detail", args=[legacy_dataset_a_json["dataset_json"]["identifier"]]

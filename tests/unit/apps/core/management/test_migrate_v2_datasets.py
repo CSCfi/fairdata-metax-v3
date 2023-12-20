@@ -26,6 +26,6 @@ def test_migrate_command_identifier(mock_response_single, reference_data):
         "migrate_v2_datasets",
         stdout=out,
         stderr=err,
-        identifiers="cr955e904-e3dd-4d7e-99f1-3fed446f96d1",
+        identifiers="c955e904-e3dd-4d7e-99f1-3fed446f96d1",
     )
     assert "successfully migrated" in out.getvalue().strip()

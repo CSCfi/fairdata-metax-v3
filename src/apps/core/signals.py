@@ -1,17 +1,11 @@
 import logging
 
-from django.db.models.signals import m2m_changed, post_save, pre_save
+from django.db.models.signals import m2m_changed, post_save
 from django.dispatch import receiver
 
 from apps.core.models import FileSet, LegacyDataset
 
 logger = logging.getLogger(__name__)
-
-
-@receiver(pre_save, sender=LegacyDataset)
-def adapt_legacy_dataset_to_v3(sender, instance: LegacyDataset, **kwargs):
-    attached_instances = instance.prepare_dataset_for_v3()
-    logger.debug(f"prepared {attached_instances=}")
 
 
 @receiver(post_save, sender=LegacyDataset)

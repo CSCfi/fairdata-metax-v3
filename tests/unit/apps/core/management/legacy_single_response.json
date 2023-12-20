@@ -1,13 +1,13 @@
 {
   "id": 1,
-  "identifier": "cr955e904-e3dd-4d7e-99f1-3fed446f96d1",
+  "identifier": "c955e904-e3dd-4d7e-99f1-3fed446f96d1",
   "data_catalog": {
     "id": 1,
     "identifier": "urn:nbn:fi:att:2955e904-e3dd-4d7e-99f1-3fed446f96d1"
   },
   "dataset_version_set": [
     {
-      "identifier": "cr955e904-e3dd-4d7e-99f1-3fed446f96d1",
+      "identifier": "c955e904-e3dd-4d7e-99f1-3fed446f96d1",
       "preferred_identifier": "urn:nbn:fi:att:1955e904-e3dd-4d7e-99f1-3fed446f96d1",
       "date_created": "2017-05-23T13:07:22+03:00",
       "removed": false

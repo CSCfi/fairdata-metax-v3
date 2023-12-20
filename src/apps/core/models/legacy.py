@@ -1,5 +1,6 @@
 import json
 import logging
+import uuid
 from collections import namedtuple
 from datetime import datetime
 from typing import Dict, List
@@ -10,6 +11,8 @@ from django.contrib.auth import get_user_model
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import ProgrammingError, models
 from django.utils.dateparse import parse_datetime
+from django.utils.translation import gettext as _
+from rest_framework import serializers
 
 from apps.actors.models import Actor, Organization, Person
 from apps.common.helpers import datetime_to_date, parse_iso_dates_in_nested_dict
@@ -213,6 +216,18 @@ class LegacyDataset(Dataset):
         Returns:
 
         """
+
+        if not self.legacy_identifier:
+            raise serializers.ValidationError(
+                {"dataset_json__identifier": _("Value is required.")}
+            )
+        try:
+            uuid.UUID(self.legacy_identifier)
+        except ValueError:
+            raise serializers.ValidationError(
+                {"dataset_json__identifier": _("Value is not a valid UUID.")}
+            )
+
         self.cumulation_started = self.dataset_json.get("date_cumulation_started")
         self.cumulation_ended = self.dataset_json.get("date_cumulation_ended")
         self.last_cumulative_addition = self.dataset_json.get("date_last_cumulative_addition")
@@ -255,6 +270,8 @@ class LegacyDataset(Dataset):
 
         if issued := self.legacy_research_dataset.get("issued"):
             self.issued = issued
+        elif not self.issued:
+            self.issued = datetime_to_date(parse_datetime(self.modified))
 
         if "keyword" in self.legacy_research_dataset:
             self.keyword = self.legacy_research_dataset["keyword"]
@@ -843,6 +860,20 @@ class LegacyDataset(Dataset):
         # logger.info(f"diff={diff.to_json()}")
         json_diff = diff.to_json()
         return json.loads(json_diff)
+
+    def save(self, *args, **kwargs):
+        attached_instances = self.prepare_dataset_for_v3()
+        logger.debug(f"prepared {attached_instances=}")
+
+        if str(self.id) != str(self.legacy_identifier):
+            raise serializers.ValidationError({"id": _("Value does not match V2 identifier.")})
+
+        if Dataset.objects.filter(id=self.id, legacydataset__isnull=True).exists():
+            raise serializers.ValidationError(
+                {"id": _("A non-legacy dataset already exists with the same identifier.")}
+            )
+
+        return super().save(*args, **kwargs)
 
 
 def add_escapes(val: str):

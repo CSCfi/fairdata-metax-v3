@@ -20,6 +20,5 @@ class LegacyDatasetFilter(filters.FilterSet):
 
 class LegacyDatasetViewSet(CommonModelViewSet):
     serializer_class = LegacyDatasetModelSerializer
-    queryset = LegacyDataset.objects.all()
-    lookup_field = "dataset_json__identifier"
+    queryset = LegacyDataset.available_objects.all()
     filterset_class = LegacyDatasetFilter

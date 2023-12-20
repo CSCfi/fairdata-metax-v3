@@ -434,7 +434,7 @@ def test_update_actor_order(patch_dataset, existing_actors):
                 {"id": existing_actors[1]["id"]},
                 new_person,
                 {"id": existing_actors[0]["id"]},
-                {"id": existing_actors[1]["id"]}, # should get merged with first actor
+                {"id": existing_actors[1]["id"]},  # should get merged with first actor
             ]
         }
     )

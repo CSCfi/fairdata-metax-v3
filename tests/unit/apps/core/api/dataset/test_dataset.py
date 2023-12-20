@@ -214,7 +214,9 @@ def test_patch_metadata_owner_not_allowed(
     assert res.status_code == 400
 
 
-def test_owned_dataset(admin_client, user_client, dataset_a_json, dataset_b_json, data_catalog, reference_data):
+def test_owned_dataset(
+    admin_client, user_client, dataset_a_json, dataset_b_json, data_catalog, reference_data
+):
     """End-user cannot use custom metadata owner values."""
     dataset_b_json["state"] = "published"
     res = admin_client.post("/v3/datasets", dataset_b_json, content_type="application/json")
@@ -244,7 +246,6 @@ def test_create_dataset_with_actor(dataset_c, data_catalog, reference_data):
 
 
 def test_edit_dataset_actor(admin_client, dataset_c, data_catalog, reference_data):
-
     assert dataset_c.status_code == 201
     res = admin_client.put(
         reverse(
