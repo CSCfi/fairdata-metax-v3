@@ -111,6 +111,8 @@ class DatasetFilter(filters.FilterSet):
     has_files = filters.BooleanFilter(
         field_name="file_set__files", lookup_expr="isnull", exclude=True
     )
+    csc_projects = filters.BaseInFilter(field_name="file_set__storage__csc_project")
+    storage_services = filters.BaseInFilter(field_name="file_set__storage__storage_service")
 
     only_owned_or_shared = filters.BooleanFilter(method="filter_owned_or_shared")
 

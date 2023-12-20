@@ -144,3 +144,27 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_flush_dataset_by_user
 
+## test_has_files
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_has_files
+
+## ida_dataset
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.ida_dataset
+
+## ida_dataset_other
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.ida_dataset_other
+
+## pas_dataset
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.pas_dataset
+
+## test_filter_by_storage_service
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_filter_by_storage_service
+
+## test_filter_by_csc_project
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_filter_by_csc_project
+

@@ -1,6 +1,7 @@
 import json
 import logging
 from unittest.mock import ANY
+from apps.core import factories
 
 import pytest
 from rest_framework.reverse import reverse
@@ -581,6 +582,73 @@ def test_flush_dataset_by_user(user_client, dataset_a_json, data_catalog, refere
     assert res.status_code == 204
     assert Dataset.all_objects.filter(id=id).exists()
     assert not Dataset.available_objects.filter(id=id).exists()
+
+
+@pytest.fixture
+def ida_dataset(data_catalog, reference_data):
+    ida_storage = factories.FileStorageFactory(storage_service="ida", csc_project="project")
+    dataset = factories.DatasetFactory()
+    factories.FileSetFactory(dataset=dataset, storage=ida_storage)
+    return dataset
+
+
+@pytest.fixture
+def ida_dataset_other(data_catalog, reference_data):
+    ida_storage = factories.FileStorageFactory(storage_service="ida", csc_project="other_project")
+    dataset = factories.DatasetFactory()
+    factories.FileSetFactory(dataset=dataset, storage=ida_storage)
+    return dataset
+
+
+@pytest.fixture
+def pas_dataset(data_catalog, reference_data):
+    pas_storage = factories.FileStorageFactory(storage_service="pas", csc_project="project")
+    dataset = factories.DatasetFactory()
+    factories.FileSetFactory(dataset=dataset, storage=pas_storage)
+    return dataset
+
+
+def test_filter_by_storage_service(admin_client, ida_dataset, ida_dataset_other, pas_dataset):
+    res = admin_client.get(
+        "/v3/datasets?storage_services=ida&pagination=false", content_type="application/json"
+    )
+    assert {d["id"] for d in res.data} == {str(ida_dataset.id), str(ida_dataset_other.id)}
+
+    res = admin_client.get(
+        "/v3/datasets?storage_services=pas&pagination=false", content_type="application/json"
+    )
+    assert {d["id"] for d in res.data} == {str(pas_dataset.id)}
+
+    res = admin_client.get(
+        "/v3/datasets?storage_services=ida,pas&pagination=false", content_type="application/json"
+    )
+    assert {d["id"] for d in res.data} == {
+        str(pas_dataset.id),
+        str(ida_dataset.id),
+        str(ida_dataset_other.id),
+    }
+
+
+def test_filter_by_csc_project(admin_client, ida_dataset, ida_dataset_other, pas_dataset):
+    res = admin_client.get(
+        "/v3/datasets?csc_projects=project&pagination=false", content_type="application/json"
+    )
+    assert {d["id"] for d in res.data} == {str(ida_dataset.id), str(pas_dataset.id)}
+
+    res = admin_client.get(
+        "/v3/datasets?csc_projects=other_project&pagination=false", content_type="application/json"
+    )
+    assert {d["id"] for d in res.data} == {str(ida_dataset_other.id)}
+
+    res = admin_client.get(
+        "/v3/datasets?csc_projects=project,other_project&pagination=false",
+        content_type="application/json",
+    )
+    assert {d["id"] for d in res.data} == {
+        str(pas_dataset.id),
+        str(ida_dataset.id),
+        str(ida_dataset_other.id),
+    }
 
 
 def test_filter_by_has_files(admin_client, dataset_a, dataset_with_files, data_catalog, reference_data):
