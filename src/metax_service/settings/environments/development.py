@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from metax_service.settings.components.base import (
     ALLOWED_HOSTS,
+    DATABASES,
     ENABLE_DEBUG_TOOLBAR,
     ENABLE_SILK_PROFILER,
     INSTALLED_APPS,
