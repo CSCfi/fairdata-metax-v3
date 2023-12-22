@@ -38,8 +38,8 @@ def file_tree_with_datasets(file_tree_a):
     return file_tree_a
 
 
-def test_directory_dataset_a(client, file_tree_with_datasets):
-    res = client.get(
+def test_directory_dataset_a(admin_client, file_tree_with_datasets):
+    res = admin_client.get(
         "/v3/directories",
         {
             "dataset": file_tree_with_datasets["dataset_a"].id,
@@ -70,8 +70,8 @@ def test_directory_dataset_a(client, file_tree_with_datasets):
     )
 
 
-def test_directory_dataset_b(client, file_tree_with_datasets):
-    res = client.get(
+def test_directory_dataset_b(admin_client, file_tree_with_datasets):
+    res = admin_client.get(
         "/v3/directories",
         {
             "dataset": file_tree_with_datasets["dataset_b"].id,
@@ -99,8 +99,8 @@ def test_directory_dataset_b(client, file_tree_with_datasets):
     )
 
 
-def test_directory_dataset_include_all(client, file_tree_with_datasets):
-    res = client.get(
+def test_directory_dataset_include_all(admin_client, file_tree_with_datasets):
+    res = admin_client.get(
         "/v3/directories",
         {
             "dataset": file_tree_with_datasets["dataset_a"].id,
@@ -144,9 +144,9 @@ def test_directory_dataset_include_all(client, file_tree_with_datasets):
     )
 
 
-def test_directory_dataset_no_files_dataset(client, file_tree_with_datasets):
+def test_directory_dataset_no_files_dataset(admin_client, file_tree_with_datasets):
     dataset = factories.DatasetFactory()
-    res = client.get(
+    res = admin_client.get(
         "/v3/directories",
         {
             "dataset": file_tree_with_datasets["dataset_c"].id,
@@ -158,8 +158,8 @@ def test_directory_dataset_no_files_dataset(client, file_tree_with_datasets):
     assert res.json() == {"directories": [], "files": []}
 
 
-def test_directory_exclude_dataset_a(client, file_tree_with_datasets):
-    res = client.get(
+def test_directory_exclude_dataset_a(admin_client, file_tree_with_datasets):
+    res = admin_client.get(
         "/v3/directories",
         {
             "dataset": file_tree_with_datasets["dataset_a"].id,

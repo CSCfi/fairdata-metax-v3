@@ -206,6 +206,7 @@
                         - [test_directory_ordering](tests/unit/apps/files/api/directories/test_directory_ordering.md)
                         - [test_directory_pagination](tests/unit/apps/files/api/directories/test_directory_pagination.md)
                         - [test_directory_path](tests/unit/apps/files/api/directories/test_directory_path.md)
+                        - [test_directory_permissions](tests/unit/apps/files/api/directories/test_directory_permissions.md)
                     - files
                         - [conftest](tests/unit/apps/files/api/files/conftest.md)
                         - [test_auth](tests/unit/apps/files/api/files/test_auth.md)

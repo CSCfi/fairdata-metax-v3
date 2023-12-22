@@ -23,7 +23,7 @@ from apps.common.filters import VerboseChoiceFilter
 from apps.common.helpers import cachalot_toggle, get_filter_openapi_parameters
 from apps.common.serializers import DeleteListReturnValueSerializer, FlushQueryParamsSerializer
 from apps.common.serializers.serializers import IncludeRemovedQueryParamsSerializer
-from apps.common.views import CommonModelViewSet, QueryParamsMixin
+from apps.common.views import CommonModelViewSet
 from apps.files.helpers import get_file_metadata_model
 from apps.files.models.file import File
 from apps.files.permissions import FilesAccessPolicy
@@ -107,8 +107,9 @@ class BaseFileViewSet(CommonModelViewSet):
     serializer_class = FileSerializer
     filterset_class = FileFilterSet
     http_method_names = ["get"]
-    queryset = File.objects.prefetch_related("storage")
-    access_policy = FilesAccessPolicy
+    queryset = File.available_objects.prefetch_related("storage")
+    queryset_include_removed = File.all_objects.prefetch_related("storage")
+    access_policy: FilesAccessPolicy = FilesAccessPolicy
 
     # Query serializer info for query_params and swagger generation
     query_serializers = [
@@ -119,11 +120,13 @@ class BaseFileViewSet(CommonModelViewSet):
     ]
 
     def get_queryset(self):
+        queryset = self.queryset
         if self.query_params.get("include_removed"):
-            return self.access_policy.scope_queryset(
-                self.request, File.all_objects.prefetch_related("storage")
-            )
-        return self.access_policy.scope_queryset(self.request, super().get_queryset())
+            queryset = self.queryset_include_removed
+
+        return self.access_policy.scope_queryset(
+            self.request, queryset, dataset_id=self.get_dataset_id()
+        )
 
     def retrieve(self, request, *args, **kwargs):
         return super().retrieve(request, *args, **kwargs)
@@ -139,20 +142,22 @@ class BaseFileViewSet(CommonModelViewSet):
         kwargs.setdefault("context", self.get_serializer_context(instance))
         return serializer_class(instance, *args, **kwargs)
 
+    def get_dataset_id(self):
+        """Get dataset id from kwargs (i.e. from url) or query parameters."""
+        dataset_id = self.kwargs.get("dataset_id")
+        if not dataset_id and self.request:
+            dataset_id = forms.CharField(required=False).clean(
+                self.request.query_params.get("dataset")
+            )
+        return dataset_id
+
     def get_serializer_context(self, instance):
         """Add dataset file metadata to serializer context when listing files."""
         context = super().get_serializer_context()
         if self.request and self.request.method != "GET":
             return context
 
-        # Get dataset id from kwargs (i.e. from url) or query parameters
-        dataset_id = self.kwargs.get("dataset_id")
-        if not dataset_id and self.request:
-            dataset_id = forms.CharField(required=False).clean(
-                self.request.query_params.get("dataset")
-            )
-
-        if dataset_id:
+        if dataset_id := self.get_dataset_id():
             # Convert single instance to list
             files = instance
             if not (isinstance(files, list) or isinstance(files, QuerySet)):

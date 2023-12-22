@@ -286,14 +286,20 @@ class DatasetViewSet(CommonModelViewSet):
 class DatasetDirectoryViewSet(DirectoryViewSet):
     """API for browsing directories of a dataset."""
 
-    def get_params(self):
-        """Parse view query parameters."""
-        params_serializer = DirectoryCommonQueryParams(data=self.request.query_params)
-        params_serializer.is_valid(raise_exception=True)
-        params = params_serializer.validated_data
+    # Omit dataset-specific parameters from API, set them manually for the view
+    query_serializers = [
+        {
+            "class": DirectoryCommonQueryParams,
+        }
+    ]
 
-        # dataset id comes from route, storage project is determined from dataset
+    def validate_query_params(self):
+        """Parse view query parameters."""
+        super().validate_query_params()
+
+        # Dataset id comes from route, file storage is determined from dataset
         dataset_id = self.kwargs["dataset_id"]
+        params = {}
         params["dataset"] = dataset_id
         params["exclude_dataset"] = False
         params["include_all"] = False
@@ -303,12 +309,9 @@ class DatasetDirectoryViewSet(DirectoryViewSet):
             params["storage_id"] = storage.id
         except FileSet.DoesNotExist:
             raise exceptions.NotFound()
-        return params
+        self.query_params.update(params)
 
-    @swagger_auto_schema(
-        query_serializer=DirectoryCommonQueryParams,
-        responses={200: DirectorySerializer},
-    )
+    @swagger_auto_schema(responses={200: DirectorySerializer})
     def list(self, *args, **kwargs):
         return super().list(*args, **kwargs)
 

@@ -1,8 +1,28 @@
 import pytest
 
 from apps.core import factories
+from apps.files import factories as filefactories
+from apps.users.models import MetaxUser
 
 pytestmark = [pytest.mark.django_db, pytest.mark.file]
+
+
+@pytest.fixture
+def project_user(file_tree_a):
+    user, created = MetaxUser.objects.get_or_create(
+        username="test_project_user",
+        first_name="Project User",
+        last_name="Testaaja",
+        is_hidden=False,
+        ida_projects=[file_tree_a["storage"].csc_project],
+    )
+    return user
+
+
+@pytest.fixture
+def project_client(client, project_user):
+    client.force_login(project_user)
+    return client
 
 
 @pytest.fixture
@@ -20,10 +40,41 @@ def dataset(file_tree_a):
     return dataset
 
 
-def test_files_get(admin_client, file_tree_a):
+def test_files_get(admin_client, file_tree_a, file_tree_b):
     res = admin_client.get(
         "/v3/files",
-        file_tree_a["params"],
+        file_tree_a["params"],  # only files from file_tree_a
+        content_type="application/json",
+    )
+    assert res.data["count"] == 16
+
+
+def test_files_get_all(admin_client, file_tree_a, file_tree_b):
+    res = admin_client.get(
+        "/v3/files",  # files from both projects
+        content_type="application/json",
+    )
+    assert res.data["count"] == 19
+
+
+def test_files_get_anonymous(client, file_tree_a):
+    """Anonymous user should not get any files without specifying dataset."""
+    res = client.get(
+        "/v3/files",
+        content_type="application/json",
+    )
+    assert res.data["count"] == 0
+
+
+def test_files_get_project_user(project_client, file_tree_b):
+    """Project user should get all files from the project."""
+    filefactories.create_project_with_files(
+        file_paths=[
+            "/filefromanotherproject.txt",
+        ]
+    )
+    res = project_client.get(
+        "/v3/files",
         content_type="application/json",
     )
     assert res.data["count"] == 16
@@ -50,6 +101,60 @@ def test_files_get_dataset_files(admin_client, dataset):
         "/dir/b.txt",
         "/dir/c.txt",
     ]
+
+
+def test_files_get_dataset_files_anonymous_nonpublic(client, dataset):
+    res = client.get(
+        "/v3/files",
+        {"dataset": dataset.id},
+        content_type="application/json",
+    )
+    assert res.data["count"] == 0
+
+
+@pytest.mark.xfail(
+    reason="DatasetAccessPolicy.scope_queryset does not work correctly for anonymous users"
+)
+def test_files_get_dataset_files_anonymous_published(client, dataset):
+    dataset.state = "published"
+    dataset.save()
+    res = client.get(
+        "/v3/files",
+        {"dataset": dataset.id},
+        content_type="application/json",
+    )
+    assert res.data["count"] == 3
+
+
+def test_files_get_dataset_files_non_owner_nonpublic(user_client, dataset):
+    res = user_client.get(
+        "/v3/files",
+        {"dataset": dataset.id},
+        content_type="application/json",
+    )
+    assert res.data["count"] == 0
+
+
+def test_files_get_dataset_files_non_owner_published(user_client, dataset):
+    dataset.state = "published"
+    dataset.save()
+    res = user_client.get(
+        "/v3/files",
+        {"dataset": dataset.id},
+        content_type="application/json",
+    )
+    assert res.data["count"] == 3
+
+
+def test_files_get_dataset_files_dataset_owner(user_client, user, dataset):
+    dataset.metadata_owner.user = user
+    dataset.metadata_owner.save()
+    res = user_client.get(
+        "/v3/files",
+        {"dataset": dataset.id},
+        content_type="application/json",
+    )
+    assert res.data["count"] == 3
 
 
 def test_files_get_dataset_files_empty(admin_client, dataset):

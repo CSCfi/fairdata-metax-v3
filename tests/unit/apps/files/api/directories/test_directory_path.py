@@ -4,8 +4,8 @@ from tests.utils import assert_nested_subdict
 pytestmark = [pytest.mark.django_db, pytest.mark.file]
 
 
-def test_directory_path(client, file_tree_a):
-    res = client.get(
+def test_directory_path(admin_client, file_tree_a):
+    res = admin_client.get(
         "/v3/directories",
         {
             "pagination": False,
@@ -39,8 +39,8 @@ def test_directory_path(client, file_tree_a):
     )
 
 
-def test_directory_path_subdir(client, file_tree_a):
-    res = client.get(
+def test_directory_path_subdir(admin_client, file_tree_a):
+    res = admin_client.get(
         "/v3/directories",
         {
             "pagination": False,
@@ -64,8 +64,8 @@ def test_directory_path_subdir(client, file_tree_a):
     )
 
 
-def test_directory_path_nonexisting(client, file_tree_a):
-    res = client.get(
+def test_directory_path_nonexisting(admin_client, file_tree_a):
+    res = admin_client.get(
         "/v3/directories",
         {
             "pagination": False,

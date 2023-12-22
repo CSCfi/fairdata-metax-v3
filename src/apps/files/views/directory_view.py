@@ -9,10 +9,12 @@
 from django.db.models import CharField, Count, F, Max, Min, Sum, Value
 from django.db.models.functions import Concat
 from drf_yasg.utils import swagger_auto_schema
+from rest_access_policy import AccessViewSetMixin
 from rest_framework import fields, serializers, viewsets
 from rest_framework.response import Response
 
 from apps.common.helpers import cachalot_toggle, get_attr_or_item
+from apps.common.views import QueryParamsMixin
 from apps.files.functions import SplitPart
 from apps.files.helpers import (
     get_directory_metadata_model,
@@ -21,7 +23,7 @@ from apps.files.helpers import (
     replace_query_param,
 )
 from apps.files.models.file import File, FileStorage
-from apps.files.permissions import FilesAccessPolicy
+from apps.files.permissions import DirectoriesAccessPolicy
 from apps.files.serializers.directory_serializer import (
     DirectoryFileSerializer,
     DirectorySerializer,
@@ -122,20 +124,21 @@ class DirectoryQueryParams(DirectoryCommonQueryParams):
         return value
 
 
-class DirectoryViewSet(viewsets.ViewSet):
+class DirectoryViewSet(QueryParamsMixin, AccessViewSetMixin, viewsets.ViewSet):
     """API for browsing directories of a storage project.
 
     Directories are transient and do not have a model of their own.
     Instead, they are generated dynamically from files that match
     the requested path."""
 
-    access_policy = FilesAccessPolicy
+    access_policy = DirectoriesAccessPolicy
 
-    def get_params(self):
-        """Parse view query parameters."""
-        params_serializer = DirectoryQueryParams(data=self.request.query_params)
-        params_serializer.is_valid(raise_exception=True)
-        return params_serializer.validated_data
+    # Query serializer info for query_params and swagger generation
+    query_serializers = [
+        {
+            "class": DirectoryQueryParams,
+        }
+    ]
 
     def get_project_files(self, params):
         """Get relevant project files."""
@@ -333,12 +336,10 @@ class DirectoryViewSet(viewsets.ViewSet):
                 metadata["directory_metadata"] = directory_metadata
         return metadata
 
-    @swagger_auto_schema(
-        query_serializer=DirectoryQueryParams, responses={200: DirectorySerializer}
-    )
+    @swagger_auto_schema(responses={200: DirectorySerializer})
     def list(self, request, *args, **kwargs):
         """Directory content view."""
-        params = self.get_params()
+        params = self.query_params
         with cachalot_toggle(enabled=params["pagination"]):
             directories = self.get_directories(params)
             parent_data = {}

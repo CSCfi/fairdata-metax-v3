@@ -16,6 +16,10 @@
 
 ### :::tests.conftest.service_client
 
+## ida_client
+
+### :::tests.conftest.ida_client
+
 ## pytest_collection_modifyitems
 
 ### :::tests.conftest.pytest_collection_modifyitems

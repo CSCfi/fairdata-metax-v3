@@ -50,6 +50,16 @@ def service_client(client):
     return client
 
 
+@pytest.fixture
+def ida_client(client):
+    user = MetaxUserFactory(username="service_test_ida")
+    service_group, _ = Group.objects.get_or_create(name="service")
+    ida_group, _ = Group.objects.get_or_create(name="ida")
+    user.groups.set([service_group, ida_group])
+    client.force_login(user)
+    return client
+
+
 def pytest_collection_modifyitems(items):
     """Pytest provided hook function
 

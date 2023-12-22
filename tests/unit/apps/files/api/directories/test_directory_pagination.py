@@ -4,8 +4,8 @@ from tests.utils import assert_nested_subdict
 pytestmark = [pytest.mark.django_db, pytest.mark.file]
 
 
-def test_directory_pagination(client, file_tree_a):
-    res = client.get(
+def test_directory_pagination(admin_client, file_tree_a):
+    res = admin_client.get(
         "/v3/directories",
         {
             "path": "/dir",
@@ -35,7 +35,7 @@ def test_directory_pagination(client, file_tree_a):
         check_list_length=True,
     )
 
-    res = client.get(res.data["next"])
+    res = admin_client.get(res.data["next"])
     assert res.status_code == 200
     assert "offset" not in res.data["previous"]
     assert "offset=10" in res.data["next"]
@@ -59,7 +59,7 @@ def test_directory_pagination(client, file_tree_a):
         check_list_length=True,
     )
 
-    res = client.get(res.data["next"])
+    res = admin_client.get(res.data["next"])
     assert res.status_code == 200
     assert "offset=5" in res.data["previous"]
     assert_nested_subdict(
@@ -80,8 +80,8 @@ def test_directory_pagination(client, file_tree_a):
     )
 
 
-def test_directory_pagination_empty_due_to_offset(client, file_tree_a):
-    res = client.get(
+def test_directory_pagination_empty_due_to_offset(admin_client, file_tree_a):
+    res = admin_client.get(
         "/v3/directories",
         {
             "path": "/dir",
@@ -105,8 +105,8 @@ def test_directory_pagination_empty_due_to_offset(client, file_tree_a):
     )
 
 
-def test_directory_pagination_with_name(client, file_tree_a):
-    res = client.get(
+def test_directory_pagination_with_name(admin_client, file_tree_a):
+    res = admin_client.get(
         "/v3/directories",
         {
             "path": "/dir",
@@ -137,7 +137,7 @@ def test_directory_pagination_with_name(client, file_tree_a):
         check_list_length=True,
     )
 
-    res = client.get(res.data["next"])
+    res = admin_client.get(res.data["next"])
     assert res.status_code == 200
     assert_nested_subdict(
         {
