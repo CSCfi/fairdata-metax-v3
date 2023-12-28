@@ -212,6 +212,7 @@ def test_dataset_copied_fields():
         "dataset.other_versions",
         "dataset.provenance.event_outcome",
         "dataset.provenance.lifecycle_event",
+        "dataset.provenance.preservation_event",
         "dataset.provenance.spatial.reference",
         "dataset.provenance.used_entity.type",
         "dataset.relation.entity.type",

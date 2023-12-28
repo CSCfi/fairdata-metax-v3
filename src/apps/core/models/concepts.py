@@ -127,6 +127,10 @@ class LifecycleEvent(ConceptProxyMixin, refdata.LifecycleEvent):
     """Lifecycle event of the resource."""
 
 
+class PreservationEvent(ConceptProxyMixin, refdata.PreservationEvent):
+    """Preservation event of the resource."""
+
+
 class EventOutcome(ConceptProxyMixin, refdata.EventOutcome):
     """Event outcome of the resource."""
 

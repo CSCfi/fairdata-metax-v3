@@ -21,6 +21,7 @@ from .concepts import (
     FileType,
     Language,
     LifecycleEvent,
+    PreservationEvent,
     RelationType,
     ResearchInfra,
     ResourceType,

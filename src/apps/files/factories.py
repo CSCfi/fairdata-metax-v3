@@ -21,7 +21,6 @@ class FileStorageFactory(factory.django.DjangoModelFactory):
     class Params:
         fallback_project = factory.Faker("numerify", text="#######")
 
-
     storage_service = "ida"
 
 

@@ -128,6 +128,19 @@ class LifecycleEventFactory(factory.django.DjangoModelFactory):
         return f"https://lifecycle-event-{self}.fi"
 
 
+class PreservationEventFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.PreservationEvent
+        django_get_or_create = ("url",)
+
+    pref_label = factory.Dict({"en": factory.Sequence(lambda n: f"preservation-event-{n}")})
+    in_scheme = factory.Faker("url")
+
+    @factory.sequence
+    def url(self):
+        return f"https://preservation-event-{self}.fi"
+
+
 class EventOutcomeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.EventOutcome

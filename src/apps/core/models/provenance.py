@@ -7,7 +7,7 @@ from apps.common.helpers import ensure_instance_id, prepare_for_copy
 from apps.common.models import AbstractBaseModel, AbstractFreeformConcept
 
 from .catalog_record import Dataset, DatasetActor
-from .concepts import EventOutcome, LifecycleEvent, Spatial
+from .concepts import EventOutcome, LifecycleEvent, PreservationEvent, Spatial
 
 
 class Provenance(AbstractBaseModel):
@@ -41,6 +41,9 @@ class Provenance(AbstractBaseModel):
 
     lifecycle_event = models.ForeignKey(
         LifecycleEvent, on_delete=models.CASCADE, null=True, blank=True
+    )
+    preservation_event = models.ForeignKey(
+        PreservationEvent, on_delete=models.CASCADE, null=True, blank=True
     )
     event_outcome = models.ForeignKey(
         EventOutcome, on_delete=models.CASCADE, null=True, blank=True

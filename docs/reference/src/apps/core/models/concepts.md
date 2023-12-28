@@ -44,6 +44,10 @@
 
 ### :::src.apps.core.models.concepts.LifecycleEvent
 
+## PreservationEvent
+
+### :::src.apps.core.models.concepts.PreservationEvent
+
 ## EventOutcome
 
 ### :::src.apps.core.models.concepts.EventOutcome

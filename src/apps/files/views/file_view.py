@@ -249,7 +249,8 @@ class FileViewSet(BaseFileViewSet):
                 ).values(key=F(file_id_type))
                 queryset = queryset.annotate(
                     values=ArrayAgg(
-                        "file_sets__dataset_id", filter=Q(file_sets__dataset__deprecated__isnull=True)
+                        "file_sets__dataset_id",
+                        filter=Q(file_sets__dataset__deprecated__isnull=True),
                     )
                 )
                 return Response({str(v["key"]): v["values"] for v in queryset})

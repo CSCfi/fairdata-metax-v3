@@ -489,6 +489,15 @@ def lifecycle_event_reference_data():
         **common_args,
     )
 
+@pytest.fixture
+def preservation_event_reference_data():
+    common_args = {"in_scheme": "http://uri.suomi.fi/codelist/fairdata/preservation_event"}
+    factories.PreservationEventFactory(
+        url="http://uri.suomi.fi/codelist/fairdata/preservation_event/code/cre",
+        pref_label={"en": "Creation", "fi": "Luonti"},
+        **common_args,
+    )
+
 
 @pytest.fixture
 def reference_data(
@@ -507,6 +516,7 @@ def reference_data(
     event_outcome_reference_data,
     lifecycle_event_reference_data,
     organization_reference_data,
+    preservation_event_reference_data,
 ):
     """Collection of reference data"""
 

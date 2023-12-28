@@ -36,6 +36,10 @@
 
 ### :::src.apps.core.factories.LifecycleEventFactory
 
+## PreservationEventFactory
+
+### :::src.apps.core.factories.PreservationEventFactory
+
 ## EventOutcomeFactory
 
 ### :::src.apps.core.factories.EventOutcomeFactory
