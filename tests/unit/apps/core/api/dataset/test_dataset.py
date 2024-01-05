@@ -7,6 +7,7 @@ from rest_framework.reverse import reverse
 from tests.utils import assert_nested_subdict, matchers
 
 from apps.core import factories
+from apps.core.factories import DatasetFactory, MetadataProviderFactory
 from apps.core.models import OtherIdentifier
 from apps.core.models.catalog_record.dataset import Dataset
 from apps.core.models.concepts import IdentifierType
@@ -674,3 +675,15 @@ def test_empty_description(admin_client, dataset_a_json, data_catalog, reference
     )
     assert res.status_code == 400
     assert res.json()["description"] == ["This dictionary may not be empty."]
+
+
+def test_dataset_last_modified_by(admin_client, user_client, user):
+    dataset = DatasetFactory(metadata_owner=MetadataProviderFactory(user=user))
+
+    admin_client.patch(f"/v3/datasets/{dataset.id}", {}, content_type="application/json")
+    dataset.refresh_from_db()
+    assert dataset.last_modified_by.username == "admin"
+
+    user_client.patch(f"/v3/datasets/{dataset.id}", {}, content_type="application/json")
+    dataset.refresh_from_db()
+    assert dataset.last_modified_by == user

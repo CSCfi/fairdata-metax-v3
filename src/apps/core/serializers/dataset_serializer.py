@@ -232,11 +232,13 @@ class DatasetSerializer(CommonNestedModelSerializer):
         return _data
 
     def update(self, instance, validated_data):
+        validated_data["last_modified_by"] = self.context["request"].user
         dataset = super().update(instance, validated_data=validated_data)
         dataset.create_persistent_identifier()
         return dataset
 
     def create(self, validated_data):
+        validated_data["last_modified_by"] = self.context["request"].user
         dataset = super().create(validated_data=validated_data)
         dataset.create_persistent_identifier()
         return dataset

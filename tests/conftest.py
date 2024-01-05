@@ -13,6 +13,7 @@ import factory.random
 import pytest
 from django.conf import settings
 from django.contrib.auth.models import Group
+from django.test.client import Client
 from rest_framework.test import APIClient, RequestsClient
 
 from apps.core import factories
@@ -42,7 +43,8 @@ def faker_seed():
 
 
 @pytest.fixture
-def service_client(client):
+def service_client():
+    client = Client()
     user = MetaxUserFactory(username="service_test")
     group, _ = Group.objects.get_or_create(name="service")
     user.groups.set([group])
@@ -543,7 +545,8 @@ def requests_client():
 
 
 @pytest.fixture
-def user_client(client, user):
+def user_client(user):
+    client = Client()
     client.force_login(user)
     return client
 
