@@ -144,10 +144,6 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_flush_dataset_by_user
 
-## test_has_files
-
-### :::tests.unit.apps.core.api.dataset.test_dataset.test_has_files
-
 ## ida_dataset
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.ida_dataset
@@ -167,4 +163,12 @@
 ## test_filter_by_csc_project
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_filter_by_csc_project
+
+## test_filter_by_has_files
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_filter_by_has_files
+
+## test_empty_description
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_empty_description
 

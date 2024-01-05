@@ -1,12 +1,12 @@
 import json
 import logging
 from unittest.mock import ANY
-from apps.core import factories
 
 import pytest
 from rest_framework.reverse import reverse
 from tests.utils import assert_nested_subdict, matchers
 
+from apps.core import factories
 from apps.core.models import OtherIdentifier
 from apps.core.models.catalog_record.dataset import Dataset
 from apps.core.models.concepts import IdentifierType
@@ -651,7 +651,9 @@ def test_filter_by_csc_project(admin_client, ida_dataset, ida_dataset_other, pas
     }
 
 
-def test_filter_by_has_files(admin_client, dataset_a, dataset_with_files, data_catalog, reference_data):
+def test_filter_by_has_files(
+    admin_client, dataset_a, dataset_with_files, data_catalog, reference_data
+):
     res = admin_client.get(
         "/v3/datasets?has_files=false&pagination=false", content_type="application/json"
     )
@@ -660,3 +662,15 @@ def test_filter_by_has_files(admin_client, dataset_a, dataset_with_files, data_c
         "/v3/datasets?has_files=true&pagination=false", content_type="application/json"
     )
     assert [d["id"] for d in res.data] == [str(dataset_with_files.id)]
+
+
+def test_empty_description(admin_client, dataset_a_json, data_catalog, reference_data):
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    dataset_id = res.data["id"]
+    res = admin_client.patch(
+        f"/v3/datasets/{dataset_id}",
+        {"description": {"fi": "", "en": None}},
+        content_type="application/json",
+    )
+    assert res.status_code == 400
+    assert res.json()["description"] == ["This dictionary may not be empty."]

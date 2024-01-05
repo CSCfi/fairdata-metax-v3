@@ -795,7 +795,9 @@ def test_update_organization_empty_pref_label(patch_dataset, existing_actors):
         {"actors": [{"organization": {"id": organization_id, "pref_label": {}}}]},
         expected_status=400,
     )
-    assert data["actors"][0]["organization"] == {"pref_label": "Field is required."}
+    assert data["actors"][0]["organization"] == {
+        "pref_label": ["This dictionary may not be empty."]
+    }
 
 
 def test_update_person_no_name(patch_dataset, existing_actors):

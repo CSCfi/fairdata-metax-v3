@@ -11,10 +11,10 @@ from contextlib import contextmanager
 from uuid import UUID
 
 from django.core.exceptions import FieldDoesNotExist
-from django.core.validators import EMPTY_VALUES
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
+from rest_framework.compat import postgres_fields
 from rest_framework.fields import empty
 from rest_framework.serializers import ValidationError
 from rest_framework.settings import api_settings
@@ -476,8 +476,36 @@ class NestedModelSerializer(serializers.ModelSerializer):
         return instance
 
 
+class MultiLanguageField(serializers.HStoreField):
+    """Serializer field for MultiLanguageField model fields.
+
+    Languages with `null` or "" as translation are removed from the object.
+    Disallows empty objects `{}` by default.
+    """
+
+    child = serializers.CharField(allow_blank=True, allow_null=True)
+
+    def to_internal_value(self, data):
+        data = {
+            lang: translation
+            for lang, translation in data.items()
+            if translation not in {None, ""}
+        }
+        return super().to_internal_value(data)
+
+    def __init__(self, **kwargs):
+        kwargs.setdefault("allow_empty", False)
+        super().__init__(**kwargs)
+
+
 class CommonModelSerializer(PatchModelSerializer, serializers.ModelSerializer):
     """ModelSerializer for behavior common for all model APIs."""
+
+    serializer_field_mapping = {
+        **serializers.ModelSerializer.serializer_field_mapping,
+        # Default to using MultiLanguageField serializer field for all HStoreFields
+        postgres_fields.HStoreField: MultiLanguageField,
+    }
 
 
 class CommonNestedModelSerializer(CommonModelSerializer, NestedModelSerializer):
