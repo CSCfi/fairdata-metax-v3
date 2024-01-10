@@ -489,6 +489,7 @@ def lifecycle_event_reference_data():
         **common_args,
     )
 
+
 @pytest.fixture
 def preservation_event_reference_data():
     common_args = {"in_scheme": "http://uri.suomi.fi/codelist/fairdata/preservation_event"}

@@ -5,7 +5,7 @@ from apps.common.serializers.serializers import CommonModelSerializer
 from apps.core.models import Contract, Preservation
 
 
-class ContractModelSerializer(serializers.ModelSerializer):
+class ContractModelSerializer(CommonModelSerializer):
     """Model serializer for Contract"""
 
     class Meta:

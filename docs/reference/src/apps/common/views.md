@@ -12,6 +12,10 @@
 
 ### :::src.apps.common.views.PatchModelMixin
 
+## StrictQueryParamsSerializer
+
+### :::src.apps.common.views.StrictQueryParamsSerializer
+
 ## QueryParamsMixin
 
 ### :::src.apps.common.views.QueryParamsMixin

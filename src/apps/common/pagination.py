@@ -13,6 +13,13 @@ class OffsetPagination(LimitOffsetPagination):
     pagination_param = "pagination"
     pagination_description = _("Set false to disable pagination.")
 
+    # Declare which query parameters are used by pagination so they can be used in validation
+    params = {
+        LimitOffsetPagination.limit_query_param,
+        LimitOffsetPagination.offset_query_param,
+        pagination_param,
+    }
+
     def pagination_enabled(self, request):
         try:
             value = request.query_params[self.pagination_param]

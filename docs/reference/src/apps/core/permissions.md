@@ -12,3 +12,7 @@
 
 ### :::src.apps.core.permissions.DatasetNestedAccessPolicy
 
+## ContractAccessPolicy
+
+### :::src.apps.core.permissions.ContractAccessPolicy
+

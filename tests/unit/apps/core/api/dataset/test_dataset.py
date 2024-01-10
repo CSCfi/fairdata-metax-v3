@@ -150,6 +150,21 @@ def test_list_datasets_with_default_pagination(admin_client, dataset_a, dataset_
     }
 
 
+def test_list_datasets_with_invalid_query_param(admin_client, dataset_a):
+    res = admin_client.get(reverse("dataset-list"), {"päginätiön": "false", "offzet": 10})
+    assert res.status_code == 400
+    assert res.json() == {
+        "päginätiön": "Unknown query parameter",
+        "offzet": "Unknown query parameter",
+    }
+
+    # unknown params should be ok in non-strict mode
+    res = admin_client.get(
+        reverse("dataset-list"), {"päginätiön": "false", "offzet": 10, "strict": "false"}
+    )
+    assert res.status_code == 200
+
+
 def test_list_datasets_with_pagination(admin_client, dataset_a, dataset_b):
     res = admin_client.get(reverse("dataset-list"), {"pagination": "true"})
     assert res.status_code == 200

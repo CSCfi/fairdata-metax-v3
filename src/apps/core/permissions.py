@@ -110,3 +110,7 @@ class DatasetNestedAccessPolicy(BaseAccessPolicy):
                 request.user == dataset.metadata_owner.user
                 or request.user == dataset.system_creator
             )
+
+
+class ContractAccessPolicy(BaseAccessPolicy):
+    pass

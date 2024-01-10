@@ -1,6 +1,8 @@
 from django_filters import rest_framework as filters
 from rest_framework import viewsets
 
+from apps.common.views import CommonReadOnlyModelViewSet
+
 
 def get_filter_for_model(model):
     _model = model
@@ -36,7 +38,7 @@ def get_filter_for_model(model):
 
 
 def get_viewset_for_model(model):
-    class ReferenceDataViewSet(viewsets.ReadOnlyModelViewSet):
+    class ReferenceDataViewSet(CommonReadOnlyModelViewSet):
         """Generic viewset for reference data objects."""
 
         serializer_class = model.get_serializer_class()

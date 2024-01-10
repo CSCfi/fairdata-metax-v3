@@ -31,8 +31,8 @@ def contract_a_json(client):
 
 
 @pytest.fixture
-def contract_a(client, contract_a_json, data_catalog, reference_data):
-    return client.post("/v3/contracts", contract_a_json, content_type="application/json")
+def contract_a(admin_client, contract_a_json, data_catalog, reference_data):
+    return admin_client.post("/v3/contracts", contract_a_json, content_type="application/json")
 
 
 @pytest.fixture

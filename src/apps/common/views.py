@@ -1,5 +1,9 @@
+from functools import cached_property
+
+from django.conf import settings
+from django.utils.translation import gettext_lazy as _
 from rest_access_policy import AccessViewSetMixin
-from rest_framework import viewsets
+from rest_framework import serializers, viewsets
 from rest_framework.exceptions import NotAuthenticated
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
@@ -52,6 +56,12 @@ class PatchModelMixin:
         return self.update(request, *args, **kwargs)
 
 
+class StrictQueryParamsSerializer(serializers.Serializer):
+    """Serializer for 'strict' query parameter."""
+
+    strict = serializers.BooleanField(default=True)
+
+
 class QueryParamsMixin(viewsets.ViewSet):
     """ViewSet mixin for parsing query params with serializers.
 
@@ -99,13 +109,42 @@ class QueryParamsMixin(viewsets.ViewSet):
             classes.append(serializer_info["class"])
         return classes
 
+    @cached_property
+    def strict(self) -> bool:
+        """Return True if strict parameter parsing is enabled."""
+        serializer = StrictQueryParamsSerializer(data=self.request.query_params)
+        serializer.is_valid(raise_exception=True)
+        return serializer.validated_data["strict"]
+
     def validate_query_params(self):
         """Validate query parameters for current action, assign to self.query_params."""
         params = {}
+        supported_params = set(settings.COMMON_QUERY_PARAMS)
         for serializer_class in self.get_query_serializer_classes():
             serializer = serializer_class(data=self.request.query_params)
             serializer.is_valid(raise_exception=True)
             params.update(serializer.validated_data)
+            supported_params.update(serializer.fields)
+
+        # Add query parameters from filterset to supported_params.
+        # NOTE: This currently assumes that there are no new filters
+        # added dynamically during filterset instantiation.
+        if filterset_class := getattr(self, "filterset_class", None):
+            supported_params.update(filterset_class.base_filters)
+
+        # List views use pagination, add pagination params to supported_params
+        if not self.detail:
+            # Requires paginator to declare its params in 'params' attribute
+            if paginator := getattr(self, "paginator", None):
+                supported_params.update(paginator.params)
+
+        # Disallow unknown query params in strict mode
+        if self.strict:
+            if unknown_params := set(self.request.query_params) - supported_params:
+                raise serializers.ValidationError(
+                    {field: _("Unknown query parameter") for field in unknown_params}
+                )
+
         self.query_params = params
 
 

@@ -52,6 +52,13 @@ Pagination can be disabled with `?pagination=false`. In that case the response w
 Note that some queries might produce too many results to be practical to use without pagination.
 
 
+### Strict parameter validation
+
+By default, requests containing query parameters the API does not recognize will return an error. 
+It can sometimes be useful during development to have the API ignore unknown parameters by including
+`?strict=false` in the query.
+
+
 ### Value types
 
 This documentation uses following abbreviations to describe the allowed types of a value.

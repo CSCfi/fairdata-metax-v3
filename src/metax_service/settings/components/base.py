@@ -347,3 +347,9 @@ PID_MS_CLIENT_INSTANCE = env.str(
 PID_MS_BASEURL = env.str("PID_MS_BASEURL", None)
 PID_MS_APIKEY = env.str("PID_MS_APIKEY", None)
 ETSIN_URL = env.str("ETSIN_URL", None)
+
+# Common global query parameters shared by most endpoints but not documented in swagger
+COMMON_QUERY_PARAMS = {
+    "format",  # DRF output format,  e.g.  ?format=json or ?format=api
+    "strict",  # set ?strict=false to allow unknown query params without throwing error
+}

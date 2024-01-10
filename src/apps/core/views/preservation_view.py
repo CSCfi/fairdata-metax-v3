@@ -1,10 +1,11 @@
 from django.utils.decorators import method_decorator
 from django_filters import rest_framework as filters
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import viewsets
 
+from apps.common.views import CommonModelViewSet
 from apps.core.mixins import DatasetNestedViewSetMixin
 from apps.core.models import Contract, Dataset, Preservation
+from apps.core.permissions import ContractAccessPolicy
 from apps.core.serializers import ContractModelSerializer, PreservationModelSerializer
 
 
@@ -21,10 +22,11 @@ class ContractFilter(filters.FilterSet):
 @method_decorator(
     name="list", decorator=swagger_auto_schema(operation_description="List Contracts")
 )
-class ContractViewSet(viewsets.ModelViewSet):
+class ContractViewSet(CommonModelViewSet):
     serializer_class = ContractModelSerializer
     queryset = Contract.objects.all()
     filterset_class = ContractFilter
+    access_policy = ContractAccessPolicy
 
 
 @method_decorator(

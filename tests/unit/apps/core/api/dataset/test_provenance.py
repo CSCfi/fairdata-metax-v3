@@ -129,19 +129,21 @@ def test_edit_provenance(dataset_with_provenance_json, provenance_a_request, adm
     assert res.data["title"]["fi"] == "new title"
     assert len(res.data["is_associated_with"]) == 2
 
+
 def test_preservation_event(admin_client, dataset_a_json, data_catalog, reference_data):
     dataset_a_json["provenance"] = [
         {
             "description": {"fi": "kuvaus"},
             "preservation_event": {
                 "url": "http://uri.suomi.fi/codelist/fairdata/preservation_event/code/cre",
-            }
+            },
         }
     ]
-    
+
     res1 = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res1.status_code == 201
     assert res1.data["provenance"][0]["preservation_event"]["pref_label"]["en"] == "Creation"
+
 
 def test_provenance_new_version(dataset_with_provenance_json, provenance_a_request, admin_client):
     dataset_id = provenance_a_request.data["id"]
