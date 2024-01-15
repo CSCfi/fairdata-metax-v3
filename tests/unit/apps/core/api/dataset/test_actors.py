@@ -824,6 +824,23 @@ def test_create_provenance_actor(patch_dataset):
     assert_nested_subdict(actor, data["provenance"][0]["is_associated_with"][0])
 
 
+def test_create_provenance_and_role_refdata_actor(patch_dataset, organization_reference_data):
+    org = organization_reference_data[0]
+    actor = {
+        "organization": {
+            "id": org.id,
+            "pref_label": {"en": "blah blah"},  # should be ignored
+        }
+    }
+    data = patch_dataset(
+        {
+            "actors": [actor],
+            "provenance": [{"description": {"en": "provenance"}, "is_associated_with": [actor]}],
+        }
+    )
+    assert_nested_subdict({"organization": {"pref_label": org.pref_label}}, data["actors"][0])
+
+
 def test_create_provenance_and_role_actor(patch_dataset):
     actor = {"organization": {"pref_label": {"en": "organization"}}}
     data = patch_dataset(

@@ -95,6 +95,8 @@ class DatasetOrganizationSerializer(DatasetMemberSerializer):
         dataset_members = self.get_dataset_members()
         member = dataset_members.get(id)
         if member and not url:
+            if member.object and member.object.is_reference_data:
+                comparison_data.clear()  # no need to compare anything for reference data
             return attrs  # org found, no url to validate
 
         # Check if id and/or url belong to reference data
@@ -110,7 +112,7 @@ class DatasetOrganizationSerializer(DatasetMemberSerializer):
             member = dataset_members.setdefault(instance_id, DatasetMemberContext())
             member.object = instance
             member.is_updated = True  # don't update refdata
-            comparison_data.clear()  # no need compare anything for reference data
+            comparison_data.clear()  # no need to compare anything for reference data
 
         except Organization.DoesNotExist:
             require_refdata = "url" in query_args  # only refdata can have url
