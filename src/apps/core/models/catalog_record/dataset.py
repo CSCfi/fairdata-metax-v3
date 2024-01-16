@@ -190,7 +190,6 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
             published_revision=F("catalogrecord_ptr__dataset__published_revision"),
             state="published",
             history_change_reason__isnull=False,
-            removed__isnull=True,
         )
         if as_instance_list:
             return cls._historicals_to_instances(published)

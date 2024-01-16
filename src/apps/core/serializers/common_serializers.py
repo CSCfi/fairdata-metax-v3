@@ -32,6 +32,7 @@ from apps.core.models.concepts import (
     UseCategory,
 )
 from apps.core.models.entity import Entity
+from apps.core.helpers import get_metax_identifiers_by_pid
 
 logger = logging.getLogger(__name__)
 
@@ -155,10 +156,11 @@ class OtherIdentifierListSerializer(serializers.ListSerializer):
 
 class OtherIdentifierModelSerializer(AbstractDatasetModelSerializer):
     identifier_type = IdentifierType.get_serializer_field(required=False, allow_null=True)
+    metax_ids = serializers.SerializerMethodField()
 
     class Meta:
         model = OtherIdentifier
-        fields = ("notation", "identifier_type", "old_notation")
+        fields = ("notation", "identifier_type", "old_notation", "metax_ids")
         list_serializer_class = OtherIdentifierListSerializer
 
     def to_representation(self, instance):
@@ -171,6 +173,9 @@ class OtherIdentifierModelSerializer(AbstractDatasetModelSerializer):
             rep.pop("old_notation", None)
 
         return rep
+
+    def get_metax_ids(self, instance):
+        return get_metax_identifiers_by_pid(instance.notation)
 
 
 class TemporalModelSerializer(AbstractDatasetModelSerializer):
@@ -232,11 +237,16 @@ class EntitySerializer(CommonModelSerializer):
 class EntityRelationSerializer(CommonNestedModelSerializer):
     entity = EntitySerializer()
     relation_type = RelationType.get_serializer_field()
+    metax_ids = serializers.SerializerMethodField()
 
     class Meta:
         model = EntityRelation
         fields = [
             "entity",
             "relation_type",
+            "metax_ids",
         ]
         list_serializer_class = CommonListSerializer
+
+    def get_metax_ids(self, instance):
+        return get_metax_identifiers_by_pid(instance.entity.entity_identifier)

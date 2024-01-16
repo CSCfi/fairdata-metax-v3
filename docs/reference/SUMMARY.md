@@ -34,6 +34,7 @@
         - [admin](src/apps/core/admin.md)
         - [apps](src/apps/core/apps.md)
         - [factories](src/apps/core/factories.md)
+        - [helpers](src/apps/core/helpers.md)
         - management.commands
             - [load_test_data](src/apps/core/management/commands/load_test_data.md)
             - [migrate_v2_datasets](src/apps/core/management/commands/migrate_v2_datasets.md)
