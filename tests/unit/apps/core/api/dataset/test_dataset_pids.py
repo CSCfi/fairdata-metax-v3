@@ -210,3 +210,46 @@ def test_create_dataset_multiple_datasets_same_pid(
     assert "Data catalog is not allowed to have multiple datasets with same value" in str(
         res.data["persistent_identifier"]
     )
+
+# Try to create a dataset without pid_type and pid
+# Check that request fails
+def test_create_dataset_without_pid_type_and_pid_fails(admin_client, dataset_a_json, data_catalog, reference_data):
+    dataset = dataset_a_json
+    dataset.pop("pid_type", None)
+    dataset.pop("persistent_identifier", None)
+    res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
+    assert res.status_code != 201
+
+# Create a dataset    
+# Try to update the dataset using put without pid_type and pid
+# Check that request fails
+def test_update_dataset_without_pid_type_and_pid_fails(admin_client, dataset_a_json, data_catalog, reference_data):
+    dataset = dataset_a_json
+    dataset["pid_type"] = "URN"
+    res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
+    assert res.status_code == 201
+    ds_id = res.json().get("id", None)
+
+    dataset.pop("pid_type", None)
+    dataset.pop("persistent_identifier", None)
+    res = admin_client.put(f"/v3/datasets/{ds_id}", dataset, content_type="application/json")
+    assert res.status_code != 200
+
+# Create a dataset    
+# Try to update the pid of the dataset
+# Check that request fails
+# Check that pid is still the same
+def test_pid_cant_be_updated(admin_client, dataset_a_json, data_catalog, reference_data):
+    dataset = dataset_a_json
+    res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
+    assert res.status_code == 201
+    ds_id = res.json().get("id", None)
+    ds_pid = res.json().get("persistent_identifier", None)
+
+    dataset["persistent_identifier"] = "new_pid"
+    res = admin_client.put(f"/v3/datasets/{ds_id}", dataset, content_type="application/json")
+    assert res.status_code != 200
+
+    res2 = admin_client.get(f"/v3/datasets/{ds_id}", content_type="application/json")
+    ds_pid2 = res2.json().get("persistent_identifier", None)
+    assert ds_pid == ds_pid2

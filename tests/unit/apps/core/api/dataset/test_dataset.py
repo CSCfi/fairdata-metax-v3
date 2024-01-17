@@ -413,6 +413,7 @@ def test_dataset_put_maximal_and_minimal(
     minimal_json = {
         "data_catalog": dataset_maximal_json["data_catalog"],
         "title": dataset_maximal_json["title"],
+        "pid_type": "URN"
     }
     res = admin_client.put(
         f"/v3/datasets/{res.data['id']}", minimal_json, content_type="application/json"
@@ -425,6 +426,7 @@ def test_dataset_put_maximal_and_minimal(
         "data_catalog",
         "id",
         "modified",
+        "pid_type",
         "state",
         "title",
     ]

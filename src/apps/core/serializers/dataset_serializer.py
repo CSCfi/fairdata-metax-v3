@@ -157,6 +157,15 @@ class DatasetSerializer(CommonNestedModelSerializer):
             return DataCatalog.objects.get(id=self.instance.data_catalog).harvested
         return None
 
+    def _ds_is_published(self, data):
+        if data.get("state"):
+            state = data["state"]
+        else:
+            state = self.instance.state
+        if state == "published":
+            return True
+        return False
+
     def _validate_timestamps(self, data, errors):
         _now = timezone.now()
 
@@ -177,7 +186,8 @@ class DatasetSerializer(CommonNestedModelSerializer):
 
     def _validate_pids(self, data, errors):
         dc_is_harvested = self._dc_is_harvested(data)
-        if self.context["request"].method == "POST":
+        ds_is_published = self._ds_is_published(data)
+        if self.context["request"].method in {"POST", "PUT"}:
             if data.get("persistent_identifier") != None and data.get("data_catalog") == None:
                 errors["persistent_identifier"] = serializers.ValidationError(
                     detail="Can't assign persistent_identifier if data_catalog isn't given"
@@ -191,8 +201,12 @@ class DatasetSerializer(CommonNestedModelSerializer):
                     errors["persistent_identifier"] = serializers.ValidationError(
                         detail="Dataset in a harvested catalog has to have a persistent identifier"
                     )
+            if dc_is_harvested == False and ds_is_published and data.get("pid_type") == None:
+                errors["pid_type"] = serializers.ValidationError(
+                    detail="If data catalog is not harvested and dataset is published, pid_type needs to be given"
+                )
 
-        elif self.context["request"].method in {"PUT", "PATCH"}:
+        elif self.context["request"].method in {"PATCH"}:
             if data.get("persistent_identifier") != None and dc_is_harvested == False:
                 errors["persistent_identifier"] = serializers.ValidationError(
                     detail="persistent_identifier can't be assigned to a dataset in a non-harvested data catalog"
