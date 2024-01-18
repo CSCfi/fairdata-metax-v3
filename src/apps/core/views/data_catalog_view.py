@@ -24,7 +24,9 @@ class DataCatalogFilter(filters.FilterSet):
         )
 
     title = filters.CharFilter(
-        field_name="title__values", max_length=255, lookup_expr="icontains", label="title"
+        max_length=255,
+        lookup_expr="icontains",
+        label="title__values",
     )
     id = filters.CharFilter(max_length=255, lookup_expr="icontains")
     publisher__name = filters.CharFilter(
@@ -61,6 +63,7 @@ class DataCatalogFilter(filters.FilterSet):
         lookup_expr="icontains",
         label="language preferred label contains",
     )
+
     ordering = filters.OrderingFilter(fields=("created", "created"))
 
 

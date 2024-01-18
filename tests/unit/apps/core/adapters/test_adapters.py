@@ -89,7 +89,7 @@ logger = logging.getLogger(__name__)
 @pytest.mark.adapter
 @pytest.mark.django_db
 def test_v2_to_v3_dataset_conversion(
-    license_reference_data, test_file_path, files_path, expected_diff
+    funder_type_reference_data, license_reference_data, test_file_path, files_path, expected_diff
 ):
     # Data prep
     test_data_path = os.path.dirname(os.path.abspath(__file__)) + "/testdata/"

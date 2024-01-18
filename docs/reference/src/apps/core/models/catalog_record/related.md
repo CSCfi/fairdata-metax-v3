@@ -12,13 +12,17 @@
 
 ### :::src.apps.core.models.catalog_record.related.DatasetProject
 
+## Funding
+
+### :::src.apps.core.models.catalog_record.related.Funding
+
+## Funder
+
+### :::src.apps.core.models.catalog_record.related.Funder
+
 ## FileSet
 
 ### :::src.apps.core.models.catalog_record.related.FileSet
-
-## ProjectContributor
-
-### :::src.apps.core.models.catalog_record.related.ProjectContributor
 
 ## RemoteResource
 

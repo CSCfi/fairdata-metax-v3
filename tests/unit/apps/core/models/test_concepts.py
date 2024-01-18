@@ -9,7 +9,6 @@ pytestmark = [pytest.mark.django_db, pytest.mark.concept]
 def concepts():
     return [
         factories.AccessTypeFactory,
-        factories.ContributorTypeFactory,
         factories.DatasetLicenseFactory,
         factories.EventOutcomeFactory,
         factories.FieldOfScienceFactory,

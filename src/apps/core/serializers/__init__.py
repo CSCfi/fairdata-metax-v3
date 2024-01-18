@@ -18,3 +18,5 @@ from .legacy_serializer import LegacyDatasetModelSerializer
 from .metadata_provider_serializer import MetadataProviderModelSerializer
 from .preservation_serializers import ContractModelSerializer, PreservationModelSerializer
 from .provenance_serializers import ProvenanceModelSerializer
+from .preservation_serializers import PreservationModelSerializer
+from .project_serializer import ProjectModelSerializer

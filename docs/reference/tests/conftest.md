@@ -92,6 +92,10 @@
 
 ### :::tests.conftest.preservation_event_reference_data
 
+## funder_type_reference_data
+
+### :::tests.conftest.funder_type_reference_data
+
 ## reference_data
 
 ### :::tests.conftest.reference_data

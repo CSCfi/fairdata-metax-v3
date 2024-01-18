@@ -29,6 +29,7 @@ from apps.core.serializers.preservation_serializers import PreservationModelSeri
 
 # for preventing circular import, using submodule instead of apps.core.serializers
 from apps.core.serializers.provenance_serializers import ProvenanceModelSerializer
+from apps.core.serializers.project_serializer import ProjectModelSerializer
 
 from .dataset_files_serializer import FileSetSerializer
 
@@ -51,6 +52,7 @@ class DatasetSerializer(CommonNestedModelSerializer):
     relation = EntityRelationSerializer(required=False, many=True)
     preservation = PreservationModelSerializer(required=False, many=False)
     provenance = ProvenanceModelSerializer(required=False, many=True)
+    projects = ProjectModelSerializer(required=False, many=True)
     last_version = serializers.HyperlinkedRelatedField(
         many=False, read_only=True, view_name="dataset-detail"
     )
@@ -91,7 +93,7 @@ class DatasetSerializer(CommonNestedModelSerializer):
         if request:
             see_drafts = instance.has_permission_to_see_drafts(request.user)
             is_historic = hasattr(instance, "_history")
-            if not see_drafts and not is_historic:
+            if not see_drafts and not is_historic and instance.latest_published_revision:
                 instance = instance.latest_published_revision
         return super().to_representation(instance)
 
@@ -113,6 +115,7 @@ class DatasetSerializer(CommonNestedModelSerializer):
             "metadata_owner",
             "other_identifiers",
             "persistent_identifier",
+            "projects",
             "theme",
             "title",
             "pid_type",

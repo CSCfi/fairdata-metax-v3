@@ -241,7 +241,7 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication",
         "knox.auth.TokenAuthentication",
     ],
-    "DEFAULT_PAGINATION_CLASS": "apps.common.pagination.OffsetPagination",
+    "DEFAULT_PAGINATION_CLASS": "apps.common.pagination.DefaultOffsetPagination",
     "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
     "EXCEPTION_HANDLER": "common.exceptions.exception_handler",
     "DEFAULT_RENDERER_CLASSES": [

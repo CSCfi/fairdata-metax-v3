@@ -57,8 +57,7 @@ class DatasetAccessPolicy(BaseAccessPolicy):
         if q := super().scope_queryset(request, queryset):
             return q
         elif request.user.is_anonymous:
-            return Dataset.only_latest_published()
-
+            return queryset.filter(state="published")
         return queryset.filter(
             Q(state=Dataset.StateChoices.PUBLISHED)
             | Q(metadata_owner__user=request.user)

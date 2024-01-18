@@ -4,6 +4,8 @@ from django.forms.fields import NullBooleanField
 from django.utils.encoding import force_str
 from django.utils.translation import gettext_lazy as _
 from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.response import Response
+from collections import OrderedDict
 
 
 class OffsetPagination(LimitOffsetPagination):
@@ -30,10 +32,26 @@ class OffsetPagination(LimitOffsetPagination):
         return True
 
     def paginate_queryset(self, queryset, request, view=None):
+        self.aggregates = self.aggregate_queryset(queryset)
         if not self.pagination_enabled(request):
             return None
-
         return super().paginate_queryset(queryset, request, view)
+
+    def aggregate_queryset(self, queryset):
+        raise NotImplementedError('"aggregate_queryset()" must be implemented.')
+
+    def get_paginated_response(self, data):
+        return Response(
+            OrderedDict(
+                [
+                    ("count", self.count),
+                    ("next", self.get_next_link()),
+                    ("previous", self.get_previous_link()),
+                    ("aggregations", self.aggregates),
+                    ("results", data),
+                ]
+            )
+        )
 
     def get_schema_fields(self, view):
         fields = super().get_schema_fields(view)
@@ -63,3 +81,8 @@ class OffsetPagination(LimitOffsetPagination):
             }
         )
         return parameters
+
+
+class DefaultOffsetPagination(OffsetPagination):
+    def aggregate_queryset(self, queryset):
+        return None

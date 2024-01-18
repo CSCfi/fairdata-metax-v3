@@ -86,7 +86,20 @@ class RestrictionGroundsFactory(factory.django.DjangoModelFactory):
 
     @factory.sequence
     def url(self):
-        return f"https://restriction-grounds-{self}.fi"
+        return f"https://dataset-restriction-grounds-{self}.fi"
+
+
+class FunderTypeFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.FunderType
+        django_get_or_create = ("url",)
+
+    pref_label = factory.Dict({"en": factory.Sequence(lambda n: f"dataset-funder-type-{n}")})
+    in_scheme = factory.Faker("url")
+
+    @factory.sequence
+    def url(self):
+        return f"https://dataset-funder-type-{self}.fi"
 
 
 class FieldOfScienceFactory(factory.django.DjangoModelFactory):
@@ -379,19 +392,6 @@ class IdentifierTypeFactory(factory.django.DjangoModelFactory):
     @factory.sequence
     def url(self):
         return f"https://dataset-identifier-type-{self}.fi"
-
-
-class ContributorTypeFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = models.ContributorType
-        django_get_or_create = ("url",)
-
-    pref_label = factory.Dict({"en": factory.Sequence(lambda n: f"contributor-{n}")})
-    in_scheme = factory.Faker("url")
-
-    @factory.sequence
-    def url(self):
-        return f"https://contributor-type-{self}.fi"
 
 
 class ProvenanceFactory(factory.django.DjangoModelFactory):

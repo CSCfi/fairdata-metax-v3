@@ -193,10 +193,6 @@ class Spatial(AbstractFreeformConcept):
         indexes = []
 
 
-class ContributorType(ConceptProxyMixin, refdata.ContributorType):
-    """Project Contributor"""
-
-
 class RelationType(ConceptProxyMixin, refdata.RelationType):
     """Entity relation type"""
 
@@ -207,3 +203,7 @@ class ResourceType(ConceptProxyMixin, refdata.ResourceType):
 
 class RestrictionGrounds(ConceptProxyMixin, refdata.RestrictionGrounds):
     """Reason for access restriction."""
+
+
+class FunderType(ConceptProxyMixin, refdata.FunderType):
+    """Funder type"""

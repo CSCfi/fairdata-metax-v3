@@ -229,12 +229,12 @@ def test_dataset_copied_fields():
     # (e.g. AccessRights.copier.parent_relations) to indicate they
     # are intentionally omitted when creating a copy.
     assert omit == {
-        "dataset.is_output_of",  # TODO: copying project should be implemented when project is ready
+        "dataset.projects",
         "dataset.provenance.is_associated_with.organization.children",
-        "dataset.actors.organization.contributions",
         "dataset.actors.organization.children",
+        "dataset.actors.organization.agencies",
+        "dataset.actors.organization.projects",
         "dataset.legacydataset",
-        "dataset.actors.actor_project",
-        "dataset.provenance.is_associated_with.actor_project",
-        "dataset.provenance.is_associated_with.organization.contributions",
+        "dataset.provenance.is_associated_with.organization.projects",
+        "dataset.provenance.is_associated_with.organization.agencies",
     }

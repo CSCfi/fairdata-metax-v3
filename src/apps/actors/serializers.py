@@ -1,8 +1,11 @@
+import logging
 from rest_framework import serializers
 
 from apps.actors.models import Actor, Organization, Person
 from apps.common.serializers import CommonListSerializer
 from apps.common.serializers.serializers import CommonModelSerializer
+
+logger = logging.getLogger("__name__")
 
 
 class ChildOrganizationSerializer(CommonModelSerializer):
@@ -67,6 +70,28 @@ class OrganizationSerializer(CommonModelSerializer):
     class Meta:
         model = Organization
         fields = "__all__"
+
+
+class CompactOrganizationSerializer(OrganizationSerializer):
+    """Serialize organization
+
+    Will exclude
+    * child organizations
+    * created
+    * modified
+    * removed
+    """
+
+    parent = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = Organization
+        fields = ("parent", "pref_label", "url", "in_scheme")
+
+    def get_parent(self, child):
+        if not child.parent:
+            return None
+        return CompactOrganizationSerializer(instance=child.parent).data
 
 
 class PersonModelSerializer(CommonModelSerializer):

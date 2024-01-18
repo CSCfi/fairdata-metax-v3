@@ -42,15 +42,10 @@
         }
       }
     ],
-    "keyword": [
-      "Roolipelit",
-      "Pelit"
-    ],
+    "keyword": ["Roolipelit", "Pelit"],
     "spatial": [
       {
-        "as_wkt": [
-          "POINT(24.65673 60.20638)"
-        ],
+        "as_wkt": ["POINT(24.65673 60.20638)"],
         "place_uri": {
           "in_scheme": "http://www.yso.fi/onto/yso/places",
           "identifier": "http://www.yso.fi/onto/yso/p94105",
@@ -103,9 +98,7 @@
           "en": "Collection"
         },
         "spatial": {
-          "as_wkt": [
-            "POINT(24.65673 60.20638)"
-          ],
+          "as_wkt": ["POINT(24.65673 60.20638)"],
           "place_uri": {
             "in_scheme": "http://www.yso.fi/onto/yso/places",
             "identifier": "http://www.yso.fi/onto/yso/p94105",
@@ -193,7 +186,18 @@
               "und": "CSC - Tieteen tietotekniikan keskus Oy"
             },
             "@type": "Organization",
-            "identifier": "http://uri.suomi.fi/codelist/fairdata/organization/code/09206320"
+            "identifier": "http://uri.suomi.fi/codelist/fairdata/organization/code/09206320",
+            "contributor_type": [
+              {
+                "pref_label": {
+                  "fi": "Projektin jäsen",
+                  "sv": "Projektmedlem",
+                  "en": "Project Member"
+                },
+                "identifier": "http://uri.suomi.fi/codelist/fairdata/contributor_type/code/ProjectMember",
+                "in_scheme": "http://uri.suomi.fi/codelist/fairdata/contributor_type"
+              }
+            ]
           }
         ],
         "source_organization": [
@@ -208,27 +212,14 @@
             "identifier": "http://uri.suomi.fi/codelist/fairdata/organization/code/09206320"
           },
           {
-            "name": "Teppo Testaaja",
-            "@type": "Person",
-            "member_of": {
-              "name": {
-                "fi": "Työterveyslaitos",
-                "sv": "Arbetshälsoinstitutet",
-                "en": "Finnish Institute of Occupational Health",
-                "und": "Työterveyslaitos"
-              },
-              "@type": "Organization",
-              "identifier": "http://uri.suomi.fi/codelist/fairdata/organization/code/02202669"
+            "name": {
+              "fi": "Työterveyslaitos",
+              "sv": "Arbetshälsoinstitutet",
+              "en": "Finnish Institute of Occupational Health",
+              "und": "Työterveyslaitos"
             },
-            "contributor_type": [{
-              "pref_label": {
-                "fi": "Projektin jäsen",
-                "sv": "Projektmedlem",
-                "en": "Project Member"
-              },
-              "identifier": "http://uri.suomi.fi/codelist/fairdata/contributor_type/code/ProjectMember",
-              "in_scheme": "http://uri.suomi.fi/codelist/fairdata/contributor_type"
-            }]
+            "@type": "Organization",
+            "identifier": "http://uri.suomi.fi/codelist/fairdata/organization/code/02202669"
           }
         ],
         "has_funder_identifier": "1232132"

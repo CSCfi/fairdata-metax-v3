@@ -3,9 +3,10 @@ from .meta import CatalogRecord, MetadataProvider, OtherIdentifier
 from .related import (
     DatasetActor,
     DatasetProject,
+    Funding,
+    Funder,
     EntityRelation,
     FileSet,
-    ProjectContributor,
     RemoteResource,
     Temporal,
 )

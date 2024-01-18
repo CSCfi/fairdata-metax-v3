@@ -2,6 +2,7 @@ import pytest
 from rest_framework.reverse import reverse
 
 from apps.core.models import LegacyDataset
+from apps.actors.factories import OrganizationFactory
 from apps.core.models.catalog_record.dataset import Dataset
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.dataset, pytest.mark.legacy]
@@ -34,6 +35,26 @@ def test_edit_legacy_dataset(admin_client, legacy_dataset_a, legacy_dataset_a_js
         content_type="application/json",
     )
     assert res.status_code == 200
+
+
+def test_get_organization_with_duplicate_get(legacy_dataset_a):
+    assert legacy_dataset_a.status_code == 201
+    dataset = LegacyDataset.objects.first()
+    org1 = OrganizationFactory.create(pref_label={"en": "University of Helsinki"}, url=None)
+    org2 = OrganizationFactory.create(
+        pref_label={"en": "University of Helsinki", "fi": "Helsingin Yliopisto"}, url=None
+    )
+    org3 = dataset.get_or_create_v3_org_from_v2_org(
+        {
+            "@type": "Organization",
+            "name": {
+                "en": "University of Helsinki",
+            },
+        }
+    )
+    best = dataset.choose_between_orgs(org1, org3)
+    assert str(org2.id) == str(org3.id)
+    assert str(best.id) == str(org2.id)
 
 
 def test_edit_legacy_dataset_deprecation(admin_client, legacy_dataset_a, legacy_dataset_a_json):

@@ -11,11 +11,22 @@ from metax_service.settings.components.base import (
 
 DEBUG = True
 
-ALLOWED_HOSTS = ALLOWED_HOSTS + ["metax.localdomain", "127.0.0.1", "localhost", ".fd-dev.csc.fi"]
-
+ALLOWED_HOSTS = ALLOWED_HOSTS + [
+    "metax.localdomain",
+    "127.0.0.1",
+    "localhost",
+    ".fd-dev.csc.fi",
+]
 
 SHELL_PLUS_SUBCLASSES_IMPORT = [serializers.Serializer]
 
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost",
+    "https://localhost",
+    "https://etsin.fd-dev.csc.fi",
+    "https://qvain.fd-dev.csc.fi",
+]
+CORS_ORIGIN_ALLOW_ALL = True
 
 DEBUG_TOOLBAR_APPS = [
     "debug_toolbar",

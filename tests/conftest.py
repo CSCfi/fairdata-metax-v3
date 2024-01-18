@@ -513,6 +513,19 @@ def preservation_event_reference_data():
 
 
 @pytest.fixture
+def funder_type_reference_data():
+    factories.FunderTypeFactory(
+        in_scheme="http://uri.suomi.fi/codelist/fairdata/funder_type",
+        url="http://uri.suomi.fi/codelist/fairdata/funder_type/code/other-public",
+        pref_label={
+            "en": "Other public funding",
+            "fi": "Muu julkinen rahoitus",
+            "und": "Muu julkinen rahoitus",
+        },
+    )
+
+
+@pytest.fixture
 def reference_data(
     access_type_reference_data,
     restriction_grounds_reference_data,
@@ -528,6 +541,7 @@ def reference_data(
     relation_type_reference_data,
     event_outcome_reference_data,
     lifecycle_event_reference_data,
+    funder_type_reference_data,
     organization_reference_data,
     preservation_event_reference_data,
 ):

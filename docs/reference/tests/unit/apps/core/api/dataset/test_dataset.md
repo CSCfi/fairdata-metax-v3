@@ -16,6 +16,10 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_search_pid
 
+## test_aggregation_and_filters
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_aggregation_and_filters
+
 ## test_create_dataset_invalid_catalog
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_create_dataset_invalid_catalog

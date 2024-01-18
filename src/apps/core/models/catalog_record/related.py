@@ -95,16 +95,20 @@ class DatasetActor(Actor):
         organization: Optional[Organization] = None
         person: Optional[Person] = None
         if actor_type == "Organization":
-            organization = Organization.get_instance_from_v2_dictionary(obj)
-        elif actor_type == "Person":
+            organization = Organization.get_instance_from_v2_dictionary(obj, dataset)
+            actor, created = cls.objects.get_or_create(
+                organization=organization, person__isnull=True, dataset=dataset
+            )
+        else:
             name = obj.get("name")
             person = Person(name=name)
             person.save()
+            dataset.created_objects.update(["Person"])
             if member_of := obj.get("member_of"):
-                organization = Organization.get_instance_from_v2_dictionary(member_of)
-        actor, created = cls.objects.get_or_create(
-            organization=organization, person=person, dataset=dataset
-        )
+                organization = Organization.get_instance_from_v2_dictionary(member_of, dataset)
+            actor, created = cls.objects.get_or_create(
+                organization=organization, dataset=dataset, person=person
+            )
         if not actor.roles:
             actor.roles = [role]
         elif role not in actor.roles:
@@ -148,29 +152,59 @@ class DatasetProject(AbstractBaseModel):
 
     Attributes:
         dataset(models.ManyToManyField): ManyToMany relation to Dataset
-        funder_identifier(models.CharField): Unique identifier for the project
-            that is being used by the project funder
-        funder_type(refdata.FunderType): FunderType ForeignKey relation
-        funding_agency(models.ManyToManyField): The Organization funding the project
-        name(HStoreField): Name of the project
-        participating_organization(models.ManyToManyField):
-            The Organization participating in the project
-        project_identifier(models.CharField): Project identifier
+        title(HStoreField): Name of the project
+        project_identifier(models.CharField): Project's external identifier
+        participating_organizations(models.ManyToManyField): Project's participating organizations
+        funders(models.ManyToManyField): Funding agencies of the project
     """
 
-    copier = ModelCopier(copied_relations=["funding_agency"], parent_relations=["dataset"])
+    copier = ModelCopier(
+        copied_relations=["funding", "participating_organizations"], parent_relations=["dataset"]
+    )
 
-    dataset = models.ManyToManyField(Dataset, related_name="is_output_of")
+    dataset = models.ForeignKey(
+        "Dataset", related_name="projects", on_delete=models.CASCADE, null=True, blank=True
+    )
+    title = HStoreField(blank=True, null=True)
     project_identifier = models.CharField(max_length=512, blank=True, null=True)
-    funding_agency = models.ManyToManyField("ProjectContributor", related_name="is_funding")
-    funder_identifier = models.CharField(max_length=512, blank=True, null=True)
-    participating_organization = models.ManyToManyField(
-        "ProjectContributor", related_name="is_participating"
+    participating_organizations = models.ManyToManyField(Organization, related_name="projects")
+    funding = models.ManyToManyField("Funding", related_name="projects")
+
+
+class Funding(AbstractBaseModel):
+    """Funding for the project and dataset
+
+    Attributes:
+        agency(models.ForeignKey): Agency that Funds the project
+        funding_identifier(models.CharField): Funding identifier that is
+            given by the funder organization
+    """
+
+    copier = ModelCopier(copied_relations=["funder"], parent_relations=[])
+
+    funder = models.ForeignKey("Funder", related_name="funding", on_delete=models.CASCADE)
+    funding_identifier = models.CharField(max_length=255, blank=True, null=True)
+
+
+class Funder(AbstractBaseModel):
+    """Project's Funder Agency
+
+    Attributes:
+    organization(models.ForeignKey): Organization that granted the funds
+    funder_type(models.ForeignKey): Funder type reference
+    """
+
+    copier = ModelCopier(copied_relations=["organization"], parent_relations=[])
+
+    organization = models.ForeignKey(
+        Organization, related_name="agencies", on_delete=models.SET_NULL, null=True, blank=True
     )
-    name = HStoreField(blank=True, null=True)
     funder_type = models.ForeignKey(
-        refdata.FunderType, on_delete=models.SET_NULL, null=True, blank=True
+        refdata.FunderType, blank=True, null=True, on_delete=models.SET_NULL
     )
+
+    def __str__(self):
+        return f"{self.pref_label['fi']}"
 
 
 class FileSet(AbstractBaseModel):
@@ -248,36 +282,6 @@ class FileSet(AbstractBaseModel):
                 storage=storage
             ).exclude(pathname__in=dataset_pathnames)
             unused_directory_metadata.delete()
-
-
-class ProjectContributor(AbstractBaseModel):
-    """Project contributing organizations
-
-    Attributes:
-        actor: ForeignKey relation to Actor
-        contribution_type: ForeignKey relation to ContributorType
-        participating_organization: ForeignKey relation to Organization
-        project: ForeignKey relation to DatasetProject
-
-    """
-
-    participating_organization = models.ForeignKey(
-        Organization, on_delete=models.CASCADE, related_name="contributions"
-    )
-
-    contribution_type = models.ManyToManyField(
-        refdata.ContributorType,
-        related_name="projects",
-    )
-    project = models.ForeignKey(
-        DatasetProject, on_delete=models.CASCADE, related_name="contributors"
-    )
-    actor = models.ForeignKey(
-        Actor, on_delete=models.CASCADE, related_name="actor_project", null=True, blank=True
-    )
-
-    def __str__(self):
-        return str(self.participating_organization.pref_label["fi"])
 
 
 class RemoteResource(AbstractBaseModel):

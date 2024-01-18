@@ -4,7 +4,6 @@ from typing import Dict
 
 from django.conf import settings
 from django.contrib.postgres.fields import HStoreField
-from django.core.exceptions import MultipleObjectsReturned
 from django.db import models
 from django.db.models import Model
 from django.utils.translation import gettext as _

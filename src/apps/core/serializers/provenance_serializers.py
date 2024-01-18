@@ -1,17 +1,7 @@
 import logging
-from typing import Optional
 
-from apps.actors.models import Organization, Person
-from apps.actors.serializers import ActorModelSerializer
 from apps.common.serializers.serializers import CommonListSerializer, CommonNestedModelSerializer
-from apps.core.models import (
-    Dataset,
-    DatasetActor,
-    EventOutcome,
-    LifecycleEvent,
-    PreservationEvent,
-    Provenance,
-)
+from apps.core.models import EventOutcome, LifecycleEvent, Provenance, PreservationEvent
 from apps.core.serializers import (
     DatasetActorProvenanceSerializer,
     SpatialModelSerializer,

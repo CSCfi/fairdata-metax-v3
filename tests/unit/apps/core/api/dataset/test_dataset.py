@@ -60,6 +60,40 @@ def test_search_pid(
     assert res.data["count"] == 1
 
 
+def test_aggregation_and_filters(
+    admin_client, dataset_a_json, dataset_b_json, dataset_c_json, data_catalog, reference_data
+):
+    admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    admin_client.post("/v3/datasets", dataset_b_json, content_type="application/json")
+    admin_client.post("/v3/datasets", dataset_c_json, content_type="application/json")
+    res = admin_client.get("/v3/datasets")
+    assert res.data["count"] == 3
+    assert res.data.get("aggregations") != None
+    assert list(sorted(key for key, value in res.data["aggregations"].items())) == [
+        "access_type",
+        "creator",
+        "data_catalog",
+        "field_of_science",
+        "file_type",
+        "infrastructure",
+        "keyword",
+        "organization",
+        "project",
+    ]
+    aggregations = res.data["aggregations"]
+
+    for aggregation in aggregations.values():
+        if len(aggregation["hits"]):
+            value = (
+                aggregation["hits"][0]["value"].get("fi")
+                or aggregation["hits"][0]["value"].get("en")
+                or aggregation["hits"][0]["value"].get("und")
+            )
+            count = aggregation["hits"][0]["count"]
+            res = admin_client.get(f"/v3/datasets?{aggregation['query_parameter']}={value}")
+            assert res.data["count"] == count
+
+
 def test_create_dataset_invalid_catalog(admin_client, dataset_a_json):
     dataset_a_json["data_catalog"] = "urn:nbn:fi:att:data-catalog-does-not-exist"
     response = admin_client.post("/v3/publishers", dataset_a_json, content_type="application/json")
@@ -149,6 +183,7 @@ def test_list_datasets_with_default_pagination(admin_client, dataset_a, dataset_
         "next": None,
         "previous": None,
         "results": [ANY, ANY],
+        "aggregations": ANY,
     }
 
 
@@ -175,6 +210,7 @@ def test_list_datasets_with_pagination(admin_client, dataset_a, dataset_b):
         "next": None,
         "previous": None,
         "results": [ANY, ANY],
+        "aggregations": ANY,
     }
 
 

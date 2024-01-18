@@ -52,6 +52,7 @@
             - [legacy](src/apps/core/models/legacy.md)
             - [preservation](src/apps/core/models/preservation.md)
             - [provenance](src/apps/core/models/provenance.md)
+        - [pagination](src/apps/core/pagination.md)
         - [permissions](src/apps/core/permissions.md)
         - serializers
             - [common_serializers](src/apps/core/serializers/common_serializers.md)
@@ -69,6 +70,7 @@
             - [legacy_serializer](src/apps/core/serializers/legacy_serializer.md)
             - [metadata_provider_serializer](src/apps/core/serializers/metadata_provider_serializer.md)
             - [preservation_serializers](src/apps/core/serializers/preservation_serializers.md)
+            - [project_serializer](src/apps/core/serializers/project_serializer.md)
             - [provenance_serializers](src/apps/core/serializers/provenance_serializers.md)
         - [services.pid_ms_client](src/apps/core/services/pid_ms_client.md)
         - [signals](src/apps/core/signals.md)

@@ -3,12 +3,14 @@ import logging
 import uuid
 from collections import namedtuple
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict, List, Tuple, Optional
+from collections import Counter
 
 from deepdiff import DeepDiff
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.serializers.json import DjangoJSONEncoder
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.db import ProgrammingError, models
 from django.utils.dateparse import parse_datetime
 from django.utils.translation import gettext as _
@@ -29,12 +31,12 @@ from .catalog_record import (
     DatasetProject,
     MetadataProvider,
     OtherIdentifier,
-    ProjectContributor,
     Temporal,
+    Funding,
+    Funder,
 )
 from .concepts import (
     AccessType,
-    ContributorType,
     DatasetLicense,
     EventOutcome,
     FieldOfScience,
@@ -72,6 +74,13 @@ PostProcessedInstances = namedtuple(
 )
 
 
+class InvalidActorTypeError(Exception):
+    def __init__(self, message="Invalid Actor type"):
+        super().__init__(message)
+
+        self.message = message
+
+
 class LegacyDataset(Dataset):
     """Migrated V1 and V2 Datasets
 
@@ -94,7 +103,7 @@ class LegacyDataset(Dataset):
         encoder=DjangoJSONEncoder,
         help_text="Difference between v1-v2 and V3 dataset json",
     )
-    created_objects = 0
+    created_objects = Counter()
 
     @property
     def legacy_identifier(self):
@@ -252,6 +261,8 @@ class LegacyDataset(Dataset):
         if user_modified := self.dataset_json.get("user_modified"):
             user, created = get_user_model().objects.get_or_create(username=user_modified)
             self.last_modified_by = user
+            if created:
+                self.created_objects.update(["User"])
 
         self.preservation_state = self.dataset_json.get("preservation_state")
         self.preservation_identifier = self.dataset_json.get("preservation_identifier")
@@ -276,6 +287,16 @@ class LegacyDataset(Dataset):
         if "keyword" in self.legacy_research_dataset:
             self.keyword = self.legacy_research_dataset["keyword"]
 
+    def remove_attached_actors(self):
+        attached_actors = DatasetActor.objects.filter(dataset=self)
+        attached_user_defined_orgs = Organization.objects.filter(
+            actor_organizations__in=attached_actors.values("id"), url__isnull=True
+        )
+        self.created_objects["DatasetActor"] -= attached_actors.count()
+        self.created_objects["Organization"] -= attached_user_defined_orgs.count()
+        attached_user_defined_orgs.delete()
+        attached_actors.delete()
+
     def attach_access_rights(self) -> AccessRights:
         description = self.legacy_access_rights.get("description", None)
 
@@ -289,14 +310,14 @@ class LegacyDataset(Dataset):
             },
         )
         if at_created:
-            self.created_objects += 1
+            self.created_objects.update(["AccessType"])
         if not self.access_rights:
             access_rights = AccessRights(
                 access_type=access_type,
                 description=description,
             )
             access_rights.save()
-            self.created_objects += 1
+            self.created_objects.update(["AccessRights"])
             self.access_rights = access_rights
 
         # license objects
@@ -320,18 +341,20 @@ class LegacyDataset(Dataset):
                 },
             )
             if created:
-                self.created_objects += 1
+                self.created_objects.update(["DatasetLicense"])
             license_objects.append(license_instance)
 
         restriction_grounds_objects = []
         for res_grounds in self.legacy_access_rights.get("restriction_grounds", []):
             rg, rg_created = RestrictionGrounds.objects.get_or_create(
                 url=res_grounds["identifier"],
-                pref_label=res_grounds["pref_label"],
-                in_scheme=res_grounds["in_scheme"],
+                defaults={
+                    "pref_label": res_grounds["pref_label"],
+                    "in_scheme": res_grounds["in_scheme"],
+                },
             )
             if rg_created:
-                self.created_objects += 1
+                self.created_objects.update(["RestrictionGrounds"])
             logger.debug(f"restriction_grounds={rg}, created={rg_created}")
             restriction_grounds_objects.append(rg)
         self.access_rights.license.set(license_objects)
@@ -346,7 +369,7 @@ class LegacyDataset(Dataset):
             id=catalog_id, defaults={"id": catalog_id, "title": {"und": catalog_id}}
         )
         if created:
-            self.created_objects += 1
+            self.created_objects.update(["DataCatalog"])
         self.data_catalog = catalog
         return catalog
 
@@ -365,9 +388,9 @@ class LegacyDataset(Dataset):
             )
             owner_created = True
         if owner_created:
-            self.created_objects += 1
+            self.created_objects.update(["MetadataProvider"])
         if user_created:
-            self.created_objects += 1
+            self.created_objects.update(["User"])
         self.metadata_owner = metadata_owner
         return metadata_owner
 
@@ -404,7 +427,7 @@ class LegacyDataset(Dataset):
                 },
             )
             if created:
-                self.created_objects += 1
+                self.created_objects.update([target_many_to_many_field])
             obj_list.append(instance)
 
         # django-simple-history really does not like if trying to access m2m fields from inheritance child-instance.
@@ -414,7 +437,7 @@ class LegacyDataset(Dataset):
 
     def attach_spatial(self) -> List[Spatial]:
         if spatial_data := self.legacy_spatial:
-            self.created_objects -= self.dataset.spatial.all().count()
+            self.created_objects["Spatial"] -= self.dataset.spatial.all().count()
             self.dataset.spatial.all().delete()
             obj_list = []
             for data in spatial_data:
@@ -428,14 +451,14 @@ class LegacyDataset(Dataset):
                         },
                     )
                     if loc_created:
-                        self.created_objects += 1
+                        self.created_objects.update(["Location"])
                 spatial = Spatial(
                     reference=loc_obj,
                     dataset=self,
                     geographic_name=data["geographic_name"],
                     full_address=data.get("full_address"),
                 )
-                self.created_objects += 1
+                self.created_objects.update(["Spatial"])
                 if data.get("as_wkt") and spatial.reference:
                     as_wkt = data.get("as_wkt")
                     if as_wkt != spatial.reference.as_wkt:
@@ -462,7 +485,7 @@ class LegacyDataset(Dataset):
                     provenance=None,
                 )
                 if created:
-                    self.created_objects += 1
+                    self.created_objects.update(["Temporal"])
                 records.append(instance)
         return records
 
@@ -480,14 +503,14 @@ class LegacyDataset(Dataset):
                         },
                     )
                     if id_type_created:
-                        self.created_objects += 1
+                        self.created_objects.update(["IdentifierType"])
                 instance, created = OtherIdentifier.objects.get_or_create(
                     dataset=self,
                     notation=other_id["notation"],
                     defaults={"identifier_type": id_type},
                 )
                 if created:
-                    self.created_objects += 1
+                    self.created_objects.update(["OtherIdentifier"])
                 records.append(instance)
 
         self.dataset.other_identifiers.set(records)
@@ -503,7 +526,7 @@ class LegacyDataset(Dataset):
                 url=self.legacy_contract["identifier"],
             )
             if created:
-                self.created_objects += 1
+                self.created_objects.update(["Contract"])
             self.contract = contract
             return contract
 
@@ -515,11 +538,11 @@ class LegacyDataset(Dataset):
 
             actors = []
             for actor in actors_data:
-                dataset_actor, created = DatasetActor.get_instance_from_v2_dictionary(
-                    actor, self, actor_role
+                dataset_actor, created = self.get_or_create_v3_actor_from_v2_actor(
+                    actor, actor_role
                 )
                 if created:
-                    self.created_objects += 1
+                    self.created_objects.update(["DatasetActor"])
                 actors.append(dataset_actor)
 
             return actors
@@ -557,7 +580,7 @@ class LegacyDataset(Dataset):
                     },
                 )
                 if created:
-                    self.created_objects += 1
+                    self.created_objects.update(["File"])
                 if file_checksum:
                     new_file.checksum = file_checksum
 
@@ -567,7 +590,7 @@ class LegacyDataset(Dataset):
         for storage_id, file_objects in storage_file_objects.items():
             file_set, created = FileSet.objects.get_or_create(dataset=self, storage_id=storage_id)
             if created:
-                self.created_objects += 1
+                self.created_objects.update(["FileSet"])
             file_set.files.set(file_objects)
         return file_set
 
@@ -586,12 +609,12 @@ class LegacyDataset(Dataset):
                     title=data.get("title"), description=data["description"], dataset=self
                 )
                 if provenance_created:
-                    self.created_objects += 1
+                    self.created_objects.update(["Provenance"])
                 logger.debug(f"{provenance=}, created={provenance_created}")
                 if spatial_data := data.get("spatial"):
                     if provenance.spatial:
                         provenance.spatial.delete()
-                        self.created_objects -= 1
+                        self.created_objects["Spatial"] -= 1
                         provenance.spatial = None
 
                     loc_obj, loc_created = Location.objects.get_or_create(
@@ -602,7 +625,7 @@ class LegacyDataset(Dataset):
                         },
                     )
                     if loc_created:
-                        self.created_objects += 1
+                        self.created_objects.update(["Location"])
 
                     spatial = Spatial(
                         provenance=provenance,
@@ -610,7 +633,7 @@ class LegacyDataset(Dataset):
                         geographic_name=spatial_data.get("geographic_name"),
                         reference=loc_obj,
                     )
-                    self.created_objects += 1
+                    self.created_objects.update(["Spatial"])
                     if as_wkt := spatial_data.get("as_wkt"):
                         if as_wkt != spatial.reference.as_wkt:
                             spatial.custom_wkt = as_wkt
@@ -624,7 +647,7 @@ class LegacyDataset(Dataset):
                         defaults={"start_date": start_date, "end_date": end_date},
                     )
                     if temporal_created:
-                        self.created_objects += 1
+                        self.created_objects.update(["Temporal"])
                     logger.debug(f"{temporal=}, created={temporal_created}")
                 if variables := data.get("variable"):
                     for var in variables:
@@ -637,7 +660,7 @@ class LegacyDataset(Dataset):
                             representation=var.get("representation"),
                         )
                         if variable_created:
-                            self.created_objects += 1
+                            self.created_objects.update(["Variable"])
                 if event_outcome_data := data.get("event_outcome"):
                     event_outcome, created = EventOutcome.objects.get_or_create(
                         url=event_outcome_data["identifier"],
@@ -647,7 +670,7 @@ class LegacyDataset(Dataset):
                         },
                     )
                     if created:
-                        self.created_objects += 1
+                        self.created_objects.update(["EventOutcome"])
                     provenance.event_outcome = event_outcome
                 if lifecycle_event_data := data.get("lifecycle_event"):
                     lifecycle_event, created = LifecycleEvent.objects.get_or_create(
@@ -658,16 +681,14 @@ class LegacyDataset(Dataset):
                         },
                     )
                     if created:
-                        self.created_objects += 1
+                        self.created_objects.update(["LifecycleEvent"])
                     provenance.lifecycle_event = lifecycle_event
                 associated_with_objs: List[DatasetActor] = []
                 if was_associated_with := data.get("was_associated_with"):
                     for actor_data in was_associated_with:
-                        actor, created = DatasetActor.get_instance_from_v2_dictionary(
-                            actor_data, self, "provenance"
+                        actor, created = self.get_or_create_v3_actor_from_v2_actor(
+                            actor_data, "provenance"
                         )
-                        if created:
-                            self.created_objects += 1
                         associated_with_objs.append(actor)
 
                 provenance.is_associated_with.set(associated_with_objs)
@@ -678,92 +699,176 @@ class LegacyDataset(Dataset):
                 obj_list.append(provenance)
         return obj_list
 
-    def attach_projects(self):
-        def get_contributor(v2_data, proj: DatasetProject):
-            actor_type = v2_data.get("@type", "Organization")
-            person = None
-            organization = None
-            if actor_type == "Organization":
-                organization = Organization.get_instance_from_v2_dictionary(v2_data)
-            if actor_type == "Person":
-                person_name = v2_data.get("name")
-                person = Person.objects.create(name=person_name)
-
-                if member_of := v2_data.get("member_of"):
-                    organization = Organization.get_instance_from_v2_dictionary(member_of)
-
-            actor, actor_created = Actor.objects.get_or_create(
-                person=person, organization=organization
-            )
-            if actor_created:
-                self.created_objects += 1
-            project_contributions = []
-            contribution_types = []
-            if contr_data := v2_data.get("contributor_type", None):
-                for data in contr_data:
-                    contr_type, created = ContributorType.objects.get_or_create(
-                        url=data["identifier"],
-                        defaults={
-                            "pref_label": data["pref_label"],
-                            "in_scheme": data["in_scheme"],
-                        },
-                    )
-                    if created:
-                        self.created_objects += 1
-                    contribution_types.append(contr_type)
-            if len(contribution_types) != 0:
-                proj_contr, created = ProjectContributor.objects.get_or_create(
-                    participating_organization=organization,
-                    project=proj,
-                    actor=actor,
-                )
-                if created:
-                    self.created_objects += 1
-                proj_contr.contribution_type.add(*contribution_types)
-                project_contributions.append(proj_contr)
+    @classmethod
+    def choose_between_orgs(cls, a, b) -> "Organization":
+        """Choose the best option between the orgs when migrating v2 org to v3."""
+        if isinstance(a, b.__class__):
+            if a.parent is None and b.parent is not None:
+                return a
+            elif a.in_scheme and not b.in_scheme:
+                return a
+            elif a.code and not b.code:
+                return a
+            elif a.url and not b.url:
+                return a
+            elif len(list(a.pref_label.keys())) > len(list(b.pref_label.keys())):
+                return a
             else:
-                proj_contr, created = ProjectContributor.objects.get_or_create(
-                    participating_organization=organization, project=proj, actor=actor
-                )
-                if created:
-                    self.created_objects += 1
-                project_contributions.append(proj_contr)
-            return project_contributions
+                return b
 
+    @classmethod
+    def get_or_create_v3_org_from_v2_org(cls, v2_org) -> "Organization":
+        """Get or create organization from v2 organization object.
+
+        Args:
+            v2_org (): dictionary with organization name in one or many languages.
+                Example dictionary could be {"fi":"csc": "en":"csc"}
+
+        Returns:
+            Organization: Organization object corresponding to given name dictionary.
+
+        """
+        # https://docs.djangoproject.com/en/4.1/ref/contrib/postgres/fields/#values
+        # pref_label is HStoreField that serializes into dictionary object.
+        # pref_label__values works as normal python dictionary.values()
+        # pref_label__values__contains compares if any given value in a list
+        #       is contained in the pref_label values.
+        if v2_org["@type"] == "Person":
+            raise InvalidActorTypeError()
+
+        try:
+            org, created = Organization.objects.get_or_create(
+                pref_label__values__contains=list(v2_org["name"].values()),
+                url=v2_org.get("identifier"),
+                defaults={
+                    "pref_label": v2_org["name"],
+                    "homepage": v2_org.get("homepage"),
+                    "url": v2_org.get("identifier"),
+                    "in_scheme": settings.ORGANIZATION_SCHEME,
+                },
+            )
+            if created:
+                cls.created_objects.update(["Organization"])
+
+            return org
+        except MultipleObjectsReturned as e:
+            orgs = Organization.objects.filter(
+                pref_label__values__contains=list(v2_org["name"].values()),
+                url=v2_org.get("identifier"),
+            )
+            best_org = orgs[0]
+            for org in orgs:
+                best_org = cls.choose_between_orgs(best_org, org)
+            logger.error(
+                f"{e}, chose: {best_org.pref_label} from: {[org.pref_label for org in orgs]}"
+            )
+            return best_org
+
+    def get_or_create_organizations_from_list(self, orgs):
+        return [self.get_or_create_v3_org_from_v2_org(org_v2) for org_v2 in orgs]
+
+    def get_or_create_v3_actor_from_v2_actor(
+        cls, obj: Dict, role: str
+    ) -> Tuple[DatasetActor, bool]:
+        """
+
+        Args:
+            obj (Dict): v2 actor dictionary
+            dataset (Dataset): Dataset where the actor will be present
+            role (str): Role of the actor in the dataset
+
+        Returns:
+            DatasetActor: get or created DatasetActor instance
+
+        """
+        organization: Optional[Organization] = None
+        person: Optional[Person] = None
+
+        try:
+            organization = cls.get_or_create_v3_org_from_v2_org(obj)
+            actor, created = DatasetActor.objects.get_or_create(
+                organization=organization, person__isnull=True, dataset=cls
+            )
+        except InvalidActorTypeError:
+            name = obj.get("name")
+            person = Person(name=name)
+            person.save()
+            cls.created_objects.update(["Person"])
+
+            if member_of := obj.get("member_of"):
+                organization = cls.get_or_create_v3_org_from_v2_org(member_of)
+            actor, created = DatasetActor.objects.get_or_create(
+                organization=organization, dataset=cls, person=person
+            )
+
+        except Exception as e:
+            logger.error(f"{e}\nin dataset: {cls.id}\nattaching actor: {obj}")
+            raise e
+
+        if not actor.roles:
+            actor.roles = [role]
+        elif role not in actor.roles:
+            actor.roles.append(role)
+
+        actor.save()
+
+        if created:
+            cls.created_objects.update(["DatasetActor"])
+
+        return actor, created
+
+    def create_funding(self, data, funder_org):
+        funder_type = None
+
+        if funder_type_id := data.get("funder_type", {}).get("identifier"):
+            try:
+                funder_type = FunderType.objects.get(url=funder_type_id)
+            except ObjectDoesNotExist as e:
+                logger.warn(f"{e}: {funder_type_id=}")
+
+        funder = Funder.objects.create(organization=funder_org, funder_type=funder_type)
+        funder.save()
+        self.created_objects.update(["Funder"])
+        fund = Funding.objects.create(
+            funder=funder, funding_identifier=data.get("has_funder_identifier", None)
+        )
+        fund.save()
+        self.created_objects.update(["Funding"])
+        return fund
+
+    def attach_projects(self):
         obj_list = []
+
         if project_data := self.legacy_research_dataset.get("is_output_of"):
             for data in project_data:
-                project, created = DatasetProject.objects.get_or_create(
-                    name=data["name"],
-                    project_identifier=data.get("identifier"),
-                    funder_identifier=data.get("has_funder_identifier"),
+                funding = []
+                source_organizations = self.get_or_create_organizations_from_list(
+                    data.get("source_organization", [])
                 )
+                funder_organizations = self.get_or_create_organizations_from_list(
+                    data.get("has_funding_agency", [])
+                )
+
+                for funder_org in funder_organizations:
+                    fund = self.create_funding(data, funder_org)
+                    funding.append(fund)
+
+                project, created = DatasetProject.objects.get_or_create(
+                    dataset=self,
+                    title=data["name"],
+                    defaults={
+                        "project_identifier": data.get("identifier"),
+                    },
+                )
+
+                project.participating_organizations.set(source_organizations)
+                project.funding.set(funding)
+
                 if created:
-                    self.created_objects += 1
-                    project.dataset.add(self)
-                funder_type = None
-                if data.get("funder_type"):
-                    funder_type, created = FunderType.objects.get_or_create(
-                        url=data["funder_type"]["identifier"],
-                        defaults={
-                            "in_scheme": data["funder_type"]["in_scheme"],
-                            "pref_label": data["funder_type"]["pref_label"],
-                        },
-                    )
-                    if created:
-                        self.created_objects += 1
-                project.funder_type = funder_type
-                funders = []
-                participants = []
-                for funder in data.get("has_funding_agency", []):
-                    funders = funders + get_contributor(funder, project)
-                for participant in data.get("source_organization", []):
-                    participants = participants + get_contributor(participant, project)
-                project.funding_agency.set(funders)
-                project.participating_organization.set(participants)
-                project.save()
+                    self.created_objects.update(["DatasetProject"])
+                    project.dataset = self
+
                 obj_list.append(project)
-            self.is_output_of.set(obj_list)
         return obj_list
 
     def prepare_dataset_for_v3(self) -> PreparedInstances:
@@ -775,6 +880,7 @@ class LegacyDataset(Dataset):
         """
         self.convert_root_level_fields()
         self.convert_research_dataset_fields()
+        self.remove_attached_actors()
 
         access_rights = self.attach_access_rights()
         data_catalog = self.attach_data_catalog()
@@ -851,6 +957,7 @@ class LegacyDataset(Dataset):
             ],
             exclude_regex_paths=[
                 add_escapes("root['research_dataset']['language'][\\d]['in_scheme']"),
+                add_escapes("root['research_dataset']['language'][\\d]['pref_label']"),
                 add_escapes(
                     "root['research_dataset']['access_rights']['license'][\\d]['title']['und']"
                 ),

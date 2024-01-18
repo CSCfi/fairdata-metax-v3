@@ -12,6 +12,10 @@
 
 ### :::src.apps.actors.serializers.OrganizationSerializer
 
+## CompactOrganizationSerializer
+
+### :::src.apps.actors.serializers.CompactOrganizationSerializer
+
 ## PersonModelSerializer
 
 ### :::src.apps.actors.serializers.PersonModelSerializer

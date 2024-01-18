@@ -12,9 +12,11 @@ from django.core.exceptions import FieldError
 from django.http import Http404
 from django.utils.decorators import method_decorator
 from django_filters import rest_framework as filters
+from django.db.models import Q
+from django_filters.fields import CSVWidget
 from drf_yasg.openapi import Response
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import exceptions, response, status
+from rest_framework import exceptions, response, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.renderers import JSONRenderer
 from rest_framework.reverse import reverse
@@ -28,15 +30,20 @@ from apps.common.views import CommonModelViewSet
 from apps.core.models.catalog_record import Dataset, FileSet
 from apps.core.models.preservation import Preservation
 from apps.core.permissions import DatasetAccessPolicy
+from apps.core.models.preservation import Preservation
+from apps.common.filters import MultipleCharFilter
+from apps.common.views import CommonModelViewSet
 from apps.core.serializers import DatasetSerializer
 from apps.core.serializers.dataset_allowed_actions import (
     DatasetAllowedActionsQueryParamsSerializer,
 )
 from apps.core.serializers.dataset_serializer import DatasetRevisionsQueryParamsSerializer
+from apps.core.pagination import AggregatingDatasetPagination
 from apps.files.models import File
 from apps.files.serializers import DirectorySerializer
 from apps.files.views.directory_view import DirectoryCommonQueryParams, DirectoryViewSet
 from apps.files.views.file_view import BaseFileViewSet, FileCommonFilterset
+from apps.core.views.common_views import DefaultValueOrdering
 
 logger = logging.getLogger(__name__)
 
@@ -49,25 +56,30 @@ class DatasetFilter(filters.FilterSet):
         label="title",
     )
     data_catalog__id = filters.CharFilter(
-        max_length=512,
+        field_name="data_catalog__id",
         lookup_expr="icontains",
         label="data-catalog identifier",
         help_text="filter with substring from data-catalog identifier",
     )
+
     data_catalog__title = filters.CharFilter(
         field_name="data_catalog__title__values",
         max_length=512,
         lookup_expr="icontains",
         label="data-catalog title",
     )
-    actors__actor__person__name = filters.CharFilter(
-        max_length=512, lookup_expr="icontains", label="person name"
-    )
-    actors__actor__organization__pref_label = filters.CharFilter(
-        field_name="actors__actor__organization__pref_label__values",
+    actors__person__name = MultipleCharFilter(
         max_length=512,
         lookup_expr="icontains",
-        label="organization name",
+        label="person name",
+    )
+    actors__role = MultipleCharFilter(
+        field_name="actors__role",
+        max_length=512,
+        lookup_expr="icontains",
+        label="actor role",
+        conjoined=True,
+        widget=CSVWidget,
     )
     metadata_owner__organization = filters.CharFilter(
         max_length=512,
@@ -84,7 +96,6 @@ class DatasetFilter(filters.FilterSet):
         lookup_expr="exact",
         label="persistent identifier",
     )
-    state = filters.ChoiceFilter(choices=Dataset.StateChoices.choices, label="state")
     preservation__contract = filters.CharFilter(
         max_length=512,
         label="preservation contract",
@@ -96,17 +107,137 @@ class DatasetFilter(filters.FilterSet):
         label="preservation_state",
         field_name="preservation__state",
     )
+    state = filters.ChoiceFilter(
+        choices=Dataset.StateChoices.choices,
+        label="state",
+    )
+
+    access_rights__access_type__pref_label = MultipleCharFilter(
+        method="filter_access_type",
+        label="access_type",
+    )
+
+    actors__organization__pref_label = MultipleCharFilter(
+        method="filter_organization",
+        label="organization name",
+    )
+
+    actors__roles__creator = MultipleCharFilter(method="filter_creator", max_length=255)
+
+    field_of_science__pref_label = MultipleCharFilter(
+        method="filter_field_of_science",
+        label="field of science",
+    )
+
+    keyword = MultipleCharFilter(method="filter_keyword", label="keyword")
+
+    infrastructure__pref_label = MultipleCharFilter(
+        method="filter_infrastructure",
+        label="infrastructure",
+    )
+
+    file_type = MultipleCharFilter(
+        method="filter_file_type",
+        label="file_type",
+    )
+
+    projects__title = MultipleCharFilter(
+        method="filter_project",
+        label="projects",
+    )
+
     deprecated = filters.BooleanFilter(lookup_expr="isnull", exclude=True)
-    ordering = filters.OrderingFilter(
+    ordering = DefaultValueOrdering(
         fields=(
             ("created", "created"),
             ("modified", "modified"),
-        )
+        ),
+        default="-modified",
     )
+
     search = filters.CharFilter(method="search_dataset")
 
     def search_dataset(self, queryset, name, value):
-        return search.filter(queryset, value)
+        if value is None or value == "":
+            return queryset
+        if self.form.cleaned_data.get("ordering") is None:
+            return search.filter(queryset=queryset, search_text=value, ranking=True)
+        return search.filter(queryset=queryset, search_text=value, ranking=False)
+
+    def filter_access_type(self, queryset, name, value):
+        return self._filter_list(
+            queryset,
+            value,
+            filter_param="access_rights__access_type__pref_label__values__contains",
+        )
+
+    def filter_organization(self, queryset, name, value):
+        return self._filter_list(
+            queryset, value, filter_param="actors__organization__pref_label__values__contains"
+        )
+
+    def filter_keyword(self, queryset, name, value):
+        return self._filter_list(queryset, value, filter_param="keyword__contains")
+
+    def filter_creator(self, queryset, name, value):
+        result = queryset
+        for group in value:
+            union = None
+            for val in group:
+                if union is not None:
+                    union = union | queryset.filter(
+                        Q(actors__roles__contains=["creator"])
+                        & (
+                            Q(actors__organization__pref_label__values__contains=[val])
+                            | Q(actors__person__name__exact=val)
+                        )
+                    )
+                else:
+                    union = queryset.filter(
+                        Q(actors__roles__contains=["creator"])
+                        & (
+                            Q(actors__organization__pref_label__values__contains=[val])
+                            | Q(actors__person__name__exact=val)
+                        )
+                    )
+            if union is not None:
+                result = result & union
+        return result.distinct()
+
+    def filter_field_of_science(self, queryset, name, value):
+        return self._filter_list(
+            queryset, value, filter_param="field_of_science__pref_label__values__contains"
+        )
+
+    def filter_infrastructure(self, queryset, name, value):
+        return self._filter_list(
+            queryset, value, filter_param="infrastructure__pref_label__values__contains"
+        )
+
+    def filter_file_type(self, queryset, name, value):
+        return self._filter_list(
+            queryset,
+            value,
+            filter_param="file_set__file_metadata__file_type__pref_label__values__contains",
+        )
+
+    def filter_project(self, queryset, name, value):
+        return self._filter_list(queryset, value, filter_param="projects__title__values__contains")
+
+    def _filter_list(self, queryset, value, filter_param):
+        result = queryset
+        for group in value:
+            union = None
+            for val in group:
+                param = {filter_param: [val]}
+
+                if union is not None:
+                    union = union | queryset.filter(**param)
+                else:
+                    union = queryset.filter(**param)
+            if union:
+                result = result & union
+        return result.distinct()
 
     has_files = filters.BooleanFilter(
         field_name="file_set__files", lookup_expr="isnull", exclude=True
@@ -169,6 +300,7 @@ class DatasetViewSet(CommonModelViewSet):
         "other_identifiers__identifier_type",
         "other_identifiers",
         "preservation",
+        "projects",
         "provenance__is_associated_with",
         "provenance__spatial__reference",
         "provenance__spatial",
@@ -186,6 +318,7 @@ class DatasetViewSet(CommonModelViewSet):
 
     filterset_class = DatasetFilter
     http_method_names = ["get", "post", "put", "patch", "delete", "options"]
+    pagination_class = AggregatingDatasetPagination
 
     def get_object(self):
         queryset = self.get_queryset()

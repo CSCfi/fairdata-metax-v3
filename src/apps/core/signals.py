@@ -14,6 +14,7 @@ def post_process_legacy_dataset(sender, instance: LegacyDataset, **kwargs):
     diff = instance.check_compatibility()
     # use update to not invoke another post_save signal
     LegacyDataset.objects.filter(id=instance.id).update(v2_dataset_compatibility_diff=diff)
+    instance.dataset.save()
 
 
 @receiver(m2m_changed, sender=FileSet.files.through)

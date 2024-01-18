@@ -12,6 +12,10 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_legacy.test_edit_legacy_dataset
 
+## test_get_organization_with_duplicate_get
+
+### :::tests.unit.apps.core.api.dataset.test_legacy.test_get_organization_with_duplicate_get
+
 ## test_edit_legacy_dataset_deprecation
 
 ### :::tests.unit.apps.core.api.dataset.test_legacy.test_edit_legacy_dataset_deprecation

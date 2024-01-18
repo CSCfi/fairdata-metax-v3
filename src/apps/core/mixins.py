@@ -1,4 +1,5 @@
 import logging
+import json
 from datetime import datetime
 from typing import Dict, List
 
@@ -302,73 +303,84 @@ class V2DatasetMixin:
             )
         return data
 
-    def _generate_v2_dataset_project(self) -> List:
-        from apps.core.models import ProjectContributor
+    def generate_org(self, org, contributor_type=None):
+        v2_org = {
+            "@type": "Organization",
+            "name": org.pref_label,
+            "identifier": org.url,
+        }
 
-        def _populate_participant(participant: ProjectContributor):
-            participant_type = "Organization" if participant.actor.person is None else "Person"
-            _contribution_types = []
-            for cont_type in participant.contribution_type.all():
-                _contribution_types.append(
-                    {
-                        "pref_label": cont_type.pref_label,
-                        "identifier": cont_type.url,
-                        "in_scheme": cont_type.in_scheme,
-                    }
+        if org.parent:
+            v2_org["is_part_of"] = self.generate_org(org.parent)
+
+        if contributor_type:
+            v2_org["contributor_type"] = contributor_type
+
+        return v2_org
+
+    def _add_funder_type(self, project, funder_type):
+        if funder_type:
+            project["funder_type"] = {
+                "pref_label": funder_type.pref_label,
+                "identifier": funder_type.url,
+                "in_scheme": funder_type.in_scheme,
+            }
+
+    def _add_funder_organization(self, project, funder_organization):
+        if funder_organization:
+            legacy_project = next(
+                legacy_project
+                for legacy_project in self.dataset_json["research_dataset"]["is_output_of"]
+                if legacy_project["name"] == project["name"]
+            )
+            contributor_type = legacy_project["has_funding_agency"][0].get("contributor_type")
+
+            if "has_funding_agency" not in project:
+                project["has_funding_agency"] = []
+            project["has_funding_agency"].append(
+                self.generate_org(
+                    funder_organization,
+                    contributor_type=contributor_type,
                 )
-            if participant_type == "Person":
-                person_name = None
-                if participant.actor.person:
-                    person_name = participant.actor.person.name
-                _source_organization = {
-                    "name": person_name,
-                    "@type": participant_type,
-                }
-                if _contribution_types not in EMPTY_VALUES:
-                    _source_organization["contributor_type"] = _contribution_types
-                if participant.participating_organization not in EMPTY_VALUES:
-                    _source_organization["member_of"] = {
-                        "name": participant.participating_organization.pref_label,
-                        "@type": "Organization",
-                        "identifier": participant.participating_organization.url,
-                    }
-            else:
-                _source_organization = {
-                    "name": participant.participating_organization.pref_label,
-                    "@type": participant_type,
-                    "identifier": participant.participating_organization.url,
-                }
-                if _contribution_types not in EMPTY_VALUES:
-                    _source_organization["contributor_type"] = _contribution_types
-            return _source_organization
+            )
 
+    def _add_funder_identifier(self, project, funder_identifier):
+        if funder_identifier:
+            project["has_funder_identifier"] = funder_identifier
+
+    def _add_funder_source_organizations(self, project, participating_organizations):
+        for participating_organization in participating_organizations:
+            if "source_organization" not in project:
+                project["source_organization"] = []
+            project["source_organization"].append(self.generate_org(participating_organization))
+
+    def _generate_v2_dataset_project(self) -> List:
         obj_list = []
-        for dataset_project in self.is_output_of.all():
+        for dataset_project in self.projects.all():
             project = {
-                "name": dataset_project.name,
+                "name": dataset_project.title,
                 "identifier": dataset_project.project_identifier,
-                "has_funder_identifier": dataset_project.funder_identifier,
                 "funder_type": {},
                 "has_funding_agency": [],
                 "source_organization": [],
             }
-            if funder_type := dataset_project.funder_type:
-                project["funder_type"] = {
-                    "pref_label": funder_type.pref_label,
-                    "identifier": funder_type.url,
-                    "in_scheme": funder_type.in_scheme,
-                }
-            for funder_agency in dataset_project.funding_agency.all():
-                if "has_funding_agency" not in project:
-                    project["has_funding_agency"] = []
-                project["has_funding_agency"].append(_populate_participant(funder_agency))
 
-            for participating_organization in dataset_project.participating_organization.all():
-                if "source_organization" not in project:
-                    project["source_organization"] = []
-                project["source_organization"].append(
-                    _populate_participant(participating_organization)
-                )
+            funder_type = None
+            funder_organization = None
+            funder_identifier = None
+
+            for fund in dataset_project.funding.all():
+                funder_type = fund.funder.funder_type
+                funder_organization = fund.funder.organization
+                funder_identifier = fund.funding_identifier
+
+            self._add_funder_type(project, funder_type)
+            self._add_funder_organization(project, funder_organization)
+            self._add_funder_identifier(project, funder_identifier)
+            self._add_funder_source_organizations(
+                project,
+                participating_organizations=dataset_project.participating_organizations.all(),
+            )
 
             obj_list.append(project)
         return obj_list
@@ -441,5 +453,4 @@ class V2DatasetMixin:
         self._generate_v2_provenance(doc)
         add_actor("creator", doc)
         add_actor("publisher", doc)
-        # logger.info(f"{doc=}")
         return doc

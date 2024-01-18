@@ -144,7 +144,7 @@ class OtherIdentifierAdmin(admin.ModelAdmin):
 
 @admin.register(DatasetProject)
 class DatasetProjectAdmin(admin.ModelAdmin):
-    list_display = ("name",)
+    list_display = ("title",)
 
 
 @admin.register(LegacyDataset)

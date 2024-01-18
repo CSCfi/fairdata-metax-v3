@@ -95,7 +95,7 @@ class Command(BaseCommand):
                 dataset.save()
             self.stdout.write(
                 f"{self.migrated}: {dataset.id=}, {dataset.legacy_identifier=}, "
-                f"{created=}, {dataset.created_objects=}"
+                f"{created=}, {dict(dataset.created_objects)=}"
             )
             self.migrated += 1
             return dataset
@@ -105,7 +105,8 @@ class Command(BaseCommand):
                 self.stdout.write(f"Failed to migrate dataset {data['identifier']}")
                 self.failed_datasets.append(data)
             else:
-                logger.error(f"Failed while processing {self.next_url=}")
+                logger.error(f"Failed while processing {self=}")
+                # logger.error(f"{data=}")
                 raise e
 
     def migrate_from_list(self, list_json):

@@ -6,15 +6,15 @@ from .catalog_record import (
     DatasetProject,
     EntityRelation,
     FileSet,
+    Funding,
+    Funder,
     MetadataProvider,
     OtherIdentifier,
-    ProjectContributor,
     RemoteResource,
     Temporal,
 )
 from .concepts import (
     AccessType,
-    ContributorType,
     DatasetLicense,
     EventOutcome,
     FieldOfScience,
@@ -29,6 +29,7 @@ from .concepts import (
     Spatial,
     Theme,
     UseCategory,
+    FunderType,
 )
 from .data_catalog import CatalogHomePage, DataCatalog, DatasetPublisher
 from .entity import Entity

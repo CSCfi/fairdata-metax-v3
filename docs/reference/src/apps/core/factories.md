@@ -24,6 +24,10 @@
 
 ### :::src.apps.core.factories.RestrictionGroundsFactory
 
+## FunderTypeFactory
+
+### :::src.apps.core.factories.FunderTypeFactory
+
 ## FieldOfScienceFactory
 
 ### :::src.apps.core.factories.FieldOfScienceFactory
@@ -115,10 +119,6 @@
 ## IdentifierTypeFactory
 
 ### :::src.apps.core.factories.IdentifierTypeFactory
-
-## ContributorTypeFactory
-
-### :::src.apps.core.factories.ContributorTypeFactory
 
 ## ProvenanceFactory
 
