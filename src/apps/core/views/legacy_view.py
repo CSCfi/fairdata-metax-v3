@@ -3,6 +3,7 @@ from django_filters import rest_framework as filters
 from apps.common.views import CommonModelViewSet
 from apps.core.models import LegacyDataset
 from apps.core.serializers import LegacyDatasetModelSerializer
+from apps.core.permissions import LegacyDatasetAccessPolicy
 
 
 class LegacyDatasetFilter(filters.FilterSet):
@@ -22,3 +23,4 @@ class LegacyDatasetViewSet(CommonModelViewSet):
     serializer_class = LegacyDatasetModelSerializer
     queryset = LegacyDataset.available_objects.all()
     filterset_class = LegacyDatasetFilter
+    access_policy = LegacyDatasetAccessPolicy

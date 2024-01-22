@@ -90,6 +90,16 @@ class DataCatalogAccessPolicy(BaseAccessPolicy):
     ] + BaseAccessPolicy.statements
 
 
+class LegacyDatasetAccessPolicy(BaseAccessPolicy):
+    statements = [
+        {
+            "action": ["create", "update", "partial_update", "destroy"],
+            "principal": "group:v2_migration",
+            "effect": "allow",
+        },
+    ] + BaseAccessPolicy.statements
+
+
 class DatasetNestedAccessPolicy(BaseAccessPolicy):
     statements = [
         {
