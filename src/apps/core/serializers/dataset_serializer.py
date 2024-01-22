@@ -26,6 +26,7 @@ from apps.core.serializers.dataset_actor_serializers import DatasetActorSerializ
 from apps.core.serializers.dataset_allowed_actions import DatasetAllowedActionsSerializer
 from apps.core.serializers.metadata_provider_serializer import MetadataProviderModelSerializer
 from apps.core.serializers.preservation_serializers import PreservationModelSerializer
+from apps.core.serializers.data_catalog_serializer import DataCatalogModelSerializer
 
 # for preventing circular import, using submodule instead of apps.core.serializers
 from apps.core.serializers.provenance_serializers import ProvenanceModelSerializer
@@ -95,7 +96,15 @@ class DatasetSerializer(CommonNestedModelSerializer):
             is_historic = hasattr(instance, "_history")
             if not see_drafts and not is_historic and instance.latest_published_revision:
                 instance = instance.latest_published_revision
-        return super().to_representation(instance)
+
+        ret = super().to_representation(instance)
+
+        if request.query_params.get("expand_catalog"):
+            ret["data_catalog"] = DataCatalogModelSerializer(
+                instance.data_catalog, context={"request": request}
+            ).data
+
+        return ret
 
     class Meta:
         model = Dataset
@@ -282,3 +291,9 @@ class DatasetRevisionsQueryParamsSerializer(serializers.Serializer):
                 count_all_falsy=True,
             )
         ]
+
+
+class ExpandCatalogQueryParamsSerializer(serializers.Serializer):
+    expand_catalog = serializers.BooleanField(
+        default=False, help_text=_("Include expanded data catalog in response.")
+    )

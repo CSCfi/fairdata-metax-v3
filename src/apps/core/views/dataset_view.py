@@ -37,7 +37,10 @@ from apps.core.serializers import DatasetSerializer
 from apps.core.serializers.dataset_allowed_actions import (
     DatasetAllowedActionsQueryParamsSerializer,
 )
-from apps.core.serializers.dataset_serializer import DatasetRevisionsQueryParamsSerializer
+from apps.core.serializers.dataset_serializer import (
+    DatasetRevisionsQueryParamsSerializer,
+    ExpandCatalogQueryParamsSerializer,
+)
 from apps.core.pagination import AggregatingDatasetPagination
 from apps.files.models import File
 from apps.files.serializers import DirectorySerializer
@@ -266,6 +269,10 @@ class DatasetFilter(filters.FilterSet):
 )
 class DatasetViewSet(CommonModelViewSet):
     query_serializers = [
+        {
+            "class": ExpandCatalogQueryParamsSerializer,
+            "actions": ["list", "retrieve"],
+        },
         {
             "class": DatasetRevisionsQueryParamsSerializer,
             "actions": ["revisions"],

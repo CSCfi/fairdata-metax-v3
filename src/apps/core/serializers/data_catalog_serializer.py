@@ -24,6 +24,7 @@ class DataCatalogModelSerializer(CommonNestedModelSerializer):
             "id",
             "access_rights",
             "publisher",
+            "logo",
             "language",
             "title",
             "dataset_versioning_enabled",

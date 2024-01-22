@@ -180,3 +180,7 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_dataset_last_modified_by
 
+## test_dataset_expanded_catalog
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_dataset_expanded_catalog
+

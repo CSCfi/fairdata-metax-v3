@@ -725,3 +725,15 @@ def test_dataset_last_modified_by(admin_client, user_client, user):
     user_client.patch(f"/v3/datasets/{dataset.id}", {}, content_type="application/json")
     dataset.refresh_from_db()
     assert dataset.last_modified_by == user
+
+def test_dataset_expanded_catalog(admin_client, dataset_a_json, data_catalog, reference_data):
+    res1 = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res1.status_code == 201
+
+    res2 = admin_client.get(f"/v3/datasets/{res1.data['id']}")
+    assert res2.status_code == 200
+    assert isinstance(res2.data["data_catalog"], str)
+
+    res3 = admin_client.get(f"/v3/datasets/{res1.data['id']}?expand_catalog=true")
+    assert res3.status_code == 200
+    assert isinstance(res3.data["data_catalog"], dict)
