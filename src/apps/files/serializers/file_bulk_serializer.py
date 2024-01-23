@@ -80,7 +80,7 @@ class FileBulkSerializer(serializers.ListSerializer):
     * update: Update existing files.
     * upsert: Create new files or replace already existing files.
     * delete: Delete existing files.
-    Update support partial updating. Values omitted from the request are not changed.
+    Update supports partial updating. Values omitted from the request are not changed.
 
     If input file has an id, it's treated as an existing file.
     If input file has a storage_identifier, its existence is checked from the database.

@@ -79,7 +79,8 @@
       },
       "person": null,
       "roles": [
-        "creator"
+        "creator",
+        "publisher"
       ]
     },
     {
@@ -238,7 +239,8 @@
     {
       "altitude_in_meters": 1337,
       "custom_wkt": [
-        "POINT (22 61)"
+        "POINT (22 61)",
+        "MULTIPOLYGON (((40 40, 20 45, 45 30, 40 40)), ((0 1, 1 1, 1 0, 0 1)))"
       ],
       "full_address": "Itätuulenkuja 3, Espoo",
       "geographic_name": "Another Random Address in Espoo",
@@ -260,6 +262,9 @@
     },
     {
       "start_date": "2023-10-10"
+    },
+    {
+      "end_date": "2023-12-24"
     }
   ],
   "theme": [
@@ -286,5 +291,15 @@
   "title": {
     "en": "All Fields Test Dataset",
     "fi": "Kaikkien kenttien testiaineisto testi"
-  }
+  },
+  "relation": [
+    {
+      "entity": {
+        "entity_identifier": "doi:something"
+      },
+      "relation_type": {
+        "url": "http://purl.org/spar/cito/cites"
+      }
+    }
+  ]
 }

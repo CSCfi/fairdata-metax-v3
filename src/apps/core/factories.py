@@ -240,6 +240,10 @@ class DatasetLicenseFactory(factory.django.DjangoModelFactory):
         LicenseFactory,
         url="http://uri.suomi.fi/codelist/fairdata/license/code/other",
         in_scheme="http://uri.suomi.fi/codelist/fairdata/license",
+        pref_label={
+            "en": "Other",
+            "fi": "Muu",
+        },
     )
 
 

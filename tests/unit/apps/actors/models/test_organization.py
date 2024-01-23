@@ -1,5 +1,6 @@
-import pytest
 from collections import Counter
+
+import pytest
 from django.db import IntegrityError
 
 from apps.actors.factories import OrganizationFactory

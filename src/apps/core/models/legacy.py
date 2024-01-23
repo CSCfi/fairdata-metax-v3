@@ -1,16 +1,15 @@
 import json
 import logging
 import uuid
-from collections import namedtuple
+from collections import Counter, namedtuple
 from datetime import datetime
-from typing import Dict, List, Tuple, Optional
-from collections import Counter
+from typing import Dict, List, Optional, Tuple
 
 from deepdiff import DeepDiff
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 from django.core.serializers.json import DjangoJSONEncoder
-from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.db import ProgrammingError, models
 from django.utils.dateparse import parse_datetime
 from django.utils.translation import gettext as _
@@ -29,11 +28,11 @@ from .catalog_record import (
     Dataset,
     DatasetActor,
     DatasetProject,
+    Funder,
+    Funding,
     MetadataProvider,
     OtherIdentifier,
     Temporal,
-    Funding,
-    Funder,
 )
 from .concepts import (
     AccessType,

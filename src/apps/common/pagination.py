@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 import coreapi
 import coreschema
 from django.forms.fields import NullBooleanField
@@ -5,7 +7,6 @@ from django.utils.encoding import force_str
 from django.utils.translation import gettext_lazy as _
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
-from collections import OrderedDict
 
 
 class OffsetPagination(LimitOffsetPagination):

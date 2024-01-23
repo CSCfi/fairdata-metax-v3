@@ -1,7 +1,7 @@
 import logging
 
 from apps.common.serializers.serializers import CommonListSerializer, CommonNestedModelSerializer
-from apps.core.models import EventOutcome, LifecycleEvent, Provenance, PreservationEvent
+from apps.core.models import EventOutcome, LifecycleEvent, PreservationEvent, Provenance
 from apps.core.serializers import (
     DatasetActorProvenanceSerializer,
     SpatialModelSerializer,

@@ -1,4 +1,5 @@
 import logging
+
 from rest_framework import serializers
 
 from apps.actors.models import Actor, Organization, Person

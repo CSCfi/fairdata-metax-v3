@@ -449,7 +449,7 @@ def test_dataset_put_maximal_and_minimal(
     minimal_json = {
         "data_catalog": dataset_maximal_json["data_catalog"],
         "title": dataset_maximal_json["title"],
-        "pid_type": "URN"
+        "pid_type": "URN",
     }
     res = admin_client.put(
         f"/v3/datasets/{res.data['id']}", minimal_json, content_type="application/json"
@@ -525,58 +525,6 @@ def test_dataset_restricted(admin_client, dataset_a_json, reference_data, data_c
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 201
     assert_nested_subdict(dataset_a_json, res.json())
-
-
-def test_dataset_metadata_download_json(
-    admin_client, dataset_a_json, dataset_a, reference_data, data_catalog
-):
-    assert dataset_a.response.status_code == 201
-    id = dataset_a.dataset_id
-    res = admin_client.get(f"/v3/datasets/{id}/metadata-download?format=json")
-    assert res.status_code == 200
-    assert_nested_subdict(dataset_a_json, res.data)
-    assert res.headers.get("Content-Disposition") == f"attachment; filename={id}-metadata.json"
-
-
-def test_dataset_metadata_download_json_with_versions(
-    admin_client, dataset_a_json, dataset_a, reference_data, data_catalog
-):
-    assert dataset_a.response.status_code == 201
-    new_version = admin_client.post(
-        f"/v3/datasets/{dataset_a.dataset_id}/new-version",
-        dataset_a_json,
-        content_type="application/json",
-    )
-    assert new_version.status_code == 201
-    new_id = new_version.data["id"]
-    dataset_a_json["title"] = {"en": "new title"}
-    update = admin_client.put(
-        f"/v3/datasets/{new_id}", dataset_a_json, content_type="application/json"
-    )
-    assert update.status_code == 200
-    res = admin_client.get(f"/v3/datasets/{new_id}/metadata-download?format=json")
-    assert res.status_code == 200
-    assert_nested_subdict(dataset_a_json, res.data)
-    assert res.headers.get("Content-Disposition") == f"attachment; filename={new_id}-metadata.json"
-
-
-def test_dataset_metadata_download_datacite(
-    admin_client, dataset_a_json, dataset_a, reference_data, data_catalog
-):
-    pytest.xfail("DataCite XML implementation missing")
-    assert dataset_a.response.status_code == 201
-    id = dataset_a.data["id"]
-    res = admin_client.get(f"/v3/datasets/{id}/metadata-download?format=datacite")
-    assert res.status_code == 200
-    # check dataset_a data in res.data
-    assert res.headers.get("Content-Disposition") == f"attachment; filename={id}-metadata.xml"
-
-
-def test_dataset_metadata_download_invalid_id(admin_client):
-    res = admin_client.get(f"/v3/datasets/invalid_id/metadata-download")
-    assert res.status_code == 404
-    assert res.headers.get("Content-Disposition") == None
-    assert res.data == "Dataset not found."
 
 
 def test_create_dataset_require_data_catalog(

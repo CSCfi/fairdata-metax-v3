@@ -18,6 +18,7 @@ from apps.common.serializers import (
 )
 from apps.common.serializers.fields import ChecksumField, MediaTypeField
 from apps.common.serializers.serializers import CommonModelSerializer
+from apps.core.helpers import get_metax_identifiers_by_pid
 from apps.core.models import AccessRights, CatalogHomePage, DatasetPublisher, OtherIdentifier
 from apps.core.models.catalog_record import EntityRelation, RemoteResource, Temporal
 from apps.core.models.concepts import (
@@ -32,7 +33,6 @@ from apps.core.models.concepts import (
     UseCategory,
 )
 from apps.core.models.entity import Entity
-from apps.core.helpers import get_metax_identifiers_by_pid
 
 logger = logging.getLogger(__name__)
 

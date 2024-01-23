@@ -1,8 +1,8 @@
 import pytest
 from rest_framework.reverse import reverse
 
-from apps.core.models import LegacyDataset
 from apps.actors.factories import OrganizationFactory
+from apps.core.models import LegacyDataset
 from apps.core.models.catalog_record.dataset import Dataset
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.dataset, pytest.mark.legacy]

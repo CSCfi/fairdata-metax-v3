@@ -211,19 +211,25 @@ def test_create_dataset_multiple_datasets_same_pid(
         res.data["persistent_identifier"]
     )
 
+
 # Try to create a dataset without pid_type and pid
 # Check that request fails
-def test_create_dataset_without_pid_type_and_pid_fails(admin_client, dataset_a_json, data_catalog, reference_data):
+def test_create_dataset_without_pid_type_and_pid_fails(
+    admin_client, dataset_a_json, data_catalog, reference_data
+):
     dataset = dataset_a_json
     dataset.pop("pid_type", None)
     dataset.pop("persistent_identifier", None)
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
     assert res.status_code != 201
 
-# Create a dataset    
+
+# Create a dataset
 # Try to update the dataset using put without pid_type and pid
 # Check that request fails
-def test_update_dataset_without_pid_type_and_pid_fails(admin_client, dataset_a_json, data_catalog, reference_data):
+def test_update_dataset_without_pid_type_and_pid_fails(
+    admin_client, dataset_a_json, data_catalog, reference_data
+):
     dataset = dataset_a_json
     dataset["pid_type"] = "URN"
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
@@ -235,7 +241,8 @@ def test_update_dataset_without_pid_type_and_pid_fails(admin_client, dataset_a_j
     res = admin_client.put(f"/v3/datasets/{ds_id}", dataset, content_type="application/json")
     assert res.status_code != 200
 
-# Create a dataset    
+
+# Create a dataset
 # Try to update the pid of the dataset
 # Check that request fails
 # Check that pid is still the same

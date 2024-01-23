@@ -27,10 +27,10 @@ from apps.core.serializers.dataset_allowed_actions import DatasetAllowedActionsS
 from apps.core.serializers.metadata_provider_serializer import MetadataProviderModelSerializer
 from apps.core.serializers.preservation_serializers import PreservationModelSerializer
 from apps.core.serializers.data_catalog_serializer import DataCatalogModelSerializer
+from apps.core.serializers.project_serializer import ProjectModelSerializer
 
 # for preventing circular import, using submodule instead of apps.core.serializers
 from apps.core.serializers.provenance_serializers import ProvenanceModelSerializer
-from apps.core.serializers.project_serializer import ProjectModelSerializer
 
 from .dataset_files_serializer import FileSetSerializer
 
@@ -259,13 +259,13 @@ class DatasetSerializer(CommonNestedModelSerializer):
 
     def update(self, instance, validated_data):
         validated_data["last_modified_by"] = self.context["request"].user
-        dataset = super().update(instance, validated_data=validated_data)
+        dataset: Dataset = super().update(instance, validated_data=validated_data)
         dataset.create_persistent_identifier()
         return dataset
 
     def create(self, validated_data):
         validated_data["last_modified_by"] = self.context["request"].user
-        dataset = super().create(validated_data=validated_data)
+        dataset: Dataset = super().create(validated_data=validated_data)
         dataset.create_persistent_identifier()
         return dataset
 

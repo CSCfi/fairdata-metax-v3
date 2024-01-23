@@ -6,8 +6,8 @@ from .catalog_record import (
     DatasetProject,
     EntityRelation,
     FileSet,
-    Funding,
     Funder,
+    Funding,
     MetadataProvider,
     OtherIdentifier,
     RemoteResource,
@@ -19,6 +19,7 @@ from .concepts import (
     EventOutcome,
     FieldOfScience,
     FileType,
+    FunderType,
     Language,
     LifecycleEvent,
     PreservationEvent,
@@ -29,7 +30,6 @@ from .concepts import (
     Spatial,
     Theme,
     UseCategory,
-    FunderType,
 )
 from .data_catalog import CatalogHomePage, DataCatalog, DatasetPublisher
 from .entity import Entity

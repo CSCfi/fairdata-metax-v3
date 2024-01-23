@@ -54,6 +54,7 @@
             - [provenance](src/apps/core/models/provenance.md)
         - [pagination](src/apps/core/pagination.md)
         - [permissions](src/apps/core/permissions.md)
+        - [renderers](src/apps/core/renderers.md)
         - serializers
             - [common_serializers](src/apps/core/serializers/common_serializers.md)
             - [concept_serializers](src/apps/core/serializers/concept_serializers.md)
@@ -72,7 +73,9 @@
             - [preservation_serializers](src/apps/core/serializers/preservation_serializers.md)
             - [project_serializer](src/apps/core/serializers/project_serializer.md)
             - [provenance_serializers](src/apps/core/serializers/provenance_serializers.md)
-        - [services.pid_ms_client](src/apps/core/services/pid_ms_client.md)
+        - services
+            - [datacite_service](src/apps/core/services/datacite_service.md)
+            - [pid_ms_client](src/apps/core/services/pid_ms_client.md)
         - [signals](src/apps/core/signals.md)
         - views
             - [common_views](src/apps/core/views/common_views.md)
@@ -168,6 +171,7 @@
                         - [test_dataset_pids](tests/unit/apps/core/api/dataset/test_dataset_pids.md)
                         - [test_dataset_timestamps](tests/unit/apps/core/api/dataset/test_dataset_timestamps.md)
                         - [test_legacy](tests/unit/apps/core/api/dataset/test_legacy.md)
+                        - [test_metadata_download](tests/unit/apps/core/api/dataset/test_metadata_download.md)
                         - [test_preservation](tests/unit/apps/core/api/dataset/test_preservation.md)
                         - [test_provenance](tests/unit/apps/core/api/dataset/test_provenance.md)
                         - [test_relation](tests/unit/apps/core/api/dataset/test_relation.md)

@@ -1,8 +1,8 @@
 from rest_framework import serializers
 
 from apps.actors.serializers import CompactOrganizationSerializer
-from apps.core.models import DatasetProject, Funding, Funder, FunderType
 from apps.common.serializers import CommonListSerializer, CommonNestedModelSerializer
+from apps.core.models import DatasetProject, Funder, FunderType, Funding
 
 
 class FunderSerializer(CommonNestedModelSerializer):

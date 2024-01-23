@@ -9,12 +9,12 @@ import logging
 from typing import Optional
 
 from django.core.exceptions import FieldError
+from django.db.models import Q
 from django.http import Http404
 from django.utils.decorators import method_decorator
 from django_filters import rest_framework as filters
-from django.db.models import Q
 from django_filters.fields import CSVWidget
-from drf_yasg.openapi import Response
+from drf_yasg.openapi import TYPE_STRING, Parameter, Response
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import exceptions, response, status, viewsets
 from rest_framework.decorators import action
@@ -22,6 +22,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.reverse import reverse
 from watson import search
 
+from apps.common.filters import MultipleCharFilter
 from apps.common.serializers.serializers import (
     FlushQueryParamsSerializer,
     IncludeRemovedQueryParamsSerializer,
@@ -29,10 +30,9 @@ from apps.common.serializers.serializers import (
 from apps.common.views import CommonModelViewSet
 from apps.core.models.catalog_record import Dataset, FileSet
 from apps.core.models.preservation import Preservation
+from apps.core.pagination import AggregatingDatasetPagination
 from apps.core.permissions import DatasetAccessPolicy
-from apps.core.models.preservation import Preservation
-from apps.common.filters import MultipleCharFilter
-from apps.common.views import CommonModelViewSet
+from apps.core.renderers import DataciteXMLRenderer, FairdataDataciteXMLRenderer
 from apps.core.serializers import DatasetSerializer
 from apps.core.serializers.dataset_allowed_actions import (
     DatasetAllowedActionsQueryParamsSerializer,
@@ -41,12 +41,11 @@ from apps.core.serializers.dataset_serializer import (
     DatasetRevisionsQueryParamsSerializer,
     ExpandCatalogQueryParamsSerializer,
 )
-from apps.core.pagination import AggregatingDatasetPagination
+from apps.core.views.common_views import DefaultValueOrdering
 from apps.files.models import File
 from apps.files.serializers import DirectorySerializer
 from apps.files.views.directory_view import DirectoryCommonQueryParams, DirectoryViewSet
 from apps.files.views.file_view import BaseFileViewSet, FileCommonFilterset
-from apps.core.views.common_views import DefaultValueOrdering
 
 logger = logging.getLogger(__name__)
 
@@ -337,8 +336,28 @@ class DatasetViewSet(CommonModelViewSet):
         except (Dataset.DoesNotExist, FieldError):
             return super().get_object()
 
-    @action(detail=True, url_path="metadata-download", renderer_classes=[JSONRenderer])
+    @swagger_auto_schema(
+        manual_parameters=[
+            Parameter(
+                name="format",
+                in_="query",
+                description="Metadata output format.",
+                type=TYPE_STRING,
+                enum=(
+                    JSONRenderer.format,
+                    DataciteXMLRenderer.format,
+                    FairdataDataciteXMLRenderer.format,
+                ),
+            )
+        ]
+    )
+    @action(
+        detail=True,
+        url_path="metadata-download",
+        renderer_classes=[JSONRenderer, DataciteXMLRenderer, FairdataDataciteXMLRenderer],
+    )
     def metadata_download(self, request, pk=None):
+        """Return dataset metadata as a file attachment."""
         try:
             obj = self.get_object()
         except Http404:
@@ -348,12 +367,15 @@ class DatasetViewSet(CommonModelViewSet):
         serializer_context = self.get_serializer_context()
         extension = "json"
 
-        if request.query_params.get("format") == ("datacite" or "fairdata_datacite"):
-            # serializer = serializer for datacite xml
+        data = None
+        if request.accepted_renderer.media_type == "application/xml":
             extension = "xml"
+            data = obj  # XML renderer takes dataset objects
+        else:
+            data = serializer(obj, context=serializer_context).data
 
         return response.Response(
-            serializer(obj, context=serializer_context).data,
+            data,
             headers={"Content-Disposition": f"attachment; filename={pk}-metadata.{extension}"},
         )
 
