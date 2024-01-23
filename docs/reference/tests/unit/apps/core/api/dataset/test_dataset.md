@@ -64,6 +64,10 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_patch_metadata_owner
 
+## test_put_dataset_by_user
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_put_dataset_by_user
+
 ## test_patch_metadata_owner_not_allowed
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_patch_metadata_owner_not_allowed

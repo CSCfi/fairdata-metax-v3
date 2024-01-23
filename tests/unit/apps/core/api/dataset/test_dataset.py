@@ -249,6 +249,19 @@ def test_patch_metadata_owner(admin_client, dataset_a_json, data_catalog, refere
     assert_nested_subdict(new_owner, res.data["metadata_owner"])
 
 
+def test_put_dataset_by_user(user_client, dataset_a_json, data_catalog, reference_data):
+    res = user_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    user = res.data["metadata_owner"]["user"]
+
+    # metadata owner should remain unchanged by put
+    res = user_client.put(
+        f"/v3/datasets/{res.data['id']}", dataset_a_json, content_type="application/json"
+    )
+    assert res.status_code == 200
+    assert res.data["metadata_owner"]["user"] == user
+
+
 def test_patch_metadata_owner_not_allowed(
     user_client, dataset_a_json, data_catalog, reference_data
 ):
@@ -461,6 +474,7 @@ def test_dataset_put_maximal_and_minimal(
         "created",
         "data_catalog",
         "id",
+        "metadata_owner",
         "modified",
         "pid_type",
         "state",
@@ -673,6 +687,7 @@ def test_dataset_last_modified_by(admin_client, user_client, user):
     user_client.patch(f"/v3/datasets/{dataset.id}", {}, content_type="application/json")
     dataset.refresh_from_db()
     assert dataset.last_modified_by == user
+
 
 def test_dataset_expanded_catalog(admin_client, dataset_a_json, data_catalog, reference_data):
     res1 = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")

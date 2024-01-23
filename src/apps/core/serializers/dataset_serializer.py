@@ -22,11 +22,11 @@ from apps.core.serializers.common_serializers import (
     TemporalModelSerializer,
 )
 from apps.core.serializers.concept_serializers import SpatialModelSerializer
+from apps.core.serializers.data_catalog_serializer import DataCatalogModelSerializer
 from apps.core.serializers.dataset_actor_serializers import DatasetActorSerializer
 from apps.core.serializers.dataset_allowed_actions import DatasetAllowedActionsSerializer
 from apps.core.serializers.metadata_provider_serializer import MetadataProviderModelSerializer
 from apps.core.serializers.preservation_serializers import PreservationModelSerializer
-from apps.core.serializers.data_catalog_serializer import DataCatalogModelSerializer
 from apps.core.serializers.project_serializer import ProjectModelSerializer
 
 # for preventing circular import, using submodule instead of apps.core.serializers
@@ -81,6 +81,9 @@ class DatasetSerializer(CommonNestedModelSerializer):
         return fields
 
     def save(self, **kwargs):
+        if self._validated_data.get("metadata_owner", False) is None:
+            # Remove "None" metadata owner to avoid clearing the value by default in PUT
+            del self._validated_data["metadata_owner"]
         # If missing, assign metadata owner with metadata_owner.save()
         if not (self.instance and self.instance.metadata_owner):
             # Nested serializer is not called with None,

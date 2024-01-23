@@ -8,6 +8,10 @@
 
 ### :::src.apps.core.permissions.DataCatalogAccessPolicy
 
+## LegacyDatasetAccessPolicy
+
+### :::src.apps.core.permissions.LegacyDatasetAccessPolicy
+
 ## DatasetNestedAccessPolicy
 
 ### :::src.apps.core.permissions.DatasetNestedAccessPolicy
