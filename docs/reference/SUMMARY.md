@@ -73,9 +73,7 @@
             - [preservation_serializers](src/apps/core/serializers/preservation_serializers.md)
             - [project_serializer](src/apps/core/serializers/project_serializer.md)
             - [provenance_serializers](src/apps/core/serializers/provenance_serializers.md)
-        - services
-            - [datacite_service](src/apps/core/services/datacite_service.md)
-            - [pid_ms_client](src/apps/core/services/pid_ms_client.md)
+        - [services.pid_ms_client](src/apps/core/services/pid_ms_client.md)
         - [signals](src/apps/core/signals.md)
         - views
             - [common_views](src/apps/core/views/common_views.md)
