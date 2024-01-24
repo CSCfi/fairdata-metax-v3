@@ -36,7 +36,7 @@ class AccessRights(AbstractBaseModel):
     """
 
     # Model nested copying configuration
-    copier = ModelCopier(copied_relations=["license"], parent_relations=["datasets", "catalogs"])
+    copier = ModelCopier(copied_relations=["license"], parent_relations=["dataset", "catalogs"])
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     license = models.ManyToManyField(

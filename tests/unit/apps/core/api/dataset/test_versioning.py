@@ -43,6 +43,7 @@ def test_dataset_versions(admin_client, dataset_a_json, data_catalog, reference_
     dataset2 = Dataset.objects.get(id=res2.data["id"])
 
     dataset_a_json["title"] = {"en": "new_title"}
+    dataset_a_json["state"] = "draft"
     res3 = admin_client.put(
         f"/v3/datasets/{res2.data['id']}", dataset_a_json, content_type="application/json"
     )

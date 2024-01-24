@@ -120,7 +120,7 @@ class AggregatingDatasetPagination(OffsetPagination):
             dataset_ids=dataset_ids,
             model=AccessType,
             field_name="pref_label",
-            dataset_access="access_rights__datasets",
+            dataset_access="access_rights__dataset",
             languages=["fi", "en"],
         )
 

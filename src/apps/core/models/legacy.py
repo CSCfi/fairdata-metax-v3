@@ -332,7 +332,7 @@ class LegacyDataset(Dataset):
                 )
             custom_url = lic.get("license", None)
             license_instance, created = DatasetLicense.objects.get_or_create(
-                access_rights__datasets=self.id,
+                access_rights__dataset=self.id,
                 reference=lic_ref,
                 defaults={
                     "description": lic.get("description"),

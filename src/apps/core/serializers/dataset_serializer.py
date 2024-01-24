@@ -72,18 +72,28 @@ class DatasetSerializer(CommonNestedModelSerializer):
     allowed_actions = DatasetAllowedActionsSerializer(read_only=True, source="*")
     created = serializers.DateTimeField(required=False, read_only=False)
     modified = serializers.DateTimeField(required=False, read_only=False)
+    next_draft = serializers.HyperlinkedRelatedField(read_only=True, view_name="dataset-detail")
+    draft_of = serializers.HyperlinkedRelatedField(read_only=True, view_name="dataset-detail")
+
+    # Fields that should be left unchanged when omitted from PUT
+    no_put_default_fields = {"id", "state", "metadata_owner"}
 
     def get_fields(self):
         fields = super().get_fields()
-
         if not self.context["view"].query_params.get("include_allowed_actions"):
             fields.pop("allowed_actions", None)
         return fields
 
     def save(self, **kwargs):
-        if self._validated_data.get("metadata_owner", False) is None:
-            # Remove "None" metadata owner to avoid clearing the value by default in PUT
-            del self._validated_data["metadata_owner"]
+        if self.instance:
+            if (
+                "state" in self._validated_data
+                and self._validated_data["state"] != self.instance.state
+            ):
+                raise serializers.ValidationError(
+                    {"state": "Value cannot be changed directly for an existing dataset."}
+                )
+
         # If missing, assign metadata owner with metadata_owner.save()
         if not (self.instance and self.instance.metadata_owner):
             # Nested serializer is not called with None,
@@ -94,13 +104,12 @@ class DatasetSerializer(CommonNestedModelSerializer):
 
     def to_representation(self, instance):
         request = self.context.get("request")
-        if request:
-            see_drafts = instance.has_permission_to_see_drafts(request.user)
-            is_historic = hasattr(instance, "_history")
-            if not see_drafts and not is_historic and instance.latest_published_revision:
-                instance = instance.latest_published_revision
-
         ret = super().to_representation(instance)
+
+        # Drafts should be hidden from users without access to them
+        if instance and not instance.has_permission_to_see_drafts(self.context["request"].user):
+            ret.pop("next_draft", None)
+            ret.pop("draft_of", None)
 
         if request.query_params.get("expand_catalog"):
             ret["data_catalog"] = DataCatalogModelSerializer(
@@ -151,6 +160,8 @@ class DatasetSerializer(CommonNestedModelSerializer):
             "other_versions",
             "published_revision",
             "allowed_actions",
+            "draft_of",
+            "next_draft",
         )
         read_only_fields = (
             "cumulation_started",
@@ -162,6 +173,8 @@ class DatasetSerializer(CommonNestedModelSerializer):
             "removed",
             "replaces",
             "other_versions",
+            "draft_of",
+            "next_draft",
         )
 
     def _dc_is_harvested(self, data):
@@ -173,9 +186,10 @@ class DatasetSerializer(CommonNestedModelSerializer):
         return None
 
     def _ds_is_published(self, data):
+        state = None
         if data.get("state"):
             state = data["state"]
-        else:
+        elif self.instance:
             state = self.instance.state
         if state == "published":
             return True

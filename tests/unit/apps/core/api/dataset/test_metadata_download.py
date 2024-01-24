@@ -49,6 +49,7 @@ def test_dataset_metadata_download_json_with_versions(
     assert new_version.status_code == 201
     new_id = new_version.data["id"]
     dataset_a_json["title"] = {"en": "new title"}
+    dataset_a_json["state"] = "draft"
     update = admin_client.put(
         f"/v3/datasets/{new_id}", dataset_a_json, content_type="application/json"
     )

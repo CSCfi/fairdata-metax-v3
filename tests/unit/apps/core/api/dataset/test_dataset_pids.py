@@ -122,6 +122,7 @@ def test_create_dataset_with_DOI(admin_client, dataset_a_json, data_catalog, ref
 # Check that it does not have PID
 # Publish the draft
 # Check that it has a PID
+@pytest.mark.xfail(reason="Publishing endpoint missing")
 def test_create_draft_dataset(admin_client, dataset_a_json, data_catalog, reference_data):
     dataset = dataset_a_json
     dataset["pid_type"] = "URN"
@@ -173,6 +174,7 @@ def test_create_dataset_with_failed_PID(
 # Check that it does not have a pid
 # Publish the new version
 # Check that it has a PID
+@pytest.mark.xfail(reason="Publishing endpoint missing")
 def test_new_version_has_no_pid(admin_client, dataset_a_json, data_catalog, reference_data):
     dataset = dataset_a_json
     dataset["pid_type"] = "URN"
@@ -189,7 +191,7 @@ def test_new_version_has_no_pid(admin_client, dataset_a_json, data_catalog, refe
     ds_id2 = res2.json().get("id", None)
     assert pid2 == None
 
-    json_payload = {"state": "published"}
+    json_payload = {"state": "published"}  # This no longer works, fix after implementing publish
     res3 = admin_client.patch(
         f"/v3/datasets/{ds_id2}", json_payload, content_type="application/json"
     )

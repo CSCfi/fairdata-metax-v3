@@ -326,7 +326,7 @@ class DatasetViewSet(CommonModelViewSet):
     http_method_names = ["get", "post", "put", "patch", "delete", "options"]
     pagination_class = AggregatingDatasetPagination
 
-    def get_object(self):
+    def get_object(self) -> Dataset:
         queryset = self.get_queryset()
 
         try:
@@ -387,21 +387,21 @@ class DatasetViewSet(CommonModelViewSet):
             return self.access_policy.scope_queryset(self.request, self.queryset_include_removed)
         return self.access_policy.scope_queryset(self.request, self.queryset)
 
-    @action(detail=True, methods=["post", "get"], url_path="new-version")
+    @action(detail=True, methods=["post"], url_path="new-version")
     def new_version(self, request, pk=None):
-        if request.method == "POST":
-            dataset = self.get_object()
-            new_version = Dataset.create_copy(dataset)
-            serializer = self.get_serializer(new_version)
-            return response.Response(serializer.data, status=status.HTTP_201_CREATED)
-        elif request.method == "GET":
-            dataset = self.get_object()
-            next_version = dataset.next_version
-            if next_version is None:
-                return response.Response(status=status.HTTP_404_NOT_FOUND)
-            else:
-                serializer = self.get_serializer(next_version)
-                return response.Response(serializer.data, status=status.HTTP_200_OK)
+        """Create a new version of a published dataset."""
+        dataset = self.get_object()
+        new_version = dataset.create_new_version()
+        serializer = self.get_serializer(new_version)
+        return response.Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["post"], url_path="create-draft")
+    def create_draft(self, request, pk=None):
+        """Create draft dataset from a published dataset."""
+        dataset = self.get_object()
+        new_version = dataset.create_new_draft()
+        serializer = self.get_serializer(new_version)
+        return response.Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["get"])
     def revisions(self, request, pk=None):

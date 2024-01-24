@@ -4,6 +4,7 @@ from rest_framework.reverse import reverse
 pytestmark = [pytest.mark.dataset, pytest.mark.auth]
 
 
+@pytest.mark.xfail(reason="Publishing endpoint missing")
 def test_creator_and_owner_sees_draft(
     requests_client, dataset_a_json, live_server, reference_data, data_catalog, end_users
 ):
@@ -41,6 +42,7 @@ def test_creator_and_owner_sees_draft(
     assert res4.json()["count"] == 1
 
     # metadata owner can edit the dataset
+    # Publishing by changing state no longer works, fix after implementing publish
     detail_url = f"{url}/{res1.json()['id']}"
     res5 = requests_client.patch(
         detail_url, json={"state": "published", "title": {"en": "published title"}}
@@ -48,10 +50,8 @@ def test_creator_and_owner_sees_draft(
     assert res5.status_code == 200
 
     # metadata owner makes new draft
-    res6 = requests_client.patch(
-        detail_url, json={"state": "draft", "title": {"en": "new draft title"}}
-    )
-    assert res6.status_code == 200
+    res6 = requests_client.post(f"{detail_url}/create_draft")
+    assert res6.status_code == 201
 
     # user2 should only see the published version
     requests_client.headers.update({"Authorization": f"Bearer {user2.token}"})

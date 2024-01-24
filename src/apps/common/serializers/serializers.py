@@ -185,6 +185,9 @@ class PatchModelSerializer(serializers.ModelSerializer):
     For a viewset that uses patch=True for partial updates, see PatchModelMixin.
     """
 
+    # Fields that don't get default assigned when using PUT
+    no_put_default_fields = {"id"}
+
     def __init__(self, *args, **kwargs):
         self.patch = kwargs.pop("patch", False)
         if kwargs.get("partial"):
@@ -202,7 +205,12 @@ class PatchModelSerializer(serializers.ModelSerializer):
         Used for PUT-style update where fields that are not included in
         the update are reset to their default values."""
         for name, field in fields.items():
-            if name == "id" or field.required or field.read_only or (field.default is not empty):
+            if (
+                name in self.no_put_default_fields
+                or field.required
+                or field.read_only
+                or (field.default is not empty)
+            ):
                 continue
 
             try:

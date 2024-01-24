@@ -81,8 +81,8 @@ def test_other_versions(dataset):
     dataset.state = dataset.StateChoices.PUBLISHED
     dataset.save()
     first = dataset
-    second = Dataset.create_copy(first)
-    third = Dataset.create_copy(second)
+    second = Dataset.create_new_version(first)
+    third = Dataset.create_new_version(second)
     assert first.other_versions.all().count() == 2
     assert second.other_versions.all().count() == 2
     assert third.other_versions.all().count() == 2
@@ -196,6 +196,7 @@ def test_dataset_copied_fields():
         "dataset.access_rights.license.reference",
         "dataset.access_rights.restriction_grounds",
         "dataset.data_catalog",
+        "dataset.draft_of",
         "dataset.field_of_science",
         "dataset.file_set.directory_metadata.storage",
         "dataset.file_set.directory_metadata.use_category",
@@ -235,6 +236,7 @@ def test_dataset_copied_fields():
         "dataset.actors.organization.agencies",
         "dataset.actors.organization.projects",
         "dataset.legacydataset",
+        "dataset.next_draft",
         "dataset.provenance.is_associated_with.organization.projects",
         "dataset.provenance.is_associated_with.organization.agencies",
     }

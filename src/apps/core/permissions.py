@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 class DatasetAccessPolicy(BaseAccessPolicy):
     statements = [
         {
-            "action": ["update", "destroy", "partial_update"],
+            "action": ["update", "destroy", "partial_update", "new_version", "create_draft"],
             "principal": "authenticated",
             "effect": "allow",
             "condition": "is_metadata_owner",
@@ -57,7 +57,7 @@ class DatasetAccessPolicy(BaseAccessPolicy):
         if q := super().scope_queryset(request, queryset):
             return q
         elif request.user.is_anonymous:
-            return queryset.filter(state="published")
+            return queryset.filter(state=Dataset.StateChoices.PUBLISHED)
         return queryset.filter(
             Q(state=Dataset.StateChoices.PUBLISHED)
             | Q(metadata_owner__user=request.user)

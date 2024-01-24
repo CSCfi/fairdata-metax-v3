@@ -108,10 +108,10 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         related_name="datasets",
         blank=True,
     )
-    access_rights = models.ForeignKey(
+    access_rights = models.OneToOneField(
         AccessRights,
         on_delete=models.SET_NULL,
-        related_name="datasets",
+        related_name="dataset",
         null=True,
     )
     other_identifiers = models.ManyToManyField(
@@ -167,7 +167,11 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         fields=["state", "published_revision", "cumulative_state", "draft_revision"]
     )
 
-    def has_permission_to_see_drafts(self, user: settings.AUTH_USER_MODEL):
+    draft_of = models.OneToOneField(
+        "self", related_name="next_draft", on_delete=models.CASCADE, null=True, blank=True
+    )
+
+    def has_permission_to_see_drafts(self, user: settings.AUTH_USER_MODEL, blank=True, null=True):
         if user.is_superuser:
             return True
         elif not user.is_authenticated:
@@ -182,21 +186,6 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
     @staticmethod
     def _historicals_to_instances(historicals):
         return [historical.instance for historical in historicals if historical.instance]
-
-    @classmethod
-    def only_latest_published(cls, as_instance_list=False, as_instances=True, as_queryset=False):
-        # Get active historical dataset by using dataset relation
-        published = cls.history.filter(
-            published_revision=F("catalogrecord_ptr__dataset__published_revision"),
-            state="published",
-            history_change_reason__isnull=False,
-        )
-        if as_instance_list:
-            return cls._historicals_to_instances(published)
-        elif as_instances:
-            return published.as_instances()
-        elif as_queryset:
-            return published
 
     @cached_property
     def latest_published_revision(self):
@@ -246,14 +235,14 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         else:
             return revisions.as_instances()
 
-    @classmethod
-    def create_copy(cls, original: Self) -> Self:
+    def create_copy(self, **kwargs) -> Self:
         """Creates a copy of the given dataset and its related objects.
 
         This method is used when a dataset is being published as a new version.
 
         Args:
             original (Dataset): The original dataset to be copied
+            **kwargs: New values to assign to the copy
 
         Returns:
             Dataset: The copied dataset
@@ -261,17 +250,35 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         new_values = dict(
             preservation=None,
             catalogrecord_ptr=None,
-            state=cls.StateChoices.DRAFT,
+            state=self.StateChoices.DRAFT,
             published_revision=0,
             created=timezone.now(),
             modified=timezone.now(),
             persistent_identifier=None,
+            draft_of=None,
         )
-        copy = original.copier.copy(original, new_values=new_values)
+        new_values.update(kwargs)
+        copy = self.copier.copy(self, new_values=new_values)
+        return copy
 
-        copy.other_versions.add(original)
-        for version in original.other_versions.exclude(id=copy.id):
+    def create_new_version(self) -> Self:
+        copy = self.create_copy()
+        copy.other_versions.add(self)
+        for version in self.other_versions.exclude(id=copy.id):
             copy.other_versions.add(version)
+        return copy
+
+    def check_new_draft_allowed(self):
+        if self.state != self.StateChoices.PUBLISHED:
+            raise ValidationError(
+                {"state": _("Dataset needs to be published before creating a new draft.")}
+            )
+        if getattr(self, "next_draft", None):
+            raise ValidationError({"next_draft": _("Dataset already has a draft.")})
+
+    def create_new_draft(self) -> Self:
+        self.check_new_draft_allowed()
+        copy = self.create_copy(draft_of=self)
         return copy
 
     def delete(self, *args, **kwargs):
