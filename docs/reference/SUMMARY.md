@@ -19,6 +19,7 @@
         - [filters](src/apps/common/filters.md)
         - [generators](src/apps/common/generators.md)
         - [helpers](src/apps/common/helpers.md)
+        - [history](src/apps/common/history.md)
         - [inspectors](src/apps/common/inspectors.md)
         - [mail](src/apps/common/mail.md)
         - [managers](src/apps/common/managers.md)

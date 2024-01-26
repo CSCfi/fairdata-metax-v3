@@ -179,6 +179,15 @@ class LegacyDataset(Dataset):
         if self.contract_json:
             return self.contract_json["contract_json"]
 
+    def create_snapshot(self, **kwargs):
+        """Create snapshot of dataset.
+
+        Due to how simple-history works, LegacyDataset will need to be "cast"
+        into a normal Dataset for creating a snapshot or otherwise it will
+        raise an error about unknown `dataset_ptr` field.
+        """
+        self.dataset.create_snapshot(**kwargs)
+
     def _flatten_nested_ref_data_object(
         self, ref_data_name: str, top_level_key_name: str, additional_keys: List = None
     ) -> List[Dict]:

@@ -205,7 +205,6 @@ def test_delete_draft(admin_client, dataset_a_json, data_catalog, reference_data
     assert not Dataset.all_objects.filter(id=draft["id"]).exists()
 
 
-@pytest.mark.xfail(reason="too many revisions are created")
 def test_draft_revisions(admin_client, dataset_a_json, data_catalog, reference_data):
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 201
@@ -256,6 +255,17 @@ def test_new_draft_publish_revisions(admin_client, dataset_a_json, data_catalog,
     assert isinstance(res.data, list)
     assert len(res.data) == 1
     assert res.data[0]["published_revision"] == 1
+
+    res = admin_client.patch(
+        f"/v3/datasets/{dataset_id}",
+        {"description": {"en": "hello world"}},
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+
+    res = admin_client.get(f"/v3/datasets/{dataset_id}/revisions", content_type="application/json")
+    assert res.data[0]["published_revision"] == 2
+    assert len(res.data) == 2
 
 
 def test_merge_draft_revisions(admin_client, dataset_a_json, data_catalog, reference_data):

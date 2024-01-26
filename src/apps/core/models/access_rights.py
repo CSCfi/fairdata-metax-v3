@@ -5,10 +5,10 @@ from datetime import date
 from django.contrib.postgres.fields import HStoreField
 from django.db import models
 from django.utils import timezone
-from simple_history.models import HistoricalRecords
 
 from apps.common.copier import ModelCopier
 from apps.common.helpers import datetime_to_date
+from apps.common.history import SnapshotHistoricalRecords
 from apps.common.models import AbstractBaseModel
 from apps.core.models.concepts import AccessType, DatasetLicense, RestrictionGrounds
 
@@ -56,7 +56,7 @@ class AccessRights(AbstractBaseModel):
     description = HStoreField(
         help_text='example: {"en":"description", "fi":"kuvaus"}', null=True, blank=True
     )
-    history = HistoricalRecords(m2m_fields=(license,))
+    history = SnapshotHistoricalRecords(m2m_fields=(license,))
 
     class Meta:
         verbose_name_plural = "Access rights"

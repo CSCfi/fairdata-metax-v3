@@ -516,6 +516,18 @@ class CommonModelSerializer(PatchModelSerializer, serializers.ModelSerializer):
         postgres_fields.HStoreField: MultiLanguageField,
     }
 
+    def create(self, validated_data):
+        instance = super().create(validated_data)
+        if create_snapshot := getattr(instance, "create_snapshot", None):
+            create_snapshot(created=True)
+        return instance
+
+    def update(self, instance, validated_data):
+        instance = super().update(instance, validated_data)
+        if create_snapshot := getattr(instance, "create_snapshot", None):
+            create_snapshot()
+        return instance
+
 
 class CommonNestedModelSerializer(CommonModelSerializer, NestedModelSerializer):
     """NestedModelSerializer for behavior common for all model APIs."""

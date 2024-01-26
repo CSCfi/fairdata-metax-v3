@@ -13,6 +13,7 @@ from typing_extensions import Self
 
 from apps.common.copier import ModelCopier
 from apps.common.helpers import datetime_to_date
+from apps.common.history import SnapshotHistoricalRecords
 from apps.common.models import AbstractBaseModel
 from apps.core.mixins import V2DatasetMixin
 from apps.core.models.access_rights import AccessRights
@@ -151,7 +152,7 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
     dataset_versions = models.ForeignKey(
         DatasetVersions, related_name="datasets", on_delete=models.SET_NULL, null=True
     )
-    history = HistoricalRecords(
+    history = SnapshotHistoricalRecords(
         m2m_fields=(language, theme, field_of_science, infrastructure, other_identifiers)
     )
 
@@ -292,6 +293,7 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
             self.dataset_versions.datasets(manager="all_objects").order_by("version").last()
         )
         copy = self.create_copy(version=latest_version.version + 1)
+        copy.create_snapshot(created=True)
         return copy
 
     def check_new_draft_allowed(self):
@@ -309,6 +311,7 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
             draft_revision=0,
             persistent_identifier=f"draft:{self.persistent_identifier}",
         )
+        copy.create_snapshot(created=True)
         return copy
 
     def _check_merge_draft_files(self):
@@ -388,6 +391,7 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         self.save()
         self.next_draft = None  # Remove cached related object
         dft.delete(soft=False)
+        self.create_snapshot()
 
     def delete(self, *args, **kwargs):
         # Drafts are always hard deleted
@@ -526,6 +530,7 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         # Remove historical draft revisions when publishing
         self.history.filter(state=self.StateChoices.DRAFT).delete()
         self.save()
+        self.create_snapshot()
         return self
 
     def validate_published(self, require_pid=True):
