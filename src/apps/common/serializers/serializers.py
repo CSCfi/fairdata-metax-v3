@@ -466,10 +466,6 @@ class NestedModelSerializer(serializers.ModelSerializer):
             self.forward_serializers, instance=instance, related_data=related_data
         )
 
-        # Update instance, assign forward one-to-one and many-to-one relations
-        instance = super().update(
-            instance=instance, validated_data={**validated_data, **forward_instances}
-        )
         # Update reverse one-to-one related objects
         self.update_related(self.reverse_serializers, instance=instance, related_data=related_data)
 
@@ -481,6 +477,10 @@ class NestedModelSerializer(serializers.ModelSerializer):
             model_field = getattr(instance, source)
             model_field.set(related_instance)  # Assign new relations
 
+        # Update instance, assign forward one-to-one and many-to-one relations
+        instance = super().update(
+            instance=instance, validated_data={**validated_data, **forward_instances}
+        )
         return instance
 
 
@@ -494,11 +494,12 @@ class MultiLanguageField(serializers.HStoreField):
     child = serializers.CharField(allow_blank=True, allow_null=True)
 
     def to_internal_value(self, data):
-        data = {
-            lang: translation
-            for lang, translation in data.items()
-            if translation not in {None, ""}
-        }
+        if isinstance(data, dict):
+            data = {
+                lang: translation
+                for lang, translation in data.items()
+                if translation not in {None, ""}
+            }
         return super().to_internal_value(data)
 
     def __init__(self, **kwargs):

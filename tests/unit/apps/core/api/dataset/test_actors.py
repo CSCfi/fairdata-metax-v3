@@ -24,6 +24,7 @@ def dataset(
     del dataset_a_json["language"]
     del dataset_a_json["field_of_science"]
     del dataset_a_json["theme"]
+    dataset_a_json["state"] = "draft"
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 201
     return res.data
@@ -438,7 +439,6 @@ def test_update_actor_order(patch_dataset, existing_actors):
             ]
         }
     )
-    print(data["actors"])
     assert_nested_subdict(
         [
             existing_actors[1],

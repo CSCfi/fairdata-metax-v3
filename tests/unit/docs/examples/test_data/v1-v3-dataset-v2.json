@@ -22,6 +22,10 @@
         "@type": "Person"
       }
     ],
+    "publisher": {
+      "name": "Publisher",
+      "@type": "Person"
+    },
     "language": [
       {
         "title": {

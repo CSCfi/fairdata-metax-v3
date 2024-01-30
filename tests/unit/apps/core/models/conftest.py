@@ -146,12 +146,14 @@ def dataset() -> Dataset:
     }
     persistent_id = "doi:1234"
     catalog = factories.DataCatalogFactory(dataset_versioning_enabled=True)
-    return factories.DatasetFactory(
+    dataset = factories.DatasetFactory(
         title=title,
         cumulative_state=1,
         persistent_identifier=persistent_id,
         data_catalog=catalog,
     )
+    dataset.actors.add(factories.DatasetActorFactory(roles=["creator", "publisher"], dataset=None))
+    return dataset
 
 
 @pytest.fixture
@@ -164,6 +166,7 @@ def dataset_with_foreign_keys(
     dataset.language.add(language)
     dataset.field_of_science.add(field_of_science)
     dataset.theme.add(theme)
+    dataset.publish()
     return dataset
 
 

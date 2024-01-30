@@ -52,8 +52,7 @@ def test_directory_permissions_dataset_anon_nonpublic(client, dataset_with_files
     reason="DatasetAccessPolicy.scope_queryset does not work correctly for anonymous users"
 )
 def test_directory_permissions_dataset_anon_published(client, dataset_with_files):
-    dataset_with_files.state = "published"
-    dataset_with_files.save()
+    dataset_with_files.publish()
     res = client.get(
         "/v3/directories",
         {
@@ -67,8 +66,7 @@ def test_directory_permissions_dataset_anon_published(client, dataset_with_files
 
 
 def test_directory_permissions_dataset_noncreator_published(user_client, dataset_with_files):
-    dataset_with_files.state = "published"
-    dataset_with_files.save()
+    dataset_with_files.publish()
     res = user_client.get(
         "/v3/directories",
         {

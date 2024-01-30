@@ -12,4 +12,4 @@ class SystemCreatorBaseAdmin(admin.ModelAdmin):
 
 class AbstractDatasetPropertyBaseAdmin(SystemCreatorBaseAdmin, SimpleHistoryAdmin):
     list_filter = ("created", "modified")
-    exclude = ("is_removed", "removal_date")
+    exclude = ("is_removed", "removed")

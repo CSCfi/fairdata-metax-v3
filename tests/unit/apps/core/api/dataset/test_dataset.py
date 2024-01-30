@@ -31,6 +31,7 @@ def test_update_dataset(
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     id = res.data["id"]
     res = admin_client.put(f"/v3/datasets/{id}", dataset_b_json, content_type="application/json")
+    assert res.status_code == 200
     assert_nested_subdict(dataset_b_json, res.data)
 
 
@@ -284,9 +285,12 @@ def test_owned_dataset(
     admin_client, user_client, dataset_a_json, dataset_b_json, data_catalog, reference_data
 ):
     """End-user cannot use custom metadata owner values."""
+    dataset_a_json["state"] = "published"
     dataset_b_json["state"] = "published"
+    dataset_b_json["actors"] = [
+        {"roles": ["creator", "publisher"], "organization": {"pref_label": {"en": "org"}}}
+    ]
     res = admin_client.post("/v3/datasets", dataset_b_json, content_type="application/json")
-
     assert res.status_code == 201
     res = user_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     dataset_id = res.data["id"]
@@ -473,6 +477,7 @@ def test_dataset_put_maximal_and_minimal(
     assert list(sorted(key for key, value in res.data.items() if value)) == [
         "created",
         "data_catalog",
+        "draft_revision",
         "id",
         "metadata_owner",
         "modified",
@@ -503,6 +508,7 @@ def test_dataset_patch_maximal_and_minimal(
         **maximal_data,
         **minimal_json,
         "modified": matchers.DateTime(),  # match any datetime
+        "draft_revision": 2,  # increased by 1 on save
     }
 
 

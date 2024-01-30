@@ -12,10 +12,6 @@
 
 ### :::tests.unit.apps.core.models.test_versioning.test_publish_dataset
 
-## test_latest_published_property
-
-### :::tests.unit.apps.core.models.test_versioning.test_latest_published_property
-
 ## test_other_versions
 
 ### :::tests.unit.apps.core.models.test_versioning.test_other_versions

@@ -19,7 +19,7 @@ def test_create_new_version(language, theme, dataset):
     dataset.language.add(language)
     dataset.theme.add(theme)
     old_version = dataset
-    new_version = Dataset.create_copy(dataset)
+    new_version = Dataset.create_new_version(dataset)
     assert new_version.id != old_version.id
     assert new_version.published_revision == 0
     assert old_version.language.all().count() != 0
@@ -30,7 +30,7 @@ def test_create_new_version(language, theme, dataset):
     assert old_version.field_of_science.all().count() == new_version.field_of_science.all().count()
     assert old_version.actors.all().count() == new_version.actors.all().count()
     assert old_version.access_rights.id != new_version.access_rights.id
-    assert old_version.actors.difference(new_version.actors.all()).count() == 2
+    assert old_version.actors.difference(new_version.actors.all()).count() == 3
     assert old_version.provenance.difference(new_version.provenance.all()).count() == 1
 
     # Preservation status is reset for new version
@@ -57,29 +57,16 @@ def test_edit_new_version(dataset_with_foreign_keys):
 
 
 def test_publish_dataset(dataset):
-    dataset.state = dataset.StateChoices.PUBLISHED
-    dataset.save()
+    dataset.publish()
     assert dataset.published_revision == 1
     assert dataset.issued is not None
     dataset.save()
     assert dataset.published_revision == 2
     assert dataset.draft_revision == 0
-    dataset.state = dataset.StateChoices.DRAFT
-    dataset.save()
-    assert dataset.published_revision == 2
-    assert dataset.draft_revision == 1
-
-
-def test_latest_published_property(dataset):
-    dataset.state = dataset.StateChoices.PUBLISHED
-    dataset.save()
-    dataset.save()
-    assert dataset.latest_published_revision.published_revision == 2
 
 
 def test_other_versions(dataset):
-    dataset.state = dataset.StateChoices.PUBLISHED
-    dataset.save()
+    dataset.publish()
     first = dataset
     second = Dataset.create_new_version(first)
     third = Dataset.create_new_version(second)

@@ -18,7 +18,7 @@
   "actors": [
     {
       "roles": [
-        "creator"
+        "creator", "publisher"
       ],
       "person": {
         "name": "teppo testaaja"

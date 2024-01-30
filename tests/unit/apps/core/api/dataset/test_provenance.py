@@ -59,7 +59,7 @@ def dataset_with_provenance_json(dataset_a_json, entity_json):
             "organization": {
                 "pref_label": {"fi": "CSC"},
             },
-            "roles": ["creator"],
+            "roles": ["creator", "publisher"],
         }
     ]
     return dataset_a_json
@@ -83,7 +83,7 @@ def test_create_dataset_with_provenance(provenance_a_request, entity_json):
     assert actors.count() == 1
     assert dataset.provenance.count() == 2
     actor = actors.first()
-    assert len(set(actor.roles)) == 1
+    assert len(actor.roles) == 2
 
 
 def test_update_dataset_with_provenance(
@@ -105,7 +105,7 @@ def test_update_dataset_with_provenance(
     assert actors.count() == 1
     assert dataset.provenance.count() == 2
     actor = actors.first()
-    assert len(set(actor.roles)) == 1
+    assert len(set(actor.roles)) == 2
 
 
 def test_edit_provenance(dataset_with_provenance_json, provenance_a_request, admin_client):

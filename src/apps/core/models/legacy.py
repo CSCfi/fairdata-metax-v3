@@ -105,6 +105,10 @@ class LegacyDataset(Dataset):
     created_objects = Counter()
 
     @property
+    def is_legacy(self):
+        return True
+
+    @property
     def legacy_identifier(self):
         """Legacy database primary key"""
         return self.dataset_json["identifier"]

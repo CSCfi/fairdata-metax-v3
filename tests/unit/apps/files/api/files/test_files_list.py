@@ -27,7 +27,8 @@ def project_client(client, project_user):
 
 @pytest.fixture
 def dataset(file_tree_a):
-    dataset = factories.DatasetFactory()
+    dataset = factories.DatasetFactory(persistent_identifier="somepid")
+    dataset.actors.add(factories.DatasetActorFactory(roles=["creator", "publisher"]))
     factories.FileSetFactory(
         dataset=dataset,
         storage=file_tree_a["storage"],
@@ -116,8 +117,7 @@ def test_files_get_dataset_files_anonymous_nonpublic(client, dataset):
     reason="DatasetAccessPolicy.scope_queryset does not work correctly for anonymous users"
 )
 def test_files_get_dataset_files_anonymous_published(client, dataset):
-    dataset.state = "published"
-    dataset.save()
+    dataset.publish()
     res = client.get(
         "/v3/files",
         {"dataset": dataset.id},
@@ -136,8 +136,7 @@ def test_files_get_dataset_files_non_owner_nonpublic(user_client, dataset):
 
 
 def test_files_get_dataset_files_non_owner_published(user_client, dataset):
-    dataset.state = "published"
-    dataset.save()
+    dataset.publish()
     res = user_client.get(
         "/v3/files",
         {"dataset": dataset.id},

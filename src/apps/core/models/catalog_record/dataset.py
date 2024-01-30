@@ -211,6 +211,10 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
     def previous_version(self):
         return self.other_versions.filter(created__lt=self.created).last()
 
+    @property
+    def is_legacy(self):
+        return getattr(self, "legacydataset", None)
+
     def get_revision(self, name: str = None, publication_number: int = None):
         revision = None
         if publication_number:
@@ -222,14 +226,8 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         if revision:
             return revision.instance
 
-    def all_revisions(self, published_only=False, draft_only=False, as_instance_list=False):
-        revisions = []
-        if published_only:
-            revisions = self.history.filter(history_change_reason__contains="published-")
-        elif draft_only:
-            revisions = self.history.filter(history_change_reason__contains="draft-")
-        else:
-            revisions = self.history.all()
+    def all_revisions(self, as_instance_list=False):
+        revisions = self.history.all()
         if as_instance_list:
             return self._historicals_to_instances(revisions)
         else:
@@ -278,10 +276,63 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
 
     def create_new_draft(self) -> Self:
         self.check_new_draft_allowed()
-        copy = self.create_copy(draft_of=self)
+        copy = self.create_copy(draft_of=self, draft_revision=0)
         return copy
 
+    def merge_draft(self):
+        if not self.next_draft:
+            raise ValidationError({"state": _("Dataset does not have a draft.")})
+        if self.next_draft.deprecated:
+            raise ValidationError({"state": _("Draft is deprecated.")})
+        dft = self.next_draft
+        ignored_values = [
+            "id",
+            "catalogrecord_ptr",
+            "state",
+            "published_revision",
+            "created",
+            "persistent_identifier",
+            "draft_of",
+            "metadata_owner",
+            "other_versions",
+            "legacydataset",
+            "preservation",
+            "draft_revision",
+        ]
+
+        for field in self._meta.get_fields():
+            if field.name in ignored_values:
+                continue
+
+            if field.is_relation and not field.many_to_one:
+                if field.many_to_many or field.one_to_many:
+                    # Many-to-many and one-to-many can be set with manager
+                    manager = getattr(self, field.name)
+                    manager.set(getattr(dft, field.name).all())
+                elif field.one_to_many or (field.one_to_one and not field.concrete):
+                    # Field value in related table, reassign draft dataset relations
+                    remote_field = field.remote_field.name
+                    draft_relations = field.related_model.objects.filter(**{remote_field: dft.id})
+                    draft_relations.update(**{remote_field: self.id})
+                elif field.one_to_one and field.concrete:
+                    # Unique field value in model table, value must be removed from draft first
+                    dft_value = getattr(dft, field.name)
+                    setattr(self, field.name, dft_value)
+                    setattr(dft, field.name, None)
+            else:
+                # Field value in model table, can be assigned directly
+                dft_value = getattr(dft, field.name)
+                setattr(self, field.name, dft_value)
+
+        dft.save()  # Update draft to remove unique one-to-one values
+        self.save()
+        dft.delete(soft=False)
+
     def delete(self, *args, **kwargs):
+        # Drafts are always hard deleted
+        if self.state == self.StateChoices.DRAFT:
+            kwargs["soft"] = False
+
         if self.access_rights:
             self.access_rights.delete(*args, **kwargs)
         return super().delete(*args, **kwargs)
@@ -309,51 +360,6 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         else:
             return False
 
-    def _should_increase_published_revision(self):
-        """Checks if the published_revision number should be increased.
-
-        Returns:
-            bool: True if the published revision should be increased, False otherwise.
-        """
-        state_has_changed, previous_state = self.tracker.has_changed(
-            "state"
-        ), self.tracker.previous("state")
-        if not self.persistent_identifier:
-            logger.info(f"Dataset {self.id} has no persistent_identifier. Not publishing")
-            return False
-        if (
-            state_has_changed
-            and previous_state == self.StateChoices.DRAFT
-            or previous_state == self.StateChoices.PUBLISHED
-            and self.state != self.StateChoices.DRAFT
-            or self.state == self.StateChoices.PUBLISHED
-            and self.published_revision == 0
-        ):
-            return True
-        else:
-            return False
-
-    def _should_increase_draft_revision(self):
-        """Checks if the draft_revision number should be increased.
-
-        Returns:
-            bool: True if the draft revision should be increased, False otherwise.
-        """
-        state_has_changed, previous_state = self.tracker.has_changed(
-            "state"
-        ), self.tracker.previous("state")
-        if (
-            state_has_changed
-            and previous_state == self.StateChoices.DRAFT
-            and self.state == self.StateChoices.DRAFT
-            or previous_state == self.StateChoices.PUBLISHED
-            and self.state == self.StateChoices.DRAFT
-            and self.published_revision != 0
-        ):
-            return True
-        else:
-            return False
-
     def _should_use_versioning(self):
         from apps.core.models import LegacyDataset
 
@@ -366,54 +372,86 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
     def _can_create_urn(self):
         return self.pid_type == self.PIDTypes.URN
 
-    def change_update_reason(self, reason: str):
-        from apps.core.models import LegacyDataset
-
-        if not isinstance(self, LegacyDataset):
-            update_change_reason(self, reason)
+    def set_update_reason(self, reason: str):
+        """Set change reason used by simple-history."""
+        self._change_reason = reason
 
     def create_persistent_identifier(self):
+        if self.persistent_identifier != None:
+            logger.info("Dataset already has a PID. PID is not created")
+            return
         if self.state == self.StateChoices.DRAFT:
             logger.info("State is DRAFT. PID is not created")
-            return
-        if self.persistent_identifier != None:
             return
         if self.pid_type == self.PIDTypes.URN and self._can_create_urn():
             dataset_id = self.id
             try:
                 pid = PIDMSClient.createURN(dataset_id)
                 self.persistent_identifier = pid
-                self.save()
             except ServiceUnavailableError as e:
                 e.detail = f"Error when creating persistent identifier. Please try again later."
                 raise e
 
     def publish(self):
-        """Publishes the dataset by creating a new revision and setting the
-        `issued` date to the current time if not set.
+        """Publishes the dataset.
 
-        The `persistent_identifier` must be set
-        before publishing.
+        If the dataset is a linked draft, merges
+        it to the original published dataset and returns
+        the published dataset.
+
+        Returns:
+            Dataset: The published dataset."""
+        if self.state == self.StateChoices.DRAFT:
+            if original := self.draft_of:
+                # Dataset is a draft, merge it to original
+                original.merge_draft()
+                return original
+
+        self.state = self.StateChoices.PUBLISHED
+        if not self.persistent_identifier:
+            self.validate_published(require_pid=False)  # Don't create pid for invalid dataset
+            self.create_persistent_identifier()
+
+        if not self.issued:
+            self.issued = datetime_to_date(timezone.now())
+
+        # Remove historical draft revisions when publishing
+        self.history.filter(state=self.StateChoices.DRAFT).delete()
+        self.save()
+        return self
+
+    def validate_published(self, require_pid=True):
+        """Validates that dataset is acceptable for publishing.
+
+        Args:
+            require_pid: Is persistent_identifier required.
 
         Raises:
-            ValidationError: If the dataset does not have a persistent identifier.
+            ValidationError: If dataset has invalid or missing fields.
         """
         errors = {}
+        actor_errors = []
         if not self.data_catalog:
             errors["data_catalog"] = _("Dataset has to have a data catalog when publishing")
-        if not self.persistent_identifier:
+        if require_pid and not self.persistent_identifier:
             errors["persistent_identifier"] = _(
                 "Dataset has to have a persistent identifier when publishing"
             )
         if not self.access_rights:
             errors["access_rights"] = _("Dataset has to have access rights when publishing")
+
+        # Some legacy/harvested datasets are missing creator or publisher
+        is_harvested_or_none = not self.data_catalog or self.data_catalog.harvested
+        if not is_harvested_or_none and not self.is_legacy:
+            if self.actors.filter(roles__contains=["creator"]).count() <= 0:
+                actor_errors.append(_("An actor with creator role is required"))
+                errors["actors"] = actor_errors
+            if self.actors.filter(roles__contains=["publisher"]).count() != 1:
+                actor_errors.append(_("Exactly one actor with publisher role is required"))
+                errors["actors"] = actor_errors
+
         if errors:
             raise ValidationError(errors)
-        self.published_revision += 1
-        self.draft_revision = 0
-        if not self.issued:
-            self.issued = datetime_to_date(timezone.now())
-        return True
 
     def validate_unique(self):
         """Validate uniqueness constraints."""
@@ -438,25 +476,22 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
                 )
 
     def save(self, *args, **kwargs):
-        """Saves the dataset and increments the draft or published revision number as needed.
-
-        The function will also publish a new version  or
-        increment the draft revision number as appropriate.
-        """
+        """Saves the dataset and increments the draft or published revision number as needed."""
         self.validate_unique()
         self._deny_if_trying_to_change_to_cumulative()
 
-        published_version_changed = False
-        draft_version_changed = False
-        if self._should_increase_published_revision():
-            published_version_changed = self.publish()
-        if self._should_increase_draft_revision():
-            draft_version_changed = True
+        # Prevent changing state of a published dataset
+        previous_state = self.tracker.previous("state")
+        if not self._state.adding:
+            if previous_state == self.StateChoices.PUBLISHED and self.state != previous_state:
+                raise ValidationError({"state": _("Cannot change value into non-published.")})
+
+        if self.state == self.StateChoices.DRAFT:
             self.draft_revision += 1
+        elif self.state == self.StateChoices.PUBLISHED:
+            self.published_revision += 1
+            self.draft_revision = 0
+            self.validate_published()
+
+        self.set_update_reason(f"{self.state}-{self.published_revision}.{self.draft_revision}")
         super().save(*args, **kwargs)
-        if published_version_changed:
-            self.change_update_reason(f"{self.state}-{self.published_revision}")
-        elif draft_version_changed:
-            self.change_update_reason(
-                f"{self.state}-{self.published_revision}.{self.draft_revision}"
-            )

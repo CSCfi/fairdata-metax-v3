@@ -76,7 +76,7 @@ class DatasetSerializer(CommonNestedModelSerializer):
     draft_of = serializers.HyperlinkedRelatedField(read_only=True, view_name="dataset-detail")
 
     # Fields that should be left unchanged when omitted from PUT
-    no_put_default_fields = {"id", "state", "metadata_owner"}
+    no_put_default_fields = {"id", "state", "metadata_owner", "persistent_identifier"}
 
     def get_fields(self):
         fields = super().get_fields()
@@ -108,6 +108,7 @@ class DatasetSerializer(CommonNestedModelSerializer):
 
         # Drafts should be hidden from users without access to them
         if instance and not instance.has_permission_to_see_drafts(self.context["request"].user):
+            ret.pop("draft_revision", None)
             ret.pop("next_draft", None)
             ret.pop("draft_of", None)
 
@@ -120,34 +121,7 @@ class DatasetSerializer(CommonNestedModelSerializer):
 
     class Meta:
         model = Dataset
-        fields = (
-            "id",  # read only
-            "access_rights",
-            "actors",
-            "cumulative_state",
-            "data_catalog",
-            "description",
-            "field_of_science",
-            "infrastructure",
-            "fileset",
-            "issued",
-            "keyword",
-            "language",
-            "metadata_owner",
-            "other_identifiers",
-            "persistent_identifier",
-            "projects",
-            "theme",
-            "title",
-            "pid_type",
-            "preservation",
-            "provenance",
-            "relation",
-            "remote_resources",
-            "spatial",
-            "state",
-            "temporal",
-            # read only
+        read_only_fields = (
             "created",
             "cumulation_started",
             "first_version",
@@ -159,22 +133,39 @@ class DatasetSerializer(CommonNestedModelSerializer):
             "next_version",
             "other_versions",
             "published_revision",
+            "draft_revision",
             "allowed_actions",
             "draft_of",
             "next_draft",
         )
-        read_only_fields = (
-            "cumulation_started",
-            "first",
-            "id",
-            "deprecated",
-            "last",
-            "previous",
-            "removed",
-            "replaces",
-            "other_versions",
-            "draft_of",
-            "next_draft",
+        fields = (
+            "id",  # read only
+            "access_rights",
+            "actors",
+            "cumulative_state",
+            "data_catalog",
+            "description",
+            "field_of_science",
+            "fileset",
+            "infrastructure",
+            "issued",
+            "keyword",
+            "language",
+            "metadata_owner",
+            "other_identifiers",
+            "persistent_identifier",
+            "pid_type",
+            "preservation",
+            "projects",
+            "provenance",
+            "relation",
+            "remote_resources",
+            "spatial",
+            "state",
+            "temporal",
+            "theme",
+            "title",
+            *read_only_fields,
         )
 
     def _dc_is_harvested(self, data):
@@ -276,15 +267,22 @@ class DatasetSerializer(CommonNestedModelSerializer):
 
     def update(self, instance, validated_data):
         validated_data["last_modified_by"] = self.context["request"].user
-        dataset: Dataset = super().update(instance, validated_data=validated_data)
-        dataset.create_persistent_identifier()
-        return dataset
+        return super().update(instance, validated_data=validated_data)
 
     def create(self, validated_data):
         validated_data["last_modified_by"] = self.context["request"].user
-        dataset: Dataset = super().create(validated_data=validated_data)
-        dataset.create_persistent_identifier()
-        return dataset
+
+        # Always initialize dataset as draft. This allows assigning
+        # reverse and many-to-many relations to the newly created
+        # dataset before it is actually published.
+        state = validated_data.pop("state", None)
+        instance: Dataset = super().create(validated_data=validated_data)
+
+        # Now reverse and many-to-many relations have been assigned, try to publish
+        if state == Dataset.StateChoices.PUBLISHED:
+            instance.publish()
+
+        return instance
 
 
 class DatasetRevisionsQueryParamsSerializer(serializers.Serializer):

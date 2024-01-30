@@ -48,8 +48,8 @@ class OffsetPagination(LimitOffsetPagination):
                     ("count", self.count),
                     ("next", self.get_next_link()),
                     ("previous", self.get_previous_link()),
-                    ("aggregations", self.aggregates),
                     ("results", data),
+                    ("aggregations", self.aggregates),
                 ]
             )
         )

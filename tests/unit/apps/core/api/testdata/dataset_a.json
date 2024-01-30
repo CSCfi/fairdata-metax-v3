@@ -37,6 +37,19 @@
       }
     ]
   },
+  "actors": [
+    {
+      "organization": {
+        "pref_label": {
+          "en": "test org"
+        }
+      },
+      "roles": [
+        "creator",
+        "publisher"
+      ]
+    }
+  ],
   "temporal": [
     {
       "start_date": "2023-09-20",

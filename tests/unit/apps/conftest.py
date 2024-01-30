@@ -72,7 +72,8 @@ def deep_file_tree() -> dict:
 
 @pytest.fixture
 def dataset_with_files(file_tree):
-    dataset = factories.DatasetFactory()
+    dataset = factories.DatasetFactory(persistent_identifier="somepid")
+    factories.DatasetActorFactory(roles=["creator", "publisher"], dataset=dataset)
     storage = next(iter(file_tree["files"].values())).storage
     file_set = factories.FileSetFactory(dataset=dataset, storage=storage)
     file_set.files.set(

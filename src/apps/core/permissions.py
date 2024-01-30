@@ -10,7 +10,14 @@ logger = logging.getLogger(__name__)
 class DatasetAccessPolicy(BaseAccessPolicy):
     statements = [
         {
-            "action": ["update", "destroy", "partial_update", "new_version", "create_draft"],
+            "action": [
+                "update",
+                "destroy",
+                "partial_update",
+                "new_version",
+                "create_draft",
+                "publish",
+            ],
             "principal": "authenticated",
             "effect": "allow",
             "condition": "is_metadata_owner",

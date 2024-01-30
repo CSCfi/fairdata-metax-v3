@@ -2,27 +2,16 @@
 
 ## Required properties
 
-A dataset has the following required properties.
+A published dataset has the following required properties. Drafts require only `data_catalog` and `title`.
+| Field         | key           | value                                                                |
+|---------------|---------------|----------------------------------------------------------------------|
+| Data Catalog  | data_catalog  | str                                                                  |
+| Title         | title         | dict                                                                 |
+| Description   | description   | dict                                                                 |
+| Access Rights | access_rights | object                                                               |
+| Actors        | actors        | object, at least one "creator" role and exactly one "publisher" role |
 
-| Field         | key           | value                                                   |
-|---------------|---------------|---------------------------------------------------------|
-| Title         | title         | dict                                                    |
-| Description   | description   | dict                                                    |
-| Language      | language      | list, reference data from `/v3/reference-data/language` |
-| Access Rights | access_rights | object                                                  |
-| Data Catalog  | data_catalog  | str                                                     |
 
-### Language
-
-A language of the resource. This refers to the natural language used for textual metadata (i.e., titles, descriptions, etc.) of a cataloged resource (i.e., dataset or service) or the textual values of a dataset distribution. [^1]
-
-Language field is a list of language reference data objects. Only url field is required to add language reference. Both of definitions below are valid objects:
-
-!!! example
-
-    ``` json
-    ---8<--- "tests/unit/docs/examples/test_data/dataset_api/language.json"
-    ```
 
 ### Access Rights
 
@@ -109,7 +98,31 @@ of same object in the `actors` list will be merged into one actor with all the v
     ```
 
 
+## Publishing datasets
+
+By default, new datasets are created as drafts and have `"state": "draft"`. Draft datasets
+are not visible to the general public until they are published. To publish a draft dataset,
+send a `POST` request to `/v3/datasets/<id>/publish`.
+
+To create a dataset and immediately publish it in a single request, create it with `"state": "publish"`.
+The state of an existing dataset can only be changed with the dataset publishing endpoint.
+
+### Updating published datasets
+
+Changes to a published dataset are public immediately. It is also possible to
+create a linked temporary draft dataset with `/v3/datasets/<id>/create-draft`.
+This returns a copy of the dataset with a new `id` and a `draft_of` field that refers
+to the original dataset. To apply changes made to the linked draft, send a `POST` request to
+`/v3/datasets/<id of draft>/publish`. This will update the published dataset and delete
+the linked draft dataset.
+
+Removing a published dataset with `DELETE /v3/datasets/<id>` will hide it from listings
+by default but it will still be available with the `?include_removed=true` query parameter.
+Deleting a draft removes it permanently.
+
+
 ## Optional properties
+
 
 There are multiple optional fields can be used to provide additional information about the dataset:
 
@@ -117,9 +130,10 @@ There are multiple optional fields can be used to provide additional information
 |-------------------------|-------------------|--------------------------------------------------------------------|
 | Issued date             | issued            | date                                                               |
 | Keywords                | keyword           | list of str                                                        |
-| Theme                   | theme             | list of reference data from `/v3/reference-data/themes`            |
 | Field of Science        | field_of_science  | list of reference data from `/v3/reference-data/fields-of-science` |
+| Language                | language          | list of reference data from `/v3/reference-data/language`          |
 | Research Infrastructure | infrastructure    | list of reference data from `/v3/reference-data/research-infras`   |
+| Theme                   | theme             | list of reference data from `/v3/reference-data/themes`            |
 | Other identifiers       | other_identifiers | list of object                                                     |
 | Provenance              | provenance        | list of object                                                     |
 | Spatial coverage        | spatial           | list of object                                                     |
@@ -128,6 +142,17 @@ There are multiple optional fields can be used to provide additional information
 | Metadata owner          | metadata_owner    | object                                                             |
 
 
+### Language
+
+A language of the resource. This refers to the natural language used for textual metadata (i.e., titles, descriptions, etc.) of a cataloged resource (i.e., dataset or service) or the textual values of a dataset distribution. [^1]
+
+Language field is a list of language reference data objects. Only url field is required to add language reference. Both of definitions below are valid objects:
+
+!!! example
+
+    ``` json
+    ---8<--- "tests/unit/docs/examples/test_data/dataset_api/language.json"
+    ```
 
 ### Spatial coverage
 
@@ -189,11 +214,7 @@ Special privileges are required to change the automatically assigned values.
 
 
 
-### Versioning and revisions
-
-Whenever Dataset `state` field has value `published`, it will trigger new published revision on save. Published revisions are numbered, starting from 0. If new dataset is published without prior version in the database, it will have named revision `published-0`, if it did have previous revision that was draft, it will get named revision `published-1`. Drafts have named revisions in the format draft-{published-revision}-{draft-revision}, so for example `draft-1.1` is first draft revision on named published revision `published-1`.
-
-#### Versions vs revisions
+#### Versions
 
 Revisions are named changes to singular dataset. Single dataset can have as many revisions as it needs. Versions are two or more datasets that represents series of datasets in the same set. Versions never share same persistent identifier or id. Versions are only created when user explicitly wants to create one. Revisions are created automatically. 
 

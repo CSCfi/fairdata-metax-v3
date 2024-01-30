@@ -33,5 +33,27 @@
       }
     ]
   },
-  "pid_type": "URN"
+  "pid_type": "URN",
+  "actors": [
+    {
+      "organization": {
+        "pref_label": {
+          "en": "creator org"
+        }
+      },
+      "roles": [
+        "creator"
+      ]
+    },
+    {
+      "organization": {
+        "pref_label": {
+          "en": "publisher org"
+        }
+      },
+      "roles": [
+        "publisher"
+      ]
+    }
+  ]
 }

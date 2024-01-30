@@ -57,7 +57,6 @@ def test_files_datasets(admin_client, file_tree_with_datasets):
         content_type="application/json",
     )
     assert res.status_code == 200
-    print(res.json())
     assert sorted(res.json()) == sorted(
         [
             str(tree["dataset_a"].id),

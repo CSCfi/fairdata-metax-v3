@@ -88,7 +88,7 @@ class DatasetFilter(filters.FilterSet):
         lookup_expr="icontains",
         label="metadata owner organization",
     )
-    metadata_owner__user__username = filters.CharFilter(
+    metadata_owner__user = filters.CharFilter(
         max_length=512,
         lookup_expr="icontains",
         label="metadata owner user",
@@ -242,7 +242,7 @@ class DatasetFilter(filters.FilterSet):
         return result.distinct()
 
     has_files = filters.BooleanFilter(
-        field_name="file_set__files", lookup_expr="isnull", exclude=True
+        field_name="file_set__files", lookup_expr="isnull", exclude=True, distinct=True
     )
     csc_projects = filters.BaseInFilter(field_name="file_set__storage__csc_project")
     storage_services = filters.BaseInFilter(field_name="file_set__storage__storage_service")
@@ -397,35 +397,35 @@ class DatasetViewSet(CommonModelViewSet):
 
     @action(detail=True, methods=["post"], url_path="create-draft")
     def create_draft(self, request, pk=None):
-        """Create draft dataset from a published dataset."""
+        """Create a draft dataset from a published dataset.
+
+        The changes in the draft can be applied to the
+        published dataset using the publish endpoint of the draft.
+        """
         dataset = self.get_object()
-        new_version = dataset.create_new_draft()
-        serializer = self.get_serializer(new_version)
+        draft = dataset.create_new_draft()
+        serializer = self.get_serializer(draft)
         return response.Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["post"])
+    def publish(self, request, pk=None):
+        """Publish a dataset.
+
+        - If dataset is a new draft, changes its state to "published".
+        - If dataset is a draft of an existing published dataset,
+          updates the published dataset with changes from the draft
+          and deletes the draft.
+        """
+        dataset = self.get_object()
+        published_dataset = dataset.publish()
+        serializer = self.get_serializer(published_dataset)
+        return response.Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["get"])
     def revisions(self, request, pk=None):
         dataset: Dataset = self.get_object()
-        serializer: Optional[DatasetSerializer]
-        latest_published = self.query_params.get("latest_published")
-        published_version = self.query_params.get("published_revision")
-        all_published_versions = self.query_params.get("all_published_revisions")
-        if latest_published:
-            if published := dataset.latest_published_revision:
-                serializer = self.get_serializer(published, many=False)
-            else:
-                return response.Response(status=status.HTTP_404_NOT_FOUND)
-        elif published_version:
-            version = dataset.get_revision(publication_number=published_version)
-            if version:
-                serializer = self.get_serializer(version)
-            else:
-                return response.Response(status=status.HTTP_404_NOT_FOUND)
-        elif all_published_versions:
-            versions = dataset.all_revisions(published_only=True)
-            serializer = self.get_serializer(versions, many=True)
-        else:
-            serializer = self.get_serializer(dataset)
+        versions = dataset.all_revisions()
+        serializer = self.get_serializer(versions, many=True)
         return response.Response(serializer.data)
 
     def perform_destroy(self, instance):
