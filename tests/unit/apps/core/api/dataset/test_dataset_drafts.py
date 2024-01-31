@@ -55,8 +55,8 @@ def test_create_draft(admin_client, dataset_a_json, data_catalog, reference_data
 
     assert original["state"] == "published"
     assert draft["state"] == "draft"
-    assert original["id"] in draft["draft_of"]
-    assert draft["id"] in original["next_draft"]
+    assert draft["draft_of"]["id"] == original["id"]
+    assert original["next_draft"]["id"] == draft["id"]
     metadata_owner_id = draft["metadata_owner"]["id"]
     assert draft["metadata_owner"] == original["metadata_owner"]
 

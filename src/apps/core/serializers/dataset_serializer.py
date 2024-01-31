@@ -37,6 +37,19 @@ from .dataset_files_serializer import FileSetSerializer
 logger = logging.getLogger(__name__)
 
 
+class LinkedDraftSerializer(CommonNestedModelSerializer):
+    class Meta:
+        model = Dataset
+        fields = (
+            "id",
+            "persistent_identifier",
+            "created",
+            "modified",
+            "title",
+        )
+        read_only_fields = fields
+
+
 class DatasetSerializer(CommonNestedModelSerializer):
     access_rights = AccessRightsModelSerializer(required=False, allow_null=True, many=False)
     field_of_science = FieldOfScience.get_serializer_field(required=False, many=True)
@@ -72,8 +85,8 @@ class DatasetSerializer(CommonNestedModelSerializer):
     allowed_actions = DatasetAllowedActionsSerializer(read_only=True, source="*")
     created = serializers.DateTimeField(required=False, read_only=False)
     modified = serializers.DateTimeField(required=False, read_only=False)
-    next_draft = serializers.HyperlinkedRelatedField(read_only=True, view_name="dataset-detail")
-    draft_of = serializers.HyperlinkedRelatedField(read_only=True, view_name="dataset-detail")
+    next_draft = LinkedDraftSerializer(read_only=True)
+    draft_of = LinkedDraftSerializer(read_only=True)
 
     # Fields that should be left unchanged when omitted from PUT
     no_put_default_fields = {"id", "state", "metadata_owner", "persistent_identifier"}
@@ -173,7 +186,10 @@ class DatasetSerializer(CommonNestedModelSerializer):
             if data.get("data_catalog") != None:
                 return DataCatalog.objects.get(id=data["data_catalog"]).harvested
         elif self.context["request"].method in {"PUT", "PATCH"}:
-            return DataCatalog.objects.get(id=self.instance.data_catalog).harvested
+            if self.instance and self.instance.data_catalog:
+                return self.instance.data_catalog.harvested
+            elif data.get("data_catalog") != None:
+                return DataCatalog.objects.get(id=data["data_catalog"]).harvested
         return None
 
     def _ds_is_published(self, data):

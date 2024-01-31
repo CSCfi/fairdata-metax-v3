@@ -566,6 +566,13 @@ def test_create_dataset_draft_without_catalog(
     assert res.status_code == 201
     assert_nested_subdict(dataset_a_json, res.data)
 
+    # make sure the dataset can also be updated
+    res = admin_client.patch(
+        f"/v3/datasets/{res.data['id']}", {"title": {"en": "test"}}, content_type="application/json"
+    )
+    assert res.status_code == 200
+
+
 
 def test_flush_dataset_by_service(service_client, dataset_a_json, data_catalog, reference_data):
     """Flush should delete dataset from database."""

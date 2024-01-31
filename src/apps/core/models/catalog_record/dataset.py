@@ -3,18 +3,16 @@ import logging
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.db import models
-from django.db.models import F
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 from model_utils import FieldTracker
 from rest_framework.exceptions import ValidationError
 from simple_history.models import HistoricalRecords
-from simple_history.utils import update_change_reason
 from typing_extensions import Self
 
 from apps.common.copier import ModelCopier
-from apps.common.helpers import datetime_to_date, prepare_for_copy
+from apps.common.helpers import datetime_to_date
 from apps.common.models import AbstractBaseModel
 from apps.core.mixins import V2DatasetMixin
 from apps.core.models.access_rights import AccessRights
@@ -276,7 +274,11 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
 
     def create_new_draft(self) -> Self:
         self.check_new_draft_allowed()
-        copy = self.create_copy(draft_of=self, draft_revision=0)
+        copy = self.create_copy(
+            draft_of=self,
+            draft_revision=0,
+            persistent_identifier=f"draft:{self.persistent_identifier}",
+        )
         return copy
 
     def merge_draft(self):
@@ -324,8 +326,10 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
                 dft_value = getattr(dft, field.name)
                 setattr(self, field.name, dft_value)
 
+        dft.draft_of = None
         dft.save()  # Update draft to remove unique one-to-one values
         self.save()
+        self.next_draft = None  # Remove cached related object
         dft.delete(soft=False)
 
     def delete(self, *args, **kwargs):

@@ -203,7 +203,11 @@ class DatasetMemberSerializer(StrictSerializer, CommonNestedModelSerializer):
             # No existing object and not creating a new object
             msg = self.error_messages["does_not_exist"]
             raise serializers.ValidationError(
-                {"id": msg.format(model_name=self.model_name, dataset_id=self.context["dataset"])}
+                {
+                    "id": msg.format(
+                        model_name=self.model_name, dataset_id=self.context.get("dataset")
+                    )
+                }
             )
 
         if self.should_save_data(attrs):
