@@ -1,5 +1,6 @@
 import json
 import logging
+
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
@@ -59,7 +60,7 @@ class Command(BaseCommand):
             "src/apps/core/management/initial_data/initial_data_catalogs.json", "r"
         ) as catalogs_file:
             catalogs_list = json.load(catalogs_file)
-            for catalog_json in catalogs_list: # pragma: no cover
+            for catalog_json in catalogs_list:  # pragma: no cover
                 if data_catalog := DataCatalog.objects.filter(id=catalog_json["id"]).first():
                     serializer = DataCatalogModelSerializer(data_catalog, data=catalog_json)
                     serializer.is_valid()

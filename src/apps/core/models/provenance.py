@@ -30,7 +30,9 @@ class Provenance(AbstractBaseModel):
     )
 
     title = HStoreField(help_text=_('example: {"en":"title", "fi":"otsikko"}'), null=True)
-    description = HStoreField(help_text=_('example: {"en":"description", "fi": "kuvaus"}'))
+    description = HStoreField(
+        help_text=_('example: {"en":"description", "fi": "kuvaus"}'), null=True
+    )
     spatial = models.OneToOneField(
         Spatial,
         on_delete=models.SET_NULL,

@@ -1,6 +1,7 @@
 import logging
 
 from apps.common.serializers.serializers import CommonListSerializer, CommonNestedModelSerializer
+from apps.common.serializers.validators import AnyOf
 from apps.core.models import EventOutcome, LifecycleEvent, PreservationEvent, Provenance
 from apps.core.serializers import (
     DatasetActorProvenanceSerializer,
@@ -38,3 +39,4 @@ class ProvenanceModelSerializer(CommonNestedModelSerializer):
         )
         read_only_fields = ("id",)
         list_serializer_class = CommonListSerializer
+        validators = [AnyOf([f for f in fields if f != "id"])]

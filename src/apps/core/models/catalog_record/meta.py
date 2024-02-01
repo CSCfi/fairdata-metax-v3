@@ -77,12 +77,10 @@ class CatalogRecord(AbstractBaseModel):
 
     history = HistoricalRecords()
 
-    # TODO make this field required when purging migrations
     metadata_owner = models.ForeignKey(
         MetadataProvider,
         on_delete=models.CASCADE,
         related_name="records",
-        null=True,
     )
     last_modified_by = models.ForeignKey(
         get_user_model(), on_delete=models.SET_NULL, null=True, blank=True

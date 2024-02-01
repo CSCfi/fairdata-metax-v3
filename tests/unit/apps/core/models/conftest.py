@@ -171,9 +171,11 @@ def dataset_with_foreign_keys(
 
 
 @pytest.fixture
-def catalog_record(data_catalog) -> CatalogRecord:
+def catalog_record(data_catalog, metadata_provider) -> CatalogRecord:
     identifier = "12345678-51d3-4c25-ad20-75aff8ca19d7"
-    return CatalogRecord(id=identifier, data_catalog=data_catalog)
+    return CatalogRecord(
+        id=identifier, data_catalog=data_catalog, metadata_owner=metadata_provider
+    )
 
 
 @pytest.fixture

@@ -5,7 +5,7 @@ from watson import search
 class DatasetSearchAdapter(search.SearchAdapter):
     def get_title(self, obj):
         if not obj.catalogrecord_ptr_id:
-            return [] # prevent trying to index deleted draft
+            return []  # prevent trying to index deleted draft
 
         criteria = []
         criteria.append(str(obj.persistent_identifier))
@@ -23,7 +23,7 @@ class DatasetSearchAdapter(search.SearchAdapter):
 
     def get_description(self, obj):
         if not obj.catalogrecord_ptr_id:
-            return [] # prevent trying to index deleted draft
+            return []  # prevent trying to index deleted draft
 
         criteria = []
         criteria.append(obj.description)
@@ -32,7 +32,7 @@ class DatasetSearchAdapter(search.SearchAdapter):
 
     def get_content(self, obj):
         if not obj.catalogrecord_ptr_id:
-            return [] # prevent trying to index deleted draft
+            return []  # prevent trying to index deleted draft
 
         criteria = []
         criteria.append(obj.relation.all())

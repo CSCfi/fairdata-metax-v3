@@ -308,19 +308,20 @@ class DataCatalogFactory(factory.django.DjangoModelFactory):
                 self.language.add(language)
 
 
-class CatalogRecordFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = models.CatalogRecord
-
-    data_catalog = factory.SubFactory(DataCatalogFactory)
-
-
 class MetadataProviderFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.MetadataProvider
 
     user = factory.SubFactory(MetaxUserFactory)
     system_creator = factory.SubFactory(MetaxUserFactory)
+
+
+class CatalogRecordFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.CatalogRecord
+
+    data_catalog = factory.SubFactory(DataCatalogFactory)
+    metadata_owner = factory.SubFactory(MetadataProviderFactory)
 
 
 class DatasetFactory(factory.django.DjangoModelFactory):

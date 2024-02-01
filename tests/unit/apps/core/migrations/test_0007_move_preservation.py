@@ -27,12 +27,20 @@ def test_migrate_to_new(migrator):
     DatasetOld = old_apps.get_model("core", "Dataset")
     ContractOld = old_apps.get_model("core", "Contract")
     DataCatalog = old_apps.get_model("core", "DataCatalog")
+    MetadataProvider = old_apps.get_model("core", "MetadataProvider")
+    MetaxUser = old_apps.get_model("users", "MetaxUser")
+
+    provider = MetadataProvider.objects.create(
+        user=MetaxUser.objects.create(username="test-user"),
+        organization="test-org",
+    )
 
     def create_test_dataset(i, **kwargs):
         return DatasetOld.objects.create(
             id=i,
             data_catalog=DataCatalog.objects.create(id=f"test-data-catalog-{i}", title={"en": "Test data catalog {i}"}),
             title={"en": f"Test dataset {i}"},
+            metadata_owner=provider,
             **kwargs
         )
 
@@ -86,6 +94,13 @@ def test_migrate_to_old(migrator):
     ContractNew = new_apps.get_model("core", "Contract")
     PreservationNew = new_apps.get_model("core", "Preservation")
     DataCatalog = new_apps.get_model("core", "DataCatalog")
+    MetadataProvider = new_apps.get_model("core", "MetadataProvider")
+    MetaxUser = new_apps.get_model("users", "MetaxUser")
+
+    provider = MetadataProvider.objects.create(
+        user=MetaxUser.objects.create(username="test-user"),
+        organization="test-org",
+    )
 
     def create_test_dataset(i, **kwargs):
         return DatasetNew.objects.create(
@@ -94,6 +109,7 @@ def test_migrate_to_old(migrator):
                 id=f"test-data-catalog-{i}", title={"en": "Test data catalog {i}"}
             ),
             title={"en": f"Test dataset {i}"},
+            metadata_owner=provider,
             **kwargs
         )
 
