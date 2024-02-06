@@ -266,7 +266,7 @@ SWAGGER_SETTINGS = {
         *SWAGGER_DEFAULTS["DEFAULT_FIELD_INSPECTORS"],
     ],
     "DEFAULT_AUTO_SCHEMA_CLASS": "apps.common.inspectors.ExtendedSwaggerAutoSchema",
-    "DEFAULT_GENERATOR_CLASS": "apps.common.inspectors.SortingOpenAPISchemaGenerator",
+    "DEFAULT_GENERATOR_CLASS": "apps.common.generators.SortingOpenAPISchemaGenerator",
     "DEFAULT_INFO": "metax_service.urls.openapi_info",
     "SECURITY_DEFINITIONS": {
         "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"}
@@ -353,3 +353,12 @@ COMMON_QUERY_PARAMS = {
     "format",  # DRF output format,  e.g.  ?format=json or ?format=api
     "strict",  # set ?strict=false to allow unknown query params without throwing error
 }
+
+# Email configuration
+EMAIL_HOST = env.str("EMAIL_HOST", None)
+EMAIL_PORT = env.str("EMAIL_PORT", None)
+EMAIL_HOST_USER = env.str("EMAIL_HOST_USER", None)
+EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD", None)
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", False)
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+METAX_EMAIL_SENDER = env.str("METAX_EMAIL_SENDER", "noreply@fairdata.fi")

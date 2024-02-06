@@ -1,5 +1,9 @@
 # dataset_serializer
 
+## LinkedDraftSerializer
+
+### :::src.apps.core.serializers.dataset_serializer.LinkedDraftSerializer
+
 ## DatasetSerializer
 
 ### :::src.apps.core.serializers.dataset_serializer.DatasetSerializer

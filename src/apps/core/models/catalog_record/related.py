@@ -76,6 +76,18 @@ class DatasetActor(Actor):
                 return True
         return False
 
+    def get_email(self) -> Optional[str]:
+        """Return email of actor if any."""
+        if self.person and self.person.email:
+            return self.person.email
+        else:
+            org = self.organization
+            while org:
+                if org.email:
+                    return org.email
+                org = org.parent
+        return None
+
     @classmethod
     def get_instance_from_v2_dictionary(
         cls, obj: Dict, dataset: "Dataset", role: str

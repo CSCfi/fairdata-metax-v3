@@ -67,3 +67,6 @@ SILKY_DYNAMIC_PROFILING = [
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
 
 PID_MS_CLIENT_INSTANCE = "apps.core.services.pid_ms_client._DummyPIDMSClient"
+
+# Print emails in console instead of sending
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"

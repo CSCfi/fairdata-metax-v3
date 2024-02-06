@@ -12,6 +12,7 @@ from django.core.exceptions import FieldError
 from django.db.models import Q
 from django.http import Http404
 from django.utils.decorators import method_decorator
+from django.utils.translation import gettext_lazy as _
 from django_filters import rest_framework as filters
 from django_filters.fields import CSVWidget
 from drf_yasg.openapi import TYPE_STRING, Parameter, Response
@@ -34,6 +35,11 @@ from apps.core.pagination import AggregatingDatasetPagination
 from apps.core.permissions import DatasetAccessPolicy
 from apps.core.renderers import DataciteXMLRenderer, FairdataDataciteXMLRenderer
 from apps.core.serializers import DatasetSerializer
+from apps.core.serializers.contact_serializer import (
+    ContactResponseSerializer,
+    ContactRolesSerializer,
+    ContactSerializer,
+)
 from apps.core.serializers.dataset_allowed_actions import (
     DatasetAllowedActionsQueryParamsSerializer,
 )
@@ -427,6 +433,25 @@ class DatasetViewSet(CommonModelViewSet):
         versions = dataset.all_revisions()
         serializer = self.get_serializer(versions, many=True)
         return response.Response(serializer.data)
+
+    @swagger_auto_schema(responses={200: ContactResponseSerializer})
+    @action(detail=True, methods=["POST"])
+    def contact(self, request, pk=None):
+        """Send email to dataset actors with specific role."""
+        dataset: Dataset = self.get_object()
+        serializer = ContactSerializer(data=request.data, context={"dataset": dataset})
+        serializer.is_valid(raise_exception=True)
+        mail_count = serializer.save()
+        response_msg = ContactResponseSerializer(instance={"recipient_count": mail_count}).data
+        return response.Response(response_msg, status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(responses={200: ContactRolesSerializer})
+    @contact.mapping.get
+    def contact_roles(self, request, pk=None):
+        """Determine for each role if there are any email addresses for that role."""
+        dataset: Dataset = self.get_object()
+        serializer = ContactRolesSerializer(instance=dataset)
+        return response.Response(serializer.data, status=status.HTTP_200_OK)
 
     def perform_destroy(self, instance):
         """Called by 'destroy' action."""

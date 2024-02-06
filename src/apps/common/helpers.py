@@ -1,20 +1,19 @@
 import copy
 import logging
+import re
 import uuid
 from contextlib import contextmanager
 from datetime import datetime
+from textwrap import dedent
 from typing import Dict
 
 from cachalot.api import cachalot_disabled
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db.models import Model
 from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_datetime
 from django_filters import NumberFilter
-from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg import openapi
-from drf_yasg.inspectors import CoreAPICompatInspector
 from rest_framework.fields import empty
 
 logger = logging.getLogger(__name__)
@@ -210,3 +209,17 @@ def has_values(obj: dict, exclude=None):
     if exclude is None:
         exclude = set()
     return any({1 for key, value in obj.items() if key not in exclude})
+
+
+def format_multiline(string: str, *args, **kwargs) -> str:
+    """Multiline string cleanup and formatting helper.
+
+    Does the following:
+    - Remove leading and trailing newlines
+    - Remove all whitespace after "\\" (so it can be used for line continuation)
+    - Remove common indentation
+    - Format string with `.format` using the provided"" arguments.
+    """
+    string = string.strip("\n")
+    string = re.sub("\\\\\s+", "", string)
+    return dedent(string).format(*args, **kwargs)

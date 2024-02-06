@@ -12,7 +12,3 @@
 
 ### :::src.apps.common.inspectors.ExtendedSwaggerAutoSchema
 
-## SortingOpenAPISchemaGenerator
-
-### :::src.apps.common.inspectors.SortingOpenAPISchemaGenerator
-

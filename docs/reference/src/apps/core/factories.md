@@ -88,13 +88,13 @@
 
 ### :::src.apps.core.factories.DataCatalogFactory
 
-## CatalogRecordFactory
-
-### :::src.apps.core.factories.CatalogRecordFactory
-
 ## MetadataProviderFactory
 
 ### :::src.apps.core.factories.MetadataProviderFactory
+
+## CatalogRecordFactory
+
+### :::src.apps.core.factories.CatalogRecordFactory
 
 ## DatasetFactory
 

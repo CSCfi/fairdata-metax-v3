@@ -56,3 +56,7 @@
 
 ### :::src.apps.common.helpers.has_values
 
+## format_multiline
+
+### :::src.apps.common.helpers.format_multiline
+

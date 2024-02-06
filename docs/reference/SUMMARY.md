@@ -17,8 +17,10 @@
         - [copier](src/apps/common/copier.md)
         - [exceptions](src/apps/common/exceptions.md)
         - [filters](src/apps/common/filters.md)
+        - [generators](src/apps/common/generators.md)
         - [helpers](src/apps/common/helpers.md)
         - [inspectors](src/apps/common/inspectors.md)
+        - [mail](src/apps/common/mail.md)
         - [managers](src/apps/common/managers.md)
         - [models](src/apps/common/models.md)
         - [pagination](src/apps/common/pagination.md)
@@ -58,6 +60,7 @@
         - serializers
             - [common_serializers](src/apps/core/serializers/common_serializers.md)
             - [concept_serializers](src/apps/core/serializers/concept_serializers.md)
+            - [contact_serializer](src/apps/core/serializers/contact_serializer.md)
             - [data_catalog_serializer](src/apps/core/serializers/data_catalog_serializer.md)
             - dataset_actor_serializers
                 - [actor_serializer](src/apps/core/serializers/dataset_actor_serializers/actor_serializer.md)
@@ -166,6 +169,7 @@
                         - [test_auth](tests/unit/apps/core/api/dataset/test_auth.md)
                         - [test_dataset](tests/unit/apps/core/api/dataset/test_dataset.md)
                         - [test_dataset_allowed_actions](tests/unit/apps/core/api/dataset/test_dataset_allowed_actions.md)
+                        - [test_dataset_contact](tests/unit/apps/core/api/dataset/test_dataset_contact.md)
                         - [test_dataset_drafts](tests/unit/apps/core/api/dataset/test_dataset_drafts.md)
                         - [test_dataset_pids](tests/unit/apps/core/api/dataset/test_dataset_pids.md)
                         - [test_dataset_timestamps](tests/unit/apps/core/api/dataset/test_dataset_timestamps.md)
