@@ -127,6 +127,7 @@
         - [authentication](src/apps/users/authentication.md)
         - [factories](src/apps/users/factories.md)
         - [management.commands.create_api_user](src/apps/users/management/commands/create_api_user.md)
+        - [middleware](src/apps/users/middleware.md)
         - [models](src/apps/users/models.md)
         - [permissions](src/apps/users/permissions.md)
         - [serializers](src/apps/users/serializers.md)
