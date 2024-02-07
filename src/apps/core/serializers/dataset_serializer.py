@@ -363,7 +363,7 @@ class ExpandCatalogQueryParamsSerializer(serializers.Serializer):
     )
 
 
-class LatestVersionQueryParmasSerializer(serializers.Serializer):
+class LatestVersionQueryParamsSerializer(serializers.Serializer):
     latest_versions = serializers.BooleanField(
         default=False,
         help_text=_("Return only latest datasets versions available for the requesting user."),

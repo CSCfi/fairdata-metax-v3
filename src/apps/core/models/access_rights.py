@@ -44,7 +44,11 @@ class AccessRights(AbstractBaseModel):
         related_name="access_rights",
     )
     access_type = models.ForeignKey(
-        AccessType, on_delete=models.SET_NULL, related_name="access_rights", null=True
+        AccessType,
+        on_delete=models.SET_NULL,
+        related_name="access_rights",
+        null=True,
+        blank=True,
     )
     restriction_grounds = models.ManyToManyField(RestrictionGrounds, related_name="access_rights")
     available = models.DateField(

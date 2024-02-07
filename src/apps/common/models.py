@@ -156,7 +156,7 @@ class AbstractFreeformConcept(AbstractDatasetProperty):
     url = models.URLField(
         max_length=512, help_text="valid url to the property definition", null=True, blank=True
     )
-    title = HStoreField(help_text='example: {"en":"title", "fi":"otsikko"}', blank=True, null=True)
+    title = HStoreField(help_text='example: {"en":"title", "fi":"otsikko"}', null=True, blank=True)
     representation = models.URLField(blank=True, null=True)
     pref_label = HStoreField(blank=True, null=True)
     description = HStoreField(blank=True, null=True)

@@ -43,15 +43,12 @@ class DataCatalog(AbstractBaseModel):
         on_delete=models.SET_NULL,
         related_name="catalogs",
         null=True,
+        blank=True,
     )
     access_rights = models.ForeignKey(
-        "AccessRights", on_delete=models.SET_NULL, related_name="catalogs", null=True
+        "AccessRights", on_delete=models.SET_NULL, related_name="catalogs", null=True, blank=True
     )
-    logo = models.CharField(
-        max_length=100,
-        blank=True,
-        null=True,
-    )
+    logo = models.CharField(max_length=100, blank=True, null=True)
 
     class DatasetSchema(models.TextChoices):
         IDA = "ida"

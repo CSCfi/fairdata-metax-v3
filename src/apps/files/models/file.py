@@ -49,7 +49,7 @@ class File(SystemCreatorBaseModel, SoftDeletableModel):
     # TODO?: characteristics_extension = JSONField(blank=True, null=True)
 
     storage = models.ForeignKey(FileStorage, related_name="files", on_delete=models.CASCADE)
-    is_pas_compatible = models.BooleanField(default=None, null=True)
+    is_pas_compatible = models.BooleanField(default=None, null=True, blank=True)
 
     user = models.CharField(max_length=200, null=True, blank=True)
 

@@ -46,7 +46,7 @@ from apps.core.serializers.dataset_allowed_actions import (
 from apps.core.serializers.dataset_serializer import (
     DatasetRevisionsQueryParamsSerializer,
     ExpandCatalogQueryParamsSerializer,
-    LatestVersionQueryParmasSerializer,
+    LatestVersionQueryParamsSerializer,
 )
 from apps.core.views.common_views import DefaultValueOrdering
 from apps.files.models import File
@@ -275,7 +275,7 @@ class DatasetFilter(filters.FilterSet):
 )
 class DatasetViewSet(CommonModelViewSet):
     query_serializers = [
-        {"class": LatestVersionQueryParmasSerializer, "actions": ["list"]},
+        {"class": LatestVersionQueryParamsSerializer, "actions": ["list"]},
         {
             "class": ExpandCatalogQueryParamsSerializer,
             "actions": ["list", "retrieve"],

@@ -29,9 +29,11 @@ class Provenance(AbstractBaseModel):
         parent_relations=["dataset"],
     )
 
-    title = HStoreField(help_text=_('example: {"en":"title", "fi":"otsikko"}'), null=True)
+    title = HStoreField(
+        help_text=_('example: {"en":"title", "fi":"otsikko"}'), null=True, blank=True
+    )
     description = HStoreField(
-        help_text=_('example: {"en":"description", "fi": "kuvaus"}'), null=True
+        help_text=_('example: {"en":"description", "fi": "kuvaus"}'), null=True, blank=True
     )
     spatial = models.OneToOneField(
         Spatial,
@@ -53,7 +55,7 @@ class Provenance(AbstractBaseModel):
     outcome_description = HStoreField(
         help_text=_('example: {"en":"successfully collected",}'), null=True, blank=True
     )
-    is_associated_with = models.ManyToManyField(DatasetActor, related_name="provenance")
+    is_associated_with = models.ManyToManyField(DatasetActor, related_name="provenance", blank=True)
     dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE, related_name="provenance")
 
     @classmethod
