@@ -32,6 +32,16 @@ def user():
     return user
 
 
+@pytest.fixture
+def user2():
+    user, created = MetaxUser.objects.get_or_create(
+        username="test_user2", first_name="Matti", last_name="Mestaaja", is_hidden=False
+    )
+    user.set_password("matti")
+    user.save()
+    return user
+
+
 @pytest.fixture(scope="session", autouse=True)
 def faker_session_locale():
     return ["en_US"]
@@ -562,6 +572,13 @@ def requests_client():
 def user_client(user):
     client = Client()
     client.force_login(user)
+    return client
+
+
+@pytest.fixture
+def user_client_2(user2):
+    client = Client()
+    client.force_login(user2)
     return client
 
 

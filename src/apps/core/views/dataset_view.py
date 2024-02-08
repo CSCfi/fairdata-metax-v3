@@ -322,7 +322,7 @@ class DatasetViewSet(CommonModelViewSet):
         "spatial__reference",
         "spatial",
         "theme",
-        "other_versions",
+        "dataset_versions",
     )
 
     queryset = Dataset.available_objects.prefetch_related(*prefetch_fields)

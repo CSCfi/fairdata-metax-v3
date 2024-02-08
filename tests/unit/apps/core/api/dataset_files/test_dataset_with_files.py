@@ -30,6 +30,37 @@ def dataset_json_with_files(deep_file_tree, data_catalog):
         },
     }
 
+@pytest.fixture
+def dataset_json_with_files_published(dataset_json_with_files, deep_file_tree, data_catalog, reference_data):
+    return {
+        **dataset_json_with_files,
+        "state": "published",
+        "pid_type": "URN",
+        "access_rights": {
+            "access_type": {
+                "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open"
+            },
+            "license": [
+                {
+                    "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC0-1.0"
+                }
+            ]
+        },
+        "actors": [
+            {
+                "organization": {
+                    "pref_label": {
+                        "en": "test org"
+                    }
+                },
+                "roles": [
+                    "creator",
+                    "publisher"
+                ]
+            }
+        ],
+    }
+
 
 @pytest.fixture
 def dataset_json_with_no_files(deep_file_tree, data_catalog):
@@ -66,11 +97,11 @@ def test_dataset_post_dataset_with_files(
 
 
 def test_dataset_post_dataset_with_files_new_version(
-    admin_client, deep_file_tree, dataset_json_with_files, data_urls
+    admin_client, deep_file_tree, dataset_json_with_files_published, data_urls, reference_data
 ):
     res = admin_client.post(
         f"/v3/datasets",
-        dataset_json_with_files,
+        dataset_json_with_files_published,
         content_type="application/json",
     )
     original_id = res.data["id"]
@@ -78,9 +109,7 @@ def test_dataset_post_dataset_with_files_new_version(
 
     # Create new version of dataset with files
     res = admin_client.post(
-        f"/v3/datasets/{res.data['id']}/new-version",
-        dataset_json_with_files,
-        content_type="application/json",
+        f"/v3/datasets/{res.data['id']}/new-version"
     )
     new_id = res.data["id"]
     assert new_id != original_id

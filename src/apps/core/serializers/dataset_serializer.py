@@ -11,7 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.fields import empty
 
-from apps.common.serializers import CommonNestedModelSerializer, OneOf
+from apps.common.serializers import CommonNestedModelSerializer, OneOf, CommonListSerializer
 from apps.core.models import DataCatalog, Dataset
 from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
 from apps.core.serializers.common_serializers import (
@@ -35,6 +35,33 @@ from apps.core.serializers.provenance_serializers import ProvenanceModelSerializ
 from .dataset_files_serializer import FileSetSerializer
 
 logger = logging.getLogger(__name__)
+
+
+class VersionSerializer(CommonNestedModelSerializer):
+    class Meta:
+        model = Dataset
+        fields = [
+            "id",
+            "title",
+            "persistent_identifier",
+            "state",
+            "created",
+            "removed",
+            "deprecated",
+            "next_draft",
+            "draft_of",
+            "version",
+        ]
+        list_serializer_class = CommonListSerializer
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+
+        if not instance.has_permission_to_see_drafts(self.context["request"].user):
+            ret.pop("next_draft", None)
+            ret.pop("draft_of", None)
+
+        return ret
 
 
 class LinkedDraftSerializer(CommonNestedModelSerializer):
@@ -67,26 +94,24 @@ class DatasetSerializer(CommonNestedModelSerializer):
     preservation = PreservationModelSerializer(required=False, many=False)
     provenance = ProvenanceModelSerializer(required=False, many=True)
     projects = ProjectModelSerializer(required=False, many=True)
-    last_version = serializers.HyperlinkedRelatedField(
-        many=False, read_only=True, view_name="dataset-detail"
-    )
-    previous_version = serializers.HyperlinkedRelatedField(
-        many=False, read_only=True, view_name="dataset-detail"
-    )
-    next_version = serializers.HyperlinkedRelatedField(
-        many=False, read_only=True, view_name="dataset-detail"
-    )
-    first_version = serializers.HyperlinkedRelatedField(
-        many=False, read_only=True, view_name="dataset-detail"
-    )
-    other_versions = serializers.HyperlinkedRelatedField(
-        many=True, read_only=True, view_name="dataset-detail"
-    )
+    dataset_versions = serializers.SerializerMethodField()
     allowed_actions = DatasetAllowedActionsSerializer(read_only=True, source="*")
     created = serializers.DateTimeField(required=False, read_only=False)
     modified = serializers.DateTimeField(required=False, read_only=False)
     next_draft = LinkedDraftSerializer(read_only=True)
     draft_of = LinkedDraftSerializer(read_only=True)
+
+    def get_dataset_versions(self, instance):
+        if versions := instance.dataset_versions:
+            version_set = versions.datasets(manager="all_objects").all().order_by("-version")
+            if not instance.has_permission_to_see_drafts(self.context["request"].user):
+                version_set = version_set.exclude(state=Dataset.StateChoices.DRAFT)
+
+            return VersionSerializer(
+                instance=version_set,
+                many=True,
+                context=self.context,
+            ).data
 
     # Fields that should be left unchanged when omitted from PUT
     no_put_default_fields = {"id", "state", "metadata_owner", "persistent_identifier"}
@@ -137,19 +162,16 @@ class DatasetSerializer(CommonNestedModelSerializer):
         read_only_fields = (
             "created",
             "cumulation_started",
-            "first_version",
             "deprecated",
             "removed",
-            "last_version",
             "modified",
-            "previous_version",
-            "next_version",
-            "other_versions",
+            "dataset_versions",
             "published_revision",
             "draft_revision",
             "allowed_actions",
             "draft_of",
             "next_draft",
+            "version",
         )
         fields = (
             "id",  # read only

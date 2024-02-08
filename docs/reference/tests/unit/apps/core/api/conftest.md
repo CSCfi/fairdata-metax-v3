@@ -36,6 +36,10 @@
 
 ### :::tests.unit.apps.core.api.conftest.datacatalog_harvested_json
 
+## datacatalog_without_versioning
+
+### :::tests.unit.apps.core.api.conftest.datacatalog_without_versioning
+
 ## datacatalog_put_json
 
 ### :::tests.unit.apps.core.api.conftest.datacatalog_put_json

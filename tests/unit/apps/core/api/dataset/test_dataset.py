@@ -477,6 +477,7 @@ def test_dataset_put_maximal_and_minimal(
     assert list(sorted(key for key, value in res.data.items() if value)) == [
         "created",
         "data_catalog",
+        "dataset_versions",
         "draft_revision",
         "id",
         "metadata_owner",
@@ -484,6 +485,7 @@ def test_dataset_put_maximal_and_minimal(
         "pid_type",
         "state",
         "title",
+        "version"
     ]
 
 
@@ -495,7 +497,7 @@ def test_dataset_patch_maximal_and_minimal(
     maximal_data = res.json()
 
     minimal_json = {
-        "title": {"en": "new title"},
+        "description": {"en": "new description"},
     }
     res = admin_client.patch(
         f"/v3/datasets/{res.data['id']}", minimal_json, content_type="application/json"

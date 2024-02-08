@@ -4,6 +4,10 @@
 
 ### :::tests.unit.apps.core.api.dataset_files.test_dataset_with_files.dataset_json_with_files
 
+## dataset_json_with_files_published
+
+### :::tests.unit.apps.core.api.dataset_files.test_dataset_with_files.dataset_json_with_files_published
+
 ## dataset_json_with_no_files
 
 ### :::tests.unit.apps.core.api.dataset_files.test_dataset_with_files.dataset_json_with_no_files

@@ -24,6 +24,10 @@ from .meta import CatalogRecord, OtherIdentifier
 logger = logging.getLogger(__name__)
 
 
+class DatasetVersions(AbstractBaseModel):
+    """A collection of dataset's versions."""
+
+
 class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
     """A collection of data available for access or download in one or many representations.
 
@@ -141,9 +145,11 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         choices=StateChoices.choices,
         default=StateChoices.DRAFT,
     )
-    # First, last replaces, next
+    version = models.IntegerField(default=1, blank=True, editable=False)
 
-    other_versions = models.ManyToManyField("self", db_index=True, blank=True)
+    dataset_versions = models.ForeignKey(
+        DatasetVersions, related_name="datasets", on_delete=models.SET_NULL, null=True
+    )
     history = HistoricalRecords(
         m2m_fields=(language, theme, field_of_science, infrastructure, other_identifiers)
     )
@@ -185,6 +191,14 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
     def _historicals_to_instances(historicals):
         return [historical.instance for historical in historicals if historical.instance]
 
+    @property
+    def next_existing_version(self):
+        return (
+            self.dataset_versions.datasets.order_by("created")
+            .filter(version__gt=self.version)
+            .first()
+        )
+
     @cached_property
     def latest_published_revision(self):
         return self.get_revision(publication_number=self.published_revision)
@@ -192,22 +206,6 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
     @cached_property
     def first_published_revision(self):
         return self.get_revision(publication_number=1)
-
-    @cached_property
-    def first_version(self):
-        return self.other_versions.first()
-
-    @cached_property
-    def last_version(self):
-        return self.other_versions.last()
-
-    @cached_property
-    def next_version(self):
-        return self.other_versions.filter(created__gt=self.created).first()
-
-    @cached_property
-    def previous_version(self):
-        return self.other_versions.filter(created__lt=self.created).last()
 
     @property
     def is_legacy(self):
@@ -258,10 +256,11 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         return copy
 
     def create_new_version(self) -> Self:
-        copy = self.create_copy()
-        copy.other_versions.add(self)
-        for version in self.other_versions.exclude(id=copy.id):
-            copy.other_versions.add(version)
+        self._deny_if_versioning_not_allowed()
+        latest_version = (
+            self.dataset_versions.datasets(manager="all_objects").order_by("version").last()
+        )
+        copy = self.create_copy(version=latest_version.version + 1)
         return copy
 
     def check_new_draft_allowed(self):
@@ -364,14 +363,46 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         else:
             return False
 
-    def _should_use_versioning(self):
+    def _deny_if_versioning_not_allowed(self):
+        """Checks whether new versions of this dataset can be created.
+
+        Requirements:
+        Dataset is not a legacy dataset.
+        Dataset belongs to a data catalog that supports versioning.
+        Dataset is not a draft.
+        Dataset has not been removed.
+        Dataset is the latest existing version of its version set.
+        Dataset does not have an existing draft for a new version.
+
+        Raises:
+            ValidationError: If any of the versioning requirements are not met.
+        """
         from apps.core.models import LegacyDataset
 
+        errors = {}
+
         if isinstance(self, LegacyDataset):
+            errors["dataset"] = _("Cannot create a new version of a legacy dataset.")
+        if not (self.data_catalog and self.data_catalog.dataset_versioning_enabled):
+            errors["data_catalog"] = _("Data catalog doesn't support versioning.")
+        if self.removed is not None:
+            errors["removed"] = _("Cannot make a new version of a removed dataset.")
+        if self.state == self.StateChoices.DRAFT:
+            errors["state"] = _("Cannot make a new version of a draft.")
+        if self.next_existing_version is not None:
+            if self.next_existing_version.state == self.StateChoices.DRAFT:
+                errors["dataset_versions"] = _(
+                    "There is an existing draft of a new version of this dataset."
+                )
+            else:
+                errors["dataset_versions"] = _(
+                    "Newer version of this dataset exists. Only the latest existing version of the dataset can be used to make a new version."
+                )
+
+        if errors:
+            raise ValidationError(errors)
+        else:
             return False
-        elif self.data_catalog and self.data_catalog.dataset_versioning_enabled:
-            return True
-        return False
 
     def _can_create_urn(self):
         return self.pid_type == self.PIDTypes.URN
@@ -490,6 +521,8 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
             if previous_state == self.StateChoices.PUBLISHED and self.state != previous_state:
                 raise ValidationError({"state": _("Cannot change value into non-published.")})
 
+        if not self.dataset_versions:
+            self.dataset_versions = DatasetVersions.objects.create()
         if self.state == self.StateChoices.DRAFT:
             self.draft_revision += 1
         elif self.state == self.StateChoices.PUBLISHED:

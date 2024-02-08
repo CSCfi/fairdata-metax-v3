@@ -19,6 +19,7 @@ def test_create_new_version(language, theme, dataset):
     dataset.language.add(language)
     dataset.theme.add(theme)
     old_version = dataset
+    dataset.publish()
     new_version = Dataset.create_new_version(dataset)
     assert new_version.id != old_version.id
     assert new_version.published_revision == 0
@@ -69,14 +70,16 @@ def test_other_versions(dataset):
     dataset.publish()
     first = dataset
     second = Dataset.create_new_version(first)
+    second.persistent_identifier = "doi:5678"
+    second.publish()
     third = Dataset.create_new_version(second)
-    assert first.other_versions.all().count() == 2
-    assert second.other_versions.all().count() == 2
-    assert third.other_versions.all().count() == 2
-    assert str(third.first_version.id) == str(first.id)
-    assert str(first.last_version.id) == str(third.id)
-    assert str(first.next_version.id) == str(second.id)
-    assert str(third.previous_version.id) == str(second.id)
+    assert first.dataset_versions == second.dataset_versions == third.dataset_versions
+    assert first.version == 1
+    assert second.version == 2
+    assert third.version == 3
+    assert first.next_existing_version.id == second.id
+    assert second.next_existing_version.id == third.id
+    assert third.next_existing_version == None
     assert first.created < second.created < third.created
 
 
@@ -183,6 +186,7 @@ def test_dataset_copied_fields():
         "dataset.access_rights.license.reference",
         "dataset.access_rights.restriction_grounds",
         "dataset.data_catalog",
+        "dataset.dataset_versions",
         "dataset.draft_of",
         "dataset.field_of_science",
         "dataset.file_set.directory_metadata.storage",
@@ -197,7 +201,6 @@ def test_dataset_copied_fields():
         "dataset.last_modified_by",
         "dataset.metadata_owner",
         "dataset.other_identifiers.identifier_type",
-        "dataset.other_versions",
         "dataset.provenance.event_outcome",
         "dataset.provenance.lifecycle_event",
         "dataset.provenance.preservation_event",

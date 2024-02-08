@@ -7,6 +7,9 @@ import pytest
 from rest_framework.reverse import reverse
 from rest_framework.test import APIClient
 
+from apps.core import factories
+from apps.core.models.data_catalog import DataCatalog
+
 from .json_models import DatasetActor, Organization, Person
 
 logger = logging.getLogger(__name__)
@@ -63,6 +66,17 @@ def datacatalog_harvested_json(admin_client, data_catalog_list_url, reference_da
         "/v3/data-catalogs", datacatalog_json, content_type="application/json"
     )
     return datacatalog_json
+
+
+@pytest.fixture
+def datacatalog_without_versioning() -> DataCatalog:
+    identifier = "urn:nbn:fi:att:data-catalog-ida"
+    title = {
+        "en": "Datasets with versioning disabled",
+    }
+    return factories.DataCatalogFactory(
+        id=identifier, title=title, dataset_versioning_enabled=False
+    )
 
 
 @pytest.fixture

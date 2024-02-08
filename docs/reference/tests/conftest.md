@@ -4,6 +4,10 @@
 
 ### :::tests.conftest.user
 
+## user2
+
+### :::tests.conftest.user2
+
 ## faker_session_locale
 
 ### :::tests.conftest.faker_session_locale
@@ -111,6 +115,10 @@
 ## user_client
 
 ### :::tests.conftest.user_client
+
+## user_client_2
+
+### :::tests.conftest.user_client_2
 
 ## tweaked_settings
 

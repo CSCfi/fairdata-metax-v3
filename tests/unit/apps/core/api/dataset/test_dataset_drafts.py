@@ -31,8 +31,9 @@ def pop_nested_ids(dataset: dict) -> dict:
                 obj_id = object.pop("id")
                 if not "pref_label" in object:  # ignore refdata
                     ids[obj_id] = object
-            for value in object.values():
-                _pop(value)
+            for key, value in object.items():
+                if key != "dataset_versions": # ignore dataset_versions
+                    _pop(value)
 
     _pop(dataset)
     return ids
@@ -66,10 +67,6 @@ def test_create_draft(admin_client, dataset_a_json, data_catalog, reference_data
         "state",
         "next_draft",
         "draft_of",
-        "next_version",
-        "last_version",
-        "previous_version",
-        "first_version",
         "published_revision",
         "draft_revision",
         "created",
@@ -79,7 +76,7 @@ def test_create_draft(admin_client, dataset_a_json, data_catalog, reference_data
         original.pop(field)
         draft.pop(field)
 
-    # Nested data should be equal but with different ids (except refdata)
+    # Nested data should be equal but with different ids (except refdata and dataset_versions)
     original_ids = pop_nested_ids(original)
     draft_ids = pop_nested_ids(draft)
     assert original == draft
@@ -175,6 +172,7 @@ def test_merge_draft(
         "draft_of",
         "next_draft",
         "created",
+        "dataset_versions",
     ]:
         draft_data.pop(field)
         published_data.pop(field)
