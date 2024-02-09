@@ -20,3 +20,7 @@
 
 ### :::src.apps.core.serializers.dataset_serializer.ExpandCatalogQueryParamsSerializer
 
+## LatestVersionQueryParmasSerializer
+
+### :::src.apps.core.serializers.dataset_serializer.LatestVersionQueryParmasSerializer
+

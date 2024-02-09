@@ -32,7 +32,7 @@ def pop_nested_ids(dataset: dict) -> dict:
                 if not "pref_label" in object:  # ignore refdata
                     ids[obj_id] = object
             for key, value in object.items():
-                if key != "dataset_versions": # ignore dataset_versions
+                if key != "dataset_versions":  # ignore dataset_versions
                     _pop(value)
 
     _pop(dataset)

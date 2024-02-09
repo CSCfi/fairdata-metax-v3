@@ -32,3 +32,7 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_versioning.test_version_draft_permissions
 
+## test_list_latest_versions
+
+### :::tests.unit.apps.core.api.dataset.test_versioning.test_list_latest_versions
+

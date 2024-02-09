@@ -485,7 +485,7 @@ def test_dataset_put_maximal_and_minimal(
         "pid_type",
         "state",
         "title",
-        "version"
+        "version",
     ]
 
 

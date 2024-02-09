@@ -29,6 +29,7 @@ from apps.common.serializers.serializers import (
 )
 from apps.common.views import CommonModelViewSet
 from apps.core.models.catalog_record import Dataset, FileSet
+from apps.core.models.catalog_record.dataset import DatasetVersions
 from apps.core.models.preservation import Preservation
 from apps.core.pagination import AggregatingDatasetPagination
 from apps.core.permissions import DatasetAccessPolicy
@@ -45,6 +46,7 @@ from apps.core.serializers.dataset_allowed_actions import (
 from apps.core.serializers.dataset_serializer import (
     DatasetRevisionsQueryParamsSerializer,
     ExpandCatalogQueryParamsSerializer,
+    LatestVersionQueryParmasSerializer,
 )
 from apps.core.views.common_views import DefaultValueOrdering
 from apps.files.models import File
@@ -273,6 +275,7 @@ class DatasetFilter(filters.FilterSet):
 )
 class DatasetViewSet(CommonModelViewSet):
     query_serializers = [
+        {"class": LatestVersionQueryParmasSerializer, "actions": ["list"]},
         {
             "class": ExpandCatalogQueryParamsSerializer,
             "actions": ["list", "retrieve"],
@@ -340,6 +343,18 @@ class DatasetViewSet(CommonModelViewSet):
             return obj
         except (Dataset.DoesNotExist, FieldError):
             return super().get_object()
+
+    def filter_queryset(self, queryset):
+        queryset = super().filter_queryset(queryset)
+        if self.query_params.get("latest_versions"):
+            # Return only latest versions available for the current user
+            available_datasets = self.get_queryset()
+            latest_versions = available_datasets.order_by(
+                "dataset_versions_id", "-version"
+            ).distinct("dataset_versions_id")
+            return queryset.filter(id__in=latest_versions)
+
+        return queryset
 
     @swagger_auto_schema(
         manual_parameters=[
