@@ -20,6 +20,8 @@ from rest_framework.serializers import ValidationError
 from rest_framework.settings import api_settings
 from rest_framework.utils import html, model_meta
 
+from apps.common.serializers.fields import MultiLanguageField, PrivateEmailField
+
 logger = logging.getLogger(__name__)
 
 
@@ -484,29 +486,6 @@ class NestedModelSerializer(serializers.ModelSerializer):
         return instance
 
 
-class MultiLanguageField(serializers.HStoreField):
-    """Serializer field for MultiLanguageField model fields.
-
-    Languages with `null` or "" as translation are removed from the object.
-    Disallows empty objects `{}` by default.
-    """
-
-    child = serializers.CharField(allow_blank=True, allow_null=True)
-
-    def to_internal_value(self, data):
-        if isinstance(data, dict):
-            data = {
-                lang: translation
-                for lang, translation in data.items()
-                if translation not in {None, ""}
-            }
-        return super().to_internal_value(data)
-
-    def __init__(self, **kwargs):
-        kwargs.setdefault("allow_empty", False)
-        super().__init__(**kwargs)
-
-
 class CommonModelSerializer(PatchModelSerializer, serializers.ModelSerializer):
     """ModelSerializer for behavior common for all model APIs."""
 
@@ -514,7 +493,21 @@ class CommonModelSerializer(PatchModelSerializer, serializers.ModelSerializer):
         **serializers.ModelSerializer.serializer_field_mapping,
         # Default to using MultiLanguageField serializer field for all HStoreFields
         postgres_fields.HStoreField: MultiLanguageField,
+        # Hide emails by default
+        models.EmailField: PrivateEmailField,
     }
+
+    @property
+    def _readable_fields(self):
+        for field in super()._readable_fields:
+            # Unlike get_fields which is common for all items in a list serializer,
+            # _readable_fields is run for each item in to_representation so
+            # we can have a different context for each item
+            if isinstance(field, PrivateEmailField):
+                # Hide email fields from responses by default
+                if not self.context.get("show_emails"):
+                    continue
+            yield field
 
     def create(self, validated_data):
         instance = super().create(validated_data)

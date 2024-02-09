@@ -1,7 +1,6 @@
-from metax_service.settings.components.base import env
-
 from cachalot.settings import SUPPORTED_CACHE_BACKENDS
 
+from metax_service.settings.components.base import env
 
 ENABLE_MEMCACHED = env.bool("ENABLE_MEMCACHED", False)
 CACHALOT_DATABASES = ["default"]

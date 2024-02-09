@@ -177,7 +177,7 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         "self", related_name="next_draft", on_delete=models.CASCADE, null=True, blank=True
     )
 
-    def has_permission_to_see_drafts(self, user: settings.AUTH_USER_MODEL, blank=True, null=True):
+    def has_permission_to_edit(self, user: settings.AUTH_USER_MODEL):
         if user.is_superuser:
             return True
         elif not user.is_authenticated:
@@ -188,6 +188,9 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
             if self.metadata_owner.user == user:
                 return True
         return False
+
+    def has_permission_to_see_drafts(self, user: settings.AUTH_USER_MODEL):
+        return self.has_permission_to_edit(user)
 
     @staticmethod
     def _historicals_to_instances(historicals):

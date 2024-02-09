@@ -11,7 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.fields import empty
 
-from apps.common.serializers import CommonNestedModelSerializer, OneOf, CommonListSerializer
+from apps.common.serializers import CommonListSerializer, CommonNestedModelSerializer, OneOf
 from apps.core.models import DataCatalog, Dataset
 from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
 from apps.core.serializers.common_serializers import (
@@ -147,12 +147,14 @@ class DatasetSerializer(CommonNestedModelSerializer):
                 self._validated_data["metadata_owner"] = {}
         super().save(**kwargs)
 
-    def to_representation(self, instance):
-        request = self.context.get("request")
+    def to_representation(self, instance: Dataset):
+        request = self.context["request"]
+        self.context["show_emails"] = instance.has_permission_to_edit(request.user)
+
         ret = super().to_representation(instance)
 
         # Drafts should be hidden from users without access to them
-        if instance and not instance.has_permission_to_see_drafts(self.context["request"].user):
+        if not instance.has_permission_to_see_drafts(request.user):
             ret.pop("draft_revision", None)
             ret.pop("next_draft", None)
             ret.pop("draft_of", None)
@@ -296,6 +298,8 @@ class DatasetSerializer(CommonNestedModelSerializer):
         return errors
 
     def to_internal_value(self, data):
+        # Emails are readable during input conversion (needed by dataset member serializer)
+        self.context["show_emails"] = True
         if self.instance:  # dataset actors need dataset in context
             self.context["dataset"] = self.instance
         _data = super().to_internal_value(data)

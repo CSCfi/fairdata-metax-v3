@@ -28,10 +28,6 @@
 
 ### :::src.apps.common.serializers.serializers.NestedModelSerializer
 
-## MultiLanguageField
-
-### :::src.apps.common.serializers.serializers.MultiLanguageField
-
 ## CommonModelSerializer
 
 ### :::src.apps.common.serializers.serializers.CommonModelSerializer

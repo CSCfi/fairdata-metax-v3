@@ -4,6 +4,7 @@ import uuid
 from unittest.mock import ANY
 
 import pytest
+from django.test.client import Client
 from rest_framework.reverse import reverse
 from tests.utils import assert_nested_subdict, matchers
 
@@ -1083,3 +1084,35 @@ def test_create_same_organization_twice_no_id(patch_dataset):
         }
     )
     assert organization_id == data["actors"][0]["organization"]["id"]
+
+
+def test_create_actor_email_private(patch_dataset, admin_client):
+    """Actor email addresses should not be visible to users without editing rights to dataset."""
+    data = patch_dataset(
+        {
+            "actors": [
+                {
+                    "person": {"name": "teppo", "email": "person@example.com"},
+                    "organization": {"pref_label": {"en": "org"}, "email": "org@example.com"},
+                    "roles": ["creator", "publisher"],
+                }
+            ]
+        }
+    )
+    # Email should be visible when creating
+    assert data["actors"][0]["person"]["email"] == "person@example.com"
+    assert data["actors"][0]["organization"]["email"] == "org@example.com"
+
+    res = admin_client.post(f"/v3/datasets/{data['id']}/publish", content_type="application/json")
+    assert res.status_code == 200
+
+    # Email should be visible on get if user has rights
+    res = admin_client.get(f"/v3/datasets/{data['id']}", content_type="application/json")
+    assert "email" in res.data["actors"][0]["person"]
+    assert "email" in res.data["actors"][0]["organization"]
+
+    # Email should not be visible for anonymous user
+    anon_client = Client()
+    res = anon_client.get(f"/v3/datasets/{data['id']}", content_type="application/json")
+    assert "email" not in res.data["actors"][0]["person"]
+    assert "email" not in res.data["actors"][0]["organization"]

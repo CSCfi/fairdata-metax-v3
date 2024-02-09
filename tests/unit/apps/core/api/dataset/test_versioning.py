@@ -1,8 +1,8 @@
 import logging
 
 import pytest
-from apps.core import factories
 
+from apps.core import factories
 from apps.core.models import Dataset
 
 pytestmark = [pytest.mark.django_db, pytest.mark.dataset, pytest.mark.versioning]

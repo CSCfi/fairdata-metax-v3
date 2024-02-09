@@ -211,3 +211,30 @@ class WKTField(serializers.CharField):
             return shapely.wkt.loads(data).wkt
         except shapely.errors.GEOSException as error:
             raise serializers.ValidationError(_("Invalid WKT: {}").format(str(error)))
+
+
+class MultiLanguageField(serializers.HStoreField):
+    """Serializer field for MultiLanguageField model fields.
+
+    Languages with `null` or "" as translation are removed from the object.
+    Disallows empty objects `{}` by default.
+    """
+
+    child = serializers.CharField(allow_blank=True, allow_null=True)
+
+    def to_internal_value(self, data):
+        if isinstance(data, dict):
+            data = {
+                lang: translation
+                for lang, translation in data.items()
+                if translation not in {None, ""}
+            }
+        return super().to_internal_value(data)
+
+    def __init__(self, **kwargs):
+        kwargs.setdefault("allow_empty", False)
+        super().__init__(**kwargs)
+
+
+class PrivateEmailField(serializers.EmailField):
+    """Email field that is hidden by CommonModelSerializer by default."""
