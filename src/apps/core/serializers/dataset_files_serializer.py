@@ -272,8 +272,7 @@ class FileSetSerializer(StrictSerializer):
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
-        errors = self.get_items_exist_errors(attrs)
-        if errors:
+        if errors := self.get_items_exist_errors(attrs):
             raise serializers.ValidationError(errors)
         return attrs
 
@@ -497,6 +496,7 @@ class FileSetSerializer(StrictSerializer):
     def update(self, instance: FileSet, validated_data):
         """Update file relations and metadata of FileSet."""
         file_set = instance
+
         storage: FileStorage = validated_data["storage"]
         directory_actions: list = validated_data.get("directory_actions", [])
         file_actions: list = validated_data.get("file_actions", [])
@@ -519,6 +519,10 @@ class FileSetSerializer(StrictSerializer):
                     .values_list("id", flat=True)
                 )
                 file_set.removed_files_count = len(files_to_remove)
+                if file_set.removed_files_count > 0 and not instance.dataset.allow_removing_files:
+                    raise serializers.ValidationError(
+                        {"action": _("Removing files from a published dataset is not allowed.")}
+                    )
                 file_set.files.remove(*files_to_remove)
 
             # add files
@@ -530,6 +534,14 @@ class FileSetSerializer(StrictSerializer):
                     .values_list("id", flat=True)
                 )
                 file_set.added_files_count = len(files_to_add)
+                if file_set.added_files_count > 0 and not instance.dataset.allow_adding_files:
+                    raise serializers.ValidationError(
+                        {
+                            "action": _(
+                                "Adding files to a published noncumulative dataset is not allowed."
+                            )
+                        }
+                    )
                 file_set.files.add(*files_to_add)
 
         # file counts and dataset storage project may have changed, clear cached values

@@ -6,7 +6,6 @@
 # :license: MIT
 
 import logging
-from typing import Optional
 
 from django.core.exceptions import FieldError
 from django.db.models import Q
@@ -17,7 +16,7 @@ from django_filters import rest_framework as filters
 from django_filters.fields import CSVWidget
 from drf_yasg.openapi import TYPE_STRING, Parameter, Response
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import exceptions, response, status, viewsets
+from rest_framework import exceptions, response, status
 from rest_framework.decorators import action
 from rest_framework.renderers import JSONRenderer
 from rest_framework.reverse import reverse

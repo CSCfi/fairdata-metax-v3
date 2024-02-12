@@ -263,6 +263,10 @@ in the `dataset_metadata` field, or `null` if metadata is not set.
 
 ### Adding, updating or removing dataset files
 
+Files be added to and removed from unpublished draft datasets. Files can be added to
+published datasets only if the dataset is cumulative or if there are no existing files 
+in the dataset.
+
 To modify dataset file associations, include file storage parameters
 (i.e. `storage_service`, `project`) and a `directory_actions` or `file_actions` list in
 fileset object when creating or updating a dataset.
@@ -313,6 +317,19 @@ Metadata is also removed if the file or directory is no longer in the dataset af
 The response fileset object will include the normal fileset summary and additional
 values `added_files_count` and `removed_files_count` which tell how many
 files were added and how many files were removed by the operations.
+
+### Cumulative datasets
+
+Cumulative datasets are datasets where new files can be added after publication without 
+creating a new dataset version. The cumulation status can be changed using the `cumulative_state`
+parameter. It has the following possible values:
+
+- `0`: (default): Non-cumulative. Files cannot be added after publication.
+- `1`: Cumulation active. Files can be added even after publication.
+- `2`: Cumulation closed. Files can no longer be added.
+
+If a dataset has been published, the only allowed change to `cumulative_state` is from
+active to closed.
 
 ### Dataset file and directory metadata fields
 

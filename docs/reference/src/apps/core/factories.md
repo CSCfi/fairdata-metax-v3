@@ -104,6 +104,10 @@
 
 ### :::src.apps.core.factories.DatasetActorFactory
 
+## PublishedDatasetFactory
+
+### :::src.apps.core.factories.PublishedDatasetFactory
+
 ## FileSetFactory
 
 ### :::src.apps.core.factories.FileSetFactory

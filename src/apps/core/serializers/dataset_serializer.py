@@ -73,6 +73,7 @@ class LinkedDraftSerializer(CommonNestedModelSerializer):
             "created",
             "modified",
             "title",
+            "cumulative_state",
         )
         read_only_fields = fields
 
@@ -114,7 +115,13 @@ class DatasetSerializer(CommonNestedModelSerializer):
             ).data
 
     # Fields that should be left unchanged when omitted from PUT
-    no_put_default_fields = {"id", "state", "metadata_owner", "persistent_identifier"}
+    no_put_default_fields = {
+        "id",
+        "state",
+        "metadata_owner",
+        "persistent_identifier",
+        "cumulative_state",
+    }
 
     def get_fields(self):
         fields = super().get_fields()

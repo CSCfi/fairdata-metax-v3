@@ -346,6 +346,26 @@ class DatasetActorFactory(factory.django.DjangoModelFactory):
     organization = factory.SubFactory(OrganizationFactory)
 
 
+class PublishedDatasetFactory(DatasetFactory):
+    @factory.lazy_attribute
+    def persistent_identifier(self):
+        return f"urn:nbn:fi:test:{factory.Faker('uuid')}"
+
+    @factory.post_generation
+    def actors(self, create, extracted, **kwargs):
+        if not create:
+            return
+        self.actors.set([DatasetActorFactory(roles=["creator", "publisher"])])
+
+    @factory.post_generation
+    def state(self, create, extracted, **kwargs):
+        if not create:
+            return
+        if not extracted:
+            self.state = "published"
+            self.save()
+
+
 class FileSetFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.FileSet

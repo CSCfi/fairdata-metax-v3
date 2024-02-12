@@ -18,6 +18,7 @@ from apps.core.mixins import V2DatasetMixin
 from apps.core.models.access_rights import AccessRights
 from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
 from apps.core.services.pid_ms_client import PIDMSClient, ServiceUnavailableError
+from apps.files.models import File
 
 from .meta import CatalogRecord, OtherIdentifier
 
@@ -211,6 +212,36 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
     def is_legacy(self):
         return getattr(self, "legacydataset", None)
 
+    @property
+    def has_files(self):
+        return hasattr(self, "file_set") and self.file_set.files.exists()
+
+    @property
+    def has_published_files(self):
+        """Return true if dataset or its draft_of dataset has published files."""
+        if self.state == Dataset.StateChoices.DRAFT:
+            if pub := getattr(self, "draft_of", None):
+                return pub.has_published_files
+            return False
+        return self.has_files
+
+    @property
+    def allow_adding_files(self) -> bool:
+        """Return true if files can be added to dataset."""
+        if self.state == Dataset.StateChoices.DRAFT:
+            if pub := getattr(self, "draft_of", None):
+                # Published dataset determines if files can be added
+                return pub.allow_adding_files
+            return True
+
+        # Published dataset has to be cumulative or empty to allow adding files
+        return self.cumulative_state == self.CumulativeState.ACTIVE or not self.has_files
+
+    @property
+    def allow_removing_files(self) -> bool:
+        """Return true if files can be removed from dataset."""
+        return not self.has_published_files
+
     def get_revision(self, name: str = None, publication_number: int = None):
         revision = None
         if publication_number:
@@ -280,11 +311,31 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         )
         return copy
 
+    def _check_merge_draft_files(self):
+        """Check that merging draft would not cause invalid file changes."""
+        dft = self.next_draft
+        no_files = File.objects.none()
+        self_files = (hasattr(self, "file_set") and self.file_set.files.all()) or no_files
+        dft_files = (hasattr(dft, "file_set") and dft.file_set.files.all()) or no_files
+        files_removed = self_files.difference(dft_files).exists()
+        if files_removed:
+            raise ValidationError(
+                {"fileset": _("Merging changes would remove files, which is not allowed.")}
+            )
+        files_added = dft_files.difference(self_files).exists()
+        if files_added and self.cumulative_state != self.CumulativeState.ACTIVE:
+            raise ValidationError(
+                {"fileset": _("Merging changes would add files, which is not allowed.")}
+            )
+
     def merge_draft(self):
+        """Merge values from next_draft dataset and delete the draft."""
         if not self.next_draft:
             raise ValidationError({"state": _("Dataset does not have a draft.")})
         if self.next_draft.deprecated:
             raise ValidationError({"state": _("Draft is deprecated.")})
+
+        self._check_merge_draft_files()
         dft = self.next_draft
         ignored_values = [
             "id",
@@ -293,6 +344,7 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
             "published_revision",
             "created",
             "persistent_identifier",
+            "next_draft",
             "draft_of",
             "metadata_owner",
             "other_versions",
@@ -306,15 +358,20 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
                 continue
 
             if field.is_relation and not field.many_to_one:
-                if field.many_to_many or field.one_to_many:
-                    # Many-to-many and one-to-many can be set with manager
+                if field.many_to_many:
+                    # Many-to-many can be set with manager
                     manager = getattr(self, field.name)
                     manager.set(getattr(dft, field.name).all())
                 elif field.one_to_many or (field.one_to_one and not field.concrete):
                     # Field value in related table, reassign draft dataset relations
                     remote_field = field.remote_field.name
+                    old_relations = field.related_model.all_objects.filter(
+                        **{remote_field: self.id}
+                    )
+                    old_relations.delete()  # Hard delete old related objects
                     draft_relations = field.related_model.objects.filter(**{remote_field: dft.id})
                     draft_relations.update(**{remote_field: self.id})
+
                 elif field.one_to_one and field.concrete:
                     # Unique field value in model table, value must be removed from draft first
                     dft_value = getattr(dft, field.name)
@@ -326,7 +383,8 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
                 setattr(self, field.name, dft_value)
 
         dft.draft_of = None
-        dft.save()  # Update draft to remove unique one-to-one values
+        # Update draft to remove unique one-to-one values, skip Dataset.save to avoid validation
+        models.Model.save(dft)
         self.save()
         self.next_draft = None  # Remove cached related object
         dft.delete(soft=False)
@@ -340,28 +398,43 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
             self.access_rights.delete(*args, **kwargs)
         return super().delete(*args, **kwargs)
 
-    def _deny_if_trying_to_change_to_cumulative(self) -> bool:
+    def _validate_cumulative_state(self):
         """Check to prevent changing non-cumulative to cumulative
 
         Raises:
             ValidationError: If the cumulative state cannot be changed.
-
-        Returns:
-            bool: False if not trying to change non-cumulative to cumulative
-
         """
-        cumulative_changed, previous_cumulative = self.tracker.has_changed(
-            "cumulative_state"
-        ), self.tracker.previous("cumulative_state")
-        if (
-            cumulative_changed
-            and previous_cumulative == self.CumulativeState.NOT_CUMULATIVE
-            and self.cumulative_state != self.CumulativeState.NOT_CUMULATIVE
-            and self.first_published_revision is not None
-        ):
-            raise ValidationError("Cannot change cumulative state from NOT_CUMULATIVE to ACTIVE")
+        public_state = None  # Published cumulative state of dataset
+        if self.state == self.StateChoices.PUBLISHED:
+            public_state = self.tracker.previous("cumulative_state")
+        elif self.draft_of:
+            public_state = self.draft_of.cumulative_state
+
+        allowed_states: set
+        if public_state is None:
+            allowed_states = {self.CumulativeState.NOT_CUMULATIVE, self.CumulativeState.ACTIVE}
         else:
-            return False
+            allowed_states = {public_state}
+            if public_state == self.CumulativeState.ACTIVE:
+                allowed_states.add(self.CumulativeState.CLOSED)
+
+        if self.cumulative_state not in allowed_states:
+            raise ValidationError(
+                {
+                    "cumulative_state": "Cannot change state to {state}.".format(
+                        state=self.cumulative_state
+                    )
+                }
+            )
+
+    def _update_cumulative_state(self):
+        """Update fields related to cumulative state."""
+        self._validate_cumulative_state()
+        if self.state == self.StateChoices.PUBLISHED:
+            if self.cumulative_state == self.CumulativeState.ACTIVE:
+                self.cumulation_started = self.cumulation_started or timezone.now()
+            elif self.cumulative_state == self.CumulativeState.CLOSED:
+                self.cumulation_ended = self.cumulation_ended or timezone.now()
 
     def _deny_if_versioning_not_allowed(self):
         """Checks whether new versions of this dataset can be created.
@@ -513,7 +586,7 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
     def save(self, *args, **kwargs):
         """Saves the dataset and increments the draft or published revision number as needed."""
         self.validate_unique()
-        self._deny_if_trying_to_change_to_cumulative()
+        self._update_cumulative_state()
 
         # Prevent changing state of a published dataset
         previous_state = self.tracker.previous("state")
