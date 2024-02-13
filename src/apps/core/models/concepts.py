@@ -189,7 +189,7 @@ class Spatial(AbstractFreeformConcept):
     def __str__(self):
         return self.geographic_name or str(next(iter(self.reference.pref_label.items())))
 
-    class Meta:
+    class Meta(AbstractFreeformConcept.Meta):
         indexes = []
 
 

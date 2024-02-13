@@ -115,7 +115,7 @@ class AbstractBaseModel(SystemCreatorBaseModel, TimeStampedModel, CustomSoftDele
     class Meta:
         abstract = True
         get_latest_by = "modified"
-        ordering = ["created"]
+        ordering = ["created", "id"]
 
 
 class AbstractDatasetProperty(AbstractBaseModel):
@@ -136,7 +136,7 @@ class AbstractDatasetProperty(AbstractBaseModel):
     def __str__(self):
         return self.url
 
-    class Meta:
+    class Meta(AbstractBaseModel.Meta):
         abstract = True
 
 
@@ -162,7 +162,7 @@ class AbstractFreeformConcept(AbstractDatasetProperty):
     description = HStoreField(blank=True, null=True)
     in_scheme = models.URLField(max_length=255, null=True, blank=True)
 
-    class Meta:
+    class Meta(AbstractDatasetProperty.Meta):
         abstract = True
 
     def __str__(self):

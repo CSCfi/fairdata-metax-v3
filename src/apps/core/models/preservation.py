@@ -79,7 +79,7 @@ class Preservation(AbstractBaseModel):
         help_text=_("Link between the dataset stored in DPRES and the originating dataset"),
     )
 
-    class Meta:
+    class Meta(AbstractBaseModel.Meta):
         constraints = [
             # Dataset that enters the preservation process must have a
             # contract

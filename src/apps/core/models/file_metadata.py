@@ -3,6 +3,7 @@ import logging
 from django.db import models
 
 from apps.common.copier import ModelCopier
+from apps.common.models import AbstractBaseModel
 from apps.files.models import File, FileStorage
 
 from .concepts import FileType, UseCategory
@@ -25,6 +26,7 @@ class FileSetFileMetadata(models.Model):
     use_category = models.ForeignKey(UseCategory, null=True, on_delete=models.SET_NULL)
 
     class Meta:
+        ordering = ["id"]
         unique_together = [("file_set", "file")]
 
 
@@ -43,4 +45,5 @@ class FileSetDirectoryMetadata(models.Model):
     use_category = models.ForeignKey(UseCategory, null=True, on_delete=models.SET_NULL)
 
     class Meta:
+        ordering = ["id"]
         unique_together = [("file_set", "pathname")]

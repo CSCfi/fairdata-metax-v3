@@ -204,7 +204,7 @@ class FileStorage(ProxyBasePolymorphicModel, AbstractBaseModel):
     # File fields required by FileStorage that are normally optional, e.g. storage_identifier
     required_file_fields = set()
 
-    class Meta:
+    class Meta(AbstractBaseModel.Meta):
         unique_together = [("csc_project", "storage_service")]
 
     @classmethod

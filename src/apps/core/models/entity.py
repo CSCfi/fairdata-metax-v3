@@ -30,5 +30,5 @@ class Entity(AbstractBaseModel):
         blank=True,
     )
 
-    class Meta:
+    class Meta(AbstractBaseModel.Meta):
         verbose_name_plural = "Entities"

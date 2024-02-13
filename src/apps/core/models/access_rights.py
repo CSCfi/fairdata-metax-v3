@@ -62,7 +62,7 @@ class AccessRights(AbstractBaseModel):
     )
     history = SnapshotHistoricalRecords(m2m_fields=(license,))
 
-    class Meta:
+    class Meta(AbstractBaseModel.Meta):
         verbose_name_plural = "Access rights"
 
     def __str__(self):
