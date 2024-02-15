@@ -1,5 +1,13 @@
 # conftest
 
+## fairdata_users_group
+
+### :::tests.conftest.fairdata_users_group
+
+## service_group
+
+### :::tests.conftest.service_group
+
 ## user
 
 ### :::tests.conftest.user

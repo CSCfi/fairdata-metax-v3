@@ -76,7 +76,7 @@ class Command(BaseCommand):
                     catalog = serializer.create(validated_data=serializer.validated_data)
                     logger.info(f"Created data catalog: {catalog}")
                 else:
-                    logger.info(f"Catalog JSON not valid: {serializer.errors}")
+                    logger.error(f"Catalog JSON not valid: {serializer.errors}")
 
             logger.info(f"Created or updated test data-catalogs")
 

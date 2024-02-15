@@ -94,7 +94,7 @@ class TokenUsers:
 
 
 @pytest.fixture
-def end_users(faker):
+def end_users(faker, fairdata_users_group):
     user1 = get_user_model().objects.create(
         username=faker.simple_profile()["username"], password=faker.password(), organization="test"
     )
@@ -104,6 +104,7 @@ def end_users(faker):
     user3 = get_user_model().objects.create(
         username=faker.simple_profile()["username"], password=faker.password(), organization="test"
     )
+    fairdata_users_group.user_set.add(user1, user2, user3)
     instance1, token1 = AuthToken.objects.create(user=user1)
     instance2, token2 = AuthToken.objects.create(user=user2)
     instance3, token3 = AuthToken.objects.create(user=user3)

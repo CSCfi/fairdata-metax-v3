@@ -18,6 +18,7 @@ from drf_yasg.openapi import TYPE_STRING, Parameter, Response
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import exceptions, response, status
 from rest_framework.decorators import action
+from rest_framework.exceptions import NotAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.reverse import reverse
 from watson import search
@@ -30,9 +31,10 @@ from apps.common.serializers.serializers import (
 from apps.common.views import CommonModelViewSet
 from apps.core.models.catalog_record import Dataset, FileSet
 from apps.core.models.catalog_record.dataset import DatasetVersions
+from apps.core.models.data_catalog import DataCatalog
 from apps.core.models.preservation import Preservation
 from apps.core.pagination import AggregatingDatasetPagination
-from apps.core.permissions import DatasetAccessPolicy
+from apps.core.permissions import DataCatalogAccessPolicy, DatasetAccessPolicy
 from apps.core.renderers import DataciteXMLRenderer, FairdataDataciteXMLRenderer
 from apps.core.serializers import DatasetSerializer
 from apps.core.serializers.contact_serializer import (
@@ -467,11 +469,24 @@ class DatasetViewSet(CommonModelViewSet):
         serializer = ContactRolesSerializer(instance=dataset)
         return response.Response(serializer.data, status=status.HTTP_200_OK)
 
+    def perform_create(self, serializer):
+        if self.request.user.is_anonymous:
+            raise NotAuthenticated("You must be authenticated to perform this action.")
+
+        catalog: DataCatalog = serializer._validated_data["data_catalog"]
+        if not DataCatalogAccessPolicy().query_object_permission(
+            user=self.request.user, object=catalog, action="<op:create_dataset>"
+        ):
+            raise exceptions.PermissionDenied(
+                "You are not allowed to create datasets in this data catalog."
+            )
+        serializer.save(system_creator=self.request.user)
+
     def perform_destroy(self, instance):
         """Called by 'destroy' action."""
         flush = self.query_params["flush"]
         if flush and not DatasetAccessPolicy().query_object_permission(
-            self.request, instance, action="<op:flush>"
+            user=self.request.user, object=instance, action="<op:flush>"
         ):
             raise exceptions.PermissionDenied()
         instance.delete(soft=not flush)

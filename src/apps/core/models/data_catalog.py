@@ -1,6 +1,7 @@
 import json
 import uuid
 
+from django.contrib.auth.models import Group
 from django.contrib.postgres.fields import HStoreField
 from django.db import models
 from simple_history.models import HistoricalRecords
@@ -48,7 +49,23 @@ class DataCatalog(AbstractBaseModel):
     access_rights = models.ForeignKey(
         "AccessRights", on_delete=models.SET_NULL, related_name="catalogs", null=True, blank=True
     )
-    logo = models.CharField(max_length=100, blank=True, null=True)
+    logo = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+    )
+    dataset_groups_create = models.ManyToManyField(
+        Group,
+        help_text="User groups that are allowed to create datasets in catalog.",
+        related_name="catalogs_create_datasets",
+        blank=True,
+    )
+    dataset_groups_admin = models.ManyToManyField(
+        Group,
+        help_text="User groups that are allowed to update all datasets in catalog.",
+        related_name="catalogs_admin_datasets",
+        blank=True,
+    )
 
     class DatasetSchema(models.TextChoices):
         IDA = "ida"

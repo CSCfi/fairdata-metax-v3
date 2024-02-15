@@ -4,6 +4,7 @@ from urllib.parse import urlencode
 import jwt
 from dateutil.parser import parse
 from django.conf import settings
+from django.contrib.auth.models import Group
 from django.middleware.csrf import rotate_token
 from django.utils.translation import get_language, gettext_lazy as _
 from knox.auth import TokenAuthentication
@@ -140,6 +141,9 @@ class SSOAuthentication(authentication.SessionAuthentication):
             fairdata_user = sso_session.get("fairdata_user", {})
             user.fairdata_username = fairdata_user.get("id")
             user.is_active = not fairdata_user.get("locked", True)
+            if fairdata_user:
+                group, created = Group.objects.get_or_create(name="fairdata_users")
+                user.groups.add(group)
 
             csc_projects = sso_session.get("services", {}).get("IDA", {}).get("projects", [])
             user.csc_projects = csc_projects

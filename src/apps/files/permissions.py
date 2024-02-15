@@ -50,7 +50,7 @@ class DirectoriesAccessPolicy(BaseFilesAccessPolicy):
         {
             "action": ["list"],
             "principal": ["*"],
-            "condition_expression": "can_view_directory",
+            "condition": "can_view_directory",
             "effect": "allow",
         },
     ]

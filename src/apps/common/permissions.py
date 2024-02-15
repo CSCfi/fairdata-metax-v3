@@ -27,8 +27,8 @@ class DummyRequest:
     has "user" and "method" attributes.
     """
 
-    def __init__(self, request, method="") -> None:
-        self.user = request.user
+    def __init__(self, user=None, method="") -> None:
+        self.user = user
         self.method = method  # leave empty to avoid matching e.g. <method:get> rules
 
 
@@ -59,7 +59,7 @@ class BaseAccessPolicy(AccessPolicy):
             logger.debug(f"Admin access granted for : {request.user}")
             return queryset
 
-    def query_object_permission(self, request, object, action, method=""):
+    def query_object_permission(self, user, object, action, method=""):
         """Helper method for querying for permissions of an object for current user.
 
         Normally has_permissions does not allow specifying object, action, or method
@@ -67,5 +67,5 @@ class BaseAccessPolicy(AccessPolicy):
         without having to make an actual request.
         """
         view = DummyView(object=object, action=action)
-        request = DummyRequest(request=request, method=method)
+        request = DummyRequest(user=user, method=method)
         return self.has_permission(request=request, view=view)

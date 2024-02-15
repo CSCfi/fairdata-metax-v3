@@ -341,12 +341,16 @@ class DatasetActorFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.DatasetActor
 
-    dataset = factory.SubFactory(DatasetFactory)
     person = factory.SubFactory(PersonFactory)
     organization = factory.SubFactory(OrganizationFactory)
 
 
 class PublishedDatasetFactory(DatasetFactory):
+    class Meta:
+        model = models.Dataset
+        django_get_or_create = ("title",)
+        skip_postgeneration_save = True
+
     @factory.lazy_attribute
     def persistent_identifier(self):
         return f"urn:nbn:fi:test:{factory.Faker('uuid')}"

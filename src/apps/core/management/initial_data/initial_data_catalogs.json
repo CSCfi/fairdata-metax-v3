@@ -1,29 +1,23 @@
 [
     {
-        "title":
-        {
+        "title": {
             "en": "Data catalog for testing FSD integration",
             "fi": "Testi katalogi FSD-integraatiolle"
         },
-        "language":
-        [
+        "language": [
             {
                 "url": "http://lexvo.org/id/iso639-3/fin"
             }
         ],
         "harvested": true,
-        "publisher":
-        {
-            "name":
-            {
+        "publisher": {
+            "name": {
                 "en": "Testing",
                 "fi": "Testi"
             },
-            "homepage":
-            [
+            "homepage": [
                 {
-                    "title":
-                    {
+                    "title": {
                         "en": "Publisher organization website",
                         "fi": "Julkaisijaorganisaation kotisivu"
                     },
@@ -32,52 +26,48 @@
             ]
         },
         "id": "urn:nbn:fi:att:data-catalog-fsd",
-        "access_rights":
-        {
-            "license":
-            [
+        "access_rights": {
+            "license": [
                 {
                     "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC0-1.0"
                 }
             ],
-            "access_type":
-            {
+            "access_type": {
                 "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open"
             },
-            "description":
-            {
+            "description": {
                 "en": "Test data catalog used in FSD integration",
                 "fi": "Testi katalogi FSD-integraatiolle"
             }
         },
         "dataset_versioning_enabled": false,
-        "dataset_schema": "att"
+        "dataset_schema": "att",
+        "dataset_groups_create": [
+            "fsd"
+        ],
+        "dataset_groups_admin": [
+            "fsd"
+        ]
     },
     {
-        "title":
-        {
+        "title": {
             "en": "Data catalog for testing Kielipankki integration",
             "fi": "Testi katalogi Kielipankki-integraatiolle"
         },
-        "language":
-        [
+        "language": [
             {
                 "url": "http://lexvo.org/id/iso639-3/fin"
             }
         ],
         "harvested": true,
-        "publisher":
-        {
-            "name":
-            {
+        "publisher": {
+            "name": {
                 "en": "Testing",
                 "fi": "Testi"
             },
-            "homepage":
-            [
+            "homepage": [
                 {
-                    "title":
-                    {
+                    "title": {
                         "en": "Publisher organization website",
                         "fi": "Julkaisijaorganisaation kotisivu"
                     },
@@ -86,52 +76,48 @@
             ]
         },
         "id": "urn:nbn:fi:att:data-catalog-kielipankki",
-        "access_rights":
-        {
-            "license":
-            [
+        "access_rights": {
+            "license": [
                 {
                     "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC0-1.0"
                 }
             ],
-            "access_type":
-            {
+            "access_type": {
                 "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open"
             },
-            "description":
-            {
+            "description": {
                 "en": "Test data catalog used in Kielipankki integration",
                 "fi": "Testi katalogi Kielipankki-integraatiolle"
             }
         },
         "dataset_versioning_enabled": false,
-        "dataset_schema": "att"
+        "dataset_schema": "att",
+        "dataset_groups_create": [
+            "kielipankki"
+        ],
+        "dataset_groups_admin": [
+            "kielipankki"
+        ]
     },
     {
-        "title":
-        {
+        "title": {
             "en": "Data catalog for testing TUNI integration",
             "fi": "Testi katalogi Tampereen Yliopiston Metax-integraatiolle"
         },
-        "language":
-        [
+        "language": [
             {
                 "url": "http://lexvo.org/id/iso639-3/fin"
             }
         ],
         "harvested": true,
-        "publisher":
-        {
-            "name":
-            {
+        "publisher": {
+            "name": {
                 "en": "Testing",
                 "fi": "Testi"
             },
-            "homepage":
-            [
+            "homepage": [
                 {
-                    "title":
-                    {
+                    "title": {
                         "en": "Publisher organization website",
                         "fi": "Julkaisijaorganisaation kotisivu"
                     },
@@ -140,79 +126,78 @@
             ]
         },
         "id": "urn:nbn:fi:att:data-catalog-tuni",
-        "access_rights":
-        {
-            "license":
-            [
+        "access_rights": {
+            "license": [
                 {
                     "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC0-1.0"
                 }
             ],
-            "access_type":
-            {
+            "access_type": {
                 "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open"
             },
-            "description":
-            {
+            "description": {
                 "en": "Data catalog for testing TUNI integration",
                 "fi": "Testi katalogi Tampereen Yliopiston Metax-integraatiolle"
             }
         },
         "dataset_versioning_enabled": false,
-        "dataset_schema": "att"
+        "dataset_schema": "att",
+        "dataset_groups_create": [
+            "tuni"
+        ],
+        "dataset_groups_admin": [
+            "tuni"
+        ]
     },
     {
         "id": "urn:nbn:fi:att:data-catalog-ida",
-        "access_rights":
-        {
-            "description":
-            {
+        "access_rights": {
+            "description": {
                 "en": "Datasets stored in the IDA service",
                 "fi": "IDA-palvelussa säilytettävät aineistot"
             },
-            "license":
-            [
+            "license": [
                 {
                     "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC0-1.0"
                 }
             ],
-            "access_type":
-            {
+            "access_type": {
                 "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open"
             }
         },
-        "publisher":
-        {
-            "name":
-            {
+        "publisher": {
+            "name": {
                 "en": "Testing",
                 "fi": "Testi"
             },
-            "homepage":
-            [
+            "homepage": [
                 {
                     "url": "http://www.testi.fi/",
-                    "title":
-                    {
+                    "title": {
                         "en": "Publisher organization website",
                         "fi": "Julkaisijaorganisaation kotisivu"
                     }
                 }
             ]
         },
-        "language":
-        [
+        "language": [
             {
                 "url": "http://lexvo.org/id/iso639-3/fin"
             }
         ],
-        "title":
-        {
+        "title": {
             "en": "Datasets stored in the IDA service",
             "fi": "IDA-palvelussa säilytettävät aineistot"
         },
         "dataset_versioning_enabled": true,
         "harvested": false,
-        "dataset_schema": "att"
+        "dataset_schema": "att",
+        "dataset_groups_create": [
+            "fairdata_users",
+            "ida"
+        ],
+        "dataset_groups_admin": [
+            "ida"
+        ]
     }
 ]

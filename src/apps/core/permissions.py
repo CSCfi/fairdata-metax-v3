@@ -20,7 +20,7 @@ class DatasetAccessPolicy(BaseAccessPolicy):
             ],
             "principal": "authenticated",
             "effect": "allow",
-            "condition": "is_metadata_owner",
+            "condition": "is_edit_allowed",
         },
         {
             # Note that there is no actual "download" action in the viewset at the moment.
@@ -38,10 +38,18 @@ class DatasetAccessPolicy(BaseAccessPolicy):
             "action": ["<op:flush>"],  # hard delete dataset
             "principal": "group:service",
             "effect": "allow",
-            "condition": "is_metadata_owner",
+            "condition": "is_edit_allowed",
         },
-        {"action": ["create"], "principal": "authenticated", "effect": "allow"},
+        {
+            "action": ["create"],
+            "principal": "authenticated",
+            "effect": "allow",  # Catalog permission checked in viewset perform_create
+        },
     ] + BaseAccessPolicy.statements
+
+    def is_edit_allowed(self, request, view, action) -> bool:
+        dataset = view.get_object()
+        return dataset.has_permission_to_edit(request.user)
 
     def is_metadata_owner(self, request, view, action) -> bool:
         dataset = view.get_object()
@@ -65,11 +73,13 @@ class DatasetAccessPolicy(BaseAccessPolicy):
             return q
         elif request.user.is_anonymous:
             return queryset.filter(state=Dataset.StateChoices.PUBLISHED)
+        groups = request.user.groups.all()
         return queryset.filter(
             Q(state=Dataset.StateChoices.PUBLISHED)
             | Q(metadata_owner__user=request.user)
             | Q(system_creator=request.user)
             | Q(published_revision__gt=0)
+            | Q(data_catalog__dataset_groups_admin__in=groups)
         )
 
     @classmethod
@@ -94,7 +104,39 @@ class DataCatalogAccessPolicy(BaseAccessPolicy):
             "effect": "allow",
             "condition": "is_system_creator",
         },
+        {
+            "action": ["<op:create_dataset>"],
+            "principal": "authenticated",
+            "effect": "allow",
+            "condition": "is_creating_datasets_allowed",
+        },
+        {
+            "action": ["<op:admin_dataset>"],
+            "principal": "authenticated",
+            "effect": "allow",
+            "condition": "is_dataset_admin",
+        },
     ] + BaseAccessPolicy.statements
+
+    def is_creating_datasets_allowed(self, request, view, action) -> bool:
+        """Return True if user is allowed to create datasets in this catalog."""
+        user = request.user
+        if user.is_superuser:
+            return True
+
+        catalog = view.get_object()
+        user_groups = user.groups.all()
+        return catalog.dataset_groups_create.intersection(user_groups).exists()
+
+    def is_dataset_admin(self, request, view, action) -> bool:
+        """Return True if user is allowed to edit all datasets in this catalog."""
+        user = request.user
+        if user.is_superuser:
+            return True
+
+        catalog = view.get_object()
+        user_groups = user.groups.all()
+        return catalog.dataset_groups_admin.intersection(user_groups).exists()
 
 
 class LegacyDatasetAccessPolicy(BaseAccessPolicy):

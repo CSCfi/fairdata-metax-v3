@@ -23,20 +23,35 @@ from apps.users.models import MetaxUser
 
 
 @pytest.fixture
-def user():
+def fairdata_users_group():
+    group, _ = Group.objects.get_or_create(name="fairdata_users")
+    return group
+
+
+@pytest.fixture
+def service_group():
+    group, _ = Group.objects.get_or_create(name="service")
+    return group
+
+
+@pytest.fixture
+def user(fairdata_users_group):
     user, created = MetaxUser.objects.get_or_create(
         username="test_user", first_name="Teppo", last_name="Testaaja", is_hidden=False
     )
+    user.groups.set([fairdata_users_group])
     user.set_password("teppo")
     user.save()
     return user
 
 
 @pytest.fixture
-def user2():
+def user2(fairdata_users_group):
     user, created = MetaxUser.objects.get_or_create(
         username="test_user2", first_name="Matti", last_name="Mestaaja", is_hidden=False
     )
+    group, _ = Group.objects.get_or_create(name="fairdata_users")
+    user.groups.set([fairdata_users_group])
     user.set_password("matti")
     user.save()
     return user
@@ -56,8 +71,9 @@ def faker_seed():
 def service_client():
     client = Client()
     user = MetaxUserFactory(username="service_test")
-    group, _ = Group.objects.get_or_create(name="service")
-    user.groups.set([group])
+    group_service, _ = Group.objects.get_or_create(name="service")
+    group_test, _ = Group.objects.get_or_create(name="test")
+    user.groups.set([group_test, group_service])
     client.force_login(user)
     return client
 
@@ -92,16 +108,18 @@ def pytest_collection_modifyitems(items):
 
 
 @pytest.fixture
-def data_catalog() -> DataCatalog:
+def data_catalog(fairdata_users_group, service_group) -> DataCatalog:
     identifier = "urn:nbn:fi:att:data-catalog-ida"
     title = {
         "en": "Fairdata IDA datasets",
         "fi": "Fairdata IDA-aineistot",
         "sv": "Fairdata forskningsdata",
     }
-    return factories.DataCatalogFactory(
+    catalog = factories.DataCatalogFactory(
         id=identifier, title=title, dataset_versioning_enabled=True
     )
+    catalog.dataset_groups_create.set([fairdata_users_group, service_group])
+    return catalog
 
 
 @pytest.mark.django_db

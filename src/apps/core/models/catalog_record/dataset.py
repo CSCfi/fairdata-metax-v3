@@ -18,6 +18,7 @@ from apps.common.models import AbstractBaseModel
 from apps.core.mixins import V2DatasetMixin
 from apps.core.models.access_rights import AccessRights
 from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
+from apps.core.permissions import DataCatalogAccessPolicy
 from apps.core.services.pid_ms_client import PIDMSClient, ServiceUnavailableError
 from apps.files.models import File
 
@@ -184,9 +185,12 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
             return False
         elif user == self.system_creator:
             return True
-        elif self.metadata_owner:
-            if self.metadata_owner.user == user:
-                return True
+        elif self.metadata_owner and self.metadata_owner.user == user:
+            return True
+        elif DataCatalogAccessPolicy().query_object_permission(
+            user=user, object=self.data_catalog, action="<op:admin_dataset>"
+        ):
+            return True
         return False
 
     def has_permission_to_see_drafts(self, user: settings.AUTH_USER_MODEL):

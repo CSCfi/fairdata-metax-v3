@@ -47,7 +47,7 @@ class MetadataProviderModelSerializer(StrictSerializer, AbstractDatasetModelSeri
         """End-users should not be allowed to use custom values."""
         request = self.context["request"]
         return DatasetAccessPolicy().query_object_permission(  # note that instance may be null
-            request, object=self.instance, action="<op:custom_metadata_owner>"
+            user=request.user, object=self.instance, action="<op:custom_metadata_owner>"
         )
 
     def save(self, **kwargs):

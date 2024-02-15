@@ -38,12 +38,12 @@ class DatasetAllowedActionsSerializer(serializers.Serializer):
 
     def get_update(self, obj: Dataset):
         return self.access_policy().query_object_permission(
-            request=self.context["request"], object=obj, action="update"
+            user=self.context["request"].user, object=obj, action="update"
         )
 
     def get_download(self, obj: Dataset):
         return self.access_policy().query_object_permission(
-            request=self.context["request"], object=obj, action="<op:download>"
+            user=self.context["request"].user, object=obj, action="<op:download>"
         )
 
 

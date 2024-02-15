@@ -20,12 +20,15 @@ class UserInfoSerializer(CommonModelSerializer):
 
     dataset_count = serializers.SerializerMethodField()
 
+    # Metax internal user groups
+    groups = serializers.SlugRelatedField(slug_field="name", many=True, read_only=True)
+
     def get_dataset_count(self, obj):
         return obj.metadataprovider_set.count()
 
     class Meta:
         model = MetaxUser
-        fields = ("username", "csc_projects", "dataset_count")
+        fields = ("username", "csc_projects", "dataset_count", "groups")
         read_only_fields = fields
 
 
@@ -49,7 +52,14 @@ class AuthenticatedUserInfoSerializer(UserInfoSerializer):
 
     class Meta:
         model = MetaxUser
-        fields = ("username", "organization", "csc_projects", "metax_csrf_token", "dataset_count")
+        fields = (
+            "username",
+            "organization",
+            "csc_projects",
+            "groups",
+            "metax_csrf_token",
+            "dataset_count",
+        )
         read_only_fields = fields
 
 
