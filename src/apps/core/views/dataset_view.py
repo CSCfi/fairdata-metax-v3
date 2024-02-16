@@ -336,16 +336,6 @@ class DatasetViewSet(CommonModelViewSet):
     http_method_names = ["get", "post", "put", "patch", "delete", "options"]
     pagination_class = AggregatingDatasetPagination
 
-    def get_object(self) -> Dataset:
-        queryset = self.get_queryset()
-
-        try:
-            obj = queryset.get(legacydataset__dataset_json__identifier=self.kwargs["pk"])
-            self.check_object_permissions(self.request, obj)
-            return obj
-        except (Dataset.DoesNotExist, FieldError):
-            return super().get_object()
-
     def filter_queryset(self, queryset):
         queryset = super().filter_queryset(queryset)
         if self.query_params.get("latest_versions"):

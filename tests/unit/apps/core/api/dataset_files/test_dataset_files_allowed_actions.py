@@ -1,6 +1,5 @@
 """Tests for updating dataset files with /dataset/<id>/files endpoint."""
 
-
 import pytest
 
 from apps.core import factories
@@ -34,6 +33,7 @@ def do_action(admin_client, deep_file_tree):
                 content_type="application/json",
             )
             assert res.status_code == 200
+            dataset.refresh_from_db()
 
         if state == "draft_of":
             dataset = dataset.create_new_draft()
@@ -344,6 +344,7 @@ def test_merge_close(do_action, admin_client, deep_file_tree):
     )
     assert res.status_code == 200
     assert res.data["cumulative_state"] == Dataset.CumulativeState.ACTIVE
+    assert res.data["fileset"] != None
 
     # Set draft to close cumulation
     orig_res = admin_client.patch(
@@ -354,9 +355,11 @@ def test_merge_close(do_action, admin_client, deep_file_tree):
         content_type="application/json",
     )
     assert orig_res.status_code == 200
+    assert res.data["fileset"] != None
 
     res = admin_client.post(
         f"/v3/datasets/{res.data['id']}/publish",
         content_type="application/json",
     )
     assert res.status_code == 200
+    assert res.data["fileset"] != None

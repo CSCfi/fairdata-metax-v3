@@ -9,7 +9,6 @@ import logging
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
-from rest_framework.fields import empty
 
 from apps.common.serializers import CommonListSerializer, CommonNestedModelSerializer, OneOf
 from apps.core.models import DataCatalog, Dataset
@@ -21,6 +20,7 @@ from apps.core.serializers.common_serializers import (
     RemoteResourceSerializer,
     TemporalModelSerializer,
 )
+from rest_framework.settings import api_settings
 from apps.core.serializers.concept_serializers import SpatialModelSerializer
 from apps.core.serializers.data_catalog_serializer import DataCatalogModelSerializer
 from apps.core.serializers.dataset_actor_serializers import DatasetActorSerializer
@@ -83,7 +83,7 @@ class DatasetSerializer(CommonNestedModelSerializer):
     field_of_science = FieldOfScience.get_serializer_field(required=False, many=True)
     infrastructure = ResearchInfra.get_serializer_field(required=False, many=True)
     actors = DatasetActorSerializer(required=False, many=True)
-    fileset = FileSetSerializer(required=False, source="file_set")
+    fileset = FileSetSerializer(required=False, source="file_set", allow_null=True)
     remote_resources = RemoteResourceSerializer(many=True, required=False)
     language = Language.get_serializer_field(required=False, many=True)
     metadata_owner = MetadataProviderModelSerializer(required=False)
@@ -255,45 +255,56 @@ class DatasetSerializer(CommonNestedModelSerializer):
         ds_is_published = self._ds_is_published(data)
         if self.context["request"].method in {"POST", "PUT"}:
             if data.get("persistent_identifier") != None and data.get("data_catalog") == None:
-                errors["persistent_identifier"] = serializers.ValidationError(
-                    detail="Can't assign persistent_identifier if data_catalog isn't given"
-                )
+                errors[
+                    "persistent_identifier"
+                ] = "Can't assign persistent_identifier if data_catalog isn't given"
             elif data.get("data_catalog") != None:
                 if data.get("persistent_identifier") != None and dc_is_harvested == False:
-                    errors["persistent_identifier"] = serializers.ValidationError(
-                        detail="persistent_identifier can't be assigned to a dataset in a non-harvested data catalog"
-                    )
+                    errors[
+                        "persistent_identifier"
+                    ] = "persistent_identifier can't be assigned to a dataset in a non-harvested data catalog"
                 if data.get("persistent_identifier") == None and dc_is_harvested == True:
-                    errors["persistent_identifier"] = serializers.ValidationError(
-                        detail="Dataset in a harvested catalog has to have a persistent identifier"
-                    )
+                    errors[
+                        "persistent_identifier"
+                    ] = "Dataset in a harvested catalog has to have a persistent identifier"
+
             if dc_is_harvested == False and ds_is_published and data.get("pid_type") == None:
-                errors["pid_type"] = serializers.ValidationError(
-                    detail="If data catalog is not harvested and dataset is published, pid_type needs to be given"
-                )
+                errors[
+                    "pid_type"
+                ] = "If data catalog is not harvested and dataset is published, pid_type needs to be given"
 
         elif self.context["request"].method in {"PATCH"}:
             if data.get("persistent_identifier") != None and dc_is_harvested == False:
-                errors["persistent_identifier"] = serializers.ValidationError(
-                    detail="persistent_identifier can't be assigned to a dataset in a non-harvested data catalog"
-                )
+                errors[
+                    "persistent_identifier"
+                ] = "persistent_identifier can't be assigned to a dataset in a non-harvested data catalog"
+
             if (
                 self.instance.persistent_identifier == None
                 and data.get("persistent_identifier") == None
                 and dc_is_harvested == True
             ):
-                errors["persistent_identifier"] = serializers.ValidationError(
-                    detail="Dataset in a harvested catalog has to have a persistent identifier"
-                )
+                errors[
+                    "persistent_identifier"
+                ] = "Dataset in a harvested catalog has to have a persistent identifier"
 
         return errors
 
-    def _validate_catalog(self, data, errors):
-        if self.context["request"].method == "POST":
-            if data.get("data_catalog") == None and data.get("state") == "published":
-                errors["data_catalog"] = serializers.ValidationError(
-                    detail="Dataset has to have a data catalog when publishing"
-                )
+    def _validate_data(self, data, errors):
+        """Check data constraints."""
+        existing_fileset = None
+        existing_remote_resources = None
+        if self.instance:
+            existing_fileset = getattr(self.instance, "file_set", None)
+            existing_remote_resources = self.instance.remote_resources.all()
+
+        fileset = data.get("file_set", existing_fileset)
+        remote_resources = data.get("remote_resources", existing_remote_resources)
+        if fileset and remote_resources:
+            print(fileset, remote_resources)
+            errors[
+                api_settings.NON_FIELD_ERRORS_KEY
+            ] = "Cannot have files and remote resources in the same dataset."
         return errors
 
     def to_internal_value(self, data):
@@ -304,9 +315,9 @@ class DatasetSerializer(CommonNestedModelSerializer):
         _data = super().to_internal_value(data)
 
         errors = {}
-        errors = self._validate_catalog(_data, errors)
         errors = self._validate_timestamps(_data, errors)
         errors = self._validate_pids(_data, errors)
+        errors = self._validate_data(_data, errors)
 
         if errors:
             raise serializers.ValidationError(errors)

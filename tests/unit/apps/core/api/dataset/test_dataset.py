@@ -518,6 +518,7 @@ def test_dataset_patch_maximal_and_minimal(
 def test_dataset_put_remove_fileset(
     admin_client, dataset_maximal_json, reference_data, data_catalog
 ):
+    dataset_maximal_json.pop("remote_resources")
     FileStorageFactory(storage_service="ida", csc_project="project")
     dataset_maximal_json["fileset"] = {
         "storage_service": "ida",

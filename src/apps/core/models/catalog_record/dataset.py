@@ -8,7 +8,6 @@ from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 from model_utils import FieldTracker
 from rest_framework.exceptions import ValidationError
-from simple_history.models import HistoricalRecords
 from typing_extensions import Self
 
 from apps.common.copier import ModelCopier
@@ -21,6 +20,8 @@ from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, T
 from apps.core.permissions import DataCatalogAccessPolicy
 from apps.core.services.pid_ms_client import PIDMSClient, ServiceUnavailableError
 from apps.files.models import File
+from apps.users.models import MetaxUser
+
 
 from .meta import CatalogRecord, OtherIdentifier
 
@@ -178,7 +179,7 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         "self", related_name="next_draft", on_delete=models.CASCADE, null=True, blank=True
     )
 
-    def has_permission_to_edit(self, user: settings.AUTH_USER_MODEL):
+    def has_permission_to_edit(self, user: MetaxUser):
         if user.is_superuser:
             return True
         elif not user.is_authenticated:
@@ -193,7 +194,7 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
             return True
         return False
 
-    def has_permission_to_see_drafts(self, user: settings.AUTH_USER_MODEL):
+    def has_permission_to_see_drafts(self, user: MetaxUser):
         return self.has_permission_to_edit(user)
 
     @staticmethod
@@ -325,8 +326,8 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         """Check that merging draft would not cause invalid file changes."""
         dft = self.next_draft
         no_files = File.objects.none()
-        self_files = (hasattr(self, "file_set") and self.file_set.files.all()) or no_files
-        dft_files = (hasattr(dft, "file_set") and dft.file_set.files.all()) or no_files
+        self_files = (getattr(self, "file_set", None) and self.file_set.files.all()) or no_files
+        dft_files = (getattr(dft, "file_set", None) and dft.file_set.files.all()) or no_files
         files_removed = self_files.difference(dft_files).exists()
         if files_removed:
             raise ValidationError(

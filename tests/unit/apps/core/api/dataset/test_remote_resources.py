@@ -5,6 +5,7 @@ from rest_framework import serializers
 from tests.utils.utils import assert_nested_subdict
 
 from apps.core.serializers import SpatialModelSerializer
+from apps.files.factories import FileStorageFactory
 
 logger = logging.getLogger(__name__)
 
@@ -81,3 +82,15 @@ def test_remote_resources_invalid_media_type(
     assert "Value should contain a media type" in str(
         resp.data["remote_resources"][0]["mediatype"]
     )
+
+
+def test_remote_resources_and_files(
+    admin_client, remote_dataset_json, data_catalog, reference_data
+):
+    FileStorageFactory(storage_service="ida", csc_project="project")
+    remote_dataset_json["fileset"] = {"storage_service": "ida", "csc_project": "project"}
+    resp = admin_client.post("/v3/datasets", remote_dataset_json, content_type="application/json")
+    assert resp.status_code == 400
+    assert resp.json() == {
+        "non_field_errors": "Cannot have files and remote resources in the same dataset."
+    }

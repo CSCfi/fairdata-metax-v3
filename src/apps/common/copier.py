@@ -113,6 +113,12 @@ class ModelCopier:
         for key, value in new_values.items():
             setattr(copy, key, value)
 
+        # Copied models using inheritance don't have the parent one-to-one relation
+        # until save. Make an initial save using the plain Django model save
+        # so any saving logic using fields from parent model will work.
+        if original._meta.parents:
+            Model.save(copy)
+
         copy.save()
         copied_objects[self.model.__name__][str(original.id)] = copy
 
