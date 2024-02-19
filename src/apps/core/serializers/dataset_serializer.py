@@ -150,7 +150,6 @@ class DatasetSerializer(CommonNestedModelSerializer):
     def to_representation(self, instance: Dataset):
         request = self.context["request"]
         self.context["show_emails"] = instance.has_permission_to_edit(request.user)
-
         ret = super().to_representation(instance)
 
         # Drafts should be hidden from users without access to them

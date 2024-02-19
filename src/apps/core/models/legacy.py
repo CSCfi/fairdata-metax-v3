@@ -748,6 +748,9 @@ class LegacyDataset(Dataset):
         if v2_org["@type"] == "Person":
             raise InvalidActorTypeError()
 
+        parent = None
+        if is_part_of := v2_org.get("is_part_of"):
+            parent = cls.get_or_create_v3_org_from_v2_org(is_part_of)
         try:
             org, created = Organization.objects.get_or_create(
                 pref_label__values__contains=list(v2_org["name"].values()),
@@ -757,6 +760,7 @@ class LegacyDataset(Dataset):
                     "homepage": v2_org.get("homepage"),
                     "url": v2_org.get("identifier"),
                     "in_scheme": settings.ORGANIZATION_SCHEME,
+                    "parent": parent,
                 },
             )
             if created:

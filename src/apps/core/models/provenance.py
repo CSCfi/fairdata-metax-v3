@@ -55,7 +55,9 @@ class Provenance(AbstractBaseModel):
     outcome_description = HStoreField(
         help_text=_('example: {"en":"successfully collected",}'), null=True, blank=True
     )
-    is_associated_with = models.ManyToManyField(DatasetActor, related_name="provenance", blank=True)
+    is_associated_with = models.ManyToManyField(
+        DatasetActor, related_name="provenance", blank=True
+    )
     dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE, related_name="provenance")
 
     @classmethod

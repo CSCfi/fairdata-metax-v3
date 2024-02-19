@@ -83,13 +83,25 @@
       "@type": "Person",
       "member_of": {
         "name": {
-          "en": "CSC – IT Center for Science",
-          "fi": "CSC - Tieteen tietotekniikan keskus Oy",
-          "sv": "CSC – IT Center for Science",
-          "und": "CSC - Tieteen tietotekniikan keskus Oy"
+          "en": "Test Sub-Group"
         },
         "@type": "Organization",
-        "identifier": "http://uri.suomi.fi/codelist/fairdata/organization/code/09206320"
+        "is_part_of": {
+          "name": {
+            "en": "Test-Group"
+          },
+          "@type": "Organization",
+          "is_part_of": {
+            "name": {
+              "en": "CSC – IT Center for Science",
+              "fi": "CSC - Tieteen tietotekniikan keskus Oy",
+              "sv": "CSC – IT Center for Science",
+              "und": "CSC - Tieteen tietotekniikan keskus Oy"
+            },
+            "@type": "Organization",
+            "identifier": "http://uri.suomi.fi/codelist/fairdata/organization/code/09206320"
+          }
+        }
       }
     },
     "provenance": [

@@ -4,6 +4,7 @@ from typing import Dict
 
 from django.conf import settings
 from django.contrib.postgres.fields import HStoreField
+from django.core.exceptions import MultipleObjectsReturned
 from django.db import models
 from django.db.models import Model
 from django.utils.translation import gettext as _
@@ -163,6 +164,22 @@ class Organization(AbstractBaseModel):
         pref_label = self.pref_label or {}
         return pref_label.get("en") or pref_label.get("fi") or next(iter(pref_label.values()), "")
 
+    def as_v2_data(self):
+        """Returns v2 organization dictionary"""
+        data = {}
+        data["@type"] = "Organization"
+        data["name"] = self.pref_label
+        if url := self.url:
+            data["identifier"] = url
+        if homepage := self.homepage:
+            if title := homepage.get("title"):
+                if isinstance(title, str):
+                    homepage["title"] = eval(title)
+            data["homepage"] = homepage
+        if parent := self.parent:
+            data["is_part_of"] = parent.as_v2_data()
+        return data
+
     def __str__(self):
         return f"<{self.__class__.__name__} {self.id}: {self.get_label()}>"
 
@@ -211,22 +228,10 @@ class Actor(AbstractBaseModel):
             data["name"] = self.person.name
             data["@type"] = "Person"
             if self.organization:
-                data["member_of"] = {
-                    "name": self.organization.pref_label,
-                    "@type": "Organization",
-                }
-                if url := self.organization.url:
-                    data["member_of"]["identifier"] = url
+                data["member_of"] = self.organization.as_v2_data()
+
         elif self.organization:
-            data["@type"] = "Organization"
-            data["name"] = self.organization.pref_label
-            if url := self.organization.url:
-                data["identifier"] = url
-            if homepage := self.organization.homepage:
-                if title := homepage.get("title"):
-                    if isinstance(title, str):
-                        homepage["title"] = eval(title)
-                data["homepage"] = homepage
+            data = self.organization.as_v2_data()
         return data
 
     def __str__(self):
