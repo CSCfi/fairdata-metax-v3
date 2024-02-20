@@ -6,9 +6,11 @@ from dateutil.parser import parse
 from django.conf import settings
 from django.middleware.csrf import rotate_token
 from django.utils.translation import get_language, gettext_lazy as _
+from knox.auth import TokenAuthentication
 from rest_framework import authentication, exceptions
 
 from apps.users.models import MetaxUser
+from apps.users.sso_client import SSOClient
 
 logger = logging.getLogger(__name__)
 
@@ -93,10 +95,11 @@ class SSOAuthentication(authentication.SessionAuthentication):
     def get_or_create_user(self, sso_session) -> MetaxUser:
         """Get or create user object and update user details."""
         sso_user = sso_session.get("authenticated_user", {})
-        fairdata_user = sso_session.get("fairdata_user", {})
-        username = fairdata_user.get("id")
+        username = sso_user.get("id")
 
-        if not username:
+        fairdata_user = sso_session.get("fairdata_user", {})
+        fairdata_username = fairdata_user.get("id")
+        if not fairdata_username:
             logger.warning("Authentication failed: missing fairdata user id")
             raise exceptions.AuthenticationFailed(
                 detail=_("Missing user identifier."), code="missing_fairdata_user_id"
@@ -118,7 +121,7 @@ class SSOAuthentication(authentication.SessionAuthentication):
 
         return user
 
-    def sync_user_details(self, user, sso_session) -> bool:
+    def sync_user_details(self, user: MetaxUser, sso_session: dict) -> bool:
         """Update user details from SSO session.
 
         Updates only if SSO session is newer than latest sync.
@@ -135,10 +138,11 @@ class SSOAuthentication(authentication.SessionAuthentication):
             )
 
             fairdata_user = sso_session.get("fairdata_user", {})
+            user.fairdata_username = fairdata_user.get("id")
             user.is_active = not fairdata_user.get("locked", True)
 
-            ida_projects = sso_session.get("services", {}).get("IDA", {}).get("projects", [])
-            user.ida_projects = ida_projects
+            csc_projects = sso_session.get("services", {}).get("IDA", {}).get("projects", [])
+            user.csc_projects = csc_projects
 
             user.synced = initiated
             user.save()
@@ -182,3 +186,42 @@ class SSOAuthentication(authentication.SessionAuthentication):
         host = settings.SSO_HOST
         logout_url = f"{host}/logout?{query}"
         return logout_url
+
+
+class SSOSyncMixin:
+    """Mixin authentication class that syncs user data from SSO after authentication."""
+
+    def authenticate(self, request):
+        auth = super().authenticate(request)
+        if auth:
+            user, _token = auth
+            client = SSOClient()
+            client.sync_user(user)
+
+            if not user.is_active:
+                logger.warning(f"Authentication failed: user inactive {user}.")
+                raise exceptions.AuthenticationFailed(
+                    _("User account has been deactivated."), code="fairdata_user_locked"
+                )
+        return auth
+
+
+def add_sso_sync(authentication: authentication.BaseAuthentication):
+    """Create new class that extends authentication with SSOSyncAuthenticationMixin."""
+    synced_authentication = type(
+        f"SSOSync{authentication.__name__}",
+        (
+            SSOSyncMixin,
+            authentication,
+        ),
+        {},
+    )
+    return synced_authentication
+
+
+# DRF authentication happens after all middleware has been executed and doesn't provide an easy way
+# to run code after authentication has been done. Here we customize existing used authentication
+# backends to sync user from SSO after auth if needed.
+SSOSyncBasicAuthentication = add_sso_sync(authentication.BasicAuthentication)
+SSOSyncSessionAuthentication = add_sso_sync(authentication.SessionAuthentication)
+SSOSyncKnoxTokenAuthentication = add_sso_sync(TokenAuthentication)

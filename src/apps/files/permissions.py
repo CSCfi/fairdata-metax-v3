@@ -41,8 +41,8 @@ class FilesAccessPolicy(BaseFilesAccessPolicy):
             else:
                 return queryset.none()
         else:
-            ida_projects = getattr(request.user, "ida_projects", [])
-            return queryset.filter(storage__csc_project__in=ida_projects)
+            csc_projects = getattr(request.user, "csc_projects", [])
+            return queryset.filter(storage__csc_project__in=csc_projects)
 
 
 class DirectoriesAccessPolicy(BaseFilesAccessPolicy):
@@ -60,5 +60,5 @@ class DirectoriesAccessPolicy(BaseFilesAccessPolicy):
         if dataset_id := params["dataset"]:
             return self.can_view_dataset(request, dataset_id)
         else:
-            ida_projects = getattr(request.user, "ida_projects", [])
-            return params["csc_project"] in ida_projects
+            csc_projects = getattr(request.user, "csc_projects", [])
+            return params["csc_project"] in csc_projects

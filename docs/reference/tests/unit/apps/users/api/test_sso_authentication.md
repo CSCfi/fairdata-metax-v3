@@ -36,3 +36,19 @@
 
 ### :::tests.unit.apps.users.api.test_sso_authentication.test_sso_user_not_logged_in
 
+## user_status_json
+
+### :::tests.unit.apps.users.api.test_sso_authentication.user_status_json
+
+## test_sso_sync
+
+### :::tests.unit.apps.users.api.test_sso_authentication.test_sso_sync
+
+## test_sso_sync_locked_account
+
+### :::tests.unit.apps.users.api.test_sso_authentication.test_sso_sync_locked_account
+
+## test_sso_sync_disabled
+
+### :::tests.unit.apps.users.api.test_sso_authentication.test_sso_sync_disabled
+

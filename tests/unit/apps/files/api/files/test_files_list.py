@@ -14,7 +14,7 @@ def project_user(file_tree_a):
         first_name="Project User",
         last_name="Testaaja",
         is_hidden=False,
-        ida_projects=[file_tree_a["storage"].csc_project],
+        csc_projects=[file_tree_a["storage"].csc_project],
     )
     return user
 

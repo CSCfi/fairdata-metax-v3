@@ -25,7 +25,7 @@ class UserInfoSerializer(CommonModelSerializer):
 
     class Meta:
         model = MetaxUser
-        fields = ("username", "ida_projects", "dataset_count")
+        fields = ("username", "csc_projects", "dataset_count")
         read_only_fields = fields
 
 
@@ -49,7 +49,7 @@ class AuthenticatedUserInfoSerializer(UserInfoSerializer):
 
     class Meta:
         model = MetaxUser
-        fields = ("username", "organization", "ida_projects", "metax_csrf_token", "dataset_count")
+        fields = ("username", "organization", "csc_projects", "metax_csrf_token", "dataset_count")
         read_only_fields = fields
 
 

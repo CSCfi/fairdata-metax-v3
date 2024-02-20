@@ -13,7 +13,8 @@ class MetaxUser(AbstractUser, SoftDeletableModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     # if True, don't display User details
     is_hidden = models.BooleanField(default=False)
-    ida_projects = ArrayField(models.CharField(max_length=256), default=list, blank=True)
+    fairdata_username = models.CharField(max_length=64, blank=True, null=True)
+    csc_projects = ArrayField(models.CharField(max_length=256), default=list, blank=True)
     synced = models.DateTimeField(
         null=True,
         blank=True,

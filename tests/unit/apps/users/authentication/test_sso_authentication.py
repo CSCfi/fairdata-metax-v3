@@ -6,6 +6,7 @@ import pytest
 from dateutil.parser import parse
 from django.conf import settings as django_settings
 from rest_framework import exceptions
+from rest_framework.reverse import reverse
 from rest_framework.test import APIRequestFactory
 
 from apps.users.authentication import SSOAuthentication
@@ -39,7 +40,7 @@ def make_sso_auth_request(enable_sso):
 def test_sso_authentication_ok(make_sso_auth_request, sso_session_teppo):
     user, error = make_sso_auth_request(sso_session_teppo)
     assert user.username == "fd_teppo3"
-    assert user.ida_projects == ["fd_teppo3_project"]
+    assert user.csc_projects == ["fd_teppo3_project"]
     assert error == None
 
 
@@ -52,7 +53,7 @@ def test_sso_authentication_sync(make_sso_auth_request, sso_session_teppo, sso_f
 
     # session is newer than previous sync, should sync user details
     user, error = make_sso_auth_request(sso_session_teppo)
-    assert user.ida_projects == ["fd_teppo3_project", "new_project"]
+    assert user.csc_projects == ["fd_teppo3_project", "new_project"]
     assert error == None
 
 
@@ -62,7 +63,7 @@ def test_sso_authentication_dont_sync_old(make_sso_auth_request, sso_session_tep
 
     # session is not newer than previous sync, should not sync user details
     user, error = make_sso_auth_request(sso_session_teppo)
-    assert user.ida_projects == ["fd_teppo3_project"]
+    assert user.csc_projects == ["fd_teppo3_project"]
     assert error == None
 
 

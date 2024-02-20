@@ -237,9 +237,9 @@ AUTH_USER_MODEL = "users.MetaxUser"
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "apps.users.authentication.SSOAuthentication",
-        "rest_framework.authentication.BasicAuthentication",
-        "rest_framework.authentication.SessionAuthentication",
-        "knox.auth.TokenAuthentication",
+        "apps.users.authentication.SSOSyncBasicAuthentication",
+        "apps.users.authentication.SSOSyncSessionAuthentication",
+        "apps.users.authentication.SSOSyncKnoxTokenAuthentication",
     ],
     "DEFAULT_PAGINATION_CLASS": "apps.common.pagination.DefaultOffsetPagination",
     "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
@@ -321,6 +321,9 @@ SSO_HOST = env.str("SSO_HOST", None)
 SSO_SESSION_COOKIE = env.str("SSO_SESSION_COOKIE", None)
 SSO_SECRET_KEY = env.str("SSO_SECRET_KEY", None)
 SSO_METAX_SERVICE_NAME = env.str("SSO_METAX_SERVICE_NAME", None)
+
+# Token required by SSO /user_status and /project_status endpoints
+SSO_TRUSTED_SERVICE_TOKEN = env.str("SSO_TRUSTED_SERVICE_TOKEN", None)
 
 # CSRF configuration
 # Note: CSRF_TRUSTED_ORIGINS require a scheme (e.g. https://someurl.com) in Django 4.0

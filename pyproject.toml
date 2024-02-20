@@ -57,6 +57,7 @@ django-json-widget = "^1.1.1"
 datacite = "^1.1.3"
 elementpath = "^4.1.5"
 lxml = "^5.1.0"
+requests-mock = "^1.11.0"
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.12.0"

@@ -21,6 +21,7 @@ def enable_sso(settings):
     settings.SSO_SESSION_COOKIE = "sso_session_test"
     settings.SSO_HOST = "https://fake-sso"
     settings.SSO_METAX_SERVICE_NAME = "METAX"
+    settings.SSO_TRUSTED_SERVICE_TOKEN = "trusted-token"
 
 
 @pytest.fixture

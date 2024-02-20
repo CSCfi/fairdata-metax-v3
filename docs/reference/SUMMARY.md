@@ -132,6 +132,7 @@
         - [models](src/apps/users/models.md)
         - [permissions](src/apps/users/permissions.md)
         - [serializers](src/apps/users/serializers.md)
+        - [sso_client](src/apps/users/sso_client.md)
         - [templatetags.users](src/apps/users/templatetags/users.md)
         - [views](src/apps/users/views.md)
 - tests
