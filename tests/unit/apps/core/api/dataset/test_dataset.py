@@ -6,6 +6,7 @@ import pytest
 from rest_framework.reverse import reverse
 from tests.utils import assert_nested_subdict, matchers
 
+from watson.models import SearchEntry
 from apps.core import factories
 from apps.core.factories import DatasetFactory, MetadataProviderFactory
 from apps.core.models import OtherIdentifier
@@ -716,3 +717,28 @@ def test_dataset_expanded_catalog(admin_client, dataset_a_json, data_catalog, re
     res3 = admin_client.get(f"/v3/datasets/{res1.data['id']}?expand_catalog=true")
     assert res3.status_code == 200
     assert isinstance(res3.data["data_catalog"], dict)
+
+
+def test_many_actors(admin_client, dataset_a_json, data_catalog, reference_data):
+    dataset_a_json["actors"] = [
+        {"person": {"name": f"Test person {i}"}, "roles": ["creator"]} for i in range(100)
+    ]
+    dataset_a_json["actors"][0]["roles"].append("publisher")
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+
+
+def test_dataset_search_entry(admin_client, dataset_a_json, data_catalog, reference_data):
+    """Check that search entry contains correct values from dataset."""
+    dataset_a_json["other_identifiers"] = [{"notation": "doi:other_identifier"}]
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    dataset_id = res.data["id"]
+
+    entry = SearchEntry.objects.get(object_id=dataset_id)
+    assert res.data["persistent_identifier"] in entry.title  # pid
+    assert "Test dataset" in entry.title # title
+    assert "test subjects (persons)" in entry.title  # theme
+    assert "Test dataset desc" in entry.description  # description
+    assert "keyword another_keyword" in entry.description  # keywords
+    assert "doi:other_identifier" in entry.content  # entity.notation

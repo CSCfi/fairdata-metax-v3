@@ -172,3 +172,11 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_dataset_expanded_catalog
 
+## test_many_actors
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_many_actors
+
+## test_dataset_search_entry
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_dataset_search_entry
+
