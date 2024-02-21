@@ -44,10 +44,6 @@
 
 ### :::tests.unit.apps.core.models.conftest.contract
 
-## catalog_record
-
-### :::tests.unit.apps.core.models.conftest.catalog_record
-
 ## dataset
 
 ### :::tests.unit.apps.core.models.conftest.dataset
@@ -55,10 +51,6 @@
 ## dataset_with_foreign_keys
 
 ### :::tests.unit.apps.core.models.conftest.dataset_with_foreign_keys
-
-## catalog_record
-
-### :::tests.unit.apps.core.models.conftest.catalog_record
 
 ## file
 

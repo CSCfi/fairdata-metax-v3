@@ -10,7 +10,6 @@ from apps.common.admin import AbstractDatasetPropertyBaseAdmin
 from apps.core.models import (
     AccessRights,
     CatalogHomePage,
-    CatalogRecord,
     Contract,
     DataCatalog,
     Dataset,
@@ -68,15 +67,6 @@ class MetadataProviderAdmin(admin.ModelAdmin):
     list_display = ("user", "organization")
 
 
-@admin.register(CatalogRecord)
-class CatalogRecordAdmin(AbstractDatasetPropertyBaseAdmin):
-    list_display = (
-        "id",
-        "data_catalog",
-    )
-    list_filter = ("created", "modified", "data_catalog")
-
-
 @admin.register(Dataset)
 class DatasetAdmin(AbstractDatasetPropertyBaseAdmin, SimpleHistoryAdmin):
     list_display = (
@@ -85,6 +75,9 @@ class DatasetAdmin(AbstractDatasetPropertyBaseAdmin, SimpleHistoryAdmin):
         "access_rights",
         "deprecated",
         "state",
+        "data_catalog",
+        "created",
+        "modified",
     )
     list_filter = (
         "language",

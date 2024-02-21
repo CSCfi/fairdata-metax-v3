@@ -10,7 +10,7 @@ from apps.core.models.catalog_record.dataset import Dataset
 from apps.core.serializers.dataset_actor_serializers.member_serializer import (
     DatasetMemberContext,
     DatasetMemberSerializer,
-    IntegerOrTagField,
+    UUIDOrTagField,
 )
 
 logger = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ class DatasetPersonSerializer(DatasetMemberSerializer):
 
     Same person can be multiple times in the same dataset."""
 
-    id = IntegerOrTagField(required=False)
+    id = UUIDOrTagField(required=False)
     save_validator = AllOf(["name"])
 
     def get_dataset_persons(self, dataset) -> Dict[str, DatasetMemberContext]:

@@ -112,6 +112,8 @@ class AbstractBaseModel(SystemCreatorBaseModel, TimeStampedModel, CustomSoftDele
      - removed
     """
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
     class Meta:
         abstract = True
         get_latest_by = "modified"
@@ -126,7 +128,6 @@ class AbstractDatasetProperty(AbstractBaseModel):
         url (models.URLField): property url
     """
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     url = models.URLField(
         max_length=512,
         help_text="valid url to the property definition",

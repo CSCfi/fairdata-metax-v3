@@ -1,5 +1,6 @@
 import logging
 
+import uuid
 from django.db import models
 
 from apps.common.copier import ModelCopier
@@ -16,6 +17,7 @@ class FileSetFileMetadata(models.Model):
 
     copier = ModelCopier(copied_relations=[], parent_relations=["file_set"])
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     file_set = models.ForeignKey(
         "core.FileSet", related_name="file_metadata", editable=False, on_delete=models.CASCADE
     )
@@ -35,6 +37,7 @@ class FileSetDirectoryMetadata(models.Model):
 
     copier = ModelCopier(copied_relations=[], parent_relations=["file_set"])
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     file_set = models.ForeignKey(
         "core.FileSet", related_name="directory_metadata", editable=False, on_delete=models.CASCADE
     )

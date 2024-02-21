@@ -25,9 +25,6 @@ class DatasetSearchAdapter(search.SearchAdapter):
         return criteria
 
     def get_title(self, obj):
-        if not obj.catalogrecord_ptr_id:
-            return []  # prevent trying to index deleted draft
-
         criteria = []
         criteria.append(str(obj.persistent_identifier))
         criteria.extend(obj.title.values())
@@ -35,10 +32,8 @@ class DatasetSearchAdapter(search.SearchAdapter):
         criteria.extend(self._get_actors(obj))
         return (" ".join(criteria))[: self.max_title_length]
 
-    def get_description(self, obj):
-        if not obj.catalogrecord_ptr_id:
-            return []  # prevent trying to index deleted draft
 
+    def get_description(self, obj):
         criteria = []
         if obj.description:
             criteria.extend(obj.description.values())
@@ -49,9 +44,6 @@ class DatasetSearchAdapter(search.SearchAdapter):
         return " ".join(criteria)
 
     def get_content(self, obj):
-        if not obj.catalogrecord_ptr_id:
-            return []  # prevent trying to index deleted draft
-
         criteria = []
         criteria.extend(
             obj.relation.filter(entity__entity_identifier__isnull=False).values_list(

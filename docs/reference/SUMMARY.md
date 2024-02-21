@@ -212,9 +212,10 @@
                     - [test_dataset](tests/unit/apps/core/models/test_dataset.md)
                     - [test_dataset_property](tests/unit/apps/core/models/test_dataset_property.md)
                     - [test_metadata_provider](tests/unit/apps/core/models/test_metadata_provider.md)
-                    - [test_models_ordering](tests/unit/apps/core/models/test_models_ordering.md)
+                    - [test_models](tests/unit/apps/core/models/test_models.md)
                     - [test_publisher](tests/unit/apps/core/models/test_publisher.md)
                     - [test_versioning](tests/unit/apps/core/models/test_versioning.md)
+            - [download.api.test_download](tests/unit/apps/download/api/test_download.md)
             - files
                 - api
                     - [conftest](tests/unit/apps/files/api/conftest.md)

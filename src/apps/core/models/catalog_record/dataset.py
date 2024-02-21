@@ -9,6 +9,7 @@ from django.utils.translation import gettext as _
 from model_utils import FieldTracker
 from rest_framework.exceptions import ValidationError
 from typing_extensions import Self
+from simple_history.models import HistoricalRecords
 
 from apps.common.copier import ModelCopier
 from apps.common.helpers import datetime_to_date
@@ -31,7 +32,7 @@ class DatasetVersions(AbstractBaseModel):
     """A collection of dataset's versions."""
 
 
-class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
+class Dataset(V2DatasetMixin, CatalogRecord):
     """A collection of data available for access or download in one or many representations.
 
     RDF Class: dcat:Dataset
@@ -60,6 +61,8 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         theme (models.ManyToManyField): Keyword ManyToMany relation
         title (HStoreField): Title of the dataset
     """
+
+    history = HistoricalRecords()
 
     # Model nested copying configuration
     copier = ModelCopier(
@@ -282,7 +285,6 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
         """
         new_values = dict(
             preservation=None,
-            catalogrecord_ptr=None,
             state=self.StateChoices.DRAFT,
             published_revision=0,
             created=timezone.now(),

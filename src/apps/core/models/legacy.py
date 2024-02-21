@@ -96,6 +96,12 @@ class LegacyDataset(Dataset):
             Difference between v1-v2 and V3 dataset json
     """
 
+    dataset = models.OneToOneField(
+        Dataset,
+        on_delete=models.CASCADE,
+        parent_link=True,
+        primary_key=True,
+    )
     dataset_json = models.JSONField(encoder=DjangoJSONEncoder)
     contract_json = models.JSONField(null=True, blank=True, encoder=DjangoJSONEncoder)
     files_json = models.JSONField(null=True, blank=True, encoder=DjangoJSONEncoder)
@@ -194,8 +200,7 @@ class LegacyDataset(Dataset):
         """Create snapshot of dataset.
 
         Due to how simple-history works, LegacyDataset will need to be "cast"
-        into a normal Dataset for creating a snapshot or otherwise it will
-        raise an error about unknown `dataset_ptr` field.
+        into a normal Dataset for creating a snapshot.
         """
         self.dataset.create_snapshot(**kwargs)
 

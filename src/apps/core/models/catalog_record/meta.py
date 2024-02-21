@@ -6,7 +6,6 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils import timezone
-from simple_history.models import HistoricalRecords
 
 from apps.common.copier import ModelCopier
 from apps.common.models import AbstractBaseModel
@@ -61,7 +60,6 @@ class CatalogRecord(AbstractBaseModel):
 
     Attributes:
         data_catalog(DataCatalog): DataCatalog ForeignKey relation
-        history(HistoricalRecords): Historical model changes
         metadata_owner(MetadataProvider): MetadataProvider ForeignKey relation
         preservation(Preservation): Preservation OneToOne relation
         last_modified_by(Actor): Actor ForeignKey relation
@@ -74,8 +72,6 @@ class CatalogRecord(AbstractBaseModel):
     preservation = models.OneToOneField(
         Preservation, on_delete=models.CASCADE, related_name="record", null=True, blank=True
     )
-
-    history = HistoricalRecords()
 
     metadata_owner = models.ForeignKey(
         MetadataProvider,
@@ -91,3 +87,6 @@ class CatalogRecord(AbstractBaseModel):
 
     def __str__(self):
         return str(self.id)
+
+    class Meta(AbstractBaseModel.Meta):
+        abstract = True

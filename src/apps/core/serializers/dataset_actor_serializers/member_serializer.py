@@ -44,21 +44,6 @@ class UUIDOrTagField(serializers.UUIDField):
         return super().to_representation(value)
 
 
-class IntegerOrTagField(serializers.IntegerField):
-    """Field that accepts integers or '#value' style strings."""
-
-    # TODO: Use UUID default primary keys so only the UUID version is needed
-    def to_internal_value(self, data):
-        if type(data) is str and data.startswith("#"):
-            return data
-        return super().to_internal_value(data)
-
-    def to_representation(self, value):
-        if type(value) is str and value.startswith("#"):
-            return value
-        return super().to_representation(value)
-
-
 class DatasetMemberSerializer(StrictSerializer, CommonNestedModelSerializer):
     """Serialize dataset members that may be in multiple places in same dataset.
 

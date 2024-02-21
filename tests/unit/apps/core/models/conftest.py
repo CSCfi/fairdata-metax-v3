@@ -132,12 +132,6 @@ def contract() -> Contract:
 
 
 @pytest.fixture
-def catalog_record(data_catalog) -> CatalogRecord:
-    identifier = "12345678-51d3-4c25-ad20-75aff8ca19d7"
-    return factories.CatalogRecordFactory(id=identifier, data_catalog=data_catalog)
-
-
-@pytest.fixture
 def dataset() -> Dataset:
     title = {
         "en": "Title 2",
@@ -168,14 +162,6 @@ def dataset_with_foreign_keys(
     dataset.theme.add(theme)
     dataset.publish()
     return dataset
-
-
-@pytest.fixture
-def catalog_record(data_catalog, metadata_provider) -> CatalogRecord:
-    identifier = "12345678-51d3-4c25-ad20-75aff8ca19d7"
-    return CatalogRecord(
-        id=identifier, data_catalog=data_catalog, metadata_owner=metadata_provider
-    )
 
 
 @pytest.fixture
@@ -210,15 +196,13 @@ def dataset_property_object_factory(
 
 @pytest.fixture
 def abstract_base_object_factory(
-    dataset_publisher, access_rights, catalog_record, file, contract, metadata_provider
+    dataset_publisher, access_rights, file, contract, metadata_provider
 ):
     def _abstract_base_object_factory(object_name):
         if object_name == "dataset_publisher":
             return dataset_publisher
         elif object_name == "access_rights":
             return access_rights
-        elif object_name == "catalog_record":
-            return catalog_record
         elif object_name == "file":
             return file
         elif object_name == "contract":

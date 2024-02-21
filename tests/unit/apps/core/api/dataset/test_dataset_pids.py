@@ -2,7 +2,7 @@ from unittest import mock
 
 import pytest
 
-from apps.core.models import CatalogRecord
+from apps.core.models import Dataset
 from apps.core.services.pid_ms_client import PIDMSClient, ServiceUnavailableError
 
 pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
@@ -155,13 +155,13 @@ def patch_mock_createURN_fail():
 def test_create_dataset_with_failed_PID(
     admin_client, dataset_a_json, data_catalog, reference_data, patch_mock_createURN_fail
 ):
-    old_count = CatalogRecord.available_objects.all().count()
+    old_count = Dataset.available_objects.all().count()
     dataset = dataset_a_json
     dataset["pid_type"] = "URN"
     dataset.pop("persistent_identifier", None)
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
     assert res.status_code == 503
-    new_count = CatalogRecord.all_objects.all().count()
+    new_count = Dataset.all_objects.all().count()
     assert new_count == old_count
 
 

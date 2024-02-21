@@ -147,6 +147,7 @@ class Organization(AbstractBaseModel):
 
 
 class Person(AbstractBaseModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     copier = ModelCopier(copied_relations=[], parent_relations=["part_of_actors"])
 
     name = models.CharField(max_length=512)
@@ -172,6 +173,7 @@ class Actor(AbstractBaseModel):
         organization(Organization): Organization if any associated with this actor.
     """
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     person = models.ForeignKey(
         Person, related_name="part_of_actors", null=True, blank=True, on_delete=models.CASCADE
     )

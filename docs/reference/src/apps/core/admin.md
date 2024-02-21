@@ -20,10 +20,6 @@
 
 ### :::src.apps.core.admin.MetadataProviderAdmin
 
-## CatalogRecordAdmin
-
-### :::src.apps.core.admin.CatalogRecordAdmin
-
 ## DatasetAdmin
 
 ### :::src.apps.core.admin.DatasetAdmin

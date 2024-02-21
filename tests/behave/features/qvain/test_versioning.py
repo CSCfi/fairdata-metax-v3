@@ -33,7 +33,6 @@ def created_new_dataset_version(published_dataset):
     raise NotImplementedError
     original_fields = model_to_dict(published_dataset)
     logger.info(original_fields)
-    del original_fields["catalogrecord_ptr"]
     del original_fields["data_catalog"]
     del original_fields["language"]
     del original_fields["contract"]

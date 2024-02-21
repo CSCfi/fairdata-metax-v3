@@ -2,7 +2,7 @@ import pytest
 
 pytestmark = pytest.mark.parametrize(
     "model",
-    ["dataset_publisher", "access_rights", "catalog_record", "file", "contract"],
+    ["dataset_publisher", "access_rights", "file", "contract"],
 )
 
 

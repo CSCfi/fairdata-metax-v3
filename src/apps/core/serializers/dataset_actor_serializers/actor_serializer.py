@@ -11,7 +11,7 @@ from apps.core.models.catalog_record.dataset import Dataset
 from apps.core.serializers.dataset_actor_serializers.member_serializer import (
     DatasetMemberContext,
     DatasetMemberSerializer,
-    IntegerOrTagField,
+    UUIDOrTagField
 )
 from apps.core.serializers.dataset_actor_serializers.organization_serializer import (
     DatasetOrganizationSerializer,
@@ -33,7 +33,7 @@ class DatasetActorSerializer(DatasetMemberSerializer):
     in the same request will produce `{"id": x, "roles": ["creator", "publisher]}`.
     """
 
-    id = IntegerOrTagField(required=False)
+    id = UUIDOrTagField(required=False)
     organization = DatasetOrganizationSerializer(required=False, allow_null=True)
     person = DatasetPersonSerializer(required=False, allow_null=True)
 
