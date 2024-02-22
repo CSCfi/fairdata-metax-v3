@@ -192,7 +192,7 @@ class Funding(AbstractBaseModel):
             given by the funder organization
     """
 
-    copier = ModelCopier(copied_relations=["funder"], parent_relations=[])
+    copier = ModelCopier(copied_relations=["funder"], parent_relations=["projects"])
 
     funder = models.ForeignKey("Funder", related_name="funding", on_delete=models.CASCADE)
     funding_identifier = models.CharField(max_length=255, blank=True, null=True)
@@ -206,7 +206,7 @@ class Funder(AbstractBaseModel):
     funder_type(models.ForeignKey): Funder type reference
     """
 
-    copier = ModelCopier(copied_relations=["organization"], parent_relations=[])
+    copier = ModelCopier(copied_relations=["organization"], parent_relations=["funding"])
 
     organization = models.ForeignKey(
         Organization, related_name="agencies", on_delete=models.SET_NULL, null=True, blank=True

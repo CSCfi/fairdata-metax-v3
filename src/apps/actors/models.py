@@ -34,7 +34,7 @@ class Organization(AbstractBaseModel):
 
     # Copying a sub-organization in a dataset should also copy its parents
     copier = OrganizationModelCopier(
-        copied_relations=["parent"], parent_relations=["actor_organizations"]
+        copied_relations=["parent"], parent_relations=["actor_organizations", "projects", "agencies"]
     )
 
     def choose_between(self, other) -> "Organization":

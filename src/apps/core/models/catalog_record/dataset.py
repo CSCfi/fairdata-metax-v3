@@ -68,7 +68,7 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
             "other_identifiers",
             "actors",
             "provenance",
-            # "projects",
+            "projects",
             "file_set",
             "spatial",
             "temporal",
