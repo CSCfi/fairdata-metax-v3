@@ -181,7 +181,7 @@ class Organization(AbstractBaseModel):
         return data
 
     def __str__(self):
-        return f"<{self.__class__.__name__} {self.id}: {self.get_label()}>"
+        return f"{self.id}: {self.get_label()}"
 
 
 class Person(AbstractBaseModel):

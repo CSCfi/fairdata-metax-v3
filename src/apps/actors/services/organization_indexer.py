@@ -1,9 +1,11 @@
 import csv
 import logging
 
+import requests
 from cachalot.api import cachalot_disabled
 from django.conf import settings
 from django.db import transaction
+from django.utils import timezone
 
 from apps.actors.models import Organization
 from metax_service.settings.components.actors import ORGANIZATION_SCHEME
@@ -11,19 +13,83 @@ from metax_service.settings.components.actors import ORGANIZATION_SCHEME
 _logger = logging.getLogger(__name__)
 
 
-class OrganizationIndexer:
-    """Load organizations and up to one level of suborganizations from csv file"""
+CSV_HEADERS = [
+    "org_name_fi",
+    "org_name_en",
+    "org_name_sv",
+    "org_code",
+    "unit_main_code",
+    "unit_sub_code",
+    "unit_name",
+    "org_isni",
+    "org_csc",
+]
 
-    def row_to_dict(self, row):
-        org_name_fi = row.get("org_name_fi", "")
-        org_name_en = row.get("org_name_en", "")
-        org_name_sv = row.get("org_name_sv", "")
-        main_org_code = row.get("org_code", "")
+
+class OrganizationIndexer:
+    """Load organizations and up to one level of suborganizations."""
+
+    def fetch_orgs_from_api(self):
+        """Fetch organizations from API and write to csv file."""
+        _logger.info(f"Fetching organization data from {settings.ORGANIZATION_FETCH_API_URL}")
+        res = requests.get(settings.ORGANIZATION_FETCH_API_URL)
+        data = res.json()
+
+        orgs_json = data["hits"]["hits"]
+        orgs = []
+
+        for org in orgs_json:
+            org_source = org["_source"]
+
+            name_fi = str(org_source["nameFi"]).strip()
+            name_en = str(org_source["nameEn"]).strip()
+            name_sv = str(org_source.get("nameSv")).strip()
+            org_code = str(org_source["organizationId"]).strip()
+
+            organization = {
+                "org_name_fi": name_fi,
+                "org_name_en": name_en,
+                "org_name_sv": name_sv,
+                "org_code": org_code,
+            }
+            orgs.append(organization)
+
+            sub_units = org_source.get("subUnits") or []
+            for sub_unit in sub_units:
+                unit_sub_code = str(sub_unit["subUnitID"]).strip()
+                unit_name = str(sub_unit["subUnitName"]).strip()
+
+                sub_organization = {
+                    **organization,
+                    "unit_name": unit_name,
+                    "unit_sub_code": unit_sub_code,
+                }
+                orgs.append(sub_organization)
+
+        orgs = sorted(orgs, key=lambda org: (org["org_name_fi"], org.get("unit_name", "")))
+
+        _logger.info(f"Retrieved {len(orgs)} organizations.")
+        if settings.ORGANIZATION_DATA_FILE:
+            with open(settings.ORGANIZATION_DATA_FILE, "w") as f:
+                writer = csv.DictWriter(
+                    f, delimiter=",", quotechar='"', lineterminator="\n", fieldnames=CSV_HEADERS
+                )
+                writer.writeheader()
+                writer.writerows(orgs)
+            _logger.info(f"CSV updated.")
+        return orgs
+
+    def row_to_dict(self, org: dict):
+        """Convert organizations.csv style org to format closer to Metax."""
+        org_name_fi = org.get("org_name_fi", "")
+        org_name_en = org.get("org_name_en", "")
+        org_name_sv = org.get("org_name_sv", "")
+        main_org_code = org.get("org_code", "")
         # unit_main_code is unused
-        unit_sub_code = row.get("unit_sub_code", "")
-        unit_name = row.get("unit_name", "").rstrip()
-        org_isni = row.get("org_isni", "")
-        org_csc = row.get("org_csc", "")
+        unit_sub_code = org.get("unit_sub_code", "")
+        unit_name = org.get("unit_name", "").rstrip()
+        org_isni = org.get("org_isni", "")
+        org_csc = org.get("org_csc", "")
 
         label = {
             "fi": org_name_fi,
@@ -63,17 +129,25 @@ class OrganizationIndexer:
         }
         return org
 
-    def read_organizations(self):
-        orgs_dict = {}
+    def get_orgs_from_csv(self):
+        _logger.info(f"Reading organizations from csv")
         with open(settings.ORGANIZATION_DATA_FILE) as f:
-            reader = csv.DictReader(f, delimiter=",", quotechar='"')
-            for row in reader:
-                org = self.row_to_dict(row)
-                if orgs_dict.get(org["url"]):
-                    label = org.get("pref_label", {}).get("en")
-                    _logger.warning(f"Duplicate ogranization URL, skipping: {org['url']} {label}")
-                else:
-                    orgs_dict[org["url"]] = org
+            reader = csv.DictReader(f, delimiter=",", quotechar='"', lineterminator="\n")
+            return list(reader)
+
+    def orgs_list_to_dict(self, orgs: list):
+        orgs_dict = {}
+        for org in orgs:
+            org = self.row_to_dict(org)
+            if existing := orgs_dict.get(org["url"]):
+                label = org.get("pref_label", {}).get("en")
+                existing_label = existing.get("pref_label", {}).get("en")
+                _logger.warning(
+                    f"Duplicate organization URL, skipping: {org['url']} {label}, existing: {existing_label}"
+                )
+            else:
+                orgs_dict[org["url"]] = org
+        _logger.info(f"Loaded {len(orgs_dict)} organizations.")
         return orgs_dict
 
     def sort_parents_first(self, orgs_dict):
@@ -86,10 +160,10 @@ class OrganizationIndexer:
             is_reference_data=True, in_scheme=settings.ORGANIZATION_SCHEME
         )
         deprecated = all_reference_orgs.exclude(url__in=orgs_dict.keys())
-        for org in deprecated:
-            if not org.is_removed:
-                org.is_removed = True
-                org.save()
+        if count := deprecated.count():
+            _logger.info(
+                f"Reference data organizations in database but no longer in source data: {count}"
+            )
 
         existing_orgs = all_reference_orgs.filter(url__in=orgs_dict.keys())
         orgs_by_url = {org.url: org for org in existing_orgs}
@@ -113,9 +187,17 @@ class OrganizationIndexer:
                 org.parent = orgs_by_url[parent]
             else:
                 org.parent = None
-            org.save()
 
-    def index(self):
-        orgs_dict = self.read_organizations()
+            org.save()
+        _logger.info(f"Organizations updated")
+
+    def index(self, cached=False):
+        orgs: list
+        if cached:
+            orgs = self.get_orgs_from_csv()
+        else:
+            orgs = self.fetch_orgs_from_api()
+
+        orgs_dict = self.orgs_list_to_dict(orgs)
         with cachalot_disabled():
             self.update_orgs(orgs_dict)

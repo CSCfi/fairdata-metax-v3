@@ -1,0 +1,78 @@
+{
+  "took": 11,
+  "timed_out": false,
+  "_shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 85,
+      "relation": "eq"
+    },
+    "max_score": 1.0,
+    "hits": [
+      {
+        "_index": "organization_20240221233246",
+        "_type": "_doc",
+        "_id": "0115776-3",
+        "_score": 1.0,
+        "_source": {
+          "organizationId": "02623",
+          "TKOppilaitosTunnus": "02623",
+          "pic": [
+            {
+              "pic": "947255635"
+            }
+          ],
+          "localOrganizationSector": " ",
+          "nameFi": "Diakonia-ammattikorkeakoulu",
+          "nameSv": "Diakonia-ammattikorkeakoulu",
+          "nameEn": "Diaconia University of Applied Sciences",
+          "sectorId": "2",
+          "sectorNameFi": "Ammattikorkeakoulu",
+          "sectorNameSv": "Yrkeshögskola",
+          "sectorNameEn": "University of Applied Sciences",
+          "organizationType": "Osakeyhtiö",
+          "businessId": "0115776-3",
+          "nameUnd": " ",
+          "homepage": "https://www.diak.fi",
+          "mediaUri": "https://wiki.eduuni.fi/download/attachments/141992289/Diak_01_vio_WEB_svg.svg",
+          "staffCountAsFte": 164,
+          "staffCountAsPercentage": null,
+          "staffYear": "2019",
+          "thesisCountBsc": "672",
+          "thesisCountMsc": "60",
+          "thesisCountLic": "0",
+          "thesisCountPhd": "0",
+          "thesisCountBscPercentage": null,
+          "thesisCountMscPercentage": null,
+          "thesisCountLicPercentage": null,
+          "thesisCountPhdPercentage": null,
+          "thesisYear": "2019",
+          "visitingAddress": "Kyläsaarenkuja 2 00580 HELSINKI",
+          "postalAddress": "Kyläsaarenkuja 2 00580 HELSINKI",
+          "established": "",
+          "organizationBackground": null,
+          "predecessors": null,
+          "related": null,
+          "variantNames": "Diаkoničeskij universitet priklаdnyh nаuk;DIAK;Diakoniyrkeshögskolan;Диаконический университет прикладных наук;Diaconia University of Applied Sciences;Diaconia Polytechnic",
+          "subUnits": [
+            {
+              "subUnitID": "100",
+              "subUnitName": "Innovaatiot ja kumppanuudet tulosalue",
+              "year": 2023
+            },
+            {
+              "subUnitID": "105",
+              "subUnitName": "TKI-toiminta",
+              "year": 2023
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
