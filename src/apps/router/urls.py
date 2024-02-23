@@ -35,7 +35,6 @@ router.register(
 )
 
 # router.register(r"dataset-actors", DatasetActorViewSet, basename="dataset-actor")
-router.register(r"publishers", core_views.PublisherViewSet, basename="publisher")
 router.register(r"migrated-datasets", core_views.LegacyDatasetViewSet, basename="migrated-dataset")
 # files app
 router.register(r"files", FileViewSet, basename="file")

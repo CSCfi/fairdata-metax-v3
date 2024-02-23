@@ -13,11 +13,11 @@ from http.cookies import SimpleCookie
 
 @pytest.mark.django_db
 def test_sso_login(client, user, enable_sso):
-    resp = client.get(reverse("login") + "?next=/somewhere")
+    resp = client.get(reverse("login") + "?next=/v3/somewhere")
     assert resp.status_code == 302  # redirect
     assert (
         resp.url == "https://fake-sso/login"
-        "?service=METAX&redirect_url=http%3A%2F%2Ftestserver%2Fsomewhere&language=en"
+        "?service=METAX&redirect_url=http%3A%2F%2Ftestserver%2Fv3%2Fsomewhere&language=en"
     )
 
 
@@ -27,7 +27,7 @@ def test_sso_login_invalid_next(client, user, enable_sso):
     assert resp.status_code == 302  # redirect
     assert (
         resp.url == "https://fake-sso/login"
-        "?service=METAX&redirect_url=http%3A%2F%2Ftestserver%2F&language=en"
+        "?service=METAX&redirect_url=http%3A%2F%2Ftestserver%2Fv3%2F&language=en"
     )
 
 
@@ -41,7 +41,7 @@ def test_sso_login_disabled(client, disable_sso):
 @pytest.mark.django_db
 def test_sso_misconfiguration(client, enable_sso, settings):
     settings.SSO_SESSION_COOKIE = None
-    resp = client.get("/auth/user")
+    resp = client.get(reverse("user"))
     assert resp.status_code == 403
     assert "invalid_sso_configuration" in resp.data["code"]
 
@@ -54,7 +54,7 @@ def test_sso_logout(client, user, enable_sso, sso_session_teppo, get_sso_token):
     assert resp.status_code == 302  # redirect
     assert (
         resp.url == "https://fake-sso/logout"
-        "?service=METAX&redirect_url=http%3A%2F%2Ftestserver%2F&language=en"
+        "?service=METAX&redirect_url=http%3A%2F%2Ftestserver%2Fv3%2F&language=en"
     )
 
 

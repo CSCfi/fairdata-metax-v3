@@ -34,7 +34,7 @@ sys.path.append(APPS_DIR)
 
 # collect static files here
 STATIC_ROOT = os.environ.get("STATIC_ROOT", join(ROOT_DIR, "staticfiles"))
-STATIC_URL = "/static"
+STATIC_URL = "/v3/static/"
 
 NO_NGINX_PROXY = os.environ.get("NO_NGINX_PROXY", True)
 
@@ -218,11 +218,6 @@ USE_L10N = True
 
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/3.2/howto/static-files/
-
-STATIC_URL = "/static/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field

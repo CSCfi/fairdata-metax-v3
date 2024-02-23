@@ -1,4 +1,4 @@
-from rest_framework.routers import DefaultRouter, Route
+from rest_framework.routers import DefaultRouter
 
 
 class CommonRouter(DefaultRouter):

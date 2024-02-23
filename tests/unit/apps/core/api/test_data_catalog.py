@@ -228,7 +228,6 @@ def test_put_datacatalog(admin_client, datacatalog_a_json, reference_data, data_
     assert res2.status_code == 200
 
     # values not in put_json should be cleared to defaults
-    put_json["url"] = matchers.Any(type=str)
     put_json["dataset_schema"] = "ida"  # ida is default
     assert put_json == {key: value for key, value in res2.json().items() if value}
 

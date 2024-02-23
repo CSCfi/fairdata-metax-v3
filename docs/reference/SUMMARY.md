@@ -193,7 +193,6 @@
                     - [json_models](tests/unit/apps/core/api/json_models.md)
                     - [test_contract](tests/unit/apps/core/api/test_contract.md)
                     - [test_data_catalog](tests/unit/apps/core/api/test_data_catalog.md)
-                    - [test_dataset_publisher](tests/unit/apps/core/api/test_dataset_publisher.md)
                 - management
                     - [conftest](tests/unit/apps/core/management/conftest.md)
                     - [test_load_test_data](tests/unit/apps/core/management/test_load_test_data.md)

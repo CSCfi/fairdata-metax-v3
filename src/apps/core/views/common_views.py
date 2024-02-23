@@ -41,14 +41,6 @@ class DatasetPublisherFilter(filters.FilterSet):
     )
 
 
-@swagger_auto_schema(operation_description="Publisher viewset")
-class PublisherViewSet(CommonModelViewSet):
-    serializer_class = DatasetPublisherModelSerializer
-    queryset = DatasetPublisher.objects.all()
-    filterset_class = DatasetPublisherFilter
-    http_method_names = ["get", "post", "put", "delete"]
-
-
 class AccessRightsFilter(filters.FilterSet):
     class Meta:
         model = AccessRights

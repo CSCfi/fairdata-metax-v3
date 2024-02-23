@@ -51,7 +51,6 @@ class DataCatalogModelSerializer(CommonNestedModelSerializer):
             "dataset_versioning_enabled",
             "harvested",
             "dataset_schema",
-            "url",
             "dataset_groups_create",
             "dataset_groups_admin",
         )

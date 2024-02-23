@@ -98,7 +98,7 @@ def test_aggregation_and_filters(
 
 def test_create_dataset_invalid_catalog(admin_client, dataset_a_json):
     dataset_a_json["data_catalog"] = "urn:nbn:fi:att:data-catalog-does-not-exist"
-    response = admin_client.post("/v3/publishers", dataset_a_json, content_type="application/json")
+    response = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert response.status_code == 400
 
 

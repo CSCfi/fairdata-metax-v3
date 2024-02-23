@@ -61,7 +61,7 @@ If you want to use enhanced interpreter with `runserver_plus`, you can add `--bp
 
 ### Accessing the admin panel
 
-When the development server is running, admin panel can be accessed from `localhost:<port>/admin`. Use the credentials generated in the _"Creating superuser"_ part of this readme.
+When the development server is running, admin panel can be accessed from `localhost:<port>/v3/admin`. Use the credentials generated in the _"Creating superuser"_ part of this readme.
 
 ### cli-tools
 

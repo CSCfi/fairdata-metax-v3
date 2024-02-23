@@ -16,11 +16,11 @@ To enable SSO authentication support, add the following variables to the Metax `
 
 ## External service configuration
 
-To allow external services to use the SSO session for cross-site Metax requests, they need to be listed in `CORS_ALLOWED_ORIGINS`, and `CORS_ALLOW_CREDENTIALS` has to be enabled. For unsafe requests (`POST`, `PUT`, etc.), the origin also has to be listed in `CSRF_TRUSTED_ORIGINS`. The CSRF token can be retrieved from `/auth/user` after SSO login and needs to be included as `X-CSRFToken` header in each unsafe request.
+To allow external services to use the SSO session for cross-site Metax requests, they need to be listed in `CORS_ALLOWED_ORIGINS`, and `CORS_ALLOW_CREDENTIALS` has to be enabled. For unsafe requests (`POST`, `PUT`, etc.), the origin also has to be listed in `CSRF_TRUSTED_ORIGINS`. The CSRF token can be retrieved from `/v3/auth/user` after SSO login and needs to be included as `X-CSRFToken` header in each unsafe request.
 
 <!-- prettier-ignore -->
 !!! NOTE
-    The CSRF token is only valid during the SSO session and needs to be retrieved again after a new login. Also, the value is masked for security reasons which makes it look different on each `/auth/user` request.
+    The CSRF token is only valid during the SSO session and needs to be retrieved again after a new login. Also, the value is masked for security reasons which makes it look different on each `/v3/auth/user` request.
 
 The related `.env` variables are:
 
@@ -75,7 +75,7 @@ After updating configuration and restarting the development server, it should be
 const metaxUrl = "https://metaxv3.fd-dev.csc.fi:8100";
 
 // Get CSRF token required for POST requests
-const resp = await fetch(`${metaxUrl}/auth/user`, {
+const resp = await fetch(`${metaxUrl}/v3/auth/user`, {
   credentials: "include", // required for the SSO cookie to be sent
 });
 const data = await resp.json();

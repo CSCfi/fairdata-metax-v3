@@ -13,7 +13,7 @@ You can generate Bearer token without SSO by following these steps.
 ```bash
 python manage.py createsuperuser
 ```
-Login to admin panel from /admin endpoint. Go to endpoint /auth/tokens and generate a new bearer token. Copy the token value from the page. 
+Login to admin panel from /v3/admin endpoint. Go to endpoint /v3/auth/tokens and generate a new bearer token. Copy the token value from the page. 
 
 ### Using the token
 
@@ -54,7 +54,7 @@ While the env-var is true, all users will get a DRF-token on save operation. Thi
 
 #### Using the endpoint
 
-You can send your user and password on post request to /drf-token-auth/ endpoint. It will return your token.
+You can send your user and password on post request to /v3/drf-token-auth/ endpoint. It will return your token.
 
 ```
 # POST /drf-token-auth

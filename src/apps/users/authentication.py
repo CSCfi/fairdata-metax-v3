@@ -22,6 +22,8 @@ class SSOAuthentication(authentication.SessionAuthentication):
     Inherits from SessionAuthentication that provides the
     enforce_csrf method used for CSRF checking."""
 
+    base_path = "/v3/"
+
     def authenticate(self, request):
         """Authenticate request with data from SSO cookie.
 
@@ -162,9 +164,9 @@ class SSOAuthentication(authentication.SessionAuthentication):
 
     def sso_login_url(self, request):
         """Get SSO login url for service"""
-        nxt = request.query_params.get("next", "/")
-        if not nxt.startswith("/"):
-            nxt = "/"
+        nxt = request.query_params.get("next", self.base_path)
+        if not nxt.startswith(self.base_path):
+            nxt = self.base_path
         sso_redirect_url = request.build_absolute_uri(nxt)
         query = urlencode(
             {
@@ -179,7 +181,7 @@ class SSOAuthentication(authentication.SessionAuthentication):
 
     def sso_logout_url(self, request):
         """Get SSO logout url for service"""
-        sso_redirect_url = request.build_absolute_uri("/")
+        sso_redirect_url = request.build_absolute_uri(self.base_path)
         query = urlencode(
             {
                 "service": settings.SSO_METAX_SERVICE_NAME,

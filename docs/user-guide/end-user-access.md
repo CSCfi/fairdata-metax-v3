@@ -29,6 +29,6 @@ import requests
 
 # Print user details using bearer authentication
 headers = { 'Authorization': 'Bearer 3e621588143f41cdd792fd32' }
-response = requests.get('https://metax.fairdata.fi/auth/user', headers=headers)
+response = requests.get('https://metax.fairdata.fi/v3/auth/user', headers=headers)
 print(response.json())
 ```
