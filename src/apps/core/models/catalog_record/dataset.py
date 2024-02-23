@@ -187,7 +187,7 @@ class Dataset(V2DatasetMixin, CatalogRecord, AbstractBaseModel):
             return True
         elif self.metadata_owner and self.metadata_owner.user == user:
             return True
-        elif DataCatalogAccessPolicy().query_object_permission(
+        elif self.data_catalog and DataCatalogAccessPolicy().query_object_permission(
             user=user, object=self.data_catalog, action="<op:admin_dataset>"
         ):
             return True

@@ -474,7 +474,7 @@ class DatasetViewSet(CommonModelViewSet):
             raise NotAuthenticated("You must be authenticated to perform this action.")
 
         catalog: DataCatalog = serializer._validated_data["data_catalog"]
-        if not DataCatalogAccessPolicy().query_object_permission(
+        if catalog and not DataCatalogAccessPolicy().query_object_permission(
             user=self.request.user, object=catalog, action="<op:create_dataset>"
         ):
             raise exceptions.PermissionDenied(

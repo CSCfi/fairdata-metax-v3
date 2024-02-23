@@ -560,16 +560,16 @@ def test_create_dataset_require_data_catalog(
 
 
 def test_create_dataset_draft_without_catalog(
-    admin_client, dataset_a_json, data_catalog, reference_data
+    user_client, dataset_a_json, data_catalog, reference_data
 ):
     dataset_a_json.pop("data_catalog")
     dataset_a_json["state"] = "draft"
-    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    res = user_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 201
     assert_nested_subdict(dataset_a_json, res.data)
 
     # make sure the dataset can also be updated
-    res = admin_client.patch(
+    res = user_client.patch(
         f"/v3/datasets/{res.data['id']}",
         {"title": {"en": "test"}},
         content_type="application/json",
