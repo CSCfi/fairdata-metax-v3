@@ -296,7 +296,6 @@ class DataCatalogFactory(factory.django.DjangoModelFactory):
 
     title = factory.Dict({"en": factory.Sequence(lambda n: f"data-catalog-{n}")})
     publisher = factory.SubFactory(DatasetPublisherFactory)
-    access_rights = factory.SubFactory(AccessRightsFactory)
     system_creator = factory.SubFactory(MetaxUserFactory)
 
     @factory.post_generation

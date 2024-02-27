@@ -34,7 +34,6 @@ class GetOrCreateGroupField(serializers.SlugRelatedField):
 
 
 class DataCatalogModelSerializer(CommonNestedModelSerializer):
-    access_rights = AccessRightsModelSerializer(required=False)
     publisher = DatasetPublisherModelSerializer(required=False)
     language = Language.get_serializer_field(required=False, many=True)
     dataset_groups_create = GetOrCreateGroupField(required=False, many=True)
@@ -44,7 +43,7 @@ class DataCatalogModelSerializer(CommonNestedModelSerializer):
         model = DataCatalog
         fields = (
             "id",
-            "access_rights",
+            "description",
             "publisher",
             "logo",
             "language",

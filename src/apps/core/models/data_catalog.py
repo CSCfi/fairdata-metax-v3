@@ -46,8 +46,8 @@ class DataCatalog(AbstractBaseModel):
         null=True,
         blank=True,
     )
-    access_rights = models.ForeignKey(
-        "AccessRights", on_delete=models.SET_NULL, related_name="catalogs", null=True, blank=True
+    description = HStoreField(
+        help_text='example: {"en":"description", "fi":"kuvaus"}', blank=True, null=True
     )
     logo = models.CharField(
         max_length=100,

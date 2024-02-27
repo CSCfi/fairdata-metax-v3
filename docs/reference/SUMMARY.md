@@ -208,6 +208,7 @@
                     - [test_dataset](tests/unit/apps/core/models/test_dataset.md)
                     - [test_dataset_property](tests/unit/apps/core/models/test_dataset_property.md)
                     - [test_metadata_provider](tests/unit/apps/core/models/test_metadata_provider.md)
+                    - [test_models_ordering](tests/unit/apps/core/models/test_models_ordering.md)
                     - [test_publisher](tests/unit/apps/core/models/test_publisher.md)
                     - [test_versioning](tests/unit/apps/core/models/test_versioning.md)
             - files

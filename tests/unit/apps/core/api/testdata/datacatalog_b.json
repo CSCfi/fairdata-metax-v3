@@ -1,49 +1,34 @@
 {
-    "id": "urn:nbn:fi:att:data-catalog-uusitesti2",
-    "access_rights": {
-        "description": {
-            "en": "Contains datasets from Repotronic service",
-            "fi": "Sisältää aineistoja Repotronic-palvelusta"
-        },
-        "license": [
-            {
-                "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC0-1.0"
-            }
-        ],
-        "access_type": {
-            "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/embargo",
-            "title": {
-                "en": "Embargo",
-                "fi": "Embargo",
-                "und": "Embargo"
-            }
+  "id": "urn:nbn:fi:att:data-catalog-uusitesti2",
+  "description": {
+    "en": "Contains datasets from Repotronic service",
+    "fi": "Sisältää aineistoja Repotronic-palvelusta"
+  },
+  "publisher": {
+    "name": {
+      "en": "Testing",
+      "fi": "Testi"
+    },
+    "homepage": [
+      {
+        "url": "http://www.uusitesti2.fi/",
+        "title": {
+          "en": "Publisher organization website",
+          "fi": "Julkaisijaorganisaation kotisivu"
         }
-    },
-    "publisher": {
-        "name": {
-            "en": "Testing",
-            "fi": "Testi"
-        },
-        "homepage": [
-            {
-                "url": "http://www.uusitesti2.fi/",
-                "title": {
-                    "en": "Publisher organization website",
-                    "fi": "Julkaisijaorganisaation kotisivu"
-                }
-            }
-        ]
-    },
-    "language": [
-        {
-            "url": "http://lexvo.org/id/iso639-3/fin"
-        }
-    ],
-    "title": {
-        "en": "New catalog",
-        "fi": "Uusi katalogi"
-    },
-    "dataset_versioning_enabled": false,
-    "harvested": false,
-    "dataset_schema": "att"
+      }
+    ]
+  },
+  "language": [
+    {
+      "url": "http://lexvo.org/id/iso639-3/fin"
+    }
+  ],
+  "title": {
+    "en": "New catalog",
+    "fi": "Uusi katalogi"
+  },
+  "dataset_versioning_enabled": false,
+  "harvested": false,
+  "dataset_schema": "att"
 }

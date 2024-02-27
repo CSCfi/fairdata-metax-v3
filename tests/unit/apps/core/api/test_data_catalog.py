@@ -168,9 +168,7 @@ def test_list_datacatalogs(admin_client, post_datacatalog_payloads_a_b_c, data_c
         ("title", "katalogi", 3),
         ("title", "New", 1),
         ("id", "nbn:fi:att", 3),
-        ("access_rights__description", "repo", 2),
-        ("access_rights__access_type__url", "fairdata", 3),
-        ("access_rights__access_type__pref_label", "open", 2),
+        ("description", "repo", 2),
         ("publisher__name", "testi", 3),
         ("publisher__homepage__url", ".fi", 3),
         ("publisher__homepage__title", "website", 3),
@@ -183,9 +181,7 @@ def test_list_datacatalogs_with_filter(
     admin_client, post_datacatalog_payloads_a_b_c, catalog_filter, filter_value, filter_result
 ):
     url = "/v3/data-catalogs?{0}={1}".format(catalog_filter, filter_value)
-    logger.info(url)
     response = admin_client.get(url)
-    logger.info(response.data)
     assert response.status_code == 200
     assert response.data.get("count") == filter_result
 
