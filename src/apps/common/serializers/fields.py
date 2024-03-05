@@ -229,6 +229,8 @@ class MultiLanguageField(serializers.HStoreField):
                 for lang, translation in data.items()
                 if translation not in [None, ""]
             }
+        if data == {} and self.allow_null and not self.allow_empty:
+            return None
         return super().to_internal_value(data)
 
     def __init__(self, **kwargs):

@@ -159,6 +159,7 @@
                 - [commands.test_index_organizations](tests/unit/apps/actors/commands/test_index_organizations.md)
                 - [models.test_organization](tests/unit/apps/actors/models/test_organization.md)
             - [cache.test_cache](tests/unit/apps/cache/test_cache.md)
+            - [common.serializers.test_fields](tests/unit/apps/common/serializers/test_fields.md)
             - [conftest](tests/unit/apps/conftest.md)
             - core
                 - adapters

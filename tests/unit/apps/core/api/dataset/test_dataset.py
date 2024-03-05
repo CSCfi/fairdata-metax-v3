@@ -691,8 +691,8 @@ def test_empty_description(admin_client, dataset_a_json, data_catalog, reference
         {"description": {"fi": "", "en": None}},
         content_type="application/json",
     )
-    assert res.status_code == 400
-    assert res.json()["description"] == ["This dictionary may not be empty."]
+    assert res.status_code == 200
+    assert res.json()["description"] == None
 
 
 def test_dataset_last_modified_by(admin_client, user_client, user):

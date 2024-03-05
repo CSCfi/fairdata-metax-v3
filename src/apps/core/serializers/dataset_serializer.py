@@ -158,7 +158,8 @@ class DatasetSerializer(CommonNestedModelSerializer):
             ret.pop("next_draft", None)
             ret.pop("draft_of", None)
 
-        if request.query_params.get("expand_catalog"):
+        view = self.context["view"]
+        if view.query_params.get("expand_catalog"):
             ret["data_catalog"] = DataCatalogModelSerializer(
                 instance.data_catalog, context={"request": request}
             ).data
