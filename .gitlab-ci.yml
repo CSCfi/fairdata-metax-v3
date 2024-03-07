@@ -46,6 +46,12 @@ unittests:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH =~ /^(master)$/ && $CI_PIPELINE_SOURCE !~ /^(web)$/
 
+test-build-mkdocs:
+  stage: test
+  extends: .test-build-mkdocs
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
 sonarqube:
   stage: test
   extends: .sonarqube-job
