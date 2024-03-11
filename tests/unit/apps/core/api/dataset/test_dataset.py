@@ -5,8 +5,8 @@ from unittest.mock import ANY
 import pytest
 from rest_framework.reverse import reverse
 from tests.utils import assert_nested_subdict, matchers
-
 from watson.models import SearchEntry
+
 from apps.core import factories
 from apps.core.factories import DatasetFactory, MetadataProviderFactory
 from apps.core.models import OtherIdentifier
@@ -738,7 +738,7 @@ def test_dataset_search_entry(admin_client, dataset_a_json, data_catalog, refere
 
     entry = SearchEntry.objects.get(object_id=dataset_id)
     assert res.data["persistent_identifier"] in entry.title  # pid
-    assert "Test dataset" in entry.title # title
+    assert "Test dataset" in entry.title  # title
     assert "test subjects (persons)" in entry.title  # theme
     assert "Test dataset desc" in entry.description  # description
     assert "keyword another_keyword" in entry.description  # keywords

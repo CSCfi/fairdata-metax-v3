@@ -15,8 +15,12 @@ class OrganizationFilterSet(filters.FilterSet):
         label="pref_label",
     )
     parent = filters.UUIDFilter()
+    url = filters.CharFilter()
+    deprecated = filters.BooleanFilter(lookup_expr="isnull", exclude=True)
 
     def filter_queryset(self, queryset):
+        self.form.cleaned_data.setdefault("deprecated", False)  # Hide deprecated by default
+
         qs = super().filter_queryset(queryset)
         if not self.form.cleaned_data.get("parent"):
             qs = qs.filter(parent__isnull=True)

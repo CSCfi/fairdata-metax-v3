@@ -3,19 +3,19 @@ import logging
 import uuid
 from collections import Counter, namedtuple
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 
 from deepdiff import DeepDiff
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import ProgrammingError, models
 from django.utils.dateparse import parse_datetime
 from django.utils.translation import gettext as _
 from rest_framework import serializers
 
-from apps.actors.models import Actor, Organization, Person
+from apps.actors.models import Actor, Organization
 from apps.common.helpers import datetime_to_date, parse_iso_dates_in_nested_dict
 from apps.core.models import FileSet
 from apps.files.models import File
@@ -60,24 +60,16 @@ PostProcessedInstances = namedtuple(
     [
         "languages",
         "spatial",
-        "creators",
+        "actors",
         "file_set",
         "temporal",
         "other_identifiers",
         "field_of_science",
         "infrastructure",
         "provenance",
-        "publisher",
         "projects",
     ],
 )
-
-
-class InvalidActorTypeError(Exception):
-    def __init__(self, message="Invalid Actor type"):
-        super().__init__(message)
-
-        self.message = message
 
 
 class LegacyDataset(Dataset):
@@ -542,23 +534,73 @@ class LegacyDataset(Dataset):
             self.contract = contract
             return contract
 
-    def attach_actor(self, actor_role):
-        if actors_data := self.legacy_research_dataset.get(actor_role):
-            # In case of publisher, actor is dictionary instead of list
-            if isinstance(actors_data, dict):
-                actors_data = [actors_data]
+    def convert_homepage(self, homepage):
+        if not homepage:
+            return homepage
+        return {"title": homepage.get("title"), "url": homepage.get("identifier")}
 
-            actors = []
-            for actor in actors_data:
-                dataset_actor, created = self.get_or_create_v3_actor_from_v2_actor(
-                    actor, actor_role
-                )
-                if created:
-                    self.created_objects.update(["DatasetActor"])
-                actors.append(dataset_actor)
+    def convert_organization(self, organization: dict) -> dict:
+        """Convert organization from V2 dict to V3 dict."""
+        val = {
+            "pref_label": organization.get("name"),
+            "email": organization.get("email"),
+            "homepage": self.convert_homepage(organization.get("homepage")),
+        }
+        if identifier := organization.get("identifier"):
+            if identifier.startswith(settings.ORGANIZATION_BASE_URI):
+                val["url"] = identifier  # reference data
+            else:
+                val["external_identifier"] = identifier
 
-            return actors
-        return []
+        if parent := organization.get("is_part_of"):
+            val["parent"] = self.convert_organization(parent)
+        return val
+
+    def convert_actor(self, actor: dict) -> dict:
+        """Convert actror from V2 dict (optionally with roles) to V3 dict."""
+        val = {}
+        if actor["@type"] == "Person":
+            val["person"] = {
+                "name": actor.get("name"),
+                "external_identifier": actor.get("identifier"),
+                "email": actor.get("email"),
+            }
+            if parent := actor.get("member_of"):
+                val["organization"] = self.convert_organization(parent)
+        elif actor["@type"] == "Organization":
+            val["organization"] = self.convert_organization(actor)
+        else:
+            # Agent (which should be unused) is not supported
+            logger.warn(f"Unknown actor type: {actor['@type']}")
+
+        if roles := actor.get("roles"):
+            # The actor serializer combines actors that have multiple roles
+            # so it's ok to output multiple copies of same actor here
+            val["roles"] = roles
+
+        return val
+
+    def attach_actors(self):
+        actors_data = []
+        roles = ["creator", "publisher", "curator", "contributor", "rights_holder"]
+        for role in roles:
+            # Flatten actors list and add role data
+            role_actors = self.legacy_research_dataset.get(role) or []
+            if isinstance(role_actors, dict):
+                role_actors = [role_actors]  # Publisher is dictionary instead of list
+            actors_data.extend([{**actor, "roles": [role]} for actor in role_actors])
+
+        adapted = [self.convert_actor(actor) for actor in actors_data]
+
+        from apps.core.serializers.dataset_actor_serializers.legacy_serializers import (
+            LegacyDatasetActorSerializer,
+        )
+
+        serializer = LegacyDatasetActorSerializer(
+            instance=self.actors.all(), data=adapted, context={"dataset": self}, many=True
+        )
+        serializer.is_valid(raise_exception=True)
+        self.actors.set(serializer.save())
 
     def convert_checksum_v2_to_v3(self, checksum: dict) -> str:
         algorithm = checksum.get("algorithm", "").lower().replace("-", "")
@@ -695,143 +737,30 @@ class LegacyDataset(Dataset):
                     if created:
                         self.created_objects.update(["LifecycleEvent"])
                     provenance.lifecycle_event = lifecycle_event
+
                 associated_with_objs: List[DatasetActor] = []
                 if was_associated_with := data.get("was_associated_with"):
-                    for actor_data in was_associated_with:
-                        actor, created = self.get_or_create_v3_actor_from_v2_actor(
-                            actor_data, "provenance"
-                        )
-                        associated_with_objs.append(actor)
+                    from apps.core.serializers.dataset_actor_serializers.legacy_serializers import (
+                        LegacyDatasetActorProvenanceSerializer,
+                    )
 
+                    adapted = [self.convert_actor(actor) for actor in was_associated_with]
+                    serializer = LegacyDatasetActorProvenanceSerializer(
+                        instance=provenance.is_associated_with.all(),
+                        data=adapted,
+                        context={"dataset": self},
+                        many=True,
+                    )
+                    serializer.is_valid(raise_exception=True)
+                    associated_with_objs = serializer.save()
                 provenance.is_associated_with.set(associated_with_objs)
+
                 if data.get("outcome_description"):
                     provenance.outcome_description = data.get("outcome_description")
 
                 provenance.save()
                 obj_list.append(provenance)
         return obj_list
-
-    @classmethod
-    def choose_between_orgs(cls, a, b) -> "Organization":
-        """Choose the best option between the orgs when migrating v2 org to v3."""
-        if isinstance(a, b.__class__):
-            if a.parent is None and b.parent is not None:
-                return a
-            elif a.in_scheme and not b.in_scheme:
-                return a
-            elif a.code and not b.code:
-                return a
-            elif a.url and not b.url:
-                return a
-            elif len(list(a.pref_label.keys())) > len(list(b.pref_label.keys())):
-                return a
-            else:
-                return b
-
-    @classmethod
-    def get_or_create_v3_org_from_v2_org(cls, v2_org) -> "Organization":
-        """Get or create organization from v2 organization object.
-
-        Args:
-            v2_org (): dictionary with organization name in one or many languages.
-                Example dictionary could be {"fi":"csc": "en":"csc"}
-
-        Returns:
-            Organization: Organization object corresponding to given name dictionary.
-
-        """
-        # https://docs.djangoproject.com/en/4.1/ref/contrib/postgres/fields/#values
-        # pref_label is HStoreField that serializes into dictionary object.
-        # pref_label__values works as normal python dictionary.values()
-        # pref_label__values__contains compares if any given value in a list
-        #       is contained in the pref_label values.
-        if v2_org["@type"] == "Person":
-            raise InvalidActorTypeError()
-
-        parent = None
-        if is_part_of := v2_org.get("is_part_of"):
-            parent = cls.get_or_create_v3_org_from_v2_org(is_part_of)
-        try:
-            org, created = Organization.objects.get_or_create(
-                pref_label__values__contains=list(v2_org["name"].values()),
-                url=v2_org.get("identifier"),
-                defaults={
-                    "pref_label": v2_org["name"],
-                    "homepage": v2_org.get("homepage"),
-                    "url": v2_org.get("identifier"),
-                    "in_scheme": settings.ORGANIZATION_SCHEME,
-                    "parent": parent,
-                },
-            )
-            if created:
-                cls.created_objects.update(["Organization"])
-
-            return org
-        except MultipleObjectsReturned as e:
-            orgs = Organization.objects.filter(
-                pref_label__values__contains=list(v2_org["name"].values()),
-                url=v2_org.get("identifier"),
-            )
-            best_org = orgs[0]
-            for org in orgs:
-                best_org = cls.choose_between_orgs(best_org, org)
-            logger.error(
-                f"{e}, chose: {best_org.pref_label} from: {[org.pref_label for org in orgs]}"
-            )
-            return best_org
-
-    def get_or_create_organizations_from_list(self, orgs):
-        return [self.get_or_create_v3_org_from_v2_org(org_v2) for org_v2 in orgs]
-
-    def get_or_create_v3_actor_from_v2_actor(
-        cls, obj: Dict, role: str
-    ) -> Tuple[DatasetActor, bool]:
-        """
-
-        Args:
-            obj (Dict): v2 actor dictionary
-            dataset (Dataset): Dataset where the actor will be present
-            role (str): Role of the actor in the dataset
-
-        Returns:
-            DatasetActor: get or created DatasetActor instance
-
-        """
-        organization: Optional[Organization] = None
-        person: Optional[Person] = None
-
-        try:
-            organization = cls.get_or_create_v3_org_from_v2_org(obj)
-            actor, created = DatasetActor.objects.get_or_create(
-                organization=organization, person__isnull=True, dataset=cls
-            )
-        except InvalidActorTypeError:
-            name = obj.get("name")
-            person = Person(name=name)
-            person.save()
-            cls.created_objects.update(["Person"])
-
-            if member_of := obj.get("member_of"):
-                organization = cls.get_or_create_v3_org_from_v2_org(member_of)
-            actor, created = DatasetActor.objects.get_or_create(
-                organization=organization, dataset=cls, person=person
-            )
-
-        except Exception as e:
-            logger.error(f"{e}\nin dataset: {cls.id}\nattaching actor: {obj}")
-            raise e
-
-        if not actor.roles:
-            actor.roles = [role]
-        elif role not in actor.roles:
-            actor.roles.append(role)
-
-        actor.save()
-
-        if created:
-            cls.created_objects.update(["DatasetActor"])
-
-        return actor, created
 
     def create_funding(self, data, funder_org):
         funder_type = None
@@ -853,22 +782,15 @@ class LegacyDataset(Dataset):
         return fund
 
     def attach_projects(self):
+        from apps.core.serializers.dataset_actor_serializers.legacy_serializers import (
+            LegacyDatasetOrganizationSerializer,
+        )
+
         obj_list = []
+        serializer_context = {"dataset": self}
 
         if project_data := self.legacy_research_dataset.get("is_output_of"):
             for data in project_data:
-                funding = []
-                source_organizations = self.get_or_create_organizations_from_list(
-                    data.get("source_organization", [])
-                )
-                funder_organizations = self.get_or_create_organizations_from_list(
-                    data.get("has_funding_agency", [])
-                )
-
-                for funder_org in funder_organizations:
-                    fund = self.create_funding(data, funder_org)
-                    funding.append(fund)
-
                 project, created = DatasetProject.objects.get_or_create(
                     dataset=self,
                     title=data["name"],
@@ -877,7 +799,34 @@ class LegacyDataset(Dataset):
                     },
                 )
 
+                # Source organizations
+                source_data = [
+                    self.convert_organization(org) for org in data.get("source_organization", [])
+                ]
+                source_serializer = LegacyDatasetOrganizationSerializer(
+                    instance=project.participating_organizations.all(),
+                    data=source_data,
+                    context=serializer_context,
+                    many=True,  # todo instance
+                )
+                source_serializer.is_valid(raise_exception=True)
+                source_organizations = source_serializer.save()
                 project.participating_organizations.set(source_organizations)
+
+                # Funder organizations
+                funder_data = [
+                    self.convert_organization(org) for org in data.get("has_funding_agency", [])
+                ]
+                funder_serializer = LegacyDatasetOrganizationSerializer(
+                    data=funder_data, context=serializer_context, many=True
+                )
+                funder_serializer.is_valid(raise_exception=True)
+                funder_organizations = funder_serializer.save()
+
+                funding = []
+                for funder_org in funder_organizations:
+                    fund = self.create_funding(data, funder_org)
+                    funding.append(fund)
                 project.funding.set(funding)
 
                 if created:
@@ -896,7 +845,6 @@ class LegacyDataset(Dataset):
         """
         self.convert_root_level_fields()
         self.convert_research_dataset_fields()
-        self.remove_attached_actors()
 
         access_rights = self.attach_access_rights()
         data_catalog = self.attach_data_catalog()
@@ -933,8 +881,7 @@ class LegacyDataset(Dataset):
                 pref_label_key_name="title",
             ),
             spatial=self.attach_spatial(),
-            creators=self.attach_actor("creator"),
-            publisher=self.attach_actor("publisher"),
+            actors=self.attach_actors(),
             file_set=self.attach_files(),
             temporal=self.attach_temporal(),
             other_identifiers=self.attach_other_identifiers(),

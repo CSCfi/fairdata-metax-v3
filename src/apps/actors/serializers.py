@@ -2,11 +2,36 @@ import logging
 
 from rest_framework import serializers
 
-from apps.actors.models import Actor, Organization, Person
+from apps.actors.models import Actor, HomePage, Organization, Person
 from apps.common.serializers import CommonListSerializer
 from apps.common.serializers.serializers import CommonModelSerializer
 
 logger = logging.getLogger("__name__")
+
+
+class HomePageSerializer(CommonModelSerializer):
+    """Serialize parent organizations up to root."""
+
+    class Meta:
+        model = HomePage
+        fields = ["title", "url"]
+
+
+def get_org_children(context: dict, org: Organization):
+    """Serialize reference data childen of organization."""
+    # Return only children that match the deprecation status of the parent
+    if org.deprecated:
+        children = [
+            child for child in org.children.all() if child.is_reference_data and child.deprecated
+        ]
+    else:
+        children = [
+            child
+            for child in org.children.all()
+            if child.is_reference_data and not child.deprecated
+        ]
+    serializer = ChildOrganizationSerializer(instance=children, many=True, context=context)
+    return serializer.data
 
 
 class ChildOrganizationSerializer(CommonModelSerializer):
@@ -15,11 +40,7 @@ class ChildOrganizationSerializer(CommonModelSerializer):
     children = serializers.SerializerMethodField(read_only=True, method_name="get_children")
 
     def get_children(self, obj):
-        children = [child for child in obj.children.all() if child.is_reference_data]
-        serializer = ChildOrganizationSerializer(
-            instance=children, many=True, context=self.context
-        )
-        return serializer.data
+        return get_org_children(self.context, obj)
 
     class Meta:
         model = Organization
@@ -58,15 +79,12 @@ class OrganizationSerializer(CommonModelSerializer):
     * Parent organizations up to root, but no children of parents
     """
 
-    children = ChildOrganizationSerializer(many=True, read_only=True)
+    children = serializers.SerializerMethodField(read_only=True, method_name="get_children")
     parent = ParentOrganizationSerializer(read_only=True)
+    homepage = HomePageSerializer(read_only=True)
 
     def get_children(self, obj):
-        children = [child for child in obj.children.all() if child.is_reference_data]
-        serializer = ChildOrganizationSerializer(
-            instance=children, many=True, context=self.context
-        )
-        return serializer.data
+        return get_org_children(self.context, obj)
 
     class Meta:
         model = Organization

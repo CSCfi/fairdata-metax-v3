@@ -9,6 +9,7 @@ import logging
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
+from rest_framework.settings import api_settings
 
 from apps.common.serializers import CommonListSerializer, CommonNestedModelSerializer, OneOf
 from apps.core.models import DataCatalog, Dataset
@@ -20,7 +21,6 @@ from apps.core.serializers.common_serializers import (
     RemoteResourceSerializer,
     TemporalModelSerializer,
 )
-from rest_framework.settings import api_settings
 from apps.core.serializers.concept_serializers import SpatialModelSerializer
 from apps.core.serializers.data_catalog_serializer import DataCatalogModelSerializer
 from apps.core.serializers.dataset_actor_serializers import DatasetActorSerializer
@@ -308,8 +308,6 @@ class DatasetSerializer(CommonNestedModelSerializer):
         return errors
 
     def to_internal_value(self, data):
-        # Emails are readable during input conversion (needed by dataset member serializer)
-        self.context["show_emails"] = True
         if self.instance:  # dataset actors need dataset in context
             self.context["dataset"] = self.instance
         _data = super().to_internal_value(data)

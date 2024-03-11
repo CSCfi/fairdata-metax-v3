@@ -2,17 +2,31 @@ import logging
 import uuid
 from typing import Dict
 
-from django.conf import settings
 from django.contrib.postgres.fields import HStoreField
-from django.core.exceptions import MultipleObjectsReturned
 from django.db import models
 from django.db.models import Model
 from django.utils.translation import gettext as _
+from simple_history.models import HistoricalRecords
 
 from apps.common.copier import ModelCopier
 from apps.common.models import AbstractBaseModel
 
 logger = logging.getLogger(__name__)
+
+
+class HomePage(AbstractBaseModel):
+    """A homepage of an entity."""
+
+    copier = ModelCopier(
+        copied_relations=[],
+        parent_relations=["organization"],
+    )
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    url = models.URLField(max_length=512, help_text="Link to homepage.")
+    title = HStoreField(help_text='example: {"en":"title", "fi":"otsikko"}', null=True)
+
+    history = HistoricalRecords()
 
 
 class OrganizationModelCopier(ModelCopier):
@@ -34,75 +48,21 @@ class Organization(AbstractBaseModel):
 
     # Copying a sub-organization in a dataset should also copy its parents
     copier = OrganizationModelCopier(
-        copied_relations=["parent"], parent_relations=["actor_organizations", "projects", "agencies"]
+        copied_relations=["parent", "homepage"],
+        parent_relations=["actor_organizations", "projects", "agencies"],
     )
-
-    def choose_between(self, other) -> "Organization":
-        if isinstance(other, self.__class__):
-            if self.parent is None and other.parent is not None:
-                return self
-            elif self.in_scheme and not other.in_scheme:
-                return self
-            elif self.code and not other.code:
-                return self
-            elif self.url and not other.url:
-                return self
-            elif len(list(self.pref_label.keys())) > len(list(other.pref_label.keys())):
-                return self
-            else:
-                return other
-
-    @classmethod
-    def get_instance_from_v2_dictionary(cls, org_obj) -> "Organization":
-        """Gets or creates organization for the actor from v2 organization type actor object.
-
-        Args:
-            org_obj (): dictionary with organization name in one or many languages.
-                Example dictionary could be {"fi":"csc": "en":"csc"}
-
-        Returns:
-            Organization: Organization object corresponding to given name dictionary.
-
-        """
-        # https://docs.djangoproject.com/en/4.1/ref/contrib/postgres/fields/#values
-        # pref_label is HStoreField that serializes into dictionary object.
-        # pref_label__values works as normal python dictionary.values()
-        # pref_label__values__contains compares if any given value in a list is contained in the pref_label values.
-        try:
-            org, created = cls.objects.get_or_create(
-                pref_label__values__contains=list(org_obj["name"].values()),
-                url=org_obj.get("identifier"),
-                defaults={
-                    "pref_label": org_obj["name"],
-                    "homepage": org_obj.get("homepage"),
-                    "url": org_obj.get("identifier"),
-                    "in_scheme": settings.ORGANIZATION_SCHEME,
-                },
-            )
-            logger.debug(f"{org=}, {created=}")
-            return org
-        except MultipleObjectsReturned as e:
-            orgs = cls.objects.filter(
-                pref_label__values__contains=list(org_obj["name"].values()),
-                url=org_obj.get("identifier"),
-            )
-            best_org = orgs[0]
-            for org in orgs:
-                best_org = org.choose_between(best_org)
-            logger.error(
-                f"{e}, chose: {best_org.pref_label} from: {[org.pref_label for org in orgs]}"
-            )
-            return best_org
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     url = models.URLField(max_length=255, blank=True, null=True)
     code = models.CharField(max_length=64, null=True)
     in_scheme = models.URLField(max_length=255, null=True, blank=True)
     pref_label = HStoreField(help_text='example: {"en":"title", "fi":"otsikko"}')
-    homepage = HStoreField(
+    homepage = models.OneToOneField(
+        HomePage,
         blank=True,
         null=True,
-        help_text='example: {"title": {"en": "webpage"}, "identifier": "url"}',
+        help_text='example: {"title": {"en": "webpage"}, "url": "https://example.com"}',
+        on_delete=models.SET_NULL,
     )
     external_identifier = models.CharField(
         max_length=512,
@@ -120,6 +80,11 @@ class Organization(AbstractBaseModel):
         null=True,
     )
     is_reference_data = models.BooleanField(default=False)
+    deprecated = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text=_("If set, organization is not shown in organization list by default."),
+    )
 
     class Meta:
         indexes = [
@@ -169,13 +134,10 @@ class Organization(AbstractBaseModel):
         data = {}
         data["@type"] = "Organization"
         data["name"] = self.pref_label
-        if url := self.url:
-            data["identifier"] = url
+        if identifier := self.url or self.external_identifier:
+            data["identifier"] = identifier
         if homepage := self.homepage:
-            if title := homepage.get("title"):
-                if isinstance(title, str):
-                    homepage["title"] = eval(title)
-            data["homepage"] = homepage
+            data["homepage"] = {"title": homepage.title, "identifier": homepage.url}
         if parent := self.parent:
             data["is_part_of"] = parent.as_v2_data()
         return data

@@ -4,6 +4,7 @@ from typing import Dict
 from django.utils.translation import gettext_lazy as _
 
 from apps.actors.models import Person
+from apps.common.serializers.serializers import CommonListSerializer
 from apps.common.serializers.validators import AllOf
 from apps.core.models.catalog_record.dataset import Dataset
 from apps.core.serializers.dataset_actor_serializers.member_serializer import (
@@ -55,3 +56,4 @@ class DatasetPersonSerializer(DatasetMemberSerializer):
         model = Person
         fields = ("id", "name", "email", "external_identifier")
         extra_kwargs = {"name": {"required": False}}  # checked by save_validator
+        list_serializer_class = CommonListSerializer

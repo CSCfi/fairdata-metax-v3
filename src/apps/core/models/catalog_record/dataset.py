@@ -22,7 +22,6 @@ from apps.core.services.pid_ms_client import PIDMSClient, ServiceUnavailableErro
 from apps.files.models import File
 from apps.users.models import MetaxUser
 
-
 from .meta import CatalogRecord, OtherIdentifier
 
 logger = logging.getLogger(__name__)

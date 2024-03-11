@@ -65,6 +65,7 @@
             - [data_catalog_serializer](src/apps/core/serializers/data_catalog_serializer.md)
             - dataset_actor_serializers
                 - [actor_serializer](src/apps/core/serializers/dataset_actor_serializers/actor_serializer.md)
+                - [legacy_serializers](src/apps/core/serializers/dataset_actor_serializers/legacy_serializers.md)
                 - [member_serializer](src/apps/core/serializers/dataset_actor_serializers/member_serializer.md)
                 - [organization_serializer](src/apps/core/serializers/dataset_actor_serializers/organization_serializer.md)
                 - [person_serializer](src/apps/core/serializers/dataset_actor_serializers/person_serializer.md)

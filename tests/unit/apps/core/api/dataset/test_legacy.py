@@ -37,26 +37,6 @@ def test_edit_legacy_dataset(admin_client, legacy_dataset_a, legacy_dataset_a_js
     assert res.status_code == 200
 
 
-def test_get_organization_with_duplicate_get(legacy_dataset_a):
-    assert legacy_dataset_a.status_code == 201
-    dataset = LegacyDataset.objects.first()
-    org1 = OrganizationFactory.create(pref_label={"en": "University of Helsinki"}, url=None)
-    org2 = OrganizationFactory.create(
-        pref_label={"en": "University of Helsinki", "fi": "Helsingin Yliopisto"}, url=None
-    )
-    org3 = dataset.get_or_create_v3_org_from_v2_org(
-        {
-            "@type": "Organization",
-            "name": {
-                "en": "University of Helsinki",
-            },
-        }
-    )
-    best = dataset.choose_between_orgs(org1, org3)
-    assert str(org2.id) == str(org3.id)
-    assert str(best.id) == str(org2.id)
-
-
 def test_edit_legacy_dataset_deprecation(admin_client, legacy_dataset_a, legacy_dataset_a_json):
     # deprecation boolean should be converted into timestamp
     legacy_dataset_a_json["dataset_json"]["deprecated"] = True
@@ -96,3 +76,84 @@ def test_delete_legacy_dataset(admin_client, legacy_dataset_a, legacy_dataset_a_
     )
     assert res.status_code == 204
     assert LegacyDataset.available_objects.count() == 0
+
+
+def test_legacy_dataset_actors(admin_client, data_catalog, reference_data, legacy_dataset_a_json):
+    res = admin_client.post(
+        reverse("migrated-dataset-list"), legacy_dataset_a_json, content_type="application/json"
+    )
+    assert res.status_code == 201
+    res = admin_client.get(
+        reverse("dataset-detail", kwargs={"pk": res.data["id"]}), content_type="application/json"
+    )
+    data = res.json()
+
+    # Check that actors are merged
+    assert len(data["actors"]) == 3
+    assert data["actors"][0]["person"]["name"] == "Toni Nurmi"
+    assert sorted(data["actors"][0]["roles"]) == [
+        "contributor",
+        "creator",
+        "publisher",
+        "rights_holder",
+    ]
+    assert data["actors"][1]["person"]["name"] == "Teppo Testaaja"
+    assert data["actors"][1]["organization"]["homepage"] == {
+        "url": "https://example.com",
+        "title": {"en": "Test homepage"},
+    }
+    assert data["actors"][1]["roles"] == ["creator"]
+    assert data["actors"][2]["person"]["name"] == "Curator Person"
+    assert data["actors"][2]["roles"] == ["curator"]
+
+    actor_without_roles = {**res.json()["actors"][0]}
+    actor_without_roles.pop("roles")
+    assert actor_without_roles == res.json()["provenance"][0]["is_associated_with"][0]
+
+    # Check that deprecated reference organization has been created
+    res = admin_client.get(
+        reverse("organization-list"),
+        {
+            "url": "http://uri.suomi.fi/codelist/fairdata/organization/code/legacyorg",
+            "deprecated": True,
+            "expand_children": True,
+            "pagination": False,
+        },
+    )
+    data = res.json()
+    assert len(data) == 1
+    assert data[0]["pref_label"]["en"] == "Reference organization from V2 not in V3"
+    assert data[0]["deprecated"] is not None
+    assert len(data[0]["children"]) == 1
+    assert (
+        data[0]["children"][0]["pref_label"]["en"]
+        == "Reference organization department from V2 not in V3"
+    )
+    assert data[0]["children"][0]["deprecated"] is not None
+
+
+def test_legacy_dataset_actors_invalid_refdata_parent(
+    admin_client, data_catalog, reference_data, legacy_dataset_a_json
+):
+    """Reference organization cannot be child of non-reference organization."""
+    legacy_dataset_a_json["dataset_json"]["research_dataset"]["creator"] = {
+        "name": "Toni Nurmi",
+        "@type": "Person",
+        "member_of": {
+            "name": {"en": "Legacy reference org"},
+            "@type": "Organization",
+            "identifier": "http://uri.suomi.fi/codelist/fairdata/organization/code/somelegacyorg",
+            "is_part_of": {
+                "name": {"en": "this is not a reference org"},
+                "@type": "Organization",
+                "identifier": "http://example.com/thisisnotreferencedata",
+            },
+        },
+    }
+    res = admin_client.post(
+        reverse("migrated-dataset-list"), legacy_dataset_a_json, content_type="application/json"
+    )
+    assert res.status_code == 400
+    assert (
+        "cannot be child of non-reference organization" in res.json()[0]["organization"]["parent"]
+    )

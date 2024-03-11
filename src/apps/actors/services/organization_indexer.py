@@ -159,11 +159,16 @@ class OrganizationIndexer:
         all_reference_orgs = Organization.all_objects.filter(
             is_reference_data=True, in_scheme=settings.ORGANIZATION_SCHEME
         )
-        deprecated = all_reference_orgs.exclude(url__in=orgs_dict.keys())
-        if count := deprecated.count():
+
+        # Deprecate organizations that have been removed from source data
+        new_deprecated = all_reference_orgs.filter(deprecated__isnull=True).exclude(
+            url__in=orgs_dict.keys()
+        )
+        if count := new_deprecated.count():
             _logger.info(
                 f"Reference data organizations in database but no longer in source data: {count}"
             )
+            new_deprecated.update(deprecated=timezone.now())
 
         existing_orgs = all_reference_orgs.filter(url__in=orgs_dict.keys())
         orgs_by_url = {org.url: org for org in existing_orgs}

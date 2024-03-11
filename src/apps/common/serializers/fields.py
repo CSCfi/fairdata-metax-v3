@@ -227,7 +227,7 @@ class MultiLanguageField(serializers.HStoreField):
             data = {
                 lang: translation
                 for lang, translation in data.items()
-                if translation not in {None, ""}
+                if translation not in [None, ""]
             }
         return super().to_internal_value(data)
 

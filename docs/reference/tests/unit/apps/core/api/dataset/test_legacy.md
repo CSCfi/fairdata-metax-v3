@@ -12,10 +12,6 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_legacy.test_edit_legacy_dataset
 
-## test_get_organization_with_duplicate_get
-
-### :::tests.unit.apps.core.api.dataset.test_legacy.test_get_organization_with_duplicate_get
-
 ## test_edit_legacy_dataset_deprecation
 
 ### :::tests.unit.apps.core.api.dataset.test_legacy.test_edit_legacy_dataset_deprecation
@@ -23,4 +19,12 @@
 ## test_delete_legacy_dataset
 
 ### :::tests.unit.apps.core.api.dataset.test_legacy.test_delete_legacy_dataset
+
+## test_legacy_dataset_actors
+
+### :::tests.unit.apps.core.api.dataset.test_legacy.test_legacy_dataset_actors
+
+## test_legacy_dataset_actors_invalid_refdata_parent
+
+### :::tests.unit.apps.core.api.dataset.test_legacy.test_legacy_dataset_actors_invalid_refdata_parent
 

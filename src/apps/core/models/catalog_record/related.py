@@ -88,46 +88,6 @@ class DatasetActor(Actor):
                 org = org.parent
         return None
 
-    @classmethod
-    def get_instance_from_v2_dictionary(
-        cls, obj: Dict, dataset: "Dataset", role: str
-    ) -> Tuple["DatasetActor", bool]:
-        """
-
-        Args:
-            obj (Dict): v2 actor dictionary
-            dataset (Dataset): Dataset where the actor will be present
-            role (str): Role of the actor in the dataset
-
-        Returns:
-            DatasetActor: get or created DatasetActor instance
-
-        """
-        actor_type = obj["@type"]
-        organization: Optional[Organization] = None
-        person: Optional[Person] = None
-        if actor_type == "Organization":
-            organization = Organization.get_instance_from_v2_dictionary(obj, dataset)
-            actor, created = cls.objects.get_or_create(
-                organization=organization, person__isnull=True, dataset=dataset
-            )
-        else:
-            name = obj.get("name")
-            person = Person(name=name)
-            person.save()
-            dataset.created_objects.update(["Person"])
-            if member_of := obj.get("member_of"):
-                organization = Organization.get_instance_from_v2_dictionary(member_of, dataset)
-            actor, created = cls.objects.get_or_create(
-                organization=organization, dataset=dataset, person=person
-            )
-        if not actor.roles:
-            actor.roles = [role]
-        elif role not in actor.roles:
-            actor.roles.append(role)
-        actor.save()
-        return actor, created
-
 
 class Temporal(AbstractBaseModel):
     """Time period that is covered by the dataset, i.e. period of observations.

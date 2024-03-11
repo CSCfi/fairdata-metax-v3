@@ -41,12 +41,33 @@
             "@type": "Organization",
             "identifier": "http://uri.suomi.fi/codelist/fairdata/organization/code/09206320"
           }
+        },
+        {
+          "name": "Teppo Testaaja",
+          "@type": "Person",
+          "member_of": {
+            "name": {
+              "en": "Test organization"
+            },
+            "@type": "Organization",
+            "homepage": {
+              "title": {
+                "en": "Test homepage"
+              },
+              "identifier": "https://example.com"
+            }
+          }
         }
       ],
-      "keyword": ["Roolipelit", "Pelit"],
+      "keyword": [
+        "Roolipelit",
+        "Pelit"
+      ],
       "spatial": [
         {
-          "as_wkt": ["POINT(24.65673 60.20638)"],
+          "as_wkt": [
+            "POINT(24.65673 60.20638)"
+          ],
           "place_uri": {
             "in_scheme": "http://www.yso.fi/onto/yso/places",
             "identifier": "http://www.yso.fi/onto/yso/p94105",
@@ -79,6 +100,40 @@
           "start_date": "2022-12-11T00:00:00.000Z"
         }
       ],
+      "curator": [
+        {
+          "name": "Curator Person",
+          "@type": "Person",
+          "member_of": {
+            "name": {
+              "en": "Reference organization department from V2 not in V3"
+            },
+            "@type": "Organization",
+            "identifier": "http://uri.suomi.fi/codelist/fairdata/organization/code/legacydept",
+            "is_part_of": {
+              "name": {
+                "en": "Reference organization from V2 not in V3"
+              },
+              "@type": "Organization",
+              "identifier": "http://uri.suomi.fi/codelist/fairdata/organization/code/legacyorg"
+            }
+          }
+        }
+      ],
+      "contributor": {
+        "name": "Toni Nurmi",
+        "@type": "Person",
+        "member_of": {
+          "name": {
+            "en": "CSC – IT Center for Science",
+            "fi": "CSC - Tieteen tietotekniikan keskus Oy",
+            "sv": "CSC – IT Center for Science",
+            "und": "CSC - Tieteen tietotekniikan keskus Oy"
+          },
+          "@type": "Organization",
+          "identifier": "http://uri.suomi.fi/codelist/fairdata/organization/code/09206320"
+        }
+      },
       "publisher": {
         "name": "Toni Nurmi",
         "@type": "Person",
@@ -93,13 +148,31 @@
           "identifier": "http://uri.suomi.fi/codelist/fairdata/organization/code/09206320"
         }
       },
+      "rights_holder": [
+        {
+          "name": "Toni Nurmi",
+          "@type": "Person",
+          "member_of": {
+            "name": {
+              "en": "CSC – IT Center for Science",
+              "fi": "CSC - Tieteen tietotekniikan keskus Oy",
+              "sv": "CSC – IT Center for Science",
+              "und": "CSC - Tieteen tietotekniikan keskus Oy"
+            },
+            "@type": "Organization",
+            "identifier": "http://uri.suomi.fi/codelist/fairdata/organization/code/09206320"
+          }
+        }
+      ],
       "provenance": [
         {
           "title": {
             "en": "Collection"
           },
           "spatial": {
-            "as_wkt": ["POINT(24.65673 60.20638)"],
+            "as_wkt": [
+              "POINT(24.65673 60.20638)"
+            ],
             "place_uri": {
               "in_scheme": "http://www.yso.fi/onto/yso/places",
               "identifier": "http://www.yso.fi/onto/yso/p94105",

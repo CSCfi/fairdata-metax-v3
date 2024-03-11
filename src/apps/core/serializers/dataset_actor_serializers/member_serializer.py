@@ -1,6 +1,6 @@
 import logging
 import uuid
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -27,7 +27,7 @@ class DatasetMemberContext:
     existing_data: dict = None  # like comparison_data but for data already in dataset
     is_existing: bool = False  # member already existed in dataset before request
     is_updated: bool = False  # dataset is already up-to-date, no need to save again
-    error: object = None  # if object has an error, raise it instead of trying to save
+    error: Any = None  # if object has an error, raise it instead of trying to save
 
 
 class UUIDOrTagField(serializers.UUIDField):
@@ -153,7 +153,11 @@ class DatasetMemberSerializer(StrictSerializer, CommonNestedModelSerializer):
 
     def get_existing_data(self, object):
         """Get comparison data for existing object, used for determining id."""
+        old_show_emails = self.context.get("show_emails")
+        self.context["show_emails"] = True  # Show emails when getting existing data for comparison
         rep = self.to_representation(object)
+        self.context["show_emails"] = old_show_emails
+
         rep.pop("id", None)
         return self.get_comparison_data(rep)
 

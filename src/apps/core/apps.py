@@ -3,7 +3,6 @@ from watson import search
 
 
 class DatasetSearchAdapter(search.SearchAdapter):
-
     # Title field is limited to 1000 characters
     max_title_length = 1000
 

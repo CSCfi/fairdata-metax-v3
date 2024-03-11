@@ -116,3 +116,25 @@ def test_index_organizations_from_api(requests_mock):
         org["url"] = f"{test_settings['ORGANIZATION_BASE_URI']}{org['code']}"
 
     assert list(orgs) == expected_orgs
+
+
+@pytest.mark.django_db
+@override_settings(**test_settings)
+def test_index_organizations_deprecation():
+    """Reference data organizations removed from source data should be deprecated."""
+    dep1 = Organization.objects.create(
+        pref_label={"en": "This will be deprecated"},
+        url=f"{test_settings['ORGANIZATION_BASE_URI']}/deprecateme",
+        in_scheme=test_settings["ORGANIZATION_SCHEME"],
+        is_reference_data=True,
+    )
+    dep2 = Organization.objects.create(
+        pref_label={"en": "This too"},
+        url=f"{test_settings['ORGANIZATION_BASE_URI']}/deprecatemetoo",
+        in_scheme=test_settings["ORGANIZATION_SCHEME"],
+        is_reference_data=True,
+    )
+    assert not Organization.available_objects.filter(deprecated__isnull=False).exists()
+    call_command("index_organizations", "--cached")
+    deprecated_orgs = Organization.available_objects.filter(deprecated__isnull=False)
+    assert set(deprecated_orgs) == {dep1, dep2}
