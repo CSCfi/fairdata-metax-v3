@@ -32,6 +32,9 @@ class DatasetNestedViewSetMixin(CommonModelViewSet):
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
+        if getattr(self, "swagger_fake_view", None):
+            # kwargs are not available in swagger inspection
+            return context
         context["dataset_pk"] = self.kwargs.get("dataset_pk")
         context["dataset"] = self.get_dataset_instance()
         return context

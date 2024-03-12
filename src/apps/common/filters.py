@@ -104,3 +104,40 @@ class SearchField(forms.CharField):
 
 class SearchFilter(filters.CharFilter):
     field_class = SearchField
+
+
+class CustomDjangoFilterBackend(filters.DjangoFilterBackend):
+    """Filter backend that shows boolean filters as booleans in swagger."""
+
+    def get_operation_parameter_type(self, field):
+        if isinstance(field, filters.BooleanFilter):
+            return "boolean"
+        return "string"
+
+    def get_schema_operation_parameters(self, view):
+        try:
+            queryset = view.get_queryset()
+        except Exception:
+            queryset = None
+
+        filterset_class = self.get_filterset_class(view, queryset)
+
+        if not filterset_class:
+            return []
+
+        parameters = []
+        for field_name, field in filterset_class.base_filters.items():
+            parameter = {
+                "name": field_name,
+                "required": field.extra["required"],
+                "in": "query",
+                "description": field.label if field.label is not None else field_name,
+                "schema": {
+                    # Original implementation always uses "string" type here
+                    "type": self.get_operation_parameter_type(field),
+                },
+            }
+            if field.extra and "choices" in field.extra:
+                parameter["schema"]["enum"] = [c[0] for c in field.extra["choices"]]
+            parameters.append(parameter)
+        return parameters

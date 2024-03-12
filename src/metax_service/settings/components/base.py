@@ -238,7 +238,7 @@ REST_FRAMEWORK = {
         "apps.users.authentication.SSOSyncKnoxTokenAuthentication",
     ],
     "DEFAULT_PAGINATION_CLASS": "apps.common.pagination.DefaultOffsetPagination",
-    "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
+    "DEFAULT_FILTER_BACKENDS": ("apps.common.filters.CustomDjangoFilterBackend",),
     "EXCEPTION_HANDLER": "common.exceptions.exception_handler",
     "DEFAULT_RENDERER_CLASSES": [
         "apps.common.renderers.CustomTimeJSONRenderer",  # Add the path to your custom renderer

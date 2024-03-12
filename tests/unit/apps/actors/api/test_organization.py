@@ -82,3 +82,23 @@ def test_get_sub_org(check_org_trees):
 @pytest.mark.django_db
 def test_get_sub_sub_org(check_org_trees):
     check_org_trees("1-2-3", {"1": {"1-2": {"1-2-3": {}}}})
+
+
+@pytest.mark.django_db
+def test_get_org_list_no_include_suborganizations(organization_tree, client):
+    resp = client.get(
+        reverse("organization-list"),
+        {"pagination": False},
+    )
+    assert resp.status_code == 200
+    assert len(resp.data) == 2
+
+
+@pytest.mark.django_db
+def test_get_org_list_include_suborganizations(organization_tree, client):
+    resp = client.get(
+        reverse("organization-list"),
+        {"pagination": False, "include_suborganizations": True},
+    )
+    assert resp.status_code == 200
+    assert len(resp.data) == 6

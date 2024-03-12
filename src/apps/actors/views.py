@@ -17,19 +17,31 @@ class OrganizationFilterSet(filters.FilterSet):
     parent = filters.UUIDFilter()
     url = filters.CharFilter()
     deprecated = filters.BooleanFilter(lookup_expr="isnull", exclude=True)
+    include_suborganizations = filters.BooleanFilter(
+        method="filter_include_suborganizations",
+        label=_("Also include suborganizations in the list."),
+    )
+
+    def filter_include_suborganizations(self, queryset, name, value):
+        """Hide suborganizations in list unless filter is enabled or parent is set."""
+        parent = self.form.cleaned_data.get("parent")
+        if not value and not parent:
+            return queryset.filter(parent__isnull=True)  # Show only top-level orgs
+        return queryset
 
     def filter_queryset(self, queryset):
-        self.form.cleaned_data.setdefault("deprecated", False)  # Hide deprecated by default
-
-        qs = super().filter_queryset(queryset)
-        if not self.form.cleaned_data.get("parent"):
-            qs = qs.filter(parent__isnull=True)
-        return qs
+        # Hide deprecated organizations by default
+        if self.form.cleaned_data["deprecated"] is None:
+            self.form.cleaned_data["deprecated"] = False
+        # Hide suborganizations in the top list level by default
+        if self.form.cleaned_data["include_suborganizations"] is None:
+            self.form.cleaned_data["include_suborganizations"] = False
+        return super().filter_queryset(queryset)
 
 
 class OrganizationViewSetQueryParamsSerializer(serializers.Serializer):
     expand_children = serializers.BooleanField(
-        required=False,
+        default=False,
         help_text=_("Show full child objects in list view instead of only identifiers."),
     )
 

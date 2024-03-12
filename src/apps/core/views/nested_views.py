@@ -83,9 +83,7 @@ class ProvenanceViewSet(DatasetNestedViewSetMixin):
 @swagger_auto_schema(operation_description="DatasetActor viewset")
 class DatasetActorViewSet(DatasetNestedViewSetMixin):
     serializer_class = DatasetActorSerializer
-    filter_backends = (filters.DjangoFilterBackend,)
 
 
 class AccessRightsViewSet(DatasetNestedViewSetMixin):
     serializer_class = AccessRightsModelSerializer
-    filter_backends = (filters.DjangoFilterBackend,)

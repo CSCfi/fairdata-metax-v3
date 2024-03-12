@@ -36,3 +36,7 @@
 
 ### :::src.apps.common.filters.SearchFilter
 
+## CustomDjangoFilterBackend
+
+### :::src.apps.common.filters.CustomDjangoFilterBackend
+
