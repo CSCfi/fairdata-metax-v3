@@ -40,11 +40,15 @@ def test_filter_pid(
     admin_client, dataset_a_json, dataset_b_json, datacatalog_harvested_json, reference_data
 ):
     dataset_a_json["persistent_identifier"] = "some_pid"
-    dataset_b_json.pop("persistent_identifier", None)
+    dataset_b_json["persistent_identifier"] = "other_pid"
     dataset_a_json["data_catalog"] = datacatalog_harvested_json["id"]
     dataset_b_json["data_catalog"] = datacatalog_harvested_json["id"]
-    admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
-    admin_client.post("/v3/datasets", dataset_b_json, content_type="application/json")
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    print(f"{res.data=}")
+    assert res.status_code == 201
+    res = admin_client.post("/v3/datasets", dataset_b_json, content_type="application/json")
+    print(f"{res.data=}")
+    assert res.status_code == 201
     res = admin_client.get("/v3/datasets?persistent_identifier=some_pid")
     assert res.data["count"] == 1
 
@@ -743,3 +747,17 @@ def test_dataset_search_entry(admin_client, dataset_a_json, data_catalog, refere
     assert "Test dataset desc" in entry.description  # description
     assert "keyword another_keyword" in entry.description  # keywords
     assert "doi:other_identifier" in entry.content  # entity.notation
+
+
+def test_create_dataset_with_extra_fields(
+    admin_client, dataset_a_json, data_catalog, reference_data
+):
+    dataset_a_json["test-abcd"] = "non valid field"
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 400
+    assert str(res.data["test-abcd"][0]) == "Unexpected field"
+    # with strict=false the dataset creation should get through
+    res = admin_client.post(
+        "/v3/datasets?strict=false", dataset_a_json, content_type="application/json"
+    )
+    assert res.status_code == 201

@@ -1,47 +1,33 @@
 {
-    "id": "urn:nbn:fi:att:data-catalog-uusitesti",
-    "access_rights": {
-        "description": {
-            "en": "Contains datasets from testing service",
-            "fi": "Sisältää aineistoja testaus palvelusta"
-        },
-        "license": [
-            {
-                "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC0-1.0"
-            }
-        ],
-        "access_type": {
-            "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open"
+  "id": "urn:nbn:fi:att:data-catalog-uusitesti",
+  "publisher": {
+    "name": {
+      "en": "Testtronic changed",
+      "fi": "Testitronic muutettu"
+    },
+    "homepage": [
+      {
+        "url": "http://www.julkaisija.fi/",
+        "title": {
+          "en": "Publisher website",
+          "fi": "Julkaisijan kotisivu"
         }
+      }
+    ]
+  },
+  "language": [
+    {
+      "url": "http://lexvo.org/id/iso639-3/fin"
     },
-    "publisher": {
-        "name": {
-            "en": "Testtronic changed",
-            "fi": "Testitronic muutettu"
-        },
-        "homepage": [
-            {
-                "url": "http://www.julkaisija.fi/",
-                "title": {
-                    "en": "Publisher website",
-                    "fi": "Julkaisijan kotisivu"
-                }
-            }
-        ]
-    },
-    "language": [
-        {
-            "url": "http://lexvo.org/id/iso639-3/fin"
-        },
-        {
-            "url": "http://lexvo.org/id/iso639-3/eng"
-        }
-    ],
-    "title": {
-        "en": "Changed Catalog",
-        "fi": "Muutettu Katalogi"
-    },
-    "dataset_versioning_enabled": true,
-    "harvested": true,
-    "dataset_schema": "ida"
+    {
+      "url": "http://lexvo.org/id/iso639-3/eng"
+    }
+  ],
+  "title": {
+    "en": "Changed Catalog",
+    "fi": "Muutettu Katalogi"
+  },
+  "dataset_versioning_enabled": true,
+  "harvested": true,
+  "dataset_schema": "ida"
 }

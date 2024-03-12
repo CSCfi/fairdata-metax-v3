@@ -10,7 +10,7 @@ import logging
 from contextlib import contextmanager
 from uuid import UUID
 
-from django.core.exceptions import FieldDoesNotExist
+from django.core.exceptions import FieldDoesNotExist, ObjectDoesNotExist
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
@@ -520,6 +520,13 @@ class CommonModelSerializer(PatchModelSerializer, serializers.ModelSerializer):
         if create_snapshot := getattr(instance, "create_snapshot", None):
             create_snapshot()
         return instance
+
+    def validate(self, data):
+        if self.context.get("strict") and hasattr(self, "initial_data"):
+            unknown_keys = set(self.initial_data.keys()) - set(self.fields.keys())
+            if unknown_keys:
+                raise ValidationError({key: "Unexpected field" for key in unknown_keys})
+        return super().validate(data)
 
 
 class CommonNestedModelSerializer(CommonModelSerializer, NestedModelSerializer):

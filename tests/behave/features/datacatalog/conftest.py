@@ -55,20 +55,6 @@ def datacatalog_json():
                 ],
             },
             "id": "urn:nbn:fi:att:data-catalog-testi",
-            "access_rights": {
-                "license": [
-                    {
-                        "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC0-1.0",
-                    }
-                ],
-                "access_type": {
-                    "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open",
-                },
-                "description": {
-                    "en": "Contains datasets from Repotronic service",
-                    "fi": "Sisältää aineistoja Reportronic-palvelusta",
-                },
-            },
             "dataset_versioning_enabled": False,
             "dataset_schema": "att",
         }

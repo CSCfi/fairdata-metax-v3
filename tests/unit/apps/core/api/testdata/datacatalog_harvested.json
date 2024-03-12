@@ -1,44 +1,30 @@
-        {
-            "id": "urn:nbn:fi:att:data-catalog-harvested",
-            "access_rights": {
-                "description": {
-                    "en": "Contains datasets from testing service",
-                    "fi": "Sisältää aineistoja testaus palvelusta"
-                },
-                "license": [
-                    {
-                        "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC0-1.0"
-                    }
-                ],
-                "access_type": {
-                    "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open"
-                }
-            },
-            "publisher": {
-                "name": {
-                    "en": "CSC",
-                    "fi": "CSC"
-                },
-                "homepage": [
-                    {
-                        "url": "http://www.julkaisija.fi/",
-                        "title": {
-                            "en": "Publisher organization website",
-                            "fi": "Julkaisijaorganisaation kotisivu"
-                        }
-                    }
-                ]
-            },
-            "language": [
-                {
-                    "url": "http://lexvo.org/id/iso639-3/eng"
-                }
-            ],
-            "title": {
-                "en": "Harvested catalog",
-                "fi": "Harvestoitu katalogi"
-            },
-            "dataset_versioning_enabled": true,
-            "harvested": true,
-            "dataset_schema": "att"
+{
+  "id": "urn:nbn:fi:att:data-catalog-harvested",
+  "publisher": {
+    "name": {
+      "en": "CSC",
+      "fi": "CSC"
+    },
+    "homepage": [
+      {
+        "url": "http://www.julkaisija.fi/",
+        "title": {
+          "en": "Publisher organization website",
+          "fi": "Julkaisijaorganisaation kotisivu"
         }
+      }
+    ]
+  },
+  "language": [
+    {
+      "url": "http://lexvo.org/id/iso639-3/eng"
+    }
+  ],
+  "title": {
+    "en": "Harvested catalog",
+    "fi": "Harvestoitu katalogi"
+  },
+  "dataset_versioning_enabled": true,
+  "harvested": true,
+  "dataset_schema": "att"
+}
