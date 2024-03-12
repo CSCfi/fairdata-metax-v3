@@ -45,6 +45,7 @@ from .concepts import (
     ResearchInfra,
     RestrictionGrounds,
     Spatial,
+    Theme,
 )
 from .data_catalog import DataCatalog
 from .preservation import Contract
@@ -68,6 +69,7 @@ PostProcessedInstances = namedtuple(
         "infrastructure",
         "provenance",
         "projects",
+        "theme",
     ],
 )
 
@@ -152,6 +154,10 @@ class LegacyDataset(Dataset):
     @property
     def legacy_infrastructure(self):
         return self.legacy_research_dataset.get("infrastructure") or []
+
+    @property
+    def legacy_theme(self):
+        return self.legacy_research_dataset.get("theme") or []
 
     @property
     def legacy_spatial(self):
@@ -894,6 +900,11 @@ class LegacyDataset(Dataset):
                 legacy_property_name="legacy_infrastructure",
                 target_many_to_many_field="infrastructure",
                 ref_data_model=ResearchInfra,
+            ),
+            theme=self.attach_ref_data_list(
+                legacy_property_name="legacy_theme",
+                target_many_to_many_field="theme",
+                ref_data_model=Theme,
             ),
             provenance=self.attach_provenance(),
             projects=self.attach_projects(),

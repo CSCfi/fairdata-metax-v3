@@ -36,15 +36,7 @@ logger = logging.getLogger(__name__)
         (
             "dataset-ida-files-qvain-created.json",
             "files-ida.json",
-            {
-                "dictionary_item_removed": [
-                    # Some datasets in v1-v2 have theme, some have keyword in the research_dataset body.
-                    # This can be resolved by preparing dataset before DeepDiff comparison, or writing custom operator
-                    # for DeepDiff.
-                    "root['research_dataset']['theme']",
-                    # "root['research_dataset']['access_rights']['license'][0]['title']['und']",
-                ]
-            },
+            {},
         ),
         (
             "dataset-remote-qvain-created.json",
@@ -56,7 +48,6 @@ logger = logging.getLogger(__name__)
                     "root['research_dataset']['total_files_byte_size']"
                 ],
                 "dictionary_item_removed": [
-                    "root['research_dataset']['theme']",
                     # Project and funding integration should be completed in the adapter for is_output_of to work
                     # "root['research_dataset']['is_output_of']",
                     # Remote resources is not modeled yet
@@ -75,7 +66,6 @@ logger = logging.getLogger(__name__)
                     "root['research_dataset']['total_files_byte_size']"
                 ],
                 "dictionary_item_removed": [
-                    "root['research_dataset']['theme']",
                     # Project and funding integration should be completed in the adapter for is_output_of to work
                     # "root['research_dataset']['is_output_of']",
                     # Remote resources is not modeled yet

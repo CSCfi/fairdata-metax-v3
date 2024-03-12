@@ -448,6 +448,7 @@ class V2DatasetMixin:
         self._generate_v2_ref_data_field("language", doc, pref_label_text="title")
         self._generate_v2_ref_data_field("field_of_science", doc)
         self._generate_v2_ref_data_field("infrastructure", doc)
+        self._generate_v2_ref_data_field("theme", doc)
         self._generate_v2_spatial(doc)
         self._generate_v2_temporal(doc)
         self._generate_v2_provenance(doc)
