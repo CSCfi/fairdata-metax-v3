@@ -1,9 +1,8 @@
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.middleware.csrf import get_token
 from knox.models import AuthToken
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
-from django.contrib.auth.validators import UnicodeUsernameValidator
-
 
 from apps.common.serializers.serializers import CommonModelSerializer
 from apps.users.models import MetaxUser

@@ -31,31 +31,31 @@ logger = logging.getLogger(__name__)
                 #     "root['research_dataset']['access_rights']['license'][0]['title']['und']"
                 # ],
                 "dictionary_item_added": ["root['research_dataset']['issued']"],
-                'dictionary_item_removed': ["root['preservation_state']"],
+                "dictionary_item_removed": [
+                    "root['preservation_state']",
+                    "root['research_dataset']['total_files_byte_size']",
+                ],
             },
         ),
         (
             "dataset-ida-files-qvain-created.json",
             "files-ida.json",
-            {'dictionary_item_removed': ["root['preservation_state']",
-                                         "root['preservation_identifier']"],
-             },
+            {
+                "dictionary_item_removed": [
+                    "root['preservation_state']",
+                    "root['preservation_identifier']",
+                ],
+            },
         ),
         (
             "dataset-remote-qvain-created.json",
             None,
             {
-                "dictionary_item_added": [
-                    # Not all datasets have total_files_byte_size field in v1-v2. The best way to pinpoint when it
-                    # should be present in DeepDiff needs investigation.
-                    "root['research_dataset']['total_files_byte_size']"
-                ],
                 "dictionary_item_removed": [
                     # Project and funding integration should be completed in the adapter for is_output_of to work
                     # "root['research_dataset']['is_output_of']",
                     # Remote resources is not modeled yet
                     "root['preservation_state']",
-                    "root['research_dataset']['remote_resources']",
                     "root['research_dataset']['total_remote_resources_byte_size']",
                 ],
             },
@@ -64,17 +64,11 @@ logger = logging.getLogger(__name__)
             "dataset-remote-qvain-extra-contributor.json",
             None,
             {
-                "dictionary_item_added": [
-                    # Not all datasets have total_files_byte_size field in v1-v2. The best way to pinpoint when it
-                    # should be present in DeepDiff needs investigation.
-                    "root['research_dataset']['total_files_byte_size']"
-                ],
                 "dictionary_item_removed": [
                     # Project and funding integration should be completed in the adapter for is_output_of to work
                     # "root['research_dataset']['is_output_of']",
                     # Remote resources is not modeled yet
                     "root['preservation_state']",
-                    "root['research_dataset']['remote_resources']",
                     "root['research_dataset']['total_remote_resources_byte_size']",
                 ],
             },

@@ -5,7 +5,7 @@ import uuid
 from contextlib import contextmanager
 from datetime import datetime
 from textwrap import dedent
-from typing import Dict
+from typing import Dict, Optional
 
 from cachalot.api import cachalot_disabled
 from django.conf import settings
@@ -223,3 +223,22 @@ def format_multiline(string: str, *args, **kwargs) -> str:
     string = string.strip("\n")
     string = re.sub("\\\\\s+", "", string)
     return dedent(string).format(*args, **kwargs)
+
+
+def single_translation(value: dict) -> Optional[str]:
+    """Return single translation value for multilanguage dict."""
+    if not value:
+        return value
+
+    order = ["en", "fi", "sv", "und"]
+    for lang in order:
+        if translation := value.get(lang):
+            return translation
+
+    # Return first value
+    return next(iter(value.values()), None)
+
+
+def omit_none(value: dict) -> dict:
+    """Return copy of dict with None values removed."""
+    return {key: val for key, val in value.items() if val is not None}

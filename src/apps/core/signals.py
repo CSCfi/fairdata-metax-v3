@@ -1,14 +1,14 @@
-import logging
-import urllib3
 import json
-import requests
+import logging
 from datetime import date, datetime
 
-from django.core.validators import EMPTY_VALUES
-from django.db.models.signals import m2m_changed, post_save, pre_save, post_delete
-from django.dispatch import receiver, Signal
+import requests
+import urllib3
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
+from django.core.validators import EMPTY_VALUES
+from django.db.models.signals import m2m_changed, post_delete, post_save, pre_save
+from django.dispatch import Signal, receiver
 
 from apps.core.models import Dataset, FileSet, LegacyDataset
 from apps.core.serializers import DatasetSerializer
@@ -57,9 +57,9 @@ def fetch_dataset_from_v2(pid: str):
 
 
 def get_v2_request_settings():
-    host = f'{settings.METAX_V2_HOST}/rest/v2/datasets'
+    host = f"{settings.METAX_V2_HOST}/rest/v2/datasets"
     headers = urllib3.make_headers(
-        basic_auth=f'{settings.METAX_V2_USER}:{settings.METAX_V2_PASSWORD}',
+        basic_auth=f"{settings.METAX_V2_USER}:{settings.METAX_V2_PASSWORD}",
     )
     return host, headers
 
@@ -88,11 +88,16 @@ def update_dataset_in_v2(sender, data: Dataset, **kwargs):
         if response.status_code == 200:
             res = requests.put(url=f"{host}/{identifier}", data=body, headers=headers)
             logger.info(f"{res.status_code=}: {res.content=}, {res.headers=}")
-        elif v2_dataset["api_meta"]["version"] == 3 and v2_dataset["research_dataset"]["preferred_identifier"]:
+        elif (
+            v2_dataset["api_meta"]["version"] == 3
+            and v2_dataset["research_dataset"]["preferred_identifier"]
+        ):
             res = requests.post(url=f"{host}?migration_override", data=body, headers=headers)
             logger.info(f"{res.status_code=}: {res.content=}, {res.headers=}")
         else:
-            logger.warning(f"could not sync dataset ({identifier}), because it was not found in Metax v2")
+            logger.warning(
+                f"could not sync dataset ({identifier}), because it was not found in Metax v2"
+            )
 
     except Exception as e:
         logger.exception(e)
@@ -109,8 +114,13 @@ def create_dataset_to_v2(sender, data: Dataset, **kwargs):
     headers["Accept"] = "application/json"
     _draft = "&draft=true" if v2_dataset["state"] == "draft" else ""
     try:
-        if v2_dataset["api_meta"]["version"] == 3 and v2_dataset["research_dataset"]["preferred_identifier"]:
-            res = requests.post(url=f"{host}?migration_override{_draft}", data=body, headers=headers)
+        if (
+            v2_dataset["api_meta"]["version"] == 3
+            and v2_dataset["research_dataset"]["preferred_identifier"]
+        ):
+            res = requests.post(
+                url=f"{host}?migration_override{_draft}", data=body, headers=headers
+            )
             logger.info(f"{res.status_code=}: {res.content=}, {res.headers=}")
 
     except Exception as e:

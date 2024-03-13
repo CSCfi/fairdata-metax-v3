@@ -105,9 +105,11 @@ def test_files_datasets_for_service_with_relations(admin_client, file_tree_with_
     expected_result = {
         tree["files"]["/dir/a.txt"].storage_identifier: [str(tree["dataset_a"].id)],
         tree["files"]["/dir/b.txt"].storage_identifier: [str(tree["dataset_b"].id)],
-        tree["files"]["/dir/c.txt"].storage_identifier: [str(tree["dataset_a"].id),
-                                                         str(tree["dataset_b"].id),
-                                                         str(tree["dataset_c"].id),],
+        tree["files"]["/dir/c.txt"].storage_identifier: [
+            str(tree["dataset_a"].id),
+            str(tree["dataset_b"].id),
+            str(tree["dataset_c"].id),
+        ],
     }
     expected_result[tree["files"]["/dir/c.txt"].storage_identifier].sort()
     assert res.json() == expected_result

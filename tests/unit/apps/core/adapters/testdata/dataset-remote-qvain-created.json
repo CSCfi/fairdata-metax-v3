@@ -259,6 +259,10 @@
             "fi": "Lähdeaineisto",
             "und": "Lähdeaineisto"
           }
+        },
+        "checksum": {
+          "algorithm": "MD5",
+          "value": "f00f"
         }
       }
     ],

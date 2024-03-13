@@ -12,6 +12,7 @@ from rest_framework import serializers
 from rest_framework.settings import api_settings
 
 from apps.common.serializers import CommonListSerializer, CommonNestedModelSerializer, OneOf
+from apps.core import signals
 from apps.core.models import DataCatalog, Dataset
 from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
 from apps.core.serializers.common_serializers import (
@@ -31,7 +32,7 @@ from apps.core.serializers.project_serializer import ProjectModelSerializer
 
 # for preventing circular import, using submodule instead of apps.core.serializers
 from apps.core.serializers.provenance_serializers import ProvenanceModelSerializer
-from apps.core import signals
+
 from .dataset_files_serializer import FileSetSerializer
 
 logger = logging.getLogger(__name__)

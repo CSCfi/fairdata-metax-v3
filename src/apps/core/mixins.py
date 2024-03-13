@@ -1,13 +1,13 @@
 import json
 import logging
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from django.contrib.auth import get_user_model
 from django.core.validators import EMPTY_VALUES
 from django.db.models import QuerySet
 
-from apps.common.helpers import date_to_datetime
+from apps.common.helpers import date_to_datetime, omit_none, single_translation
 from apps.common.views import CommonModelViewSet
 from apps.core.permissions import DatasetNestedAccessPolicy
 from apps.refdata.models import AbstractConcept
@@ -437,6 +437,59 @@ class V2DatasetMixin:
         else:
             return False
 
+    def _construct_v2_checksum(self, checksum: str) -> Optional[dict]:
+        if not checksum:
+            return None
+
+        try:
+            algo, value = checksum.split(":", maxsplit=1)
+        except ValueError:
+            algo = None
+            value = checksum
+
+        v2_algos = {
+            "md5": "MD5",
+            "sha1": "SHA-1",
+            "sha224": "SHA-224",
+            "sha256": "SHA-384",
+            "sha512": "SHA-512",
+        }
+        v2_algo = v2_algos.get(algo, "OTHER")
+        return {
+            "value": value,
+            "algorithm": v2_algo,
+        }
+
+    def _construct_v2_remote_resource(self, remote_resource) -> dict:
+        access_url = None
+        if url := remote_resource.access_url:
+            access_url = {"identifier": url}
+        download_url = None
+        if url := remote_resource.download_url:
+            download_url = {"identifier": url}
+
+        return omit_none(
+            {
+                "title": single_translation(remote_resource.title),
+                "description": single_translation(remote_resource.description),
+                "checksum": self._construct_v2_checksum(remote_resource.checksum),
+                "mediatype": remote_resource.mediatype,
+                "use_category": self._construct_v2_refdata_object(remote_resource.use_category),
+                "file_type": self._construct_v2_refdata_object(remote_resource.file_type),
+                "access_url": access_url,
+                "download_url": download_url,
+            }
+        )
+
+    def _generate_v2_remote_resources(self, document) -> List:
+        obj_list = [
+            self._construct_v2_remote_resource(resource)
+            for resource in self.remote_resources.all()
+        ]
+        if obj_list:
+            document["research_dataset"]["remote_resources"] = obj_list
+        return obj_list
+
     def as_v2_dataset(self) -> Dict:
         def add_actor(role: str, document: Dict):
             actors = self.actors.filter(roles__contains=[role])
@@ -451,27 +504,31 @@ class V2DatasetMixin:
                 else:
                     document["research_dataset"][role].append(data)
 
-        total_files_byte_size = 0
+        research_dataset = {
+            "title": self.title,
+            "description": self.description,
+            "modified": self.modified,
+            "preferred_identifier": self.persistent_identifier,
+            "keyword": self.keyword,
+            "access_rights": self._generate_v2_access_rights() if self.access_rights else None,
+        }
+
         if file_set := getattr(self, "file_set", None):
-            total_files_byte_size = file_set.total_files_size
+            research_dataset["total_files_byte_size"] = file_set.total_files_size
 
         doc = {
-            "identifier": str(self.legacydataset.dataset_json["identifier"]) if hasattr(self, "legacydataset") else self.id,
-            "api_meta": self.legacydataset.dataset_json["api_meta"] if hasattr(self, "legacydataset") else {"version": 3},
+            "identifier": str(self.legacydataset.dataset_json["identifier"])
+            if hasattr(self, "legacydataset")
+            else self.id,
+            "api_meta": self.legacydataset.dataset_json["api_meta"]
+            if hasattr(self, "legacydataset")
+            else {"version": 3},
             "deprecated": self.deprecated is not None,
             "state": self.state,
             "cumulative_state": self.cumulative_state.real,
             "date_created": self.created,
             "removed": self._construct_v2_removed_field(),
-            "research_dataset": {
-                "title": self.title,
-                "description": self.description,
-                "modified": self.modified,
-                "preferred_identifier": self.persistent_identifier,
-                "total_files_byte_size": total_files_byte_size,
-                "keyword": self.keyword,
-                "access_rights": self._generate_v2_access_rights() if self.access_rights else None,
-            },
+            "research_dataset": research_dataset,
         }
         if self.metadata_owner:
             if hasattr(self.metadata_owner, "user"):
@@ -510,6 +567,7 @@ class V2DatasetMixin:
         self._generate_v2_temporal(doc)
         self._generate_v2_provenance(doc)
         self._generate_v2_relation(doc)
+        self._generate_v2_remote_resources(doc)
         add_actor("creator", doc)
         add_actor("publisher", doc)
         return doc

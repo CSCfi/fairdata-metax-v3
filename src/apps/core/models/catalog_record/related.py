@@ -273,7 +273,7 @@ class RemoteResource(AbstractBaseModel):
     copier = ModelCopier(copied_relations=[], parent_relations=["dataset"])
 
     dataset = models.ForeignKey(
-        "Dataset", on_delete=models.CASCADE, related_name="remote_resources"
+        "Dataset", on_delete=models.CASCADE, related_name="remote_resources", blank=True, null=True
     )
     title = HStoreField(help_text='example: {"en":"title", "fi":"otsikko"}')
     description = HStoreField(

@@ -3,9 +3,9 @@ import logging
 import uuid
 from collections import Counter, namedtuple
 from datetime import datetime
-from dateutil.parser import parse
-from typing import Dict, List
+from typing import Dict, List, Optional
 
+from dateutil.parser import parse
 from deepdiff import DeepDiff
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -40,6 +40,7 @@ from .concepts import (
     DatasetLicense,
     EventOutcome,
     FieldOfScience,
+    FileType,
     FunderType,
     IdentifierType,
     Language,
@@ -52,6 +53,7 @@ from .concepts import (
     RestrictionGrounds,
     Spatial,
     Theme,
+    UseCategory,
 )
 from .data_catalog import DataCatalog
 from .preservation import Contract
@@ -77,6 +79,7 @@ PostProcessedInstances = namedtuple(
         "projects",
         "relations",
         "theme",
+        "remote_resources",
     ],
 )
 
@@ -170,7 +173,6 @@ class LegacyDataset(Dataset):
     @property
     def legacy_infrastructure(self):
         return self.legacy_research_dataset.get("infrastructure") or []
-
 
     @property
     def legacy_theme(self):
@@ -642,7 +644,9 @@ class LegacyDataset(Dataset):
         self.actors.set(actors)
         return actors
 
-    def convert_checksum_v2_to_v3(self, checksum: dict) -> str:
+    def convert_checksum_v2_to_v3(self, checksum: dict) -> Optional[str]:
+        if not checksum:
+            return None
         algorithm = checksum.get("algorithm", "").lower().replace("-", "")
         value = checksum.get("value", "").lower()
         return f"{algorithm}:{value}"
@@ -862,6 +866,72 @@ class LegacyDataset(Dataset):
         self.relation.set(relations)
         return relations
 
+    def convert_remote_resource(self, resource: dict) -> dict:
+        title = None
+        if v2_title := resource.get("title"):
+            title = {"en": v2_title}
+
+        description = None
+        if v2_description := resource.get("description"):
+            description = {"en": v2_description}
+
+        use_category = None
+        if v2_use_category := resource.get("use_category"):
+            ref, created = self.get_or_create_reference_data(
+                UseCategory,
+                url=v2_use_category["identifier"],
+                defaults={
+                    "in_scheme": v2_use_category["in_scheme"],
+                    "pref_label": v2_use_category["pref_label"],
+                },
+            )
+            use_category = {"url": ref.url}
+
+        file_type = None
+        if v2_file_type := resource.get("file_type"):
+            ref, created = self.get_or_create_reference_data(
+                FileType,
+                url=v2_file_type["identifier"],
+                defaults={
+                    "in_scheme": v2_file_type["in_scheme"],
+                    "pref_label": v2_file_type["pref_label"],
+                },
+            )
+            file_type = {"url": ref.url}
+
+        access_url = (resource.get("access_url") or {}).get("identifier")
+        download_url = (resource.get("download_url") or {}).get("identifier")
+
+        return {
+            "title": title,
+            "description": description,
+            "checksum": self.convert_checksum_v2_to_v3(resource.get("checksum")),
+            "mediatype": resource.get("mediatype"),
+            "use_category": use_category,
+            "file_type": file_type,
+            "access_url": access_url,
+            "download_url": download_url,
+        }
+
+    def attach_remote_resources(self):
+        resource_data = [
+            self.convert_remote_resource(resource)
+            for resource in self.legacy_research_dataset.get("remote_resources", [])
+        ]
+
+        from apps.core.serializers.common_serializers import RemoteResourceSerializer
+
+        serializer = RemoteResourceSerializer(
+            instance=self.remote_resources.all(),
+            data=resource_data,
+            many=True,
+            context={"dataset": self},
+        )
+        serializer.is_valid(raise_exception=True)
+        resources = serializer.save()
+        self.remote_resources.set(resources)
+        return resources
+
     def create_funding(self, data, funder_org):
         funder_type = None
 
@@ -1003,6 +1073,7 @@ class LegacyDataset(Dataset):
             provenance=self.attach_provenance(),
             projects=self.attach_projects(),
             relations=self.attach_relations(),
+            remote_resources=self.attach_remote_resources(),
         )
 
     def check_compatibility(self) -> Dict:
