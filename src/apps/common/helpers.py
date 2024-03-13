@@ -3,14 +3,13 @@ import logging
 import re
 import uuid
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import datetime, timezone as tz
 from textwrap import dedent
 from typing import Dict, Optional
 
 from cachalot.api import cachalot_disabled
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_datetime
 from django_filters import NumberFilter
 from drf_yasg import openapi
@@ -176,15 +175,15 @@ def ensure_instance_id(instance):
 
 def date_to_datetime(date):
     """Convert UTC date to datetime."""
-    return datetime(year=date.year, month=date.month, day=date.day, tzinfo=timezone.utc)
+    return datetime(year=date.year, month=date.month, day=date.day, tzinfo=tz.utc)
 
 
 def datetime_to_date(dt):
     """Convert datetime to UTC date."""
-    return dt.astimezone(timezone.utc).date()
+    return dt.astimezone(tz.utc).date()
 
 
-def changed_fields(a: dict, b: dict) -> dict:
+def changed_fields(a: dict, b: dict) -> list:
     all_keys = set(a) | set(b)
     return sorted(key for key in all_keys if a.get(key, empty) != b.get(key, empty))
 

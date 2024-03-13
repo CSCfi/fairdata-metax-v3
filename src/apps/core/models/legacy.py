@@ -812,7 +812,6 @@ class LegacyDataset(Dataset):
     def convert_entity(self, entity: dict) -> dict:
         entity_type_obj = None
         if entity_type_data := entity.get("type"):
-
             entity_type, created = self.get_or_create_reference_data(
                 ResourceType,
                 url=entity_type_data["identifier"],

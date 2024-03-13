@@ -22,7 +22,7 @@ class IgnoreTooLargePyMemcacheCache(PyMemcacheCache):
 
     def _handle_error(self, error):
         if error.args == (b"object too large for cache",):
-            logger.warn(error)
+            logger.warning(error)
         else:
             raise error
 

@@ -74,9 +74,9 @@ class File(SystemCreatorBaseModel, SoftDeletableModel):
             return self.storage.storage_service
 
     class Meta:
-        index_together = [
-            ("directory_path", "storage"),
-            ("directory_path", "filename"),
+        indexes = [
+            models.Index(fields=("directory_path", "storage")),
+            models.Index(fields=("directory_path", "filename")),
         ]
         ordering = ["directory_path", "filename"]
 

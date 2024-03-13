@@ -10,7 +10,7 @@ from django import forms
 from django.conf import settings
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.db.models import F, Q, QuerySet
+from django.db.models import F, Q, QuerySet, Value
 from django.db.models.functions import Concat
 from django.utils.translation import gettext_lazy as _
 from django_filters import rest_framework as filters
@@ -256,6 +256,7 @@ class FileViewSet(BaseFileViewSet):
                     values=ArrayAgg(
                         "file_sets__dataset_id",
                         filter=Q(file_sets__dataset__deprecated__isnull=True),
+                        default=Value([]),
                     )
                 )
                 return Response({str(v["key"]): v["values"] for v in queryset})

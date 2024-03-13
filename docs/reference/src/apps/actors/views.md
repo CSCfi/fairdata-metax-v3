@@ -1,12 +1,12 @@
 # views
 
-## OrganizationViewSetQueryParamsSerializer
-
-### :::src.apps.actors.views.OrganizationViewSetQueryParamsSerializer
-
 ## OrganizationFilterSet
 
 ### :::src.apps.actors.views.OrganizationFilterSet
+
+## OrganizationViewSetQueryParamsSerializer
+
+### :::src.apps.actors.views.OrganizationViewSetQueryParamsSerializer
 
 ## OrganizationViewSet
 

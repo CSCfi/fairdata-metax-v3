@@ -18,7 +18,6 @@ from pathlib import Path
 
 import factory.random
 from django.utils.translation import gettext_lazy as _
-from drf_yasg.app_settings import SWAGGER_DEFAULTS
 from environs import Env
 
 env = Env()
@@ -215,8 +214,6 @@ TIME_ZONE = "UTC"
 
 USE_I18N = True
 
-USE_L10N = True
-
 USE_TZ = True
 
 
@@ -253,6 +250,12 @@ if ENABLE_DRF_TOKEN_AUTH:
     REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] = AUTH_CLASSES + [
         "rest_framework.authentication.TokenAuthentication"
     ]
+
+# Importing these also imports django.conf.settings which triggers
+# some deprecation checks while settings have not been fully loaded.
+# Import late in file to avoid e.g. warnings about changed default
+# in USE_TZ.
+from drf_yasg.app_settings import SWAGGER_DEFAULTS
 
 SWAGGER_SETTINGS = {
     "DEEP_LINKING": True,  # Automatically update URL fragment with current operation in Swagger UI
@@ -324,7 +327,14 @@ SSO_TRUSTED_SERVICE_TOKEN = env.str("SSO_TRUSTED_SERVICE_TOKEN", None)
 # CSRF configuration
 # Note: CSRF_TRUSTED_ORIGINS require a scheme (e.g. https://someurl.com) in Django 4.0
 # but older versions expect scheme not to be present (e.g. someurl.com).
-CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", [])
+CSRF_TRUSTED_ORIGINS = [
+    (
+        origin
+        if (origin.startswith("http://") or origin.startswith("https://"))
+        else f"https://{origin}"
+    )
+    for origin in env.list("CSRF_TRUSTED_ORIGINS", [])
+]
 
 # CORS header settings for django-cors-headers
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", [])
