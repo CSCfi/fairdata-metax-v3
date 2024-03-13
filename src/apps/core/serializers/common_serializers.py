@@ -249,4 +249,5 @@ class EntityRelationSerializer(CommonNestedModelSerializer):
         list_serializer_class = CommonListSerializer
 
     def get_metax_ids(self, instance):
-        return get_metax_identifiers_by_pid(instance.entity.entity_identifier)
+        if instance.entity.entity_identifier:
+            return get_metax_identifiers_by_pid(instance.entity.entity_identifier)

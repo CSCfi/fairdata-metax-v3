@@ -180,3 +180,7 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_dataset_search_entry
 
+## test_create_dataset_with_extra_fields
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_create_dataset_with_extra_fields
+

@@ -10,6 +10,7 @@ from django.db.models import QuerySet
 from apps.common.helpers import date_to_datetime
 from apps.common.views import CommonModelViewSet
 from apps.core.permissions import DatasetNestedAccessPolicy
+from apps.refdata.models import AbstractConcept
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +80,8 @@ class V2DatasetMixin:
         modified (datetime): Datetime when the dataset was last modified
         persistent_identifier (str): Persistent identifier of the dataset
         keyword (str): Keyword of the dataset
+        theme (Queryset): The main category of the dataset
+        relation (Queryset): Relation to another entity.
         data_catalog (object): Object must be compatible with DataCatalog model attributes
         cumulation_started (datetime): Datetime when the dataset started accumulation process
         last_cumulative_addition (datetime): Datetime when the dataset had last cumulative event
@@ -95,12 +98,14 @@ class V2DatasetMixin:
     access_rights: object
     is_output_of: QuerySet
     actors: QuerySet
+    theme: QuerySet
     deprecated: datetime
     preservation_state: int
+    relation: QuerySet
     state: str
     cumulative_state: int
     created: datetime
-    is_removed: bool
+    removed: datetime
     metadata_owner: object
     title: dict
     description: dict
@@ -225,6 +230,41 @@ class V2DatasetMixin:
             obj_list.append(obj)
         if len(obj_list) != 0:
             document["research_dataset"]["spatial"] = obj_list
+        return obj_list
+
+    def _construct_v2_refdata_object(self, concept: AbstractConcept, omit_fields=[]):
+        if not concept:
+            return None
+        obj = {
+            "pref_label": concept.pref_label,
+            "in_scheme": concept.in_scheme,
+            "identifier": concept.url,
+        }
+        for field in omit_fields:
+            obj.pop(field, None)
+        return obj
+
+    def _construct_v2_relation(self, relation):
+        entity = relation.entity
+        return {
+            "relation_type": self._construct_v2_refdata_object(
+                relation.relation_type, omit_fields=["in_scheme"]  # no relation type scheme in v2
+            ),
+            "entity": {
+                "title": entity.title or None,
+                "description": entity.description or None,
+                "identifier": entity.entity_identifier or None,
+                "type": self._construct_v2_refdata_object(entity.type),
+            },
+        }
+
+    def _generate_v2_relation(self, document: Dict):
+        obj_list = []
+        for relation in self.relation.all():
+            obj = self._construct_v2_relation(relation)
+            obj_list.append(obj)
+        if len(obj_list) != 0:
+            document["research_dataset"]["relation"] = obj_list
         return obj_list
 
     def _generate_v2_provenance(self, document: Dict) -> List:
@@ -452,6 +492,7 @@ class V2DatasetMixin:
         self._generate_v2_spatial(doc)
         self._generate_v2_temporal(doc)
         self._generate_v2_provenance(doc)
+        self._generate_v2_relation(doc)
         add_actor("creator", doc)
         add_actor("publisher", doc)
         return doc

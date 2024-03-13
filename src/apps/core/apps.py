@@ -53,7 +53,11 @@ class DatasetSearchAdapter(search.SearchAdapter):
             return []  # prevent trying to index deleted draft
 
         criteria = []
-        criteria.extend(obj.relation.values_list("entity__entity_identifier", flat=True))
+        criteria.extend(
+            obj.relation.filter(entity__entity_identifier__isnull=False).values_list(
+                "entity__entity_identifier", flat=True
+            )
+        )
         criteria.extend(obj.other_identifiers.values_list("notation", flat=True))
         return " ".join(criteria)
 

@@ -341,6 +341,37 @@
           }
         }
       ],
+      "relation": [
+        {
+          "entity": {
+            "title": {
+              "fi": "Ulkopuolinen aineisto 1",
+              "en": "External dataset 1"
+            },
+            "description": {
+              "fi": "Kuvailutiedot"
+            },
+            "identifier": "external:dataset:identifier",
+            "type": {
+              "identifier": "http://uri.suomi.fi/codelist/fairdata/resource_type/code/physical_object",
+              "pref_label": {
+                "fi": "Fyysinen objekti",
+                "en": "Physical object",
+                "und": "Fyysinen objekti"
+              },
+              "in_scheme": "http://uri.suomi.fi/codelist/fairdata/resource_type"
+            }
+          },
+          "relation_type": {
+            "identifier": "http://www.w3.org/ns/prov#wasDerivedFrom",
+            "pref_label": {
+              "fi": "Johdettu aineistosta",
+              "en": "Was derived from",
+              "und": "Johdettu aineistosta"
+            }
+          }
+        }
+      ],
       "preferred_identifier": "urn:nbn:fi:att:c988571a-b5cc-4808-b7b4-bba63903c5fb",
       "metadata_version_identifier": "0e5ca1ef-14e8-413f-b775-cc26ff837dd0",
       "total_remote_resources_byte_size": 0

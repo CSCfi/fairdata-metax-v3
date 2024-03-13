@@ -157,3 +157,22 @@ def test_legacy_dataset_actors_invalid_refdata_parent(
     assert (
         "cannot be child of non-reference organization" in res.json()[0]["organization"]["parent"]
     )
+
+
+def test_legacy_dataset_relation(
+    admin_client, data_catalog, reference_data, legacy_dataset_a_json
+):
+    res = admin_client.post(
+        reverse("migrated-dataset-list"), legacy_dataset_a_json, content_type="application/json"
+    )
+    assert res.status_code == 201
+    res = admin_client.get(
+        reverse("dataset-detail", kwargs={"pk": res.data["id"]}), content_type="application/json"
+    )
+    data = res.json()
+    assert len(data["relation"]) == 1
+    assert data["relation"][0]["entity"]["entity_identifier"] == "external:dataset:identifier"
+    assert (
+        data["relation"][0]["entity"]["type"]["url"]
+        == "http://uri.suomi.fi/codelist/fairdata/resource_type/code/physical_object"
+    )

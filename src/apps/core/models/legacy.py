@@ -20,7 +20,6 @@ from apps.common.helpers import datetime_to_date, parse_iso_dates_in_nested_dict
 from apps.core.models import FileSet
 from apps.files.models import File
 from apps.files.serializers.file_serializer import get_or_create_storage
-from apps.refdata.models import FunderType, License, Location
 from apps.users.models import MetaxUser
 
 from .access_rights import AccessRights
@@ -39,10 +38,15 @@ from .concepts import (
     DatasetLicense,
     EventOutcome,
     FieldOfScience,
+    FunderType,
     IdentifierType,
     Language,
+    License,
     LifecycleEvent,
+    Location,
+    RelationType,
     ResearchInfra,
+    ResourceType,
     RestrictionGrounds,
     Spatial,
     Theme,
@@ -69,6 +73,7 @@ PostProcessedInstances = namedtuple(
         "infrastructure",
         "provenance",
         "projects",
+        "relations",
         "theme",
     ],
 )
@@ -606,7 +611,9 @@ class LegacyDataset(Dataset):
             instance=self.actors.all(), data=adapted, context={"dataset": self}, many=True
         )
         serializer.is_valid(raise_exception=True)
-        self.actors.set(serializer.save())
+        actors = serializer.save()
+        self.actors.set(actors)
+        return actors
 
     def convert_checksum_v2_to_v3(self, checksum: dict) -> str:
         algorithm = checksum.get("algorithm", "").lower().replace("-", "")
@@ -768,6 +775,60 @@ class LegacyDataset(Dataset):
                 obj_list.append(provenance)
         return obj_list
 
+    def convert_entity(self, entity: dict) -> dict:
+        entity_type_obj = None
+        if entity_type_data := entity.get("type"):
+            entity_type, created = ResourceType.objects.get_or_create(
+                url=entity_type_data["identifier"],
+                defaults={
+                    "pref_label": entity_type_data["pref_label"],
+                    "in_scheme": entity_type_data["in_scheme"],
+                    # TODO: Create deprecated object if not found
+                },
+            )
+            entity_type_obj = {"url": entity_type.url}
+
+        return {
+            "title": entity.get("title"),
+            "description": entity.get("description"),
+            "entity_identifier": entity.get("identifier"),
+            "type": entity_type_obj,
+        }
+
+    def convert_relation(self, relation: dict) -> dict:
+        relation_type_scheme = settings.LOCAL_REFERENCE_DATA_SOURCES["relation_type"]["scheme"]
+        relation_type, created = RelationType.objects.get_or_create(
+            url=relation["relation_type"]["identifier"],
+            defaults={
+                "pref_label": relation["relation_type"]["pref_label"],
+                "in_scheme": relation_type_scheme,
+                # TODO: Create deprecated object if not found
+            },
+        )
+
+        return {
+            "entity": self.convert_entity(relation.get("entity")),
+            "relation_type": {"url": relation_type.url},
+        }
+
+    def attach_relations(self):
+        relation_data = [
+            self.convert_relation(relation)
+            for relation in self.legacy_research_dataset.get("relation", [])
+        ]
+
+        from apps.core.serializers.common_serializers import EntityRelationSerializer
+
+        serializer = EntityRelationSerializer(
+            instance=self.relation.all(),
+            data=relation_data,
+            many=True,
+        )
+        serializer.is_valid(raise_exception=True)
+        relations = serializer.save()
+        self.relation.set(relations)
+        return relations
+
     def create_funding(self, data, funder_org):
         funder_type = None
 
@@ -813,7 +874,7 @@ class LegacyDataset(Dataset):
                     instance=project.participating_organizations.all(),
                     data=source_data,
                     context=serializer_context,
-                    many=True,  # todo instance
+                    many=True,
                 )
                 source_serializer.is_valid(raise_exception=True)
                 source_organizations = source_serializer.save()
@@ -908,6 +969,7 @@ class LegacyDataset(Dataset):
             ),
             provenance=self.attach_provenance(),
             projects=self.attach_projects(),
+            relations=self.attach_relations(),
         )
 
     def check_compatibility(self) -> Dict:
