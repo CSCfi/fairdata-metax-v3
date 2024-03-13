@@ -188,6 +188,7 @@ class OrganizationIndexer:
             org.code = org_dict.get("code")
             org.same_as = []
             org.pref_label = org_dict["pref_label"]
+            org.deprecated = None
             if parent := org_dict.get("parent"):
                 org.parent = orgs_by_url[parent]
             else:

@@ -65,6 +65,7 @@ def test_serialize_concept(model):
         "pref_label": {"en": "Field"},
         "broader": [],
         "narrower": [],
+        "deprecated": None,
         **{
             field: extra_field_values[field]
             for field in getattr(model, "serializer_extra_fields", [])

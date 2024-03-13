@@ -47,6 +47,7 @@ def get_refdata_serializer_class(refdata_model):
             "pref_label",
             "broader",
             "narrower",
+            "deprecated",
             # include fields defined in refdata_class.serializer_extra_fields
             *getattr(refdata_model, "serializer_extra_fields", ()),
         )

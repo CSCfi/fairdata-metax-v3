@@ -29,6 +29,11 @@ class AbstractConcept(AbstractBaseModel):
         blank=True,
     )
     same_as = ArrayField(models.CharField(max_length=255), default=list, blank=True)  # owl:sameAs
+    deprecated = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text=_("If set, entry is not shown in reference data list by default."),
+    )
 
     class Meta:
         indexes = [

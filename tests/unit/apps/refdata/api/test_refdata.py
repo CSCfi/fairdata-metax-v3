@@ -41,6 +41,7 @@ def test_get_concept(client, model):
             "pref_label": {"en": "Field"},
             "broader": [],
             "narrower": [],
+            "deprecated": None,
             **{
                 field: extra_field_values[field]
                 for field in getattr(model, "serializer_extra_fields", [])
@@ -94,3 +95,16 @@ def test_order_concept(assert_query_results):
     assert_query_results({"ordering": "-created"}, ["Item y", "Item x"])
     assert_query_results({"ordering": "url"}, ["Item x", "Item y"])
     assert_query_results({"ordering": "-url"}, ["Item y", "Item x"])
+
+
+@pytest.mark.django_db
+def test_deprecate_concept(assert_query_results, model):
+    model.all_objects.create(
+        url="https://www.example.com/deprecated",
+        in_scheme="https://www.example.com",
+        pref_label={"en": "Deprecated entry"},
+        deprecated="2022-12-24T01:23:45Z",
+    )
+    assert_query_results({}, ["Item x", "Item y"])
+    assert_query_results({"deprecated": "false"}, ["Item x", "Item y"])
+    assert_query_results({"deprecated": "true"}, ["Deprecated entry"])

@@ -2,6 +2,7 @@ import logging
 from time import sleep
 
 import requests
+from django.utils import timezone
 from rdflib import RDF, Graph
 from rdflib.namespace import OWL, SKOS, Namespace
 
@@ -52,7 +53,8 @@ class RemoteRDFReferenceDataImporter(BaseDataImporter):
             "same_as": [str(same) for same in graph.objects(concept, OWL.sameAs)],
         }
         # consider items without label deprecated
-        item["is_removed"] = len(item["pref_label"]) == 0
+        if len(item["pref_label"]) == 0:
+            item["deprecated"] = timezone.now()
 
         return item
 

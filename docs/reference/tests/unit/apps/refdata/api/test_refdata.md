@@ -24,3 +24,7 @@
 
 ### :::tests.unit.apps.refdata.api.test_refdata.test_order_concept
 
+## test_deprecate_concept
+
+### :::tests.unit.apps.refdata.api.test_refdata.test_deprecate_concept
+

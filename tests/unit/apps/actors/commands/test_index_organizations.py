@@ -124,17 +124,28 @@ def test_index_organizations_deprecation():
     """Reference data organizations removed from source data should be deprecated."""
     dep1 = Organization.objects.create(
         pref_label={"en": "This will be deprecated"},
-        url=f"{test_settings['ORGANIZATION_BASE_URI']}/deprecateme",
+        url=f"{test_settings['ORGANIZATION_BASE_URI']}deprecateme",
         in_scheme=test_settings["ORGANIZATION_SCHEME"],
         is_reference_data=True,
     )
     dep2 = Organization.objects.create(
         pref_label={"en": "This too"},
-        url=f"{test_settings['ORGANIZATION_BASE_URI']}/deprecatemetoo",
+        url=f"{test_settings['ORGANIZATION_BASE_URI']}deprecatemetoo",
         in_scheme=test_settings["ORGANIZATION_SCHEME"],
         is_reference_data=True,
     )
-    assert not Organization.available_objects.filter(deprecated__isnull=False).exists()
+    # Deprecated entry should be undeprecated when it is found in the data source
+    undep = Organization.objects.create(
+        url=f"{test_settings['ORGANIZATION_BASE_URI']}10076",
+        deprecated="2022-01-02T11:22:33Z",
+        pref_label={"en": "Aalto"},
+        in_scheme=test_settings["ORGANIZATION_SCHEME"],
+        is_reference_data=True,
+    )
+
     call_command("index_organizations", "--cached")
     deprecated_orgs = Organization.available_objects.filter(deprecated__isnull=False)
     assert set(deprecated_orgs) == {dep1, dep2}
+
+    undep.refresh_from_db()
+    assert undep.deprecated is None

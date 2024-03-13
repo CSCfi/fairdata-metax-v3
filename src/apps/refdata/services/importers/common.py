@@ -4,6 +4,7 @@ from typing import Protocol
 
 from django.db import transaction
 from django.db.models import prefetch_related_objects
+from django.utils import timezone
 
 from apps.common.helpers import cachalot_toggle
 
@@ -40,7 +41,7 @@ class BaseDataImporter(ReferenceDataImporterInterface):
         - pref_label    dict of translations
         - broader       list of parent concept URLs, used to build relations between concepts
         - same_as       list of URLs of equivalent concepts
-        - is_removed    set True if deprecated
+        - deprecated    datetime if object should be deprecated
         - any additional fields from the model
 
         """
@@ -55,10 +56,14 @@ class BaseDataImporter(ReferenceDataImporterInterface):
         """Assign fields to object from dict."""
 
         obj.in_scheme = self.scheme or data_item.get("in_scheme", "")
-        obj.is_removed = data_item.get("is_removed", False)  # 'unremove' changed objects
+        if deprecated := data_item.get("deprecated"):
+            # keep existing value if already deprecated
+            obj.deprecated = obj.deprecated or deprecated
+        else:
+            obj.deprecated = None
 
         for field, value in data_item.items():
-            if field in {"url", "in_scheme", "broader", "narrower"}:
+            if field in {"url", "in_scheme", "broader", "narrower", "deprecated"}:
                 continue
             if not hasattr(obj, field):
                 raise ValueError(f"Invalid field '{field}' for {self.data_type}")
@@ -70,6 +75,7 @@ class BaseDataImporter(ReferenceDataImporterInterface):
         existing_object_count = 0
         deprecated_object_count = 0
 
+        found_ids = []
         for data_item in data:
             url = data_item["url"]
             obj = objects_by_url.get(url)
@@ -80,13 +86,19 @@ class BaseDataImporter(ReferenceDataImporterInterface):
 
             self.assign_fields(data_item, obj)
             obj.save()
-
-            if is_new:
+            found_ids.append(obj.id)
+            if is_new and not obj.deprecated:
                 new_object_count += 1
+            elif obj.deprecated:
+                deprecated_object_count += 1
             else:
                 existing_object_count += 1
-            if obj.is_removed:
-                deprecated_object_count += 1
+
+        # Deprecate objects no longer in source data
+        removed_reference_objects = self.model.all_objects.filter(deprecated__isnull=True).exclude(
+            id__in=found_ids
+        )
+        deprecated_object_count += removed_reference_objects.update(deprecated=timezone.now())
 
         return {
             "new": new_object_count,
@@ -120,11 +132,9 @@ class BaseDataImporter(ReferenceDataImporterInterface):
         objects_by_url = self.get_existing_objects_by_url()
         counts = self.create_or_update_objects(data, objects_by_url)
         self.create_relationships(data, objects_by_url)
-        _logger.info(
-            f"Created {counts['new']} new objects, "
-            f"updated {counts['existing']} existing objects "
-            f"({counts['deprecated']} deprecated objects)"
-        )
+        _logger.info(f"Created {counts['new']} new objects")
+        _logger.info(f"Updated {counts['existing']} existing objects")
+        _logger.info(f"Deprecated {counts['deprecated']} objects")
 
     def load(self):
         _logger.info("Extracting relevant data from the parsed data")

@@ -12,6 +12,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import ProgrammingError, models
+from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.utils.translation import gettext as _
 from rest_framework import serializers
@@ -330,7 +331,8 @@ class LegacyDataset(Dataset):
         if available:
             available = parse(available)
         # access-type object
-        access_type, at_created = AccessType.objects.get_or_create(
+        access_type, at_created = self.get_or_create_reference_data(
+            AccessType,
             url=self.legacy_access_type["identifier"],
             defaults={
                 "url": self.legacy_access_type["identifier"],
@@ -376,7 +378,8 @@ class LegacyDataset(Dataset):
 
         restriction_grounds_objects = []
         for res_grounds in self.legacy_access_rights.get("restriction_grounds", []):
-            rg, rg_created = RestrictionGrounds.objects.get_or_create(
+            rg, rg_created = self.get_or_create_reference_data(
+                RestrictionGrounds,
                 url=res_grounds["identifier"],
                 defaults={
                     "pref_label": res_grounds["pref_label"],
@@ -424,6 +427,12 @@ class LegacyDataset(Dataset):
         self.metadata_owner = metadata_owner
         return metadata_owner
 
+    def get_or_create_reference_data(self, ref_data_model, url: str, defaults: dict) -> tuple:
+        instance, created = ref_data_model.objects.get_or_create(
+            url=url, defaults={**defaults, "deprecated": timezone.now()}
+        )
+        return instance, created
+
     def attach_ref_data_list(
         self,
         legacy_property_name: str,
@@ -446,7 +455,8 @@ class LegacyDataset(Dataset):
         if not getattr(self, legacy_property_name):
             return obj_list
         for obj in getattr(self, legacy_property_name):
-            instance, created = ref_data_model.objects.get_or_create(
+            instance, created = self.get_or_create_reference_data(
+                ref_data_model,
                 url=obj["identifier"],
                 defaults={
                     "url": obj["identifier"],
@@ -473,7 +483,8 @@ class LegacyDataset(Dataset):
             for data in spatial_data:
                 loc_obj = None
                 if data.get("identifier"):
-                    loc_obj, loc_created = Location.objects.get_or_create(
+                    loc_obj, loc_created = self.get_or_create_reference_data(
+                        Location,
                         url=data["identifier"],
                         defaults={
                             "in_scheme": data["in_scheme"],
@@ -525,7 +536,8 @@ class LegacyDataset(Dataset):
             for other_id in other_ids:
                 id_type = None
                 if other_id.get("identifier"):
-                    id_type, id_type_created = IdentifierType.objects.get_or_create(
+                    id_type, id_type_created = self.get_or_create_reference_data(
+                        IdentifierType,
                         url=other_id["identifier"],
                         defaults={
                             "pref_label": other_id["pref_label"],
@@ -699,7 +711,8 @@ class LegacyDataset(Dataset):
                         self.created_objects["Spatial"] -= 1
                         provenance.spatial = None
 
-                    loc_obj, loc_created = Location.objects.get_or_create(
+                    loc_obj, loc_created = self.get_or_create_reference_data(
+                        Location,
                         url=spatial_data["place_uri"]["identifier"],
                         defaults={
                             "in_scheme": spatial_data["place_uri"]["in_scheme"],
@@ -744,7 +757,8 @@ class LegacyDataset(Dataset):
                         if variable_created:
                             self.created_objects.update(["Variable"])
                 if event_outcome_data := data.get("event_outcome"):
-                    event_outcome, created = EventOutcome.objects.get_or_create(
+                    event_outcome, created = self.get_or_create_reference_data(
+                        EventOutcome,
                         url=event_outcome_data["identifier"],
                         defaults={
                             "pref_label": event_outcome_data["pref_label"],
@@ -755,7 +769,8 @@ class LegacyDataset(Dataset):
                         self.created_objects.update(["EventOutcome"])
                     provenance.event_outcome = event_outcome
                 if lifecycle_event_data := data.get("lifecycle_event"):
-                    lifecycle_event, created = LifecycleEvent.objects.get_or_create(
+                    lifecycle_event, created = self.get_or_create_reference_data(
+                        LifecycleEvent,
                         url=lifecycle_event_data["identifier"],
                         defaults={
                             "pref_label": lifecycle_event_data["pref_label"],
@@ -793,7 +808,9 @@ class LegacyDataset(Dataset):
     def convert_entity(self, entity: dict) -> dict:
         entity_type_obj = None
         if entity_type_data := entity.get("type"):
-            entity_type, created = ResourceType.objects.get_or_create(
+
+            entity_type, created = self.get_or_create_reference_data(
+                ResourceType,
                 url=entity_type_data["identifier"],
                 defaults={
                     "pref_label": entity_type_data["pref_label"],
@@ -812,7 +829,8 @@ class LegacyDataset(Dataset):
 
     def convert_relation(self, relation: dict) -> dict:
         relation_type_scheme = settings.LOCAL_REFERENCE_DATA_SOURCES["relation_type"]["scheme"]
-        relation_type, created = RelationType.objects.get_or_create(
+        relation_type, created = self.get_or_create_reference_data(
+            RelationType,
             url=relation["relation_type"]["identifier"],
             defaults={
                 "pref_label": relation["relation_type"]["pref_label"],

@@ -16,7 +16,7 @@ class LocalJSONImporter(BaseDataImporter):
             "pref_label": json_item.get("label", ""),
             "broader": [],
             "same_as": json_item.get("same_as", []),
-            "is_removed": False,
+            "deprecated": None,
         }
 
     def get_data(self):

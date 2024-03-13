@@ -1,6 +1,7 @@
+import logging
+
 import pytest
 from django.conf import settings
-from requests import request
 
 from apps.refdata.models import AccessType, FileFormatVersion, License
 from apps.refdata.services.importers import (
@@ -36,6 +37,39 @@ def test_import_local_json(local_ref_data_importer):
     )
     assert open_access.in_scheme == importer.scheme
     assert open_access.pref_label == {"en": "Open", "fi": "Avoin"}
+
+
+def test_import_update(local_ref_data_importer, caplog):
+    """Test update behavior of existing refdata."""
+    logging.disable(logging.NOTSET)
+    updated_accesstype = AccessType.all_objects.create(
+        url="http://uri.suomi.fi/codelist/fairdata/access_type/code/open",
+        in_scheme="http://uri.suomi.fi/codelist/fairdata/access_type",
+        pref_label={"en": "Öppen"},  # Will be updated to "Open"
+        deprecated="2022-02-05T01:02:03Z",  # Will be updated to None
+    )
+    removed_accesstype = AccessType.all_objects.create(
+        url="http://uri.suomi.fi/codelist/fairdata/access_type/code/thisdoesnotexist",
+        in_scheme="http://uri.suomi.fi/codelist/fairdata/access_type",
+        pref_label={"en": "Nonexisting accesstype"},
+    )
+    importer = local_ref_data_importer(LocalJSONImporter, "access_type", AccessType)
+    importer.load()
+
+    # Entry in source data is updated and undeprecated
+    updated_accesstype.refresh_from_db()
+    assert updated_accesstype.pref_label["en"] == "Open"
+    assert updated_accesstype.deprecated is None
+
+    # Entry missing from source data is deprecated
+    removed_accesstype.refresh_from_db()
+    assert removed_accesstype.pref_label["en"] == "Nonexisting accesstype"
+    assert removed_accesstype.deprecated is not None
+
+    # Check logging
+    assert caplog.messages[-3] == "Created 4 new objects"
+    assert caplog.messages[-2] == "Updated 1 existing objects"
+    assert caplog.messages[-1] == "Deprecated 1 objects"
 
 
 def test_import_local_json_license(local_ref_data_importer):

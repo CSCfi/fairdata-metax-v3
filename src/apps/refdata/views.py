@@ -33,6 +33,13 @@ def get_filter_for_model(model):
                 ("pref_label__values", "pref_label"),
             )
         )
+        deprecated = filters.BooleanFilter(lookup_expr="isnull", exclude=True)
+
+        def filter_queryset(self, queryset):
+            if self.form.cleaned_data.get("deprecated") is None:
+                self.form.cleaned_data["deprecated"] = False  # Hide deprecated by default
+
+            return super().filter_queryset(queryset)
 
     return ReferenceDataFilter
 
