@@ -48,6 +48,12 @@ def test_import_update(local_ref_data_importer, caplog):
         pref_label={"en": "Öppen"},  # Will be updated to "Open"
         deprecated="2022-02-05T01:02:03Z",  # Will be updated to None
     )
+    unchanged_accesstype = AccessType.all_objects.create(
+        url="http://uri.suomi.fi/codelist/fairdata/access_type/code/restricted",
+        in_scheme="http://uri.suomi.fi/codelist/fairdata/access_type",
+        pref_label={"fi": "Saatavuutta rajoitettu", "en": "Restricted use"},
+        same_as=["http://publications.europa.eu/resource/authority/access-right/RESTRICTED"],
+    )
     removed_accesstype = AccessType.all_objects.create(
         url="http://uri.suomi.fi/codelist/fairdata/access_type/code/thisdoesnotexist",
         in_scheme="http://uri.suomi.fi/codelist/fairdata/access_type",
@@ -67,8 +73,9 @@ def test_import_update(local_ref_data_importer, caplog):
     assert removed_accesstype.deprecated is not None
 
     # Check logging
-    assert caplog.messages[-3] == "Created 4 new objects"
-    assert caplog.messages[-2] == "Updated 1 existing objects"
+    assert caplog.messages[-4] == "Created 3 new objects"
+    assert caplog.messages[-3] == "Updated 2 existing objects"
+    assert caplog.messages[-2] == "Left 1 existing objects unchanged"
     assert caplog.messages[-1] == "Deprecated 1 objects"
 
 

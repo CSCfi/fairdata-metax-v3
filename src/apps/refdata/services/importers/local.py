@@ -5,7 +5,6 @@ from apps.refdata.services.importers.common import BaseDataImporter
 
 _logger = logging.getLogger(__name__)
 
-
 class LocalJSONImporter(BaseDataImporter):
     """Importer for generic reference data from local json file."""
 
