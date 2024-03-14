@@ -3,6 +3,7 @@ import logging
 import uuid
 from collections import Counter, namedtuple
 from datetime import datetime
+from dateutil.parser import parse
 from typing import Dict, List
 
 from deepdiff import DeepDiff
@@ -314,7 +315,10 @@ class LegacyDataset(Dataset):
 
     def attach_access_rights(self) -> AccessRights:
         description = self.legacy_access_rights.get("description", None)
+        available = self.legacy_access_rights.get("available", None)
 
+        if available:
+            available = parse(available)
         # access-type object
         access_type, at_created = AccessType.objects.get_or_create(
             url=self.legacy_access_type["identifier"],
@@ -330,6 +334,7 @@ class LegacyDataset(Dataset):
             access_rights = AccessRights(
                 access_type=access_type,
                 description=description,
+                available=available,
             )
             access_rights.save()
             self.created_objects.update(["AccessRights"])
@@ -350,9 +355,9 @@ class LegacyDataset(Dataset):
             license_instance, created = DatasetLicense.objects.get_or_create(
                 access_rights__dataset=self.id,
                 reference=lic_ref,
+                custom_url=custom_url,
                 defaults={
                     "description": lic.get("description"),
-                    "custom_url": custom_url,
                 },
             )
             if created:

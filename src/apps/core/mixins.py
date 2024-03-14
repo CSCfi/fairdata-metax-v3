@@ -321,6 +321,9 @@ class V2DatasetMixin:
             "license": [],
         }
 
+        if available := getattr(self.access_rights, "available", None):
+            data["available"] = available.isoformat()
+
         for license in self.access_rights.license.all():
             row = {
                 "identifier": license.reference.url,

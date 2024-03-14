@@ -59,15 +59,10 @@
           }
         }
       ],
-      "keyword": [
-        "Roolipelit",
-        "Pelit"
-      ],
+      "keyword": ["Roolipelit", "Pelit"],
       "spatial": [
         {
-          "as_wkt": [
-            "POINT(24.65673 60.20638)"
-          ],
+          "as_wkt": ["POINT(24.65673 60.20638)"],
           "place_uri": {
             "in_scheme": "http://www.yso.fi/onto/yso/places",
             "identifier": "http://www.yso.fi/onto/yso/p94105",
@@ -170,9 +165,7 @@
             "en": "Collection"
           },
           "spatial": {
-            "as_wkt": [
-              "POINT(24.65673 60.20638)"
-            ],
+            "as_wkt": ["POINT(24.65673 60.20638)"],
             "place_uri": {
               "in_scheme": "http://www.yso.fi/onto/yso/places",
               "identifier": "http://www.yso.fi/onto/yso/p94105",
@@ -291,14 +284,14 @@
           }
         ],
         "access_type": {
+          "identifier": "http://uri.suomi.fi/codelist/fairdata/access_type/code/embargo",
           "in_scheme": "http://uri.suomi.fi/codelist/fairdata/access_type",
-          "identifier": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open",
           "pref_label": {
-            "en": "Open",
-            "fi": "Avoin",
-            "und": "Avoin"
+            "en": "Embargo",
+            "fi": "Embargo"
           }
-        }
+        },
+        "available": "2024-03-13"
       },
       "field_of_science": [
         {
