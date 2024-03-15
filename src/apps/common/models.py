@@ -140,27 +140,31 @@ class AbstractDatasetProperty(AbstractBaseModel):
         abstract = True
 
 
-class AbstractFreeformConcept(AbstractDatasetProperty):
+class AbstractFreeformConcept(AbstractBaseModel):
     """Permissive version of concept object with added custom fields
 
     Necessary for objects that do not conform to the requirements of reference data. Should only be used with core-app.
 
     Attributes:
         title (HstoreField): property title, usually this would be pref_label in reference data
-        representation (models.URLField): representation of the concept
         pref_label (HStoreField): title of the concept
         description (HStoreField): detailed freeform description of the concept
         in_scheme (models.URLField): scheme of the concept
     """
 
-    url = models.URLField(
-        max_length=512, help_text="valid url to the property definition", null=True, blank=True
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    pref_label = HStoreField(
+        blank=True, null=True, help_text="The preferred label of the concept."
     )
-    title = HStoreField(help_text='example: {"en":"title", "fi":"otsikko"}', null=True, blank=True)
-    representation = models.URLField(blank=True, null=True)
-    pref_label = HStoreField(blank=True, null=True)
-    description = HStoreField(blank=True, null=True)
-    in_scheme = models.URLField(max_length=255, null=True, blank=True)
+    definition = HStoreField(
+        blank=True, null=True, help_text="Definition or formal explanation of the concept."
+    )
+    concept_identifier = models.URLField(
+        max_length=512, help_text="An URL identifying the concept."
+    )
+    in_scheme = models.URLField(
+        max_length=255, null=True, blank=True, help_text="The scheme the concept belongs to."
+    )
 
     class Meta(AbstractDatasetProperty.Meta):
         abstract = True

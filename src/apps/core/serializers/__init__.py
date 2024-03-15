@@ -3,6 +3,7 @@ from .common_serializers import (
     CatalogHomePageModelSerializer,
     DatasetPublisherModelSerializer,
     LicenseModelSerializer,
+    OtherIdentifierModelSerializer,
     TemporalModelSerializer,
 )
 from .concept_serializers import SpatialModelSerializer

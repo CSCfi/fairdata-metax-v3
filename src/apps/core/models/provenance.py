@@ -1,3 +1,5 @@
+import uuid
+
 from django.contrib.postgres.fields import HStoreField
 from django.db import models
 from django.utils.translation import gettext as _
@@ -58,7 +60,9 @@ class Provenance(AbstractBaseModel):
     is_associated_with = models.ManyToManyField(
         DatasetActor, related_name="provenance", blank=True
     )
-    dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE, related_name="provenance")
+    dataset = models.ForeignKey(
+        Dataset, on_delete=models.CASCADE, null=True, blank=True, related_name="provenance"
+    )
 
     @classmethod
     def _create_copy(cls, original, dataset=None):
@@ -85,7 +89,56 @@ class Provenance(AbstractBaseModel):
             return str(next(iter(self.description.items()), default))
 
 
-class ProvenanceVariable(AbstractFreeformConcept):
-    copier = ModelCopier(copied_relations=[], parent_relations=["provenance"])
+class VariableUniverse(AbstractFreeformConcept):
+    """Indicates the Universe of a represented variable.
 
-    provenance = models.ForeignKey(Provenance, on_delete=models.CASCADE, related_name="variables")
+    RDF Class: disco:Universe
+    Source: [DDI-RDF Discovery Vocabulary](https://rdf-vocabulary.ddialliance.org/discovery.html#dfn-disco-universe)
+
+    E.g. "All the population in the national territory
+    at the moment the census is carried out."
+    """
+
+    copier = ModelCopier(copied_relations=[], parent_relations=["provenancevariable"])
+
+
+class VariableConcept(AbstractFreeformConcept):
+    """Concept of a variable.
+
+    RDF Class: disco:Concept
+    Source: [DDI-RDF Discovery Vocabulary](https://rdf-vocabulary.ddialliance.org/discovery.html#dfn-disco-concept)
+
+    E.g. "Demographic Variables"
+    """
+
+    copier = ModelCopier(copied_relations=[], parent_relations=["provenancevariable"])
+
+
+class ProvenanceVariable(AbstractBaseModel):
+    """A variable provides the definition of a column in a rectangular data file.
+
+    RDF Class: disco:Variable
+    Source: [DDI-RDF Discovery Vocabulary](https://rdf-vocabulary.ddialliance.org/discovery.html#dfn-disco-variable)
+    """
+
+    copier = ModelCopier(copied_relations=["concept", "universe"], parent_relations=["provenance"])
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    pref_label = HStoreField(help_text='example: {"en":"Age"}')
+    description = HStoreField(
+        help_text='example: {"en":"This variable indicates the person\'s age in years"}',
+        null=True,
+        blank=True,
+    )
+    concept = models.ForeignKey(VariableConcept, on_delete=models.SET_NULL, null=True, blank=True)
+    universe = models.ForeignKey(
+        VariableUniverse, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    representation = models.URLField(
+        null=True,
+        blank=True,
+        help_text="Scheme that contains the possible values of the variable.",
+    )
+    provenance = models.ForeignKey(
+        Provenance, on_delete=models.CASCADE, related_name="variables", null=True, blank=True
+    )

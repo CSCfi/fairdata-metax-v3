@@ -113,9 +113,30 @@
         "variable": [
           {
             "pref_label": {
-              "en": "the Åland Islands",
-              "fi": "Ahvenanmaa"
-            }
+              "en": "Age",
+              "fi": "Ikä"
+            },
+            "description": {
+              "en": "This variable indicates the person's age in years."
+            },
+            "concept": {
+              "pref_label": {
+                "en": "Demographic variables"
+              },
+              "definition": {
+                "en": "Attributes of a human population that are studied statistically."
+              },
+              "identifier": "https://example.com/demographic",
+              "in_scheme": "https://example.com/"
+            },
+            "universe": {
+              "pref_label": {
+                "en": "All the population in the national territory at the moment the census is carried out."
+              },
+              "identifier": "https://example.com/everyone",
+              "in_scheme": "https://example.com/"
+            },
+            "representation": "https://example.com/age"
           }
         ],
         "description": {

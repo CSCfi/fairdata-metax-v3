@@ -188,7 +188,15 @@ class DatasetMemberSerializer(StrictSerializer, CommonNestedModelSerializer):
             return getattr(self.parent, "child_extra_attrs", {})
         return {}
 
+    def validate_context(self):
+        """Context should have dataset, is allowed to be None."""
+        if "dataset" not in self.context:
+            raise ValueError(
+                f"{self.__class__.__name__}: 'dataset' missing from serializer context"
+            )
+
     def to_internal_value(self, data) -> dict:
+        self.validate_context()
         attrs = super().to_internal_value(data)
 
         # If doing only partial update, remove default values

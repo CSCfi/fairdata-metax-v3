@@ -12,3 +12,7 @@
 
 ### :::src.apps.core.serializers.dataset_actor_serializers.legacy_serializers.LegacyDatasetActorProvenanceSerializer
 
+## LegacyProvenanceModelSerializer
+
+### :::src.apps.core.serializers.dataset_actor_serializers.legacy_serializers.LegacyProvenanceModelSerializer
+

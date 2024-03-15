@@ -11,13 +11,13 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db import ProgrammingError, models
+from django.db import models
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.utils.translation import gettext as _
 from rest_framework import serializers
 
-from apps.actors.models import Actor, Organization
+from apps.actors.models import Actor
 from apps.common.helpers import datetime_to_date, parse_iso_dates_in_nested_dict
 from apps.core.models import FileSet
 from apps.files.models import File
@@ -33,7 +33,6 @@ from .catalog_record import (
     Funding,
     MetadataProvider,
     OtherIdentifier,
-    Temporal,
 )
 from .concepts import (
     AccessType,
@@ -57,7 +56,7 @@ from .concepts import (
 )
 from .data_catalog import DataCatalog
 from .preservation import Contract
-from .provenance import Provenance, ProvenanceVariable
+from .provenance import Provenance
 
 logger = logging.getLogger(__name__)
 
@@ -180,16 +179,11 @@ class LegacyDataset(Dataset):
 
     @property
     def legacy_spatial(self):
-        return self._flatten_nested_ref_data_object(
-            "spatial", "place_uri", additional_keys=["full_address", "geographic_name", "as_wkt"]
-        )
+        return self.legacy_research_dataset.get("spatial") or []
 
     @property
     def legacy_other_identifiers(self):
-        other_ids = self._flatten_nested_ref_data_object(
-            "other_identifier", "type", additional_keys=["notation"]
-        )
-        return other_ids
+        return self.legacy_research_dataset.get("other_identifier") or []
 
     @property
     def legacy_contract(self):
@@ -204,37 +198,6 @@ class LegacyDataset(Dataset):
         raise an error about unknown `dataset_ptr` field.
         """
         self.dataset.create_snapshot(**kwargs)
-
-    def _flatten_nested_ref_data_object(
-        self, ref_data_name: str, top_level_key_name: str, additional_keys: List = None
-    ) -> List[Dict]:
-        """Removes top-level object name-field from json structure.
-
-        Examples:
-             {obj: { field: value } becomes { field: value }
-
-        Args:
-            ref_data_name (str):
-            top_level_key_name (str):
-            additional_keys (List): additional fields to put on the root level of the object
-
-        Returns:
-
-        """
-        if ref_data := self.legacy_research_dataset.get(ref_data_name):
-            obj_list = []
-            for obj in ref_data:
-                flatten_obj: Dict
-                # Sometimes spatial does not have place_uri top level key
-                if obj.get(top_level_key_name):
-                    flatten_obj = {**obj[top_level_key_name]}
-                else:
-                    flatten_obj = {**obj}
-                if additional_keys:
-                    for key in additional_keys:
-                        flatten_obj[key] = obj.get(key)
-                obj_list.append(flatten_obj)
-            return obj_list
 
     @classmethod
     def parse_temporal_timestamps(cls, legacy_temporal):
@@ -316,16 +279,6 @@ class LegacyDataset(Dataset):
         if "keyword" in self.legacy_research_dataset:
             self.keyword = self.legacy_research_dataset["keyword"]
 
-    def remove_attached_actors(self):
-        attached_actors = DatasetActor.objects.filter(dataset=self)
-        attached_user_defined_orgs = Organization.objects.filter(
-            actor_organizations__in=attached_actors.values("id"), url__isnull=True
-        )
-        self.created_objects["DatasetActor"] -= attached_actors.count()
-        self.created_objects["Organization"] -= attached_user_defined_orgs.count()
-        attached_user_defined_orgs.delete()
-        attached_actors.delete()
-
     def attach_access_rights(self) -> AccessRights:
         description = self.legacy_access_rights.get("description", None)
         available = self.legacy_access_rights.get("available", None)
@@ -337,7 +290,6 @@ class LegacyDataset(Dataset):
             AccessType,
             url=self.legacy_access_type["identifier"],
             defaults={
-                "url": self.legacy_access_type["identifier"],
                 "in_scheme": self.legacy_access_type["in_scheme"],
                 "pref_label": self.legacy_access_type["pref_label"],
             },
@@ -401,7 +353,7 @@ class LegacyDataset(Dataset):
             return self.data_catalog
         catalog_id = self.legacy_data_catalog["identifier"]
         catalog, created = DataCatalog.objects.get_or_create(
-            id=catalog_id, defaults={"id": catalog_id, "title": {"und": catalog_id}}
+            id=catalog_id, defaults={"title": {"und": catalog_id}}
         )
         if created:
             self.created_objects.update(["DataCatalog"])
@@ -409,7 +361,7 @@ class LegacyDataset(Dataset):
         return catalog
 
     def attach_metadata_owner(self) -> Actor:
-        """Creates new Actor-object from metadata-owner field, that is usually CSC-username"""
+        """Creates new MetadataProvider object from metadata-owner field, that is usually CSC-username"""
         metadata_user, user_created = MetaxUser.objects.get_or_create(
             username=self.metadata_provider_user
         )
@@ -433,7 +385,25 @@ class LegacyDataset(Dataset):
         instance, created = ref_data_model.objects.get_or_create(
             url=url, defaults={**defaults, "deprecated": timezone.now()}
         )
+        if created:
+            logger.info(
+                f"Created reference data for {ref_data_model.__name__}: {dict(url=url, **defaults)}"
+            )
         return instance, created
+
+    def convert_reference_data(self, ref_data_model, concept: dict, overrides = {}) -> Optional[dict]:
+        if not concept:
+            return None
+        instance, created = self.get_or_create_reference_data(
+            ref_data_model=ref_data_model,
+            url=concept["identifier"],
+            defaults={
+                "pref_label": concept.get("pref_label"),
+                "in_scheme": concept.get("in_scheme"),
+                **overrides,
+            },
+        )
+        return {"url": instance.url}
 
     def attach_ref_data_list(
         self,
@@ -461,7 +431,6 @@ class LegacyDataset(Dataset):
                 ref_data_model,
                 url=obj["identifier"],
                 defaults={
-                    "url": obj["identifier"],
                     "pref_label": obj[pref_label_key_name],
                     "in_scheme": settings.REFERENCE_DATA_SOURCES[target_many_to_many_field].get(
                         "scheme"
@@ -477,88 +446,99 @@ class LegacyDataset(Dataset):
         getattr(self.dataset, target_many_to_many_field).set(obj_list)
         return obj_list
 
-    def attach_spatial(self) -> List[Spatial]:
-        if spatial_data := self.legacy_spatial:
-            self.created_objects["Spatial"] -= self.dataset.spatial.all().count()
-            self.dataset.spatial.all().delete()
-            obj_list = []
-            for data in spatial_data:
-                loc_obj = None
-                if data.get("identifier"):
-                    loc_obj, loc_created = self.get_or_create_reference_data(
-                        Location,
-                        url=data["identifier"],
-                        defaults={
-                            "in_scheme": data["in_scheme"],
-                            "pref_label": data["pref_label"],
-                        },
-                    )
-                    if loc_created:
-                        self.created_objects.update(["Location"])
-                spatial = Spatial(
-                    reference=loc_obj,
-                    dataset=self,
-                    geographic_name=data["geographic_name"],
-                    full_address=data.get("full_address"),
+    def convert_spatial(self, spatial: dict) -> Optional[dict]:
+        if not spatial:
+            return None
+        location = None
+        if location_data := spatial.get("place_uri"):
+            location = self.convert_reference_data(
+                Location,
+                {
+                    "identifier": location_data["identifier"],
+                    "in_scheme": location_data["in_scheme"],
+                    "pref_label": location_data["pref_label"],
+                },
+            )
+
+        obj = {
+            "reference": location,
+            "geographic_name": spatial.get("geographic_name"),
+            "full_address": spatial.get("full_address"),
+        }
+        if spatial.get("as_wkt"):
+            location_wkt = None
+            if location:
+                location_wkt = (
+                    Location.objects.filter(url=location.get("url"))
+                    .values_list("as_wkt", flat=True)
+                    .first()
                 )
-                self.created_objects.update(["Spatial"])
-                if data.get("as_wkt") and spatial.reference:
-                    as_wkt = data.get("as_wkt")
-                    if as_wkt != spatial.reference.as_wkt:
-                        spatial.custom_wkt = as_wkt
-                try:
-                    spatial.save()
-                except ProgrammingError as e:
-                    logger.error(
-                        f"Failed to save {spatial=}, with {data=}, and reference {loc_obj}"
-                    )
-                    raise e
-                obj_list.append(spatial)
-            return obj_list
+
+            as_wkt = spatial.get("as_wkt")
+            if as_wkt != [location_wkt]:
+                obj["custom_wkt"] = as_wkt
+        return obj
+
+    def attach_spatial(self) -> List[Spatial]:
+        spatial_data = [
+            self.convert_spatial(spatial)
+            for spatial in self.legacy_research_dataset.get("spatial", [])
+        ]
+        from apps.core.serializers import SpatialModelSerializer
+
+        serializer = SpatialModelSerializer(
+            instance=self.spatial.all(), data=spatial_data, many=True
+        )
+        serializer.is_valid(raise_exception=True)
+        spatials = serializer.save()
+        self.spatial.set(spatials)
+        return spatials
+
+    def convert_temporal(self, temporal: dict) -> Optional[dict]:
+        if not temporal:
+            return None
+        start_date, end_date = self.parse_temporal_timestamps(temporal)
+        return {
+            "start_date": start_date,
+            "end_date": end_date,
+        }
 
     def attach_temporal(self):
-        records = []
-        if temporal := self.legacy_research_dataset.get("temporal"):
-            for record in temporal:
-                start_date, end_date = self.parse_temporal_timestamps(record)
-                instance, created = Temporal.objects.get_or_create(
-                    dataset=self,
-                    start_date=start_date,
-                    end_date=end_date,
-                    provenance=None,
-                )
-                if created:
-                    self.created_objects.update(["Temporal"])
-                records.append(instance)
-        return records
+        temporal_data = [
+            self.convert_temporal(temporal)
+            for temporal in self.legacy_research_dataset.get("temporal", [])
+        ]
+        from apps.core.serializers import TemporalModelSerializer
 
-    def attach_other_identifiers(self):
-        records = []
-        if other_ids := self.legacy_other_identifiers:
-            for other_id in other_ids:
-                id_type = None
-                if other_id.get("identifier"):
-                    id_type, id_type_created = self.get_or_create_reference_data(
-                        IdentifierType,
-                        url=other_id["identifier"],
-                        defaults={
-                            "pref_label": other_id["pref_label"],
-                            "in_scheme": other_id["in_scheme"],
-                        },
-                    )
-                    if id_type_created:
-                        self.created_objects.update(["IdentifierType"])
-                instance, created = OtherIdentifier.objects.get_or_create(
-                    dataset=self,
-                    notation=other_id["notation"],
-                    defaults={"identifier_type": id_type},
-                )
-                if created:
-                    self.created_objects.update(["OtherIdentifier"])
-                records.append(instance)
+        serializer = TemporalModelSerializer(
+            instance=self.temporal.all(), data=temporal_data, many=True
+        )
+        serializer.is_valid(raise_exception=True)
+        temporals = serializer.save()
+        self.temporal.set(temporals)
+        return temporals
 
-        self.dataset.other_identifiers.set(records)
-        return records
+    def convert_other_identifier(self, other_identifier: dict) -> dict:
+        return {
+            "notation": other_identifier.get("notation"),
+            "identifier_type": self.convert_reference_data(
+                IdentifierType, other_identifier.get("type")
+            ),
+        }
+
+    def attach_other_identifiers(self) -> List[OtherIdentifier]:
+        identifier_data = [
+            self.convert_other_identifier(obj) for obj in self.legacy_other_identifiers
+        ]
+        from apps.core.serializers import OtherIdentifierModelSerializer
+
+        serializer = OtherIdentifierModelSerializer(
+            instance=self.other_identifiers.all(), data=identifier_data, many=True
+        )
+        serializer.is_valid(raise_exception=True)
+        other_identifiers = serializer.save()
+        self.other_identifiers.set(other_identifiers)
+        return other_identifiers
 
     def attach_contract(self) -> Contract:
         if self.legacy_contract:
@@ -597,7 +577,7 @@ class LegacyDataset(Dataset):
         return val
 
     def convert_actor(self, actor: dict) -> dict:
-        """Convert actror from V2 dict (optionally with roles) to V3 dict."""
+        """Convert actor from V2 dict (optionally with roles) to V3 dict."""
         val = {}
         if actor["@type"] == "Person":
             val["person"] = {
@@ -620,7 +600,7 @@ class LegacyDataset(Dataset):
 
         return val
 
-    def attach_actors(self):
+    def attach_actors(self) -> List[DatasetActor]:
         actors_data = []
         roles = ["creator", "publisher", "curator", "contributor", "rights_holder"]
         for role in roles:
@@ -692,142 +672,72 @@ class LegacyDataset(Dataset):
             file_set.files.set(file_objects)
         return file_set
 
-    def attach_provenance(self):
-        """
+    def convert_concept(self, variable: dict) -> Optional[dict]:
+        if not variable:
+            return None
+        return {
+            "pref_label": variable.get("pref_label"),
+            "definition": variable.get("definition"),
+            "concept_identifier": variable.get("identifier"),
+            "in_scheme": variable.get("in_scheme"),
+        }
 
-        Returns: object list
+    def convert_variable(self, variable: dict) -> dict:
+        return {
+            "pref_label": variable.get("pref_label"),
+            "description": variable.get("description"),
+            "concept": self.convert_concept(variable.get("concept")),
+            "universe": self.convert_concept(variable.get("universe")),
+            "representation": variable.get("representation"),
+        }
 
-        """
-        obj_list = []
-        if provenance_data := self.legacy_research_dataset.get("provenance"):
-            for data in provenance_data:
-                provenance: Provenance
-                provenance_created: bool
-                provenance, provenance_created = Provenance.objects.get_or_create(
-                    title=data.get("title"), description=data["description"], dataset=self
-                )
-                if provenance_created:
-                    self.created_objects.update(["Provenance"])
-                logger.debug(f"{provenance=}, created={provenance_created}")
-                if spatial_data := data.get("spatial"):
-                    if provenance.spatial:
-                        provenance.spatial.delete()
-                        self.created_objects["Spatial"] -= 1
-                        provenance.spatial = None
+    def convert_provenance(self, provenance: dict) -> dict:
+        return {
+            "title": provenance.get("title"),
+            "description": provenance.get("description"),
+            "outcome_description": provenance.get("outcome_description"),
+            "spatial": self.convert_spatial(provenance.get("spatial")),  # maybe None
+            "temporal": self.convert_temporal(provenance.get("temporal")),  # maybe None
+            "event_outcome": self.convert_reference_data(
+                EventOutcome, provenance.get("event_outcome")
+            ),
+            "lifecycle_event": self.convert_reference_data(
+                LifecycleEvent, provenance.get("lifecycle_event")
+            ),
+            "variables": [self.convert_variable(var) for var in provenance.get("variable", [])],
+            "is_associated_with": [
+                self.convert_actor(actor) for actor in provenance.get("was_associated_with", [])
+            ],
+        }
 
-                    loc_obj, loc_created = self.get_or_create_reference_data(
-                        Location,
-                        url=spatial_data["place_uri"]["identifier"],
-                        defaults={
-                            "in_scheme": spatial_data["place_uri"]["in_scheme"],
-                            "pref_label": spatial_data["place_uri"]["pref_label"],
-                        },
-                    )
-                    if loc_created:
-                        self.created_objects.update(["Location"])
+    def attach_provenance(self) -> List[Provenance]:
+        provenance_data = [
+            self.convert_provenance(prov)
+            for prov in self.legacy_research_dataset.get("provenance", [])
+        ]
+        from apps.core.serializers.provenance_serializers import ProvenanceModelSerializer
 
-                    spatial = Spatial(
-                        provenance=provenance,
-                        full_address=spatial_data.get("full_address"),
-                        geographic_name=spatial_data.get("geographic_name"),
-                        reference=loc_obj,
-                    )
-                    self.created_objects.update(["Spatial"])
-                    if as_wkt := spatial_data.get("as_wkt"):
-                        if as_wkt != spatial.reference.as_wkt:
-                            spatial.custom_wkt = as_wkt
-                    spatial.save()
-                    provenance.spatial = spatial
-                if temporal_data := data.get("temporal"):
-                    start_date, end_date = self.parse_temporal_timestamps(temporal_data)
-                    temporal, temporal_created = Temporal.objects.get_or_create(
-                        provenance=provenance,
-                        dataset=None,
-                        defaults={"start_date": start_date, "end_date": end_date},
-                    )
-                    if temporal_created:
-                        self.created_objects.update(["Temporal"])
-                    logger.debug(f"{temporal=}, created={temporal_created}")
-                if variables := data.get("variable"):
-                    for var in variables:
-                        (
-                            variable,
-                            variable_created,
-                        ) = ProvenanceVariable.objects.get_or_create(
-                            pref_label=var["pref_label"],
-                            provenance=provenance,
-                            representation=var.get("representation"),
-                        )
-                        if variable_created:
-                            self.created_objects.update(["Variable"])
-                if event_outcome_data := data.get("event_outcome"):
-                    event_outcome, created = self.get_or_create_reference_data(
-                        EventOutcome,
-                        url=event_outcome_data["identifier"],
-                        defaults={
-                            "pref_label": event_outcome_data["pref_label"],
-                            "in_scheme": event_outcome_data["in_scheme"],
-                        },
-                    )
-                    if created:
-                        self.created_objects.update(["EventOutcome"])
-                    provenance.event_outcome = event_outcome
-                if lifecycle_event_data := data.get("lifecycle_event"):
-                    lifecycle_event, created = self.get_or_create_reference_data(
-                        LifecycleEvent,
-                        url=lifecycle_event_data["identifier"],
-                        defaults={
-                            "pref_label": lifecycle_event_data["pref_label"],
-                            "in_scheme": lifecycle_event_data["in_scheme"],
-                        },
-                    )
-                    if created:
-                        self.created_objects.update(["LifecycleEvent"])
-                    provenance.lifecycle_event = lifecycle_event
-
-                associated_with_objs: List[DatasetActor] = []
-                if was_associated_with := data.get("was_associated_with"):
-                    from apps.core.serializers.dataset_actor_serializers.legacy_serializers import (
-                        LegacyDatasetActorProvenanceSerializer,
-                    )
-
-                    adapted = [self.convert_actor(actor) for actor in was_associated_with]
-                    serializer = LegacyDatasetActorProvenanceSerializer(
-                        instance=provenance.is_associated_with.all(),
-                        data=adapted,
-                        context={"dataset": self},
-                        many=True,
-                    )
-                    serializer.is_valid(raise_exception=True)
-                    associated_with_objs = serializer.save()
-                provenance.is_associated_with.set(associated_with_objs)
-
-                if data.get("outcome_description"):
-                    provenance.outcome_description = data.get("outcome_description")
-
-                provenance.save()
-                obj_list.append(provenance)
-        return obj_list
+        serializer = ProvenanceModelSerializer(
+            instance=self.provenance.all(),
+            data=provenance_data,
+            many=True,
+            context={"dataset": self},
+        )
+        serializer.is_valid(raise_exception=True)
+        provenances = serializer.save()
+        self.provenance.set(provenances)
+        return provenances
 
     def convert_entity(self, entity: dict) -> dict:
-        entity_type_obj = None
+        entity_type = None
         if entity_type_data := entity.get("type"):
-            entity_type, created = self.get_or_create_reference_data(
-                ResourceType,
-                url=entity_type_data["identifier"],
-                defaults={
-                    "pref_label": entity_type_data["pref_label"],
-                    "in_scheme": entity_type_data["in_scheme"],
-                    # TODO: Create deprecated object if not found
-                },
-            )
-            entity_type_obj = {"url": entity_type.url}
+            entity_type = self.convert_reference_data(ResourceType, entity_type_data)
 
         return {
             "title": entity.get("title"),
             "description": entity.get("description"),
             "entity_identifier": entity.get("identifier"),
-            "type": entity_type_obj,
+            "type": entity_type,
         }
 
     def convert_relation(self, relation: dict) -> dict:

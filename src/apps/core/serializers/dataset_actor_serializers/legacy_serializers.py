@@ -13,6 +13,7 @@ from apps.core.serializers.dataset_actor_serializers.member_serializer import Da
 from apps.core.serializers.dataset_actor_serializers.organization_serializer import (
     DatasetOrganizationSerializer,
 )
+from apps.core.serializers.provenance_serializers import ProvenanceModelSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -60,3 +61,9 @@ class LegacyDatasetActorProvenanceSerializer(DatasetActorProvenanceSerializer):
     """Dataset provenance actor serializer for migrating legacy data."""
 
     organization = LegacyDatasetOrganizationSerializer(required=False, allow_null=True)
+
+
+class LegacyProvenanceModelSerializer(ProvenanceModelSerializer):
+    """Dataset provenance serializer for migrating legacy data."""
+
+    is_associated_with = LegacyDatasetActorProvenanceSerializer(many=True, required=False)

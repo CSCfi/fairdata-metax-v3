@@ -312,6 +312,8 @@ class DatasetSerializer(CommonNestedModelSerializer):
     def to_internal_value(self, data):
         if self.instance:  # dataset actors need dataset in context
             self.context["dataset"] = self.instance
+        else:
+            self.context["dataset"] = None
         _data = super().to_internal_value(data)
 
         errors = {}

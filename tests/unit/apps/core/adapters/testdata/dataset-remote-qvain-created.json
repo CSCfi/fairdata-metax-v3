@@ -49,7 +49,7 @@
     "spatial": [
       {
         "as_wkt": [
-          "POINT(24.65673 60.20638)"
+          "POINT (24.65673 60.20638)"
         ],
         "place_uri": {
           "in_scheme": "http://www.yso.fi/onto/yso/places",
@@ -104,7 +104,7 @@
         },
         "spatial": {
           "as_wkt": [
-            "POINT(24.65673 60.20638)"
+            "POINT (24.65673 60.20638)"
           ],
           "place_uri": {
             "in_scheme": "http://www.yso.fi/onto/yso/places",
@@ -164,6 +164,11 @@
             }
           }
         ]
+      },
+      {
+        "title": {
+          "en": "Minimal provenance"
+        }
       }
     ],
     "description": {

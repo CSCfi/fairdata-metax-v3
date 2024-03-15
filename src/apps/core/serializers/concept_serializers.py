@@ -9,7 +9,7 @@ from apps.core.models import Spatial, concepts
 class SpatialModelSerializer(CommonModelSerializer):
     """Model Serializer for Spatial"""
 
-    reference = concepts.Location.get_serializer_field(required=False)
+    reference = concepts.Location.get_serializer_field(required=False, allow_null=True)
     custom_wkt = serializers.ListField(child=WKTField(), required=False, allow_null=True)
 
     class Meta:

@@ -182,6 +182,8 @@ def test_dataset_copied_fields():
         "dataset.provenance.spatial",
         "dataset.provenance.temporal",
         "dataset.provenance.used_entity",
+        "dataset.provenance.variables.concept",
+        "dataset.provenance.variables.universe",
         "dataset.provenance.variables",
         "dataset.provenance",
         "dataset.relation.entity",

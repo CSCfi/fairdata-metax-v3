@@ -84,6 +84,6 @@ class FintoLocationImporter(FintoImporter):
         lat = graph.value(concept, self.WGS.lat)
         wkt = ""
         if not (long is None or lat is None):
-            wkt = f"POINT({long} {lat})"
+            wkt = f"POINT ({long} {lat})"
         data_item["as_wkt"] = wkt
         return data_item

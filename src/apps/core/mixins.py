@@ -270,6 +270,18 @@ class V2DatasetMixin:
             document["research_dataset"]["relation"] = obj_list
         return obj_list
 
+    def _construct_v2_concept(self, concept) -> Optional[Dict]:
+        if not concept:
+            return None
+        return omit_none(
+            {
+                "pref_label": concept.pref_label,
+                "definition": concept.definition,
+                "identifier": concept.concept_identifier,
+                "in_scheme": concept.in_scheme,
+            }
+        )
+
     def _generate_v2_provenance(self, document: Dict) -> List:
         obj_list = []
         for provenance in self.provenance.all():
@@ -284,11 +296,19 @@ class V2DatasetMixin:
             if hasattr(provenance, "temporal"):
                 data["temporal"] = self._convert_v3_temporal_to_v2(provenance.temporal)
 
-            if provenance.variables.all().count() != 0:
-                data["variable"] = []
-                for variable in provenance.variables.all():
-                    var_data = {"pref_label": variable.pref_label}
-                    data["variable"].append(var_data)
+            if variables := provenance.variables.all():
+                data["variable"] = [
+                    omit_none(
+                        {
+                            "pref_label": variable.pref_label,
+                            "description": variable.description,
+                            "concept": self._construct_v2_concept(variable.concept),
+                            "universe": self._construct_v2_concept(variable.universe),
+                            "representation": variable.representation,
+                        }
+                    )
+                    for variable in variables
+                ]
             if provenance.lifecycle_event:
                 data["lifecycle_event"] = {
                     "pref_label": provenance.lifecycle_event.pref_label,
@@ -309,7 +329,7 @@ class V2DatasetMixin:
                 for association in provenance.is_associated_with.all():
                     data["was_associated_with"].append(association.as_v2_data())
 
-            obj_list.append(data)
+            obj_list.append(omit_none(data))
         if len(obj_list) != 0:
             document["research_dataset"]["provenance"] = obj_list
         return obj_list

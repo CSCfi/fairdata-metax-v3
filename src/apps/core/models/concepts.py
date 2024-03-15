@@ -5,7 +5,7 @@ from django.db import models
 from django.utils.translation import gettext as _
 
 from apps.common.copier import ModelCopier
-from apps.common.models import AbstractBaseModel, AbstractFreeformConcept
+from apps.common.models import AbstractBaseModel
 from apps.common.serializers.fields import URLReferencedModelField, URLReferencedModelListField
 from apps.refdata import models as refdata
 
@@ -151,7 +151,7 @@ class Location(ConceptProxyMixin, refdata.Location):
     """Location from reference data."""
 
 
-class Spatial(AbstractFreeformConcept):
+class Spatial(AbstractBaseModel):
     """The geographical area covered by the dataset.
 
     Attributes:
@@ -166,6 +166,7 @@ class Spatial(AbstractFreeformConcept):
 
     copier = ModelCopier(copied_relations=[], parent_relations=["dataset", "provenance"])
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     reference = models.ForeignKey(
         refdata.Location, on_delete=models.CASCADE, blank=True, null=True
     )
@@ -189,7 +190,7 @@ class Spatial(AbstractFreeformConcept):
     def __str__(self):
         return self.geographic_name or str(next(iter(self.reference.pref_label.items())))
 
-    class Meta(AbstractFreeformConcept.Meta):
+    class Meta(AbstractBaseModel.Meta):
         indexes = []
 
 
