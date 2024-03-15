@@ -1,6 +1,9 @@
 from django.middleware.csrf import get_token
 from knox.models import AuthToken
 from rest_framework import serializers
+from rest_framework.serializers import ModelSerializer
+from django.contrib.auth.validators import UnicodeUsernameValidator
+
 
 from apps.common.serializers.serializers import CommonModelSerializer
 from apps.users.models import MetaxUser
@@ -13,6 +16,10 @@ class MetaxUserModelSerializer(CommonModelSerializer):
         model = MetaxUser
         fields = ("username",)
         extra_kwargs = {"username": {"validators": []}}
+
+    def create(self, validated_data):
+        username = validated_data.pop("username")
+        return MetaxUser.objects.get_or_create(username=username, defaults=validated_data)[0]
 
 
 class UserInfoSerializer(CommonModelSerializer):

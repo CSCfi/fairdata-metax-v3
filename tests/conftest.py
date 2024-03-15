@@ -11,6 +11,9 @@
 import django
 import factory.random
 import pytest
+import re
+import requests_mock
+import secrets
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.test.client import Client
@@ -624,3 +627,17 @@ def tweaked_settings(settings):
     settings.ENABLE_DEBUG_TOOLBAR = False
     settings.ENABLE_SILK_PROFILER = False
     settings.TEMPLATE_DEBUG = False
+
+
+@pytest.fixture(autouse=True)
+def mute_v2_requests():
+    settings.METAX_V2_HOST = "http://localhost:8008"
+    host = f'{settings.METAX_V2_HOST}'
+    matcher = re.compile(host)
+    code = [200, 404]
+    with requests_mock.Mocker(real_http=True) as m:
+        m.register_uri('POST', matcher, status_code=201)
+        m.register_uri('DELETE', matcher, status_code=204)
+        m.register_uri('GET', matcher, status_code=secrets.choice(code))
+        m.register_uri('PUT', matcher, status_code=200)
+        yield m

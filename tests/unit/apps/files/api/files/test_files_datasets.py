@@ -101,15 +101,16 @@ def test_files_datasets_for_service_with_relations(admin_client, file_tree_with_
         content_type="application/json",
     )
     assert res.status_code == 200
-    assert res.json() == {
+    res.json()[str(tree["files"]["/dir/c.txt"].storage_identifier)].sort()
+    expected_result = {
         tree["files"]["/dir/a.txt"].storage_identifier: [str(tree["dataset_a"].id)],
         tree["files"]["/dir/b.txt"].storage_identifier: [str(tree["dataset_b"].id)],
-        tree["files"]["/dir/c.txt"].storage_identifier: [
-            str(tree["dataset_a"].id),
-            str(tree["dataset_b"].id),
-            str(tree["dataset_c"].id),
-        ],
+        tree["files"]["/dir/c.txt"].storage_identifier: [str(tree["dataset_a"].id),
+                                                         str(tree["dataset_b"].id),
+                                                         str(tree["dataset_c"].id),],
     }
+    expected_result[tree["files"]["/dir/c.txt"].storage_identifier].sort()
+    assert res.json() == expected_result
 
 
 def test_files_datasets_for_different_service(admin_client, file_tree_with_datasets):

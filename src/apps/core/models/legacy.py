@@ -143,7 +143,10 @@ class LegacyDataset(Dataset):
 
     @property
     def legacy_license(self):
-        return self.legacy_access_rights.get("license") or []
+        if "license" in self.legacy_access_rights:
+            return self.legacy_access_rights["license"]
+        else:
+            return []
 
     @property
     def legacy_data_catalog(self):
@@ -151,15 +154,22 @@ class LegacyDataset(Dataset):
 
     @property
     def legacy_languages(self):
-        return self.legacy_research_dataset.get("language")
+        if "language" in self.legacy_research_dataset:
+            return self.legacy_research_dataset["language"]
+        else:
+            return []
 
     @property
     def legacy_field_of_science(self):
-        return self.legacy_research_dataset.get("field_of_science") or []
+        if "field_of_science" in self.legacy_research_dataset:
+            return self.legacy_research_dataset["field_of_science"]
+        else:
+            return []
 
     @property
     def legacy_infrastructure(self):
         return self.legacy_research_dataset.get("infrastructure") or []
+
 
     @property
     def legacy_theme(self):

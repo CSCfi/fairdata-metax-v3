@@ -31,12 +31,15 @@ logger = logging.getLogger(__name__)
                 #     "root['research_dataset']['access_rights']['license'][0]['title']['und']"
                 # ],
                 "dictionary_item_added": ["root['research_dataset']['issued']"],
+                'dictionary_item_removed': ["root['preservation_state']"],
             },
         ),
         (
             "dataset-ida-files-qvain-created.json",
             "files-ida.json",
-            {},
+            {'dictionary_item_removed': ["root['preservation_state']",
+                                         "root['preservation_identifier']"],
+             },
         ),
         (
             "dataset-remote-qvain-created.json",
@@ -51,6 +54,7 @@ logger = logging.getLogger(__name__)
                     # Project and funding integration should be completed in the adapter for is_output_of to work
                     # "root['research_dataset']['is_output_of']",
                     # Remote resources is not modeled yet
+                    "root['preservation_state']",
                     "root['research_dataset']['remote_resources']",
                     "root['research_dataset']['total_remote_resources_byte_size']",
                 ],
@@ -69,6 +73,7 @@ logger = logging.getLogger(__name__)
                     # Project and funding integration should be completed in the adapter for is_output_of to work
                     # "root['research_dataset']['is_output_of']",
                     # Remote resources is not modeled yet
+                    "root['preservation_state']",
                     "root['research_dataset']['remote_resources']",
                     "root['research_dataset']['total_remote_resources_byte_size']",
                 ],

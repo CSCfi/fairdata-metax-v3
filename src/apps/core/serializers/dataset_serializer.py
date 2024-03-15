@@ -31,7 +31,7 @@ from apps.core.serializers.project_serializer import ProjectModelSerializer
 
 # for preventing circular import, using submodule instead of apps.core.serializers
 from apps.core.serializers.provenance_serializers import ProvenanceModelSerializer
-
+from apps.core import signals
 from .dataset_files_serializer import FileSetSerializer
 
 logger = logging.getLogger(__name__)
@@ -325,7 +325,9 @@ class DatasetSerializer(CommonNestedModelSerializer):
 
     def update(self, instance, validated_data):
         validated_data["last_modified_by"] = self.context["request"].user
-        return super().update(instance, validated_data=validated_data)
+        dataset: Dataset = super().update(instance, validated_data=validated_data)
+        signals.dataset_updated.send(sender=self.__class__, data=dataset)
+        return dataset
 
     def create(self, validated_data):
         validated_data["last_modified_by"] = self.context["request"].user
@@ -339,7 +341,7 @@ class DatasetSerializer(CommonNestedModelSerializer):
         # Now reverse and many-to-many relations have been assigned, try to publish
         if state == Dataset.StateChoices.PUBLISHED:
             instance.publish()
-
+        signals.dataset_created.send(sender=self.__class__, data=instance)
         return instance
 
 

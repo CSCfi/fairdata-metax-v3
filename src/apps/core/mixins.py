@@ -453,16 +453,13 @@ class V2DatasetMixin:
             total_files_byte_size = file_set.total_files_size
 
         doc = {
-            "identifier": str(self.id),
+            "identifier": str(self.legacydataset.dataset_json["identifier"]) if hasattr(self, "legacydataset") else self.id,
+            "api_meta": self.legacydataset.dataset_json["api_meta"] if hasattr(self, "legacydataset") else {"version": 3},
             "deprecated": self.deprecated is not None,
-            "preservation_state": self.preservation_state,
             "state": self.state,
             "cumulative_state": self.cumulative_state.real,
             "date_created": self.created,
             "removed": self._construct_v2_removed_field(),
-            "metadata_provider_user": self.metadata_owner.user.username,
-            "metadata_provider_org": self.metadata_owner.organization,
-            "metadata_owner_org": self.metadata_owner.organization,
             "research_dataset": {
                 "title": self.title,
                 "description": self.description,
@@ -470,16 +467,30 @@ class V2DatasetMixin:
                 "preferred_identifier": self.persistent_identifier,
                 "total_files_byte_size": total_files_byte_size,
                 "keyword": self.keyword,
-                "access_rights": self._generate_v2_access_rights(),
+                "access_rights": self._generate_v2_access_rights() if self.access_rights else None,
             },
-            "data_catalog": {"identifier": self.data_catalog.id},
         }
+        if self.metadata_owner:
+            if hasattr(self.metadata_owner, "user"):
+                doc["metadata_provider_user"] = self.metadata_owner.user.username
+            else:
+                doc["metadata_provider_user"] = "None"
+            if hasattr(self.metadata_owner, "organization"):
+                doc["metadata_provider_org"] = self.metadata_owner.organization
+                doc["metadata_owner_org"] = self.metadata_owner.organization
+            else:
+                doc["metadata_provider_org"] = "None"
+                doc["metadata_owner_org"] = "None"
+
+        if self.data_catalog:
+            doc["data_catalog"] = {"identifier": self.data_catalog.id}
+        if self.preservation:
+            doc["preservation_state"] = self.preservation.state
+            doc["preservation_identifier"] = self.preservation.id
         if self.cumulation_started:
             doc["date_cumulation_started"] = self.cumulation_started
         if self.last_cumulative_addition:
             doc["date_last_cumulative_addition"] = self.last_cumulative_addition
-        if self.preservation_identifier:
-            doc["preservation_identifier"] = self.preservation_identifier
         if self.last_modified_by:
             doc["user_modified"] = self.last_modified_by.username
         if self.issued:

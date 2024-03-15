@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
+import json
 import os
 import sys
 from datetime import timedelta
@@ -360,3 +361,7 @@ EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD", None)
 EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", False)
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 METAX_EMAIL_SENDER = env.str("METAX_EMAIL_SENDER", "noreply@fairdata.fi")
+
+METAX_V2_HOST = env.str("METAX_V2_HOST", None)
+METAX_V2_USER = env.str("METAX_V2_USER", None)
+METAX_V2_PASSWORD = env.str("METAX_V2_PASSWORD", None)
