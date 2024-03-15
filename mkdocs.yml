@@ -4,6 +4,7 @@ theme:
   name: "material"
   features:
     - content.tabs.link
+    - toc.integrate
 extra_css: [extra.css]
 extra_javascript:
 - https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js

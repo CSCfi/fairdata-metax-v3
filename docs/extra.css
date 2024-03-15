@@ -6,3 +6,14 @@
   padding: .75em 1.25em;
 }
 
+.md-typeset table:not([class]) th {
+  background-color: rgba(0,0,0,.03);
+}
+
+.md-typeset table:not([class]) th:nth-child(even){
+  background-color: rgba(0,0,0,.06);
+}
+
+.md-typeset table:not([class]) td:nth-child(even){
+  background-color: rgba(0,0,0,.025);
+}

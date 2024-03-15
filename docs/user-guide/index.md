@@ -63,15 +63,15 @@ It can sometimes be useful during development to have the API ignore unknown par
 
 This documentation uses following abbreviations to describe the allowed types of a value.
 
-| Type     | Description                                                                                   | Example                                                 |
-|----------|-----------------------------------------------------------------------------------------------|---------------------------------------------------------|
-| str      | Text string.                                                                                  | "Hello world"                                           |
-| int      | Integer number.                                                                               | 13                                                      |
-| bool     | Boolean value.                                                                                | true                                                    |
-| uuid     | UUID style identifier.                                                                        | "9c1f1bbe-2b26-4580-88e1-979950994437"                  |
-| url      | String containing a URL.                                                                      | "https://example.com"                                   |
-| date     | ISO 8601 date.                                                                                | "2013-12-24"                                            |
-| datetime | ISO 8601 date and time with timezone.                                                         | "2023-10-05T09:23:35+03:00"                             |
-| dict     | Object with language codes and translations. Empty translations (`""` or `null`) are ignored. | {"en": "English title", "fi": "Suomenkielinen otsikko"} |
-| object   | Object. Content depends on the field.                                                         | {"start_date": "2023-09-20", end_date": "2023-11-25"}   |
-| list     | Array of items. Content depends on the field.                                                 | [1, 2, 3]                                               |
+| Type     | Description                                                                                                                                         | Example                                                 |
+|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------|
+| str      | Text string.                                                                                                                                        | "Hello world"                                           |
+| int      | Integer number.                                                                                                                                     | 13                                                      |
+| bool     | Boolean value.                                                                                                                                      | true                                                    |
+| uuid     | UUID style identifier.                                                                                                                              | "9c1f1bbe-2b26-4580-88e1-979950994437"                  |
+| url      | String containing a URL.                                                                                                                            | "https://example.com"                                   |
+| date     | ISO 8601 date.                                                                                                                                      | "2013-12-24"                                            |
+| datetime | ISO 8601 date and time with offset.                                                                                                                 | "2023-10-05T09:23:35+03:00"                             |
+| dict     | Object with language codes and translations. Empty translations (`""` or `null`) are ignored. If all translations are empty, the dict becomes null. | {"en": "English title", "fi": "Suomenkielinen otsikko"} |
+| object   | Object. Content depends on the field.                                                                                                               | {"start_date": "2023-09-20", end_date": "2023-11-25"}   |
+| list     | Array of items. Content depends on the field.                                                                                                       | [1, 2, 3]                                               |

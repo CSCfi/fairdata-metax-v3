@@ -3,6 +3,7 @@
 ## Required properties
 
 A published dataset has the following required properties. Drafts require only `data_catalog` and `title`.
+
 | Field         | key           | value                                                                |
 |---------------|---------------|----------------------------------------------------------------------|
 | Data Catalog  | data_catalog  | str                                                                  |

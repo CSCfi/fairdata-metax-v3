@@ -2,28 +2,24 @@
 
 Metax V3 Rest-API has number of changes from previous versions (v1-v2) and is incompatible in most API-endpoints.
 
-The most up-to-date information about the specific API version can always be found in
-the [Swagger documentation](/swagger/), but this page tries to show the main differences between the versions.
+This page introduces the main differences between the versions, but the most up-to-date information about the specific 
+API version can always be found in the [Swagger documentation](/v3/swagger/).
 
 <!-- prettier-ignore -->
 !!! INFO
     **Following markers are used to clarify changes:**
 
-    :star: known change from V1-V2 (and what it is), implemented
-
     :clock: known change from V1-V2 (and what it is), not yet implemented
 
     :question: change unknown, because of unknown third party library conventions or limitations
 
-    :no_entry: N/A, not going to be implemented
-
 ## Authentication and authorization
 
-Unlike Metax V1-V2, V3 does not use basic authentication headers, instead bearer token is provided to users and integration customers. More details in [End User Access](./end-user-access.md)
+Unlike Metax V1-V2, V3 does not use basic authentication headers. Instead, a bearer token is provided to users and integration customers. More details in [End User Access](./end-user-access.md).
 
 ## Changes in query parameters
 
-V3 query parameters follow the hierarchy structure of the object schema. Consider following V3 dataset:
+V3 query parameters follow the hierarchy structure of the object schema. Consider the following V3 dataset:
 
 !!! example
     `POST /v3/datasets`
@@ -31,74 +27,67 @@ V3 query parameters follow the hierarchy structure of the object schema. Conside
     ---8<--- "tests/unit/docs/examples/test_data/v1-v3-dataset-v3.json"
     ```
 
-In this example, if you would like to find the example dataset with person name, you would use query parameter `actors__person__name=teppo+testaaja`, as actors field has list of objects that have person object that has a name field.
+In this example, if you would like to find this dataset with person name, you would use query parameter `actors__person__name=teppo+testaaja`, as the field `actors` is a list of objects that include a `person` object with the field `name`.
 
 
 ## Dataset
 
-Also named CatalogRecord in V1-V2. Main difference is removing the research_dataset nested object and renaming fields to
-be more descriptive. All objects also now have their own id field that can be used when editing dataset properties.
+Also named CatalogRecord in V1-V2. Main differences are: removal of the research_dataset nested object, and more descriptive field names. All objects also now have their own id field that can be used when editing dataset properties.
 
-For more information about the new dataset API, see [the user guide article](./datasets-api.md)
+For more information, see the [new Dataset API user guide](./datasets-api.md).
 
 ### Field names
 
-| V1-V2                                        | V3 field name                                 |
-|----------------------------------------------|-----------------------------------------------|
-| access_granter [object]                      | :question:                                    |
-| api_meta [object]                            | :no_entry:                                    |
-| data_catalog [object]                        | [data_catalog](#datacatalog) [uuid] :star:    |
-| dataset_version_set [list]                   | other_versions [list] :star:                  |
-| date_created [datetime]                      | created [datetime] :star:                     |
-| date_cumulation_started [datetime]           | cumulation_started [datetime] :star:          |
-| date_last_cumulative_addition [datetime]     | last_cumulative_addition [datetime] :star:    |
-| date_modified [datetime]                     | modified [datetime] :star:                    |
-| date_removed [datetime]                      | removed [datetime] :star:                     |
-| deprecated [bool]                            | deprecated [datetime] :star:                  |
-| identifier [uuid]                            | id [uuid] :star:                              |
-| metadata_owner_org [str]                     | metadata_owner/organization [str] :star:      |
-| metadata_provider_org [str]                  | metadata_owner/organization [str] :star:      |
-| metadata_provider_user [str]                 | metadata_owner/user [object] :star:           |
-| N/A                                          | first_version [url] :star:                    |
-| N/A                                          | last_version [url] :star:                     |
-| N/A                                          | next_version [url] :star:                     |
-| preservation_dataset_origin_version          | :no-entry: [^1]                               |
-| preservation_dataset_version [str]           | :no-entry: [^1]                               |
-| preservation_description [str]               | preservation/description [str] :clock: [^1]   |
-| preservation_identifier [str]                | preservation/id [uuid] :clock: [^1]           |
-| preservation_reason_description [str]        | preservation/reason [str] :clock:             |
-| preservation_state [int]                     | preservation/state [int] :clock: [^1]         |
-| preservation_state_modified [datetime]       | prevervation/modified [datetime] :clock: [^1] |
-| previous_dataset_version [object]            | previous_version [url] :star:                 |
-| removed [bool]                               | :no-entry:                                    |
-| research_dataset [object]                    | :no-entry:                                    |
-| research_dataset/access_rights [object]      | access_rights [object] :star:                 |
-| research_dataset/available [date]            | :no-entry:                                    |
-| research_dataset/contributor [list]          | actors [list] :star:                          |
-| research_dataset/creator [list]              | actors [list]  :star:                         |
-| research_dataset/curator [list]              | actors [list] :star:                          |
-| research_dataset/description [dict]          | description [dict] :star:                     |
-| research_dataset/field_of_science [list]     | field_of_science [list] :star:                |
-| research_dataset/is_output_of [list]         | is_output_of [list] :clock:                   |
-| research_dataset/issued [date]               | issued [datetime] :star:                      |
-| research_dataset/keyword [list]              | keyword [list] :star:                         |
-| research_dataset/language [list]             | language [list] :star:                        |
-| research_dataset/metadata_version_identifier | :no_entry:                                    |
-| research_dataset/modified [datetime]         | modified [datetime] :star:                    |
-| research_dataset/other_identifier [list]     | other_identifiers [list] :star:               |
-| research_dataset/persistent_identifier       | persistent_identifier :star:                  |
-| research_dataset/preferred_identifier        | :no-entry:                                    |
-| research_dataset/provenance [list]           | provenance [list] :star:                      |
-| research_dataset/publisher [object]          | actors [list] :star:                          |
-| research_dataset/relation[list]              | :question:                                    |
-| research_dataset/rights_holder [list]        | actors [list] :star:                          |
-| research_dataset/theme [list]                | theme [list] :star:                           |
-| research_dataset/title [dict]                | title [dict] :star:                           |
-| service_created                              | :no_entry:                                    |
-| service_modified                             | :no_entry:                                    |
-| total_files_byte_size [int]                  | fileset/total_files_size [int] :star:         |
-| user_created                                 | :no_entry:                                    |
-| user_modified                                | :no_entry:                                    |
+| V1-V2 field name                             | V3 field name                                | Notes                                                                                                           |
+|----------------------------------------------|----------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
+| data_catalog [object]                        | data_catalog [str]                           | This is a URN-type identifier.                                                                                  |
+| dataset_version_set [list]                   | dataset_versions [list]                      |                                                                                                                 |
+| date_created [datetime]                      | created [datetime]                           |                                                                                                                 |
+| date_cumulation_started [datetime]           | cumulation_started [datetime]                |                                                                                                                 |
+| date_deprecated [datetime]                   | deprecated [datetime]                        | `date_deprecated` [datetime] and `deprecated` [bool] have been combined into one `deprecated` [datetime] field. |
+| date_last_cumulative_addition [datetime]     | last_cumulative_addition [datetime]          |                                                                                                                 |
+| date_modified [datetime]                     | modified [datetime]                          |                                                                                                                 |
+| date_removed [datetime]                      | removed [datetime]                           | `date_removed` [datetime] and `removed` [bool] have been combined into one `removed` [datetime] field.          |
+| deprecated [bool]                            | deprecated [datetime]                        | `deprecated` [bool] and `date_deprecated` [datetime] have been combined into one `deprecated` [datetime] field. |
+| identifier [uuid]                            | id [uuid]                                    |                                                                                                                 |
+| metadata_owner_org [str]                     | metadata_owner.organization [str]            |                                                                                                                 |
+| metadata_provider_org [str]                  | **not used in V3**                           | Metadata provider can now be found under `metadata_owner.organization`.                                         |
+| metadata_provider_user [str]                 | metadata_owner.user [str]                    |                                                                                                                 |
+| N/A                                          | [fileset](#dataset-files) [object]           | See [Dataset Files](#dataset-files) for more information on `fileset`.                                          |
+| preservation_dataset_origin_version [object] | preservation.dataset_origin_version [object] | :clock: not yet implemented :clock:                                                                             |
+| preservation_dataset_version [object]        | preservation.dataset_version [object]        | :clock: not yet implemented :clock:                                                                             |
+| preservation_description [str]               | preservation.description [str]               |                                                                                                                 |
+| preservation_identifier [str]                | preservation.id [uuid]                       |                                                                                                                 |
+| preservation_reason_description [str]        | preservation.reason_description [str]        |                                                                                                                 |
+| preservation_state [int]                     | preservation.state [int]                     |                                                                                                                 |
+| preservation_state_modified [datetime]       | preservation.state_modified [datetime]       | :clock: not yet implemented :clock:                                                                             |
+| previous_dataset_version [object]            | **not used in V3**                           | Version information can now be found under `dataset_versions`.                                                  |
+| removed [bool]                               | removed [datetime]                           | `removed` [bool] and `date_removed` [datetime] have been combined into one `removed` [datetime] field.          |
+| research_dataset [object]                    | **not used in V3**                           | All metadata under `research_dataset` has been moved directly under dataset. See fields below.                  |
+| research_dataset.access_rights [object]      | access_rights [object]                       |                                                                                                                 |
+| research_dataset.available [date]            | access_rights.available [date]               |                                                                                                                 |
+| research_dataset.contributor [list]          | [actors](#actors) [list]                     | See [Actors-section](#actors) for information on specifying actor roles in V3.                                  |
+| research_dataset.creator [list]              | [actors](#actors) [list]                     | See [Actors-section](#actors) for information on specifying actor roles in V3.                                  |
+| research_dataset.curator [list]              | [actors](#actors) [list]                     | See [Actors-section](#actors) for information on specifying actor roles in V3.                                  |
+| research_dataset.description [dict]          | description [dict]                           |                                                                                                                 |
+| research_dataset.field_of_science [list]     | field_of_science [list]                      |                                                                                                                 |
+| research_dataset.is_output_of [list]         | projects [list]                              |                                                                                                                 |
+| research_dataset.issued [date]               | issued [datetime]                            |                                                                                                                 |
+| research_dataset.keyword [list]              | keyword [list]                               |                                                                                                                 |
+| research_dataset.language [list]             | language [list]                              |                                                                                                                 |
+| research_dataset.modified [datetime]         | modified [datetime]                          |                                                                                                                 |
+| research_dataset.other_identifier [list]     | other_identifiers [list]                     |                                                                                                                 |
+| research_dataset.preferred_identifier        | persistent_identifier                        |                                                                                                                 |
+| research_dataset.provenance [list]           | provenance [list]                            |                                                                                                                 |
+| research_dataset.publisher [object]          | [actors](#actors) [list]                     | See [Actors-section](#actors) for information on specifying actor roles in V3.                                  |
+| research_dataset.relation[list]              | relation [list]                              |                                                                                                                 |
+| research_dataset.rights_holder [list]        | [actors](#actors) [list]                     | See [Actors-section](#actors) for information on specifying actor roles in V3.                                  |
+| research_dataset.spatial [list]              | spatial [list]                               |                                                                                                                 |
+| research_dataset.temporal [list]             | temporal [list]                              |                                                                                                                 |
+| research_dataset.theme [list]                | theme [list]                                 |                                                                                                                 |
+| research_dataset.title [dict]                | title [dict]                                 |                                                                                                                 |
+| total_files_byte_size [int]                  | fileset.total_files_size [int]               | See [Dataset Files](#dataset-files) for more information on `fileset`.                                          |
+| user_created                                 | **not used in V3**                           | This information can now be found in `metadata_owner.user`.                                                     |
 
 ### Complex fields
 
@@ -203,7 +192,7 @@ been moved under actors field. Instead of having a typed actor object like `@typ
 | N/A                      | roles [list]                     |
 
 Organizations have some fields specific only to reference data organizations: `url` and `in_scheme`.
-Only `url` is writable for reference data organizations, other values are determined automtically.
+Only `url` is writable for reference data organizations, other values are determined automatically.
 The fields for `organization` are:
 
 | V1-V2 organization actor field | V3 actor field                                     |
@@ -364,7 +353,7 @@ other fields have been removed or simplified:
 | actor_filter            | `actors__organization__pref_label` :clock: |
 | actor_filter            | `actors__person` :clock:                   |
 | api_version             | :no_entry:                                 |
-| contract_org_identifier | :question: [^1]                            |
+| contract_org_identifier | :question:                                 |
 | curator                 | `actors__roles__curator` :clock:           |
 | data_catalog            | `data_catalog__id` :star:                  |
 | editor_permissions_user | :question: [^2]                            |
@@ -729,7 +718,7 @@ fileset associated with a dataset:
 
 Dataset-specific directory metadata is only visible when browsing directories.
 
-[^1]: Is solved in Preservation Model implementation
+[^1]: -
 [^2]: Is solved in authorization implementation
 [^3]: Is solved in versioning implementation. Django-simple-versioning is used as implementation base.
 [^4]: Is solved in the PublishingChannels implementation
