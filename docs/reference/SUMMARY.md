@@ -88,6 +88,9 @@
             - [legacy_view](src/apps/core/views/legacy_view.md)
             - [nested_views](src/apps/core/views/nested_views.md)
             - [preservation_view](src/apps/core/views/preservation_view.md)
+    - download
+        - [apps](src/apps/download/apps.md)
+        - [views](src/apps/download/views.md)
     - files
         - [admin](src/apps/files/admin.md)
         - [apps](src/apps/files/apps.md)
