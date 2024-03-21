@@ -32,7 +32,7 @@ def test_get_concept(client, model):
         **common_fields,
     )
     url = get_model_url(model)
-    resp = client.get(url)
+    resp = client.get(url, {"include_nulls": True})
     assert resp.data["results"] == [
         {
             "id": "00000000-0000-0000-0000-000000000000",

@@ -528,6 +528,12 @@ class CommonModelSerializer(PatchModelSerializer, serializers.ModelSerializer):
                 raise ValidationError({key: "Unexpected field" for key in unknown_keys})
         return super().validate(data)
 
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        if not self.context.get("include_nulls"):
+            rep = {k: v for k, v in rep.items() if v is not None}
+        return rep
+
 
 class CommonNestedModelSerializer(CommonModelSerializer, NestedModelSerializer):
     """NestedModelSerializer for behavior common for all model APIs."""

@@ -90,7 +90,7 @@ def test_update_dataset_reset_preservation(admin_client, preservation_dataset):
     the preservation state and removing the contract
     """
     resp = admin_client.patch(
-        f"/v3/datasets/{preservation_dataset['id']}/preservation",
+        f"/v3/datasets/{preservation_dataset['id']}/preservation?include_nulls=true",
         {"state": -1, "contract": None},
         content_type="application/json",
     )

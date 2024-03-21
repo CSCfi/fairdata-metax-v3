@@ -371,6 +371,7 @@ class DirectoryViewSet(QueryParamsMixin, AccessViewSetMixin, viewsets.ViewSet):
             serialized_data = DirectorySerializer(
                 instance,
                 context={
+                    "include_nulls": self.include_nulls,
                     "request": self.request,
                     "directory_fields": params.get("directory_fields"),
                     "file_fields": params.get("file_fields"),

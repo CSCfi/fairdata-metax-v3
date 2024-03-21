@@ -7,7 +7,7 @@ pytestmark = [pytest.mark.django_db, pytest.mark.file]
 
 def test_files_create(admin_client, ida_file_json):
     res = admin_client.post(
-        "/v3/files",
+        "/v3/files?include_nulls=true",
         ida_file_json,
         content_type="application/json",
     )

@@ -199,19 +199,19 @@ def test_version_draft_permissions(
     assert res3.data["version"] == 2
 
     # ensure user1 can see the draft information
-    res = user_client.get(f"/v3/datasets/{res1.data['id']}")
+    res = user_client.get(f"/v3/datasets/{res1.data['id']}?include_nulls=true")
     assert res.status_code == 200
     assert len(res.data["dataset_versions"]) == 3
     assert "next_draft" in res.data["dataset_versions"][1].keys()
 
     # ensure user2 cannot see this information
-    res = user_client_2.get(f"/v3/datasets/{res1.data['id']}")
+    res = user_client_2.get(f"/v3/datasets/{res1.data['id']}?include_nulls=true")
     assert res.status_code == 200
     assert len(res.data["dataset_versions"]) == 2
     assert "next_draft" not in res.data["dataset_versions"][1].keys()
 
     # user1 makes yet another version (3)
-    res = user_client.post(f"/v3/datasets/{res2.data['id']}/new-version")
+    res = user_client.post(f"/v3/datasets/{res2.data['id']}/new-version?include_nulls=true")
     assert res.status_code == 201
 
     # ensure version numbering is correct even with all the drafts (v2 edit draft and v3 version draft)

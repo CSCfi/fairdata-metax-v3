@@ -105,6 +105,7 @@ def test_directory_dataset_include_all(admin_client, file_tree_with_datasets):
         {
             "dataset": file_tree_with_datasets["dataset_a"].id,
             "pagination": False,
+            "include_nulls": True,
             "path": "/dir",
             "include_all": True,  # include also non-dataset files
             **file_tree_with_datasets["params"],

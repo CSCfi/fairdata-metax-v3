@@ -10,6 +10,7 @@ def test_directory_field_values(admin_client, file_tree_b):
     res = admin_client.get(
         "/v3/directories",
         {
+            "include_nulls": True,
             "pagination": False,
             **file_tree_b["params"],
         },
@@ -38,7 +39,10 @@ def test_directory_field_values(admin_client, file_tree_b):
                     "size": 3200,
                     "created": file_tree_b["files"]["/dir/first"].modified,
                     "modified": file_tree_b["files"]["/dir/last"].modified,
-                    "url": "http://testserver/v3/directories?pagination=False&csc_project=project_x&storage_service=ida&path=/dir/",
+                    "url": (
+                        "http://testserver/v3/directories"
+                        "?include_nulls=True&pagination=False&csc_project=project_x&storage_service=ida&path=/dir/"
+                    ),
                 }
             ],
             "files": [
@@ -128,6 +132,7 @@ def test_directory_all_file_fields(admin_client, file_tree_b):
     res = admin_client.get(
         "/v3/directories",
         {
+            "include_nulls": True,
             "pagination": False,
             "file_fields": ",".join(fields),
             **file_tree_b["params"],

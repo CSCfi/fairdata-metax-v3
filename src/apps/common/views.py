@@ -56,10 +56,13 @@ class PatchModelMixin:
         return self.update(request, *args, **kwargs)
 
 
-class StrictQueryParamsSerializer(serializers.Serializer):
+class CommonQueryParamsSerializer(serializers.Serializer):
     """Serializer for 'strict' query parameter."""
 
     strict = serializers.BooleanField(default=True)
+    include_nulls = serializers.BooleanField(
+        default=False, help_text="Keep null values in the response."
+    )
 
 
 class QueryParamsMixin(viewsets.ViewSet):
@@ -110,11 +113,20 @@ class QueryParamsMixin(viewsets.ViewSet):
         return classes
 
     @cached_property
+    def common_query_params(self) -> dict:
+        serializer = CommonQueryParamsSerializer(data=self.request.query_params)
+        serializer.is_valid(raise_exception=True)
+        return serializer.validated_data
+
+    @property
     def strict(self) -> bool:
         """Return True if strict parameter parsing is enabled."""
-        serializer = StrictQueryParamsSerializer(data=self.request.query_params)
-        serializer.is_valid(raise_exception=True)
-        return serializer.validated_data["strict"]
+        return self.common_query_params["strict"]
+
+    @property
+    def include_nulls(self) -> bool:
+        """Return True if returning nulls is enabled."""
+        return self.common_query_params["include_nulls"]
 
     def validate_query_params(self):
         """Validate query parameters for current action, assign to self.query_params."""
@@ -189,6 +201,7 @@ class CommonModelViewSet(
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context["strict"] = self.strict
+        context["include_nulls"] = self.include_nulls
         return context
 
 
@@ -196,3 +209,9 @@ class CommonReadOnlyModelViewSet(
     QueryParamsMixin, NonFilteringGetObjectMixin, viewsets.ReadOnlyModelViewSet
 ):
     """ViewSet with common functionality for read only models."""
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["strict"] = self.strict
+        context["include_nulls"] = self.include_nulls
+        return context

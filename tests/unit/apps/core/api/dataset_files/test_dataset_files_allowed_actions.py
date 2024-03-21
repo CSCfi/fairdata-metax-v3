@@ -230,7 +230,7 @@ def test_merge_file_addition_to_cumulative_dataset(do_action, admin_client, deep
     assert res.status_code == 200
 
     res = admin_client.post(
-        f"/v3/datasets/{res.data['id']}/publish",
+        f"/v3/datasets/{res.data['id']}/publish?include_nulls=true",
         content_type="application/json",
     )
     assert res.status_code == 200

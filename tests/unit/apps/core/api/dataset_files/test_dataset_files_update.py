@@ -398,10 +398,9 @@ def test_dataset_files_post_remove_file_metadata(admin_client, deep_file_tree, d
         {"fileset": actions},
         content_type="application/json",
     )
-    fileset = res.data["fileset"]
     assert res.status_code == 200
 
-    res = admin_client.get(urls["files"])
+    res = admin_client.get(f'{urls["files"]}?include_nulls=true')
     assert res.data["results"][0]["dataset_metadata"] is None
 
 
@@ -419,14 +418,13 @@ def test_dataset_files_post_none_file_metadata(admin_client, deep_file_tree, dat
     }
     urls = data_urls(dataset)
     res = admin_client.patch(
-        urls["dataset"],
+        f"{urls['dataset']}?include_nulls=true",
         {"fileset": actions},
         content_type="application/json",
     )
-    fileset = res.data["fileset"]
     assert res.status_code == 200
 
-    res = admin_client.get(urls["files"])
+    res = admin_client.get(f'{urls["files"]}?include_nulls=true')
     assert res.data["results"][0]["dataset_metadata"] is None
 
 

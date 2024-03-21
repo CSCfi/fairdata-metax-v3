@@ -362,6 +362,7 @@ ETSIN_URL = env.str("ETSIN_URL", None)
 COMMON_QUERY_PARAMS = {
     "format",  # DRF output format,  e.g.  ?format=json or ?format=api
     "strict",  # set ?strict=false to allow unknown query params without throwing error
+    "include_nulls",  # set ?include_nulls=true include null values in responses
 }
 
 # Email configuration

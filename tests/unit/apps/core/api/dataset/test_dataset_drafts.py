@@ -45,12 +45,16 @@ def test_create_draft(admin_client, dataset_a_json, data_catalog, reference_data
     dataset_id = res.data["id"]
 
     res = admin_client.post(
-        f"/v3/datasets/{dataset_id}/create-draft", dataset_a_json, content_type="application/json"
+        f"/v3/datasets/{dataset_id}/create-draft?include_nulls=true",
+        dataset_a_json,
+        content_type="application/json",
     )
     assert res.status_code == 201
     draft = res.json()
 
-    res = admin_client.get(f"/v3/datasets/{dataset_id}", content_type="application/json")
+    res = admin_client.get(
+        f"/v3/datasets/{dataset_id}?include_nulls=true", content_type="application/json"
+    )
     assert res.status_code == 200
     original = res.json()
 
@@ -146,18 +150,24 @@ def test_merge_draft(
 
     dataset_maximal_json.pop("metadata_owner")
     res = admin_client.patch(
-        f"/v3/datasets/{draft_id}", dataset_maximal_json, content_type="application/json"
+        f"/v3/datasets/{draft_id}?include_nulls=true",
+        dataset_maximal_json,
+        content_type="application/json",
     )
     assert res.status_code == 200
     draft_data = deepcopy(res.json())
 
     # Merge draft
-    res = admin_client.post(f"/v3/datasets/{draft_id}/publish", content_type="application/json")
+    res = admin_client.post(
+        f"/v3/datasets/{draft_id}/publish?include_nulls=true", content_type="application/json"
+    )
     assert res.status_code == 200
     merge_data = res.json()  # response should be the updated original dataset
 
     # Dataset has been updated
-    res = admin_client.get(f"/v3/datasets/{dataset_id}", content_type="application/json")
+    res = admin_client.get(
+        f"/v3/datasets/{dataset_id}?include_nulls=true", content_type="application/json"
+    )
     assert res.status_code == 200
 
     published_data = deepcopy(res.json())

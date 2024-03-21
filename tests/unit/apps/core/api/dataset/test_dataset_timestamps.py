@@ -77,9 +77,9 @@ def test_create_dataset_change_timestamps(
     dataset_a_json["state"] = "draft"
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 201
-    res.data.pop("fileset")
-    res.data.pop("metadata_owner")
-    res.data.pop("preservation")
+    res.data.pop("fileset", None)
+    res.data.pop("metadata_owner", None)
+    res.data.pop("preservation", None)
     dataset_id = res.data["id"]
     res.data["created"] = "2016-05-17T10:11:12Z"
     res.data["modified"] = "2019-05-17T10:11:12Z"

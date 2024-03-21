@@ -52,12 +52,15 @@ Pagination can be disabled with `?pagination=false`. In that case the response w
 Note that some queries might produce too many results to be practical to use without pagination.
 
 
-### Strict parameter validation
+### Common query parameters
 
-By default, requests containing query parameters the API does not recognize will return an error. 
+Some query parameters are common for all endpoints and are not explicitly listed in the Swagger documentation.
+
+`strict`: By default, requests containing query parameters the API does not recognize will return an error. 
 It can sometimes be useful during development to have the API ignore unknown parameters by including
 `?strict=false` in the query.
 
+`include_nulls`: By default, null values are omitted from responses. Set `?include_nulls=true` to keep null values.
 
 ### Value types
 

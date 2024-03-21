@@ -464,7 +464,9 @@ def test_update_dataset_with_other_identifiers(
 def test_dataset_put_maximal_and_minimal(
     admin_client, dataset_maximal_json, reference_data, data_catalog
 ):
-    res = admin_client.post("/v3/datasets", dataset_maximal_json, content_type="application/json")
+    res = admin_client.post(
+        "/v3/datasets?include_nulls=true", dataset_maximal_json, content_type="application/json"
+    )
     assert res.status_code == 201
     assert_nested_subdict(dataset_maximal_json, res.json())
 
@@ -474,7 +476,9 @@ def test_dataset_put_maximal_and_minimal(
         "pid_type": "URN",
     }
     res = admin_client.put(
-        f"/v3/datasets/{res.data['id']}", minimal_json, content_type="application/json"
+        f"/v3/datasets/{res.data['id']}?include_nulls=true",
+        minimal_json,
+        content_type="application/json",
     )
     assert res.status_code == 200
 
@@ -691,7 +695,7 @@ def test_empty_description(admin_client, dataset_a_json, data_catalog, reference
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     dataset_id = res.data["id"]
     res = admin_client.patch(
-        f"/v3/datasets/{dataset_id}",
+        f"/v3/datasets/{dataset_id}?include_nulls=true",
         {"description": {"fi": "", "en": None}},
         content_type="application/json",
     )
@@ -761,3 +765,15 @@ def test_create_dataset_with_extra_fields(
         "/v3/datasets?strict=false", dataset_a_json, content_type="application/json"
     )
     assert res.status_code == 201
+
+
+def test_get_dataset_include_nulls(admin_client, dataset_a_json, data_catalog, reference_data):
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    dataset_id = res.data["id"]
+    res = admin_client.get(f"/v3/datasets/{dataset_id}", content_type="application/json")
+    assert "deprecated" not in res.data
+    res = admin_client.get(
+        f"/v3/datasets/{dataset_id}?include_nulls=true", content_type="application/json"
+    )
+    assert res.data["deprecated"] == None

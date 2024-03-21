@@ -12,9 +12,9 @@
 
 ### :::src.apps.common.views.PatchModelMixin
 
-## StrictQueryParamsSerializer
+## CommonQueryParamsSerializer
 
-### :::src.apps.common.views.StrictQueryParamsSerializer
+### :::src.apps.common.views.CommonQueryParamsSerializer
 
 ## QueryParamsMixin
 

@@ -82,7 +82,9 @@ def test_dataset_snippets(
         "remote_resources": remote_resources_json["remote_resources"],
         "metadata_owner": metadata_owner_json["metadata_owner"],
     }
-    res = admin_client.post("/v3/datasets", data, content_type="application/json")
+    res = admin_client.post(
+        "/v3/datasets?include_nulls=true", data, content_type="application/json"
+    )
     assert res.status_code == 201
     assert len(res.data["language"]) == 2
     assert len(res.data["actors"]) == 2

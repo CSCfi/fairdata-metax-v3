@@ -139,9 +139,12 @@ class DatasetMemberSerializer(StrictSerializer, CommonNestedModelSerializer):
     def get_existing_data(self, object):
         """Get comparison data for existing object, used for determining id."""
         old_show_emails = self.context.get("show_emails")
+        old_include_nulls = self.context.get("include_nulls")
         self.context["show_emails"] = True  # Show emails when getting existing data for comparison
+        self.context["include_nulls"] = True  # Show null values in existing comparison data
         rep = self.to_representation(object)
         self.context["show_emails"] = old_show_emails
+        self.context["include_nulls"] = old_include_nulls
 
         rep.pop("id", None)
         return self.get_comparison_data(rep)
