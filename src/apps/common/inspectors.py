@@ -47,6 +47,20 @@ class SwaggerDescriptionInspector(FieldInspector):
 class ExtendedSwaggerAutoSchema(SwaggerAutoSchema):
     """Class that generates the swagger documentation for views."""
 
+    def get_tags(self, operation_keys=None):
+        """Return tag for operation, used for grouping endpoints in Swagger."""
+        operation_keys = operation_keys or self.operation_keys
+
+        tags = self.overrides.get("tags")
+        if not tags:
+            if operation_keys[0] == "v3":
+                # Group e.g. /v3/datasets in "datasets" instead of having everything in "v3"
+                tags = [operation_keys[1]]
+            else:
+                tags = [operation_keys[0]]
+
+        return tags
+
     def get_query_parameters(self) -> List[openapi.Parameter]:
         """Return the query parameters accepted by this view.
 
