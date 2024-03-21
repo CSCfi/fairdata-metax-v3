@@ -1,52 +1,14 @@
-import json
 import logging
 from datetime import datetime
 from typing import Dict, List, Optional
 
 from django.contrib.auth import get_user_model
-from django.core.validators import EMPTY_VALUES
 from django.db.models import QuerySet
 
 from apps.common.helpers import date_to_datetime, omit_none, single_translation
-from apps.common.views import CommonModelViewSet
-from apps.core.permissions import DatasetNestedAccessPolicy
 from apps.refdata.models import AbstractConcept
 
 logger = logging.getLogger(__name__)
-
-
-class DatasetNestedViewSetMixin(CommonModelViewSet):
-    access_policy = DatasetNestedAccessPolicy
-
-    def get_queryset(self):
-        if getattr(
-            self, "swagger_fake_view", None
-        ):  # kwargs are not available in swagger inspection
-            return self.serializer_class.Meta.model.available_objects.none()
-        return self.serializer_class.Meta.model.available_objects.filter(
-            dataset=self.kwargs["dataset_pk"]
-        )
-
-    def perform_create(self, serializer):
-        return serializer.save(dataset_id=self.kwargs["dataset_pk"])
-
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        if getattr(self, "swagger_fake_view", None):
-            # kwargs are not available in swagger inspection
-            return context
-        context["dataset_pk"] = self.kwargs.get("dataset_pk")
-        context["dataset"] = self.get_dataset_instance()
-        return context
-
-    def get_dataset_pk(self):
-        context = super().get_serializer_context()
-        return self.kwargs.get("dataset_pk") or context.get("dataset_pk")
-
-    def get_dataset_instance(self):
-        from .models import Dataset
-
-        return Dataset.objects.get(id=self.get_dataset_pk())
 
 
 class V2DatasetMixin:
@@ -542,12 +504,16 @@ class V2DatasetMixin:
             research_dataset["total_files_byte_size"] = file_set.total_files_size
 
         doc = {
-            "identifier": str(self.legacydataset.dataset_json["identifier"])
-            if hasattr(self, "legacydataset")
-            else self.id,
-            "api_meta": self.legacydataset.dataset_json["api_meta"]
-            if hasattr(self, "legacydataset")
-            else {"version": 3},
+            "identifier": (
+                str(self.legacydataset.dataset_json["identifier"])
+                if hasattr(self, "legacydataset")
+                else self.id
+            ),
+            "api_meta": (
+                self.legacydataset.dataset_json["api_meta"]
+                if hasattr(self, "legacydataset")
+                else {"version": 3}
+            ),
             "deprecated": self.deprecated is not None,
             "state": self.state,
             "cumulative_state": self.cumulative_state.real,

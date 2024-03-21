@@ -40,3 +40,19 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_preservation.test_update_dataset_preservation_indirect
 
+## test_delete_dataset_preservation
+
+### :::tests.unit.apps.core.api.dataset.test_preservation.test_delete_dataset_preservation
+
+## test_get_dataset_preservation_anonymous
+
+### :::tests.unit.apps.core.api.dataset.test_preservation.test_get_dataset_preservation_anonymous
+
+## test_patch_dataset_nonexisting_preservation
+
+### :::tests.unit.apps.core.api.dataset.test_preservation.test_patch_dataset_nonexisting_preservation
+
+## test_put_dataset_nonexisting_preservation
+
+### :::tests.unit.apps.core.api.dataset.test_preservation.test_put_dataset_nonexisting_preservation
+

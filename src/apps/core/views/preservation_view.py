@@ -3,10 +3,10 @@ from django_filters import rest_framework as filters
 from drf_yasg.utils import swagger_auto_schema
 
 from apps.common.views import CommonModelViewSet
-from apps.core.mixins import DatasetNestedViewSetMixin
-from apps.core.models import Contract, Dataset, Preservation
+from apps.core.models import Contract
 from apps.core.permissions import ContractAccessPolicy
 from apps.core.serializers import ContractModelSerializer, PreservationModelSerializer
+from apps.core.views.nested_views import DatasetNestedOneToOneView
 
 
 class ContractFilter(filters.FilterSet):
@@ -32,24 +32,6 @@ class ContractViewSet(CommonModelViewSet):
 @method_decorator(
     name="retrieve", decorator=swagger_auto_schema(operation_description="View Preservation")
 )
-class PreservationViewSet(DatasetNestedViewSetMixin):
+class PreservationViewSet(DatasetNestedOneToOneView):
     serializer_class = PreservationModelSerializer
-
-    lookup_field = "pk"
-
-    http_method_names = ["get", "put", "patch", "options"]
-
-    def get_queryset(self):
-        dataset = Dataset.objects.only("preservation_id").get(pk=self.kwargs["dataset_pk"])
-        return Preservation.objects.filter(id=dataset.preservation_id)
-
-    def get_object(self):
-        queryset = self.get_queryset()
-        preservation, created = queryset.get_or_create()
-
-        if created:
-            Dataset.objects.filter(id=self.kwargs["dataset_pk"]).update(
-                preservation_id=preservation.id
-            )
-
-        return preservation
+    dataset_field_name = "preservation"

@@ -67,16 +67,16 @@ class CatalogRecord(AbstractBaseModel):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     data_catalog = models.ForeignKey(
-        DataCatalog, on_delete=models.DO_NOTHING, related_name="records", null=True, blank=True
+        DataCatalog, on_delete=models.DO_NOTHING, related_name="datasets", null=True, blank=True
     )
     preservation = models.OneToOneField(
-        Preservation, on_delete=models.CASCADE, related_name="record", null=True, blank=True
+        Preservation, on_delete=models.CASCADE, related_name="dataset", null=True, blank=True
     )
 
     metadata_owner = models.ForeignKey(
         MetadataProvider,
         on_delete=models.CASCADE,
-        related_name="records",
+        related_name="datasets",
     )
     last_modified_by = models.ForeignKey(
         get_user_model(), on_delete=models.SET_NULL, null=True, blank=True

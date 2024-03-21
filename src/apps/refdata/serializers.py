@@ -1,8 +1,9 @@
 from django.utils.translation import gettext as _
-from rest_framework import serializers
+
+from apps.common.serializers.serializers import CommonModelSerializer
 
 
-class BaseRefdataSerializer(serializers.ModelSerializer):
+class BaseRefdataSerializer(CommonModelSerializer):
     omit_related = False
 
     def get_fields(self):

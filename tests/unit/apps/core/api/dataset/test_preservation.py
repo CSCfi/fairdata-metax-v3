@@ -2,6 +2,7 @@ import pytest
 from tests.utils import assert_nested_subdict
 
 from apps.core.factories import ContractFactory, PreservationFactory
+from apps.core.models.catalog_record.dataset import Dataset
 
 pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
 
@@ -172,3 +173,63 @@ def test_update_dataset_preservation_indirect(admin_client, preservation_dataset
 
     assert data["preservation"]["state"] == 50
     assert data["preservation"]["contract"] == preservation["contract"]
+
+
+@pytest.mark.usefixtures("data_catalog", "reference_data")
+def test_delete_dataset_preservation(admin_client, preservation_dataset):
+    """Try deleting dataset preservation using the endpoint."""
+    resp = admin_client.delete(
+        f"/v3/datasets/{preservation_dataset['id']}/preservation", content_type="application/json"
+    )
+    assert resp.status_code == 204
+
+    resp = admin_client.get(
+        f"/v3/datasets/{preservation_dataset['id']}/preservation", content_type="application/json"
+    )
+    assert resp.status_code == 404
+
+
+@pytest.mark.usefixtures("data_catalog", "reference_data")
+def test_get_dataset_preservation_anonymous(client, preservation_dataset):
+    """Try retrieving dataset preservation as an anonymous user."""
+    resp = client.get(
+        f"/v3/datasets/{preservation_dataset['id']}/preservation", content_type="application/json"
+    )
+    assert resp.status_code == 200
+
+    # Nested endpoint of should not be visible if dataset is not visible
+    Dataset.objects.filter(id=preservation_dataset["id"]).update(state="draft")
+    resp = client.get(
+        f"/v3/datasets/{preservation_dataset['id']}/preservation", content_type="application/json"
+    )
+    assert resp.status_code == 404
+
+
+@pytest.mark.usefixtures("data_catalog", "reference_data")
+def test_patch_dataset_nonexisting_preservation(admin_client, dataset_a_json):
+    """Try patching preservation object that does not exist yet."""
+    dataset = admin_client.post(
+        "/v3/datasets", dataset_a_json, content_type="application/json"
+    ).json()
+
+    resp = admin_client.patch(
+        f"/v3/datasets/{dataset['id']}/preservation",
+        {"state": 20},
+        content_type="application/json",
+    )
+    assert resp.status_code == 404
+
+
+@pytest.mark.usefixtures("data_catalog", "reference_data")
+def test_put_dataset_nonexisting_preservation(admin_client, dataset_a_json):
+    """Try creating preservation object using put."""
+    dataset = admin_client.post(
+        "/v3/datasets", dataset_a_json, content_type="application/json"
+    ).json()
+
+    resp = admin_client.put(
+        f"/v3/datasets/{dataset['id']}/preservation",
+        {"state": -1},
+        content_type="application/json",
+    )
+    assert resp.status_code == 200

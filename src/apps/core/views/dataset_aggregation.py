@@ -113,7 +113,7 @@ def _aggregate_data_catalog(dataset_ids):
         dataset_ids=dataset_ids,
         model=DataCatalog,
         field_name="title",
-        dataset_access="records",
+        dataset_access="datasets",
         languages=None,
     )
 

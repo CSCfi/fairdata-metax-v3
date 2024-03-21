@@ -15,9 +15,9 @@ from apps.common.copier import ModelCopier
 from apps.common.helpers import datetime_to_date
 from apps.common.history import SnapshotHistoricalRecords
 from apps.common.models import AbstractBaseModel
-from apps.core.mixins import V2DatasetMixin
 from apps.core.models.access_rights import AccessRights
 from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
+from apps.core.models.mixins import V2DatasetMixin
 from apps.core.permissions import DataCatalogAccessPolicy
 from apps.core.services.pid_ms_client import PIDMSClient, ServiceUnavailableError
 from apps.files.models import File

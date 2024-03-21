@@ -541,6 +541,12 @@ class DatasetViewSet(CommonModelViewSet):
                 {"dataset_pk": self.kwargs["pk"]},
                 request=self.request,
             )
+            url_map["AccessRights"] = reverse(
+                "dataset-access-rights-detail",
+                self.args,
+                {"dataset_pk": self.kwargs["pk"]},
+                request=self.request,
+            )
 
         return url_map
 

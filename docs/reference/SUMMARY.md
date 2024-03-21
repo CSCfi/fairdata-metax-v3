@@ -41,7 +41,6 @@
         - management.commands
             - [load_test_data](src/apps/core/management/commands/load_test_data.md)
             - [migrate_v2_datasets](src/apps/core/management/commands/migrate_v2_datasets.md)
-        - [mixins](src/apps/core/mixins.md)
         - models
             - [access_rights](src/apps/core/models/access_rights.md)
             - catalog_record
@@ -53,6 +52,7 @@
             - [entity](src/apps/core/models/entity.md)
             - [file_metadata](src/apps/core/models/file_metadata.md)
             - [legacy](src/apps/core/models/legacy.md)
+            - [mixins](src/apps/core/models/mixins.md)
             - [preservation](src/apps/core/models/preservation.md)
             - [provenance](src/apps/core/models/provenance.md)
         - [permissions](src/apps/core/permissions.md)

@@ -68,9 +68,16 @@ urlpatterns = [
     re_path(
         r"^datasets/(?P<dataset_pk>[^/.]+)/preservation$",
         core_views.PreservationViewSet.as_view(
-            {"get": "retrieve", "patch": "partial_update", "put": "update"}
+            {"get": "retrieve", "patch": "partial_update", "put": "update", "delete": "destroy"}
         ),
         name="dataset-preservation-detail",
+    ),
+    re_path(
+        r"^datasets/(?P<dataset_pk>[^/.]+)/access-rights$",
+        core_views.AccessRightsViewSet.as_view(
+            {"get": "retrieve", "patch": "partial_update", "put": "update", "delete": "destroy"}
+        ),
+        name="dataset-access-rights-detail",
     ),
     path("", include(router.urls)),
     path("", include(dataset_router.urls)),
