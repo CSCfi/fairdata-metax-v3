@@ -275,11 +275,10 @@ geometry in `custom_wkt` list.
 
 Temporal coverage objects now use dates instead of datetime values.
 
-| V1-V2 field             | V3 field                 |
-|-------------------------|--------------------------|
-| start_date [datetime]   | start_date [date] :star: |
-| end_date [datetime]     | end_date [date] :star:   |
-| temporal_coverage [str] | :question:               |
+| V1-V2 field           | V3 field          |
+|-----------------------|-------------------|
+| start_date [datetime] | start_date [date] |
+| end_date [datetime]   | end_date [date] : |
 
 #### Entity relations
 

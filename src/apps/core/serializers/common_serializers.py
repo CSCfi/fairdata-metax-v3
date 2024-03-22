@@ -181,9 +181,9 @@ class OtherIdentifierModelSerializer(AbstractDatasetModelSerializer):
 class TemporalModelSerializer(AbstractDatasetModelSerializer):
     class Meta:
         model = Temporal
-        fields = ("start_date", "end_date")
+        fields = ("start_date", "end_date", "temporal_coverage")
         list_serializer_class = CommonListSerializer
-        validators = [AnyOf(["start_date", "end_date"])]
+        validators = [AnyOf(["start_date", "end_date", "temporal_coverage"])]
 
     def validate(self, attrs):
         if attrs.get("start_date") and attrs.get("end_date"):

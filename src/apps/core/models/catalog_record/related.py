@@ -96,13 +96,17 @@ class Temporal(AbstractBaseModel):
         dataset (Dataset): Dataset ForeignKey relation
         end_date (models.DateTimeField): End of the period
         provenance (Provenance): Provenance ForeignKey relation, if part of Provenance
-        start_date (models.DateTimeField): Start of the pediod
+        start_date (models.DateTimeField): Start of the period
+        temporal_coverage (models.TextField): Period expressed as a string
     """
 
     copier = ModelCopier(copied_relations=[], parent_relations=["dataset", "provenance"])
 
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
+    temporal_coverage = models.TextField(
+        null=True, blank=True, help_text="Period of time expressed as a string."
+    )
     dataset = models.ForeignKey(
         "Dataset",
         on_delete=models.CASCADE,

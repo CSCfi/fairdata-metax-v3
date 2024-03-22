@@ -217,6 +217,8 @@ class V2DatasetMixin:
             v2_temporal["start_date"] = date_to_datetime(temporal.start_date).isoformat()
         if temporal.end_date:
             v2_temporal["end_date"] = date_to_datetime(temporal.end_date).isoformat()
+        if temporal.temporal_coverage:
+            v2_temporal["temporal_coverage"] = temporal.temporal_coverage
         return v2_temporal
 
     def _generate_v2_temporal(self, document: Dict):

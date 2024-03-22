@@ -304,6 +304,7 @@ class LegacyDataset(Dataset):
         return {
             "start_date": self.parse_temporal_timestamp(temporal.get("start_date")),
             "end_date": self.parse_temporal_timestamp(temporal.get("end_date")),
+            "temporal_coverage": temporal.get("temporal_coverage"),
         }
 
     def convert_other_identifier(self, other_identifier: dict) -> dict:
