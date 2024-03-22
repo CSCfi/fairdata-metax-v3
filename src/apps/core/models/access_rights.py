@@ -104,3 +104,6 @@ class AccessRights(AbstractBaseModel):
         elif access_type == AccessTypeChoices.PERMIT:
             return False  # TODO: REMS
         return False  # access type is "restricted" or missing
+
+    class Meta:
+        ordering = ["created", "id"]

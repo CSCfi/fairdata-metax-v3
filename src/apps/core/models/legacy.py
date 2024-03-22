@@ -1,28 +1,22 @@
-import copy
 import json
 import logging
+import re
 import uuid
 from collections import Counter
-from typing import Dict, Optional
+from typing import Optional
 
-from deepdiff import DeepDiff
+from deepdiff import extract
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db import models
+from django.db import models, transaction
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.utils.translation import gettext as _
 from rest_framework import serializers
 
 from apps.actors.models import Actor, Organization
-from apps.common.helpers import (
-    datetime_to_date,
-    ensure_dict,
-    ensure_list,
-    omit_none,
-    parse_iso_dates_in_nested_dict,
-)
+from apps.common.helpers import datetime_to_date, ensure_dict, ensure_list, omit_empty
 from apps.core.models import FileSet
 from apps.files.models import File
 from apps.files.serializers.file_serializer import get_or_create_storage
@@ -39,6 +33,7 @@ from .concepts import (
     Language,
     LifecycleEvent,
     Location,
+    PreservationEvent,
     RelationType,
     ResearchInfra,
     ResourceType,
@@ -50,6 +45,16 @@ from .data_catalog import DataCatalog
 from .preservation import Contract
 
 logger = logging.getLogger(__name__)
+
+
+def add_escapes(val: str):
+    val = val.replace("[", "\\[")
+    return val.replace("]", "\\]")
+
+
+def regex(path: str):
+    """Escape [ and ] and compile into regex."""
+    return re.compile(add_escapes(path))
 
 
 class LegacyDataset(Dataset):
@@ -81,6 +86,9 @@ class LegacyDataset(Dataset):
         encoder=DjangoJSONEncoder,
         help_text="Difference between v1-v2 and V3 dataset json",
     )
+    migration_errors = models.JSONField(null=True, blank=True, encoder=DjangoJSONEncoder)
+    last_successful_migration = models.DateTimeField(null=True, blank=True)
+
     created_objects = Counter()
 
     def __init__(self, *args, convert_only=False, **kwargs):
@@ -169,6 +177,17 @@ class LegacyDataset(Dataset):
     def legacy_contract(self):
         if self.contract_json:
             return self.contract_json["contract_json"]
+
+    def fix_url(self, url: str) -> Optional[str]:
+        if not url:
+            return None
+        url = url.strip()  # Remove whitespace
+
+        # Fix spaces inside urls
+        url = url.replace(" ", "%20")
+        # Fix https://zenodo.org123 -> https://zenodo.org/records/123
+        url = re.sub("https://zenodo.org([\d]+)$", r"https://zenodo.org/records/\1", url)
+        return url
 
     def create_snapshot(self, **kwargs):
         """Create snapshot of dataset.
@@ -282,6 +301,7 @@ class LegacyDataset(Dataset):
             "reference": location,
             "geographic_name": spatial.get("geographic_name"),
             "full_address": spatial.get("full_address"),
+            "altitude_in_meters": spatial.get("alt"),
         }
         if spatial.get("as_wkt"):
             location_wkt = None
@@ -325,16 +345,26 @@ class LegacyDataset(Dataset):
     def ensure_refdata_organization(self, v3_organization: dict):
         """Create reference data organization if needed."""
         ensure_dict(v3_organization)
-        url = v3_organization.get("url")
+        url = self.fix_url(v3_organization.get("url"))
+
         parent_instance = None
-        if parent := v3_organization.get("parent"):
+        parent = v3_organization.get("parent")
+        if parent:
             # Check that parent is also reference data
             parent_url = parent.get("url") or ""
             if parent_url.startswith(settings.ORGANIZATION_BASE_URI):
                 parent_instance = Organization.objects.filter(
                     url=parent_url, is_reference_data=True
                 ).first()
-            if not parent_instance:
+
+        org = Organization.all_objects.filter(url=url, is_reference_data=True).first()
+        if org:
+            # Use parent from existing organization. This avoids errors from
+            # reference data organizations that have invalid parent data.
+            v3_organization.pop("parent", None)
+        else:
+            # Create deprecated refdata org
+            if parent and not parent_instance:
                 raise serializers.ValidationError(
                     {
                         "is_part_of": (
@@ -343,24 +373,20 @@ class LegacyDataset(Dataset):
                         )
                     }
                 )
-
-        # Create deprecated refdata organization if it does not exist
-        _org, created = Organization.all_objects.get_or_create(
-            url=url,
-            is_reference_data=True,
-            defaults={
-                "pref_label": v3_organization.get("pref_label"),
-                "in_scheme": settings.ORGANIZATION_SCHEME,
-                "deprecated": timezone.now(),
-                "parent": parent_instance,
-            },
-        )
-        if created:
+            Organization.all_objects.create(
+                url=url,
+                is_reference_data=True,
+                pref_label=v3_organization.get("pref_label"),
+                in_scheme=settings.ORGANIZATION_SCHEME,
+                deprecated=timezone.now(),
+                parent=parent_instance,
+            )
             self.created_objects.update(["Organization"])
 
-    def convert_organization(self, organization: dict) -> dict:
+    def convert_organization(self, organization: dict) -> Optional[dict]:
         """Convert organization from V2 dict to V3 dict."""
-        ensure_dict(organization)
+        if not organization:
+            return None
         val = {
             "pref_label": organization.get("name"),
             "email": organization.get("email"),
@@ -372,7 +398,7 @@ class LegacyDataset(Dataset):
             parent = self.convert_organization(parent_data)
             val["parent"] = parent
 
-        if identifier := organization.get("identifier"):
+        if identifier := self.fix_url(organization.get("identifier")):
             if identifier.startswith(settings.ORGANIZATION_BASE_URI):
                 val["url"] = identifier
                 if not self.convert_only:
@@ -393,6 +419,7 @@ class LegacyDataset(Dataset):
                 "name": actor.get("name"),
                 "external_identifier": actor.get("identifier"),
                 "email": actor.get("email"),
+                "homepage": self.convert_homepage(actor.get("homepage")),
             }
             if parent := actor.get("member_of"):
                 val["organization"] = self.convert_organization(parent)
@@ -430,6 +457,10 @@ class LegacyDataset(Dataset):
         adapted = [
             self.convert_actor(actor["actor"], roles=actor["roles"]) for actor in actors_data
         ]
+
+        # Drop actors that have no non-empty (fixes bug on organization that has empty name {"name": {"fi": ""}})
+        adapted = [a for a in adapted if omit_empty({**a, "roles": None}, recurse=True)]
+
         return adapted
 
     def convert_checksum_v2_to_v3(self, checksum: dict, value_key="value") -> Optional[str]:
@@ -475,6 +506,9 @@ class LegacyDataset(Dataset):
             "lifecycle_event": self.convert_reference_data(
                 LifecycleEvent, provenance.get("lifecycle_event")
             ),
+            "preservation_event": self.convert_reference_data(
+                PreservationEvent, provenance.get("preservation_event")
+            ),
             "variables": [
                 self.convert_variable(var) for var in ensure_list(provenance.get("variable"))
             ],
@@ -506,6 +540,16 @@ class LegacyDataset(Dataset):
             ),
         }
 
+    def convert_remote_url(self, url_data: dict) -> Optional[str]:
+        if not url_data:
+            return None
+
+        url = url_data.get("identifier")
+        if not url:
+            return None
+        url = self.fix_url(str(url))
+        return url
+
     def convert_remote_resource(self, resource: dict) -> dict:
         ensure_dict(resource)
         title = None
@@ -524,8 +568,8 @@ class LegacyDataset(Dataset):
         if v2_file_type := resource.get("file_type"):
             file_type = self.convert_reference_data(FileType, v2_file_type)
 
-        access_url = (resource.get("access_url") or {}).get("identifier")
-        download_url = (resource.get("download_url") or {}).get("identifier")
+        access_url = self.convert_remote_url(resource.get("access_url"))
+        download_url = self.convert_remote_url(resource.get("download_url"))
 
         return {
             "title": title,
@@ -551,20 +595,24 @@ class LegacyDataset(Dataset):
             ],
         }
 
-        funder_type_data = []
+        funder_type_data = None
         if funder_type := project.get("funder_type"):
             funder_type_data = self.convert_reference_data(FunderType, funder_type)
         funding_identifier = project.get("has_funder_identifier")
-        val["funding"] = [
-            {
-                "funder": {
-                    "organization": self.convert_organization(org),
-                    "funder_type": funder_type_data,
-                },
-                "funding_identifier": funding_identifier,
-            }
-            for org in ensure_list(project.get("has_funding_agency"))
-        ]
+        funding_agencies = ensure_list(project.get("has_funding_agency")) or [None]
+        val["funding"] = omit_empty(
+            [
+                {
+                    "funder": {
+                        "organization": self.convert_organization(org),
+                        "funder_type": funder_type_data,
+                    },
+                    "funding_identifier": funding_identifier,
+                }
+                for org in funding_agencies
+            ],
+            recurse=True,
+        )
         return val
 
     def convert_root_level_fields(self):
@@ -575,13 +623,14 @@ class LegacyDataset(Dataset):
             "date_created"
         ):
             modified = modified_data
-        else:
-            self.modified = self.created
+        elif not self.convert_only:
+            modified = self.created
 
         deprecated = None
         if self.dataset_json.get("deprecated"):
+            date_deprecated = self.dataset_json.get("date_deprecated")
             # Use modification date for deprecation date if not already set
-            deprecated = self.deprecated or self.modified
+            deprecated = date_deprecated or self.deprecated or modified
 
         last_modified_by = None
         if not self.convert_only:
@@ -776,58 +825,50 @@ class LegacyDataset(Dataset):
             file_set.files.set(file_objects)
         return file_set
 
-    def check_compatibility(self) -> Dict:
-        v3_version = parse_iso_dates_in_nested_dict(copy.deepcopy(self.as_v2_dataset()))
-        v2_version = parse_iso_dates_in_nested_dict(copy.deepcopy(self.dataset_json))
-        diff = DeepDiff(
-            v2_version,
-            v3_version,
-            ignore_order=True,
-            cutoff_intersection_for_pairs=0.9,
-            exclude_paths=[
-                "identifier",
-                "id",
-                "api_meta",
-                "service_modified",
-                "service_created",
-                "root['data_catalog']['id']",
-                "root['research_dataset']['metadata_version_identifier']",
-                "root['dataset_version_set']",
-                "date_modified",
-            ],
-            exclude_regex_paths=[
-                add_escapes("root['research_dataset']['language'][\\d]['in_scheme']"),
-                add_escapes("root['research_dataset']['language'][\\d]['pref_label']"),
-                add_escapes(
-                    "root['research_dataset']['access_rights']['license'][\\d]['title']['und']"
-                ),
-            ],
-            truncate_datetime="day",
-        )
-        # logger.info(f"diff={diff.to_json()}")
-        json_diff = diff.to_json()
-        return json.loads(json_diff)
-
-    def update_from_legacy(self, context=None):
+    def update_from_legacy(self, context=None, raise_serializer_errors=True):
         """Update dataset fields from legacy data dictionaries."""
         if not context:
             context = {}
 
-        data = self.convert_dataset()
         from apps.core.serializers.legacy_serializer import LegacyDatasetUpdateSerializer
 
-        self.saving_legacy = True  # Enable less strict validation on save
-        serializer = LegacyDatasetUpdateSerializer(
-            instance=self, data=data, context={**context, "dataset": self}
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
+        updated = False
 
-        self.attach_metadata_owner()
-        self.attach_files()
-        self.attach_contract()
+        try:
+            with transaction.atomic(): # Undo update if e.g. serialization fails
+                self.attach_metadata_owner()
+                data = self.convert_dataset()
+                self.saving_legacy = True  # Enable less strict validation on save
+                serializer = LegacyDatasetUpdateSerializer(
+                    instance=self, data=data, context={**context, "dataset": self}
+                )
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                self.attach_files()
+                self.attach_contract()
+                updated = True
+        except serializers.ValidationError as error:
+            # Save error details to migration_errors
+            detail = error.detail
+            if not isinstance(error.detail, list):
+                detail = [detail]
+            detail = json.loads(json.dumps(detail))
+            self.migration_errors = {"serializer_errors": detail}
+            self.save()
+            if raise_serializer_errors:
+                raise
 
-        self.v2_dataset_compatibility_diff = self.check_compatibility()
+        if updated:
+            from apps.core.models.legacy_compatibility import LegacyCompatibility
+
+            compat = LegacyCompatibility(self)
+            diff = compat.get_compatibility_diff()
+            self.v2_dataset_compatibility_diff = diff
+            if migration_errors := compat.get_migration_errors_from_diff(diff):
+                self.migration_errors = migration_errors
+            else:
+                self.migration_errors = None
+                self.last_successful_migration = timezone.now()
         self.save()
         return self
 
@@ -846,8 +887,3 @@ class LegacyDataset(Dataset):
             )
 
         return super().save(*args, **kwargs)
-
-
-def add_escapes(val: str):
-    val = val.replace("[", "\\[")
-    return val.replace("]", "\\]")

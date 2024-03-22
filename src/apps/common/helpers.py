@@ -46,14 +46,38 @@ def update_or_create_instance(serializer, instance, data):
 
 def parse_date_or_datetime(value):
     try:
-        return parse_datetime(value)
+        # Depending on error, parse_datetime may return None or raise TypeError
+        if dt := parse_datetime(value):
+            return dt.astimezone(tz.utc)
     except TypeError:
         pass
+
     try:
         return parse_date(value)
     except TypeError:
         pass
     return None
+
+
+def trim_nested_dict(d: Dict) -> Dict:
+    for key, value in d.items():
+        # If there is nested dictionary, recurse
+        if isinstance(value, dict):
+            trim_nested_dict(value)
+
+        # If there is array in the dictionary, check if it contains dictionary.
+        elif isinstance(value, list):
+            for i, item in enumerate(value):
+                if isinstance(item, dict):
+                    trim_nested_dict(item)
+                else:
+                    if isinstance(item, str):
+                        value[i] = item.strip()
+        else:
+            # Remove whitespace from str
+            if isinstance(value, str):
+                d[key] = value.strip()
+    return d
 
 
 def parse_iso_dates_in_nested_dict(d: Dict) -> Dict:

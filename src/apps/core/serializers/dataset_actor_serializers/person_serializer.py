@@ -4,6 +4,7 @@ from typing import Dict
 from django.utils.translation import gettext_lazy as _
 
 from apps.actors.models import Person
+from apps.actors.serializers import HomePageSerializer
 from apps.common.serializers.serializers import CommonListSerializer
 from apps.common.serializers.validators import AllOf
 from apps.core.models.catalog_record.dataset import Dataset
@@ -22,6 +23,7 @@ class DatasetPersonSerializer(DatasetMemberSerializer):
     Same person can be multiple times in the same dataset."""
 
     id = UUIDOrTagField(required=False)
+    homepage = HomePageSerializer(required=False, allow_null=True)
     save_validator = AllOf(["name"])
 
     def get_dataset_persons(self, dataset) -> Dict[str, DatasetMemberContext]:
@@ -54,6 +56,6 @@ class DatasetPersonSerializer(DatasetMemberSerializer):
 
     class Meta:
         model = Person
-        fields = ("id", "name", "email", "external_identifier")
+        fields = ("id", "name", "email", "external_identifier", "homepage")
         extra_kwargs = {"name": {"required": False}}  # checked by save_validator
         list_serializer_class = CommonListSerializer

@@ -52,6 +52,7 @@
             - [entity](src/apps/core/models/entity.md)
             - [file_metadata](src/apps/core/models/file_metadata.md)
             - [legacy](src/apps/core/models/legacy.md)
+            - [legacy_compatibility](src/apps/core/models/legacy_compatibility.md)
             - [mixins](src/apps/core/models/mixins.md)
             - [preservation](src/apps/core/models/preservation.md)
             - [provenance](src/apps/core/models/provenance.md)

@@ -1,11 +1,16 @@
+import copy
+import json
 import logging
 import uuid
 from argparse import ArgumentParser
-from io import StringIO
+from typing import Optional
 
 import requests
+from cachalot.api import cachalot_disabled
 from django.core.management.base import BaseCommand
+from isodate import parse_datetime
 
+from apps.common.helpers import is_valid_uuid, parse_iso_dates_in_nested_dict
 from apps.core.models import LegacyDataset
 
 logger = logging.getLogger(__name__)
@@ -28,13 +33,18 @@ class Command(BaseCommand):
     failed_datasets = []
     datasets = []
     force_update = False
+    updated = 0
     migrated = 0
+    ok_after_update = 0
     migration_limit = 0
+    compatibility_errors = 0
+    dataset_cache = {}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.failed_datasets = []
         self.datasets = []
+        self.dataset_cache = {}
 
     def add_arguments(self, parser: ArgumentParser):
         parser.add_argument(
@@ -68,6 +78,12 @@ class Command(BaseCommand):
             help="Allow individual datasets to fail without halting the migration",
         )
         parser.add_argument(
+            "--file",
+            type=str,
+            required=False,
+            help="Migrate datasets from JSON file instead of a metax instance",
+        ),
+        parser.add_argument(
             "--metax-instance",
             "-mi",
             type=str,
@@ -97,61 +113,152 @@ class Command(BaseCommand):
             type=int,
             required=False,
             default=0,
-            help="Stop after migrating this many datasets",
+            help="Stop after updating this many datasets",
         )
 
-    def get_or_create_dataset(self, data):
-        identifier = data["identifier"]
-        try:
-            uuid.UUID(identifier)
-        except ValueError:
-            logger.info(f"Invalid identifier '{identifier}', skipping")
-            return None
-        try:
-            dataset, created = LegacyDataset.objects.get_or_create(
-                id=data["identifier"],
-                defaults={"dataset_json": data},
-            )
-            if created or self.force_update:
-                dataset.update_from_legacy()
+    def get_v3_version(self, dataset: LegacyDataset):
+        if v3_version := getattr(dataset, "_v3_version", None):
+            return v3_version
+
+        dataset._v3_version = parse_iso_dates_in_nested_dict(
+            copy.deepcopy(dataset.as_v2_dataset())
+        )
+        return dataset._v3_version
+
+    def get_update_reason(self, dataset: LegacyDataset, dataset_json, created) -> Optional[str]:
+        """Get reason, why dataset is migrated again, or None if no update is needed."""
+        if created:
+            return "created"
+
+        if dataset.migration_errors or not dataset.last_successful_migration:
+            return "migration-errors"
+
+        modified = parse_datetime(
+            dataset_json.get("date_modified") or dataset_json.get("date_created")
+        )
+        if modified > dataset.last_successful_migration:
+            return "modified"
+
+        if self.force_update:
+            return "force"
+        return None
+
+    def print_errors(self, identifier: str, errors: dict):
+        if errors:
+            self.stderr.write(f"Errors for dataset {identifier}:")
+            for err_type, values in errors.items():
+                self.stderr.write(f"- {err_type}")
+                for e in values:
+                    self.stderr.write(f"   {e}")
+            self.stderr.write("")
+
+    def print_status_line(self, dataset, update_reason):
+        if update_reason or self.verbosity > 1:
+            not_ok = self.updated - self.ok_after_update
+            identifier = str(dataset.id)
+            failed = ""
+            if self.allow_fail:
+                failed = f", {not_ok} failed"
+            created_objects = dict(dataset.created_objects)
             self.stdout.write(
-                f"{self.migrated}: {dataset.id=}, {dataset.legacy_identifier=}, "
-                f"{created=}, {dict(dataset.created_objects)=}"
+                f"{self.migrated} ({self.ok_after_update} updated{failed}): {identifier=}, {update_reason=}, {created_objects=}"
             )
+
+    def migrate_dataset(self, data: dict):
+        identifier = data["identifier"]
+
+        if not is_valid_uuid(identifier):
+            self.stderr.write(f"Invalid identifier '{identifier}', ignoring")
+            return None
+
+        try:
             self.migrated += 1
+            errors = None
+            created = False
+            dataset = self.dataset_cache.get(identifier)
+            if not dataset:
+                dataset, created = LegacyDataset.objects.get_or_create(
+                    id=identifier,
+                    defaults={"dataset_json": data},
+                )
+            update_reason = self.get_update_reason(dataset, dataset_json=data, created=created)
+            if update_reason:
+                self.updated += 1
+                dataset.dataset_json = data
+                dataset.update_from_legacy(raise_serializer_errors=False)
+                errors = dataset.migration_errors
+                if not errors:
+                    self.ok_after_update += 1
+
+            self.print_status_line(dataset, update_reason)
+            self.print_errors(identifier, errors)
+
+            if errors:
+                if not self.allow_fail:
+                    raise ValueError(errors)
+                self.failed_datasets.append(identifier)
+            else:
+                self.datasets.append(identifier)
+
             return dataset
         except Exception as e:
             if self.allow_fail:
-                logger.error(e)
-                self.stdout.write(f"Failed to migrate dataset {data['identifier']}")
+                self.stderr.write(repr(e))
+                self.stderr.write(f"Exception migrating dataset {data['identifier']}\n\n")
                 _message = f"{data['identifier']} : {e}"
-                self.failed_datasets.append(_message)
+                self.failed_datasets.append(identifier)
+                return None
             else:
-                logger.error(f"Failed while processing {self=}")
-                # logger.error(f"{data=}")
+                logger.error(f"Failed while processing {identifier}")
                 raise e
 
+    def cache_existing_datasets(self, list_json):
+        """Get datasets in bulk and assign to dataset_cache."""
+        with cachalot_disabled():
+            datasets = LegacyDataset.all_objects.in_bulk(
+                [ide for d in list_json if is_valid_uuid(ide := d["identifier"])]
+            )
+        self.dataset_cache = {str(k): v for k, v in datasets.items()}
+
     def migrate_from_list(self, list_json):
+        self.cache_existing_datasets(list_json)
         created_instances = []
         for data in list_json:
-            dataset = self.get_or_create_dataset(data)
+            if self.update_limit != 0 and self.updated >= self.update_limit:
+                break
+            dataset = self.migrate_dataset(data)
             if dataset:
                 created_instances.append(dataset)
-            if self.migration_limit != 0 and self.migrated >= self.migration_limit:
-                break
         return created_instances
 
     def loop_pagination(self, response):
         response_json = response.json()
         self.datasets.extend(self.migrate_from_list(response_json["results"]))
         while next_url := response_json.get("next"):
+            if self.update_limit != 0 and self.updated >= self.update_limit:
+                break
             response = requests.get(next_url)
             response_json = response.json()
             self.datasets.extend(self.migrate_from_list(response_json["results"]))
-            if self.migration_limit != 0 and self.migrated >= self.migration_limit:
-                break
 
-    def handle(self, *args, **options):
+    def migrate_from_file(self, options):
+        file = options.get("file")
+        identifiers = set(options.get("identifiers") or [])
+        catalogs = options.get("catalogs")
+        datasets = []
+        with open(file) as f:
+            datasets = json.load(f)
+            if isinstance(datasets, dict):
+                datasets = []
+            if identifiers:
+                datasets = [d for d in datasets if d.get("identifier") in identifiers]
+            if catalogs:
+                datasets = [
+                    d for d in datasets if d.get("data_catalog", {}).get("identifier") in catalogs
+                ]
+        self.migrate_from_list(datasets)
+
+    def migrate_from_metax(self, options):
         identifiers = options.get("identifiers")
         catalogs = options.get("catalogs")
         migrate_all = options.get("all")
@@ -161,16 +268,19 @@ class Command(BaseCommand):
         self.force_update = options.get("force_update")
         self.migration_limit = options.get("stop_after")
 
-        if bool(identifiers) + bool(migrate_all) + bool(catalogs) != 1:
-            self.stderr.write("Exactly one of --identifiers, --catalogs and --all is required.")
-            return
-        if identifiers and not migrate_all and not catalogs:
+        if identifiers:
             for identifier in identifiers:
                 response = requests.get(f"{metax_instance}/rest/v2/datasets/{identifier}")
                 dataset_json = response.json()
-                if dataset := self.get_or_create_dataset(dataset_json):
-                    self.datasets.append(dataset)
-        if catalogs and not migrate_all and not identifiers:
+                self.datasets.append(self.migrate_dataset(dataset_json))
+
+        if migrate_all:
+            response = requests.get(
+                f"{metax_instance}/rest/v2/datasets?limit={limit}&include_legacy=true"
+            )
+            self.loop_pagination(response)
+
+        if catalogs:
             for catalog in catalogs:
                 if self.migration_limit != 0 and self.migration_limit <= self.migrated:
                     break
@@ -187,17 +297,33 @@ class Command(BaseCommand):
                     f"{metax_instance}/rest/v2/datasets?data_catalog={_catalog}&limit={limit}&include_legacy=true"
                 )
                 self.loop_pagination(response)
-        if migrate_all and not identifiers:
-            response = requests.get(
-                f"{metax_instance}/rest/v2/datasets?limit={limit}&include_legacy=true"
-            )
-            self.loop_pagination(response)
-        self.stdout.write(f"successfully migrated {len(self.datasets)} datasets")
-        if len(self.datasets) <= 30:
-            self.stdout.write(
-                f"identifiers of migrated datasets: {[str(x.id) for x in self.datasets]}"
-            )
-        if len(self.failed_datasets) > 0:
-            self.stdout.write(f"failed to migrate {len(self.failed_datasets)} datasets")
-            for x in self.failed_datasets:
-                self.stdout.write(f"{x}")
+
+    def print_summary(self):
+        not_ok = self.updated - self.ok_after_update
+        self.stdout.write(f"Processed {self.migrated} datasets")
+        self.stdout.write(f"- {self.ok_after_update} datasets updated succesfully")
+        self.stdout.write(f"- {not_ok} datasets failed")
+
+    def handle(self, *args, **options):
+        identifiers = options.get("identifiers")
+        migrate_all = options.get("all")
+        file = options.get("file")
+        catalogs = options.get("catalogs")
+        self.allow_fail = options.get("allow_fail")
+        self.force_update = options.get("force_update")
+        self.update_limit = options.get("stop_after")
+        self.verbosity = options.get("verbosity")  # defaults to 1
+
+        if bool(identifiers) + bool(migrate_all) + bool(catalogs) != 1:
+            self.stderr.write("Exactly one of --identifiers, --catalogs and --all is required.")
+            return
+
+        try:
+            if file:
+                self.migrate_from_file(options)
+            else:
+                self.migrate_from_metax(options)
+        except KeyboardInterrupt:
+            pass  # Print summary after Ctrl+C
+
+        self.print_summary()

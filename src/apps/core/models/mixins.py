@@ -5,7 +5,7 @@ from typing import Dict, List, Optional
 from django.contrib.auth import get_user_model
 from django.db.models import QuerySet
 
-from apps.common.helpers import date_to_datetime, omit_none, single_translation
+from apps.common.helpers import date_to_datetime, omit_empty, omit_none, single_translation
 from apps.refdata.models import AbstractConcept
 
 logger = logging.getLogger(__name__)
@@ -145,7 +145,7 @@ class V2DatasetMixin:
         if full_address := model_obj.full_address:
             obj["full_address"] = full_address
         if altitude_in_meters := model_obj.altitude_in_meters:
-            obj["altitude_in_meters"] = altitude_in_meters
+            obj["alt"] = str(altitude_in_meters)
         as_wkt = []
         if model_obj.reference:
             if ref_wkt := model_obj.reference.as_wkt:
@@ -274,6 +274,12 @@ class V2DatasetMixin:
                     )
                     for variable in variables
                 ]
+            if provenance.preservation_event:
+                data["preservation_event"] = {
+                    "pref_label": provenance.preservation_event.pref_label,
+                    "identifier": provenance.preservation_event.url,
+                    "in_scheme": provenance.preservation_event.in_scheme,
+                }
             if provenance.lifecycle_event:
                 data["lifecycle_event"] = {
                     "pref_label": provenance.lifecycle_event.pref_label,
@@ -313,6 +319,9 @@ class V2DatasetMixin:
 
         if available := getattr(self.access_rights, "available", None):
             data["available"] = available.isoformat()
+
+        if description := self.access_rights.description:
+            data["description"] = description
 
         for license in self.access_rights.license.all():
             row = {
@@ -398,13 +407,12 @@ class V2DatasetMixin:
                 project["source_organization"] = []
             project["source_organization"].append(self.generate_org(participating_organization))
 
-    def _generate_v2_dataset_project(self) -> List:
+    def _generate_v2_dataset_projects(self) -> List:
         obj_list = []
         for dataset_project in self.projects.all():
             project = {
                 "name": dataset_project.title,
                 "identifier": dataset_project.project_identifier,
-                "funder_type": {},
                 "has_funding_agency": [],
                 "source_organization": [],
             }
@@ -488,20 +496,20 @@ class V2DatasetMixin:
             document["research_dataset"]["remote_resources"] = obj_list
         return obj_list
 
-    def as_v2_dataset(self) -> Dict:
-        def add_actor(role: str, document: Dict):
-            actors = self.actors.filter(roles__contains=[role])
-            if actors.count() == 0:
-                return
-            if role != "publisher":
-                document["research_dataset"][role] = []
-            for dataset_actor in actors:
-                data = dataset_actor.as_v2_data()
-                if role == "publisher":
-                    document["research_dataset"][role] = data
-                else:
-                    document["research_dataset"][role].append(data)
+    def add_actor(self, role: str, document: Dict):
+        actors = self.actors.filter(roles__contains=[role])
+        if actors.count() == 0:
+            return
+        if role != "publisher":
+            document["research_dataset"][role] = []
+        for dataset_actor in actors:
+            data = dataset_actor.as_v2_data()
+            if role == "publisher":
+                document["research_dataset"][role] = data
+            else:
+                document["research_dataset"][role].append(data)
 
+    def as_v2_dataset(self) -> Dict:
         research_dataset = {
             "title": self.title,
             "description": self.description,
@@ -509,11 +517,13 @@ class V2DatasetMixin:
             "preferred_identifier": self.persistent_identifier,
             "keyword": self.keyword,
             "access_rights": self._generate_v2_access_rights() if self.access_rights else None,
+            "is_output_of": self._generate_v2_dataset_projects(),
         }
 
         if file_set := getattr(self, "file_set", None):
             research_dataset["total_files_byte_size"] = file_set.total_files_size
-
+        if self.issued:
+            research_dataset["issued"] = self.issued.isoformat()
         doc = {
             "identifier": (
                 str(self.legacydataset.dataset_json["identifier"])
@@ -528,10 +538,12 @@ class V2DatasetMixin:
             "deprecated": self.deprecated is not None,
             "state": self.state,
             "cumulative_state": self.cumulative_state.real,
-            "date_created": self.created,
+            "date_created": self.created.isoformat(),
             "removed": self._construct_v2_removed_field(),
             "research_dataset": research_dataset,
         }
+        if self.deprecated:
+            doc["date_deprecated"] = self.deprecated
         if self.metadata_owner:
             if hasattr(self.metadata_owner, "user"):
                 doc["metadata_provider_user"] = self.metadata_owner.user.username
@@ -555,10 +567,6 @@ class V2DatasetMixin:
             doc["date_last_cumulative_addition"] = self.last_cumulative_addition
         if self.last_modified_by:
             doc["user_modified"] = self.last_modified_by.username
-        if self.issued:
-            doc["research_dataset"]["issued"] = self.issued.isoformat()
-        if project := self._generate_v2_dataset_project():
-            doc["research_dataset"]["is_output_of"] = project
 
         self._generate_v2_other_identifiers(doc)
         self._generate_v2_ref_data_field(
@@ -572,6 +580,10 @@ class V2DatasetMixin:
         self._generate_v2_provenance(doc)
         self._generate_v2_relation(doc)
         self._generate_v2_remote_resources(doc)
-        add_actor("creator", doc)
-        add_actor("publisher", doc)
+
+        for role in ["creator", "publisher", "curator", "contributor", "rights_holder"]:
+            self.add_actor(role, doc)
+
+        # Remove empty values from research_dataset
+        doc["research_dataset"] = omit_empty(research_dataset, recurse=True)
         return doc

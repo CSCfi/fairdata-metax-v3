@@ -9,6 +9,7 @@ from django.utils.translation import gettext as _
 from simple_history.models import HistoricalRecords
 
 from apps.common.copier import ModelCopier
+from apps.common.helpers import omit_empty
 from apps.common.models import AbstractBaseModel
 
 logger = logging.getLogger(__name__)
@@ -19,7 +20,7 @@ class HomePage(AbstractBaseModel):
 
     copier = ModelCopier(
         copied_relations=[],
-        parent_relations=["organization"],
+        parent_relations=["organization", "person"],
     )
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -27,6 +28,12 @@ class HomePage(AbstractBaseModel):
     title = HStoreField(help_text='example: {"en":"title", "fi":"otsikko"}', null=True)
 
     history = HistoricalRecords()
+
+    def as_v2_data(self) -> dict:
+        data = {"identifier": self.url}
+        if self.title:
+            data["title"] = self.title
+        return data
 
 
 class OrganizationModelCopier(ModelCopier):
@@ -137,10 +144,10 @@ class Organization(AbstractBaseModel):
         if identifier := self.url or self.external_identifier:
             data["identifier"] = identifier
         if homepage := self.homepage:
-            data["homepage"] = {"title": homepage.title, "identifier": homepage.url}
+            data["homepage"] = homepage.as_v2_data()
         if parent := self.parent:
             data["is_part_of"] = parent.as_v2_data()
-        return data
+        return omit_empty(data, recurse=True)
 
     def __str__(self):
         return f"{self.id}: {self.get_label()}"
@@ -148,7 +155,7 @@ class Organization(AbstractBaseModel):
 
 class Person(AbstractBaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    copier = ModelCopier(copied_relations=[], parent_relations=["part_of_actors"])
+    copier = ModelCopier(copied_relations=["homepage"], parent_relations=["part_of_actors"])
 
     name = models.CharField(max_length=512)
     email = models.EmailField(max_length=512, blank=True, null=True)
@@ -157,6 +164,13 @@ class Person(AbstractBaseModel):
         null=True,
         blank=True,
         help_text=_("External identifier for the actor, usually ORCID or similiar"),
+    )
+    homepage = models.OneToOneField(
+        HomePage,
+        blank=True,
+        null=True,
+        help_text='example: {"title": {"en": "webpage"}, "url": "https://example.com"}',
+        on_delete=models.SET_NULL,
     )
 
     def __str__(self):
@@ -191,8 +205,12 @@ class Actor(AbstractBaseModel):
         if self.person:
             data["name"] = self.person.name
             data["@type"] = "Person"
+            if identifier := self.person.external_identifier:
+                data["identifier"] = identifier
             if self.organization:
                 data["member_of"] = self.organization.as_v2_data()
+            if homepage := self.person.homepage:
+                data["homepage"] = homepage.as_v2_data()
 
         elif self.organization:
             data = self.organization.as_v2_data()

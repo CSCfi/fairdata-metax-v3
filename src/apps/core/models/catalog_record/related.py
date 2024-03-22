@@ -52,7 +52,7 @@ class DatasetActor(Actor):
     actors_order = models.IntegerField(default=0, help_text=_("Position in dataset actors list."))
 
     class Meta:
-        ordering = ["actors_order", "created"]
+        ordering = ["actors_order", "created", "id"]
 
     def add_role(self, role: str) -> bool:
         """Adds a roles to the actor.

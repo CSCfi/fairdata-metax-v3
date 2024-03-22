@@ -1,6 +1,7 @@
 import logging
 from typing import Any, Dict, Tuple
 
+from django.db.models.base import Model as Model
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 

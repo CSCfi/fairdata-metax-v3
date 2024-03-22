@@ -32,3 +32,7 @@
 
 ### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_command_catalog_stop_after
 
+## test_migrate_command_file
+
+### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_command_file
+

@@ -18,7 +18,7 @@
           "removed": null
         }
       ],
-      "deprecated": null,
+      "deprecated": false,
       "metadata_owner_org": "abc-org-123",
       "metadata_provider_org": "abc-org-123",
       "metadata_provider_user": "abc-user-123",

@@ -173,7 +173,7 @@ class ChecksumField(serializers.RegexField):
     }
 
     def __init__(self, *args, **kwargs):
-        kwargs["trim_whitespace"] = False
+        kwargs["trim_whitespace"] = True
         super().__init__(self.checksum_regex, *args, **kwargs)
 
 

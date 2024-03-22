@@ -8,6 +8,7 @@ from rest_framework import serializers
 
 from apps.core import factories
 from apps.core.models import LegacyDataset
+from apps.core.models.legacy_compatibility import LegacyCompatibility
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +88,7 @@ def test_v2_to_v3_dataset_conversion(
     v2_dataset = LegacyDataset(id=data["identifier"], dataset_json=data, files_json=files_data)
     v2_dataset.save()
     v2_dataset.update_from_legacy()
-    diff = v2_dataset.check_compatibility()
+    diff = LegacyCompatibility(v2_dataset).get_compatibility_diff()
 
     assert diff == expected_diff
 

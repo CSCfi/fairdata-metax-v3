@@ -1,5 +1,3 @@
-from rest_framework import serializers
-
 from apps.common.serializers import CommonListSerializer, CommonNestedModelSerializer
 from apps.core.models import DatasetProject, Funder, FunderType, Funding
 from apps.core.serializers.dataset_actor_serializers.organization_serializer import (
@@ -8,8 +6,8 @@ from apps.core.serializers.dataset_actor_serializers.organization_serializer imp
 
 
 class FunderSerializer(CommonNestedModelSerializer):
-    organization = DatasetOrganizationSerializer(many=False, required=True)
-    funder_type = FunderType.get_serializer_field(many=False, required=False)
+    organization = DatasetOrganizationSerializer(many=False, required=False, allow_null=True)
+    funder_type = FunderType.get_serializer_field(many=False, required=False, allow_null=True)
 
     class Meta:
         model = Funder
@@ -31,8 +29,10 @@ class FundingModelSerializer(CommonNestedModelSerializer):
 
 
 class ProjectModelSerializer(CommonNestedModelSerializer):
-    participating_organizations = DatasetOrganizationSerializer(many=True, required=False)
-    funding = FundingModelSerializer(many=True, required=False)
+    participating_organizations = DatasetOrganizationSerializer(
+        many=True, required=False, allow_null=True
+    )
+    funding = FundingModelSerializer(many=True, required=False, allow_null=True)
 
     class Meta:
         model = DatasetProject
