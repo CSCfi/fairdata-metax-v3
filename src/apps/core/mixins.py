@@ -129,6 +129,7 @@ class V2DatasetMixin:
         pref_label_text: str = "pref_label",
         top_level_key_name: str = None,
         extra_top_level_fields: List = None,
+        omit_scheme=False,
     ):
         """
 
@@ -151,7 +152,7 @@ class V2DatasetMixin:
         obj_list = []
         for row in related_manager.all():
             obj = {pref_label_text: row.pref_label, "identifier": row.url}
-            if row.in_scheme:
+            if row.in_scheme and not omit_scheme:
                 obj["in_scheme"] = row.in_scheme
             if top_level_key_name:
                 obj = {top_level_key_name: obj}
@@ -334,7 +335,9 @@ class V2DatasetMixin:
             document["research_dataset"]["provenance"] = obj_list
         return obj_list
 
-    def _generate_v2_access_rights(self) -> Dict:
+    def _generate_v2_access_rights(self) -> Optional[Dict]:
+        if not self.access_rights:
+            return None
         data = {
             "access_type": {
                 "in_scheme": self.access_rights.access_type.in_scheme,
@@ -476,7 +479,7 @@ class V2DatasetMixin:
         }
         v2_algo = v2_algos.get(algo, "OTHER")
         return {
-            "value": value,
+            "checksum_value": value,
             "algorithm": v2_algo,
         }
 
@@ -574,12 +577,14 @@ class V2DatasetMixin:
         if self.last_modified_by:
             doc["user_modified"] = self.last_modified_by.username
         if self.issued:
-            doc["research_dataset"]["issued"] = self.issued
+            doc["research_dataset"]["issued"] = self.issued.isoformat()
         if project := self._generate_v2_dataset_project():
             doc["research_dataset"]["is_output_of"] = project
 
         self._generate_v2_other_identifiers(doc)
-        self._generate_v2_ref_data_field("language", doc, pref_label_text="title")
+        self._generate_v2_ref_data_field(
+            "language", doc, pref_label_text="title", omit_scheme=True
+        )
         self._generate_v2_ref_data_field("field_of_science", doc)
         self._generate_v2_ref_data_field("infrastructure", doc)
         self._generate_v2_ref_data_field("theme", doc)

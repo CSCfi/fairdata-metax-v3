@@ -19,15 +19,6 @@ dataset_updated = Signal()
 dataset_created = Signal()
 
 
-@receiver(post_save, sender=LegacyDataset)
-def post_process_legacy_dataset(sender, instance: LegacyDataset, **kwargs):
-    instance.post_process_dataset_for_v3()
-    diff = instance.check_compatibility()
-    # use update to not invoke another post_save signal
-    LegacyDataset.objects.filter(id=instance.id).update(v2_dataset_compatibility_diff=diff)
-    instance.dataset.save()
-
-
 @receiver(m2m_changed, sender=FileSet.files.through)
 def handle_files_changed(sender, instance: FileSet, action, **kwargs):
     if instance.skip_files_m2m_changed:  # allow skipping handler

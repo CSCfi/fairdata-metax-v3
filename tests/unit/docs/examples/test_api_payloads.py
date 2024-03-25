@@ -3,6 +3,8 @@ import pytest
 from apps.core.models import Dataset
 from apps.files.factories import create_project_with_files
 
+from .conftest import load_test_json
+
 pytestmark = [pytest.mark.django_db, pytest.mark.docs]
 
 
@@ -58,3 +60,13 @@ def test_minimal_dataset_with_files(
         "total_files_count": 3,
         "total_files_size": 3072,
     }
+
+
+def test_convert_from_legacy_payload(admin_client, data_catalog):
+    payload = load_test_json("convert_from_legacy_payload.json")
+    res = admin_client.post(
+        "/v3/datasets/convert_from_legacy", payload, content_type="application/json"
+    )
+    expected_data = load_test_json("convert_from_legacy_response.json")
+    assert res.status_code == 200
+    assert res.json() == expected_data

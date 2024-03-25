@@ -64,7 +64,6 @@
             - [data_catalog_serializer](src/apps/core/serializers/data_catalog_serializer.md)
             - dataset_actor_serializers
                 - [actor_serializer](src/apps/core/serializers/dataset_actor_serializers/actor_serializer.md)
-                - [legacy_serializers](src/apps/core/serializers/dataset_actor_serializers/legacy_serializers.md)
                 - [member_serializer](src/apps/core/serializers/dataset_actor_serializers/member_serializer.md)
                 - [organization_serializer](src/apps/core/serializers/dataset_actor_serializers/organization_serializer.md)
                 - [person_serializer](src/apps/core/serializers/dataset_actor_serializers/person_serializer.md)
@@ -175,6 +174,7 @@
                         - [conftest](tests/unit/apps/core/api/dataset/conftest.md)
                         - [test_actors](tests/unit/apps/core/api/dataset/test_actors.md)
                         - [test_auth](tests/unit/apps/core/api/dataset/test_auth.md)
+                        - [test_convert_from_legacy](tests/unit/apps/core/api/dataset/test_convert_from_legacy.md)
                         - [test_dataset](tests/unit/apps/core/api/dataset/test_dataset.md)
                         - [test_dataset_allowed_actions](tests/unit/apps/core/api/dataset/test_dataset_allowed_actions.md)
                         - [test_dataset_catalogs](tests/unit/apps/core/api/dataset/test_dataset_catalogs.md)

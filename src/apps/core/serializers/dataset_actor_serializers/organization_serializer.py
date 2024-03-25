@@ -76,6 +76,14 @@ class DatasetOrganizationSerializer(DatasetMemberSerializer):
             for actor in provenance.is_associated_with.all():
                 add_org(actor.organization)
 
+        for project in dataset.projects.all():
+            for org in project.participating_organizations.all():
+                add_org(org)
+
+            for funding in project.funding.all():
+                if funding.funder:
+                    add_org(funding.funder.organization)
+
         return orgs
 
     def get_dataset_members(self) -> Dict[str, DatasetMemberContext]:

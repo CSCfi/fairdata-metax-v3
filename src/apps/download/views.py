@@ -1,6 +1,6 @@
+from rest_framework import exceptions
 from rest_framework.decorators import action
 from rest_framework.viewsets import ViewSet
-from rest_framework import exceptions
 
 
 class DownloadUnavailableException(exceptions.APIException):
@@ -22,8 +22,8 @@ class DownloadViewSet(ViewSet):
             )
         else:
             raise DownloadUnavailableException(
-            detail=self.not_implemented_detail("Requesting package generation")
-        )
+                detail=self.not_implemented_detail("Requesting package generation")
+            )
 
     @action(detail=False, methods=["post"])
     def authorize(self, request):

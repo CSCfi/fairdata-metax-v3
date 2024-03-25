@@ -32,7 +32,6 @@ class DatasetSearchAdapter(search.SearchAdapter):
         criteria.extend(self._get_actors(obj))
         return (" ".join(criteria))[: self.max_title_length]
 
-
     def get_description(self, obj):
         criteria = []
         if obj.description:

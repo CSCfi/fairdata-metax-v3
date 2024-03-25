@@ -1,4 +1,5 @@
 import logging
+import uuid
 from argparse import ArgumentParser
 
 import httpx
@@ -86,13 +87,19 @@ class Command(BaseCommand):
         )
 
     def get_or_create_dataset(self, data):
+        identifier = data["identifier"]
+        try:
+            uuid.UUID(identifier)
+        except ValueError:
+            logger.info(f"Invalid identifier '{identifier}', skipping")
+            return None
         try:
             dataset, created = LegacyDataset.objects.get_or_create(
                 id=data["identifier"],
                 defaults={"dataset_json": data},
             )
-            if self.force_update:
-                dataset.save()
+            if created or self.force_update:
+                dataset.update_from_legacy()
             self.stdout.write(
                 f"{self.migrated}: {dataset.id=}, {dataset.legacy_identifier=}, "
                 f"{created=}, {dict(dataset.created_objects)=}"

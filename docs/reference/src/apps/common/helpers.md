@@ -8,6 +8,10 @@
 
 ### :::src.apps.common.helpers.update_or_create_instance
 
+## parse_date_or_datetime
+
+### :::src.apps.common.helpers.parse_date_or_datetime
+
 ## parse_iso_dates_in_nested_dict
 
 ### :::src.apps.common.helpers.parse_iso_dates_in_nested_dict
@@ -67,4 +71,16 @@
 ## omit_none
 
 ### :::src.apps.common.helpers.omit_none
+
+## omit_empty
+
+### :::src.apps.common.helpers.omit_empty
+
+## ensure_list
+
+### :::src.apps.common.helpers.ensure_list
+
+## ensure_dict
+
+### :::src.apps.common.helpers.ensure_dict
 

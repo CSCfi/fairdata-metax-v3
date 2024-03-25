@@ -16,3 +16,7 @@
 
 ### :::tests.unit.docs.examples.test_api_payloads.test_minimal_dataset_with_files
 
+## test_convert_from_legacy_payload
+
+### :::tests.unit.docs.examples.test_api_payloads.test_convert_from_legacy_payload
+

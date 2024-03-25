@@ -13,6 +13,7 @@ from django.contrib.auth import get_user_model
 from django.utils.dateparse import parse_date, parse_datetime
 from django_filters import NumberFilter
 from drf_yasg import openapi
+from rest_framework import serializers
 from rest_framework.fields import empty
 
 logger = logging.getLogger(__name__)
@@ -43,8 +44,20 @@ def update_or_create_instance(serializer, instance, data):
         return serializer.create(data)
 
 
+def parse_date_or_datetime(value):
+    try:
+        return parse_datetime(value)
+    except TypeError:
+        pass
+    try:
+        return parse_date(value)
+    except TypeError:
+        pass
+    return None
+
+
 def parse_iso_dates_in_nested_dict(d: Dict) -> Dict:
-    """Recursive function to parse ISO dates to datetime objects in nested dictionaries
+    """Recursive function to parse ISO dates to datetime objects in nested dictionaries.
 
     Args:
         d (Dict): Dictionary to parse
@@ -52,20 +65,7 @@ def parse_iso_dates_in_nested_dict(d: Dict) -> Dict:
     Returns:
         Dict: Parsed dictionary.
 
-    Note:
-        The returned dictionary is the same reference as the dictionary in the args."""
-
-    def parse_date_or_datetime(value):
-        try:
-            return parse_datetime(value)
-        except TypeError:
-            pass
-        try:
-            return parse_date(value)
-        except TypeError:
-            pass
-        return None
-
+    Note: The dictionary values are updated in-place."""
     for key, value in d.items():
         # If there is nested dictionary, recurse
         if isinstance(value, dict):
@@ -81,11 +81,8 @@ def parse_iso_dates_in_nested_dict(d: Dict) -> Dict:
                         value[i] = date
         # If the value is not a dictionary, try to parse it to date
         else:
-            try:
-                if date := parse_date_or_datetime(value):
-                    d[key] = date
-            except TypeError:
-                pass
+            if date := parse_date_or_datetime(value):
+                d[key] = date
     return d
 
 
@@ -180,6 +177,8 @@ def date_to_datetime(date):
 
 def datetime_to_date(dt):
     """Convert datetime to UTC date."""
+    if dt is None:
+        return None
     return dt.astimezone(tz.utc).date()
 
 
@@ -241,3 +240,39 @@ def single_translation(value: dict) -> Optional[str]:
 def omit_none(value: dict) -> dict:
     """Return copy of dict with None values removed."""
     return {key: val for key, val in value.items() if val is not None}
+
+
+def omit_empty(value: dict, recurse=False) -> dict:
+    """Return copy of dict with None values and empty lists, empty strings and empty dicts removed."""
+    if not recurse:
+        return {key: val for key, val in value.items() if val not in [None, "", {}, []]}
+
+    def _recurse(_value):
+        if isinstance(_value, list):
+            return [_val for val in _value if (_val := _recurse(val)) not in [None, "", {}, []]]
+
+        if isinstance(_value, dict):
+            return {
+                key: _val
+                for key, val in _value.items()
+                if (_val := _recurse(val)) not in [None, "", {}, []]
+            }
+        return _value
+
+    return _recurse(value)
+
+
+def ensure_list(lst) -> list:
+    """Convert None into empty list, raise validation error on other non-list values."""
+    if lst is None:
+        return []
+    if not isinstance(lst, list):
+        raise serializers.ValidationError(f"Value is not a list: {lst}")
+    return lst
+
+
+def ensure_dict(dct) -> dict:
+    """Raise validation error on non-dict values values."""
+    if not isinstance(dct, dict):
+        raise serializers.ValidationError(f"Value is not a dict: {dct}")
+    return dct

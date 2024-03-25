@@ -7,6 +7,8 @@
 
 import logging
 
+from django.core.exceptions import FieldError
+from django.db import transaction
 from django.db.models import Q
 from django.http import Http404
 from django.utils.decorators import method_decorator
@@ -15,15 +17,16 @@ from django_filters import rest_framework as filters
 from django_filters.fields import CSVWidget
 from drf_yasg.openapi import TYPE_STRING, Parameter, Response
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import exceptions, response, status
+from rest_framework import exceptions, response, serializers, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.reverse import reverse
 from watson import search
 
-from apps.common.pagination import OffsetPagination
 from apps.common.filters import MultipleCharFilter
+from apps.common.helpers import ensure_dict, omit_empty
+from apps.common.pagination import OffsetPagination
 from apps.common.serializers.serializers import (
     FlushQueryParamsSerializer,
     IncludeRemovedQueryParamsSerializer,
@@ -31,6 +34,7 @@ from apps.common.serializers.serializers import (
 from apps.common.views import CommonModelViewSet
 from apps.core.models.catalog_record import Dataset, FileSet
 from apps.core.models.data_catalog import DataCatalog
+from apps.core.models.legacy import LegacyDataset
 from apps.core.models.preservation import Preservation
 from apps.core.permissions import DataCatalogAccessPolicy, DatasetAccessPolicy
 from apps.core.renderers import DataciteXMLRenderer, FairdataDataciteXMLRenderer
@@ -48,6 +52,7 @@ from apps.core.serializers.dataset_serializer import (
     ExpandCatalogQueryParamsSerializer,
     LatestVersionQueryParamsSerializer,
 )
+from apps.core.serializers.legacy_serializer import LegacyDatasetUpdateSerializer
 from apps.core.views.common_views import DefaultValueOrdering
 from apps.files.models import File
 from apps.files.serializers import DirectorySerializer
@@ -457,6 +462,46 @@ class DatasetViewSet(CommonModelViewSet):
         dataset: Dataset = self.get_object()
         serializer = ContactRolesSerializer(instance=dataset)
         return response.Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=["POST"])
+    def convert_from_legacy(self, request):
+        """Convert V1 or V2 dataset json into V3 json format.
+
+        Accepts a V1 or V2 dataset json as the request body.
+        Dataset fields are mapped to V3 format and the resulting dataset
+        json is validated and then returned. If any errors found are found,
+        the response will contain an additional "errors" object
+        describing the errrors.
+
+        Note that no permission checking is done and the dataset json
+        may need additional changes to be ready for publishing.
+        """
+        data = None
+        with transaction.atomic():
+            try:
+                ensure_dict(request.data)
+                try:
+                    dataset = LegacyDataset(dataset_json=request.data, convert_only=True)
+                    data = omit_empty(dataset.convert_dataset(), recurse=True)
+                    serializer = LegacyDatasetUpdateSerializer(
+                        data=data, context={"dataset": None}
+                    )
+                    serializer.is_valid(raise_exception=True)
+                except serializers.ValidationError as e:
+                    if data:
+                        data["errors"] = e.detail
+                    else:
+                        raise e
+                except (AttributeError, ValueError) as e:
+                    # Catch unhandled cases where input data has wrong type
+                    logger.warning(f"convert_from_legacy failed: {e}")
+                    return response.Response(
+                        "There was an error converting the dataset.",
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+            finally:
+                transaction.set_rollback(True)  # Ensure no side effects are left in DB
+        return response.Response(data, status=status.HTTP_200_OK)
 
     def perform_create(self, serializer):
         if self.request.user.is_anonymous:

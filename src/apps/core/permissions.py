@@ -23,6 +23,11 @@ class DatasetAccessPolicy(BaseAccessPolicy):
             "condition": "is_edit_allowed",
         },
         {
+            "action": "convert_from_legacy",
+            "principal": "*",
+            "effect": "allow",
+        },
+        {
             # Note that there is no actual "download" action in the viewset at the moment.
             "action": ["<op:download>"],
             "principal": "*",

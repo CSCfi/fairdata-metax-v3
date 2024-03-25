@@ -1,0 +1,19 @@
+{
+  "state": "published",
+  "data_catalog": "urn:nbn:fi:att:data-catalog-ida",
+  "research_dataset": {
+    "description": {
+      "en": "Dataset description"
+    },
+    "creator": [
+      {
+        "@type": "Person",
+        "name": "Teppo Testaaja"
+      }
+    ],
+    "publisher": {
+      "@type": "Person",
+      "name": "Teppo Testaaja"
+    }
+  }
+}

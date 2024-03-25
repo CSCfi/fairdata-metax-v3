@@ -230,13 +230,14 @@
       ],
       "access_type": {
         "in_scheme": "http://uri.suomi.fi/codelist/fairdata/access_type",
-        "identifier": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open",
+        "identifier": "http://uri.suomi.fi/codelist/fairdata/access_type/code/embargo",
         "pref_label": {
-          "en": "Open",
-          "fi": "Avoin",
-          "und": "Avoin"
+          "en": "Embargo",
+          "fi": "Embargo",
+          "und": "Embargo"
         }
-      }
+      },
+      "available": "2024-04-26"
     },
     "field_of_science": [
       {
@@ -267,7 +268,7 @@
         },
         "checksum": {
           "algorithm": "MD5",
-          "value": "f00f"
+          "checksum_value": "f00f"
         }
       }
     ],

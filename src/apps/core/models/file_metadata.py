@@ -1,6 +1,6 @@
 import logging
-
 import uuid
+
 from django.db import models
 
 from apps.common.copier import ModelCopier

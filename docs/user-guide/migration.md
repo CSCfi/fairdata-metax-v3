@@ -32,9 +32,28 @@ In this example, if you would like to find this dataset with person name, you wo
 
 ## Dataset
 
-Also named CatalogRecord in V1-V2. Main differences are: removal of the research_dataset nested object, and more descriptive field names. All objects also now have their own id field that can be used when editing dataset properties.
+Also named CatalogRecord in V1-V2. Main differences are: removal of the research_dataset nested object, and more descriptive field names.
 
 For more information, see the [new Dataset API user guide](./datasets-api.md).
+
+A good starting point for converting a dataset payload to the V3 format is the `/v3/datasets/convert_from_legacy` helper endpoint. It accepts V1/V2 dataset JSON and converts it into V3 style dataset JSON. If errors are detected in the
+resulting JSON, they are included in `"errors"` object in the response. The endpoint does not do any permission
+checks or validate that the dataset JSON has all the data needed for publishing.
+
+!!! Example "Example dataset conversion using `POST /v3/datasets/convert_from_legacy`"
+
+    === "Payload"
+
+        ``` json
+        ---8<--- "tests/unit/docs/examples/test_data/convert_from_legacy_payload.json"
+        ```
+
+    === "Response"
+
+        ``` json
+        ---8<--- "tests/unit/docs/examples/test_data/convert_from_legacy_response.json"
+        ```
+
 
 ### Field names
 
@@ -395,16 +414,16 @@ They have been moved under `/v3/` together with the former `/rest/` style endpoi
 !!! INFO
     Endpoints with flush functionality (hard delete) will accept flush parameter only in non-production environments.
 
-| V1-V2 endpoint                               | V3 endpoint                                            |
-|----------------------------------------------|--------------------------------------------------------|
-| `/rpc/datasets/get_minimal_dataset_template` | :question:                                             |
-| `/rpc/datasets/set_preservation_identifier`  | :no_entry:                                             |
-| `/rpc/datasets/refresh_directory_content`    | :no_entry:                                             |
-| `/rpc/datasets/fix_deprecated`               | :no_entry:                                             |
-| `/rpc/datasets/flush_user_data`              | `DELETE /v3/users/<id>` :star:                         |
+| V1-V2 endpoint                               | V3 endpoint                                                |
+|----------------------------------------------|------------------------------------------------------------|
+| `/rpc/datasets/get_minimal_dataset_template` | :question:                                                 |
+| `/rpc/datasets/set_preservation_identifier`  | :no_entry:                                                 |
+| `/rpc/datasets/refresh_directory_content`    | :no_entry:                                                 |
+| `/rpc/datasets/fix_deprecated`               | :no_entry:                                                 |
+| `/rpc/datasets/flush_user_data`              | `DELETE /v3/users/<id>` :star:                             |
 | `/rpc/files/delete_project`                  | `DELETE /v3/files?csc_project={project}` :star:            |
 | `/rpc/files/flush_project`                   | `DELETE /v3/files?csc_project={project}&flush=true` :star: |
-| `/rpc/statistics/*`                          | :question:                                             |
+| `/rpc/statistics/*`                          | :question:                                                 |
 
 ### Examples
 
@@ -660,22 +679,22 @@ For a full list of supported parameters, see the [Swagger documentation](/swagge
 
 Here are some of the common files API requests and how they map to Metax V3:
 
-| Action                            | V1/V2                                                          | V3                                                                                      |
-|-----------------------------------|----------------------------------------------------------------|-----------------------------------------------------------------------------------------|
-| List files                        | `GET /rest/v1/files`                                           | `GET /v3/files`                                                                         |
-| List removed files                | `GET /rest/v1/files?removed=true`                              | `GET /v3/files?include_removed=true` (includes non-removed files)                       |
-| Get file (using Metax id)         | `GET /rest/v1/files/<id>`                                      | `GET /v3/files/<id>`                                                                    |
-| Get removed file (using Metax id) | `GET /rest/v1/files/<id>?removed=true` (includes non-removed)  | `GET /v3/files/<id>?include_removed=true` (includes non-removed files)                  |
-| Get file (using external id)      | `GET /rest/v1/files/<id>`                                      | `GET /v3/files?file_storage=*&storage_identifier=<id>&pagination=false`<br>returns list |
-| Create file                       | `POST /rest/v1/files`                                          | `POST /v3/files`                                                                        |
-| Create files (array)              | `POST /rest/v1/files`                                          | `POST /v3/files/post-many`                                                              |
-| Update files (array)              | `PATCH /rest/v1/files`                                         | `POST /v3/files/put-many`                                                               |
-| Update or create files (array)    | n/a                                                            | `POST /v3/files/patch-many`                                                             |
-| Delete files                      | `DELETE /rest/v1/files` (array of ids)                         | `POST /v3/files/delete-many` (array of file objects)                                    |
-| Restore files (array)             | `POST /rest/v1/files/restore`                                  | not implemented yet                                                                     |
-| File datasets (using Metax id)    | `POST /rest/v1/files/datasets`                                 | `POST /v3/files/datasets`                                                               |
-| File datasets (using external id) | `POST /rest/v1/files/datasets`                                 | `POST /v3/files/datasets?storage_service=<service>`                                     |
-| List directory contents by path   | `GET /rest/v1/directories/files?csc_project=<project>&path=<path>` | `GET /v3/directories?storage_service=<service>&csc_project=<project>&path=<path>`           |
+| Action                            | V1/V2                                                              | V3                                                                                      |
+|-----------------------------------|--------------------------------------------------------------------|-----------------------------------------------------------------------------------------|
+| List files                        | `GET /rest/v1/files`                                               | `GET /v3/files`                                                                         |
+| List removed files                | `GET /rest/v1/files?removed=true`                                  | `GET /v3/files?include_removed=true` (includes non-removed files)                       |
+| Get file (using Metax id)         | `GET /rest/v1/files/<id>`                                          | `GET /v3/files/<id>`                                                                    |
+| Get removed file (using Metax id) | `GET /rest/v1/files/<id>?removed=true` (includes non-removed)      | `GET /v3/files/<id>?include_removed=true` (includes non-removed files)                  |
+| Get file (using external id)      | `GET /rest/v1/files/<id>`                                          | `GET /v3/files?file_storage=*&storage_identifier=<id>&pagination=false`<br>returns list |
+| Create file                       | `POST /rest/v1/files`                                              | `POST /v3/files`                                                                        |
+| Create files (array)              | `POST /rest/v1/files`                                              | `POST /v3/files/post-many`                                                              |
+| Update files (array)              | `PATCH /rest/v1/files`                                             | `POST /v3/files/put-many`                                                               |
+| Update or create files (array)    | n/a                                                                | `POST /v3/files/patch-many`                                                             |
+| Delete files                      | `DELETE /rest/v1/files` (array of ids)                             | `POST /v3/files/delete-many` (array of file objects)                                    |
+| Restore files (array)             | `POST /rest/v1/files/restore`                                      | not implemented yet                                                                     |
+| File datasets (using Metax id)    | `POST /rest/v1/files/datasets`                                     | `POST /v3/files/datasets`                                                               |
+| File datasets (using external id) | `POST /rest/v1/files/datasets`                                     | `POST /v3/files/datasets?storage_service=<service>`                                     |
+| List directory contents by path   | `GET /rest/v1/directories/files?csc_project=<project>&path=<path>` | `GET /v3/directories?storage_service=<service>&csc_project=<project>&path=<path>`       |
 
 ### Dataset files
 

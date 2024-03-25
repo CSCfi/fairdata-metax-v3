@@ -1,0 +1,23 @@
+{
+  "state": "published",
+  "description": {
+    "en": "Dataset description"
+  },
+  "data_catalog": "urn:nbn:fi:att:data-catalog-ida",
+  "actors": [
+    {
+      "person": {
+        "name": "Teppo Testaaja"
+      },
+      "roles": [
+        "creator",
+        "publisher"
+      ]
+    }
+  ],
+  "errors": {
+    "title": [
+      "This field is required."
+    ]
+  }
+}

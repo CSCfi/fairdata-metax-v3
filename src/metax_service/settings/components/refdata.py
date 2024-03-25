@@ -130,6 +130,7 @@ REFERENCE_DATA_SOURCES = {
     **FINTO_REFERENCE_DATA_SOURCES,
     **LOCAL_REFERENCE_DATA_SOURCES,
 }
+REFDATA_LANGUAGES = {"en", "fi", "sv", "und"}  # Languages to use from reference data
 ESSENTIAL_LANGUAGE_CHOICE_URLS = [
     "http://lexvo.org/id/iso639-3/fin",
     "http://lexvo.org/id/iso639-3/swe",

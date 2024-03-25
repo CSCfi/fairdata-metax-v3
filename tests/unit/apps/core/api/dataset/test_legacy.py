@@ -154,9 +154,7 @@ def test_legacy_dataset_actors_invalid_refdata_parent(
         reverse("migrated-dataset-list"), legacy_dataset_a_json, content_type="application/json"
     )
     assert res.status_code == 400
-    assert (
-        "cannot be child of non-reference organization" in res.json()[0]["organization"]["parent"]
-    )
+    assert "cannot be child of non-reference organization" in res.json()["is_part_of"]
 
 
 def test_legacy_dataset_relation(

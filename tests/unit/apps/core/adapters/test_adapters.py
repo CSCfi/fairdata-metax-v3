@@ -52,9 +52,6 @@ logger = logging.getLogger(__name__)
             None,
             {
                 "dictionary_item_removed": [
-                    # Project and funding integration should be completed in the adapter for is_output_of to work
-                    # "root['research_dataset']['is_output_of']",
-                    # Remote resources is not modeled yet
                     "root['preservation_state']",
                     "root['research_dataset']['total_remote_resources_byte_size']",
                 ],
@@ -65,9 +62,6 @@ logger = logging.getLogger(__name__)
             None,
             {
                 "dictionary_item_removed": [
-                    # Project and funding integration should be completed in the adapter for is_output_of to work
-                    # "root['research_dataset']['is_output_of']",
-                    # Remote resources is not modeled yet
                     "root['preservation_state']",
                     "root['research_dataset']['total_remote_resources_byte_size']",
                 ],
@@ -89,8 +83,10 @@ def test_v2_to_v3_dataset_conversion(
     if files_path:
         with open(test_data_path + files_path) as json_file:
             files_data = json.load(json_file)
+
     v2_dataset = LegacyDataset(id=data["identifier"], dataset_json=data, files_json=files_data)
     v2_dataset.save()
+    v2_dataset.update_from_legacy()
     diff = v2_dataset.check_compatibility()
 
     assert diff == expected_diff
@@ -110,6 +106,7 @@ def test_v2_to_v3_dataset_conversion_invalid_identifier(license_reference_data):
     v2_dataset = LegacyDataset(id=data["identifier"], dataset_json=data)
     with pytest.raises(serializers.ValidationError):
         v2_dataset.save()
+        v2_dataset.update_from_legacy()
 
 
 @pytest.mark.adapter
@@ -127,3 +124,4 @@ def test_v2_to_v3_dataset_conversion_existing_v3_dataset_id(license_reference_da
     v2_dataset = LegacyDataset(id=data["identifier"], dataset_json=data)
     with pytest.raises(serializers.ValidationError):
         v2_dataset.save()
+        v2_dataset.update_from_legacy()

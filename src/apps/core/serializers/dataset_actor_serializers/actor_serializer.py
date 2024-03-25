@@ -11,7 +11,7 @@ from apps.core.models.catalog_record.dataset import Dataset
 from apps.core.serializers.dataset_actor_serializers.member_serializer import (
     DatasetMemberContext,
     DatasetMemberSerializer,
-    UUIDOrTagField
+    UUIDOrTagField,
 )
 from apps.core.serializers.dataset_actor_serializers.organization_serializer import (
     DatasetOrganizationSerializer,

@@ -8,8 +8,8 @@ from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 from model_utils import FieldTracker
 from rest_framework.exceptions import ValidationError
-from typing_extensions import Self
 from simple_history.models import HistoricalRecords
+from typing_extensions import Self
 
 from apps.common.copier import ModelCopier
 from apps.common.helpers import datetime_to_date
@@ -600,7 +600,8 @@ class Dataset(V2DatasetMixin, CatalogRecord):
     def save(self, *args, **kwargs):
         """Saves the dataset and increments the draft or published revision number as needed."""
         self.validate_unique()
-        self._update_cumulative_state()
+        if not getattr(self, "saving_legacy", False):
+            self._update_cumulative_state()
 
         # Prevent changing state of a published dataset
         previous_state = self.tracker.previous("state")

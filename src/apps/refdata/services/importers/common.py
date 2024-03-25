@@ -2,6 +2,7 @@ import abc
 import logging
 from typing import Protocol
 
+from django.conf import settings
 from django.db import transaction
 from django.db.models import prefetch_related_objects
 from django.utils import timezone
@@ -68,6 +69,11 @@ class BaseDataImporter(ReferenceDataImporterInterface):
         for field, value in data_item.items():
             if field in {"url", "in_scheme", "broader", "narrower", "deprecated"}:
                 continue
+            if field == "pref_label" and value and isinstance(value, dict):
+                value = {
+                    k: v for k, v in value.items() if k in settings.REFDATA_LANGUAGES
+                } or dict([next(iter(value.items()))])
+
             if not hasattr(obj, field):
                 raise ValueError(f"Invalid field '{field}' for {self.data_type}")
             if getattr(obj, field) != value:
