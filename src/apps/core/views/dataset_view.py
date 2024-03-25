@@ -7,7 +7,6 @@
 
 import logging
 
-from django.core.exceptions import FieldError
 from django.db.models import Q
 from django.http import Http404
 from django.utils.decorators import method_decorator
@@ -23,6 +22,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.reverse import reverse
 from watson import search
 
+from apps.common.pagination import OffsetPagination
 from apps.common.filters import MultipleCharFilter
 from apps.common.serializers.serializers import (
     FlushQueryParamsSerializer,
@@ -30,10 +30,8 @@ from apps.common.serializers.serializers import (
 )
 from apps.common.views import CommonModelViewSet
 from apps.core.models.catalog_record import Dataset, FileSet
-from apps.core.models.catalog_record.dataset import DatasetVersions
 from apps.core.models.data_catalog import DataCatalog
 from apps.core.models.preservation import Preservation
-from apps.core.pagination import AggregatingDatasetPagination
 from apps.core.permissions import DataCatalogAccessPolicy, DatasetAccessPolicy
 from apps.core.renderers import DataciteXMLRenderer, FairdataDataciteXMLRenderer
 from apps.core.serializers import DatasetSerializer
@@ -55,6 +53,8 @@ from apps.files.models import File
 from apps.files.serializers import DirectorySerializer
 from apps.files.views.directory_view import DirectoryCommonQueryParams, DirectoryViewSet
 from apps.files.views.file_view import BaseFileViewSet, FileCommonFilterset
+
+from .dataset_aggregation import aggregate_queryset
 
 logger = logging.getLogger(__name__)
 
@@ -334,7 +334,6 @@ class DatasetViewSet(CommonModelViewSet):
 
     filterset_class = DatasetFilter
     http_method_names = ["get", "post", "put", "patch", "delete", "options"]
-    pagination_class = AggregatingDatasetPagination
 
     def filter_queryset(self, queryset):
         queryset = super().filter_queryset(queryset)
@@ -471,6 +470,12 @@ class DatasetViewSet(CommonModelViewSet):
                 "You are not allowed to create datasets in this data catalog."
             )
         serializer.save(system_creator=self.request.user)
+
+    @action(detail=False)
+    def aggregates(self, request):
+        queryset = self.filter_queryset(self.get_queryset())
+        aggregates = aggregate_queryset(queryset)
+        return response.Response(aggregates, status=status.HTTP_200_OK)
 
     def perform_destroy(self, instance):
         """Called by 'destroy' action."""

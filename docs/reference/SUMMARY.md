@@ -55,7 +55,6 @@
             - [legacy](src/apps/core/models/legacy.md)
             - [preservation](src/apps/core/models/preservation.md)
             - [provenance](src/apps/core/models/provenance.md)
-        - [pagination](src/apps/core/pagination.md)
         - [permissions](src/apps/core/permissions.md)
         - [renderers](src/apps/core/renderers.md)
         - serializers
@@ -83,6 +82,7 @@
         - views
             - [common_views](src/apps/core/views/common_views.md)
             - [data_catalog_view](src/apps/core/views/data_catalog_view.md)
+            - [dataset_aggregation](src/apps/core/views/dataset_aggregation.md)
             - [dataset_view](src/apps/core/views/dataset_view.md)
             - [index_view](src/apps/core/views/index_view.md)
             - [legacy_view](src/apps/core/views/legacy_view.md)

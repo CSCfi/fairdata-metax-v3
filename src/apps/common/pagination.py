@@ -33,7 +33,6 @@ class OffsetPagination(LimitOffsetPagination):
         return True
 
     def paginate_queryset(self, queryset, request, view=None):
-        self.aggregates = self.aggregate_queryset(queryset)
         if not self.pagination_enabled(request):
             return None
         return super().paginate_queryset(queryset, request, view)
@@ -49,7 +48,6 @@ class OffsetPagination(LimitOffsetPagination):
                     ("next", self.get_next_link()),
                     ("previous", self.get_previous_link()),
                     ("results", data),
-                    ("aggregations", self.aggregates),
                 ]
             )
         )

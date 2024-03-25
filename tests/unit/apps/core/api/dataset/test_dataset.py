@@ -74,8 +74,10 @@ def test_aggregation_and_filters(
     admin_client.post("/v3/datasets", dataset_c_json, content_type="application/json")
     res = admin_client.get("/v3/datasets")
     assert res.data["count"] == 3
-    assert res.data.get("aggregations") != None
-    assert list(sorted(key for key, value in res.data["aggregations"].items())) == [
+
+    res = admin_client.get("/v3/datasets/aggregates")
+    assert res.data != None
+    assert list(sorted(key for key, value in res.data.items())) == [
         "access_type",
         "creator",
         "data_catalog",
@@ -86,17 +88,17 @@ def test_aggregation_and_filters(
         "organization",
         "project",
     ]
-    aggregations = res.data["aggregations"]
+    aggregates = res.data
 
-    for aggregation in aggregations.values():
-        if len(aggregation["hits"]):
+    for aggregate in aggregates.values():
+        if len(aggregate["hits"]):
             value = (
-                aggregation["hits"][0]["value"].get("fi")
-                or aggregation["hits"][0]["value"].get("en")
-                or aggregation["hits"][0]["value"].get("und")
+                aggregate["hits"][0]["value"].get("fi")
+                or aggregate["hits"][0]["value"].get("en")
+                or aggregate["hits"][0]["value"].get("und")
             )
-            count = aggregation["hits"][0]["count"]
-            res = admin_client.get(f"/v3/datasets?{aggregation['query_parameter']}={value}")
+            count = aggregate["hits"][0]["count"]
+            res = admin_client.get(f"/v3/datasets?{aggregate['query_parameter']}={value}")
             assert res.data["count"] == count
 
 
@@ -189,7 +191,6 @@ def test_list_datasets_with_default_pagination(admin_client, dataset_a, dataset_
         "next": None,
         "previous": None,
         "results": [ANY, ANY],
-        "aggregations": ANY,
     }
 
 
@@ -216,7 +217,6 @@ def test_list_datasets_with_pagination(admin_client, dataset_a, dataset_b):
         "next": None,
         "previous": None,
         "results": [ANY, ANY],
-        "aggregations": ANY,
     }
 
 
