@@ -187,44 +187,38 @@ You don't have to submit the entire object again if you want to edit it. This is
     ---8<--- "tests/unit/docs/examples/test_data/dataset_api/access-rights-put.json"
     ```
 
-Access Rights have their own endpoint under dataset that returns the access_rights object associated with the dataset:
-
-* `GET /v3/datasets/{id}/access_rights`
-* `PUT /v3/datasets/{id}/access_rights`
-* `PATCH /v3/datasets/{id}/access_rights`
-
-You can't create dataset without access rights, so there is no DELETE or POST endpoints.
-
 #### Actors
 
-Dataset related actors with roles such as creator, publisher, curator, rights_holder and contributor have
-been moved under actors field. Instead of having a typed actor object like `@type: "Person"` or `@type: "Organization`, actors have `person` and `organization` fields. The fields for `person` are:
+All actors are listed in actors field. Dataset related actors with roles such as creator, publisher, curator, rights_holder and contributor have
+been moved under actor object in roles field. Roles field is a list of roles eg. ["creator", "publisher"].
 
-| V1-V2 person actor field | V3 actor field                   |
-|--------------------------|----------------------------------|
-| @type [str]              | N/A                              |
-| email [str]              | person.email [str]               |
-| identifier [str]         | person.external_identifier [str] |
-| member_of [object]       | organization [object]            |
-| name [str]               | person.name [str]                |
-| telephone [str]          | N/A                              |
-| N/A                      | roles [list]                     |
+Instead of having a typed actor object like `@type: "Person"` or `@type: "Organization`, actors have `person` and `organization` fields. The fields for `person` are:
+
+| V1-V2 person actor field | V3 actor field                   | Notes                                             |
+|--------------------------|----------------------------------|---------------------------------------------------|
+| @type [str]              | **Not used in V3**               | replaced by person field                          |
+| email [str]              | person.email [str]               |                                                   |
+| identifier [str]         | person.external_identifier [str] |                                                   |
+| member_of [object]       | organization [object]            |                                                   |
+| name [str]               | person.name [str]                |                                                   |
+| telephone [str]          | **Not used in V3**               |                                                   |
+| **Not in V2**            | roles [list]                     | List of roles of an actor. eg. creator, publisher |
 
 Organizations have some fields specific only to reference data organizations: `url` and `in_scheme`.
 Only `url` is writable for reference data organizations, other values are determined automatically.
 The fields for `organization` are:
 
-| V1-V2 organization actor field | V3 actor field                                     |
-|--------------------------------|----------------------------------------------------|
-| @type [str]                    | N/A                                                |
-| name [str]                     | organization.pref_label [str]                      |
-| is_part_of [object]            | organization.parent [object]                       |
-| identifier [str]               | organization.external_identifier [str]             |
-| identifier [str]               | organization.url [url] (only reference data)       |
-| N/A                            | organization.in_scheme [url] (only reference data) |
-| email [str]                    | organization.email [str]                           |
-| telephone [str]                | N/A                                                |
-| N/A                            | roles [list]                                       |
+| V1-V2 organization actor field | V3 actor field                                     | Notes                                             |
+|--------------------------------|----------------------------------------------------|---------------------------------------------------|
+| @type [str]                    | **Not used in V3**                                 | same as V2 organization, if person field is null. |
+| name [str]                     | organization.pref_label [str]                      |                                                   |
+| is_part_of [object]            | organization.parent [object]                       |                                                   |
+| identifier [str]               | organization.external_identifier [str]             |                                                   |
+| identifier [str]               | organization.url [url] (only reference data)       |                                                   |
+| **Not in V2**                  | organization.in_scheme [url] (only reference data) |                                                   |
+| email [str]                    | organization.email [str]                           |                                                   |
+| telephone [str]                | **Not used in V3**                                 |                                                   |
+| **Not in V2**                  | roles [list]                                       | List of roles of an actor. eg. creator, publisher |
 
 
 !!! example "Actors JSON differences between V2 and V3"
@@ -241,50 +235,34 @@ The fields for `organization` are:
         ---8<--- "tests/unit/docs/examples/test_data/v2/actors-v2.json"
         ```
 
-Actors have their own endpoint under dataset that returns a list of actors associated with the dataset:
-
-* `GET /v3/datasets/{id}/actors`
-* `POST /v3/datasets/{id}/actors`
-* `GET /v3/datasets/{id}/actors/{actor-id}`
-* `PUT /v3/datasets/{id}/actors/{actor-id}`
-* `PATCH /v3/datasets/{id}/actors/{actor-id}`
-* `DELETE /v3/datasets/{id}/actors/{actor-id}`
-
-Using the POST endpoint, you can add actors only using the relevant body fields:
-
-!!! example
-    `POST /v3/datasets/{id}/actors`
-    ```json
-    ---8<--- "tests/unit/docs/examples/test_data/dataset_api/actor-post.json"
-    ```
-
 #### Spatial coverage
 
 In Metax V2 `as_wkt` was filled in from reference data if it was empty.
 In V3, reference data geometry is in `reference.as_wkt` string and user-provided
 geometry in `custom_wkt` list.
 
-| V1-V2 field        | V3 field                                           |
-|--------------------|----------------------------------------------------|
-| alt [str]          | altitude_in_meters [int] :star:                    |
-| place_uri [object] | reference [object] :star:                          |
-| as_wkt [list]      | custom_wkt [list] or reference.as_wkt [str] :star: |
+| V1-V2 field        | V3 field                                    |
+|--------------------|---------------------------------------------|
+| alt [str]          | altitude_in_meters [int]                    |
+| place_uri [object] | reference [object]                          |
+| as_wkt [list]      | custom_wkt [list] or reference.as_wkt [str] |
 
 
 #### Temporal coverage
 
 Temporal coverage objects now use dates instead of datetime values.
 
-| V1-V2 field           | V3 field          |
-|-----------------------|-------------------|
-| start_date [datetime] | start_date [date] |
-| end_date [datetime]   | end_date [date] : |
+| V1-V2 field             | V3 field          |
+|-------------------------|-------------------|
+| start_date [datetime]   | start_date [date] |
+| end_date [datetime]     | end_date [date]   |
+| temporal_coverage [str] | :question:        |
 
 #### Entity relations
 
-| V1-V2 field              | V3 field                       |
-|--------------------------|--------------------------------|
-| entity.identifier [dict] | entity_identifier [str] :star: |
+| V1-V2 field              | V3 field                |
+|--------------------------|-------------------------|
+| entity.identifier [dict] | entity_identifier [str] |
 
 
 #### Provenance
@@ -304,45 +282,6 @@ Biggest change in provenance field is that it is its own object in database. Pro
         ``` json
         ---8<--- "tests/unit/docs/examples/test_data/v2/provenance-v2.json"
         ```
-
-Provenance events have their own endpoint under dataset that returns a list of provenance events associated with the dataset:
-
-* `GET /v3/datasets/{id}/provenance`
-* `POST /v3/datasets/{id}/provenance`
-* `GET /v3/datasets/{id}/provenance/{provenance-id}`
-* `PUT /v3/datasets/{id}/provenance/{provenance-id}`
-* `PATCH /v3/datasets/{id}/provenance/{provenance-id}`
-* `DELETE /v3/datasets/{id}/provenance/{provenance-id}`
-
-#### Dataset Project
-
-!!! warning
-    Dataset project implementation is still in progress. Final specification might have minor deviations from the one described here.
-
-!!! example "Dataset project JSON differences between V2 and V3"
-
-    === "V3"
-
-        ``` json
-        ---8<--- "tests/unit/docs/examples/test_data/dataset_api/dataset-project.json"
-        ```
-
-    === "V2"
-
-        ``` json
-        ---8<--- "tests/unit/docs/examples/test_data/v2/project-v2.json"
-        ```
-
-
-
-Projects have their own endpoint under dataset that returns a list of associated projects with in the dataset:
-
-* `GET /v3/datasets/{id}/project`
-* `POST /v3/datasets/{id}/project`
-* `GET /v3/datasets/{id}/project/{project-id}`
-* `PUT /v3/datasets/{id}/project/{project-id}`
-* `PATCH /v3/datasets/{id}/project/{project-id}`
-* `DELETE /v3/datasets/{id}/project/{project-id}`
 
 #### Remote resources
 
@@ -413,18 +352,19 @@ They have been moved under `/v3/` together with the former `/rest/` style endpoi
 !!! INFO
     Endpoints with flush functionality (hard delete) will accept flush parameter only in non-production environments.
 
-| V1-V2 endpoint                               | V3 endpoint                                                |
-|----------------------------------------------|------------------------------------------------------------|
-| `/rpc/datasets/get_minimal_dataset_template` | :question:                                                 |
-| `/rpc/datasets/set_preservation_identifier`  | :no_entry:                                                 |
-| `/rpc/datasets/refresh_directory_content`    | :no_entry:                                                 |
-| `/rpc/datasets/fix_deprecated`               | :no_entry:                                                 |
-| `/rpc/datasets/flush_user_data`              | `DELETE /v3/users/<id>` :star:                             |
-| `/rpc/files/delete_project`                  | `DELETE /v3/files?csc_project={project}` :star:            |
-| `/rpc/files/flush_project`                   | `DELETE /v3/files?csc_project={project}&flush=true` :star: |
-| `/rpc/statistics/*`                          | :question:                                                 |
+| V1-V2 endpoint                               | V3 endpoint                                         |
+|----------------------------------------------|-----------------------------------------------------|
+| `/rpc/datasets/get_minimal_dataset_template` | :question:                                          |
+| `/rpc/datasets/set_preservation_identifier`  | **Not used in V3**                                      |
+| `/rpc/datasets/refresh_directory_content`    | **Not used in V3**                                      |
+| `/rpc/datasets/fix_deprecated`               | **Not used in V3**                                      |
+| `/rpc/datasets/flush_user_data`              | `DELETE /v3/users/<id>`                             |
+| `/rpc/files/delete_project`                  | `DELETE /v3/files?csc_project={project}`            |
+| `/rpc/files/flush_project`                   | `DELETE /v3/files?csc_project={project}&flush=true` |
+| `/rpc/statistics/*`                          | :question:                                          |
 
 ### Examples
+
 
 #### Creating a dataset
 
