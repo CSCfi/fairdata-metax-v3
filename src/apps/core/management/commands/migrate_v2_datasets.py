@@ -1,8 +1,9 @@
 import logging
 import uuid
 from argparse import ArgumentParser
+from io import StringIO
 
-import httpx
+import requests
 from django.core.management.base import BaseCommand
 
 from apps.core.models import LegacyDataset
@@ -12,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
     """Migrate V2 datasets to V3 from specific Metax instance
+
     Examples:
         Migrate all publicly available datasets from metax instance
 
@@ -29,6 +31,11 @@ class Command(BaseCommand):
     migrated = 0
     migration_limit = 0
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.failed_datasets = []
+        self.datasets = []
+
     def add_arguments(self, parser: ArgumentParser):
         parser.add_argument(
             "--identifiers",
@@ -36,6 +43,13 @@ class Command(BaseCommand):
             nargs="+",
             type=str,
             help="List of Metax V1-V2 identifiers to migrate",
+        )
+        parser.add_argument(
+            "--catalogs",
+            "-c",
+            nargs="+",
+            type=str,
+            help="List of Metax V1-V2 catalogs to migrate",
         )
         parser.add_argument(
             "--all",
@@ -110,7 +124,8 @@ class Command(BaseCommand):
             if self.allow_fail:
                 logger.error(e)
                 self.stdout.write(f"Failed to migrate dataset {data['identifier']}")
-                self.failed_datasets.append(data)
+                _message = f"{data['identifier']} : {e}"
+                self.failed_datasets.append(_message)
             else:
                 logger.error(f"Failed while processing {self=}")
                 # logger.error(f"{data=}")
@@ -126,8 +141,19 @@ class Command(BaseCommand):
                 break
         return created_instances
 
+    def loop_pagination(self, response):
+        response_json = response.json()
+        self.datasets.extend(self.migrate_from_list(response_json["results"]))
+        while next_url := response_json.get("next"):
+            response = requests.get(next_url)
+            response_json = response.json()
+            self.datasets.extend(self.migrate_from_list(response_json["results"]))
+            if self.migration_limit != 0 and self.migrated >= self.migration_limit:
+                break
+
     def handle(self, *args, **options):
         identifiers = options.get("identifiers")
+        catalogs = options.get("catalogs")
         migrate_all = options.get("all")
         metax_instance = options.get("metax_instance")
         self.allow_fail = options.get("allow_fail")
@@ -135,31 +161,43 @@ class Command(BaseCommand):
         self.force_update = options.get("force_update")
         self.migration_limit = options.get("stop_after")
 
-        if identifiers and migrate_all:
-            self.stderr.write("--identifiers and --all are mutually exclusive")
-        if identifiers and not migrate_all:
+        if bool(identifiers) + bool(migrate_all) + bool(catalogs) != 1:
+            self.stderr.write("Exactly one of --identifiers, --catalogs and --all is required.")
+            return
+        if identifiers and not migrate_all and not catalogs:
             for identifier in identifiers:
-                response = httpx.get(f"{metax_instance}/rest/v2/datasets/{identifier}")
+                response = requests.get(f"{metax_instance}/rest/v2/datasets/{identifier}")
                 dataset_json = response.json()
-                self.datasets.append(self.get_or_create_dataset(dataset_json))
+                if dataset := self.get_or_create_dataset(dataset_json):
+                    self.datasets.append(dataset)
+        if catalogs and not migrate_all and not identifiers:
+            for catalog in catalogs:
+                if self.migration_limit != 0 and self.migration_limit <= self.migrated:
+                    break
+                self.stdout.write(f"Migrating catalog: {catalog}")
+                response = requests.get(f"{metax_instance}/rest/datacatalogs/{catalog}")
+                if response.status_code == 200:
+                    response_json = response.json()
+                    _catalog = response_json["catalog_json"]["identifier"]
+                else:
+                    self.stderr.write(f"Invalid catalog identifier: {catalog}")
+                    continue
+
+                response = requests.get(
+                    f"{metax_instance}/rest/v2/datasets?data_catalog={_catalog}&limit={limit}&include_legacy=true"
+                )
+                self.loop_pagination(response)
         if migrate_all and not identifiers:
-            response = httpx.get(
+            response = requests.get(
                 f"{metax_instance}/rest/v2/datasets?limit={limit}&include_legacy=true"
             )
-            response_json = response.json()
-            self.datasets = self.datasets + self.migrate_from_list(response_json["results"])
-            while next_url := response_json.get("next"):
-                self.next_url = next_url
-                response = httpx.get(next_url)
-                response_json = response.json()
-                self.datasets = self.datasets + self.migrate_from_list(response_json["results"])
-                if self.migration_limit != 0 and self.migrated >= self.migration_limit:
-                    break
+            self.loop_pagination(response)
         self.stdout.write(f"successfully migrated {len(self.datasets)} datasets")
         if len(self.datasets) <= 30:
             self.stdout.write(
-                f"legacy identifiers of migrated datasets: "
-                f"{[str(x.legacydataset.legacy_identifier) for x in self.datasets]}"
+                f"identifiers of migrated datasets: {[str(x.id) for x in self.datasets]}"
             )
         if len(self.failed_datasets) > 0:
-            self.stdout.write(f"failed to migrate {len(self.failed_datasets)}")
+            self.stdout.write(f"failed to migrate {len(self.failed_datasets)} datasets")
+            for x in self.failed_datasets:
+                self.stdout.write(f"{x}")

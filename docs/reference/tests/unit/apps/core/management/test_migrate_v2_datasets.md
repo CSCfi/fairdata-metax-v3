@@ -8,7 +8,27 @@
 
 ### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_command_error
 
+## test_migrate_command_missing_arg
+
+### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_command_missing_arg
+
 ## test_migrate_command_identifier
 
 ### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_command_identifier
+
+## test_migrate_command_identifier_error_in_data
+
+### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_command_identifier_error_in_data
+
+## test_migrate_command_allow_fail
+
+### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_command_allow_fail
+
+## test_migrate_command_catalog
+
+### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_command_catalog
+
+## test_migrate_command_catalog_stop_after
+
+### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_command_catalog_stop_after
 
