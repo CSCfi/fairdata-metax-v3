@@ -53,6 +53,7 @@
             - [file_metadata](src/apps/core/models/file_metadata.md)
             - [legacy](src/apps/core/models/legacy.md)
             - [legacy_compatibility](src/apps/core/models/legacy_compatibility.md)
+            - [legacy_converter](src/apps/core/models/legacy_converter.md)
             - [mixins](src/apps/core/models/mixins.md)
             - [preservation](src/apps/core/models/preservation.md)
             - [provenance](src/apps/core/models/provenance.md)
@@ -167,6 +168,7 @@
             - core
                 - adapters
                     - [test_adapters](tests/unit/apps/core/adapters/test_adapters.md)
+                    - [test_legacy_converter](tests/unit/apps/core/adapters/test_legacy_converter.md)
                     - [test_license](tests/unit/apps/core/adapters/test_license.md)
                     - [test_spatial](tests/unit/apps/core/adapters/test_spatial.md)
                 - api

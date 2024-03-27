@@ -35,6 +35,7 @@ from apps.common.views import CommonModelViewSet
 from apps.core.models.catalog_record import Dataset, FileSet
 from apps.core.models.data_catalog import DataCatalog
 from apps.core.models.legacy import LegacyDataset
+from apps.core.models.legacy_converter import LegacyDatasetConverter
 from apps.core.models.preservation import Preservation
 from apps.core.permissions import DataCatalogAccessPolicy, DatasetAccessPolicy
 from apps.core.renderers import DataciteXMLRenderer, FairdataDataciteXMLRenderer
@@ -476,19 +477,29 @@ class DatasetViewSet(CommonModelViewSet):
         may need additional changes to be ready for publishing.
         """
         data = None
+        errors = {}
         with transaction.atomic():
             try:
                 ensure_dict(request.data)
                 try:
-                    dataset = LegacyDataset(dataset_json=request.data, convert_only=True)
-                    data = omit_empty(dataset.convert_dataset(), recurse=True)
+                    converter = LegacyDatasetConverter(
+                        dataset_json=request.data, convert_only=True
+                    )
+                    data = omit_empty(converter.convert_dataset(), recurse=True)
+                    if invalid := converter.get_invalid_values_by_path():
+                        errors["invalid"] = invalid
+                    if fixed := converter.get_fixed_values_by_path():
+                        errors["fixed"] = fixed
                     serializer = LegacyDatasetUpdateSerializer(
                         data=data, context={"dataset": None}
                     )
                     serializer.is_valid(raise_exception=True)
                 except serializers.ValidationError as e:
                     if data:
-                        data["errors"] = e.detail
+                        detail = e.detail
+                        if not isinstance(e.detail, dict):
+                            detail = {"error": detail}
+                        errors.update(detail)
                     else:
                         raise e
                 except (AttributeError, ValueError) as e:
@@ -500,6 +511,8 @@ class DatasetViewSet(CommonModelViewSet):
                     )
             finally:
                 transaction.set_rollback(True)  # Ensure no side effects are left in DB
+        if errors:
+            data["errors"] = errors
         return response.Response(data, status=status.HTTP_200_OK)
 
     def perform_create(self, serializer):

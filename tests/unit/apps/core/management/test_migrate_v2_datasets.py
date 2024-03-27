@@ -109,4 +109,6 @@ def test_migrate_command_file(mock_response_single_catalog, mock_response, refer
     err = StringIO()
     call_command("migrate_v2_datasets", stdout=out, stderr=err, file=filepath, all=True)
     assert "Invalid identifier 'invalid', ignoring" in err.getvalue()
-    assert "5 datasets updated" in out.getvalue()
+    output = out.getvalue()
+    assert "5 datasets updated" in output
+    assert "Ignored invalid legacy data:\n- research_dataset.rights_holder[0]" in output

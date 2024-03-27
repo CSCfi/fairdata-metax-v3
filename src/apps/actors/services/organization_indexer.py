@@ -1,5 +1,6 @@
 import csv
 import logging
+from urllib.parse import quote
 
 import requests
 from cachalot.api import cachalot_disabled
@@ -114,9 +115,11 @@ class OrganizationIndexer:
                 "und": unit_name,
             }
 
-        url = f"{settings.ORGANIZATION_BASE_URI}{org_code}"
+        url = f"{settings.ORGANIZATION_BASE_URI}{quote(org_code)}"
         parent_url = (
-            f"{settings.ORGANIZATION_BASE_URI}{parent_org_code}" if parent_org_code else None
+            f"{settings.ORGANIZATION_BASE_URI}{quote(parent_org_code)}"
+            if parent_org_code
+            else None
         )
         org = {
             "url": url,

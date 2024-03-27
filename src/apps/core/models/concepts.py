@@ -93,8 +93,9 @@ class DatasetLicense(AbstractBaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     custom_url = models.URLField(max_length=512, blank=True, null=True)
     reference = models.ForeignKey(refdata.License, on_delete=models.CASCADE)
+    title = HStoreField(help_text='example: {"en":"title", "fi":"otsikko"}', null=True, blank=True)
     description = HStoreField(
-        help_text='example: {"en":"title", "fi":"otsikko"}', null=True, blank=True
+        help_text='example: {"en":"description", "fi":"kuvaus"}', null=True, blank=True
     )
 
     class Meta:

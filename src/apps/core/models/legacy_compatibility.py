@@ -2,13 +2,13 @@ import copy
 import json
 import logging
 import re
-from typing import Dict
+from typing import Dict, Optional
 
 from deepdiff import DeepDiff, extract
 from django.conf import settings
 from django.utils.translation import gettext as _
 
-from apps.common.helpers import parse_iso_dates_in_nested_dict, trim_nested_dict
+from apps.common.helpers import omit_empty, parse_iso_dates_in_nested_dict, process_nested
 from apps.core.models.legacy import LegacyDataset
 
 logger = logging.getLogger(__name__)
@@ -49,6 +49,7 @@ class LegacyCompatibility:
             "root['preservation_description']",
             "root['preservation_reason_description']",
             "root['preservation_dataset_version']",
+            "root['preservation_dataset_origin_version']",
             "root['preservation_identifier']",
             "root['research_dataset']['version_notes']",
             "root['research_dataset']['total_files_byte_size']",
@@ -83,7 +84,23 @@ class LegacyCompatibility:
             return True
         return False
 
-    def should_ignore_changed(self, path, new, old) -> bool:
+    def dot_path_to_deepdiff_path(self, path: str) -> str:
+        """Convert javascript-style dot path to deepdiff style path.
+
+        For example, `research_dataset.temporal[0].start_date`
+        changes into `root['research_dataset']['temporal'][0]['start_date']`
+        """
+        parts = path.split(".")
+        dd_parts = []
+        for part in parts:
+            dd_parts.append(re.sub("(^\w+)", r"['\1']", part))
+
+        return "root" + "".join(dd_parts)
+
+    def should_ignore_changed(self, path, new, old, fixed_paths) -> bool:
+        if path in fixed_paths:
+            return True  # Value has been fixed and we expected it to change
+
         if list(new) == ["as_wkt"]:
             return True  # Allow changes from normalizing as_wkt values
 
@@ -92,6 +109,7 @@ class LegacyCompatibility:
 
     def get_migration_errors_from_diff(self, diff) -> dict:
         errors = {}
+        fixed_paths = self.get_fixed_deepdiff_paths()
         for diff_type, diff in diff.items():
             ignored = self.ignored_migration_errors.get(diff_type, [])
             for value in diff:
@@ -104,7 +122,7 @@ class LegacyCompatibility:
                 if diff_type == "values_changed":
                     new = diff[value]["new_value"]
                     old = diff[value]["old_value"]
-                    if self.should_ignore_changed(value, new, old):
+                    if self.should_ignore_changed(value, new, old, fixed_paths):
                         continue
 
                 if isinstance(diff, dict):
@@ -114,20 +132,76 @@ class LegacyCompatibility:
 
         return errors
 
-    def normalize_dict(self, data):
-        return trim_nested_dict(parse_iso_dates_in_nested_dict(copy.deepcopy(data)))
+    def normalize_dataset(self, data: dict) -> dict:
+        """Process dataset json dict to avoid unnecessary diff values."""
 
-    def exclude_from_diff(self, obj, path):
+        invalid = self.dataset.invalid_legacy_values or {}
+
+        def pre_handler(value, path):
+            if inv := invalid.get(path):
+                # Remove invalid values from comparison
+                if fields := inv.get("fields"):
+                    return {  # Remove invalid fields
+                        k: v for k, v in value.items() if k not in fields
+                    }
+                else:
+                    return None  # Remove entire object
+            if type(value) is str:
+                # Remove leading and trailing whitespace
+                return value.strip()
+            if isinstance(value, dict):
+                # Omit empty values from dict
+                return omit_empty(value)
+            return value
+
+        def post_handler(value, path):
+            """Remove None values."""
+            if isinstance(value, list):
+                value = [v for v in value if v is not None]
+                if not value:
+                    return None
+            if isinstance(value, dict):
+                value = {k: v for k, v in value.items() if v is not None}
+                if not value:
+                    return None
+
+            return value
+
+        data = copy.deepcopy(data)
+        data["research_dataset"] = process_nested(
+            data.get("research_dataset"), pre_handler, post_handler, path="research_dataset"
+        )
+        return parse_iso_dates_in_nested_dict(data)
+
+    def exclude_from_diff(self, obj, path: str):
         if isinstance(obj, dict):
             identifier = obj.get("identifier") or ""
             if identifier.startswith(settings.ORGANIZATION_BASE_URI):
                 # Assume object is a reference data organization
                 return True
+            if path.endswith("['definition']"):
+                # Ignore silly definition values
+                en = obj.get("en", "")
+                return "statement or formal explanation of the meaning of a concept" in en
+
         return False
 
+    def get_fixed_deepdiff_paths(self) -> list:
+        """Get deepdiff paths to values that have been fixed in the migration conversion."""
+        fixed = self.dataset.fixed_legacy_values or {}
+        fixed_paths = []
+        for path, val in fixed.items():
+            fields = val.get("fields", [])
+            if fields:
+                fixed_paths.extend(f"{path}.{field}" for field in fields)
+            else:
+                fixed_paths.append(path)
+
+        return [self.dot_path_to_deepdiff_path(p) for p in fixed_paths]
+
     def get_compatibility_diff(self) -> Dict:
-        v3_version = self.normalize_dict(self.dataset.as_v2_dataset())
-        v2_version = self.normalize_dict(self.dataset.dataset_json)
+        v2_version = self.normalize_dataset(self.dataset.dataset_json)
+        v3_version = self.normalize_dataset(self.dataset.as_v2_dataset())
         diff = DeepDiff(
             v2_version,
             v3_version,
@@ -139,6 +213,7 @@ class LegacyCompatibility:
                 "api_meta",
                 "service_modified",
                 "service_created",
+                "use_doi_for_published",  # Should be `null` in V2 for published datasets but isn't always
                 "root['data_catalog']['id']",
                 "root['research_dataset']['metadata_version_identifier']",
                 "root['dataset_version_set']",  # not directly writable
@@ -156,7 +231,7 @@ class LegacyCompatibility:
                 ),
             ],
             truncate_datetime="day",
-            exclude_obj_callback_strict=self.exclude_from_diff,
+            exclude_obj_callback=self.exclude_from_diff,
         )
         json_diff = diff.to_json()
         return json.loads(json_diff)

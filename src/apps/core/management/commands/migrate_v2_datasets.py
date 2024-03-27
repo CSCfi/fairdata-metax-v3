@@ -143,6 +143,46 @@ class Command(BaseCommand):
             return "force"
         return None
 
+    def group_consecutive_same_value(self, d: dict):
+        """Helper for grouping identical consecutive values in dict.
+
+        Like dict.items() but returns third value in the tuple
+        that is True if the next value is identical to current one.
+        """
+        prev_key = None
+        prev_value = None
+        for key, value in d.items():
+            if prev_key:
+                yield prev_key, value, prev_value == value
+            prev_key = key
+            prev_value = value
+        if prev_key:
+            yield prev_key, prev_value, False
+
+    def print_fixed(self, fixed):
+        if fixed:
+            self.stdout.write("Fixed legacy data:")
+            for path, fix, next_is_same in self.group_consecutive_same_value(fixed):
+                self.stdout.write(f"- {path}")
+                if next_is_same:
+                    continue
+                self.stdout.write(f"   error: {fix['error']}")
+                self.stdout.write(f"   value: {fix['value']}")
+                if f := fix.get("fixed_value"):
+                    self.stdout.write(f"   fixed: {f}")
+                if fields := fix.get("fields"):
+                    self.stdout.write(f"   fields: {fields}")
+
+    def print_ignored(self, ignored):
+        if ignored:
+            self.stdout.write("Ignored invalid legacy data:")
+            for path, ign, next_is_same in self.group_consecutive_same_value(ignored):
+                self.stdout.write(f"- {path}")
+                if next_is_same:
+                    continue
+                self.stdout.write(f"   value: {ign['value']}")
+                self.stdout.write(f"   error: {ign['error']}")
+
     def print_errors(self, identifier: str, errors: dict):
         if errors:
             self.stderr.write(f"Errors for dataset {identifier}:")
@@ -173,6 +213,8 @@ class Command(BaseCommand):
 
         try:
             self.migrated += 1
+            ignored = None
+            fixed = None
             errors = None
             created = False
             dataset = self.dataset_cache.get(identifier)
@@ -186,11 +228,15 @@ class Command(BaseCommand):
                 self.updated += 1
                 dataset.dataset_json = data
                 dataset.update_from_legacy(raise_serializer_errors=False)
+                fixed = dataset.fixed_legacy_values
+                ignored = dataset.invalid_legacy_values
                 errors = dataset.migration_errors
                 if not errors:
                     self.ok_after_update += 1
 
             self.print_status_line(dataset, update_reason)
+            self.print_fixed(fixed)
+            self.print_ignored(ignored)
             self.print_errors(identifier, errors)
 
             if errors:

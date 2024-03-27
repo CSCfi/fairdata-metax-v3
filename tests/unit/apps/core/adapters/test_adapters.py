@@ -12,6 +12,8 @@ from apps.core.models.legacy_compatibility import LegacyCompatibility
 
 logger = logging.getLogger(__name__)
 
+pytestmark = [pytest.mark.legacy]
+
 
 @pytest.mark.parametrize(
     "test_file_path, files_path, expected_diff",
@@ -70,7 +72,6 @@ logger = logging.getLogger(__name__)
         ),
     ],
 )
-@pytest.mark.adapter
 @pytest.mark.django_db
 def test_v2_to_v3_dataset_conversion(
     funder_type_reference_data, license_reference_data, test_file_path, files_path, expected_diff
@@ -93,7 +94,6 @@ def test_v2_to_v3_dataset_conversion(
     assert diff == expected_diff
 
 
-@pytest.mark.adapter
 @pytest.mark.django_db
 def test_v2_to_v3_dataset_conversion_invalid_identifier(license_reference_data):
     test_data_path = os.path.dirname(os.path.abspath(__file__)) + "/testdata/"
@@ -110,7 +110,6 @@ def test_v2_to_v3_dataset_conversion_invalid_identifier(license_reference_data):
         v2_dataset.update_from_legacy()
 
 
-@pytest.mark.adapter
 @pytest.mark.django_db
 def test_v2_to_v3_dataset_conversion_existing_v3_dataset_id(license_reference_data):
     test_data_path = os.path.dirname(os.path.abspath(__file__)) + "/testdata/"

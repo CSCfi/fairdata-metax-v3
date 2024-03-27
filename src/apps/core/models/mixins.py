@@ -151,8 +151,8 @@ class V2DatasetMixin:
             if ref_wkt := model_obj.reference.as_wkt:
                 as_wkt.append(ref_wkt)
         if model_obj.custom_wkt:
-            custom_wkt = model_obj.custom_wkt or []
-            as_wkt = as_wkt + [*custom_wkt]
+            custom_wkt = model_obj.custom_wkt
+            as_wkt.extend(custom_wkt)
         if len(as_wkt) > 0:
             obj["as_wkt"] = [v for v in as_wkt if v is not None]
         return obj
@@ -326,10 +326,9 @@ class V2DatasetMixin:
         for license in self.access_rights.license.all():
             row = {
                 "identifier": license.reference.url,
-                "title": license.reference.pref_label,
+                "title": license.title or license.reference.pref_label,
+                "description": license.description,
             }
-            if description := license.description:
-                row["description"] = description
             if custom_url := license.custom_url:
                 row["license"] = custom_url
             data["license"].append(row)
@@ -349,7 +348,7 @@ class V2DatasetMixin:
         v2_org = {
             "@type": "Organization",
             "name": org.pref_label,
-            "identifier": org.url,
+            "identifier": org.url or org.external_identifier,
         }
 
         if org.parent:
@@ -425,10 +424,10 @@ class V2DatasetMixin:
                 funder_type = fund.funder.funder_type
                 funder_organization = fund.funder.organization
                 funder_identifier = fund.funding_identifier
+                self._add_funder_type(project, funder_type)
+                self._add_funder_organization(project, funder_organization)
+                self._add_funder_identifier(project, funder_identifier)
 
-            self._add_funder_type(project, funder_type)
-            self._add_funder_organization(project, funder_organization)
-            self._add_funder_identifier(project, funder_identifier)
             self._add_funder_source_organizations(
                 project,
                 participating_organizations=dataset_project.participating_organizations.all(),

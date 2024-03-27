@@ -59,6 +59,7 @@ class LicenseModelSerializer(CommonModelSerializer):
 
     """
 
+    title = serializers.JSONField(required=False, allow_null=True)
     description = serializers.JSONField(required=False, allow_null=True)
     url = serializers.URLField(required=False, allow_null=True)
     pref_label = serializers.HStoreField(read_only=True)
@@ -68,6 +69,7 @@ class LicenseModelSerializer(CommonModelSerializer):
         model = DatasetLicense
         fields = [
             "custom_url",
+            "title",
             "description",
             "url",
             "pref_label",

@@ -541,6 +541,14 @@
         },
         "@type": "Organization"
       },
+      "rights_holder": [
+        {
+          "@type": "Organization",
+          "name": {
+            "fi": ""
+          }
+        }
+      ],
       "description": {
         "en": "A descriptive description describing the contents of this dataset. Must be descriptive."
       },

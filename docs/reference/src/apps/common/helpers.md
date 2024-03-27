@@ -4,21 +4,17 @@
 
 ### :::src.apps.common.helpers.get_technical_metax_user
 
-## update_or_create_instance
-
-### :::src.apps.common.helpers.update_or_create_instance
-
 ## parse_date_or_datetime
 
 ### :::src.apps.common.helpers.parse_date_or_datetime
 
-## trim_nested_dict
-
-### :::src.apps.common.helpers.trim_nested_dict
-
 ## parse_iso_dates_in_nested_dict
 
 ### :::src.apps.common.helpers.parse_iso_dates_in_nested_dict
+
+## process_nested
+
+### :::src.apps.common.helpers.process_nested
 
 ## get_attr_or_item
 
@@ -55,6 +51,10 @@
 ## is_valid_uuid
 
 ### :::src.apps.common.helpers.is_valid_uuid
+
+## is_valid_url
+
+### :::src.apps.common.helpers.is_valid_url
 
 ## deduplicate_list
 

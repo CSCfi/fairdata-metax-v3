@@ -36,14 +36,6 @@ def get_technical_metax_user():
     return obj.id
 
 
-def update_or_create_instance(serializer, instance, data):
-    if instance is not None:
-        serializer.update(instance, data)
-        return instance
-    else:
-        return serializer.create(data)
-
-
 def parse_date_or_datetime(value):
     try:
         # Depending on error, parse_datetime may return None or raise TypeError
@@ -57,27 +49,6 @@ def parse_date_or_datetime(value):
     except TypeError:
         pass
     return None
-
-
-def trim_nested_dict(d: Dict) -> Dict:
-    for key, value in d.items():
-        # If there is nested dictionary, recurse
-        if isinstance(value, dict):
-            trim_nested_dict(value)
-
-        # If there is array in the dictionary, check if it contains dictionary.
-        elif isinstance(value, list):
-            for i, item in enumerate(value):
-                if isinstance(item, dict):
-                    trim_nested_dict(item)
-                else:
-                    if isinstance(item, str):
-                        value[i] = item.strip()
-        else:
-            # Remove whitespace from str
-            if isinstance(value, str):
-                d[key] = value.strip()
-    return d
 
 
 def parse_iso_dates_in_nested_dict(d: Dict) -> Dict:
@@ -108,6 +79,31 @@ def parse_iso_dates_in_nested_dict(d: Dict) -> Dict:
             if date := parse_date_or_datetime(value):
                 d[key] = date
     return d
+
+
+def process_nested(value, pre_handler=None, post_handler=None, path=""):
+    """Generic nested dict and list processing.
+
+    For each nested value:
+    - Pass value through pre_handler callback
+    - In case of dict or list, copy it and process contained values
+    - Pass value through post_handler callback
+    """
+    if pre_handler:
+        value = pre_handler(value, path)
+    if isinstance(value, dict):
+        value = {
+            k: process_nested(v, pre_handler, post_handler, path=path + f".{k}")
+            for k, v in value.items()
+        }
+    elif isinstance(value, list):
+        value = [
+            process_nested(v, pre_handler, post_handler, path=path + f"[{i}]")
+            for i, v in enumerate(value)
+        ]
+    if post_handler:
+        value = post_handler(value, path)
+    return value
 
 
 def get_attr_or_item(obj, key):
@@ -219,6 +215,14 @@ def is_valid_uuid(val):
         return True
     except ValueError:
         return False
+
+
+def is_valid_url(val):
+    try:
+        serializers.URLField().run_validation(val)
+    except serializers.ValidationError:
+        return False
+    return True
 
 
 def deduplicate_list(lst: list):
