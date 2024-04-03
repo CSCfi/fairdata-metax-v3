@@ -9,6 +9,7 @@ import requests
 from cachalot.api import cachalot_disabled
 from django.core.management.base import BaseCommand
 from isodate import parse_datetime
+from django.db.models import Q
 
 from apps.common.helpers import is_valid_uuid, parse_iso_dates_in_nested_dict
 from apps.core.models import LegacyDataset
@@ -22,7 +23,7 @@ class Command(BaseCommand):
     Examples:
         Migrate all publicly available datasets from metax instance
 
-            $ python manage.py migrate_v2_datasets -a -mi https://metax.fairdata.fi
+            $ python manage.py migrate_v2_datasets -mi https://metax.fairdata.fi
 
         Migrate only specified V2 datasets
 
@@ -62,14 +63,6 @@ class Command(BaseCommand):
             help="List of Metax V1-V2 catalogs to migrate",
         )
         parser.add_argument(
-            "--all",
-            "-a",
-            action="store_true",
-            required=False,
-            default=False,
-            help="Migrate all publicly available datasets from provided metax instance",
-        )
-        parser.add_argument(
             "--allow-fail",
             "-af",
             action="store_true",
@@ -82,6 +75,13 @@ class Command(BaseCommand):
             type=str,
             required=False,
             help="Migrate datasets from JSON file instead of a metax instance",
+        ),
+        parser.add_argument(
+            "--update",
+            action="store_true",
+            required=False,
+            default=False,
+            help="Run migration using existing migrated datasets as data source.",
         ),
         parser.add_argument(
             "--metax-instance",
@@ -100,12 +100,12 @@ class Command(BaseCommand):
             help="Number of datasets to migrate per request",
         )
         parser.add_argument(
-            "--force-update",
-            "-fu",
+            "--force",
+            "-f",
             action="store_true",
             required=False,
             default=False,
-            help="re-migrate already migrated datasets by calling save method",
+            help="Update previously migrated datasets even if they have no errors and haven't changed",
         )
         parser.add_argument(
             "--stop-after",
@@ -287,6 +287,15 @@ class Command(BaseCommand):
             response_json = response.json()
             self.datasets.extend(self.migrate_from_list(response_json["results"]))
 
+    def update(self, options):
+        q = Q()
+        if identifiers := options.get("identifiers"):
+            q = Q(id__in=identifiers)
+        if catalogs := options.get("catalogs"):
+            q = Q(data_catalog__in=catalogs)
+        datasets = LegacyDataset.available_objects.filter(q).values_list("dataset_json", flat=True)
+        self.migrate_from_list(datasets)
+
     def migrate_from_file(self, options):
         file = options.get("file")
         identifiers = set(options.get("identifiers") or [])
@@ -307,7 +316,7 @@ class Command(BaseCommand):
     def migrate_from_metax(self, options):
         identifiers = options.get("identifiers")
         catalogs = options.get("catalogs")
-        migrate_all = options.get("all")
+        migrate_all = not (catalogs or identifiers)
         metax_instance = options.get("metax_instance")
         self.allow_fail = options.get("allow_fail")
         limit = options.get("pagination_size")
@@ -352,7 +361,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         identifiers = options.get("identifiers")
-        migrate_all = options.get("all")
+        update = options.get("update")
         file = options.get("file")
         catalogs = options.get("catalogs")
         self.allow_fail = options.get("allow_fail")
@@ -360,12 +369,18 @@ class Command(BaseCommand):
         self.update_limit = options.get("stop_after")
         self.verbosity = options.get("verbosity")  # defaults to 1
 
-        if bool(identifiers) + bool(migrate_all) + bool(catalogs) != 1:
-            self.stderr.write("Exactly one of --identifiers, --catalogs and --all is required.")
+        if bool(update) + bool(file) > 1:
+            self.stderr.write("The --file and --update options are mutually exclusive.")
+            return
+
+        if bool(identifiers) + bool(catalogs) > 1:
+            self.stderr.write("The --identifiers and --catalogs options are mutually exclusive.")
             return
 
         try:
-            if file:
+            if update:
+                self.update(options)
+            elif file:
                 self.migrate_from_file(options)
             else:
                 self.migrate_from_metax(options)
