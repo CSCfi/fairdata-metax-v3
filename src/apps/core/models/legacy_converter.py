@@ -639,6 +639,7 @@ class LegacyDatasetConverter:
             "description": self.legacy_research_dataset.get("description"),
             "issued": issued,
             "keyword": self.legacy_research_dataset.get("keyword") or [],
+            "bibliographic_citation": self.legacy_research_dataset.get("bibliographic_citation"),
         }
 
     def convert_dataset(self):

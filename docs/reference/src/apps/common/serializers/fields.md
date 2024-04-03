@@ -32,6 +32,10 @@
 
 ### :::src.apps.common.serializers.fields.MultiLanguageField
 
+## NullableCharField
+
+### :::src.apps.common.serializers.fields.NullableCharField
+
 ## PrivateEmailField
 
 ### :::src.apps.common.serializers.fields.PrivateEmailField

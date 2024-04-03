@@ -74,6 +74,7 @@ class V2DatasetMixin:
     metadata_owner: object
     title: dict
     description: dict
+    bibliographic_citation: Optional[str]
     modified: datetime
     persistent_identifier: str
     keyword: str
@@ -517,6 +518,7 @@ class V2DatasetMixin:
             "keyword": self.keyword,
             "access_rights": self._generate_v2_access_rights() if self.access_rights else None,
             "is_output_of": self._generate_v2_dataset_projects(),
+            "bibliographic_citation": self.bibliographic_citation,
         }
 
         if file_set := getattr(self, "file_set", None):

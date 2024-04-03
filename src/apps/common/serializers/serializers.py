@@ -20,7 +20,7 @@ from rest_framework.serializers import ValidationError
 from rest_framework.settings import api_settings
 from rest_framework.utils import html, model_meta
 
-from apps.common.serializers.fields import MultiLanguageField, PrivateEmailField
+from apps.common.serializers.fields import MultiLanguageField, NullableCharField, PrivateEmailField
 
 logger = logging.getLogger(__name__)
 
@@ -493,6 +493,9 @@ class CommonModelSerializer(PatchModelSerializer, serializers.ModelSerializer):
         **serializers.ModelSerializer.serializer_field_mapping,
         # Default to using MultiLanguageField serializer field for all HStoreFields
         postgres_fields.HStoreField: MultiLanguageField,
+        # Default to using NullableCharField for CharField and TextField
+        models.CharField: NullableCharField,
+        models.TextField: NullableCharField,
         # Hide emails by default
         models.EmailField: PrivateEmailField,
     }

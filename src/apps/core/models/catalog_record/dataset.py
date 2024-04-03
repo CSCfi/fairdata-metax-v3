@@ -2,6 +2,7 @@ import logging
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, HStoreField
+from django.core.validators import MinLengthValidator
 from django.db import models
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -124,6 +125,12 @@ class Dataset(V2DatasetMixin, CatalogRecord):
     )
     other_identifiers = models.ManyToManyField(
         OtherIdentifier,
+        blank=True,
+    )
+    bibliographic_citation = models.TextField(
+        help_text="Preferred bibliographic citation.",
+        validators=[MinLengthValidator(1)],
+        null=True,
         blank=True,
     )
     deprecated = models.DateTimeField(null=True)

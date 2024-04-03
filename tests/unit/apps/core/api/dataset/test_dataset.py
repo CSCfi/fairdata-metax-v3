@@ -777,6 +777,15 @@ def test_create_dataset_with_extra_fields(
     assert res.status_code == 201
 
 
+def test_dataset_citation(admin_client):
+    minimal_json = {"title": {"en": "hello world"}, "bibliographic_citation": "   some text here "}
+    res = admin_client.post("/v3/datasets", minimal_json, content_type="application/json")
+    assert res.status_code == 201
+    assert res.data == matchers.DictContaining(
+        {"title": {"en": "hello world"}, "bibliographic_citation": "some text here"}
+    )
+
+
 def test_get_dataset_include_nulls(admin_client, dataset_a_json, data_catalog, reference_data):
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 201

@@ -238,5 +238,18 @@ class MultiLanguageField(serializers.HStoreField):
         super().__init__(**kwargs)
 
 
+class NullableCharField(serializers.CharField):
+    """CharField that converts empty strings to nulls if allowed."""
+
+    def run_validation(self, data):
+        # CharField checks for empty string in run_validation
+        # instead of to_internal_value.
+        if self.allow_null:
+            is_empty = data == "" or (self.trim_whitespace and str(data).strip() == "")
+            if is_empty:
+                data = None
+        return super().run_validation(data)
+
+
 class PrivateEmailField(serializers.EmailField):
     """Email field that is hidden by CommonModelSerializer by default."""

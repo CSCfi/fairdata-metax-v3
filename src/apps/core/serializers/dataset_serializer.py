@@ -187,6 +187,7 @@ class DatasetSerializer(CommonNestedModelSerializer):
             "id",  # read only
             "access_rights",
             "actors",
+            "bibliographic_citation",
             "cumulative_state",
             "data_catalog",
             "description",

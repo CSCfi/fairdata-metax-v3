@@ -188,7 +188,7 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_create_dataset_with_extra_fields
 
-## test_get_dataset_include_nulls
+## test_dataset_citation
 
-### :::tests.unit.apps.core.api.dataset.test_dataset.test_get_dataset_include_nulls
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_dataset_citation
 
