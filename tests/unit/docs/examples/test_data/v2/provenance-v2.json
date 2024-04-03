@@ -2,14 +2,14 @@
   "provenance": [
     {
       "title": {
-        "en": "Title"
+        "fi": "otsikko"
       },
       "description": {
-        "en": "Description"
+        "fi": "kuvaus"
       },
       "event_outcome": {
-        "identifier": "http://uri.suomi.fi/codelist/fairdata/event_outcome/code/success",
-        "in_scheme": "http://uri.suomi.fi/codelist/fairdata/event_outcome",
+        "identifier": "http://example.fi/event_outcome/code/success",
+        "in_scheme": "http://example.fi/event_outcome",
         "pref_label": {
           "en": "Success",
           "fi": "Onnistunut",
@@ -18,20 +18,25 @@
         }
       },
       "lifecycle_event": {
-        "identifier": "http://uri.suomi.fi/codelist/fairdata/lifecycle_event/code/destroyed",
-        "in_scheme": "http://uri.suomi.fi/codelist/fairdata/lifecycle_event",
+        "identifier": "http://example.fi/lifecycle_event/code/planned",
+        "in_scheme": "http://example.fi/lifecycle_event",
         "pref_label": {
-          "en": "Destroyed",
-          "fi": "Tuhottu",
-          "und": "Tuhottu"
+          "en": "Planned",
+          "fi": "Suunniteltu",
+          "und": "Planned"
         }
       },
       "outcome_description": {
-        "en": "Destruction complete"
+        "en": "Descriptive outcome"
       },
       "spatial": {
         "full_address": "Annankatu 5",
-        "geographic_name": "Random Test Location"
+        "geographic_name": "Random test location",
+        "altitude_in_meters": "5",
+        "place_uri": {
+          "identifier": "http://example.fi/spatial/1234"
+        },
+        "as_wkt": ["POINT(27.74209 64.23567)", "POINT(27.73833 64.23114)"]
       },
       "temporal": {
         "end_date": "2023-06-20T00:00:00.000Z",
@@ -42,29 +47,15 @@
           "@type": "Person",
           "member_of": {
             "@type": "Organization",
-            "identifier": "http://uri.suomi.fi/codelist/fairdata/organization/code/09206320",
+            "identifier": "http://example.fi/url-1234",
             "name": {
-              "en": "CSC – IT Center for Science",
-              "fi": "CSC - Tieteen tietotekniikan keskus Oy",
-              "sv": "CSC – IT Center for Science",
-              "und": "CSC - Tieteen tietotekniikan keskus Oy"
+              "en": "example organization",
+              "fi": "esimerkkiorganisaatio",
+              "sv": "exampelorganisation",
+              "und": "example organization"
             }
           },
           "name": "Olemassaolematon Henkilö"
-        },
-        {
-          "@type": "Person",
-          "member_of": {
-            "@type": "Organization",
-            "identifier": "http://uri.suomi.fi/codelist/fairdata/organization/code/09206320",
-            "name": {
-              "en": "CSC – IT Center for Science",
-              "fi": "CSC - Tieteen tietotekniikan keskus Oy",
-              "sv": "CSC – IT Center for Science",
-              "und": "CSC - Tieteen tietotekniikan keskus Oy"
-            }
-          },
-          "name": "Unexisting Entity"
         }
       ]
     }

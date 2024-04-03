@@ -8,13 +8,20 @@
         "fi": "kuvaus"
       },
       "spatial": {
-        "url": "http://www.yso.fi/onto/onto/yso/c_9908ce39"
+        "full_address": "Annankatu 5",
+        "geographic_name": "Random test location",
+        "altitude_in_meters": 5,
+        "reference": {
+          "url": "http://example.fi/spatial/1234"
+        },
+        "as_wkt": "POINT(27.74209 64.23567)",
+        "custom_wkt": ["POINT(27.73833 64.23114)"]
       },
       "lifecycle_event": {
-        "url": "http://uri.suomi.fi/codelist/fairdata/lifecycle_event/code/planned"
+        "url": "http://example.fi/lifecycle_event/code/planned"
       },
       "event_outcome": {
-        "url": "http://uri.suomi.fi/codelist/fairdata/event_outcome/code/success"
+        "url": "http://example.fi/event_outcome/code/success"
       },
       "outcome_description": {
         "en": "Descriptive outcome"
@@ -26,14 +33,10 @@
       "is_associated_with": [
         {
           "organization": {
-            "pref_label": {
-              "fi": "CSC"
-            },
-            "code": "20000",
-            "in_scheme": "https://joku.schema.fi"
+            "url": "http://example.fi/url-1234"
           },
           "person": {
-            "name": "john"
+            "name": "Olemassaolematon Henkilö"
           }
         }
       ]

@@ -241,11 +241,13 @@ In Metax V2 `as_wkt` was filled in from reference data if it was empty.
 In V3, reference data geometry is in `reference.as_wkt` string and user-provided
 geometry in `custom_wkt` list.
 
-| V1-V2 field        | V3 field                                    |
-|--------------------|---------------------------------------------|
-| alt [str]          | altitude_in_meters [int]                    |
-| place_uri [object] | reference [object]                          |
-| as_wkt [list]      | custom_wkt [list] or reference.as_wkt [str] |
+| V1-V2 field                   | V3 field                 | Notes                 |
+|-------------------------------|--------------------------|-----------------------|
+| alt [str]                     | altitude_in_meters [int] |                       |
+| as_wkt [list]                 | custom_wkt [list]        | user defined wkt      |
+| place_uri [object]            | reference [object]       |                       |
+| place_uri.identifier [object] | reference.url [object]   |                       |
+| as_wkt [list]                 | reference.as_wkt [str]   | reference defined wkt |
 
 
 #### Temporal coverage
@@ -260,9 +262,9 @@ Temporal coverage objects now use dates instead of datetime values.
 
 #### Entity relations
 
-| V1-V2 field              | V3 field                |
-|--------------------------|-------------------------|
-| entity.identifier [dict] | entity_identifier [str] |
+| V1-V2 field              | V3 field                       |
+|--------------------------|--------------------------------|
+| entity.identifier [dict] | entity.entity_identifier [str] |
 
 
 #### Provenance
@@ -288,19 +290,19 @@ Biggest change in provenance field is that it is its own object in database. Pro
 Remote resources have gained support for title and description in multiple languages. Some
 other fields have been removed or simplified:
 
-| V1-V2 field                         | V3 field                                              |
-|-------------------------------------|-------------------------------------------------------|
-| identifier [str]                    | :no_entry:                                            |
-| title [str]                         | title [dict] :star:                                   |
-| description [str]                   | description [dict] :star:                             |
-| modified [date]                     | :no_entry:                                            |
-| byte_size [int]                     | :no_entry:                                            |
-| access_url [object]                 | access_url [url] :star:                               |
-| download_url [object]               | download_url [url] :star:                             |
-| checksum [object]                   | checksum [algorithm:value], e.g. "sha256:f00f" :star: |
-| license [list]                      | :no_entry:                                            |
-| resource_type [object]              | :no_entry:                                            |
-| has_object_characteristics [object] | :no_entry:                                            |
+| V1-V2 field                         | V3 field                   | Notes                     |
+|-------------------------------------|----------------------------|---------------------------|
+| access_url [object]                 | access_url [url]           |                           |
+| checksum [object]                   | checksum [algorithm:value] | e.g. "sha256:f00f"        |
+| description [dict]                  | description [dict]         |                           |
+| download_url [object]               | download_url [url]         |                           |
+| title [dict]                        | title [dict]               |                           |
+| identifier [str]                    | **Not used in V3**         |                           |
+| modified [date]                     | **Not used in V3**         |                           |
+| byte_size [int]                     | **Not used in V3**         |                           |
+| license [list]                      | **Not used in V3**         |                           |
+| resource_type [object]              | **Not used in V3**         |                           |
+| has_object_characteristics [object] | **Not used in V3**         |                           |
 
 
 ### Query parameters
@@ -355,9 +357,9 @@ They have been moved under `/v3/` together with the former `/rest/` style endpoi
 | V1-V2 endpoint                               | V3 endpoint                                         |
 |----------------------------------------------|-----------------------------------------------------|
 | `/rpc/datasets/get_minimal_dataset_template` | :question:                                          |
-| `/rpc/datasets/set_preservation_identifier`  | **Not used in V3**                                      |
-| `/rpc/datasets/refresh_directory_content`    | **Not used in V3**                                      |
-| `/rpc/datasets/fix_deprecated`               | **Not used in V3**                                      |
+| `/rpc/datasets/set_preservation_identifier`  | **Not used in V3**                                  |
+| `/rpc/datasets/refresh_directory_content`    | **Not used in V3**                                  |
+| `/rpc/datasets/fix_deprecated`               | **Not used in V3**                                  |
 | `/rpc/datasets/flush_user_data`              | `DELETE /v3/users/<id>`                             |
 | `/rpc/files/delete_project`                  | `DELETE /v3/files?csc_project={project}`            |
 | `/rpc/files/flush_project`                   | `DELETE /v3/files?csc_project={project}&flush=true` |
@@ -398,83 +400,6 @@ You don't have to include every field when modifying dataset, only the ones you 
     ```json
     ---8<--- "tests/unit/docs/examples/test_data/dataset_api/modify-dataset.json"
     ```
-
-## Data Catalog
-
-### Field names
-
-| V1-V2 field name                       | V3 field name                            |
-|----------------------------------------|------------------------------------------|
-| catalog_json                           | :no_entry:                               |
-| catalog_json/access_rights [object]    | access_rights [object] :star:            |
-| catalog_json/dataset_versioning [bool] | dataset_versioning_enabled [bool] :star: |
-| catalog_json/harvested [bool]          | harvested [bool] :star:                  |
-| catalog_json/language [object]         | language [object] :star:                 |
-| catalog_json/publisher [object]        | publisher [object] :star:                |
-| catalog_json/research_dataset_schema   | :no_entry:                               |
-| catalog_json/title [dict]              | title [dict] :star:                      |
-| catalog_record_group_create            | :question: [^2]                          |
-| catalog_record_group_edit              | :question: [^2]                          |
-| catalog_record_services_create [str]   | :question: [^2]                          |
-| catalog_record_services_edit [str]     | :question: [^2]                          |
-| catalog_record_services_read [str]     | :question: [^2]                          |
-| publish_to_etsin [bool]                | :question: [^4]                          |
-| publish_to_ttv [bool]                  | :question: [^4]                          |
-
-### Query parameters
-
-| V1-V2 parameter name | V3 parameter name                        |
-|----------------------|------------------------------------------|
-| N/A                  | `access_rights__access_type__pref_label` |
-| N/A                  | `access_rights__access_type__url`        |
-| N/A                  | `access_rights__description`             |
-| N/A                  | `dataset_schema`                         |
-| N/A                  | `dataset_versioning_enabled`             |
-| N/A                  | `harvested`                              |
-| N/A                  | `id`                                     |
-| N/A                  | `language__pref_label`                   |
-| N/A                  | `language__url`                          |
-| N/A                  | `publisher__homepage__title`             |
-| N/A                  | `publisher__homepage__url`               |
-| N/A                  | `publisher__name`                        |
-| N/A                  | `title`                                  |
-
-### Examples
-
-#### Creating a data-catalog
-
-!!! example
-
-    === "V3"
-        `POST /v3/data-catalogs`
-        ``` json
-        ---8<--- "tests/unit/docs/examples/test_data/v1-v3-data-catalog-v3.json"
-        ```
-
-    === "V2"
-
-        `POST /rest/v2/data-catalogs`
-        ``` json
-        ---8<--- "tests/unit/docs/examples/test_data/v1-v3-data-catalog-v2.json"
-        ```
-
-## Contract
-
-!!! warning
-    Contract implementation is still in progress, as it is part of Preservation model. Final specification might differ greatly from the one described here.
-
-### Field names
-
-| V1-V2 field name          | V3 field name |
-|---------------------------|---------------|
-| contract_json             | N/A           |
-| contract_json/contact     | contact       |
-| contract_json/created     | created       |
-| contract_json/description | description   |
-| contract_json/modified    | modified      |
-| contract_json/quota       | quota         |
-| contract_json/title       | title         |
-| contract_json/validity    | valid_until   |
 
 ## Reference data API changes
 
