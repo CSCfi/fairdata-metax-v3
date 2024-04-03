@@ -35,6 +35,15 @@ def test_update_dataset(
     assert res.status_code == 200
     assert_nested_subdict(dataset_b_json, res.data)
 
+def test_update_dataset_with_project(
+    admin_client, dataset_a_json, dataset_d_json, data_catalog, reference_data
+):
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    id = res.data["id"]
+    res = admin_client.patch(f"/v3/datasets/{id}", dataset_d_json, content_type="application/json")
+    assert res.status_code == 200
+    assert_nested_subdict(dataset_d_json, res.data)
+
 
 def test_filter_pid(
     admin_client, dataset_a_json, dataset_b_json, datacatalog_harvested_json, reference_data

@@ -41,6 +41,11 @@ def dataset_c_json():
 
 
 @pytest.fixture
+def dataset_d_json():
+    return load_test_json("dataset_d.json")
+
+
+@pytest.fixture
 def dataset_maximal_json():
     return load_test_json("dataset_maximal.json")
 

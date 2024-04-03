@@ -361,12 +361,23 @@ class V2DatasetMixin:
 
     def _add_funder_organization(self, project, funder_organization):
         if funder_organization:
-            legacy_project = next(
-                legacy_project
-                for legacy_project in self.dataset_json["research_dataset"]["is_output_of"]
-                if legacy_project["name"] == project["name"]
-            )
-            contributor_type = legacy_project["has_funding_agency"][0].get("contributor_type")
+            contributor_type = None
+            if dataset_json := getattr(self, "dataset_json", None):
+                # in v3 there's no contributor type.
+                # Contributor type will be passed on if the dataset is from the legacy metax.
+                legacy_project = next(
+                    (
+                        legacy_project
+                        for legacy_project in dataset_json["research_dataset"]["is_output_of"]
+                        if legacy_project["name"] == project["name"]
+                    ),
+                    None,
+                )
+                contributor_type = (
+                    None
+                    if legacy_project is None
+                    else legacy_project["has_funding_agency"][0].get("contributor_type")
+                )
 
             if "has_funding_agency" not in project:
                 project["has_funding_agency"] = []

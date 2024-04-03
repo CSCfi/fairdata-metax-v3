@@ -1,0 +1,24 @@
+{
+  "projects": [
+    {
+      "participating_organizations": [
+        {
+          "pref_label": {
+            "fi": "testi"
+          }
+        }
+      ],
+      "funding": [
+        {
+          "funder": {
+            "organization": {
+              "pref_label": {
+                "fi": "rahoittajataho"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
