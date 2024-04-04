@@ -108,6 +108,44 @@
     "dataset_groups_admin": ["tuni"]
   },
   {
+    "title": {
+      "en": "Åbo Akademi data catalog",
+      "fi": "Åbo Akademi aineistokatalogi",
+      "sv": "Åbo Akademi datakatalog"
+    },
+    "language": [
+      {
+        "url": "http://lexvo.org/id/iso639-3/fin"
+      }
+    ],
+    "harvested": true,
+    "publisher": {
+      "name": {
+        "en": "Testing",
+        "fi": "Testi"
+      },
+      "homepage": [
+        {
+          "title": {
+            "en": "Publisher organization website",
+            "fi": "Julkaisijaorganisaation kotisivu"
+          },
+          "url": "http://www.testi.fi/"
+        }
+      ]
+    },
+    "id": "urn:nbn:fi:att:data-catalog-abo",
+    "description": {
+      "en": "Data catalog for testing Åbo Akademi's Metax-integration",
+      "fi": "Testikatalogi Åbo Akademin Metax-integraatiolle",
+      "sv": "Datakatalog för testning av Åbo Akademis Metax-integration"
+    },
+    "dataset_versioning_enabled": false,
+    "dataset_schema": "att",
+    "dataset_groups_create": ["abo"],
+    "dataset_groups_admin": ["abo"]
+  },
+  {
     "id": "urn:nbn:fi:att:data-catalog-ida",
     "description": {
       "en": "Datasets stored in the IDA service",
