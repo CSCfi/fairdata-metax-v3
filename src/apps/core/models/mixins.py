@@ -80,6 +80,7 @@ class V2DatasetMixin:
     keyword: str
     data_catalog: object
     cumulation_started: datetime
+    cumulation_ended: datetime
     last_cumulative_addition: datetime
     preservation_identifier: str
     last_modified_by: get_user_model()
@@ -564,6 +565,8 @@ class V2DatasetMixin:
             doc["preservation_identifier"] = self.preservation.id
         if self.cumulation_started:
             doc["date_cumulation_started"] = self.cumulation_started
+        if self.cumulation_ended:
+            doc["date_cumulation_ended"] = self.cumulation_ended
         if self.last_cumulative_addition:
             doc["date_last_cumulative_addition"] = self.last_cumulative_addition
         if self.last_modified_by:

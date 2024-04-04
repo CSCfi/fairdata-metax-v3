@@ -172,6 +172,7 @@ class DatasetSerializer(CommonNestedModelSerializer):
         read_only_fields = (
             "created",
             "cumulation_started",
+            "cumulation_ended",
             "deprecated",
             "removed",
             "modified",
