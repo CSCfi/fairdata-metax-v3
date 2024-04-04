@@ -16,7 +16,7 @@ from apps.common.serializers import (
     CommonListSerializer,
     CommonNestedModelSerializer,
 )
-from apps.common.serializers.fields import ChecksumField, MediaTypeField
+from apps.common.serializers.fields import MediaTypeField, RemoteResourceChecksumField
 from apps.common.serializers.serializers import CommonModelSerializer
 from apps.core.helpers import get_metax_identifiers_by_pid
 from apps.core.models import AccessRights, CatalogHomePage, DatasetPublisher, OtherIdentifier
@@ -203,7 +203,7 @@ class TemporalModelSerializer(AbstractDatasetModelSerializer):
 class RemoteResourceSerializer(CommonModelSerializer):
     use_category = UseCategory.get_serializer_field()
     file_type = FileType.get_serializer_field(required=False, allow_null=True)
-    checksum = ChecksumField(required=False, allow_null=True)
+    checksum = RemoteResourceChecksumField(required=False, allow_null=True)
     mediatype = MediaTypeField(required=False, allow_null=True)
 
     class Meta:

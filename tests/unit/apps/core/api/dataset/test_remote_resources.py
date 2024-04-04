@@ -94,3 +94,20 @@ def test_remote_resources_and_files(
     assert resp.json() == {
         "non_field_errors": "Cannot have files and remote resources in the same dataset."
     }
+
+
+def test_remote_resources_checksum(
+    admin_client, remote_dataset_json, data_catalog, reference_data
+):
+    remote_dataset_json["remote_resources"][0]["checksum"] = "sha1:12345fff"
+    resp = admin_client.post("/v3/datasets", remote_dataset_json, content_type="application/json")
+    assert resp.status_code == 201
+    assert_nested_subdict(remote_dataset_json["remote_resources"], resp.json()["remote_resources"])
+
+    remote_dataset_json["remote_resources"][0]["checksum"] = "other:12345fff"
+    resp = admin_client.post("/v3/datasets", remote_dataset_json, content_type="application/json")
+    assert resp.status_code == 201
+
+    remote_dataset_json["remote_resources"][0]["checksum"] = "shzzhgfzh:12345fff"
+    resp = admin_client.post("/v3/datasets", remote_dataset_json, content_type="application/json")
+    assert resp.status_code == 400

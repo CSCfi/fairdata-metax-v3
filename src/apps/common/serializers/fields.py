@@ -10,6 +10,7 @@ from collections import OrderedDict
 
 import shapely.wkt
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.validators import RegexValidator
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.fields import empty, to_choices_dict
@@ -161,20 +162,38 @@ class URLReferencedModelField(serializers.RelatedField):
         )
 
 
-class ChecksumField(serializers.RegexField):
+class ChecksumField(serializers.CharField):
     allowed_algorithms = ["md5", "sha256", "sha512"]
-    checksum_regex = rf"^({'|'.join(allowed_algorithms)}):[a-z0-9_]+$"
 
     default_error_messages = {
         "invalid": _(
             "Checksum should be a lowercase string in format 'algorithm:value'. "
-            "Allowed algorithms are: {}."
-        ).format(allowed_algorithms)
+            "Allowed algorithms are: {allowed_algorithms}."
+        )
     }
 
-    def __init__(self, *args, **kwargs):
+    @property
+    def checksum_regex(self):
+        return rf"^({'|'.join(self.allowed_algorithms)}):[a-z0-9_]+$"
+
+    def fail(self, key, **kwargs):
+        kwargs["allowed_algorithms"] = self.allowed_algorithms
+        return super().fail(key, **kwargs)
+
+    def __init__(self, **kwargs):
         kwargs["trim_whitespace"] = True
-        super().__init__(self.checksum_regex, *args, **kwargs)
+        super().__init__(**kwargs)
+        validator = RegexValidator(
+            self.checksum_regex,
+            message=self.error_messages["invalid"].format(
+                allowed_algorithms=self.allowed_algorithms
+            ),
+        )
+        self.validators.append(validator)
+
+
+class RemoteResourceChecksumField(ChecksumField):
+    allowed_algorithms = ChecksumField.allowed_algorithms + ["sha1", "sha224", "sha384", "other"]
 
 
 class ListValidChoicesField(serializers.ChoiceField):
