@@ -148,12 +148,12 @@ class V2DatasetMixin:
         if altitude_in_meters := model_obj.altitude_in_meters:
             obj["alt"] = str(altitude_in_meters)
         as_wkt = []
-        if model_obj.reference:
-            if ref_wkt := model_obj.reference.as_wkt:
-                as_wkt.append(ref_wkt)
         if model_obj.custom_wkt:
             custom_wkt = model_obj.custom_wkt
             as_wkt.extend(custom_wkt)
+        elif model_obj.reference:
+            if ref_wkt := model_obj.reference.as_wkt:
+                as_wkt.append(ref_wkt)
         if len(as_wkt) > 0:
             obj["as_wkt"] = [v for v in as_wkt if v is not None]
         return obj

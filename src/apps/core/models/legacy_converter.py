@@ -20,6 +20,7 @@ from apps.common.helpers import (
     is_valid_url,
     omit_empty,
     process_nested,
+    remove_wkt_point_duplicates,
 )
 
 from .concepts import (
@@ -233,14 +234,6 @@ class LegacyDatasetConverter:
             "altitude_in_meters": spatial.get("alt"),
         }
         if spatial.get("as_wkt"):
-            location_wkt = None
-            if location:
-                location_wkt = (
-                    Location.objects.filter(url=location.get("url"))
-                    .values_list("as_wkt", flat=True)
-                    .first()
-                )
-
             # Remove invalid entries from as_wkt
             as_wkt = spatial.get("as_wkt", [])
             valid_wkt = []
@@ -248,11 +241,23 @@ class LegacyDatasetConverter:
                 if self.is_valid_wkt(wkt):
                     valid_wkt.append(wkt)
 
-            if valid_wkt != [location_wkt]:
-                obj["custom_wkt"] = valid_wkt
-
             if len(valid_wkt) != len(as_wkt):
                 self.mark_invalid(spatial, error="Invalid WKT", fields=["as_wkt"])
+
+            if (
+                len(valid_wkt) == 1
+                and location
+                and (
+                    location_wkt := (
+                        Location.objects.filter(url=location.get("url"))
+                        .values_list("as_wkt", flat=True)
+                        .first()
+                    )
+                )
+            ):
+                valid_wkt = remove_wkt_point_duplicates(location_wkt, valid_wkt)
+
+            obj["custom_wkt"] = valid_wkt or None
 
         return obj
 

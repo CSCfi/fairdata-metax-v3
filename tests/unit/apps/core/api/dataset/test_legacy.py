@@ -7,7 +7,7 @@ from apps.actors.factories import OrganizationFactory
 from apps.core.models import LegacyDataset
 from apps.core.models.catalog_record.dataset import Dataset
 
-pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.dataset, pytest.mark.legacy]
+pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.dataset, pytest.mark.adapter]
 
 
 def test_create_legacy_dataset(legacy_dataset_a):

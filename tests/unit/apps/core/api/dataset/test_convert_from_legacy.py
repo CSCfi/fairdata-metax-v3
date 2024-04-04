@@ -1,7 +1,7 @@
 import pytest
 from rest_framework.reverse import reverse
 
-pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.dataset, pytest.mark.legacy]
+pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.dataset, pytest.mark.adapter]
 
 
 def test_dataset_convert_from_legacy_minimal(user_client):

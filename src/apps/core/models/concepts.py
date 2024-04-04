@@ -189,7 +189,11 @@ class Spatial(AbstractBaseModel):
     )
 
     def __str__(self):
-        return self.geographic_name or str(next(iter(self.reference.pref_label.items())))
+        if self.geographic_name:
+            return self.geographic_name
+        if self.reference:
+            return str(next(iter(self.reference.pref_label.items())))
+        return "Spatial"
 
     class Meta(AbstractBaseModel.Meta):
         indexes = []

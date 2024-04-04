@@ -12,7 +12,7 @@ from apps.core.models.legacy_compatibility import LegacyCompatibility
 
 logger = logging.getLogger(__name__)
 
-pytestmark = [pytest.mark.legacy]
+pytestmark = [pytest.mark.adapter]
 
 
 @pytest.mark.parametrize(

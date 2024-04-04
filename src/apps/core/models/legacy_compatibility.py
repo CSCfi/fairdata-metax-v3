@@ -4,6 +4,7 @@ import logging
 import re
 from typing import Dict, Optional
 
+import shapely
 from deepdiff import DeepDiff, extract
 from django.conf import settings
 from django.utils.translation import gettext as _
@@ -65,7 +66,7 @@ class LegacyCompatibility:
             regex("root['research_dataset']['spatial'][\\d+]['as_wkt'][\\d+]"),
         ],
         "values_changed": [
-            regex("root['research_dataset']['spatial'][\\d+]['as_wkt'][\\d+]"),
+            regex(".*['spatial']([\\d+])?['as_wkt'][\\d+]"),
         ],
     }
 
@@ -137,6 +138,8 @@ class LegacyCompatibility:
 
         invalid = self.dataset.invalid_legacy_values or {}
 
+        wkt_re = re.compile(".*as_wkt\[\d+\]$")
+
         def pre_handler(value, path):
             if inv := invalid.get(path):
                 # Remove invalid values from comparison
@@ -147,8 +150,12 @@ class LegacyCompatibility:
                 else:
                     return None  # Remove entire object
             if type(value) is str:
+                value = value.strip()
+                if wkt_re.match(path):
+                    # Normalize wkt
+                    value = shapely.wkt.dumps(shapely.wkt.loads(value), rounding_precision=4)
                 # Remove leading and trailing whitespace
-                return value.strip()
+                return value
             if isinstance(value, dict):
                 # Omit empty values from dict
                 return omit_empty(value)
@@ -206,7 +213,7 @@ class LegacyCompatibility:
             v2_version,
             v3_version,
             ignore_order=True,
-            cutoff_intersection_for_pairs=1.0,
+            cutoff_intersection_for_pairs=0.85,
             cutoff_distance_for_pairs=1.0,
             exclude_paths=[
                 "id",

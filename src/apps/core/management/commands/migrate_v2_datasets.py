@@ -33,7 +33,7 @@ class Command(BaseCommand):
     allow_fail = False
     failed_datasets = []
     datasets = []
-    force_update = False
+    force = False
     updated = 0
     migrated = 0
     ok_after_update = 0
@@ -139,7 +139,7 @@ class Command(BaseCommand):
         if modified > dataset.last_successful_migration:
             return "modified"
 
-        if self.force_update:
+        if self.force:
             return "force"
         return None
 
@@ -320,7 +320,7 @@ class Command(BaseCommand):
         metax_instance = options.get("metax_instance")
         self.allow_fail = options.get("allow_fail")
         limit = options.get("pagination_size")
-        self.force_update = options.get("force_update")
+        self.force = options.get("force")
         self.migration_limit = options.get("stop_after")
 
         if identifiers:
@@ -365,7 +365,7 @@ class Command(BaseCommand):
         file = options.get("file")
         catalogs = options.get("catalogs")
         self.allow_fail = options.get("allow_fail")
-        self.force_update = options.get("force_update")
+        self.force = options.get("force")
         self.update_limit = options.get("stop_after")
         self.verbosity = options.get("verbosity")  # defaults to 1
 

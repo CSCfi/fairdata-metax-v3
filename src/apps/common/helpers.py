@@ -7,6 +7,7 @@ from datetime import datetime, timezone as tz
 from textwrap import dedent
 from typing import Dict, Optional
 
+import shapely
 from cachalot.api import cachalot_disabled
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -304,3 +305,15 @@ def ensure_dict(dct) -> dict:
     if not isinstance(dct, dict):
         raise serializers.ValidationError(f"Value is not a dict: {dct}")
     return dct
+
+
+def remove_wkt_point_duplicates(point: str, wkt_list: list) -> list:
+    """Remove points from `wkt_list` that are equal or very similar to `point`."""
+    output = []
+    p1 = shapely.wkt.loads(point)
+    for p2_wkt in wkt_list:
+        p2 = shapely.wkt.loads(p2_wkt)
+        if p2.geom_type == "Point" and p1.distance(p2) < 0.0001:
+            continue
+        output.append(p2_wkt)
+    return output
