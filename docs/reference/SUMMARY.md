@@ -215,6 +215,7 @@
                     - [test_metadata_provider](tests/unit/apps/core/models/test_metadata_provider.md)
                     - [test_models](tests/unit/apps/core/models/test_models.md)
                     - [test_publisher](tests/unit/apps/core/models/test_publisher.md)
+                    - [test_v2_integration](tests/unit/apps/core/models/test_v2_integration.md)
                     - [test_versioning](tests/unit/apps/core/models/test_versioning.md)
             - [download.api.test_download](tests/unit/apps/download/api/test_download.md)
             - files

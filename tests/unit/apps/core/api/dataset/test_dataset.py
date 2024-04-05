@@ -35,6 +35,7 @@ def test_update_dataset(
     assert res.status_code == 200
     assert_nested_subdict(dataset_b_json, res.data)
 
+
 def test_update_dataset_with_project(
     admin_client, dataset_a_json, dataset_d_json, data_catalog, reference_data
 ):

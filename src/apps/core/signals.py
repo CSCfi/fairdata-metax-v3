@@ -31,9 +31,11 @@ def handle_files_changed(sender, instance: FileSet, action, **kwargs):
 @receiver(post_delete, sender=Dataset)
 def delete_dataset_from_v2(sender, instance: Dataset, **kwargs):
     """Sync Metax V2 when deleting dataset from v3"""
-    pid = instance.persistent_identifier
+    if not settings.METAX_V2_INTEGRATION_ENABLED:
+        return
+
     host, headers = get_v2_request_settings()
-    res = requests.delete(url=f"{host}/{pid}", headers=headers)
+    res = requests.delete(url=f"{host}/{instance.id}", headers=headers)
 
     if res.status_code <= 204:
         logger.info(f"response form metax v2: {res}")
@@ -52,6 +54,8 @@ def get_v2_request_settings():
     headers = urllib3.make_headers(
         basic_auth=f"{settings.METAX_V2_USER}:{settings.METAX_V2_PASSWORD}",
     )
+    headers["Content-Type"] = "application/json"
+    headers["Accept"] = "application/json"
     return host, headers
 
 
@@ -62,15 +66,16 @@ def json_serial(obj):
     raise TypeError("Type %s not serializable" % type(obj))
 
 
-@receiver(dataset_updated, sender=DatasetSerializer)
+@receiver(dataset_updated)
 def update_dataset_in_v2(sender, data: Dataset, **kwargs):
+    if not settings.METAX_V2_INTEGRATION_ENABLED:
+        return
+
     v2_dataset = data.as_v2_dataset()
     v2_dataset["api_meta"] = {"version": 3}
     identifier = v2_dataset["identifier"]
     body = json.dumps(v2_dataset, cls=DjangoJSONEncoder)
     host, headers = get_v2_request_settings()
-    headers["Content-Type"] = "application/json"
-    headers["Accept"] = "application/json"
     _draft = "&draft=true" if v2_dataset["state"] == "draft" else ""
 
     try:
@@ -79,9 +84,8 @@ def update_dataset_in_v2(sender, data: Dataset, **kwargs):
         if response.status_code == 200:
             res = requests.put(url=f"{host}/{identifier}", data=body, headers=headers)
             logger.info(f"{res.status_code=}: {res.content=}, {res.headers=}")
-        elif (
-            v2_dataset["api_meta"]["version"] == 3
-            and v2_dataset["research_dataset"]["preferred_identifier"]
+        elif v2_dataset["api_meta"]["version"] == 3 and v2_dataset["research_dataset"].get(
+            "preferred_identifier"
         ):
             res = requests.post(url=f"{host}?migration_override", data=body, headers=headers)
             logger.info(f"{res.status_code=}: {res.content=}, {res.headers=}")
@@ -94,8 +98,11 @@ def update_dataset_in_v2(sender, data: Dataset, **kwargs):
         logger.exception(e)
 
 
-@receiver(dataset_created, sender=DatasetSerializer)
+@receiver(dataset_created)
 def create_dataset_to_v2(sender, data: Dataset, **kwargs):
+    if not settings.METAX_V2_INTEGRATION_ENABLED:
+        return
+
     v2_dataset = data.as_v2_dataset()
     if hasattr(v2_dataset["research_dataset"], "issued"):
         v2_dataset["research_dataset"]["issued"] = v2_dataset["research_dataset"]["issued"].date()
@@ -105,9 +112,8 @@ def create_dataset_to_v2(sender, data: Dataset, **kwargs):
     headers["Accept"] = "application/json"
     _draft = "&draft=true" if v2_dataset["state"] == "draft" else ""
     try:
-        if (
-            v2_dataset["api_meta"]["version"] == 3
-            and v2_dataset["research_dataset"]["preferred_identifier"]
+        if v2_dataset["api_meta"]["version"] == 3 and v2_dataset["research_dataset"].get(
+            "preferred_identifier"
         ):
             res = requests.post(
                 url=f"{host}?migration_override{_draft}", data=body, headers=headers

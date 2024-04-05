@@ -8,6 +8,10 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_update_dataset
 
+## test_update_dataset_with_project
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_update_dataset_with_project
+
 ## test_filter_pid
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_filter_pid

@@ -374,6 +374,8 @@ EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", False)
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 METAX_EMAIL_SENDER = env.str("METAX_EMAIL_SENDER", "noreply@fairdata.fi")
 
+# Syncing datasets to Metax V2
+METAX_V2_INTEGRATION_ENABLED = env.bool("METAX_V2_INTEGRATION_ENABLED", False)
 METAX_V2_HOST = env.str("METAX_V2_HOST", None)
 METAX_V2_USER = env.str("METAX_V2_USER", None)
 METAX_V2_PASSWORD = env.str("METAX_V2_PASSWORD", None)

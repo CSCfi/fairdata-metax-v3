@@ -58,7 +58,7 @@ class LegacyCompatibility:
             regex("root['research_dataset']['language'][\\d+]['title']['und']"),
             regex("root['research_dataset']['is_output_of'][\\d+]['homepage']"),
             regex(".*['contributor_role']$"),
-            "root['contract']", # TODO
+            "root['contract']",  # TODO
         ],
         "iterable_item_added": [
             regex("root['research_dataset']['spatial'][\\d+]['as_wkt'][\\d+]"),

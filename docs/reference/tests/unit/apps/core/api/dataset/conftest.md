@@ -20,6 +20,10 @@
 
 ### :::tests.unit.apps.core.api.dataset.conftest.dataset_c_json
 
+## dataset_d_json
+
+### :::tests.unit.apps.core.api.dataset.conftest.dataset_d_json
+
 ## dataset_maximal_json
 
 ### :::tests.unit.apps.core.api.dataset.conftest.dataset_maximal_json

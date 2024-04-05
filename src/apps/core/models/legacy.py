@@ -835,7 +835,7 @@ class LegacyDataset(Dataset):
         updated = False
 
         try:
-            with transaction.atomic(): # Undo update if e.g. serialization fails
+            with transaction.atomic():  # Undo update if e.g. serialization fails
                 self.attach_metadata_owner()
                 data = self.convert_dataset()
                 self.saving_legacy = True  # Enable less strict validation on save

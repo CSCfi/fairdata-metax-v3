@@ -132,7 +132,3 @@
 
 ### :::tests.conftest.tweaked_settings
 
-## mute_v2_requests
-
-### :::tests.conftest.mute_v2_requests
-
