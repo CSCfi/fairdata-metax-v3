@@ -228,13 +228,13 @@ In Metax V2 `as_wkt` was filled in from reference data if it was empty.
 In V3, reference data geometry is in `reference.as_wkt` string and user-provided
 geometry in `custom_wkt` list.
 
-| V1-V2 field                   | V3 field                 | Notes                 |
-|-------------------------------|--------------------------|-----------------------|
-| alt [str]                     | altitude_in_meters [int] |                       |
-| as_wkt [list]                 | custom_wkt [list]        | user defined wkt      |
-| place_uri [object]            | reference [object]       |                       |
-| place_uri.identifier [object] | reference.url [object]   |                       |
-| as_wkt [list]                 | reference.as_wkt [str]   | reference defined wkt |
+| V1-V2 field                   | V3 field                   | Notes                 |
+|-------------------------------|----------------------------|-----------------------|
+| alt [str]                     | altitude_in_meters [float] |                       |
+| as_wkt [list]                 | custom_wkt [list]          | user defined wkt      |
+| place_uri [object]            | reference [object]         |                       |
+| place_uri.identifier [object] | reference.url [object]     |                       |
+| as_wkt [list]                 | reference.as_wkt [str]     | reference defined wkt |
 
 
 #### Temporal coverage
@@ -277,19 +277,19 @@ Biggest change in provenance field is that it is its own object in database. Pro
 Remote resources have gained support for title and description in multiple languages. Some
 other fields have been removed or simplified:
 
-| V1-V2 field                         | V3 field                   | Notes                     |
-|-------------------------------------|----------------------------|---------------------------|
-| access_url [object]                 | access_url [url]           |                           |
-| checksum [object]                   | checksum [algorithm:value] | e.g. "sha256:f00f"        |
-| description [dict]                  | description [dict]         |                           |
-| download_url [object]               | download_url [url]         |                           |
-| title [dict]                        | title [dict]               |                           |
-| identifier [str]                    | **Not used in V3**         |                           |
-| modified [date]                     | **Not used in V3**         |                           |
-| byte_size [int]                     | **Not used in V3**         |                           |
-| license [list]                      | **Not used in V3**         |                           |
-| resource_type [object]              | **Not used in V3**         |                           |
-| has_object_characteristics [object] | **Not used in V3**         |                           |
+| V1-V2 field                         | V3 field                   | Notes              |
+|-------------------------------------|----------------------------|--------------------|
+| access_url [object]                 | access_url [url]           |                    |
+| checksum [object]                   | checksum [algorithm:value] | e.g. "sha256:f00f" |
+| description [dict]                  | description [dict]         |                    |
+| download_url [object]               | download_url [url]         |                    |
+| title [dict]                        | title [dict]               |                    |
+| identifier [str]                    | **Not used in V3**         |                    |
+| modified [date]                     | **Not used in V3**         |                    |
+| byte_size [int]                     | **Not used in V3**         |                    |
+| license [list]                      | **Not used in V3**         |                    |
+| resource_type [object]              | **Not used in V3**         |                    |
+| has_object_characteristics [object] | **Not used in V3**         |                    |
 
 
 ### Query parameters

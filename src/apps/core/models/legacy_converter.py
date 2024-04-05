@@ -17,6 +17,7 @@ from apps.common.helpers import (
     datetime_to_date,
     ensure_dict,
     ensure_list,
+    is_valid_float_str,
     is_valid_url,
     omit_empty,
     process_nested,
@@ -84,12 +85,22 @@ class LegacyDatasetConverter:
 
     def mark_invalid(self, obj: dict, error: str, fields=[]):
         """Mark object as being invalid."""
-        entry = {
-            "value": {k: v for k, v in obj.items() if not k.startswith("_")},
-            "error": error,
-        }
+        already_exists = "_invalid" in obj
+        entry = obj.setdefault("_invalid", {})
+        entry.update(
+            {
+                "value": {k: v for k, v in obj.items() if not k.startswith("_")},
+                "error": error,
+            }
+        )
+
         if fields:
-            entry["fields"] = fields
+            # Add fields to existing ones if any
+            if not already_exists or "fields" in entry:
+                entry.setdefault("fields", []).extend(fields)
+        else:
+            # Remove fields key to indicate entire object is bad
+            entry.pop("fields", None)
         obj["_invalid"] = entry
 
     def mark_fixed(self, obj: dict, error: str, fields=[], fixed_value=None):
@@ -233,6 +244,9 @@ class LegacyDatasetConverter:
             "full_address": spatial.get("full_address"),
             "altitude_in_meters": spatial.get("alt"),
         }
+        if (alt := spatial.get("alt")) and not is_valid_float_str(alt):
+            self.mark_invalid(spatial, error="Invalid number", fields=["alt"])
+
         if spatial.get("as_wkt"):
             # Remove invalid entries from as_wkt
             as_wkt = spatial.get("as_wkt", [])

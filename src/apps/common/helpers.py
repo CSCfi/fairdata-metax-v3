@@ -218,6 +218,14 @@ def is_valid_uuid(val):
         return False
 
 
+def is_valid_float_str(val):
+    try:
+        float(val)
+        return True
+    except ValueError:
+        return False
+
+
 def is_valid_url(val):
     try:
         serializers.URLField().run_validation(val)

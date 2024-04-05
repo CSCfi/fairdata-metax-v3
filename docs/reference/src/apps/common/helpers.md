@@ -52,6 +52,10 @@
 
 ### :::src.apps.common.helpers.is_valid_uuid
 
+## is_valid_float_str
+
+### :::src.apps.common.helpers.is_valid_float_str
+
 ## is_valid_url
 
 ### :::src.apps.common.helpers.is_valid_url
@@ -87,4 +91,8 @@
 ## ensure_dict
 
 ### :::src.apps.common.helpers.ensure_dict
+
+## remove_wkt_point_duplicates
+
+### :::src.apps.common.helpers.remove_wkt_point_duplicates
 

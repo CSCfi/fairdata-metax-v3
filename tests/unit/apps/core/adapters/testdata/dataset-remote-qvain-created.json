@@ -62,7 +62,8 @@
           }
         },
         "full_address": "Keilaniemi 18",
-        "geographic_name": "Keilaniemi"
+        "geographic_name": "Keilaniemi",
+        "alt": "123456.7890123456789"
       }
     ],
     "language": [

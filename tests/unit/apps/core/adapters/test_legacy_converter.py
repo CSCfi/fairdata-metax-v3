@@ -1,7 +1,7 @@
 import pytest
 
-from apps.core.models.legacy_converter import LegacyDatasetConverter
 from apps.core.factories import LocationFactory
+from apps.core.models.legacy_converter import LegacyDatasetConverter
 
 pytestmark = [pytest.mark.adapter]
 
@@ -48,3 +48,23 @@ def test_is_valid_wkt(converter):
     assert converter.is_valid_wkt("POINT (1.2 3.4)") is True
     assert converter.is_valid_wkt("point(1.2 3.4)") is True
     assert converter.is_valid_wkt("60° 15′ 11″ N, 24° 4′ 4″ E") is False
+
+
+def test_invalid_spatial_as_wkt(converter):
+    spatial = {
+        "geographic_name": "Alt is a number",
+        "alt": "100.123",
+        "as_wkt": ["ei tää oo wkt"],
+    }
+    converter.convert_spatial(spatial)
+    assert spatial["_invalid"]["fields"] == ["as_wkt"]
+
+
+def test_invalid_spatial_multiple_errors(converter):
+    spatial = {
+        "geographic_name": "Alt is not a number",
+        "alt": "100 metriä",
+        "as_wkt": ["ei tää oo wkt"],
+    }
+    converter.convert_spatial(spatial)
+    assert set(spatial["_invalid"]["fields"]) == {"alt", "as_wkt"}

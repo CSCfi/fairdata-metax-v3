@@ -133,6 +133,15 @@ class LegacyCompatibility:
 
         return errors
 
+    def normalize_float_str(self, value: str) -> str:
+        """Limit number of significant digits for float value in string."""
+        try:
+            value = float(value)
+            value = f"{value:.8g}"
+        except ValueError:
+            pass
+        return value
+
     def normalize_dataset(self, data: dict) -> dict:
         """Process dataset json dict to avoid unnecessary diff values."""
 
@@ -154,6 +163,9 @@ class LegacyCompatibility:
                 if wkt_re.match(path):
                     # Normalize wkt
                     value = shapely.wkt.dumps(shapely.wkt.loads(value), rounding_precision=4)
+                elif path.endswith(".alt"):
+                    # Normalize altitude values
+                    value = self.normalize_float_str(value)
                 # Remove leading and trailing whitespace
                 return value
             if isinstance(value, dict):

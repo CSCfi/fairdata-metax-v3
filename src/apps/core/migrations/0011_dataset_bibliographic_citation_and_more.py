@@ -14,11 +14,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='dataset',
             name='bibliographic_citation',
-            field=models.TextField(blank=True, null=True, validators=[django.core.validators.MinLengthValidator(1)]),
+            field=models.TextField(blank=True, help_text='Preferred bibliographic citation.', null=True, validators=[django.core.validators.MinLengthValidator(1)]),
         ),
         migrations.AddField(
             model_name='historicaldataset',
             name='bibliographic_citation',
-            field=models.TextField(blank=True, null=True, validators=[django.core.validators.MinLengthValidator(1)]),
+            field=models.TextField(blank=True, help_text='Preferred bibliographic citation.', null=True, validators=[django.core.validators.MinLengthValidator(1)]),
         ),
     ]

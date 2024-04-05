@@ -173,7 +173,7 @@ class Spatial(AbstractBaseModel):
     )
     full_address = models.CharField(max_length=512, blank=True, null=True)
     geographic_name = models.CharField(max_length=512, blank=True, null=True)
-    altitude_in_meters = models.IntegerField(
+    altitude_in_meters = models.FloatField(
         blank=True,
         null=True,
         help_text="The altitude of the geographical area (meters from WGS84 reference)",

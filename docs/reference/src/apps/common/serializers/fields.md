@@ -16,6 +16,10 @@
 
 ### :::src.apps.common.serializers.fields.ChecksumField
 
+## RemoteResourceChecksumField
+
+### :::src.apps.common.serializers.fields.RemoteResourceChecksumField
+
 ## ListValidChoicesField
 
 ### :::src.apps.common.serializers.fields.ListValidChoicesField
