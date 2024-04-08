@@ -18,7 +18,7 @@ class FunderSerializer(CommonNestedModelSerializer):
 
 
 class FundingModelSerializer(CommonNestedModelSerializer):
-    funder = FunderSerializer(many=False, required=True)
+    funder = FunderSerializer(required=False, allow_null=True)
 
     class Meta:
         model = Funding

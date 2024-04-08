@@ -158,7 +158,9 @@ class Funding(AbstractBaseModel):
 
     copier = ModelCopier(copied_relations=["funder"], parent_relations=["projects"])
 
-    funder = models.ForeignKey("Funder", related_name="funding", on_delete=models.CASCADE)
+    funder = models.ForeignKey(
+        "Funder", related_name="funding", on_delete=models.SET_NULL, blank=True, null=True
+    )
     funding_identifier = models.CharField(max_length=255, blank=True, null=True)
 
 

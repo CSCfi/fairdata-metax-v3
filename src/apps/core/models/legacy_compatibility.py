@@ -81,7 +81,9 @@ class LegacyCompatibility:
     def should_ignore_removed(self, path) -> bool:
         """Allow removing None or [] dictionary values."""
         removed_value = extract(self.dataset.dataset_json, path)
-        if removed_value in [None, []]:
+        if type(removed_value) is str:
+            return removed_value.strip() == ""
+        elif removed_value in [None, []]:
             return True
         return False
 

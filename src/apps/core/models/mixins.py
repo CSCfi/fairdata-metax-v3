@@ -423,11 +423,12 @@ class V2DatasetMixin:
             funder_identifier = None
 
             for fund in dataset_project.funding.all():
-                funder_type = fund.funder.funder_type
-                funder_organization = fund.funder.organization
+                if funder := fund.funder:
+                    funder_type = funder.funder_type
+                    funder_organization = funder.organization
+                    self._add_funder_type(project, funder_type)
+                    self._add_funder_organization(project, funder_organization)
                 funder_identifier = fund.funding_identifier
-                self._add_funder_type(project, funder_type)
-                self._add_funder_organization(project, funder_organization)
                 self._add_funder_identifier(project, funder_identifier)
 
             self._add_funder_source_organizations(
