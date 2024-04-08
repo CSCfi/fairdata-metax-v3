@@ -90,7 +90,7 @@ class DatasetFilter(filters.FilterSet):
         label="person name",
     )
     actors__role = MultipleCharFilter(
-        field_name="actors__role",
+        field_name="actors__roles",
         max_length=512,
         lookup_expr="icontains",
         label="actor role",
@@ -115,7 +115,6 @@ class DatasetFilter(filters.FilterSet):
     preservation__contract = filters.CharFilter(
         max_length=512,
         label="preservation contract",
-        lookup_expr="icontains",
         field_name="preservation__contract",
     )
     preservation__state = filters.MultipleChoiceFilter(

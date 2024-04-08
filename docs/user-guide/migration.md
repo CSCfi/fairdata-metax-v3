@@ -17,19 +17,6 @@ API version can always be found in the [Swagger documentation](/v3/swagger/).
 
 Unlike Metax V1-V2, V3 does not use basic authentication headers. Instead, a bearer token is provided to users and integration customers. More details in [End User Access](./end-user-access.md).
 
-## Changes in query parameters
-
-V3 query parameters follow the hierarchy structure of the object schema. Consider the following V3 dataset:
-
-!!! example
-    `POST /v3/datasets`
-    ```json
-    ---8<--- "tests/unit/docs/examples/test_data/v1-v3-dataset-v3.json"
-    ```
-
-In this example, if you would like to find this dataset with person name, you would use query parameter `actors__person__name=teppo+testaaja`, as the field `actors` is a list of objects that include a `person` object with the field `name`.
-
-
 ## Dataset
 
 Also named CatalogRecord in V1-V2. Main differences are: removal of the research_dataset nested object, and more descriptive field names.
@@ -307,34 +294,69 @@ other fields have been removed or simplified:
 
 ### Query parameters
 
-| V1-V2 parameter name    | V3 parameter name                          |
-|-------------------------|--------------------------------------------|
-| actor_filter            | `actors__organization__pref_label` :clock: |
-| actor_filter            | `actors__person` :clock:                   |
-| api_version             | :no_entry:                                 |
-| contract_org_identifier | :question:                                 |
-| curator                 | `actors__roles__curator` :clock:           |
-| data_catalog            | `data_catalog__id` :star:                  |
-| editor_permissions_user | :question: [^2]                            |
-| fields                  | fields :clock:                             |
-| include_legacy          | :no_entry:                                 |
-| latest                  | :question: [^3]                            |
-| metadata_owner_org      | `metadata_owner__organization` :star:      |
-| metadata_provider_user  | `metadata_owner__user` :star:              |
-| N/A                     | `data_catalog__title` :star:               |
-| N/A                     | `title` :star:                             |
-| N/A                     | search :star:                              |
-| owner_id                | :no_entry:                                 |
-| pas_filter              | :question: [^5]                            |
-| preferred_identifier    | `persistent_identifier`                    |
-| projects                | :clock:                                    |
-| research_dataset_fields | :no_entry:                                 |
-| user_created            | `metadata_owner__user` :star:              |
+V3 query parameters follow the hierarchy structure of the object schema. Consider the following V3 dataset:
+
+!!! example
+    `POST /v3/datasets`
+    ```json
+    ---8<--- "tests/unit/docs/examples/test_data/simple_query_param_example_dataset.json"
+    ```
+
+In this example, you could find this dataset using the query parameter `title=A V3 Test Dataset`. Or, if you would like to find this dataset with person name, you would use query parameter `actors__person__name=Teppo+Testaaja`, as the field `actors` is a list of objects that include a `person` object with the field `name`.
+
+#### Changes in query parameters
+
+These are the *changed* query parameters used in datasets listing (`/v3/datasets`). Complete list of query parameters can be found in the [Swagger documentation](/v3/swagger).
+
+| V1-V2 parameter name    | V3 parameter name                      | Notes                                                                                                                       |
+|-------------------------|----------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
+| actor_filter            | actors__role                           |                                                                                                                             |
+| actor_filter            | actors__person__name                   |                                                                                                                             |
+| actor_filter            | actors__organization__pref_label       |                                                                                                                             |
+| api_version             | **not used in V3**                     |                                                                                                                             |
+| contract_org_identifier | **not used in V3**                     |                                                                                                                             |
+| curator                 | **not used in V3**                     | See `actor__filter` changes.                                                                                                |
+| data_catalog            | data_catalog__id                       |                                                                                                                             |
+| data_catalog            | data_catalog__title                    |                                                                                                                             |
+| editor_permissions_user | only_owned_or_shared                   | :clock: All related query parameters not implemented yet :clock:                                                            |
+| fields                  |                                        | :clock: Not implemented yet :clock:                                                                                         |
+| include_legacy          | **not used in V3**                     |                                                                                                                             |
+| include_user_metadata   | **not used in V3**                     | File and directory specific metadata is included in files and directories endpoint response. See [Dataset-specific file metadata](#dataset-specific-file-metadata). |
+| latest                  | latest_versions                        |                                                                                                                             |
+| metadata_owner_org      | metadata_owner__organization           |                                                                                                                             |
+| metadata_provider_user  | metadata_owner__user                   |                                                                                                                             |
+| N/A                     | access_rights__access_type__pref_label |                                                                                                                             |
+| N/A                     | actors__roles_creator                  |                                                                                                                             |
+| N/A                     | deprecated                             |                                                                                                                             |
+| N/A                     | expand_catalog                         | Include full data catalog in dataset response instead of just an identifier.                                                |
+| N/A                     | field_of_science__pref_label           |                                                                                                                             |
+| N/A                     | file_type                              |                                                                                                                             |
+| N/A                     | format                                 | Format of response, `json` or `api` (HTML).                                                                                 |
+| N/A                     | has_files                              |                                                                                                                             |
+| N/A                     | include_nulls                          | Include also null values in the response.                                                                                   |
+| N/A                     | include_removed                        | Include also removed datasets in response.                                                                                  |
+| N/A                     | infrastructure__pref_label             |                                                                                                                             |
+| N/A                     | keyword                                |                                                                                                                             |
+| N/A                     | pagination                             | Use pagination true/false.                                                                                                  |
+| N/A                     | preservation__contract                 |                                                                                                                             |
+| N/A                     | projects__title                        |                                                                                                                             |
+| N/A                     | search                                 | Free text search from PID, title, theme, actors, description, keywords, relation id's, and other identifiers.               |
+| N/A                     | storage_services                       | Storage service(s) used for dataset files, separated by a comma.                                                            |
+| N/A                     | strict                                 | Enable/disable errors on unknown query parameters/request values.                                                           |
+| N/A                     | title                                  |                                                                                                                             |
+| owner_id                | **not used in V3**                     |                                                                                                                             |
+| pas_filter              | **not used in V3**                     |                                                                                                                             |
+| preferred_identifier    | persistent_identifier                  |                                                                                                                             |
+| preservation_state      | preservation__state                    |                                                                                                                             |
+| projects                | csc_projects                           |                                                                                                                             |
+| research_dataset_fields | **not used in V3**                     | Research dataset object not present in V3.                                                                                  |
+| user_created            | metadata_owner__user                   |                                                                                                                             |
+
 
 ### Endpoints
 
 !!! NOTE
-    You can check the supported http methods from the [Swagger documentation](/swagger/), this table lists only the resource path changes.
+    You can check the supported http methods from the [Swagger documentation](/v3/swagger/), this table lists only the resource path changes.
 
 | V1-V2 endpoint                              | V3 endpoint                        |
 |---------------------------------------------|------------------------------------|
@@ -537,7 +559,7 @@ have been removed. To get details for a directory,
 contains the directory details for `<path>` in the `parent_directory` object.
 
 Many of the parameters for `/v3/files` and `/v3/directories` have been renamed or have other changes.
-For a full list of supported parameters, see the [Swagger documentation](/swagger/).
+For a full list of supported parameters, see the [Swagger documentation](/v3/swagger/).
 
 #### Examples
 

@@ -1,0 +1,24 @@
+{
+  "data_catalog": "urn:data-catalog-example",
+  "title": {
+    "fi": "V3 Esimerkkiaineisto",
+    "en": "A V3 Test Dataset"
+  },
+  "persistent_identifier": "test-identifier:1234567890",
+  "actors": [
+    {
+      "roles": ["creator", "publisher"],
+      "person": {
+        "name": "Teppo Testaaja"
+      },
+      "organization": {
+        "url": "http://uri.suomi.fi/codelist/fairdata/organization/code/09206320"
+      }
+    }
+  ],
+  "description": {
+    "fi": "V3 esimerkkiaineiston kuvaus.",
+    "en": "Description of the V3 test dataset."
+  },
+  "state": "published"
+}
