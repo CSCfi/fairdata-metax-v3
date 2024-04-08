@@ -1,165 +1,198 @@
-# Fairdata Metax Service
+# fairdata-metax-service
 
-Metax is a metadata storage for Finnish research data.
+* Metax is a metadata storage for Finnish research data
 
 ## Getting started
 
+* How to get started with `fairdata-metax-service`
+
 ### Python dependencies
 
-This repository uses Poetry for managing Python dependencies securely. Poetry generates very strict requirements.txt files, while enabling easy update of minor security and bug patches from pip with `pyproject.toml` defined version constraints. Generated requirements.txt is guaranteed to lock all dependencies and sub-dependencies. Poetry file `poetry.lock` stores hashes of all dependencies, if the integrity of the dependency-tree ever needs to be verified. 
-
-For full documentation of Poetry, visit the [official documentation](https://python-poetry.org/docs/)
+* This repository uses Poetry for managing Python dependencies securely
+* Poetry generates a very strict `requirements.txt` file
+* Poetry enables easy updates of minor security/bug patches from pip with `pyproject.toml`-defined version constraints
+* The generated `requirements.txt` file is guaranteed to lock all dependencies and sub-dependencies
+* The Poetry file `poetry.lock` stores hashes of all dependencies, if the integrity of the dependency-tree ever needs to be verified
+* [Poetry documentation](https://python-poetry.org/docs/)
 
 #### Install Poetry
 
-First, install [pipx](https://github.com/pypa/pipx). Pipx is a system-wide Python application installer, that creates virtualenv for every package installed and automatically includes them to path. It can also uninstall any package installed using pipx.  With pipx installed, install Poetry with `pipx install poetry`. After installation, you will have poetry available system-wide. 
-
-#### Install Dependencies
-
-Tested with pip version 21.1.2
-
-With virtualenv activated, you can install dependencies with `poetry install`
-
-Alternatively you can use `pip install -r dev-requirements.txt` if you don't have Poetry installed. 
-
-### Setup PostgreSQL docker container
-
-The following command will map new named PostgreSQL database container to localhost port 5452. It will generate the database, database user and password in the process:
+* First, install [pipx](https://github.com/pypa/pipx)
+* `pipx` is a system-wide Python application installer
+* `pipx` creates a virtualenv for every package installed and automatically includes them in your workstation's path
+* It can also uninstall any package installed using pipx
+* After installation, you will have poetry available system-wide
 
 ```bash
-docker run -d -p 5452:5432 --name metax-v3-postgres -v metax-v3-postgres:/var/lib/postgresql/data -e POSTGRES_USER=<db_user> -e POSTGRES_PASSWORD=<password> -e POSTGRES_DB=metax_db --restart=always  postgres:12`
+# With pipx installed, install Poetry
+pipx install poetry
+
+# Upgrade if needed (minimum 1.2.0+ required)
+pipx upgrade poetry
 ```
 
-### Update Environmental Variables
+#### Install dependencies
 
-In the repository root, create `.env` file and add at least required variables from `.env.template` file.
+* Poetry creates and manages its virtual environments in a dedicated cache directory on your workstation
+* Tested with pip version `21.1.2`
+* Tested with poetry version `1.8.0`
+
+```bash
+# First, activate a poetry virtual environment
+poetry shell
+
+# ... then, install dependencies with poetry
+poetry install
+```
+
+### Define local environmental variables
+
+```bash
+# Create a .env file based on .env.template
+cp .env.template .env
+```
+
+* Define `<required>` variables in the `.env` file
+* Define other non-required values as needed
+
+### Creating a superuser
+
+```bash
+# In the repository root, run
+python manage.py createsuperuser
+```
 
 ### Initial setup commands
 
-In the repository root, run 
-
 ```bash
+# In the repository root, run
 python manage.py migrate
 mkdir static
 python manage.py collectstatic --no-input 
 ```
 
-### Creating superuser
+### Optional: Docker setup
 
-In the repository root, run `python manage.py createsuperuser`
-
+If you want to run a containerized version with PostgreSQL & Mecached, see: 🐋 [Docker](docs/developer-guide/install/docker.md)
 
 ## Development operations
 
-### Running development server
+* The section below lists common development operations
 
-Launch default development server with `python manage.py runserver <port-number>` e.g `python manage.py runserver 8002`
+### Running a development server
 
-You can use enchanted development server with `python manage.py runserver_plus <port-number>`
+You can change the port number as needed
 
-If you want to use enhanced interpreter with `runserver_plus`, you can add `--bpython` at the end of runserver_plus command
+```bash
+# Default development server
+python manage.py runserver 8002
+
+# Enhanced development server
+python manage.py runserver_plus 8002
+
+# Enhanced development server, enhanced interpreter
+python manage.py runserver_plus --bpython 8002
+```
 
 ### Accessing the admin panel
 
-When the development server is running, admin panel can be accessed from `localhost:<port>/v3/admin`. Use the credentials generated in the _"Creating superuser"_ part of this readme.
+* When the development server is running, access the admin panel at `localhost:<port>/v3/admin`
+* Use the credentials generated in the _"Creating superuser"_ part of this readme.
 
 ### cli-tools
 
-Show all available management commands with `python manage.py --help` and all setup.py commands with `python setup.py --help`
+```bash
+# Show all available management commands
+python manage.py --help
+
+# Show all setup.py commands
+python setup.py --help
+```
 
 ### Testing
 
-Run pytest managed tests with `pytest` command. You can run tox tests with `tox` command.
-
-Running tests quickly, stopping on first failure, reusing test-database, running failed tests first and with 2 workers:
+* Run pytest managed tests with `pytest` command
+* You can run tox tests with `tox` command.
 
 ```bash
+# Run tests, stop on first failure, reuse test-database, run failed tests first, 2 workers
 pytest -x --reuse-db -n 2 --ff
 ```
 
 ### Building MkDocs documentation
 
-Running development server:
+* The mkdocs port can be defined freely
 
 ```bash
-# port can be defined freely
+# Running development server:
 mkdocs serve -a localhost:8005
-```
 
-Building for production:
-
-```bash
+# Building mkdocs for production
 mkdocs build
 ```
 
 ### Using Silk profiler
 
-Disabled by default, Silk profiling can be turned on by setting `ENABLE_SILK_PROFILER` env-var to true. Profiler is only available when on `development` DJANGO_ENV.
-
-In order to set up the profiler properly you need to run following commands after setting ENABLE_SILK_PROFILER env-var to True:
+* Disabled by default
+* Silk profiling can be turned on by setting `ENABLE_SILK_PROFILER` env-var to true
+* The profiler is only available when on `development` DJANGO_ENV
 
 ```bash
+# After setting ENABLE_SILK_PROFILER env-var to True, run:
 python manage.py migrate
 python manage.py collectstatic --no-input
 ```
 
-After successful setup, the profiler is available at /silk endpoint. More information about Silk can be found from [official docs](https://github.com/jazzband/django-silk).
+* After successful setup, the profiler is available at /silk endpoint
+* More information about Silk can be found from [official docs](https://github.com/jazzband/django-silk)
 
 ### Disabling debug-toolbar
 
-Django Debug Toolbar can slow down SQL-queries, you can switch it off by setting `ENABLE_DEBUG_TOOLBAR` env-var to False.
+* The Django Debug Toolbar can slow down SQL-queries
+* Switch it off by setting `ENABLE_DEBUG_TOOLBAR` env-var to False
 
 ## Managing dependencies with Poetry
 
-### Adding developer dependencies 
-
 ```bash
+# Adding developer dependencies 
 poetry add -D <package>
-```
 
-### Adding application dependencies
-
-```bash
+# Adding application dependencies
 poetry add <package>
-```
 
-### Updating all dependencies
-
-```bash
+# Updating all dependencies
 poetry update
-```
 
-### Removing dependencies
-
-```bash
+# Removing dependencies
 poetry remove (-D) <package>
-```
 
-### Regenerating requirements.txt files
-
-After any modification to `pyproject.toml`, re-generate requirements with 
-```bash
+# Regenerating requirements.txt after modification of pyproject.toml
 poetry export --without-hashes -o requirements.txt
 poetry export --dev --without-hashes -o dev-requirements.txt 
-``` 
+```
 
 ## Formatting code
 
-Black formatter and isort are used for code formatting. You can ignore formatting commits by configuring git:
+* Black formatter and isort are used for code formatting
 
 ```bash
+# Ignore formatting commits by configuring git as follows
 git config blame.ignoreRevsFile .git-blame-ignore-revs
 ```
 
-
 ## Notes
 
-`setup.cfg` is the main configuration file due to still incomplete support of `pyproject.toml` in several development tools.
+### setup.cfg
 
-Database models are based on following specifications:
-https://joinup.ec.europa.eu/collection/semantic-interoperability-community-semic/solution/dcat-application-profile-data-portals-europe/release/210
+* `setup.cfg` is the main configuration file due to still incomplete support of `pyproject.toml` in several development tools
 
-https://www.w3.org/TR/vocab-dcat-3/
+### Database models
 
-This project has been set up using PyScaffold 3.3.1. For details and usage
-information on PyScaffold see https://pyscaffold.org/.
+* The database models are based on following specifications:
+* https://joinup.ec.europa.eu/collection/semantic-interoperability-community-semic/solution/dcat-application-profile-data-portals-europe/release/210
+* https://www.w3.org/TR/vocab-dcat-3/
+
+### PyScaffold
+
+* This project has been set up using PyScaffold 3.3.1
+* For details and usage information on PyScaffold see https://pyscaffold.org/.
