@@ -73,6 +73,42 @@
   },
   {
     "title": {
+      "en": "Data catalog for testing Cypress E2E integration tests",
+      "fi": "Testi katalogi Cypress E2E integraatio testeille"
+    },
+    "language": [
+      {
+        "url": "http://lexvo.org/id/iso639-3/fin"
+      }
+    ],
+    "harvested": true,
+    "publisher": {
+      "name": {
+        "en": "Testing",
+        "fi": "Testi"
+      },
+      "homepage": [
+        {
+          "title": {
+            "en": "Publisher organization website",
+            "fi": "Julkaisijaorganisaation kotisivu"
+          },
+          "url": "http://www.testi.fi/"
+        }
+      ]
+    },
+    "id": "urn:nbn:fi:att:data-catalog-e2e-tests-harvested",
+    "description": {
+      "en": "Test data catalog used in Cypress E2E tests",
+      "fi": "Testi katalogi Cypress E2E testeille"
+    },
+    "dataset_versioning_enabled": false,
+    "dataset_schema": "att",
+    "dataset_groups_create": ["e2e"],
+    "dataset_groups_admin": ["e2e"]
+  },
+  {
+    "title": {
       "en": "Data catalog for testing TUNI integration",
       "fi": "Testi katalogi Tampereen Yliopiston Metax-integraatiolle"
     },
