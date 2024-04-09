@@ -60,6 +60,10 @@
 
 ### :::src.apps.common.helpers.is_valid_url
 
+## quote_url
+
+### :::src.apps.common.helpers.quote_url
+
 ## deduplicate_list
 
 ### :::src.apps.common.helpers.deduplicate_list

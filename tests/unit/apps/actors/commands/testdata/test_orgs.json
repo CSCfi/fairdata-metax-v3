@@ -66,8 +66,8 @@
               "year": 2023
             },
             {
-              "subUnitID": "105",
-              "subUnitName": "TKI-toiminta",
+              "subUnitID": "105 123",
+              "subUnitName": "Sub org with space",
               "year": 2023
             }
           ]

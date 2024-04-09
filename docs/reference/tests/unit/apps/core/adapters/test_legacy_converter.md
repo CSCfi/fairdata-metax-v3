@@ -20,3 +20,7 @@
 
 ### :::tests.unit.apps.core.adapters.test_legacy_converter.test_invalid_spatial_multiple_errors
 
+## test_fix_url
+
+### :::tests.unit.apps.core.adapters.test_legacy_converter.test_fix_url
+

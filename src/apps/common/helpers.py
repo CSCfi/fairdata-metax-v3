@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from datetime import datetime, timezone as tz
 from textwrap import dedent
 from typing import Dict, Optional
+from urllib.parse import SplitResult, parse_qsl, quote, urlencode, urlsplit, urlunsplit
 
 import shapely
 from cachalot.api import cachalot_disabled
@@ -232,6 +233,19 @@ def is_valid_url(val):
     except serializers.ValidationError:
         return False
     return True
+
+
+def quote_url(url: str):
+    """Percent-encode url. Assumes any '%' characters in the url are already correct."""
+    parts = urlsplit(url)
+    quoted_parts = SplitResult(
+        scheme=parts.scheme,
+        netloc=parts.netloc,
+        path=quote(parts.path, safe="/%"),
+        query=urlencode(parse_qsl(parts.query)),
+        fragment=quote(parts.fragment, safe="%"),
+    )
+    return urlunsplit(quoted_parts)
 
 
 def deduplicate_list(lst: list):

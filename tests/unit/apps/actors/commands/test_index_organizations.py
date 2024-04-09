@@ -1,5 +1,6 @@
 import json
 import os
+from urllib.parse import quote
 
 import pytest
 from django.core.management import call_command
@@ -106,14 +107,14 @@ def test_index_organizations_from_api(requests_mock):
             "code": "02623-100",
         },
         {
-            "pref_label__en": "TKI-toiminta",
+            "pref_label__en": "Sub org with space",
             "parent__pref_label__en": "Diaconia University of Applied Sciences",
-            "code": "02623-105",
+            "code": "02623-105 123",
         },
     ]
     for org in expected_orgs:
         org["in_scheme"] = test_settings["ORGANIZATION_SCHEME"]
-        org["url"] = f"{test_settings['ORGANIZATION_BASE_URI']}{org['code']}"
+        org["url"] = f"{test_settings['ORGANIZATION_BASE_URI']}{quote(org['code'])}"
 
     assert list(orgs) == expected_orgs
 

@@ -68,3 +68,16 @@ def test_invalid_spatial_multiple_errors(converter):
     }
     converter.convert_spatial(spatial)
     assert set(spatial["_invalid"]["fields"]) == {"alt", "as_wkt"}
+
+
+def test_fix_url(converter):
+    url, fixed = converter.fix_url(
+        "https://example.com/space here and%20here?msg=hello world space#1 2"
+    )
+    assert url == "https://example.com/space%20here%20and%20here?msg=hello+world+space#1%202"
+    assert fixed == True
+
+    # Fix whitespace silently
+    url, fixed = converter.fix_url("  https://example.com/ok  ")
+    assert url == "https://example.com/ok"
+    assert fixed == False

@@ -21,6 +21,7 @@ from apps.common.helpers import (
     is_valid_url,
     omit_empty,
     process_nested,
+    quote_url,
     remove_wkt_point_duplicates,
 )
 
@@ -121,8 +122,8 @@ class LegacyDatasetConverter:
         url = url.strip()  # Remove whitespace
 
         old_url = url
-        # Fix spaces inside urls
-        url = url.replace(" ", "%20")
+        # Fix e.g. spaces inside urls
+        url = quote_url(url)
         # Fix https://zenodo.org123 -> https://zenodo.org/records/123
         url = re.sub("https://zenodo.org([\d]+)$", r"https://zenodo.org/records/\1", url)
 
