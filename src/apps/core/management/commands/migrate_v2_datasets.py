@@ -182,6 +182,8 @@ class Command(BaseCommand):
                     continue
                 self.stdout.write(f"   value: {ign['value']}")
                 self.stdout.write(f"   error: {ign['error']}")
+                if fields := ign.get("fields"):
+                    self.stdout.write(f"   fields: {fields}")
 
     def print_errors(self, identifier: str, errors: dict):
         if errors:

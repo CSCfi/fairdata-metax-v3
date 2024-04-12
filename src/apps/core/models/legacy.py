@@ -259,7 +259,6 @@ class LegacyDataset(Dataset):
             self.save()
             if raise_serializer_errors:
                 raise
-
         if updated:
             from apps.core.models.legacy_compatibility import LegacyCompatibility
 

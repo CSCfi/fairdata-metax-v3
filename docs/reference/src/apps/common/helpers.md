@@ -84,6 +84,10 @@
 
 ### :::src.apps.common.helpers.omit_none
 
+## is_empty_string
+
+### :::src.apps.common.helpers.is_empty_string
+
 ## omit_empty
 
 ### :::src.apps.common.helpers.omit_empty

@@ -55,10 +55,24 @@ class LegacyCompatibility:
             "root['research_dataset']['version_notes']",
             "root['research_dataset']['total_files_byte_size']",
             "root['research_dataset']['total_remote_resources_byte_size']",
+            "root['research_dataset']['access_rights']['access_url']",
             regex("root['research_dataset']['language'][\\d+]['title']['und']"),
             regex("root['research_dataset']['other_identifier'][\\d+]['old_notation']"),
             regex("root['research_dataset']['language'][\\d+]['title']['und']"),
             regex("root['research_dataset']['is_output_of'][\\d+]['homepage']"),
+            regex(
+                "root['research_dataset']['remote_resources'][\\d+]['has_object_characteristics']"
+            ),
+            regex("root['research_dataset']['remote_resources'][\\d+]['identifier']"),
+            regex("root['research_dataset']['remote_resources'][\\d+]['access_url']['title']"),
+            regex(
+                "root['research_dataset']['remote_resources'][\\d+]['access_url']['description']"
+            ),
+            regex("root['research_dataset']['remote_resources'][\\d+]['download_url']['title']"),
+            regex(
+                "root['research_dataset']['remote_resources'][\\d+]['download_url']['description']"
+            ),
+            regex(".*['contributor_type']$"),
             regex(".*['contributor_role']$"),
             "root['contract']",  # TODO
         ],
@@ -227,7 +241,7 @@ class LegacyCompatibility:
             v2_version,
             v3_version,
             ignore_order=True,
-            cutoff_intersection_for_pairs=0.85,
+            cutoff_intersection_for_pairs=1.0,
             cutoff_distance_for_pairs=1.0,
             exclude_paths=[
                 "id",

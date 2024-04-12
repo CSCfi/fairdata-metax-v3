@@ -122,7 +122,7 @@ class LegacyDatasetConverter:
         url = url.strip()  # Remove whitespace
 
         if not (url.startswith("http://") or url.startswith("https://")):
-            return url, False # Not a URL
+            return url, False  # Not a URL
 
         old_url = url
         # Fix e.g. spaces inside urls

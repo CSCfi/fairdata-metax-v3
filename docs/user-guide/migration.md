@@ -137,11 +137,12 @@ You can add most reference data using only the url field:
 
 Dataset access rights is now top level object in dataset. Following table shows differences in object structure.
 
-| V1-V2                        | V3 field name                       |
-|------------------------------|-------------------------------------|
-| access_type/identifier [url] | access_rights/access_type/url [url] |
-| license/identifier [url]     | license/url [url]                   |
-| license/license [url]        | license/custom_url [url]            |
+| V1-V2                        | V3 field name            |
+|------------------------------|--------------------------|
+| access_type/identifier [url] | access_type/url [url]    |
+| license/identifier [url]     | license/url [url]        |
+| license/license [url]        | license/custom_url [url] |
+| access_url [url]             | **Not used in V3**       |
 
 !!! example "Access rights JSON differences between V2 and V3"
 
@@ -181,15 +182,17 @@ been moved under actor object in roles field. Roles field is a list of roles eg.
 
 Instead of having a typed actor object like `@type: "Person"` or `@type: "Organization`, actors have `person` and `organization` fields. The fields for `person` are:
 
-| V1-V2 person actor field | V3 actor field                   | Notes                                             |
-|--------------------------|----------------------------------|---------------------------------------------------|
-| @type [str]              | **Not used in V3**               | replaced by person field                          |
-| email [str]              | person.email [str]               |                                                   |
-| identifier [str]         | person.external_identifier [str] |                                                   |
-| member_of [object]       | organization [object]            |                                                   |
-| name [str]               | person.name [str]                |                                                   |
-| telephone [str]          | **Not used in V3**               |                                                   |
-| **Not in V2**            | roles [list]                     | List of roles of an actor. eg. creator, publisher |
+| V1-V2 person actor field  | V3 actor field                   | Notes                                             |
+|---------------------------|----------------------------------|---------------------------------------------------|
+| @type [str]               | **Not used in V3**               | replaced by person field                          |
+| email [str]               | person.email [str]               |                                                   |
+| identifier [str]          | person.external_identifier [str] |                                                   |
+| member_of [object]        | organization [object]            |                                                   |
+| name [str]                | person.name [str]                |                                                   |
+| contributor_type [object] | **Not used in V3**               |                                                   |
+| contributor_role [object] | **Not used in V3**               |                                                   |
+| telephone [str]           | **Not used in V3**               |                                                   |
+| **Not in V2**             | roles [list]                     | List of roles of an actor. eg. creator, publisher |
 
 Organizations have some fields specific only to reference data organizations: `url` and `in_scheme`.
 Only `url` is writable for reference data organizations, other values are determined automatically.
@@ -204,6 +207,7 @@ The fields for `organization` are:
 | identifier [str]               | organization.url [url] (only reference data)       |                                                   |
 | **Not in V2**                  | organization.in_scheme [url] (only reference data) |                                                   |
 | email [str]                    | organization.email [str]                           |                                                   |
+| contributor_type [object]      | **Not used in V3**                                 |                                                   |
 | telephone [str]                | **Not used in V3**                                 |                                                   |
 | **Not in V2**                  | roles [list]                                       | List of roles of an actor. eg. creator, publisher |
 
@@ -308,49 +312,49 @@ In this example, you could find this dataset using the query parameter `title=A 
 
 These are the *changed* query parameters used in datasets listing (`/v3/datasets`). Complete list of query parameters can be found in the [Swagger documentation](/v3/swagger).
 
-| V1-V2 parameter name    | V3 parameter name                      | Notes                                                                                                                       |
-|-------------------------|----------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
-| actor_filter            | actors__role                           |                                                                                                                             |
-| actor_filter            | actors__person__name                   |                                                                                                                             |
-| actor_filter            | actors__organization__pref_label       |                                                                                                                             |
-| api_version             | **not used in V3**                     |                                                                                                                             |
-| contract_org_identifier | **not used in V3**                     |                                                                                                                             |
-| curator                 | **not used in V3**                     | See `actor__filter` changes.                                                                                                |
-| data_catalog            | data_catalog__id                       |                                                                                                                             |
-| data_catalog            | data_catalog__title                    |                                                                                                                             |
-| editor_permissions_user | only_owned_or_shared                   | :clock: All related query parameters not implemented yet :clock:                                                            |
-| fields                  |                                        | :clock: Not implemented yet :clock:                                                                                         |
-| include_legacy          | **not used in V3**                     |                                                                                                                             |
+| V1-V2 parameter name    | V3 parameter name                      | Notes                                                                                                                                                               |
+|-------------------------|----------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| actor_filter            | actors__role                           |                                                                                                                                                                     |
+| actor_filter            | actors__person__name                   |                                                                                                                                                                     |
+| actor_filter            | actors__organization__pref_label       |                                                                                                                                                                     |
+| api_version             | **not used in V3**                     |                                                                                                                                                                     |
+| contract_org_identifier | **not used in V3**                     |                                                                                                                                                                     |
+| curator                 | **not used in V3**                     | See `actor__filter` changes.                                                                                                                                        |
+| data_catalog            | data_catalog__id                       |                                                                                                                                                                     |
+| data_catalog            | data_catalog__title                    |                                                                                                                                                                     |
+| editor_permissions_user | only_owned_or_shared                   | :clock: All related query parameters not implemented yet :clock:                                                                                                    |
+| fields                  |                                        | :clock: Not implemented yet :clock:                                                                                                                                 |
+| include_legacy          | **not used in V3**                     |                                                                                                                                                                     |
 | include_user_metadata   | **not used in V3**                     | File and directory specific metadata is included in files and directories endpoint response. See [Dataset-specific file metadata](#dataset-specific-file-metadata). |
-| latest                  | latest_versions                        |                                                                                                                             |
-| metadata_owner_org      | metadata_owner__organization           |                                                                                                                             |
-| metadata_provider_user  | metadata_owner__user                   |                                                                                                                             |
-| N/A                     | access_rights__access_type__pref_label |                                                                                                                             |
-| N/A                     | actors__roles_creator                  |                                                                                                                             |
-| N/A                     | deprecated                             |                                                                                                                             |
-| N/A                     | expand_catalog                         | Include full data catalog in dataset response instead of just an identifier.                                                |
-| N/A                     | field_of_science__pref_label           |                                                                                                                             |
-| N/A                     | file_type                              |                                                                                                                             |
-| N/A                     | format                                 | Format of response, `json` or `api` (HTML).                                                                                 |
-| N/A                     | has_files                              |                                                                                                                             |
-| N/A                     | include_nulls                          | Include also null values in the response.                                                                                   |
-| N/A                     | include_removed                        | Include also removed datasets in response.                                                                                  |
-| N/A                     | infrastructure__pref_label             |                                                                                                                             |
-| N/A                     | keyword                                |                                                                                                                             |
-| N/A                     | pagination                             | Use pagination true/false.                                                                                                  |
-| N/A                     | preservation__contract                 |                                                                                                                             |
-| N/A                     | projects__title                        |                                                                                                                             |
-| N/A                     | search                                 | Free text search from PID, title, theme, actors, description, keywords, relation id's, and other identifiers.               |
-| N/A                     | storage_services                       | Storage service(s) used for dataset files, separated by a comma.                                                            |
-| N/A                     | strict                                 | Enable/disable errors on unknown query parameters/request values.                                                           |
-| N/A                     | title                                  |                                                                                                                             |
-| owner_id                | **not used in V3**                     |                                                                                                                             |
-| pas_filter              | **not used in V3**                     |                                                                                                                             |
-| preferred_identifier    | persistent_identifier                  |                                                                                                                             |
-| preservation_state      | preservation__state                    |                                                                                                                             |
-| projects                | csc_projects                           |                                                                                                                             |
-| research_dataset_fields | **not used in V3**                     | Research dataset object not present in V3.                                                                                  |
-| user_created            | metadata_owner__user                   |                                                                                                                             |
+| latest                  | latest_versions                        |                                                                                                                                                                     |
+| metadata_owner_org      | metadata_owner__organization           |                                                                                                                                                                     |
+| metadata_provider_user  | metadata_owner__user                   |                                                                                                                                                                     |
+| N/A                     | access_rights__access_type__pref_label |                                                                                                                                                                     |
+| N/A                     | actors__roles_creator                  |                                                                                                                                                                     |
+| N/A                     | deprecated                             |                                                                                                                                                                     |
+| N/A                     | expand_catalog                         | Include full data catalog in dataset response instead of just an identifier.                                                                                        |
+| N/A                     | field_of_science__pref_label           |                                                                                                                                                                     |
+| N/A                     | file_type                              |                                                                                                                                                                     |
+| N/A                     | format                                 | Format of response, `json` or `api` (HTML).                                                                                                                         |
+| N/A                     | has_files                              |                                                                                                                                                                     |
+| N/A                     | include_nulls                          | Include also null values in the response.                                                                                                                           |
+| N/A                     | include_removed                        | Include also removed datasets in response.                                                                                                                          |
+| N/A                     | infrastructure__pref_label             |                                                                                                                                                                     |
+| N/A                     | keyword                                |                                                                                                                                                                     |
+| N/A                     | pagination                             | Use pagination true/false.                                                                                                                                          |
+| N/A                     | preservation__contract                 |                                                                                                                                                                     |
+| N/A                     | projects__title                        |                                                                                                                                                                     |
+| N/A                     | search                                 | Free text search from PID, title, theme, actors, description, keywords, relation id's, and other identifiers.                                                       |
+| N/A                     | storage_services                       | Storage service(s) used for dataset files, separated by a comma.                                                                                                    |
+| N/A                     | strict                                 | Enable/disable errors on unknown query parameters/request values.                                                                                                   |
+| N/A                     | title                                  |                                                                                                                                                                     |
+| owner_id                | **not used in V3**                     |                                                                                                                                                                     |
+| pas_filter              | **not used in V3**                     |                                                                                                                                                                     |
+| preferred_identifier    | persistent_identifier                  |                                                                                                                                                                     |
+| preservation_state      | preservation__state                    |                                                                                                                                                                     |
+| projects                | csc_projects                           |                                                                                                                                                                     |
+| research_dataset_fields | **not used in V3**                     | Research dataset object not present in V3.                                                                                                                          |
+| user_created            | metadata_owner__user                   |                                                                                                                                                                     |
 
 
 ### Endpoints

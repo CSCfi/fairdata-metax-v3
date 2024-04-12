@@ -235,15 +235,21 @@ def is_valid_url(val):
     return True
 
 
+# Special characters that don't require percent encoding
+# See https://datatracker.ietf.org/doc/html/rfc3986#section-3.3
+safe_pchar = r"!$&'()*+,;=:@"
+safe_fragment = safe_pchar + r"/?"
+
+
 def quote_url(url: str):
     """Percent-encode url. Assumes any '%' characters in the url are already correct."""
     parts = urlsplit(url)
     quoted_parts = SplitResult(
         scheme=parts.scheme,
         netloc=parts.netloc,
-        path=quote(parts.path, safe="/%"),
+        path=quote(parts.path, safe=safe_pchar + "/%"),
         query=urlencode(parse_qsl(parts.query)),
-        fragment=quote(parts.fragment, safe="%"),
+        fragment=quote(parts.fragment, safe=safe_fragment + "%"),
     )
     return urlunsplit(quoted_parts)
 
@@ -293,20 +299,32 @@ def omit_none(value: dict) -> dict:
     return {key: val for key, val in value.items() if val is not None}
 
 
+def is_empty_string(value: str) -> str:
+    return type(value) is str and value.strip() == ""
+
+
 def omit_empty(value: dict, recurse=False) -> dict:
     """Return copy of dict with None values and empty lists, empty strings and empty dicts removed."""
     if not recurse:
-        return {key: val for key, val in value.items() if val not in [None, "", {}, []]}
+        return {
+            key: val
+            for key, val in value.items()
+            if val not in [None, "", {}, []] and not is_empty_string(val)
+        }
 
     def _recurse(_value):
         if isinstance(_value, list):
-            return [_val for val in _value if (_val := _recurse(val)) not in [None, "", {}, []]]
+            return [
+                _val
+                for val in _value
+                if (_val := _recurse(val)) not in [None, "", {}, []] and not is_empty_string(_val)
+            ]
 
         if isinstance(_value, dict):
             return {
                 key: _val
                 for key, val in _value.items()
-                if (_val := _recurse(val)) not in [None, "", {}, []]
+                if (_val := _recurse(val)) not in [None, "", {}, []] and not is_empty_string(_val)
             }
         return _value
 

@@ -57,7 +57,6 @@ pytestmark = [pytest.mark.adapter]
                 "dictionary_item_removed": [
                     "root['preservation_state']",
                     "root['research_dataset']['total_remote_resources_byte_size']",
-                    "root['research_dataset']['title']['en']", # whitespace string
                 ],
             },
         ),
