@@ -73,6 +73,44 @@
   },
   {
     "title": {
+      "en": "ACRIS catalog",
+      "fi": "ACRIS katalogi",
+      "sv": "ACRIS katalog"
+    },
+    "language": [
+      {
+        "url": "http://lexvo.org/id/iso639-3/fin"
+      }
+    ],
+    "harvested": true,
+    "publisher": {
+      "name": {
+        "en": "Testing",
+        "fi": "Testi"
+      },
+      "homepage": [
+        {
+          "title": {
+            "en": "Publisher organization website",
+            "fi": "Julkaisijaorganisaation kotisivu"
+          },
+          "url": "http://www.testi.fi/"
+        }
+      ]
+    },
+    "id": "urn:nbn:fi:att:data-catalog-acris",
+    "description": {
+      "en": "Data catalog for testing Aalto University's Metax-integration",
+      "fi": "Testikatalogi Aalto-yliopiston Metax-integraatiolle",
+      "sv": "Datakatalog för testning av Aalto-universitets Metax-integration"
+    },
+    "dataset_versioning_enabled": false,
+    "dataset_schema": "att",
+    "dataset_groups_create": ["aalto"],
+    "dataset_groups_admin": ["aalto"]
+  },
+  {
+    "title": {
       "en": "Data catalog for testing Cypress E2E integration tests",
       "fi": "Testi katalogi Cypress E2E integraatio testeille"
     },
