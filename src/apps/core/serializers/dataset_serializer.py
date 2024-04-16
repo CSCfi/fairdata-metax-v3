@@ -12,7 +12,6 @@ from rest_framework import serializers
 from rest_framework.settings import api_settings
 
 from apps.common.serializers import CommonListSerializer, CommonNestedModelSerializer, OneOf
-from apps.core import signals
 from apps.core.models import DataCatalog, Dataset
 from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
 from apps.core.serializers.common_serializers import (
@@ -146,7 +145,7 @@ class DatasetSerializer(CommonNestedModelSerializer):
             # so use {} as "empty" value.
             if not self._validated_data.get("metadata_owner"):
                 self._validated_data["metadata_owner"] = {}
-        super().save(**kwargs)
+        return super().save(**kwargs)
 
     def to_representation(self, instance: Dataset):
         request = self.context["request"]
@@ -331,7 +330,6 @@ class DatasetSerializer(CommonNestedModelSerializer):
     def update(self, instance, validated_data):
         validated_data["last_modified_by"] = self.context["request"].user
         dataset: Dataset = super().update(instance, validated_data=validated_data)
-        signals.dataset_updated.send(sender=self.__class__, data=dataset)
         return dataset
 
     def create(self, validated_data):
@@ -346,7 +344,6 @@ class DatasetSerializer(CommonNestedModelSerializer):
         # Now reverse and many-to-many relations have been assigned, try to publish
         if state == Dataset.StateChoices.PUBLISHED:
             instance.publish()
-        signals.dataset_created.send(sender=self.__class__, data=instance)
         return instance
 
 

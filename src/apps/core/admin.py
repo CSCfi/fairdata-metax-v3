@@ -91,6 +91,11 @@ class DatasetAdmin(AbstractDatasetPropertyBaseAdmin, SimpleHistoryAdmin):
     filter_horizontal = ("language", "theme", "field_of_science")
     list_select_related = ("access_rights", "data_catalog", "metadata_owner")
 
+    def save_model(self, request, obj: Dataset, form, change):
+        created = obj._state.adding
+        super().save_model(request, obj, form, change)
+        obj.signal_update(created=created)
+
 
 @admin.register(DatasetActor)
 class DatasetActorAdmin(admin.ModelAdmin):

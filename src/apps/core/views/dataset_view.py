@@ -297,7 +297,7 @@ class DatasetViewSet(CommonModelViewSet):
         },
         {
             "class": IncludeRemovedQueryParamsSerializer,
-            "actions": ["list", "retrieve"],
+            "actions": ["list", "retrieve", "update", "partial_update"],
         },
         {
             "class": FlushQueryParamsSerializer,
@@ -406,10 +406,12 @@ class DatasetViewSet(CommonModelViewSet):
     @action(detail=True, methods=["post"], url_path="new-version")
     def new_version(self, request, pk=None):
         """Create a new version of a published dataset."""
-        dataset = self.get_object()
+        dataset: Dataset = self.get_object()
         new_version = dataset.create_new_version()
         serializer = self.get_serializer(new_version)
-        return response.Response(serializer.data, status=status.HTTP_201_CREATED)
+        data = serializer.data
+        new_version.signal_update(created=True)
+        return response.Response(data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["post"], url_path="create-draft")
     def create_draft(self, request, pk=None):
@@ -418,10 +420,11 @@ class DatasetViewSet(CommonModelViewSet):
         The changes in the draft can be applied to the
         published dataset using the publish endpoint of the draft.
         """
-        dataset = self.get_object()
+        dataset: Dataset = self.get_object()
         draft = dataset.create_new_draft()
-        serializer = self.get_serializer(draft)
-        return response.Response(serializer.data, status=status.HTTP_201_CREATED)
+        data = self.get_serializer(draft).data
+        draft.signal_update(created=True)
+        return response.Response(data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["post"])
     def publish(self, request, pk=None):
@@ -432,10 +435,11 @@ class DatasetViewSet(CommonModelViewSet):
           updates the published dataset with changes from the draft
           and deletes the draft.
         """
-        dataset = self.get_object()
+        dataset: Dataset = self.get_object()
         published_dataset = dataset.publish()
-        serializer = self.get_serializer(published_dataset)
-        return response.Response(serializer.data, status=status.HTTP_200_OK)
+        data = self.get_serializer(published_dataset).data
+        published_dataset.signal_update()
+        return response.Response(data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["get"])
     def revisions(self, request, pk=None):
@@ -526,7 +530,12 @@ class DatasetViewSet(CommonModelViewSet):
             raise exceptions.PermissionDenied(
                 "You are not allowed to create datasets in this data catalog."
             )
-        serializer.save(system_creator=self.request.user)
+        dataset: Dataset = serializer.save(system_creator=self.request.user)
+        dataset.signal_update(created=True)
+
+    def perform_update(self, serializer):
+        dataset: Dataset = serializer.save()
+        dataset.signal_update()
 
     @action(detail=False)
     def aggregates(self, request):

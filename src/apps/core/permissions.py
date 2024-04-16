@@ -74,7 +74,7 @@ class DatasetAccessPolicy(BaseAccessPolicy):
     def scope_queryset(cls, request, queryset):
         from .models import Dataset
 
-        if q := super().scope_queryset(request, queryset):
+        if (q := super().scope_queryset(request, queryset)) is not None:
             return q
         elif request.user.is_anonymous:
             return queryset.filter(state=Dataset.StateChoices.PUBLISHED)
@@ -83,7 +83,6 @@ class DatasetAccessPolicy(BaseAccessPolicy):
             Q(state=Dataset.StateChoices.PUBLISHED)
             | Q(metadata_owner__user=request.user)
             | Q(system_creator=request.user)
-            | Q(published_revision__gt=0)
             | Q(data_catalog__dataset_groups_admin__in=groups)
         )
 

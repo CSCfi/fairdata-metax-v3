@@ -6,12 +6,10 @@ import requests
 import urllib3
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
-from django.core.validators import EMPTY_VALUES
-from django.db.models.signals import m2m_changed, post_delete, post_save, pre_save
+from django.db.models.signals import m2m_changed, post_delete
 from django.dispatch import Signal, receiver
 
-from apps.core.models import Dataset, FileSet, LegacyDataset
-from apps.core.serializers import DatasetSerializer
+from apps.core.models import Dataset, FileSet
 
 logger = logging.getLogger(__name__)
 
@@ -71,12 +69,14 @@ def update_dataset_in_v2(sender, data: Dataset, **kwargs):
     if not settings.METAX_V2_INTEGRATION_ENABLED:
         return
 
+    if data.state != "published":
+        return
+
     v2_dataset = data.as_v2_dataset()
     v2_dataset["api_meta"] = {"version": 3}
     identifier = v2_dataset["identifier"]
     body = json.dumps(v2_dataset, cls=DjangoJSONEncoder)
     host, headers = get_v2_request_settings()
-    _draft = "&draft=true" if v2_dataset["state"] == "draft" else ""
 
     try:
         response = requests.get(url=f"{host}/{identifier}", headers=headers)
@@ -103,6 +103,9 @@ def create_dataset_to_v2(sender, data: Dataset, **kwargs):
     if not settings.METAX_V2_INTEGRATION_ENABLED:
         return
 
+    if data.state != "published":
+        return
+
     v2_dataset = data.as_v2_dataset()
     if hasattr(v2_dataset["research_dataset"], "issued"):
         v2_dataset["research_dataset"]["issued"] = v2_dataset["research_dataset"]["issued"].date()
@@ -110,14 +113,11 @@ def create_dataset_to_v2(sender, data: Dataset, **kwargs):
     host, headers = get_v2_request_settings()
     headers["Content-Type"] = "application/json"
     headers["Accept"] = "application/json"
-    _draft = "&draft=true" if v2_dataset["state"] == "draft" else ""
     try:
         if v2_dataset["api_meta"]["version"] == 3 and v2_dataset["research_dataset"].get(
             "preferred_identifier"
         ):
-            res = requests.post(
-                url=f"{host}?migration_override{_draft}", data=body, headers=headers
-            )
+            res = requests.post(url=f"{host}?migration_override", data=body, headers=headers)
             logger.info(f"{res.status_code=}: {res.content=}, {res.headers=}")
 
     except Exception as e:

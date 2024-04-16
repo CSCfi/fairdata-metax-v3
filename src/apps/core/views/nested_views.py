@@ -28,6 +28,16 @@ class DatasetNestedViewSet(CommonModelViewSet):
         dataset = self.get_dataset_instance()
         return self.serializer_class.Meta.model.available_objects.filter(dataset=dataset)
 
+    def create(self, request, *args, **kwargs):
+        resp = super().create(request, *args, **kwargs)
+        self.get_dataset_instance().signal_update()
+        return resp
+
+    def update(self, request, *args, **kwargs):
+        resp = super().update(request, *args, **kwargs)
+        self.get_dataset_instance().signal_update()
+        return resp
+
     def perform_create(self, serializer):
         dataset = self.get_dataset_instance()
         return serializer.save(dataset_id=dataset.id)
@@ -40,7 +50,7 @@ class DatasetNestedViewSet(CommonModelViewSet):
         context["dataset"] = self.get_dataset_instance()
         return context
 
-    def get_dataset_instance(self):
+    def get_dataset_instance(self) -> Dataset:
         dataset_qs = Dataset.available_objects.filter(id=self.kwargs["dataset_pk"])
         dataset_qs = DatasetAccessPolicy().scope_queryset(self.request, dataset_qs)
         return get_object_or_404(dataset_qs)
@@ -79,9 +89,6 @@ class DatasetNestedOneToOneView(DatasetNestedViewSet):
                     **{self.dataset_field_name: obj}
                 )
         return super().update(request, *args, **kwargs)
-
-    def perform_update(self, serializer):
-        return super().perform_update(serializer)
 
 
 class ProvenanceFilter(filters.FilterSet):

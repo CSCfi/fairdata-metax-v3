@@ -134,9 +134,8 @@ def test_create_draft_by_changing_state(
     assert res.json()["state"] == "Value cannot be changed directly for an existing dataset."
 
 
-def test_merge_draft(
-    admin_client, dataset_a_json, dataset_maximal_json, data_catalog, reference_data
-):
+@pytest.mark.usefixtures("data_catalog", "reference_data")
+def test_merge_draft(admin_client, dataset_a_json, dataset_maximal_json, dataset_signal_handlers):
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 201
     assert res.data["state"] == "published"
@@ -158,11 +157,14 @@ def test_merge_draft(
     draft_data = deepcopy(res.json())
 
     # Merge draft
+    dataset_signal_handlers.reset()
     res = admin_client.post(
         f"/v3/datasets/{draft_id}/publish?include_nulls=true", content_type="application/json"
     )
     assert res.status_code == 200
     merge_data = res.json()  # response should be the updated original dataset
+    dataset_signal_handlers.assert_call_counts(created=0, updated=1)
+    assert str(dataset_signal_handlers.updated.call_args.kwargs["data"].id) == dataset_id
 
     # Dataset has been updated
     res = admin_client.get(
@@ -251,14 +253,18 @@ def test_new_published_revisions(admin_client, dataset_a_json, data_catalog, ref
     assert res.data[0]["published_revision"] == 1
 
 
-def test_new_draft_publish_revisions(admin_client, dataset_a_json, data_catalog, reference_data):
+@pytest.mark.usefixtures("data_catalog", "reference_data")
+def test_new_draft_publish_revisions(admin_client, dataset_a_json, dataset_signal_handlers):
+    dataset_signal_handlers.assert_call_counts(created=0, updated=0)
     dataset_a_json["state"] = "draft"
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 201
     dataset_id = res.data["id"]
-
+    dataset_signal_handlers.assert_call_counts(created=1, updated=0)
+    dataset_signal_handlers.reset()
     res = admin_client.post(f"/v3/datasets/{dataset_id}/publish", content_type="application/json")
     assert res.status_code == 200
+    dataset_signal_handlers.assert_call_counts(created=0, updated=1)
 
     res = admin_client.get(f"/v3/datasets/{dataset_id}/revisions", content_type="application/json")
     assert res.status_code == 200
@@ -278,7 +284,8 @@ def test_new_draft_publish_revisions(admin_client, dataset_a_json, data_catalog,
     assert len(res.data) == 2
 
 
-def test_merge_draft_revisions(admin_client, dataset_a_json, data_catalog, reference_data):
+@pytest.mark.usefixtures("data_catalog", "reference_data")
+def test_merge_draft_revisions(admin_client, dataset_a_json):
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 201
     dataset_id = res.data["id"]

@@ -10,6 +10,9 @@
 
 import re
 import secrets
+from dataclasses import dataclass, field
+from typing import Callable, Optional
+from unittest.mock import Mock
 
 import django
 import factory.random
@@ -17,13 +20,40 @@ import pytest
 import requests_mock
 from django.conf import settings
 from django.contrib.auth.models import Group
+from django.dispatch import Signal, receiver
 from django.test.client import Client
 from rest_framework.test import APIClient, RequestsClient
 
 from apps.core import factories
 from apps.core.models.data_catalog import DataCatalog
+from apps.core.signals import dataset_created, dataset_updated
 from apps.users.factories import MetaxUserFactory
 from apps.users.models import MetaxUser
+
+
+@dataclass
+class DatasetSignalHandlers:
+    created: Mock = field(default_factory=lambda: Mock(spec=[]))
+    updated: Mock = field(default_factory=lambda: Mock(spec=[]))
+
+    def reset(self):
+        """Reset mock calls."""
+        self.created.reset_mock()
+        self.updated.reset_mock()
+
+    def assert_call_counts(self, created: Optional[int] = None, updated: Optional[int] = None):
+        if created is not None:
+            assert self.created.call_count == created
+        if updated is not None:
+            assert self.updated.call_count == updated
+
+
+@pytest.fixture()
+def dataset_signal_handlers() -> DatasetSignalHandlers:
+    handlers = DatasetSignalHandlers()
+    receiver(dataset_created, weak=True)(handlers.created)
+    receiver(dataset_updated, weak=True)(handlers.updated)
+    return handlers
 
 
 @pytest.fixture

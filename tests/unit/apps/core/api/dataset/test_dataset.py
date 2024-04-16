@@ -19,21 +19,25 @@ logger = logging.getLogger(__name__)
 pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
 
 
-def test_create_dataset(admin_client, dataset_a_json, data_catalog, reference_data):
+@pytest.mark.usefixtures("data_catalog", "reference_data")
+def test_create_dataset(admin_client, dataset_a_json, dataset_signal_handlers):
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 201
     assert_nested_subdict({"user": "admin", "organization": "admin"}, res.data["metadata_owner"])
     assert_nested_subdict(dataset_a_json, res.data)
+    dataset_signal_handlers.assert_call_counts(created=1, updated=0)
 
 
-def test_update_dataset(
-    admin_client, dataset_a_json, dataset_b_json, data_catalog, reference_data
-):
+@pytest.mark.usefixtures("data_catalog", "reference_data")
+def test_update_dataset(admin_client, dataset_a_json, dataset_b_json, dataset_signal_handlers):
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    dataset_signal_handlers.assert_call_counts(created=1, updated=0)
+    dataset_signal_handlers.reset()
     id = res.data["id"]
     res = admin_client.put(f"/v3/datasets/{id}", dataset_b_json, content_type="application/json")
     assert res.status_code == 200
     assert_nested_subdict(dataset_b_json, res.data)
+    dataset_signal_handlers.assert_call_counts(created=0, updated=1)
 
 
 def test_update_dataset_with_project(

@@ -53,7 +53,9 @@ def test_create_dataset_preservation_without_contract(admin_client, preservation
 
 
 @pytest.mark.usefixtures("data_catalog", "reference_data")
-def test_update_dataset_preservation_state(admin_client, preservation_dataset):
+def test_update_dataset_preservation_state(
+    admin_client, preservation_dataset, dataset_signal_handlers
+):
     resp = admin_client.patch(
         f"/v3/datasets/{preservation_dataset['id']}/preservation",
         {"state": 20},
@@ -64,6 +66,7 @@ def test_update_dataset_preservation_state(admin_client, preservation_dataset):
     data = resp.json()
     assert data["id"] == preservation_dataset["preservation"]["id"]
     assert data["state"] == 20
+    dataset_signal_handlers.assert_call_counts(created=0, updated=1)
 
 
 @pytest.mark.usefixtures("data_catalog", "reference_data")
@@ -221,15 +224,19 @@ def test_patch_dataset_nonexisting_preservation(admin_client, dataset_a_json):
 
 
 @pytest.mark.usefixtures("data_catalog", "reference_data")
-def test_put_dataset_nonexisting_preservation(admin_client, dataset_a_json):
+def test_put_dataset_nonexisting_preservation(
+    admin_client, dataset_a_json, dataset_signal_handlers
+):
     """Try creating preservation object using put."""
     dataset = admin_client.post(
         "/v3/datasets", dataset_a_json, content_type="application/json"
     ).json()
 
+    dataset_signal_handlers.reset()
     resp = admin_client.put(
         f"/v3/datasets/{dataset['id']}/preservation",
         {"state": -1},
         content_type="application/json",
     )
     assert resp.status_code == 200
+    dataset_signal_handlers.assert_call_counts(created=0, updated=1)

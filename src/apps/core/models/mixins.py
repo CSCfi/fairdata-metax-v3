@@ -492,7 +492,7 @@ class V2DatasetMixin:
         research_dataset = {
             "title": self.title,
             "description": self.description,
-            "modified": self.modified,
+            "modified": self.modified.isoformat(),
             "preferred_identifier": self.persistent_identifier,
             "keyword": self.keyword,
             "access_rights": self._generate_v2_access_rights() if self.access_rights else None,
@@ -505,11 +505,7 @@ class V2DatasetMixin:
         if self.issued:
             research_dataset["issued"] = self.issued.isoformat()
         doc = {
-            "identifier": (
-                str(self.legacydataset.dataset_json["identifier"])
-                if hasattr(self, "legacydataset")
-                else self.id
-            ),
+            "identifier": str(self.id),
             "api_meta": (
                 self.legacydataset.dataset_json["api_meta"]
                 if hasattr(self, "legacydataset")
@@ -523,7 +519,7 @@ class V2DatasetMixin:
             "research_dataset": research_dataset,
         }
         if self.deprecated:
-            doc["date_deprecated"] = self.deprecated
+            doc["date_deprecated"] = self.deprecated.isoformat()
         if self.metadata_owner:
             if hasattr(self.metadata_owner, "user"):
                 doc["metadata_provider_user"] = self.metadata_owner.user.username
@@ -542,11 +538,11 @@ class V2DatasetMixin:
             doc["preservation_state"] = self.preservation.state
             doc["preservation_identifier"] = self.preservation.id
         if self.cumulation_started:
-            doc["date_cumulation_started"] = self.cumulation_started
+            doc["date_cumulation_started"] = self.cumulation_started.isoformat()
         if self.cumulation_ended:
-            doc["date_cumulation_ended"] = self.cumulation_ended
+            doc["date_cumulation_ended"] = self.cumulation_ended.isoformat()
         if self.last_cumulative_addition:
-            doc["date_last_cumulative_addition"] = self.last_cumulative_addition
+            doc["date_last_cumulative_addition"] = self.last_cumulative_addition.isoformat()
         if self.last_modified_by:
             doc["user_modified"] = self.last_modified_by.username
 

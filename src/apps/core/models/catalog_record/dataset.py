@@ -133,7 +133,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         null=True,
         blank=True,
     )
-    deprecated = models.DateTimeField(null=True)
+    deprecated = models.DateTimeField(null=True, blank=True)
     cumulation_started = models.DateTimeField(null=True, blank=True)
     cumulation_ended = models.DateTimeField(null=True, blank=True)
     last_cumulative_addition = models.DateTimeField(null=True, blank=True)
@@ -582,7 +582,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         if errors:
             raise ValidationError(errors)
 
-    def validate_unique(self):
+    def validate_unique_fields(self):
         """Validate uniqueness constraints."""
         if self.persistent_identifier and self.data_catalog:
             # Validate pid. Note that there is no DB constraint for this
@@ -606,7 +606,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
 
     def save(self, *args, **kwargs):
         """Saves the dataset and increments the draft or published revision number as needed."""
-        self.validate_unique()
+        self.validate_unique_fields()
         if not getattr(self, "saving_legacy", False):
             self._update_cumulative_state()
 
@@ -627,3 +627,11 @@ class Dataset(V2DatasetMixin, CatalogRecord):
 
         self.set_update_reason(f"{self.state}-{self.published_revision}.{self.draft_revision}")
         super().save(*args, **kwargs)
+
+    def signal_update(self, created=False):
+        """Send dataset_update or dataset_created signal."""
+        from apps.core.signals import dataset_created, dataset_updated
+
+        if created:
+            return dataset_created.send(sender=self.__class__, data=self)
+        return dataset_updated.send(sender=self.__class__, data=self)
