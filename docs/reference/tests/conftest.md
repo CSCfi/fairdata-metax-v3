@@ -140,3 +140,15 @@
 
 ### :::tests.conftest.tweaked_settings
 
+## v2_integration_settings
+
+### :::tests.conftest.v2_integration_settings
+
+## v2_integration_settings_disabled
+
+### :::tests.conftest.v2_integration_settings_disabled
+
+## mock_v2_integration
+
+### :::tests.conftest.mock_v2_integration
+

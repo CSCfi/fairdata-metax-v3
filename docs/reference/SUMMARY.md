@@ -185,6 +185,7 @@
                         - [test_dataset_drafts](tests/unit/apps/core/api/dataset/test_dataset_drafts.md)
                         - [test_dataset_pids](tests/unit/apps/core/api/dataset/test_dataset_pids.md)
                         - [test_dataset_timestamps](tests/unit/apps/core/api/dataset/test_dataset_timestamps.md)
+                        - [test_dataset_v2_integration](tests/unit/apps/core/api/dataset/test_dataset_v2_integration.md)
                         - [test_legacy](tests/unit/apps/core/api/dataset/test_legacy.md)
                         - [test_metadata_download](tests/unit/apps/core/api/dataset/test_metadata_download.md)
                         - [test_preservation](tests/unit/apps/core/api/dataset/test_preservation.md)

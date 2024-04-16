@@ -660,3 +660,28 @@ def tweaked_settings(settings):
     settings.TEMPLATE_DEBUG = False
     settings.METAX_V2_INTEGRATION_ENABLED = False
     settings.METAX_V2_HOST = "metaxv2host"
+
+
+@pytest.fixture
+def v2_integration_settings(settings):
+    settings.METAX_V2_INTEGRATION_ENABLED = True
+    settings.METAX_V2_HOST = "https://metax-v2-test"
+    settings.METAX_V2_USER = "metax-v3-user"
+    settings.METAX_V2_PASSWORD = "metax-v3-password"
+    return settings
+
+
+@pytest.fixture
+def v2_integration_settings_disabled(v2_integration_settings):
+    v2_integration_settings.METAX_V2_INTEGRATION_ENABLED = False
+    return v2_integration_settings
+
+
+@pytest.fixture
+def mock_v2_integration(requests_mock, v2_integration_settings):
+    matcher = re.compile(v2_integration_settings.METAX_V2_HOST)
+    requests_mock.register_uri("POST", matcher, status_code=201)
+    requests_mock.register_uri("DELETE", matcher, status_code=204)
+    requests_mock.register_uri("GET", matcher, status_code=200)
+    requests_mock.register_uri("PUT", matcher, status_code=200)
+    yield requests_mock

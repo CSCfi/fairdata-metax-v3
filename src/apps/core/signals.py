@@ -8,6 +8,7 @@ from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models.signals import m2m_changed, post_delete
 from django.dispatch import Signal, receiver
+from rest_framework import exceptions, status
 
 from apps.core.models import Dataset, FileSet
 
@@ -15,6 +16,10 @@ logger = logging.getLogger(__name__)
 
 dataset_updated = Signal()
 dataset_created = Signal()
+
+
+class LegacyUpdateFailed(exceptions.APIException):
+    status_code = status.HTTP_409_CONFLICT
 
 
 @receiver(m2m_changed, sender=FileSet.files.through)
@@ -64,61 +69,43 @@ def json_serial(obj):
     raise TypeError("Type %s not serializable" % type(obj))
 
 
-@receiver(dataset_updated)
-def update_dataset_in_v2(sender, data: Dataset, **kwargs):
+def update_dataset_in_v2(dataset: Dataset, created=False):
     if not settings.METAX_V2_INTEGRATION_ENABLED:
         return
 
-    if data.state != "published":
+    if dataset.state != "published" or dataset.removed or dataset.api_version < 3:
         return
 
-    v2_dataset = data.as_v2_dataset()
+    v2_dataset = dataset.as_v2_dataset()
     identifier = v2_dataset["identifier"]
-    body = json.dumps(v2_dataset, cls=DjangoJSONEncoder)
+
     host, headers = get_v2_request_settings()
 
-    try:
+    found = False
+    if not created:
         response = requests.get(url=f"{host}/{identifier}", headers=headers)
-        logger.info(f"{response.status_code=}")
-        if response.status_code == 200:
-            res = requests.put(
-                url=f"{host}/{identifier}?migration_override", data=body, headers=headers
-            )
-            logger.info(f"{res.status_code=}: {res.content=}, {res.headers=}")
-        elif v2_dataset["api_meta"]["version"] == 3 and v2_dataset["research_dataset"].get(
-            "preferred_identifier"
-        ):
-            res = requests.post(url=f"{host}?migration_override", data=body, headers=headers)
-            logger.info(f"{res.status_code=}: {res.content=}, {res.headers=}")
-        else:
-            logger.warning(
-                f"could not sync dataset ({identifier}), because it was not found in Metax v2"
-            )
+        found = response.status_code == 200
 
-    except Exception as e:
-        logger.exception(e)
+    res: requests.Response
+    body = json.dumps(v2_dataset, cls=DjangoJSONEncoder)
+    if found:
+        res = requests.put(url=f"{host}/{identifier}?migration_override", data=body, headers=headers)
+    else:
+        res = requests.post(url=f"{host}?migration_override", data=body, headers=headers)
+    if res.status_code in {200, 201}:
+        logger.info(f"Sync {identifier} to V2: {res.status_code=}")
+    else:
+        logger.error(
+            f"Sync {identifier} to V2 failed: {res.status_code=}:\n  {res.content=}, \n  {res.headers=}"
+        )
+        raise LegacyUpdateFailed(f"Failed to sync dataset ({identifier}) to Metax V2")
+
+
+@receiver(dataset_updated)
+def handle_dataset_updated(sender, data: Dataset, **kwargs):
+    update_dataset_in_v2(data)
 
 
 @receiver(dataset_created)
-def create_dataset_to_v2(sender, data: Dataset, **kwargs):
-    if not settings.METAX_V2_INTEGRATION_ENABLED:
-        return
-
-    if data.state != "published":
-        return
-    v2_dataset = data.as_v2_dataset()
-    if hasattr(v2_dataset["research_dataset"], "issued"):
-        v2_dataset["research_dataset"]["issued"] = v2_dataset["research_dataset"]["issued"].date()
-    body = json.dumps(v2_dataset, cls=DjangoJSONEncoder)
-    host, headers = get_v2_request_settings()
-    headers["Content-Type"] = "application/json"
-    headers["Accept"] = "application/json"
-    try:
-        if v2_dataset["api_meta"]["version"] == 3 and v2_dataset["research_dataset"].get(
-            "preferred_identifier"
-        ):
-            res = requests.post(url=f"{host}?migration_override", data=body, headers=headers)
-            logger.info(f"{res.status_code=}: {res.content=}, {res.headers=}")
-
-    except Exception as e:
-        logger.exception(e)
+def handle_dataset_created(sender, data: Dataset, **kwargs):
+    update_dataset_in_v2(data, created=True)

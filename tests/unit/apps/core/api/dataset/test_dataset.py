@@ -12,7 +12,6 @@ from apps.core import factories
 from apps.core.factories import DatasetFactory, MetadataProviderFactory
 from apps.core.models import OtherIdentifier
 from apps.core.models.catalog_record.dataset import Dataset
-from apps.core.models.concepts import IdentifierType
 from apps.files.factories import FileStorageFactory
 
 logger = logging.getLogger(__name__)

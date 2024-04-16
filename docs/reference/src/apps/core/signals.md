@@ -1,5 +1,9 @@
 # signals
 
+## LegacyUpdateFailed
+
+### :::src.apps.core.signals.LegacyUpdateFailed
+
 ## handle_files_changed
 
 ### :::src.apps.core.signals.handle_files_changed
@@ -24,7 +28,11 @@
 
 ### :::src.apps.core.signals.update_dataset_in_v2
 
-## create_dataset_to_v2
+## handle_dataset_updated
 
-### :::src.apps.core.signals.create_dataset_to_v2
+### :::src.apps.core.signals.handle_dataset_updated
+
+## handle_dataset_created
+
+### :::src.apps.core.signals.handle_dataset_created
 
