@@ -506,11 +506,7 @@ class V2DatasetMixin:
             research_dataset["issued"] = self.issued.isoformat()
         doc = {
             "identifier": str(self.id),
-            "api_meta": (
-                self.legacydataset.dataset_json["api_meta"]
-                if hasattr(self, "legacydataset")
-                else {"version": 3}
-            ),
+            "api_meta": {"version": self.api_version},
             "deprecated": self.deprecated is not None,
             "state": self.state,
             "cumulative_state": self.cumulative_state.real,

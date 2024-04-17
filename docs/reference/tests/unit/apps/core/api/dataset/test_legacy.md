@@ -32,3 +32,7 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_legacy.test_legacy_dataset_relation
 
+## test_edit_legacy_dataset_wrong_api_version
+
+### :::tests.unit.apps.core.api.dataset.test_legacy.test_edit_legacy_dataset_wrong_api_version
+

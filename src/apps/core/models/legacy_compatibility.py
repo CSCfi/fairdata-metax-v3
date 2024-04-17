@@ -120,7 +120,7 @@ class LegacyCompatibility:
         if path in fixed_paths:
             return True  # Value has been fixed and we expected it to change
 
-        if list(new) == ["as_wkt"]:
+        if type(new) is dict and list(new) == ["as_wkt"]:
             return True  # Allow changes from normalizing as_wkt values
 
         if type(new) == type(old) == str and new == old.strip():
@@ -247,7 +247,6 @@ class LegacyCompatibility:
             cutoff_distance_for_pairs=1.0,
             exclude_paths=[
                 "id",
-                "api_meta",
                 "service_modified",
                 "service_created",
                 "use_doi_for_published",  # Should be `null` in V2 for published datasets but isn't always

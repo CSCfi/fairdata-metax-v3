@@ -226,7 +226,14 @@ class Command(BaseCommand):
                     defaults={"dataset_json": data},
                 )
             update_reason = self.get_update_reason(dataset, dataset_json=data, created=created)
+
             if update_reason:
+                if dataset.api_version > 2:
+                    self.stdout.write(
+                        f"{self.migrated} Dataset '{identifier}' has been modified in V3, not updating"
+                    )
+                    return None
+
                 self.updated += 1
                 dataset.dataset_json = data
                 dataset.update_from_legacy(raise_serializer_errors=False)

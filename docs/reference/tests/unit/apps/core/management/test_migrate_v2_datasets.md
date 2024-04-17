@@ -36,6 +36,10 @@
 
 ### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_command_update
 
+## test_migrate_command_update_wrong_api_version
+
+### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_command_update_wrong_api_version
+
 ## test_migrate_command_update_file
 
 ### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_command_update_file

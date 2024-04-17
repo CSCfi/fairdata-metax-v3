@@ -214,6 +214,7 @@
                     - [test_data_catalog](tests/unit/apps/core/models/test_data_catalog.md)
                     - [test_dataset](tests/unit/apps/core/models/test_dataset.md)
                     - [test_dataset_property](tests/unit/apps/core/models/test_dataset_property.md)
+                    - [test_legacy_dataset](tests/unit/apps/core/models/test_legacy_dataset.md)
                     - [test_metadata_provider](tests/unit/apps/core/models/test_metadata_provider.md)
                     - [test_models](tests/unit/apps/core/models/test_models.md)
                     - [test_publisher](tests/unit/apps/core/models/test_publisher.md)

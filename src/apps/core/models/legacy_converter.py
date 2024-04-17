@@ -644,6 +644,9 @@ class LegacyDatasetConverter:
             "last_modified_by": last_modified_by,
         }
 
+        if not self.convert_only:
+            fields["api_version"] = self.dataset_json.get("api_meta", {}).get("version", 1)
+
         if self.dataset_json.get("use_doi_for_published"):
             fields["pid_type"] = "DOI"
         return fields

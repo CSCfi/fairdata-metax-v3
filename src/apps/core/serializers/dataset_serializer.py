@@ -182,6 +182,7 @@ class DatasetSerializer(CommonNestedModelSerializer):
             "draft_of",
             "next_draft",
             "version",
+            "api_version",
         )
         fields = (
             "id",  # read only
@@ -325,6 +326,8 @@ class DatasetSerializer(CommonNestedModelSerializer):
         if errors:
             raise serializers.ValidationError(errors)
 
+        # Assign API version
+        _data["api_version"] = 3
         return _data
 
     def update(self, instance, validated_data):

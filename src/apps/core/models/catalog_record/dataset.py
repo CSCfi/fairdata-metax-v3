@@ -298,6 +298,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             modified=timezone.now(),
             persistent_identifier=None,
             draft_of=None,
+            api_version=3,
         )
         new_values.update(kwargs)
         copy = self.copier.copy(self, new_values=new_values)

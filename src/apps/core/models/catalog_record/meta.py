@@ -85,6 +85,8 @@ class CatalogRecord(AbstractBaseModel):
     created = models.DateTimeField(default=timezone.now, editable=False)
     modified = models.DateTimeField(default=timezone.now)
 
+    api_version = models.SmallIntegerField(default=3)
+
     def __str__(self):
         return str(self.id)
 

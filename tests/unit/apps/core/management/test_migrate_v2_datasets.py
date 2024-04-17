@@ -4,6 +4,8 @@ from io import StringIO
 import pytest
 from django.core.management import call_command
 
+from apps.core.models import LegacyDataset
+
 pytestmark = [pytest.mark.django_db, pytest.mark.management]
 
 
@@ -123,6 +125,31 @@ def test_migrate_command_update(mock_response_single, reference_data):
         identifiers=["c955e904-e3dd-4d7e-99f1-3fed446f96d1"],
     )
     output = out.getvalue()
+    assert "Processed 1 datasets" in output
+    assert "0 datasets updated succesfully" in output
+
+
+def test_migrate_command_update_wrong_api_version(mock_response_single, reference_data):
+    call_command(
+        "migrate_v2_datasets",
+        identifiers=["c955e904-e3dd-4d7e-99f1-3fed446f96d1"],
+    )
+    out = StringIO()
+    err = StringIO()
+    LegacyDataset.objects.filter(id="c955e904-e3dd-4d7e-99f1-3fed446f96d1").update(api_version=3)
+    call_command(
+        "migrate_v2_datasets",
+        stdout=out,
+        stderr=err,
+        update=True,
+        force=True,
+        identifiers=["c955e904-e3dd-4d7e-99f1-3fed446f96d1"],
+    )
+    output = out.getvalue()
+    assert (
+        "Dataset 'c955e904-e3dd-4d7e-99f1-3fed446f96d1' has been modified in V3, not updating"
+        in output
+    )
     assert "Processed 1 datasets" in output
     assert "0 datasets updated succesfully" in output
 

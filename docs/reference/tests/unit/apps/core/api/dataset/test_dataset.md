@@ -168,6 +168,10 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_empty_description
 
+## test_api_version
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_api_version
+
 ## test_dataset_last_modified_by
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_dataset_last_modified_by

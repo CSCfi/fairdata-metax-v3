@@ -161,3 +161,27 @@ def test_legacy_dataset_relation(
         data["relation"][0]["entity"]["type"]["url"]
         == "http://uri.suomi.fi/codelist/fairdata/resource_type/code/physical_object"
     )
+
+
+def test_edit_legacy_dataset_wrong_api_version(
+    admin_client, legacy_dataset_a, legacy_dataset_a_json
+):
+    legacy_dataset_a_json["dataset_json"]["research_dataset"]["language"].append(
+        {
+            "identifier": "http://lexvo.org/id/iso639-3/est",
+            "title": {"en": "Estonian", "fi": "Viron kieli", "und": "viro"},
+        }
+    )
+    identifier = legacy_dataset_a_json["dataset_json"]["identifier"]
+    admin_client.patch(
+        reverse("dataset-detail", kwargs={"pk": identifier}),
+        {},
+        content_type="application/json",
+    )  # Should update api_version to 3
+    res = admin_client.put(
+        reverse("migrated-dataset-detail", args=[identifier]),
+        legacy_dataset_a_json,
+        content_type="application/json",
+    )
+    assert res.status_code == 400
+    assert res.json() == {"detail": "Dataset has been modified with a later API version."}

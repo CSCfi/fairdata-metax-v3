@@ -5,13 +5,14 @@ import uuid
 from contextlib import contextmanager
 from datetime import datetime, timezone as tz
 from textwrap import dedent
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 from urllib.parse import SplitResult, parse_qsl, quote, urlencode, urlsplit, urlunsplit
 
 import shapely
 from cachalot.api import cachalot_disabled
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db import models
 from django.utils.dateparse import parse_date, parse_datetime
 from django_filters import NumberFilter
 from drf_yasg import openapi
@@ -357,3 +358,22 @@ def remove_wkt_point_duplicates(point: str, wkt_list: list) -> list:
             continue
         output.append(p2_wkt)
     return output
+
+
+def is_field_value_provided(model, field_name: str, args: list, kwargs: dict):
+    """Determine if Model.__init__ arguments have a value for field_name.
+
+    Useful when we require a default value that is different from the field default.
+    """
+    # Is value provided in kwargs?
+    if field_name in kwargs:
+        return True
+
+    # Is value provided in args?
+    index = None
+    for index, field in enumerate(model._meta.concrete_fields):
+        if field.attname == field_name:
+            return len(args) > index
+
+    # Field does not exist in model
+    raise ValueError(f"Concrete model field not found: {model.__name__}.{field_name}")

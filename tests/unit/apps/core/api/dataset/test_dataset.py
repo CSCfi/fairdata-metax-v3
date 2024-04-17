@@ -498,6 +498,7 @@ def test_dataset_put_maximal_and_minimal(
 
     # writable fields not in minimal_json should be cleared to falsy values
     assert list(sorted(key for key, value in res.data.items() if value)) == [
+        "api_version",
         "created",
         "data_catalog",
         "dataset_versions",
@@ -715,6 +716,16 @@ def test_empty_description(admin_client, dataset_a_json, data_catalog, reference
     )
     assert res.status_code == 200
     assert res.json()["description"] == None
+
+
+def test_api_version(admin_client, dataset_a_json, data_catalog, reference_data):
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    dataset_id = res.data["id"]
+    assert res.data["api_version"] == 3
+    Dataset.objects.filter(id=dataset_id).update(api_version=2)
+    res = admin_client.patch(f"/v3/datasets/{dataset_id}", {}, content_type="application/json")
+    assert res.status_code == 200
+    assert res.data["api_version"] == 3
 
 
 def test_dataset_last_modified_by(admin_client, user_client, user):

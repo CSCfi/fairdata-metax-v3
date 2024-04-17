@@ -10,10 +10,10 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models, transaction
 from django.utils import timezone
 from django.utils.translation import gettext as _
-from rest_framework import serializers
+from rest_framework import exceptions, serializers
 
 from apps.actors.models import Actor
-from apps.common.helpers import ensure_dict, ensure_list
+from apps.common.helpers import ensure_dict, ensure_list, is_field_value_provided
 from apps.core.models import FileSet
 from apps.core.models.legacy_converter import LegacyDatasetConverter
 from apps.files.models import File
@@ -24,6 +24,10 @@ from .catalog_record import Dataset, MetadataProvider
 from .preservation import Contract
 
 logger = logging.getLogger(__name__)
+
+
+class IncompatibleAPIVersion(exceptions.APIException):
+    status_code = 400
 
 
 def add_escapes(val: str):
@@ -74,12 +78,15 @@ class LegacyDataset(Dataset):
         super().__init__(*args, **kwargs)
         self.created_objects = Counter()
 
-        if self._state.adding:
-            # Get minimal dataset fields from legacy json
-            if not self.metadata_owner_id:
-                self.attach_metadata_owner()
-            if not self.title:
-                self.title = self.legacy_research_dataset["title"]
+        # If api_version was not provided, replace the field default with value from dataset_json
+        if not is_field_value_provided(self.__class__, "api_version", args, kwargs):
+            self.api_version = self.dataset_json.get("api_meta", {}).get("version", 1)
+
+        # Get minimal dataset fields from legacy json
+        if not self.metadata_owner_id:
+            self.attach_metadata_owner()
+        if not self.title:
+            self.title = self.legacy_research_dataset["title"]
 
     @property
     def is_legacy(self):
@@ -224,8 +231,16 @@ class LegacyDataset(Dataset):
 
     def update_from_legacy(self, context=None, raise_serializer_errors=True):
         """Update dataset fields from legacy data dictionaries."""
+        if self._state.adding:
+            raise ValueError("LegacyDataset needs to be saved before using update_from_legacy.")
+
         if not context:
             context = {}
+
+        if self.api_version >= 3:
+            raise IncompatibleAPIVersion(
+                detail="Dataset has been modified with a later API version."
+            )
 
         from apps.core.serializers.legacy_serializer import LegacyDatasetUpdateSerializer
 
@@ -240,7 +255,6 @@ class LegacyDataset(Dataset):
                 self.created_objects.update(converter.created_objects)
                 self.invalid_legacy_values = converter.get_invalid_values_by_path()
                 self.fixed_legacy_values = converter.get_fixed_values_by_path()
-                self.saving_legacy = True  # Enable less strict validation on save
                 serializer = LegacyDatasetUpdateSerializer(
                     instance=self, data=data, context={**context, "dataset": self}
                 )
@@ -284,4 +298,5 @@ class LegacyDataset(Dataset):
                 {"id": _("A non-legacy dataset already exists with the same identifier.")}
             )
 
+        self.saving_legacy = True  # Enable less strict validation in Dataset.save
         return super().save(*args, **kwargs)

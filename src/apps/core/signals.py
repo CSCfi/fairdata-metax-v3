@@ -73,7 +73,6 @@ def update_dataset_in_v2(sender, data: Dataset, **kwargs):
         return
 
     v2_dataset = data.as_v2_dataset()
-    v2_dataset["api_meta"] = {"version": 3}
     identifier = v2_dataset["identifier"]
     body = json.dumps(v2_dataset, cls=DjangoJSONEncoder)
     host, headers = get_v2_request_settings()
