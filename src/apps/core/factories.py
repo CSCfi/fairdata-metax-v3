@@ -280,8 +280,17 @@ class AccessRightsFactory(factory.django.DjangoModelFactory):
         skip_postgeneration_save = True
 
     access_type = factory.SubFactory(AccessTypeFactory)
-    license = factory.RelatedFactory(DatasetLicenseFactory)  # create single license
     description = factory.Dict({"en": factory.Faker("paragraph")})
+
+    @factory.post_generation
+    def license(self, create, extracted, **kwargs):
+        if not create:
+            return
+        if extracted:
+            for license in extracted:
+                self.license.add(license)
+        else:
+            self.license.set([DatasetLicenseFactory()])
 
 
 class DataCatalogFactory(factory.django.DjangoModelFactory):
@@ -330,6 +339,7 @@ class DatasetFactory(factory.django.DjangoModelFactory):
 
     data_catalog = factory.SubFactory(DataCatalogFactory)
     title = factory.Dict({"en": factory.Sequence(lambda n: f"research-dataset-{n}")})
+    description = factory.Dict({"en": factory.Faker("paragraph")})
     preservation = factory.SubFactory(PreservationFactory)
     access_rights = factory.SubFactory(AccessRightsFactory)
     system_creator = factory.SubFactory(MetaxUserFactory)

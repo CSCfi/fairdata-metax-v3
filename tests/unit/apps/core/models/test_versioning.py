@@ -40,16 +40,18 @@ def test_create_new_version(language, theme, dataset):
 
 
 def test_edit_new_version(dataset_with_foreign_keys):
-    lic = DatasetLicenseFactory()
-    dataset_with_foreign_keys.access_rights = AccessRightsFactory()
-    dataset_with_foreign_keys.access_rights.license.add(lic)
+    lic1 = DatasetLicenseFactory()
+    dataset_with_foreign_keys.access_rights = AccessRightsFactory(license = [lic1])
     old_version = dataset_with_foreign_keys
     new_version = Dataset.create_copy(dataset_with_foreign_keys)
+    lic2 = DatasetLicenseFactory()
     new_version.title = {"fi": "New title"}
     new_version.language.add(LanguageFactory())
     new_version.access_rights.access_type = AccessTypeFactory(url="http://example.com")
+    new_version.access_rights.license.add(lic2)
     new_version.save()
-    assert new_version.access_rights.license.all().count() == 1
+    assert old_version.access_rights.license.all().count() == 1
+    assert new_version.access_rights.license.all().count() == 2
     assert (
         new_version.access_rights.license.all().first().id
         != old_version.access_rights.license.all().first().id

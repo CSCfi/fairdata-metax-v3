@@ -562,23 +562,28 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         errors = {}
         actor_errors = []
         if not self.data_catalog:
-            errors["data_catalog"] = _("Dataset has to have a data catalog when publishing")
+            errors["data_catalog"] = _("Dataset has to have a data catalog when publishing.")
         if require_pid and not self.persistent_identifier:
             errors["persistent_identifier"] = _(
-                "Dataset has to have a persistent identifier when publishing"
+                "Dataset has to have a persistent identifier when publishing."
             )
         if not self.access_rights:
-            errors["access_rights"] = _("Dataset has to have access rights when publishing")
+            errors["access_rights"] = _("Dataset has to have access rights when publishing.")
+        if not self.description:
+            errors["description"] = _("Dataset has to have a description when publishing.")
 
         # Some legacy/harvested datasets are missing creator or publisher
-        is_harvested_or_none = not self.data_catalog or self.data_catalog.harvested
-        if not is_harvested_or_none and not self.is_legacy:
+        is_harvested = self.data_catalog and self.data_catalog.harvested
+        if not (self.is_legacy and is_harvested):
             if self.actors.filter(roles__contains=["creator"]).count() <= 0:
-                actor_errors.append(_("An actor with creator role is required"))
+                actor_errors.append(_("An actor with creator role is required."))
                 errors["actors"] = actor_errors
+        if not self.is_legacy:
             if self.actors.filter(roles__contains=["publisher"]).count() != 1:
-                actor_errors.append(_("Exactly one actor with publisher role is required"))
+                actor_errors.append(_("Exactly one actor with publisher role is required."))
                 errors["actors"] = actor_errors
+            if self.access_rights and not self.access_rights.license.exists():
+                errors["access_rights"] = _("Dataset has to have a license when publishing.")
 
         if errors:
             raise ValidationError(errors)
