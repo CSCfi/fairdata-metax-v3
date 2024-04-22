@@ -19,7 +19,8 @@ class Command(BaseCommand):
             return
 
         language = factories.LanguageFactory()
-        data_catalog = factories.DataCatalogFactory(id="urn:data-catalog-test")
+        data_catalog = factories.DataCatalogFactory(id="urn:nbn:fi:att:data-catalog-test")
+        harvested_data_catalog = factories.DataCatalogFactory(id="urn:nbn:fi:att:data-catalog-harvested-test", harvested="True")
         dataset = factories.DatasetFactory(data_catalog=data_catalog, title={"en": "Test dataset"})
         logger.info(f"{dataset=}")
 
@@ -47,7 +48,7 @@ class Command(BaseCommand):
         )
 
         logger.info(
-            f"Created or updated test objects:\n {language=}, \n {data_catalog=}, "
+            f"Created or updated test objects:\n {language=}, \n {data_catalog=}, \n {harvested_data_catalog=},"
             f"\n {dataset=},\n {files=},\n {contract=}"
         )
 

@@ -1,0 +1,131 @@
+{
+  "access_rights": {
+    "description": {
+      "en": "Description of the access rights.",
+      "fi": "Saatavuustietojen kuvaus."
+    },
+    "license": [
+      {
+        "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0",
+        "in_scheme": "http://uri.suomi.fi/codelist/fairdata/license",
+        "pref_label": {
+          "en": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+          "fi": "Creative Commons Nimeä 4.0 Kansainvälinen (CC BY 4.0)"
+        }
+      }
+    ],
+    "access_type": {
+      "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open",
+      "in_scheme": "http://uri.suomi.fi/codelist/fairdata/access_type",
+      "pref_label": {
+        "en": "Open",
+        "fi": "Avoin"
+      }
+    },
+    "restriction_grounds": []
+  },
+  "actors": [
+    {
+      "roles": ["creator", "publisher"],
+      "person": {
+        "name": "Teppo Testaaja"
+      },
+      "organization": {
+        "pref_label": {
+          "en": "CSC – IT Center for Science",
+          "fi": "CSC - Tieteen tietotekniikan keskus Oy",
+          "sv": "CSC – IT Center for Science",
+          "und": "CSC - Tieteen tietotekniikan keskus Oy"
+        },
+        "url": "http://uri.suomi.fi/codelist/fairdata/organization/code/09206320",
+        "in_scheme": "http://uri.suomi.fi/codelist/fairdata/organization"
+      }
+    }
+  ],
+  "cumulative_state": 0,
+  "data_catalog": "urn:data-catalog-example",
+  "description": {
+    "fi": "Uusi kuvaus",
+    "en": "New description"
+  },
+  "field_of_science": [
+    {
+      "url": "http://www.yso.fi/onto/okm-tieteenala/ta112",
+      "in_scheme": "http://www.yso.fi/onto/okm-tieteenala/conceptscheme",
+      "pref_label": {
+        "en": "Statistics and probability",
+        "fi": "Tilastotiede",
+        "sv": "Statistik"
+      }
+    }
+  ],
+  "infrastructure": [],
+  "issued": "2024-04-03",
+  "keyword": [],
+  "language": [
+    {
+      "url": "http://lexvo.org/id/iso639-3/fin",
+      "in_scheme": "http://lexvo.org/id/",
+      "pref_label": {
+        "fi": "suomi",
+        "en": "Finnish",
+        "sv": "finska"
+      }
+    },
+    {
+      "url": "http://lexvo.org/id/iso639-3/eng",
+      "in_scheme": "http://lexvo.org/id/",
+      "pref_label": {
+        "fi": "englanti",
+        "en": "English",
+        "sv": "engelska"
+      }
+    }
+  ],
+  "metadata_owner": {
+    "user": "teppo",
+    "organization": "csc.fi"
+  },
+  "other_identifiers": [],
+  "persistent_identifier": "test-identifier:12345678990",
+  "projects": [],
+  "provenance": [],
+  "relation": [],
+  "remote_resources": [],
+  "spatial": [],
+  "state": "published",
+  "temporal": [],
+  "theme": [
+    {
+      "url": "http://www.yso.fi/onto/koko/p36817",
+      "in_scheme": "http://www.yso.fi/onto/koko/",
+      "pref_label": {
+        "en": "testing",
+        "fi": "testaus",
+        "se": "testen",
+        "sv": "testning"
+      }
+    }
+  ],
+  "title": {
+    "fi": "Uusi otsikko",
+    "en": "New title"
+  },
+  "created": "2024-04-03T14:13:57Z",
+  "modified": "2024-04-03T14:13:57Z",
+  "dataset_versions": [
+    {
+      "title": {
+        "en": "New title",
+        "fi": "Uusi otsikko"
+      },
+      "persistent_identifier": "test-identifier:12345678990",
+      "state": "published",
+      "created": "2024-04-03T14:13:57Z",
+      "version": 1
+    }
+  ],
+  "published_revision": 2,
+  "draft_revision": 0,
+  "version": 1
+}

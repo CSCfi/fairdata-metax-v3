@@ -417,14 +417,25 @@ They have been moved under `/v3/` together with the former `/rest/` style endpoi
 
 ### Examples
 
+#### Finding reference data
+
+To find an entry for a reference data field, query parameter `pref_label` can be used when accessing the reference data endpoint of the field. 
+In this example, "finnish" is searched from the languages-endpoint.
+The result contains 4 different entries and the most suitable one can be included in a dataset using the `url` of the entry.
+
+See [reference data API changes](#reference-data-api-changes) for a full list of reference data fields and their endpoints.
+
+!!! example "Finding Finnish language"
+    `GET /v3/reference-data/languages?pref_label=finnish`
+    ``` json
+        ---8<--- "tests/unit/docs/examples/test_data/v1-v3-finding-refdata.json"
+    ```
+
 
 #### Creating a dataset
 
+This example compares the payloads of V3 and V2 dataset creation. 
 <!-- prettier-ignore -->
-!!! TIP
-    If you want to try out the dataset creation with this example, create the data-catalog first. Example data-catalog
-    creation request can be found under DataCatalog in this article.
-
 !!! example "Creating a dataset JSON payload"
 
     === "V3"
@@ -443,13 +454,38 @@ They have been moved under `/v3/` together with the former `/rest/` style endpoi
 
 #### Modifying a dataset
 
-You don't have to include every field when modifying dataset, only the ones you want to change. This is valid put request for above V3 dataset:
+A dataset can be modified using either a PATCH or a PUT request. With a PATCH request, only the changed fields need to be included in the request body. 
+Unchanged fields can be omitted. Fields in the target dataset will be replaced with the values found in the request. To clear a field, set it to null.
+
+Note that the whole field will be replaced, so lists, for example, need to contain all values (changed and unchanged) that are to be found in the final result. 
+
+This is valid PATCH request for the above V3 dataset:
 
 !!! example
-    `PATCH /v3/datasets/{id}`
-    ```json
-    ---8<--- "tests/unit/docs/examples/test_data/dataset_api/modify-dataset.json"
-    ```
+    === "Request"
+        `PATCH /v3/datasets/{id}`
+        ```json
+        ---8<--- "tests/unit/docs/examples/test_data/dataset_api/modify-dataset.json"
+        ```
+    === "Result"
+        `GET /v3/datasets/{id}`
+        ```json
+        ---8<--- "tests/unit/docs/examples/test_data/v1-v3-dataset-patch-result.json"
+        ```
+
+A dataset can also be modified using a PUT request, that replaces the whole target dataset. When using a PUT request, both changed and unchanged fields need to be present in the request body.
+
+#### Minimal valid dataset template
+
+!!! example ""
+    === "Service User"
+        ``` json
+        ---8<--- "tests/unit/docs/examples/test_data/minimal-valid-dataset-serviceuser.json"
+        ```
+    === "End User"
+        ``` json
+        ---8<--- "tests/unit/docs/examples/test_data/minimal-valid-dataset-enduser.json"
+        ```
 
 ## Reference data API changes
 
@@ -476,7 +512,7 @@ query parameter e.g. `?pref_label=somelabel`.
 | /es/reference_data/mime_type/_search           | :no_entry:                              |
 | /es/reference_data/preservation_event/_search  | /v3/reference-data/preservation-events  |
 | /es/reference_data/relation_type/_search       | /v3/reference-data/relation-types       |
-| /es/reference_data/research_infra/_search      | /v3/reference-data/research-infra       |
+| /es/reference_data/research_infra/_search      | /v3/reference-data/research-infras      |
 | /es/reference_data/resource_type/_search       | /v3/reference-data/resource-types       |
 | /es/reference_data/restriction_grounds/_search | /v3/reference-data/restriction-grounds  |
 | /es/reference_data/use_category/_search        | /v3/reference-data/use-categories       |

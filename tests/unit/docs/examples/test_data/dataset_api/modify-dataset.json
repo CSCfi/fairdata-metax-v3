@@ -1,8 +1,7 @@
 {
-  "data_catalog": "urn:nbn:fi:att:data-catalog-ida",
   "title": {
-    "fi": "Toinen otsikko",
-    "en": "My new title"
+    "fi": "Uusi otsikko",
+    "en": "New title"
   },
   "language": [
     {
@@ -13,8 +12,7 @@
     }
   ],
   "description": {
-    "fi": "Kuvaus",
-    "en": "Description"
-  },
-  "cumulative_state": 2
+    "fi": "Uusi kuvaus",
+    "en": "New description"
+  }
 }

@@ -1,0 +1,31 @@
+{
+  "data_catalog": "urn:nbn:fi:att:data-catalog-harvested-test",
+  "persistent_identifier": "12345",
+  "title": {
+    "fi": "Esimerkkiaineisto",
+    "en": "Example Dataset"
+  },
+  "description": {
+    "fi": "Esimerkkiaineiston kuvaus.",
+    "en": "Description of the example dataset."
+  },
+  "access_rights": {
+    "access_type": {
+      "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open"
+    },
+    "license": [
+      {
+        "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0"
+      }
+    ]
+  },
+  "actors": [
+    {
+      "roles": ["creator", "publisher"],
+      "person": {
+        "name": "Teppo Testaaja"
+      }
+    }
+  ],
+  "state": "published"
+}

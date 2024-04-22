@@ -146,5 +146,5 @@ def test_modify_dataset(
     assert dataset.language.all().count() == len(put.data["language"])
     assert dataset.language.filter(url="http://lexvo.org/id/iso639-3/eng").count() == 1
     assert dataset.persistent_identifier == res.data["persistent_identifier"]
-    assert dataset.cumulative_state == 2
+    assert dataset.cumulative_state == 0
     assert dataset.field_of_science.all().count() == len(res.data["field_of_science"])
