@@ -256,7 +256,9 @@ class LegacyDataset(Dataset):
                 self.invalid_legacy_values = converter.get_invalid_values_by_path()
                 self.fixed_legacy_values = converter.get_fixed_values_by_path()
                 serializer = LegacyDatasetUpdateSerializer(
-                    instance=self, data=data, context={**context, "dataset": self}
+                    instance=self,
+                    data=data,
+                    context={**context, "dataset": self, "migrating": True},
                 )
                 serializer.is_valid(raise_exception=True)
                 serializer.save()

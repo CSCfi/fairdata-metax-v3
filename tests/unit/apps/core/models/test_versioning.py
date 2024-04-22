@@ -41,7 +41,7 @@ def test_create_new_version(language, theme, dataset):
 
 def test_edit_new_version(dataset_with_foreign_keys):
     lic1 = DatasetLicenseFactory()
-    dataset_with_foreign_keys.access_rights = AccessRightsFactory(license = [lic1])
+    dataset_with_foreign_keys.access_rights = AccessRightsFactory(license=[lic1])
     old_version = dataset_with_foreign_keys
     new_version = Dataset.create_copy(dataset_with_foreign_keys)
     lic2 = DatasetLicenseFactory()

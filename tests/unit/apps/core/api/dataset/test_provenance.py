@@ -116,9 +116,7 @@ def test_edit_provenance(dataset_with_provenance_json, provenance_a_request, adm
     provenance_json["title"]["fi"] = "new title"
     assert len(provenance_a_request.data["provenance"][0]["is_associated_with"]) == 1
     provenance_json["is_associated_with"].append(
-        {
-            "person": {"name": "jack"},
-        }
+        {"person": {"name": "jack"}, "organization": {"pref_label": {"en": "test org"}}}
     )
     res = admin_client.put(
         f"/v3/datasets/{dataset_id}/provenance/{provenance_id}",

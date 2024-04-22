@@ -2,6 +2,7 @@ import logging
 from typing import Dict
 
 from django.utils.translation import gettext_lazy as _
+from rest_framework import serializers
 
 from apps.common.helpers import deduplicate_list, has_values
 from apps.common.serializers import CommonListSerializer
@@ -34,11 +35,27 @@ class DatasetActorSerializer(DatasetMemberSerializer):
     """
 
     id = UUIDOrTagField(required=False)
-    organization = DatasetOrganizationSerializer(required=False, allow_null=True)
+
+    # Organization is normally required but can be left out when it can be determined with id.
+    # Having it as required here means it shows as required in swagger.
+    organization = DatasetOrganizationSerializer(required=True, allow_null=False)
     person = DatasetPersonSerializer(required=False, allow_null=True)
 
     partial_update_fields = {"id", "roles", "actors_order"}  # Fields allowed for partial update
-    save_validator = AnyOf(["person", "organization"])
+
+    def validate_save(self, validated_data, instance=None):
+        validated_data = super().validate_save(validated_data, instance)
+        if not validated_data.get("organization") and not self.context.get("migrating"):
+            raise serializers.ValidationError({"organization": "This field is required"})
+        AnyOf(["person", "organization"])(validated_data)
+
+    def to_internal_value(self, data) -> Dict:
+        # Make organization field optional when updating actor so it can be determined
+        # with id instead of being explicitly defined in the request.
+        fields = self.fields
+        fields.get("organization").required = False
+        fields.get("organization").allow_null = True
+        return super().to_internal_value(data)
 
     def get_dataset_actors(self, dataset) -> Dict[str, DatasetMemberContext]:
         actors = {}

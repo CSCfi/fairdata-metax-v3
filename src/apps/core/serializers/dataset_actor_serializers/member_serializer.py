@@ -84,8 +84,8 @@ class DatasetMemberSerializer(StrictSerializer, CommonNestedModelSerializer):
     # e.g. parent ForeignKey for multi-parent object
     extra_save_data_fields = set()
 
-    # Validator should return True if data can be used to create new instance
-    save_validator = lambda self, value: True
+    # Validator should raise validation error if data can't be used to create new instance
+    save_validator = None
 
     def get_dataset_members(self) -> Dict[str, DatasetMemberContext]:
         """Implement in subclass."""
@@ -228,7 +228,10 @@ class DatasetMemberSerializer(StrictSerializer, CommonNestedModelSerializer):
                     if isinstance(validated_data[field], models.Model):
                         validated_data[field] = {"id": validated_data[field].id}
 
-        return self.save_validator(validated_data)
+        if self.save_validator:
+            self.save_validator(validated_data)
+
+        return validated_data
 
     def save(self, **kwargs) -> models.Model:
         """Save each instance only once.

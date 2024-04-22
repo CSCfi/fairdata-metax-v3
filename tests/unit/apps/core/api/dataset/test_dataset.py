@@ -755,8 +755,9 @@ def test_dataset_expanded_catalog(admin_client, dataset_a_json, data_catalog, re
 
 
 def test_many_actors(admin_client, dataset_a_json, data_catalog, reference_data):
+    org = {"organization": {"pref_label": {"en": "organization"}}}
     dataset_a_json["actors"] = [
-        {"person": {"name": f"Test person {i}"}, "roles": ["creator"]} for i in range(100)
+        {"person": {"name": f"Test person {i}"}, **org, "roles": ["creator"]} for i in range(100)
     ]
     dataset_a_json["actors"][0]["roles"].append("publisher")
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
@@ -813,11 +814,9 @@ def test_get_dataset_include_nulls(admin_client, dataset_a_json, data_catalog, r
     )
     assert res.data["deprecated"] == None
 
+
 def test_missing_required_fields(admin_client, data_catalog, reference_data):
-    dataset = {
-        "pid_type": "URN",
-        "state": "published"
-    }
+    dataset = {"pid_type": "URN", "state": "published"}
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
     assert res.status_code == 400
     assert "This field is required." in str(res.data["title"])
@@ -836,34 +835,24 @@ def test_missing_required_fields(admin_client, data_catalog, reference_data):
 
     dataset = {
         **dataset,
-        "description": {
-		    "en": "test"
-	},
-	    "access_rights": {
-            "access_type": {
-                "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open"
-            },
-	},
+        "description": {"en": "test"},
+        "access_rights": {
+            "access_type": {"url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open"},
+        },
         "actors": [
             {
-                "roles": [
-                    "creator",
-                    "publisher"
-                ],
-                "person": {
-                    "name": "test"
-                }
+                "roles": ["creator", "publisher"],
+                "person": {"name": "test"},
+                "organization": {"pref_label": {"en": "test org"}},
             }
         ],
     }
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
     assert res.status_code == 400
     assert "Dataset has to have a license when publishing." in str(res.data["access_rights"])
-    
+
     dataset["access_rights"]["license"] = [
-			{
-				"url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0"
-			}
-		]
+        {"url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0"}
+    ]
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
     assert res.status_code == 201

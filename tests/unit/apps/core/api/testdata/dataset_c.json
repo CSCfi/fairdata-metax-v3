@@ -38,6 +38,11 @@
       "person": {
         "name": "Teppo"
       },
+      "organization": {
+        "pref_label": {
+          "en": "teppo org"
+        }
+      },
       "roles": [
         "creator"
       ]

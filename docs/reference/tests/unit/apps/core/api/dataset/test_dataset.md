@@ -200,3 +200,7 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_get_dataset_include_nulls
 
+## test_missing_required_fields
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_missing_required_fields
+

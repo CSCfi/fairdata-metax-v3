@@ -46,7 +46,7 @@ def dataset_json_with_files_published(
         "actors": [
             {"organization": {"pref_label": {"en": "test org"}}, "roles": ["creator", "publisher"]}
         ],
-        "description": {"en": "Test description"}
+        "description": {"en": "Test description"},
     }
 
 

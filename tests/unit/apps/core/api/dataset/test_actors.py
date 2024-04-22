@@ -66,7 +66,10 @@ def another_dataset_with_actors(
 
 
 def test_create_actor(patch_dataset):
-    data = patch_dataset({"actors": [{"person": {"name": "teppo"}, "roles": ["creator"]}]})
+    org = {"pref_label": {"en": "organization"}}
+    data = patch_dataset(
+        {"actors": [{"person": {"name": "teppo"}, "organization": org, "roles": ["creator"]}]}
+    )
     assert data["actors"] == [
         matchers.DictContaining(
             {"person": matchers.DictContaining({"name": "teppo"}), "roles": ["creator"]}
@@ -96,11 +99,12 @@ def test_create_actors_with_multiple_roles_identical(patch_dataset):
 
 
 def test_create_actors_with_multiple_roles_different_person_name(patch_dataset):
+    org = {"organization": {"pref_label": {"en": "organization"}}}
     data = patch_dataset(
         {
             "actors": [
-                {"person": {"name": "matti"}, "roles": ["creator"]},
-                {"person": {"name": "teppo"}, "roles": ["publisher"]},
+                {"person": {"name": "matti"}, **org, "roles": ["creator"]},
+                {"person": {"name": "teppo"}, **org, "roles": ["publisher"]},
             ]
         }
     )
@@ -167,11 +171,12 @@ def test_create_actors_with_multiple_roles_different_id(patch_dataset):
 
 
 def test_create_actors_with_multiple_roles_same_person_id(patch_dataset):
+    org = {"organization": {"pref_label": {"en": "organization"}}}
     data = patch_dataset(
         {
             "actors": [
-                {"person": {"id": "#teppo", "name": "teppo"}, "roles": ["creator"]},
-                {"person": {"id": "#teppo", "name": "teppo"}, "roles": ["publisher"]},
+                {"person": {"id": "#teppo", "name": "teppo"}, **org, "roles": ["creator"]},
+                {"person": {"id": "#teppo", "name": "teppo"}, **org, "roles": ["publisher"]},
             ]
         }
     )
@@ -186,11 +191,12 @@ def test_create_actors_with_multiple_roles_same_person_id(patch_dataset):
 
 
 def test_create_actors_with_multiple_roles_different_person_id(patch_dataset):
+    org = {"organization": {"pref_label": {"en": "organization"}}}
     data = patch_dataset(
         {
             "actors": [
-                {"person": {"id": "#teppo", "name": "teppo"}, "roles": ["creator"]},
-                {"person": {"id": "#otherteppo", "name": "teppo"}, "roles": ["publisher"]},
+                {**org, "person": {"id": "#teppo", "name": "teppo"}, "roles": ["creator"]},
+                {**org, "person": {"id": "#otherteppo", "name": "teppo"}, "roles": ["publisher"]},
             ]
         }
     )
@@ -639,11 +645,12 @@ def test_organization_from_another_dataset(patch_dataset, another_dataset_with_a
 
 
 def test_create_actor_conflicting_person(patch_dataset):
+    org = {"organization": {"pref_label": {"en": "organization"}}}
     data = patch_dataset(
         {
             "actors": [
-                {"id": "#actor", "person": {"name": "matti"}},
-                {"id": "#actor", "person": {"name": "teppo"}},
+                {"id": "#actor", "person": {"name": "matti"}, **org},
+                {"id": "#actor", "person": {"name": "teppo"}, **org},
             ]
         },
         expected_status=400,
@@ -677,11 +684,12 @@ def test_create_actor_conflicting_org(patch_dataset):
 
 
 def test_create_actor_person_conflicting_name(patch_dataset):
+    org = {"organization": {"pref_label": {"en": "organization"}}}
     data = patch_dataset(
         {
             "actors": [
-                {"person": {"id": "#matti", "name": "matti"}},
-                {"person": {"id": "#matti", "name": "teppo"}},
+                {"person": {"id": "#matti", "name": "matti"}, **org},
+                {"person": {"id": "#matti", "name": "teppo"}, **org},
             ]
         },
         expected_status=400,
@@ -719,12 +727,13 @@ def test_create_actor_organization_conflicting_pref_label(patch_dataset):
 
 
 def test_existing_actor_conflicting_person(patch_dataset, existing_actors):
+    org = {"organization": {"pref_label": {"en": "organization"}}}
     actor_id = existing_actors[0]["id"]
     data = patch_dataset(
         {
             "actors": [
-                {"id": actor_id, "person": {"name": "matti"}},
-                {"id": actor_id, "person": {"name": "teppo"}},
+                {"id": actor_id, "person": {"name": "matti"}, **org},
+                {"id": actor_id, "person": {"name": "teppo"}, **org},
             ]
         },
         expected_status=400,
@@ -743,17 +752,16 @@ def test_create_empty_actor(patch_dataset):
         {"actors": [{}]},
         expected_status=400,
     )
-    assert data["actors"][0] == [
-        """At least one of fields 'organization', 'person' is required."""
-    ]
+    assert data["actors"][0] == {"organization": "This field is required"}
 
 
 def test_create_empty_person(patch_dataset):
+    org = {"organization": {"pref_label": {"en": "organization"}}}
     data = patch_dataset(
         {"actors": [{"person": {}}]},
         expected_status=400,
     )
-    assert data["actors"][0]["person"] == {"name": "Field is required."}
+    assert data["actors"][0] == {"organization": "This field is required"}
 
 
 def test_create_empty_organization(patch_dataset):
@@ -769,7 +777,7 @@ def test_create_actor_no_person_or_org(patch_dataset):
         {"actors": [{"roles": ["creator"]}]},
         expected_status=400,
     )
-    assert data["actors"][0] == ["At least one of fields 'organization', 'person' is required."]
+    assert data["actors"][0] == {"organization": "This field is required"}
 
 
 def test_update_actor_no_person_or_org(patch_dataset, existing_actors):
@@ -778,7 +786,7 @@ def test_update_actor_no_person_or_org(patch_dataset, existing_actors):
         {"actors": [{"id": actor_id, "person": None, "organization": None}]},
         expected_status=400,
     )
-    assert data["actors"][0] == ["At least one of fields 'organization', 'person' is required."]
+    assert data["actors"][0] == {"organization": "This field is required"}
 
 
 def test_update_organization_no_pref_label(patch_dataset, existing_actors):
@@ -881,9 +889,11 @@ def test_create_provenance_actor_by_id(patch_dataset):
 
 
 def test_create_provenance_actor_by_id_error(patch_dataset):
+    org = {"organization": {"pref_label": {"en": "organization"}}}
+
     data = patch_dataset(
         {
-            "actors": [{"id": "#actor", "person": {}, "roles": ["creator"]}],
+            "actors": [{"id": "#actor", "person": {}, **org, "roles": ["creator"]}],
             "provenance": [
                 {"description": {"en": "provenance"}, "is_associated_with": [{"id": "#actor"}]}
             ],
