@@ -63,7 +63,7 @@ def test_v2_integration_update_dataset(mock_integration, dataset_with_foreign_ke
     assert call.url == f"https://metax-v2-test/rest/v2/datasets/{dataset_with_foreign_keys.id}"
     call = mock_integration.request_history[1]
     assert call.method == "PUT"
-    assert call.url == f"https://metax-v2-test/rest/v2/datasets/{dataset_with_foreign_keys.id}"
+    assert call.url == f"https://metax-v2-test/rest/v2/datasets/{dataset_with_foreign_keys.id}?migration_override"
 
 
 @pytest.mark.adapter

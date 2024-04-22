@@ -1,3 +1,4 @@
+from rest_framework import validators
 from apps.common.serializers import CommonListSerializer, CommonNestedModelSerializer
 from apps.core.models import DatasetProject, Funder, FunderType, Funding
 from apps.core.serializers.dataset_actor_serializers.organization_serializer import (
@@ -30,9 +31,22 @@ class FundingModelSerializer(CommonNestedModelSerializer):
 
 class ProjectModelSerializer(CommonNestedModelSerializer):
     participating_organizations = DatasetOrganizationSerializer(
-        many=True, required=False, allow_null=True
+        many=True, required=True, allow_null=False, min_length=1
     )
     funding = FundingModelSerializer(many=True, required=False, allow_null=True)
+
+    def to_internal_value(self, data):
+        # The participating_organizations field is optional when migrating V2 datasets
+        org_field = self.fields["participating_organizations"]
+        if self.context.get("migrating"):
+            org_field.required = False
+            org_field.allow_null = True
+            org_field.min_length = 0
+        else:
+            org_field.required = True
+            org_field.allow_null = False
+            org_field.min_length = 1
+        return super().to_internal_value(data)
 
     class Meta:
         model = DatasetProject

@@ -217,6 +217,7 @@
                     - [test_legacy_dataset](tests/unit/apps/core/models/test_legacy_dataset.md)
                     - [test_metadata_provider](tests/unit/apps/core/models/test_metadata_provider.md)
                     - [test_models](tests/unit/apps/core/models/test_models.md)
+                    - [test_project](tests/unit/apps/core/models/test_project.md)
                     - [test_publisher](tests/unit/apps/core/models/test_publisher.md)
                     - [test_v2_integration](tests/unit/apps/core/models/test_v2_integration.md)
                     - [test_versioning](tests/unit/apps/core/models/test_versioning.md)

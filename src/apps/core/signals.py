@@ -81,7 +81,7 @@ def update_dataset_in_v2(sender, data: Dataset, **kwargs):
         response = requests.get(url=f"{host}/{identifier}", headers=headers)
         logger.info(f"{response.status_code=}")
         if response.status_code == 200:
-            res = requests.put(url=f"{host}/{identifier}", data=body, headers=headers)
+            res = requests.put(url=f"{host}/{identifier}?migration_override", data=body, headers=headers)
             logger.info(f"{res.status_code=}: {res.content=}, {res.headers=}")
         elif v2_dataset["api_meta"]["version"] == 3 and v2_dataset["research_dataset"].get(
             "preferred_identifier"
