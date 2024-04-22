@@ -41,6 +41,30 @@ checks or validate that the dataset JSON has all the data needed for publishing.
         ---8<--- "tests/unit/docs/examples/test_data/convert_from_legacy_response.json"
         ```
 
+### Dataset endpoints
+
+There's a few changes made for the datasets endpoints. Bulk actions are removed. Also fetching datasets based on the list of identifiers are removed as well as separate endpoints to get the identifiers as a list.
+
+Endpoints to manage datasets' editor permissions are not implemented to v3 yet but will be replaced with similar system as in Metax v2. Metax V2 editor permissions continue to work as before.
+
+| type   | v2 endpoint                                         | v3 endpoint             | notes                                    |
+| -------| --------------------------------------------------- | ----------------------- | ---------------------------------------- |
+| PUT    | /datasets[list]                                     | **Not used in V3**      | Update of a list of datasets.            |
+| PATCH  | /datasets[list]                                     | **Not used in V3**      | Partial update of a list of datasets.    |
+| DELETE | /datasets                                           | **Not used in V3**      | Delete of a list of datasets             |
+| POST   | /datasets/identifiers                               | **Not used in V3**      | A list of all dataset identifiers        |
+| POST   | /datasets/unique_preferred_identifiers              | **Not used in V3**      | A list of unique dataset preferred ids   |
+| POST   | /datasets/list                                      | **Not used in V3**      | Fetch a set of datasets using ids        |
+| GET    | /datasets/{pid}/files                               |                         | see [Files](#files) for more information |
+| POST   | /datasets/{pid}/files                               |                         | see [Files](#files) for more information |
+| GET    | /datasets/{pid}/files/{file_pid}                    |                         | see [Files](#files) for more information |
+| PUT    | /datasets/{pid}/files/user_metadata                 |                         | see [Files](#files) for more information |
+| PATCH  | /datasets/{pid}/files/user_metadata                 |                         | see [Files](#files) for more information |
+| GET    | /datasets/{CRID}/editor_permissions/users           | **Not implemented yet** | list editor permissions                  |
+| POST   | /datasets/{CRID}/editor_permissions/users           | **Not implemented yet** | create editor permissions                |
+| GET    | /datasets/{CRID}/editor_permissions/users/{USER_ID} | **Not implemented yet** | return single permission                 |
+| PATCH  | /datasets/{CRID}/editor_permissions/users/{USER_ID} | **Not implemented yet** | update permission                        |
+| DELETE | /datasets/{CRID}/editor_permissions/users/{USER_ID} | **Not implemented yet** | remove permission                        |
 
 ### Field names
 
