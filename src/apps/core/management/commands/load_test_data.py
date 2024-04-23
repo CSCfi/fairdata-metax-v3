@@ -20,7 +20,9 @@ class Command(BaseCommand):
 
         language = factories.LanguageFactory()
         data_catalog = factories.DataCatalogFactory(id="urn:nbn:fi:att:data-catalog-test")
-        harvested_data_catalog = factories.DataCatalogFactory(id="urn:nbn:fi:att:data-catalog-harvested-test", harvested="True")
+        harvested_data_catalog = factories.DataCatalogFactory(
+            id="urn:nbn:fi:att:data-catalog-harvested-test", harvested="True"
+        )
         dataset = factories.DatasetFactory(data_catalog=data_catalog, title={"en": "Test dataset"})
         logger.info(f"{dataset=}")
 

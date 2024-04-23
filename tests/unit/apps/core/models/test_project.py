@@ -1,6 +1,7 @@
-from apps.core.serializers import ProjectModelSerializer
 import pytest
 from rest_framework import serializers
+
+from apps.core.serializers import ProjectModelSerializer
 
 
 @pytest.fixture

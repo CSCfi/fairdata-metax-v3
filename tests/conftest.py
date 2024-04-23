@@ -658,3 +658,5 @@ def tweaked_settings(settings):
     settings.ENABLE_DEBUG_TOOLBAR = False
     settings.ENABLE_SILK_PROFILER = False
     settings.TEMPLATE_DEBUG = False
+    settings.METAX_V2_INTEGRATION_ENABLED = False
+    settings.METAX_V2_HOST = "metaxv2host"
