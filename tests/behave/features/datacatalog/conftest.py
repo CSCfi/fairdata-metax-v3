@@ -56,7 +56,6 @@ def datacatalog_json():
             },
             "id": "urn:nbn:fi:att:data-catalog-testi",
             "dataset_versioning_enabled": False,
-            "dataset_schema": "att",
         }
     )
     return data

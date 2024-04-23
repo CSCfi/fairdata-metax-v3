@@ -50,12 +50,10 @@ class DataCatalogAdmin(AbstractDatasetPropertyBaseAdmin, SimpleHistoryAdmin):
         "id",
         "dataset_versioning_enabled",
         "harvested",
-        "dataset_schema",
     )
     list_filter = (
         "dataset_versioning_enabled",
         "harvested",
-        "dataset_schema",
         "created",
         "modified",
     )

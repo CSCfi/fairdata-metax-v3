@@ -150,7 +150,11 @@ def data_catalog(fairdata_users_group, service_group) -> DataCatalog:
         "sv": "Fairdata forskningsdata",
     }
     catalog = factories.DataCatalogFactory(
-        id=identifier, title=title, dataset_versioning_enabled=True
+        id=identifier,
+        title=title,
+        dataset_versioning_enabled=True,
+        allow_remote_resources=True,
+        storage_services=["ida", "pas"],
     )
     catalog.dataset_groups_create.set([fairdata_users_group, service_group])
     return catalog

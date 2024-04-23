@@ -331,8 +331,10 @@ class DatasetSerializer(CommonNestedModelSerializer):
         return _data
 
     def update(self, instance, validated_data):
+        instance._updating = True
         validated_data["last_modified_by"] = self.context["request"].user
         dataset: Dataset = super().update(instance, validated_data=validated_data)
+        instance._updating = False
         return dataset
 
     def create(self, validated_data):

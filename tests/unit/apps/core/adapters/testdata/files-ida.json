@@ -25,7 +25,7 @@
     "removed": false,
     "service_created": "ida",
     "file_storage": {
-      "identifier": "pid:urn:storageidentifier1",
+      "identifier": "urn:nbn:fi:att:file-storage-ida",
       "id": 1
     },
     "byte_size": 595968

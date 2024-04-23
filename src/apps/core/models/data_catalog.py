@@ -1,13 +1,16 @@
 import json
 import uuid
 
+from django.conf import settings
 from django.contrib.auth.models import Group
-from django.contrib.postgres.fields import HStoreField
+from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.db import models
 from simple_history.models import HistoricalRecords
 
 from apps.common.models import AbstractBaseModel, AbstractDatasetProperty
 from apps.core.models.concepts import Language
+
+STORAGE_SERVICE_CHOICES = [(s, s) for s in settings.STORAGE_SERVICE_FILE_STORAGES]
 
 
 class DataCatalog(AbstractBaseModel):
@@ -26,7 +29,6 @@ class DataCatalog(AbstractBaseModel):
         language (models.ManyToManyField): default language of the catalog
         publisher (models.ForeignKey): publisher of the cataloged resources
         access_rights (models.ForeignKey): default access rights for the cataloged resources
-        dataset_schema (models.CharField): the schema which the catalog resources comply to
     """
 
     # https://www.w3.org/TR/vocab-dcat-3/#Property:resource_identifier
@@ -66,22 +68,14 @@ class DataCatalog(AbstractBaseModel):
         related_name="catalogs_admin_datasets",
         blank=True,
     )
-
-    class DatasetSchema(models.TextChoices):
-        IDA = "ida"
-        ATT = "att"
-        DRF = "drf"
-
-    DATASET_SCHEMA_CHOICES = (
-        (DatasetSchema.IDA, "IDA Schema"),
-        (DatasetSchema.ATT, "ATT Schema"),
-        (DatasetSchema.DRF, "DRF Schema"),
+    allow_remote_resources = models.BooleanField(
+        default=True, help_text="True when datasets in catalog can have remote resources."
     )
-
-    dataset_schema = models.CharField(
-        choices=DATASET_SCHEMA_CHOICES,
-        default=DatasetSchema.IDA,
-        max_length=6,
+    storage_services = ArrayField(
+        models.CharField(max_length=64, choices=STORAGE_SERVICE_CHOICES),
+        default=list,
+        blank=True,
+        help_text="File storage services supported for datasets in catalog.",
     )
     history = HistoricalRecords(m2m_fields=(language,))
 

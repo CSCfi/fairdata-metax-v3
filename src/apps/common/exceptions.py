@@ -1,7 +1,18 @@
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed, APIException, _get_error_details
+from rest_framework.serializers import ValidationError
+from rest_framework import status
 from rest_framework.views import exception_handler as default_handler
 
 from apps.common.helpers import get_attr_or_item
+
+
+class TopLevelValidationError(APIException):
+    """Validation error that is raised to top level instead of serializer trying to gather all errors.
+
+    Useful when same error output is desired outside serialization and e.g. in a nested serializer.
+    """
+
+    status_code = status.HTTP_400_BAD_REQUEST
 
 
 def exception_handler(exc, context):

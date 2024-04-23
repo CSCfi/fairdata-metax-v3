@@ -824,3 +824,21 @@ def test_dataset_add_files_by_conflicting_values(admin_client, deep_file_tree, d
     )
     assert res.status_code == 400
     assert "Expected '/dir1/sub/file.csv'" in str(res.data["fileset"]["pathname"])
+
+
+def test_dataset_files_wrong_storage_for_catalog(admin_client, deep_file_tree, data_urls):
+    catalog = factories.DataCatalogFactory(storage_services=["pas"])
+    dataset = factories.DatasetFactory(data_catalog=catalog)
+    actions = {
+        **deep_file_tree["params"],
+        "file_actions": [],
+        "directory_actions": [],
+    }
+    urls = data_urls(dataset)
+    res = admin_client.patch(
+        urls["dataset"],
+        {"fileset": actions},
+        content_type="application/json",
+    )
+    assert res.status_code == 400
+    assert "does not allow files from service ida" in res.json()["fileset"]["storage_service"]

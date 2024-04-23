@@ -39,6 +39,16 @@ def test_remote_resources(admin_client, remote_dataset_json, data_catalog, refer
     assert_nested_subdict(remote_dataset_json["remote_resources"], resp.json()["remote_resources"])
 
 
+def test_remote_resources_not_allowed(
+    admin_client, remote_dataset_json, data_catalog, reference_data
+):
+    data_catalog.allow_remote_resources = False
+    data_catalog.save()
+    resp = admin_client.post("/v3/datasets", remote_dataset_json, content_type="application/json")
+    assert resp.status_code == 400
+    assert "does not allow remote resources" in resp.json()["remote_resources"]
+
+
 def test_remote_resources_update(admin_client, remote_dataset_json, data_catalog, reference_data):
     resp = admin_client.post("/v3/datasets", remote_dataset_json, content_type="application/json")
     assert resp.status_code == 201

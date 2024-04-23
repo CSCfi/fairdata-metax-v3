@@ -261,6 +261,13 @@ class FileSet(AbstractBaseModel):
             ).exclude(pathname__in=dataset_pathnames)
             unused_directory_metadata.delete()
 
+    def save(self, *args, **kwargs):
+        # Verify that dataset is allowed to have files in the storage_service.
+        # When _updating is set, dataset is responsible for the check.
+        if (dataset := self.dataset) and not getattr(dataset, "_updating", False):
+            dataset.validate_allow_storage_service(self.storage_service)
+        return super().save(*args, **kwargs)
+
 
 class RemoteResource(AbstractBaseModel):
     """
@@ -296,6 +303,13 @@ class RemoteResource(AbstractBaseModel):
     )
     use_category = models.ForeignKey(UseCategory, on_delete=models.CASCADE)
     file_type = models.ForeignKey(FileType, on_delete=models.CASCADE, blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        # Verify that dataset is allowed to have remote resources.
+        # When _updating is set, dataset is responsible for the check.
+        if (dataset := self.dataset) and not getattr(dataset, "_updating", False):
+            dataset.validate_allow_remote_resources()
+        return super().save(*args, **kwargs)
 
 
 class EntityRelation(AbstractBaseModel):

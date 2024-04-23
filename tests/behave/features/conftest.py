@@ -26,7 +26,7 @@ def ida_files_json():
 @pytest.fixture
 @given("IDA has its own data-catalog")
 def ida_data_catalog() -> DataCatalog:
-    return factories.DataCatalogFactory(dataset_schema="ida")
+    return factories.DataCatalogFactory()
 
 
 @pytest.fixture

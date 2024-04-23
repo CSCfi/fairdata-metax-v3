@@ -6,11 +6,11 @@ import requests
 import urllib3
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db.models.signals import m2m_changed, post_delete
+from django.db.models.signals import m2m_changed, post_delete, pre_save
 from django.dispatch import Signal, receiver
 from rest_framework import exceptions, status
 
-from apps.core.models import Dataset, FileSet
+from apps.core.models import Dataset, FileSet, RemoteResource
 
 logger = logging.getLogger(__name__)
 

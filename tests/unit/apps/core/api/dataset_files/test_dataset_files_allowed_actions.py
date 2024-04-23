@@ -9,7 +9,7 @@ pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
 
 
 @pytest.fixture
-def do_action(admin_client, deep_file_tree):
+def do_action(data_catalog, admin_client, deep_file_tree):
     def _do(
         state,
         has_files,
@@ -18,9 +18,13 @@ def do_action(admin_client, deep_file_tree):
         patch_fields={},
     ):
         if state == "published" or state == "draft_of":
-            dataset = factories.PublishedDatasetFactory(cumulative_state=cumulative_state)
+            dataset = factories.PublishedDatasetFactory(
+                data_catalog=data_catalog, cumulative_state=cumulative_state
+            )
         elif state == "draft":
-            dataset = factories.DatasetFactory(cumulative_state=cumulative_state)
+            dataset = factories.DatasetFactory(
+                data_catalog=data_catalog, cumulative_state=cumulative_state
+            )
 
         if has_files:
             initial_actions = {

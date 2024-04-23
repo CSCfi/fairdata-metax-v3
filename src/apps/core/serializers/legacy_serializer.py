@@ -109,3 +109,9 @@ class LegacyDatasetUpdateSerializer(CommonNestedModelSerializer):
         raise NotImplementedError(
             "Creating a new LegacyDataset using the serializer is not supported."
         )
+
+    def update(self, instance, validated_data):
+        instance._updating = True
+        super().update(instance, validated_data)
+        instance._updating = False
+        return instance

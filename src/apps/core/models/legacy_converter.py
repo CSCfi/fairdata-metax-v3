@@ -641,6 +641,7 @@ class LegacyDatasetConverter:
                     self.created_objects.update(["User"])
 
         fields = {
+            "data_catalog": self.convert_data_catalog(),
             "cumulation_started": self.dataset_json.get("date_cumulation_started"),
             "cumulation_ended": self.dataset_json.get("date_cumulation_ended"),
             "cumulative_state": self.dataset_json.get("cumulative_state"),
@@ -686,7 +687,6 @@ class LegacyDatasetConverter:
         rd = self.legacy_research_dataset
         research_dataset = {
             **self.convert_research_dataset_fields(),
-            "data_catalog": self.convert_data_catalog(),
             "access_rights": self.convert_access_rights(),
             "actors": self.convert_actors(),
             "provenance": [self.convert_provenance(v) for v in ensure_list(rd.get("provenance"))],

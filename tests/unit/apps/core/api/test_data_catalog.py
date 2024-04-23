@@ -162,7 +162,6 @@ def test_list_datacatalogs(admin_client, post_datacatalog_payloads_a_b_c, data_c
     "catalog_filter, filter_value, filter_result",
     [
         ("harvested", True, 1),
-        ("dataset_schema", "att", 3),
         ("dataset_versioning_enabled", True, 1),
         ("dataset_versioning_enabled", False, 2),
         ("title", "katalogi", 3),
@@ -213,7 +212,6 @@ def test_delete_datacatalog_by_id(admin_client, post_datacatalog_payloads_a_b_c)
 
 
 def test_put_datacatalog(admin_client, datacatalog_a_json, reference_data, data_catalog_list_url):
-    datacatalog_a_json["dataset_schema"] = "att"
     res1 = admin_client.post(
         data_catalog_list_url, datacatalog_a_json, content_type="application/json"
     )
@@ -228,14 +226,13 @@ def test_put_datacatalog(admin_client, datacatalog_a_json, reference_data, data_
     assert res2.status_code == 200
 
     # values not in put_json should be cleared to defaults
-    put_json["dataset_schema"] = "ida"  # ida is default
+    put_json["allow_remote_resources"] = True  # default is true
     assert put_json == {key: value for key, value in res2.json().items() if value}
 
 
 def test_patch_datacatalog(
     admin_client, datacatalog_a_json, reference_data, data_catalog_list_url
 ):
-    datacatalog_a_json["dataset_schema"] = "att"
     res1 = admin_client.post(
         data_catalog_list_url, datacatalog_a_json, content_type="application/json"
     )

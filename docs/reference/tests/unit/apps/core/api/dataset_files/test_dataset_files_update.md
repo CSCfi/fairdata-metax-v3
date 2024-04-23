@@ -100,3 +100,7 @@
 
 ### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_add_files_by_conflicting_values
 
+## test_dataset_files_wrong_storage_for_catalog
+
+### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_wrong_storage_for_catalog
+

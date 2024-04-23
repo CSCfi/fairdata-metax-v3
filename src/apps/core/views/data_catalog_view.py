@@ -20,7 +20,6 @@ class DataCatalogFilter(filters.FilterSet):
         fields = (
             "dataset_versioning_enabled",
             "harvested",
-            "dataset_schema",
         )
 
     title = filters.CharFilter(

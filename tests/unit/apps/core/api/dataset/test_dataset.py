@@ -575,7 +575,7 @@ def test_flush_dataset_by_user(user_client, dataset_a_json, data_catalog, refere
 @pytest.fixture
 def ida_dataset(data_catalog, reference_data):
     ida_storage = factories.FileStorageFactory(storage_service="ida", csc_project="project")
-    dataset = factories.DatasetFactory()
+    dataset = factories.DatasetFactory(data_catalog=data_catalog)
     factories.FileSetFactory(dataset=dataset, storage=ida_storage)
     return dataset
 
@@ -583,7 +583,7 @@ def ida_dataset(data_catalog, reference_data):
 @pytest.fixture
 def ida_dataset_other(data_catalog, reference_data):
     ida_storage = factories.FileStorageFactory(storage_service="ida", csc_project="other_project")
-    dataset = factories.DatasetFactory()
+    dataset = factories.DatasetFactory(data_catalog=data_catalog)
     factories.FileSetFactory(dataset=dataset, storage=ida_storage)
     return dataset
 
@@ -591,7 +591,7 @@ def ida_dataset_other(data_catalog, reference_data):
 @pytest.fixture
 def pas_dataset(data_catalog, reference_data):
     pas_storage = factories.FileStorageFactory(storage_service="pas", csc_project="project")
-    dataset = factories.DatasetFactory()
+    dataset = factories.DatasetFactory(data_catalog=data_catalog)
     factories.FileSetFactory(dataset=dataset, storage=pas_storage)
     return dataset
 

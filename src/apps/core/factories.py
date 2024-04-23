@@ -306,6 +306,8 @@ class DataCatalogFactory(factory.django.DjangoModelFactory):
     title = factory.Dict({"en": factory.Sequence(lambda n: f"data-catalog-{n}")})
     publisher = factory.SubFactory(DatasetPublisherFactory)
     system_creator = factory.SubFactory(MetaxUserFactory)
+    allow_remote_resources = True
+    storage_services = ["ida", "pas", "test"]
 
     @factory.post_generation
     def languages(self, create, extracted, **kwargs):

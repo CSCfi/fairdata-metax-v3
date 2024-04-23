@@ -8,6 +8,10 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_remote_resources.test_remote_resources
 
+## test_remote_resources_not_allowed
+
+### :::tests.unit.apps.core.api.dataset.test_remote_resources.test_remote_resources_not_allowed
+
 ## test_remote_resources_update
 
 ### :::tests.unit.apps.core.api.dataset.test_remote_resources.test_remote_resources_update

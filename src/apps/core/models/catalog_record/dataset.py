@@ -13,11 +13,13 @@ from simple_history.models import HistoricalRecords
 from typing_extensions import Self
 
 from apps.common.copier import ModelCopier
+from apps.common.exceptions import TopLevelValidationError
 from apps.common.helpers import datetime_to_date
 from apps.common.history import SnapshotHistoricalRecords
 from apps.common.models import AbstractBaseModel
 from apps.core.models.access_rights import AccessRights
 from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
+from apps.core.models.data_catalog import DataCatalog
 from apps.core.models.mixins import V2DatasetMixin
 from apps.core.permissions import DataCatalogAccessPolicy
 from apps.core.services.pid_ms_client import PIDMSClient, ServiceUnavailableError
@@ -610,9 +612,39 @@ class Dataset(V2DatasetMixin, CatalogRecord):
                     }
                 )
 
+    def validate_allow_remote_resources(self):
+        """Raise error if dataset cannot have remote resources."""
+        catalog: DataCatalog = self.data_catalog
+        allow_remote_resources = catalog and catalog.allow_remote_resources
+        if not allow_remote_resources:
+            err_msg = f"Data catalog {catalog.id} does not allow remote resources."
+            raise TopLevelValidationError({"remote_resources": err_msg})
+
+    def validate_allow_storage_service(self, storage_service):
+        """Raise error if dataset cannot have files from storage_service."""
+        catalog: DataCatalog = self.data_catalog
+        allowed_storage_services = catalog and catalog.storage_services or []
+        if storage_service not in allowed_storage_services:
+            err_msg = (
+                f"Data catalog {catalog.id} does not allow files from service {storage_service}."
+            )
+            raise TopLevelValidationError({"fileset": {"storage_service": err_msg}})
+
+    def validate_catalog(self):
+        """Data catalog specific validation of dataset fields."""
+        if self._state.adding:
+            return  # Reverse relations are not yet available
+
+        if self.remote_resources.exists():
+            self.validate_allow_remote_resources()
+
+        if fileset := getattr(self, "file_set", None):
+            self.validate_allow_storage_service(fileset.storage_service)
+
     def save(self, *args, **kwargs):
         """Saves the dataset and increments the draft or published revision number as needed."""
         self.validate_unique_fields()
+        self.validate_catalog()
         if not getattr(self, "saving_legacy", False):
             self._update_cumulative_state()
 

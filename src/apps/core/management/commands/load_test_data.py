@@ -6,7 +6,7 @@ from django.core.management.base import BaseCommand
 
 import apps.files.factories as file_factories
 from apps.core import factories
-from apps.core.models import Contract, DataCatalog
+from apps.core.models import Contract, DataCatalog, Dataset
 from apps.core.serializers import DataCatalogModelSerializer
 
 logger = logging.getLogger(__name__)
@@ -23,21 +23,26 @@ class Command(BaseCommand):
         harvested_data_catalog = factories.DataCatalogFactory(
             id="urn:nbn:fi:att:data-catalog-harvested-test", harvested="True"
         )
-        dataset = factories.DatasetFactory(data_catalog=data_catalog, title={"en": "Test dataset"})
-        logger.info(f"{dataset=}")
+        dataset = None
+        files = None
+        if not Dataset.objects.filter(title={"en": "Test dataset"}).exists():
+            dataset = factories.DatasetFactory(
+                data_catalog=data_catalog, title={"en": "Test dataset"}
+            )
+            logger.info(f"{dataset=}")
 
-        files = file_factories.create_project_with_files(
-            file_paths=[
-                "/dir/sub1/file1.csv",
-                "/dir/a.txt",
-                "/rootfile.txt",
-            ],
-            file_args={"*": {"size": 1024}},
-            storage_service="test",
-        )
-        file_set = factories.FileSetFactory(
-            dataset=dataset, storage=files["storage"], files=files["files"].values()
-        )
+            files = file_factories.create_project_with_files(
+                file_paths=[
+                    "/dir/sub1/file1.csv",
+                    "/dir/a.txt",
+                    "/rootfile.txt",
+                ],
+                file_args={"*": {"size": 1024}},
+                storage_service="test",
+            )
+            file_set = factories.FileSetFactory(
+                dataset=dataset, storage=files["storage"], files=files["files"].values()
+            )
 
         # Contract needed by IDA tests
         contract = Contract.objects.get_or_create(

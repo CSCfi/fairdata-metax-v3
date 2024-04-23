@@ -29,6 +29,5 @@
     "en": "Contains datasets from Repotronic service",
     "fi": "Sisältää aineistoja Repotronic-palvelusta"
   },
-  "dataset_versioning_enabled": false,
-  "dataset_schema": "att"
+  "dataset_versioning_enabled": false
 }

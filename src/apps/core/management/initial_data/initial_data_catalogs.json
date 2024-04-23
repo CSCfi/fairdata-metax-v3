@@ -31,7 +31,6 @@
       "fi": "Testi katalogi FSD-integraatiolle"
     },
     "dataset_versioning_enabled": false,
-    "dataset_schema": "att",
     "dataset_groups_create": ["fsd"],
     "dataset_groups_admin": ["fsd"]
   },
@@ -67,7 +66,6 @@
       "fi": "Testi katalogi Kielipankki-integraatiolle"
     },
     "dataset_versioning_enabled": false,
-    "dataset_schema": "att",
     "dataset_groups_create": ["kielipankki"],
     "dataset_groups_admin": ["kielipankki"]
   },
@@ -105,7 +103,6 @@
       "sv": "Datakatalog för testning av Aalto-universitets Metax-integration"
     },
     "dataset_versioning_enabled": false,
-    "dataset_schema": "att",
     "dataset_groups_create": ["aalto"],
     "dataset_groups_admin": ["aalto"]
   },
@@ -141,7 +138,6 @@
       "fi": "Testi katalogi Cypress E2E testeille"
     },
     "dataset_versioning_enabled": false,
-    "dataset_schema": "att",
     "dataset_groups_create": ["e2e"],
     "dataset_groups_admin": ["e2e"]
   },
@@ -177,7 +173,6 @@
       "fi": "Testi katalogi Tampereen Yliopiston Metax-integraatiolle"
     },
     "dataset_versioning_enabled": false,
-    "dataset_schema": "att",
     "dataset_groups_create": ["tuni"],
     "dataset_groups_admin": ["tuni"]
   },
@@ -215,7 +210,6 @@
       "sv": "Datakatalog för testning av Åbo Akademis Metax-integration"
     },
     "dataset_versioning_enabled": false,
-    "dataset_schema": "att",
     "dataset_groups_create": ["abo"],
     "dataset_groups_admin": ["abo"]
   },
@@ -251,8 +245,9 @@
     },
     "dataset_versioning_enabled": true,
     "harvested": false,
-    "dataset_schema": "att",
     "dataset_groups_create": ["fairdata_users", "ida"],
-    "dataset_groups_admin": ["ida"]
+    "dataset_groups_admin": ["ida"],
+    "allow_remote_resources": false,
+    "storage_services": ["ida"]
   }
 ]

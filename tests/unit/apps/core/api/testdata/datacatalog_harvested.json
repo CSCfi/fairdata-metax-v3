@@ -25,6 +25,5 @@
     "fi": "Harvestoitu katalogi"
   },
   "dataset_versioning_enabled": true,
-  "harvested": true,
-  "dataset_schema": "att"
+  "harvested": true
 }
