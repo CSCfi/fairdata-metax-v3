@@ -84,7 +84,7 @@ class DatasetAccessPolicy(BaseAccessPolicy):
             | Q(metadata_owner__user=request.user)
             | Q(system_creator=request.user)
             | Q(data_catalog__dataset_groups_admin__in=groups)
-        )
+        ).distinct()
 
     @classmethod
     def scope_queryset_owned_or_shared(cls, request, queryset):

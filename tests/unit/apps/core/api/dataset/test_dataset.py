@@ -1,6 +1,7 @@
 import json
 import logging
 from unittest.mock import ANY
+from django.contrib.auth.models import Group
 
 import pytest
 from rest_framework.reverse import reverse
@@ -802,3 +803,13 @@ def test_missing_required_fields(admin_client, data_catalog, reference_data):
     ]
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
     assert res.status_code == 201
+
+
+def test_get_dataset_no_multiple_objects_error(service_client):
+    """Check that multiple groups in dataset_groups_admin don't produce MultipleObjectsReturned error in query."""
+    data_catalog = factories.DataCatalogFactory()
+    data_catalog.dataset_groups_admin.add(Group.objects.get(name="test"))
+    data_catalog.dataset_groups_admin.add(Group.objects.create(name="somegroup"))
+    dataset = factories.PublishedDatasetFactory(data_catalog=data_catalog)
+    res = service_client.patch(f"/v3/datasets/{dataset.id}", {}, content_type="application/json")
+    assert res.status_code == 200
