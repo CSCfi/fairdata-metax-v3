@@ -242,14 +242,19 @@ safe_pchar = r"!$&'()*+,;=:@"
 safe_fragment = safe_pchar + r"/?"
 
 
-def quote_url(url: str):
-    """Percent-encode url. Assumes any '%' characters in the url are already correct."""
+def quote_url(url: str) -> str:
+    """Percent-encode url. Assumes any '%' characters in the url are already correct.
+
+    Note: Empty URL components (e.g. '#' in 'https://example.com#')
+    are removed from the resulting URL due to how urllib works.
+    See https://github.com/python/cpython/issues/67041
+    """
     parts = urlsplit(url)
     quoted_parts = SplitResult(
         scheme=parts.scheme,
         netloc=parts.netloc,
         path=quote(parts.path, safe=safe_pchar + "/%"),
-        query=urlencode(parse_qsl(parts.query)),
+        query=urlencode(parse_qsl(parts.query), safe=safe_fragment + "%"),
         fragment=quote(parts.fragment, safe=safe_fragment + "%"),
     )
     return urlunsplit(quoted_parts)

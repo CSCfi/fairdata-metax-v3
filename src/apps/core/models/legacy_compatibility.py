@@ -35,6 +35,7 @@ class LegacyCompatibility:
         "dictionary_item_added": [
             "root['research_dataset']['modified']",
             "root['research_dataset']['issued']",
+            "root['metadata_owner_org']",  # Missing value filled from metadata_provider_org
             regex("root['research_dataset']['language'][\\d+]['title']"),
             regex("root['research_dataset']['spatial'][\\d+]['as_wkt']"),
             # Allow adding default "notspecified" license
@@ -42,6 +43,8 @@ class LegacyCompatibility:
             regex("root['research_dataset']['access_rights']['license'][\\d+]['title']"),
         ],
         "dictionary_item_removed": [
+            "root['next_draft']",  # Migrating drafts to V2 not supported
+            "root['draft_of']",  # Migrating drafts to V2 not supported
             "root['user_created']",
             "root['previous_dataset_version']",
             "root['next_dataset_version']",
@@ -74,6 +77,7 @@ class LegacyCompatibility:
             ),
             regex(".*['contributor_type']$"),
             regex(".*['contributor_role']$"),
+            regex(".*['telephone']$"),
             "root['contract']",  # TODO
         ],
         "iterable_item_added": [

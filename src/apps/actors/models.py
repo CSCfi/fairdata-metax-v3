@@ -143,6 +143,8 @@ class Organization(AbstractBaseModel):
         data["name"] = self.pref_label
         if identifier := self.url or self.external_identifier:
             data["identifier"] = identifier
+        if email := self.email:
+            data["email"] = email
         if homepage := self.homepage:
             data["homepage"] = homepage.as_v2_data()
         if parent := self.parent:
@@ -211,6 +213,8 @@ class Actor(AbstractBaseModel):
                 data["member_of"] = self.organization.as_v2_data()
             if homepage := self.person.homepage:
                 data["homepage"] = homepage.as_v2_data()
+            if email := self.person.email:
+                data["email"] = email
 
         elif self.organization:
             data = self.organization.as_v2_data()

@@ -1,5 +1,9 @@
 # test_migrate_v2_datasets
 
+## integration_settings
+
+### :::tests.unit.apps.core.management.test_migrate_v2_datasets.integration_settings
+
 ## test_migrate_command
 
 ### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_command
@@ -40,7 +44,23 @@
 
 ### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_command_update_wrong_api_version
 
+## test_migrate_command_update_wrong_api_version_in_v2
+
+### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_command_update_wrong_api_version_in_v2
+
+## test_migrate_command_update_draft
+
+### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_command_update_draft
+
 ## test_migrate_command_update_file
 
 ### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_command_update_file
+
+## test_migrate_missing_args
+
+### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_missing_args
+
+## test_migrate_prompt_credentials
+
+### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_prompt_credentials
 

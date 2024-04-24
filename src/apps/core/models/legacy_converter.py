@@ -463,11 +463,19 @@ class LegacyDatasetConverter:
         if not concept:
             return None
         ensure_dict(concept)
+        identifier = concept.get("identifier")
+        if identifier and not is_valid_url(identifier):
+            self.mark_invalid(concept, error="Invalid URL")
+            return None
+        in_scheme = concept.get("in_scheme")
+        if in_scheme and not is_valid_url(in_scheme):
+            self.mark_invalid(concept, error="Invalid URL")
+            return None
         return {
             "pref_label": concept.get("pref_label"),
             "definition": concept.get("definition"),
-            "concept_identifier": concept.get("identifier"),
-            "in_scheme": concept.get("in_scheme"),
+            "concept_identifier": identifier,
+            "in_scheme": in_scheme,
         }
 
     def convert_variable(self, variable: dict) -> dict:

@@ -1,4 +1,5 @@
 import copy
+import getpass
 import json
 import logging
 import uuid
@@ -7,6 +8,7 @@ from typing import Optional
 
 import requests
 from cachalot.api import cachalot_disabled
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db.models import Q
 from isodate import parse_datetime
@@ -46,6 +48,9 @@ class Command(BaseCommand):
         self.failed_datasets = []
         self.datasets = []
         self.dataset_cache = {}
+        self.metax_instance = None
+        self.metax_user = None
+        self.metax_password = None
 
     def add_arguments(self, parser: ArgumentParser):
         parser.add_argument(
@@ -88,9 +93,23 @@ class Command(BaseCommand):
             "-mi",
             type=str,
             required=False,
-            default="http://localhost:8002",
             help="Fully qualified Metax instance URL to migrate datasets from",
         )
+        parser.add_argument(
+            "--use-env",
+            action="store_true",
+            required=False,
+            default=False,
+            help="Read Metax instance and credentials from Django environment settings.",
+        )
+        parser.add_argument(
+            "--prompt-credentials",
+            action="store_true",
+            required=False,
+            default=False,
+            help="Prompt Metax V2 credentials.",
+        )
+
         parser.add_argument(
             "--pagination_size",
             "-ps",
@@ -213,6 +232,15 @@ class Command(BaseCommand):
             self.stderr.write(f"Invalid identifier '{identifier}', ignoring")
             return None
 
+        if data.get("api_meta", {}).get("version") >= 3:
+            self.stdout.write(f"Dataset '{identifier}' is from a later Metax version, ignoring")
+            return None
+
+        if data.get("state") != "published":
+            # Migrating drafts not supported currently
+            self.stdout.write(f"Dataset '{identifier}' is not published, ignoring")
+            return None
+
         try:
             self.migrated += 1
             ignored = None
@@ -260,7 +288,6 @@ class Command(BaseCommand):
             if self.allow_fail:
                 self.stderr.write(repr(e))
                 self.stderr.write(f"Exception migrating dataset {data['identifier']}\n\n")
-                _message = f"{data['identifier']} : {e}"
                 self.failed_datasets.append(identifier)
                 return None
             else:
@@ -292,7 +319,8 @@ class Command(BaseCommand):
         while next_url := response_json.get("next"):
             if self.update_limit != 0 and self.updated >= self.update_limit:
                 break
-            response = requests.get(next_url)
+            response = requests.get(next_url, auth=self.metax_auth)
+            response.raise_for_status()
             response_json = response.json()
             self.datasets.extend(self.migrate_from_list(response_json["results"]))
 
@@ -326,7 +354,7 @@ class Command(BaseCommand):
         identifiers = options.get("identifiers")
         catalogs = options.get("catalogs")
         migrate_all = not (catalogs or identifiers)
-        metax_instance = options.get("metax_instance")
+        metax_instance = self.metax_instance
         self.allow_fail = options.get("allow_fail")
         limit = options.get("pagination_size")
         self.force = options.get("force")
@@ -334,14 +362,14 @@ class Command(BaseCommand):
 
         if identifiers:
             for identifier in identifiers:
-                response = requests.get(f"{metax_instance}/rest/v2/datasets/{identifier}")
+                response = self.fetch_dataset(identifier)
+                response.raise_for_status()
                 dataset_json = response.json()
                 self.datasets.append(self.migrate_dataset(dataset_json))
 
         if migrate_all:
-            response = requests.get(
-                f"{metax_instance}/rest/v2/datasets?limit={limit}&include_legacy=true"
-            )
+            response = self.fetch_datasets(limit=limit)
+            response.raise_for_status()
             self.loop_pagination(response)
 
         if catalogs:
@@ -357,9 +385,8 @@ class Command(BaseCommand):
                     self.stderr.write(f"Invalid catalog identifier: {catalog}")
                     continue
 
-                response = requests.get(
-                    f"{metax_instance}/rest/v2/datasets?data_catalog={_catalog}&limit={limit}&include_legacy=true"
-                )
+                response = self.fetch_datasets(data_catalog=_catalog, limit=limit)
+                response.raise_for_status()
                 self.loop_pagination(response)
 
     def print_summary(self):
@@ -367,6 +394,55 @@ class Command(BaseCommand):
         self.stdout.write(f"Processed {self.migrated} datasets")
         self.stdout.write(f"- {self.ok_after_update} datasets updated succesfully")
         self.stdout.write(f"- {not_ok} datasets failed")
+
+    @property
+    def metax_auth(self):
+        if self.metax_user is None:
+            return None
+        return (self.metax_user, self.metax_password)
+
+    def fetch_dataset(self, identifier, **params):
+        metax_instance = self.metax_instance
+        response = requests.get(
+            f"{metax_instance}/rest/v2/datasets/{identifier}",
+            params=params,
+            auth=self.metax_auth,
+        )
+        response.raise_for_status()
+        return response
+
+    def fetch_datasets(self, **params):
+        metax_instance = self.metax_instance
+        response = requests.get(
+            f"{metax_instance}/rest/v2/datasets",
+            params={"state": "published", "include_legacy": "true", **params},
+            auth=self.metax_auth,
+        )
+        response.raise_for_status()
+        return response
+
+    def handle_metax_settings(self, options) -> bool:
+        if options.get("file") or options.get("update"):
+            return True
+
+        if options.get("use_env"):
+            self.metax_instance = settings.METAX_V2_HOST
+            self.metax_user = settings.METAX_V2_USER
+            self.metax_password = settings.METAX_V2_PASSWORD
+
+        if instance := options.get("metax_instance"):
+            self.metax_instance = instance
+
+        if not self.metax_instance:
+            self.stderr.write("Metax instance not specified and not using --file or --update.")
+            return False
+
+        if options.get("prompt_credentials"):
+            self.stdout.write(f"Please input credentials for {self.metax_instance}")
+            self.metax_user = input("Username: ")
+            self.metax_password = getpass.getpass("Password: ")
+
+        return True
 
     def handle(self, *args, **options):
         identifiers = options.get("identifiers")
@@ -384,6 +460,9 @@ class Command(BaseCommand):
 
         if bool(identifiers) + bool(catalogs) > 1:
             self.stderr.write("The --identifiers and --catalogs options are mutually exclusive.")
+            return
+
+        if not self.handle_metax_settings(options):
             return
 
         try:

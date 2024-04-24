@@ -346,21 +346,6 @@ class V2DatasetMixin:
             )
         return data
 
-    def generate_org(self, org, contributor_type=None):
-        v2_org = {
-            "@type": "Organization",
-            "name": org.pref_label,
-            "identifier": org.url or org.external_identifier,
-        }
-
-        if org.parent:
-            v2_org["is_part_of"] = self.generate_org(org.parent)
-
-        if contributor_type:
-            v2_org["contributor_type"] = contributor_type
-
-        return v2_org
-
     def _add_funder_type(self, project, funder_type):
         if funder_type:
             project["funder_type"] = {
@@ -373,7 +358,7 @@ class V2DatasetMixin:
         if funder_organization:
             if "has_funding_agency" not in project:
                 project["has_funding_agency"] = []
-            project["has_funding_agency"].append(self.generate_org(funder_organization))
+            project["has_funding_agency"].append(funder_organization.as_v2_data())
 
     def _add_funder_identifier(self, project, funder_identifier):
         if funder_identifier:
@@ -383,7 +368,7 @@ class V2DatasetMixin:
         for participating_organization in participating_organizations:
             if "source_organization" not in project:
                 project["source_organization"] = []
-            project["source_organization"].append(self.generate_org(participating_organization))
+            project["source_organization"].append(participating_organization.as_v2_data())
 
     def _generate_v2_dataset_projects(self) -> List:
         obj_list = []
@@ -475,6 +460,15 @@ class V2DatasetMixin:
             document["research_dataset"]["remote_resources"] = obj_list
         return obj_list
 
+    def _generate_v2_rems_fields(self, document):
+        # REMS fields not supported in V3 yet, use values from dataset_json if available
+        if legacydataset := getattr(self, "legacydataset", None):
+            data = legacydataset.dataset_json
+            if rems_identifier := data.get("rems_identifier"):
+                document["rems_identifier"] = rems_identifier
+            if access_granter := data.get("access_granter"):
+                document["access_granter"] = access_granter
+
     def add_actor(self, role: str, document: Dict):
         actors = self.actors.filter(roles__contains=[role])
         if actors.count() == 0:
@@ -554,6 +548,7 @@ class V2DatasetMixin:
         self._generate_v2_provenance(doc)
         self._generate_v2_relation(doc)
         self._generate_v2_remote_resources(doc)
+        self._generate_v2_rems_fields(doc)
 
         for role in ["creator", "publisher", "curator", "contributor", "rights_holder"]:
             self.add_actor(role, doc)

@@ -16,6 +16,14 @@
 
 ### :::tests.unit.apps.core.management.conftest.mock_response_single_invalid
 
+## mock_response_api_version_3
+
+### :::tests.unit.apps.core.management.conftest.mock_response_api_version_3
+
+## mock_response_draft
+
+### :::tests.unit.apps.core.management.conftest.mock_response_draft
+
 ## mock_response_single_catalog
 
 ### :::tests.unit.apps.core.management.conftest.mock_response_single_catalog
