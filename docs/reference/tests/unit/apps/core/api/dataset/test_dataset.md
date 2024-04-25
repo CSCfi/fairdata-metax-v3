@@ -84,21 +84,9 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_create_dataset_with_actor
 
-## test_edit_dataset_actor
-
-### :::tests.unit.apps.core.api.dataset.test_dataset.test_edit_dataset_actor
-
 ## test_modify_dataset_actor_roles
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_modify_dataset_actor_roles
-
-## test_create_dataset_actor_nested_url
-
-### :::tests.unit.apps.core.api.dataset.test_dataset.test_create_dataset_actor_nested_url
-
-## test_dataset_actor_permissions
-
-### :::tests.unit.apps.core.api.dataset.test_dataset.test_dataset_actor_permissions
 
 ## test_create_dataset_with_other_identifiers
 

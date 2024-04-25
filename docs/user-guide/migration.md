@@ -393,8 +393,6 @@ These are the *changed* query parameters used in datasets listing (`/v3/datasets
 | `/datasets/metadata_versions`               | :no-entry:                         |
 | `/datasets/unique_preferred_identifiers`    | :no-entry:                         |
 | `/datasets/{CRID}/editor_permissions/users` | :question:                         |
-| N/A                                         | `/datasets/{id}/actors` :star:     |
-| N/A                                         | `/datasets/{id}/provenance` :star: |
 
 #### RPC endpoints
 

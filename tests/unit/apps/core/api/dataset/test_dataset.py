@@ -334,24 +334,6 @@ def test_create_dataset_with_actor(dataset_c, data_catalog, reference_data):
     assert len(dataset_c.data["actors"]) == 2
 
 
-def test_edit_dataset_actor(admin_client, dataset_c, data_catalog, reference_data):
-    assert dataset_c.status_code == 201
-    res = admin_client.put(
-        reverse(
-            "dataset-actors-detail",
-            kwargs={"dataset_pk": dataset_c.data["id"], "pk": dataset_c.data["actors"][0]["id"]},
-        ),
-        {
-            "person": {"name": "hannah"},
-            "organization": {"pref_label": {"fi": "CSC"}},
-        },
-        content_type="application/json",
-    )
-    assert res.status_code == 200
-    assert res.data["person"]["name"] == "hannah"
-    assert res.data["organization"]["pref_label"]["fi"] == "CSC"
-
-
 def test_modify_dataset_actor_roles(
     admin_client, dataset_c, dataset_c_json, data_catalog, reference_data
 ):
@@ -365,42 +347,6 @@ def test_modify_dataset_actor_roles(
     assert len(res.data["actors"]) == 2
     assert "publisher" in res.data["actors"][0]["roles"]
     assert "creator" in res.data["actors"][0]["roles"]
-
-
-def test_create_dataset_actor_nested_url(
-    admin_client, dataset_a, dataset_actor_a, data_catalog, reference_data
-):
-    assert dataset_a.response.status_code == 201
-
-    res = admin_client.post(
-        f"/v3/datasets/{dataset_a.response.data['id']}/actors",
-        json.dumps(dataset_actor_a.to_struct()),
-        content_type="application/json",
-    )
-    assert res.status_code == 201
-
-
-@pytest.mark.auth
-def test_dataset_actor_permissions(
-    requests_client, live_server, dataset, end_users, dataset_actor
-):
-    user1, user2, user3 = end_users
-    dataset_a = dataset(
-        "dataset_a.json", admin_created=False, user_token=user1.token, server_url=live_server.url
-    )
-    assert dataset_a.response.status_code == 201
-    res1 = requests_client.post(
-        f"{live_server.url}/v3/datasets/{dataset_a.dataset_id}/actors",
-        json=dataset_actor(dataset_id=dataset_a.dataset_id).to_struct(),
-    )
-    assert res1.status_code == 201
-
-    requests_client.headers.update({"Authorization": f"Bearer {user2.token}"})
-    res2 = requests_client.post(
-        f"{live_server.url}/v3/datasets/{dataset_a.dataset_id}/actors",
-        json=dataset_actor(dataset_id=dataset_a.dataset_id).to_struct(),
-    )
-    assert res2.status_code == 403
 
 
 @pytest.mark.django_db

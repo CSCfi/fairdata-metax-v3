@@ -52,13 +52,7 @@ for model in reference_data_models:
     )
 # Nested routes
 dataset_router = routers.NestedSimpleRouter(router, r"datasets", lookup="dataset")
-dataset_router.register(r"actors", core_views.DatasetActorViewSet, basename="dataset-actors")
-dataset_router.register(r"provenance", core_views.ProvenanceViewSet, basename="dataset-provenance")
-dataset_router.register(
-    r"access-rights",
-    core_views.AccessRightsViewSet,
-    basename="dataset-access-rights",
-)
+
 # Users list
 if settings.ENABLE_USERS_VIEW:
     router.register(r"users", UserViewSet, basename="users")
@@ -71,13 +65,6 @@ urlpatterns = [
             {"get": "retrieve", "patch": "partial_update", "put": "update", "delete": "destroy"}
         ),
         name="dataset-preservation-detail",
-    ),
-    re_path(
-        r"^datasets/(?P<dataset_pk>[^/.]+)/access-rights$",
-        core_views.AccessRightsViewSet.as_view(
-            {"get": "retrieve", "patch": "partial_update", "put": "update", "delete": "destroy"}
-        ),
-        name="dataset-access-rights-detail",
     ),
     path("", include(router.urls)),
     path("", include(dataset_router.urls)),
