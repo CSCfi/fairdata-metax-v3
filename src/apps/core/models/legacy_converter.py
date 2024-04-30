@@ -220,6 +220,7 @@ class LegacyDatasetConverter:
             defaults={
                 "pref_label": concept.get(pref_label_key),
                 "in_scheme": concept.get("in_scheme"),
+                "deprecated": timezone.now(),
                 **defaults,  # Allow overriding defaults
             },
         )

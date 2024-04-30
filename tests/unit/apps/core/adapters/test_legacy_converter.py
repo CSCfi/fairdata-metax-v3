@@ -1,6 +1,10 @@
+from datetime import datetime
+
 import pytest
+from tests.utils import matchers
 
 from apps.core.factories import LocationFactory
+from apps.core.models import Theme
 from apps.core.models.legacy_converter import LegacyDatasetConverter
 
 pytestmark = [pytest.mark.adapter]
@@ -81,3 +85,18 @@ def test_fix_url(converter):
     url, fixed = converter.fix_url("  https://example.com/ok  ")
     assert url == "https://example.com/ok"
     assert fixed == False
+
+
+def test_convert_create_missing_reference_data():
+    converter = LegacyDatasetConverter(dataset_json={}, convert_only=False)
+    converter.convert_reference_data(
+        Theme,
+        {
+            "pref_label": {"en": "V2 theme"},
+            "in_scheme": "https://example.com/",
+            "identifier": "https://example.com/theme",
+        },
+    )
+    theme = Theme.objects.get(url="https://example.com/theme")
+    assert theme.pref_label == {"en": "V2 theme"}
+    assert isinstance(theme.deprecated, datetime)

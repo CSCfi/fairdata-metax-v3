@@ -192,3 +192,7 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_missing_required_fields
 
+## test_get_dataset_no_multiple_objects_error
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_get_dataset_no_multiple_objects_error
+
