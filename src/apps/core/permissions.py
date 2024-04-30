@@ -41,9 +41,9 @@ class DatasetAccessPolicy(BaseAccessPolicy):
         },
         {
             "action": ["<op:flush>"],  # hard delete dataset
-            "principal": "group:service",
             "effect": "allow",
-            "condition": "is_edit_allowed",
+            "principal": "authenticated",
+            "condition": ["is_edit_allowed", "is_flush_allowed"],
         },
         {
             "action": ["create"],
@@ -55,6 +55,17 @@ class DatasetAccessPolicy(BaseAccessPolicy):
     def is_edit_allowed(self, request, view, action) -> bool:
         dataset = view.get_object()
         return dataset.has_permission_to_edit(request.user)
+
+    def is_flush_allowed(self, request, view, action) -> bool:
+        dataset = view.get_object()
+        if dataset.state == "draft":
+            return True  # Drafts are always hard deleted
+        if catalog := dataset.data_catalog:
+            # Hard delete is allowed for catalog admins in harvested catalogs
+            return catalog.harvested and DataCatalogAccessPolicy().query_object_permission(
+                user=request.user, object=catalog, action="<op:admin_dataset>"
+            )
+        return False
 
     def is_metadata_owner(self, request, view, action) -> bool:
         dataset = view.get_object()

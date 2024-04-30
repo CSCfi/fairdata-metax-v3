@@ -91,7 +91,9 @@ def update_dataset_in_v2(dataset: Dataset, created=False):
     res: requests.Response
     body = json.dumps(v2_dataset, cls=DjangoJSONEncoder)
     if found:
-        res = requests.put(url=f"{host}/{identifier}?migration_override", data=body, headers=headers)
+        res = requests.put(
+            url=f"{host}/{identifier}?migration_override", data=body, headers=headers
+        )
     else:
         res = requests.post(url=f"{host}?migration_override", data=body, headers=headers)
     if res.status_code in {200, 201}:

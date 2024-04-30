@@ -1,9 +1,9 @@
 import json
 import logging
 from unittest.mock import ANY
-from django.contrib.auth.models import Group
 
 import pytest
+from django.contrib.auth.models import Group
 from rest_framework.reverse import reverse
 from tests.utils import assert_nested_subdict, matchers
 from watson.models import SearchEntry
@@ -551,10 +551,31 @@ def test_create_dataset_draft_without_catalog(
 def test_flush_dataset_by_service(service_client, dataset_a_json, data_catalog, reference_data):
     """Flush should delete dataset from database."""
     res = service_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
-    id = res.data["id"]
-    res = service_client.delete(f"/v3/datasets/{id}?flush=true")
+    dataset_id = res.data["id"]
+
+    # Not harvested, not catalog admin
+    res = service_client.delete(f"/v3/datasets/{dataset_id}?flush=true")
+    assert res.status_code == 403
+
+    # Harvested, not catalog admin
+    data_catalog.harvested = True
+    data_catalog.save()
+    res = service_client.delete(f"/v3/datasets/{dataset_id}?flush=true")
+    assert res.status_code == 403
+
+    # Not harvested, catalog admin
+    data_catalog.harvested = False
+    data_catalog.save()
+    data_catalog.dataset_groups_admin.add(Group.objects.get(name="test"))
+    res = service_client.delete(f"/v3/datasets/{dataset_id}?flush=true")
+    assert res.status_code == 403
+
+    # Both harvested and catalog admin -> ok
+    data_catalog.harvested = True
+    data_catalog.save()
+    res = service_client.delete(f"/v3/datasets/{dataset_id}?flush=true")
     assert res.status_code == 204
-    assert not Dataset.all_objects.filter(id=id).exists()
+    assert not Dataset.all_objects.filter(id=dataset_id).exists()
 
 
 def test_flush_dataset_by_user(user_client, dataset_a_json, data_catalog, reference_data):
@@ -569,6 +590,16 @@ def test_flush_dataset_by_user(user_client, dataset_a_json, data_catalog, refere
     res = user_client.delete(f"/v3/datasets/{id}")
     assert res.status_code == 204
     assert Dataset.all_objects.filter(id=id).exists()
+    assert not Dataset.available_objects.filter(id=id).exists()
+
+
+def test_flush_draft(user_client, dataset_a_json, data_catalog, reference_data):
+    """Flush should be allowed for drafts."""
+    dataset_a_json["state"] = "draft"
+    res = user_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    id = res.data["id"]
+    res = user_client.delete(f"/v3/datasets/{id}?flush=true")
+    assert res.status_code == 204
     assert not Dataset.available_objects.filter(id=id).exists()
 
 

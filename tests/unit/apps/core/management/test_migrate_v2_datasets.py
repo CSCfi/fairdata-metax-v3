@@ -1,9 +1,7 @@
 import os
-from io import StringIO
-
-
-from unittest.mock import patch
 from base64 import b64decode
+from io import StringIO
+from unittest.mock import patch
 
 import pytest
 from django.core.management import call_command
