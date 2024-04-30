@@ -83,9 +83,9 @@ class LegacyDataset(Dataset):
             self.api_version = self.dataset_json.get("api_meta", {}).get("version", 1)
 
         # Get minimal dataset fields from legacy json
-        if not self.metadata_owner_id:
+        if not is_field_value_provided(self.__class__, "metadata_owner_id", args, kwargs):
             self.attach_metadata_owner()
-        if not self.title:
+        if "title" not in kwargs:
             self.title = self.legacy_research_dataset["title"]
 
     @property

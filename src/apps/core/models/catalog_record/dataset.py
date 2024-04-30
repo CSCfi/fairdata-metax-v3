@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.core.validators import MinLengthValidator
 from django.db import models
+from django.db.models.signals import post_delete
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
@@ -419,7 +420,11 @@ class Dataset(V2DatasetMixin, CatalogRecord):
 
         if self.access_rights:
             self.access_rights.delete(*args, **kwargs)
-        return super().delete(*args, **kwargs)
+
+        _deleted = super().delete(*args, **kwargs)
+        if "soft" in kwargs and kwargs["soft"] is True:
+            post_delete.send(Dataset, instance=self, soft=True)
+        return _deleted
 
     def _validate_cumulative_state(self):
         """Check to prevent changing non-cumulative to cumulative
