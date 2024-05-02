@@ -128,6 +128,10 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_flush_dataset_by_user
 
+## test_flush_draft
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_flush_draft
+
 ## ida_dataset
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.ida_dataset

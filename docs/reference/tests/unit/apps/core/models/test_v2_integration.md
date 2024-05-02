@@ -20,6 +20,10 @@
 
 ### :::tests.unit.apps.core.models.test_v2_integration.test_v2_integration_soft_delete_dataset
 
+## test_v2_integration_hard_delete_a_soft_deleted_dataset
+
+### :::tests.unit.apps.core.models.test_v2_integration.test_v2_integration_hard_delete_a_soft_deleted_dataset
+
 ## test_v2_integration_disabled_create_dataset
 
 ### :::tests.unit.apps.core.models.test_v2_integration.test_v2_integration_disabled_create_dataset

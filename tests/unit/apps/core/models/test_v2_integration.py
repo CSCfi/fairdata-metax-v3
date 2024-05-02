@@ -54,7 +54,7 @@ def test_v2_integration_hard_delete_dataset(mock_v2_integration, dataset_with_fo
     assert mock_v2_integration.call_count == 1
     call = mock_v2_integration.request_history[0]
     assert call.method == "DELETE"
-    assert call.url == f"https://metax-v2-test/rest/v2/datasets/{dataset_id}?hard=true"
+    assert call.url == f"https://metax-v2-test/rest/v2/datasets/{dataset_id}?removed=true&hard=true"
 
 
 @pytest.mark.adapter
@@ -64,7 +64,23 @@ def test_v2_integration_soft_delete_dataset(mock_v2_integration, dataset_with_fo
     assert mock_v2_integration.call_count == 1
     call = mock_v2_integration.request_history[0]
     assert call.method == "DELETE"
-    assert call.url == f"https://metax-v2-test/rest/v2/datasets/{dataset_id}"
+    assert call.url == f"https://metax-v2-test/rest/v2/datasets/{dataset_id}?removed=true"
+
+
+@pytest.mark.adapter
+def test_v2_integration_hard_delete_a_soft_deleted_dataset(mock_v2_integration, dataset_with_foreign_keys):
+    dataset_id = dataset_with_foreign_keys.id
+    dataset_with_foreign_keys.delete(soft=True)
+    assert mock_v2_integration.call_count == 1
+    call = mock_v2_integration.request_history[0]
+    assert call.method == "DELETE"
+    assert call.url == f"https://metax-v2-test/rest/v2/datasets/{dataset_id}?removed=true"
+
+    dataset_with_foreign_keys.delete(soft=False)
+    assert mock_v2_integration.call_count == 2
+    call = mock_v2_integration.request_history[1]
+    assert call.method == "DELETE"
+    assert call.url == f"https://metax-v2-test/rest/v2/datasets/{dataset_id}?removed=true&hard=true"
 
 
 @pytest.mark.adapter

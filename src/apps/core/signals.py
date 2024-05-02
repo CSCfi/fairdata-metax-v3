@@ -36,11 +36,14 @@ def delete_dataset_from_v2(sender, instance: Dataset, **kwargs):
     """Sync Metax V2 when deleting dataset from v3"""
     if not settings.METAX_V2_INTEGRATION_ENABLED:
         return
-    hard = "?hard=true"
+
+    params = {"removed": "true", "hard": "true"}
+
     if "soft" in kwargs and kwargs["soft"] is True:
-        hard = ""
+        params["hard"] = None
+
     host, headers = get_v2_request_settings()
-    res = requests.delete(url=f"{host}/{instance.id}{hard}", headers=headers)
+    res = requests.delete(url=f"{host}/{instance.id}", headers=headers, params=params)
 
     if res.status_code <= 204:
         logger.info(f"response form metax v2: {res}")
