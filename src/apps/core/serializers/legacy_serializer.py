@@ -84,6 +84,7 @@ class LegacyDatasetUpdateSerializer(CommonNestedModelSerializer):
     allowed_actions = DatasetAllowedActionsSerializer(read_only=True, source="*")
     created = serializers.DateTimeField(required=False, read_only=False)
     modified = serializers.DateTimeField(required=False, read_only=False)
+    removed = serializers.DateTimeField(required=False, read_only=False, allow_null=True)
     next_draft = LinkedDraftSerializer(read_only=True)
     draft_of = LinkedDraftSerializer(read_only=True)
 

@@ -33,6 +33,7 @@ class LegacyCompatibility:
 
     ignored_migration_errors = {
         "dictionary_item_added": [
+            "root['date_removed']",
             "root['research_dataset']['modified']",
             "root['research_dataset']['issued']",
             "root['metadata_owner_org']",  # Missing value filled from metadata_provider_org
@@ -101,6 +102,8 @@ class LegacyCompatibility:
         removed_value = extract(self.dataset.dataset_json, path)
         if path == "root['date_deprecated']":
             return not self.dataset.dataset_json.get("deprecated")
+        if path == "root['date_removed']":
+            return not self.dataset.dataset_json.get("removed")
         if type(removed_value) is str:
             return removed_value.strip() == ""
         elif removed_value in [None, []]:

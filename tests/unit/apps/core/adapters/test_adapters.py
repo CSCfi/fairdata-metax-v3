@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from datetime import datetime
 from pprint import pprint
 
 import pytest
@@ -113,6 +114,38 @@ def test_v2_to_v3_dataset_conversion_invalid_identifier(license_reference_data):
     with pytest.raises(serializers.ValidationError):
         v2_dataset.save()
         v2_dataset.update_from_legacy()
+
+
+@pytest.mark.django_db
+def test_v2_to_v3_dataset_conversion_removed(license_reference_data):
+    test_data_path = os.path.dirname(os.path.abspath(__file__)) + "/testdata/"
+    test_file_path = "dataset-harvested-fsd.json"
+    data = None
+    with open(test_data_path + test_file_path) as json_file:
+        data = json.load(json_file)
+
+    data["removed"] = True
+    data["date_removed"] = "2022-01-03T12:13:14Z"
+    v2_dataset = LegacyDataset(id=data["identifier"], dataset_json=data)
+    v2_dataset.save()
+    v2_dataset.update_from_legacy()
+    assert isinstance(v2_dataset.removed, datetime)
+
+
+@pytest.mark.django_db
+def test_v2_to_v3_dataset_conversion_removed_restored(license_reference_data):
+    test_data_path = os.path.dirname(os.path.abspath(__file__)) + "/testdata/"
+    test_file_path = "dataset-harvested-fsd.json"
+    data = None
+    with open(test_data_path + test_file_path) as json_file:
+        data = json.load(json_file)
+
+    data["removed"] = False  # dataset has date_removed but is no longer removed
+    data["date_removed"] = "2022-01-03T12:13:14Z"
+    v2_dataset = LegacyDataset(id=data["identifier"], dataset_json=data)
+    v2_dataset.save()
+    v2_dataset.update_from_legacy()
+    assert v2_dataset.removed is None
 
 
 @pytest.mark.django_db

@@ -633,6 +633,11 @@ class LegacyDatasetConverter:
             # Use modification date for deprecation date if not already set
             deprecated = date_deprecated or modified
 
+        removed = None
+        if self.dataset_json.get("removed"):
+            date_removed = self.dataset_json.get("date_removed")
+            removed = date_removed or modified
+
         last_modified_by = None
         if not self.convert_only:
             if user_modified := self.dataset_json.get("user_modified"):
@@ -656,6 +661,7 @@ class LegacyDatasetConverter:
 
         if not self.convert_only:
             fields["api_version"] = self.dataset_json.get("api_meta", {}).get("version", 1)
+            fields["removed"] = removed
 
         if self.dataset_json.get("use_doi_for_published"):
             fields["pid_type"] = "DOI"

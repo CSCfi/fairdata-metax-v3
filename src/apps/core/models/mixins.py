@@ -510,6 +510,8 @@ class V2DatasetMixin:
         }
         if self.deprecated:
             doc["date_deprecated"] = self.deprecated.isoformat()
+        if self.removed:
+            doc["date_removed"] = self.removed.isoformat()
         if self.metadata_owner:
             if hasattr(self.metadata_owner, "user"):
                 doc["metadata_provider_user"] = self.metadata_owner.user.username

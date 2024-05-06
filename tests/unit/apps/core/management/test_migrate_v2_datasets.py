@@ -8,7 +8,7 @@ from django.core.management import call_command
 
 from apps.core.models import LegacyDataset
 
-pytestmark = [pytest.mark.django_db, pytest.mark.management]
+pytestmark = [pytest.mark.django_db, pytest.mark.management, pytest.mark.adapter]
 
 
 @pytest.fixture(autouse=True)
@@ -222,6 +222,6 @@ def test_migrate_prompt_credentials(requests_mock):
     ):
         call_command("migrate_v2_datasets", stderr=err, use_env=True, prompt_credentials=True)
     assert err.getvalue() == ""
-    assert mock.call_count == 1
+    assert mock.call_count == 2
     auth = mock.last_request.headers["authorization"]
     assert b64decode(auth.replace("Basic ", "")) == b"username:password"

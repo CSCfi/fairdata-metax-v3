@@ -249,7 +249,7 @@ class Command(BaseCommand):
             created = False
             dataset = self.dataset_cache.get(identifier)
             if not dataset:
-                dataset, created = LegacyDataset.objects.get_or_create(
+                dataset, created = LegacyDataset.all_objects.get_or_create(
                     id=identifier,
                     defaults={"dataset_json": data},
                 )
@@ -330,7 +330,7 @@ class Command(BaseCommand):
             q = Q(id__in=identifiers)
         if catalogs := options.get("catalogs"):
             q = Q(data_catalog__in=catalogs)
-        datasets = LegacyDataset.available_objects.filter(q).values_list("dataset_json", flat=True)
+        datasets = LegacyDataset.all_objects.filter(q).values_list("dataset_json", flat=True)
         self.migrate_from_list(datasets)
 
     def migrate_from_file(self, options):
@@ -363,13 +363,13 @@ class Command(BaseCommand):
         if identifiers:
             for identifier in identifiers:
                 response = self.fetch_dataset(identifier)
-                response.raise_for_status()
                 dataset_json = response.json()
                 self.datasets.append(self.migrate_dataset(dataset_json))
 
         if migrate_all:
             response = self.fetch_datasets(limit=limit)
-            response.raise_for_status()
+            self.loop_pagination(response)
+            response = self.fetch_datasets(limit=limit, removed="true")
             self.loop_pagination(response)
 
         if catalogs:
@@ -386,7 +386,8 @@ class Command(BaseCommand):
                     continue
 
                 response = self.fetch_datasets(data_catalog=_catalog, limit=limit)
-                response.raise_for_status()
+                self.loop_pagination(response)
+                response = self.fetch_datasets(data_catalog=_catalog, limit=limit, removed="true")
                 self.loop_pagination(response)
 
     def print_summary(self):
@@ -404,7 +405,7 @@ class Command(BaseCommand):
     def fetch_dataset(self, identifier, **params):
         metax_instance = self.metax_instance
         response = requests.get(
-            f"{metax_instance}/rest/v2/datasets/{identifier}",
+            f"{metax_instance}/rest/v2/datasets/{identifier}?removed=true",
             params=params,
             auth=self.metax_auth,
         )
