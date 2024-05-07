@@ -12,6 +12,7 @@ from typing import Dict
 
 import django
 
+
 sys.path.append("./src")
 os.environ["DJANGO_SETTINGS_MODULE"] = "metax_service.settings"
 django.setup()
@@ -19,12 +20,14 @@ django.setup()
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 
-from apps.actors.serializers import OrganizationSerializer
 from apps.common.serializers import URLReferencedModelField, URLReferencedModelListField
 from apps.core.serializers import (
     DataCatalogModelSerializer,
     DatasetSerializer,
     LicenseModelSerializer,
+)
+from apps.core.serializers.dataset_actor_serializers.organization_serializer import (
+    DatasetOrganizationSerializer,
 )
 from apps.files.helpers import get_file_metadata_serializer
 from apps.refdata.models import License
@@ -37,7 +40,7 @@ def get_url(serializer):
 
 
 extra_refdata_serializers = {
-    OrganizationSerializer: reverse(f"organization-list"),
+    DatasetOrganizationSerializer: reverse(f"organization-list"),
     LicenseModelSerializer: get_url(License.get_serializer_class()()),
 }
 
@@ -103,4 +106,4 @@ print("")
 print("| Reference data | Used by fields |")
 print("|---|---|")
 for url, fields in refdata_fields.items():
-    print(f"| `{url}` | {'<br>'.join(sorted(fields))} |")
+    print(f"| [{url}]({url}) | {'<br>'.join(sorted(fields))} |")

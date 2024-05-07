@@ -55,24 +55,27 @@ The following table includes reference data types and the fields that use them. 
 
 <!-- table generated with refdata_fields.py -->
 
-| Reference data                           | Used by fields                                                                                                                                                                                                     |
-|------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `/v3/organization`                       | Dataset.actors[].organization<br>Dataset.provenance[].is_associated_with[].organization                                                                                                                            |
-| `/v3/reference-data/access-type`         | DataCatalog.access_rights.access_type<br>Dataset.access_rights.access_type                                                                                                                                         |
-| `/v3/reference-data/event-outcome`       | Dataset.provenance[].event_outcome                                                                                                                                                                                 |
-| `/v3/reference-data/fields-of-science`   | Dataset.field_of_science[]                                                                                                                                                                                         |
-| `/v3/reference-data/file-type`           | Dataset.fileset.file_actions[].dataset_metadata.file_type<br>Dataset.remote_resources[].file_type<br>File.dataset_metadata.file_type                                                                               |
-| `/v3/reference-data/identifier-type`     | Dataset.other_identifiers[].identifier_type                                                                                                                                                                        |
-| `/v3/reference-data/language`            | DataCatalog.language[]<br>Dataset.language[]                                                                                                                                                                       |
-| `/v3/reference-data/license`             | DataCatalog.access_rights.license[]<br>Dataset.access_rights.license[]                                                                                                                                             |
-| `/v3/reference-data/lifecycle-event`     | Dataset.provenance[].lifecycle_event                                                                                                                                                                               |
-| `/v3/reference-data/location`            | Dataset.provenance[].spatial.reference<br>Dataset.spatial[].reference                                                                                                                                              |
-| `/v3/reference-data/relation-type`       | Dataset.relation[].relation_type                                                                                                                                                                                   |
-| `/v3/reference-data/research-infra`      | Dataset.infrastructure[]                                                                                                                                                                                           |
-| `/v3/reference-data/resource-type`       | Dataset.provenance[].used_entity[].type<br>Dataset.relation[].entity.type                                                                                                                                          |
-| `/v3/reference-data/restriction-grounds` | DataCatalog.access_rights.restriction_grounds[]<br>Dataset.access_rights.restriction_grounds[]                                                                                                                     |
-| `/v3/reference-data/theme`               | Dataset.theme[]                                                                                                                                                                                                    |
-| `/v3/reference-data/use-categories`      | Dataset.fileset.directory_actions[].dataset_metadata.use_category<br>Dataset.fileset.file_actions[].dataset_metadata.use_category<br>Dataset.remote_resources[].use_category<br>File.dataset_metadata.use_category |
+| Reference data | Used by fields |
+|---|---|
+| [/v3/organizations](/v3/organizations) | Dataset.actors[].organization<br>Dataset.projects[].funding[].funder.organization<br>Dataset.projects[].participating_organizations[]<br>Dataset.provenance[].is_associated_with[].organization |
+| [/v3/reference-data/access-types](/v3/reference-data/access-types) | Dataset.access_rights.access_type |
+| [/v3/reference-data/event-outcomes](/v3/reference-data/event-outcomes) | Dataset.provenance[].event_outcome |
+| [/v3/reference-data/fields-of-science](/v3/reference-data/fields-of-science) | Dataset.field_of_science[] |
+| [/v3/reference-data/file-types](/v3/reference-data/file-types) | Dataset.fileset.file_actions[].dataset_metadata.file_type<br>Dataset.remote_resources[].file_type<br>File.dataset_metadata.file_type |
+| [/v3/reference-data/funder-types](/v3/reference-data/funder-types) | Dataset.projects[].funding[].funder.funder_type |
+| [/v3/reference-data/identifier-types](/v3/reference-data/identifier-types) | Dataset.other_identifiers[].identifier_type |
+| [/v3/reference-data/languages](/v3/reference-data/languages) | DataCatalog.language[]<br>Dataset.language[] |
+| [/v3/reference-data/licenses](/v3/reference-data/licenses) | Dataset.access_rights.license[] |
+| [/v3/reference-data/lifecycle-events](/v3/reference-data/lifecycle-events) | Dataset.provenance[].lifecycle_event |
+| [/v3/reference-data/locations](/v3/reference-data/locations) | Dataset.provenance[].spatial.reference<br>Dataset.spatial[].reference |
+| [/v3/reference-data/preservation-events](/v3/reference-data/preservation-events) | Dataset.provenance[].preservation_event |
+| [/v3/reference-data/relation-types](/v3/reference-data/relation-types) | Dataset.relation[].relation_type |
+| [/v3/reference-data/research-infras](/v3/reference-data/research-infras) | Dataset.infrastructure[] |
+| [/v3/reference-data/resource-types](/v3/reference-data/resource-types) | Dataset.provenance[].used_entity[].type<br>Dataset.relation[].entity.type |
+| [/v3/reference-data/restriction-grounds](/v3/reference-data/restriction-grounds) | Dataset.access_rights.restriction_grounds[] |
+| [/v3/reference-data/themes](/v3/reference-data/themes) | Dataset.theme[] |
+| [/v3/reference-data/use-categories](/v3/reference-data/use-categories) | Dataset.fileset.directory_actions[].dataset_metadata.use_category<br>Dataset.fileset.file_actions[].dataset_metadata.use_category<br>Dataset.remote_resources[].use_category<br>File.dataset_metadata.use_category |
+
 
 
 ## Example
