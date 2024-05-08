@@ -17,6 +17,7 @@ from apps.common.helpers import (
     datetime_to_date,
     ensure_dict,
     ensure_list,
+    is_valid_email,
     is_valid_float_str,
     is_valid_url,
     omit_empty,
@@ -357,9 +358,15 @@ class LegacyDatasetConverter:
         """Convert organization from V2 dict to V3 dict."""
         if not organization:
             return None
+
+        email = organization.get("email")
+        if email and not is_valid_email(email):
+            self.mark_invalid(organization, fields=["email"], error="Invalid email")
+            email = None
+
         val = {
             "pref_label": organization.get("name"),
-            "email": organization.get("email"),
+            "email": email,
             "homepage": self.convert_homepage(organization.get("homepage")),
         }
 
@@ -394,13 +401,20 @@ class LegacyDatasetConverter:
         val = {}
         typ = actor.get("@type")
         v2_org = None
+
         if typ == "Person":
+            email = actor.get("email")
+            if email and not is_valid_email(email):
+                self.mark_invalid(actor, fields=["email"], error="Invalid email")
+                email = None
+
             val["person"] = {
                 "name": actor.get("name"),
                 "external_identifier": actor.get("identifier"),
-                "email": actor.get("email"),
+                "email": email,
                 "homepage": self.convert_homepage(actor.get("homepage")),
             }
+
             if parent := actor.get("member_of"):
                 v2_org = parent
         elif typ == "Organization":

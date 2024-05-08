@@ -236,6 +236,14 @@ def is_valid_url(val):
     return True
 
 
+def is_valid_email(val):
+    try:
+        serializers.EmailField().run_validation(val)
+    except serializers.ValidationError:
+        return False
+    return True
+
+
 # Special characters that don't require percent encoding
 # See https://datatracker.ietf.org/doc/html/rfc3986#section-3.3
 safe_pchar = r"!$&'()*+,;=:@"
