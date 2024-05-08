@@ -1,8 +1,10 @@
+import copy
 import logging
 
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
+from apps.common.helpers import process_nested
 from apps.common.serializers import CommonNestedModelSerializer
 from apps.core.models import LegacyDataset
 from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
@@ -46,6 +48,19 @@ class LegacyDatasetModelSerializer(CommonModelSerializer):
         instance: LegacyDataset = super().update(instance, validated_data)
         return instance.update_from_legacy(context=self.context)
 
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+
+        # Hide non-public fields from response
+        def pre_handler(value, path):
+            if isinstance(value, dict):
+                for key in value.keys():
+                    if key in {"email", "telephone", "phone", "access_granter", "rems_identifier"}:
+                        value[key] = "<hidden>"
+            return value
+
+        return process_nested(copy.deepcopy(rep), pre_handler)
+
     class Meta:
         model = LegacyDataset
         fields = (
@@ -54,8 +69,16 @@ class LegacyDatasetModelSerializer(CommonModelSerializer):
             "contract_json",
             "files_json",
             "v2_dataset_compatibility_diff",
+            "migration_errors",
         )
-        read_only_fields = ("id", "v2_dataset_compatibility_diff")
+        read_only_fields = (
+            "id",
+            "v2_dataset_compatibility_diff",
+            "migration_errors",
+            "last_successful_migration",
+            "invalid_legacy_values",
+            "fixed_legacy_values",
+        )
 
 
 class LegacyDatasetUpdateSerializer(CommonNestedModelSerializer):

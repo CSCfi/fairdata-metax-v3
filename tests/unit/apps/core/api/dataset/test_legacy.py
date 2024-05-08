@@ -185,3 +185,24 @@ def test_edit_legacy_dataset_wrong_api_version(
     )
     assert res.status_code == 400
     assert res.json() == {"detail": "Dataset has been modified with a later API version."}
+
+
+def test_legacy_dataset_email(admin_client, legacy_dataset_a, legacy_dataset_a_json):
+    legacy_dataset_a_json["dataset_json"]["access_granter"] = {
+        "userid": "access-granter-user",
+        "name": "Access Granter",
+        "email": "accessgranter@example.com",
+    }
+    legacy_dataset_a_json["dataset_json"]["research_dataset"]["creator"][0][
+        "email"
+    ] = "hello@world.com"
+    res = admin_client.put(
+        reverse(
+            "migrated-dataset-detail", args=[legacy_dataset_a_json["dataset_json"]["identifier"]]
+        ),
+        legacy_dataset_a_json,
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert res.data["dataset_json"]["research_dataset"]["creator"][0]["email"] == "<hidden>"
+    assert res.data["dataset_json"]["access_granter"] == "<hidden>"
