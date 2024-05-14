@@ -4,9 +4,13 @@
 
 ### :::src.apps.core.signals.LegacyUpdateFailed
 
-## handle_files_changed
+## handle_fileset_files_changed
 
-### :::src.apps.core.signals.handle_files_changed
+### :::src.apps.core.signals.handle_fileset_files_changed
+
+## handle_files_deleted
+
+### :::src.apps.core.signals.handle_files_deleted
 
 ## delete_dataset_from_v2
 

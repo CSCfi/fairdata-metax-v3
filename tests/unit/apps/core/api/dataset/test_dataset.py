@@ -479,7 +479,7 @@ def test_dataset_patch_maximal_and_minimal(
     assert minimal_data == {
         **maximal_data,
         **minimal_json,
-        "modified": matchers.DateTime(),  # match any datetime
+        "modified": matchers.DateTimeStr(),  # match any datetime
         "draft_revision": 2,  # increased by 1 on save
     }
 

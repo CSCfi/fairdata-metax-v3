@@ -1,6 +1,7 @@
 """Tests for updating dataset files with /dataset/<id>/files endpoint."""
 
 import pytest
+from tests.utils import matchers
 
 from apps.core import factories
 from apps.core.models import Dataset

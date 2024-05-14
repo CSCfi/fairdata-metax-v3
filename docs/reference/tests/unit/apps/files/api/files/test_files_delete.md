@@ -20,3 +20,11 @@
 
 ### :::tests.unit.apps.files.api.files.test_files_delete.test_delete_files_by_project_id_delete_single_storage
 
+## test_delete_draft_files
+
+### :::tests.unit.apps.files.api.files.test_files_delete.test_delete_draft_files
+
+## test_delete_file_in_multiple_datasets
+
+### :::tests.unit.apps.files.api.files.test_files_delete.test_delete_file_in_multiple_datasets
+

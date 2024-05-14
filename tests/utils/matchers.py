@@ -8,7 +8,7 @@ Example:
 expected = {
     "value": matchers.Any(type=int),
     "list": matchers.List(length=2),
-    "modified": matchers.DateTime(),
+    "modified": matchers.DateTimeStr(),
 }
 
 value = {
@@ -22,6 +22,7 @@ assert value == expected
 """
 
 from abc import ABC, abstractmethod
+from datetime import datetime
 from typing import Callable
 
 from django.core import exceptions, validators
@@ -118,7 +119,7 @@ class URLMatcher(BaseValidatorMatcher):
         self.validator = validators.URLValidator(**kwargs)
 
 
-class DateTimeMatcher(BaseMatcher):
+class DateTimeStrMatcher(BaseMatcher):
     """Match datetime string values."""
 
     def match(self, other: object) -> bool:
@@ -128,6 +129,13 @@ class DateTimeMatcher(BaseMatcher):
         except:
             pass
         return False
+
+
+class DateTimeMatcher(BaseMatcher):
+    """Match datetime string values."""
+
+    def match(self, other: object) -> bool:
+        return isinstance(other, datetime)
 
 
 class DictContainingMatcher(BaseMatcher):
@@ -156,6 +164,7 @@ class DictContainingMatcher(BaseMatcher):
 class Matchers:
     Any = AnyMatcher
     DateTime = DateTimeMatcher
+    DateTimeStr = DateTimeStrMatcher
     Length = LengthMatcher
     List = ListMatcher
     URL = URLMatcher

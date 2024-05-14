@@ -1,15 +1,16 @@
 import logging
 import uuid
-from typing import Dict, Optional, Tuple
+from typing import Optional
 
 from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.db import models
 from django.db.models import Count, Sum
 from django.db.models.functions import Coalesce
+from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 
-from apps.actors.models import Actor, Organization, Person
+from apps.actors.models import Actor, Organization
 from apps.common.copier import ModelCopier
 from apps.common.models import AbstractBaseModel, MediaTypeValidator
 from apps.core.models.concepts import FileType, RelationType, UseCategory
@@ -239,6 +240,13 @@ class FileSet(AbstractBaseModel):
                 delattr(self, prop)
             except AttributeError:
                 logger.info(f"No property {prop} in cache.")
+
+    def deprecate_dataset(self):
+        """Files are removed, deprecate dataset if needed."""
+        if dataset := getattr(self, "dataset", None):
+            if dataset.has_published_files and not dataset.deprecated:
+                dataset.deprecated = timezone.now()
+                dataset.save()
 
     def remove_unused_file_metadata(self):
         """Remove file and directory metadata for files and directories not in FileSet."""

@@ -28,6 +28,10 @@
 
 ### :::tests.utils.matchers.URLMatcher
 
+## DateTimeStrMatcher
+
+### :::tests.utils.matchers.DateTimeStrMatcher
+
 ## DateTimeMatcher
 
 ### :::tests.utils.matchers.DateTimeMatcher

@@ -12,7 +12,6 @@ from typing import Dict
 
 import django
 
-
 sys.path.append("./src")
 os.environ["DJANGO_SETTINGS_MODULE"] = "metax_service.settings"
 django.setup()

@@ -567,7 +567,10 @@ def test_files_delete_many_ok(ida_client):
         ],
         res.json()["success"],
     )
-    assert File.all_objects.filter(id__in=[f["id"] for f in files], is_removed=True).count() == 3
+    assert (
+        File.all_objects.filter(id__in=[f["id"] for f in files], removed__isnull=False).count()
+        == 3
+    )
 
 
 def test_files_delete_many_only_id(ida_client, action_url):
@@ -586,7 +589,10 @@ def test_files_delete_many_only_id(ida_client, action_url):
         ],
         res.json()["success"],
     )
-    assert File.all_objects.filter(id__in=[f["id"] for f in files], is_removed=True).count() == 1
+    assert (
+        File.all_objects.filter(id__in=[f["id"] for f in files], removed__isnull=False).count()
+        == 1
+    )
 
 
 def test_files_delete_many_with_external_id(ida_client, action_url):
@@ -607,7 +613,10 @@ def test_files_delete_many_with_external_id(ida_client, action_url):
         ],
         res.json()["success"],
     )
-    assert File.all_objects.filter(id__in=[f["id"] for f in files], is_removed=True).count() == 1
+    assert (
+        File.all_objects.filter(id__in=[f["id"] for f in files], removed__isnull=False).count()
+        == 1
+    )
 
 
 def test_files_delete_many_non_existing(ida_client):
@@ -634,7 +643,7 @@ def test_files_delete_many_non_existing(ida_client):
         },
         res.json(),
     )
-    File.all_objects.filter(id__in=[f["id"] for f in files], is_removed=True).count() == 3
+    File.all_objects.filter(id__in=[f["id"] for f in files], removed__isnull=False).count() == 3
 
 
 def test_files_delete_many_multiple_projects(

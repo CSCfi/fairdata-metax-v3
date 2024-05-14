@@ -8,18 +8,16 @@
 import uuid
 
 from django.db import models
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from model_utils.fields import AutoCreatedField, AutoLastModifiedField
-from model_utils.models import SoftDeletableModel
 
-from apps.common.models import SystemCreatorBaseModel
+from apps.common.models import CustomSoftDeletableModel, SystemCreatorBaseModel
 from apps.common.serializers.fields import ChecksumField
 
 from .file_storage import FileStorage
 
 
-class File(SystemCreatorBaseModel, SoftDeletableModel):
+class File(SystemCreatorBaseModel, CustomSoftDeletableModel):
     """A file stored in external data storage."""
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -93,18 +91,14 @@ class File(SystemCreatorBaseModel, SoftDeletableModel):
             # pathname should be unique for storage
             models.UniqueConstraint(
                 fields=["filename", "directory_path", "storage"],
-                condition=models.Q(is_removed=False),
-                name=",%(app_label)s_%(class)s_unique_file_path",
+                condition=models.Q(removed__isnull=True),
+                name="%(app_label)s_%(class)s_unique_file_path",
             ),
             # identifier should be unique for storage
             models.UniqueConstraint(
                 fields=["storage_identifier", "storage"],
-                condition=models.Q(is_removed=False) & models.Q(storage_identifier__isnull=False),
+                condition=models.Q(removed__isnull=True)
+                & models.Q(storage_identifier__isnull=False),
                 name="%(app_label)s_%(class)s_unique_identifier",
             ),
         ]
-
-    def delete(self, using=None, soft=True, *args, **kwargs):
-        """Override delete method to add record_removed"""
-        self.removed = timezone.now()
-        return super().delete(using=using, soft=soft, *args, **kwargs)

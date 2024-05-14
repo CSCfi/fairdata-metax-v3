@@ -1,5 +1,6 @@
 import pytest
 from rest_framework.reverse import reverse
+from tests.utils import matchers
 
 from apps.core import factories as core_factories
 from apps.files import factories as file_factories
@@ -21,7 +22,7 @@ def file_set():
         file_args={"*": {"size": 1024}},
     )
     data_catalog = core_factories.DataCatalogFactory()
-    dataset = core_factories.DatasetFactory(data_catalog=data_catalog)
+    dataset = core_factories.PublishedDatasetFactory(data_catalog=data_catalog)
     return core_factories.FileSetFactory(
         dataset=dataset, storage=ida_files["storage"], files=ida_files["files"].values()
     )
@@ -74,6 +75,8 @@ def test_delete_files_by_project_id_delete_multiple_storages(
     assert File.available_objects.all().count() == 0
     assert File.all_objects.all().count() == all_objects_count
     assert res.status_code == 200
+    file_set.dataset.refresh_from_db()
+    assert file_set.dataset.deprecated == matchers.DateTime()
 
 
 @pytest.mark.parametrize(
@@ -92,3 +95,56 @@ def test_delete_files_by_project_id_delete_single_storage(
     assert File.available_objects.all().count() == 4
     assert File.all_objects.all().count() == all_objects_count
     assert res.status_code == 200
+    file_set.dataset.refresh_from_db()
+    assert file_set.dataset.deprecated == matchers.DateTime()
+
+
+def test_delete_draft_files(admin_client):
+    ida_files = file_factories.create_project_with_files(
+        csc_project="project",
+        storage_service="ida",
+        file_paths=[
+            "/dir/a.txt",
+        ],
+        file_args={"*": {"size": 1024}},
+    )
+    data_catalog = core_factories.DataCatalogFactory()
+    dataset = core_factories.DatasetFactory(data_catalog=data_catalog)
+    file_set = core_factories.FileSetFactory(
+        dataset=dataset, storage=ida_files["storage"], files=ida_files["files"].values()
+    )
+
+    url = f'{reverse("file-list")}?csc_project={file_set.csc_project}&storage_service={file_set.storage_service}'
+    res = admin_client.delete(url)
+    assert res.status_code == 200
+    file_set.dataset.refresh_from_db()
+    assert file_set.dataset.deprecated is None
+
+
+def test_delete_file_in_multiple_datasets(admin_client, file_set):
+    draft_dataset = core_factories.DatasetFactory(data_catalog=file_set.dataset.data_catalog)
+    core_factories.FileSetFactory(
+        dataset=draft_dataset, storage=file_set.storage, files=file_set.files.all()
+    )
+
+    file_id = File.objects.filter(storage=file_set.storage).first().id
+    url = reverse("file-detail", kwargs={"pk": file_id})
+    res = admin_client.delete(url)
+    assert res.status_code == 204
+    file_set.dataset.refresh_from_db()
+    assert file_set.dataset.file_set.files.count() == 2
+    assert file_set.dataset.deprecated == matchers.DateTime()
+    original_deprecated = file_set.dataset.deprecated
+
+    # Draft should not be deprecated
+    assert draft_dataset.file_set.files.count() == 2
+    draft_dataset.refresh_from_db()
+    assert draft_dataset.deprecated is None
+
+    # Delete another file, deprecation date should not change
+    file_id = File.objects.filter(storage=file_set.storage).first().id
+    url = reverse("file-detail", kwargs={"pk": file_id})
+    res = admin_client.delete(url)
+    assert res.status_code == 204
+    file_set.dataset.refresh_from_db()
+    assert file_set.dataset.deprecated == original_deprecated

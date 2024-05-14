@@ -34,6 +34,7 @@ from apps.files.serializers.file_bulk_serializer import (
     FileBulkReturnValueSerializer,
     FileBulkSerializer,
 )
+from apps.files.signals import pre_files_deleted
 
 logger = logging.getLogger(__name__)
 
@@ -341,6 +342,13 @@ class FileViewSet(BaseFileViewSet):
         queryset = self.filter_queryset(queryset)
 
         count = queryset.count()
+
+        pre_files_deleted.send(sender=File, queryset=queryset)
+
         queryset.delete()
 
         return Response(DeleteListReturnValueSerializer(instance={"count": count}).data, 200)
+
+    def perform_destroy(self, instance):
+        pre_files_deleted.send(sender=File, queryset=File.objects.filter(id=instance.id))
+        return super().perform_destroy(instance)

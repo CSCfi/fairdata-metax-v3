@@ -6,11 +6,13 @@ import requests
 import urllib3
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db.models.signals import m2m_changed, post_delete, pre_save
+from django.db.models.signals import m2m_changed, post_delete
 from django.dispatch import Signal, receiver
 from rest_framework import exceptions, status
 
-from apps.core.models import Dataset, FileSet, RemoteResource
+from apps.core.models import Dataset, FileSet
+from apps.files.models import File
+from apps.files.signals import pre_files_deleted
 
 logger = logging.getLogger(__name__)
 
@@ -23,12 +25,19 @@ class LegacyUpdateFailed(exceptions.APIException):
 
 
 @receiver(m2m_changed, sender=FileSet.files.through)
-def handle_files_changed(sender, instance: FileSet, action, **kwargs):
+def handle_fileset_files_changed(sender, instance: FileSet, action, **kwargs):
     if instance.skip_files_m2m_changed:  # allow skipping handler
         return
 
     if action in ("post_remove", "post_clear"):
         instance.remove_unused_file_metadata()
+
+
+@receiver(pre_files_deleted, sender=File)
+def handle_files_deleted(sender, queryset, **kwargs):
+    fileset_ids = queryset.values_list("file_sets").order_by().distinct()
+    for fileset in FileSet.all_objects.filter(id__in=fileset_ids):
+        fileset.deprecate_dataset()
 
 
 @receiver(post_delete, sender=Dataset)
