@@ -193,7 +193,10 @@ def test_new_version_has_no_pid(admin_client, dataset_a_json, data_catalog, refe
     assert pid3 != pid
 
 
-def test_create_dataset_multiple_datasets_same_pid(
+# Create a dataset
+# Try to create the same dataset again
+# Check that error message is correct
+def test_create_dataset_with_existing_pid(
     admin_client, dataset_a_json, data_catalog, reference_data, datacatalog_harvested_json
 ):
     dataset_a_json["data_catalog"] = datacatalog_harvested_json["id"]
@@ -205,6 +208,49 @@ def test_create_dataset_multiple_datasets_same_pid(
     assert "Data catalog is not allowed to have multiple datasets with same value" in str(
         res.data["persistent_identifier"]
     )
+
+
+# Create a dataset
+# Soft-delete the dataset
+# Try to create the same dataset again
+# Check that error message is correct
+def test_create_dataset_with_existing_soft_deleted_pid(
+    admin_client, dataset_a_json, data_catalog, reference_data, datacatalog_harvested_json
+):
+    dataset_a_json["data_catalog"] = datacatalog_harvested_json["id"]
+    dataset_a_json["persistent_identifier"] = "some_pid"
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    ds_id = res.json().get("id", None)
+
+    res = admin_client.delete(f"/v3/datasets/{ds_id}")
+    assert res.status_code == 204
+
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 400
+    assert "Data catalog is not allowed to have multiple datasets with same value" in str(
+        res.data["persistent_identifier"]
+    )
+
+
+# Create a dataset
+# Hard-delete the dataset
+# Create the same dataset again
+# Check that status code is correct
+def test_create_dataset_with_previously_hard_deleted_pid(
+    admin_client, dataset_a_json, data_catalog, reference_data, datacatalog_harvested_json
+):
+    dataset_a_json["data_catalog"] = datacatalog_harvested_json["id"]
+    dataset_a_json["persistent_identifier"] = "some_pid"
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    ds_id = res.json().get("id", None)
+
+    res = admin_client.delete(f"/v3/datasets/{ds_id}?flush=True")
+    assert res.status_code == 204
+
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
 
 
 # Try to create a dataset without pid_type and pid

@@ -40,9 +40,17 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_new_version_has_no_pid
 
-## test_create_dataset_multiple_datasets_same_pid
+## test_create_dataset_with_existing_pid
 
-### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_create_dataset_multiple_datasets_same_pid
+### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_create_dataset_with_existing_pid
+
+## test_create_dataset_with_existing_soft_deleted_pid
+
+### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_create_dataset_with_existing_soft_deleted_pid
+
+## test_create_dataset_with_previously_hard_deleted_pid
+
+### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_create_dataset_with_previously_hard_deleted_pid
 
 ## test_create_dataset_without_pid_type_and_pid_fails
 

@@ -60,6 +60,10 @@
 
 ### :::src.apps.common.helpers.is_valid_url
 
+## is_valid_email
+
+### :::src.apps.common.helpers.is_valid_email
+
 ## quote_url
 
 ### :::src.apps.common.helpers.quote_url

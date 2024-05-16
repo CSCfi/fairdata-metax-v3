@@ -602,7 +602,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             # because data_catalog and persistent_identifier live
             # in separate tables.
             if (
-                Dataset.available_objects.exclude(id=self.id)
+                Dataset.all_objects.exclude(id=self.id)
                 .filter(
                     data_catalog=self.data_catalog,
                     persistent_identifier=self.persistent_identifier,

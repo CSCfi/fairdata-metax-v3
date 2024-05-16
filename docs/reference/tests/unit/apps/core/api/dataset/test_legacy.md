@@ -36,3 +36,7 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_legacy.test_edit_legacy_dataset_wrong_api_version
 
+## test_legacy_dataset_email
+
+### :::tests.unit.apps.core.api.dataset.test_legacy.test_legacy_dataset_email
+
