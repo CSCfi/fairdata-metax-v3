@@ -44,3 +44,12 @@ class CustomTimeJSONRenderer(renderers.JSONRenderer):
                 return data
         else:
             return data
+
+
+class NoHTMLFormBrowsableAPIRenderer(renderers.BrowsableAPIRenderer):
+    def get_rendered_html_form(self, *args, **kwargs):
+        """
+        The Browsable API HTML forms do not support lists or dictionaries which
+        makes them unusable for e.g. creating a dataset so we hide the form.
+        """
+        return None

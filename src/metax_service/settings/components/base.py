@@ -240,7 +240,7 @@ REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "common.exceptions.exception_handler",
     "DEFAULT_RENDERER_CLASSES": [
         "apps.common.renderers.CustomTimeJSONRenderer",  # Add the path to your custom renderer
-        "rest_framework.renderers.BrowsableAPIRenderer",
+        "apps.common.renderers.NoHTMLFormBrowsableAPIRenderer",
     ],
     "DATETIME_FORMAT": "%Y-%m-%dT%H:%M:%SZ",
 }
