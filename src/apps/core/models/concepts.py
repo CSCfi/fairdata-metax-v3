@@ -20,6 +20,9 @@ class ConceptProxyMixin:
     @classmethod
     def get_serializer_class(cls):
         """Make non-url fields read-only"""
+        if serializer_class := getattr(cls, "_serializer_class", None):
+            return serializer_class  # Reuse class instead of always creating new
+
         serializer_class = super(ConceptProxyMixin, cls).get_serializer_class()
         serializer_class.omit_related = True
         serializer_class.Meta.extra_kwargs = {
@@ -29,6 +32,7 @@ class ConceptProxyMixin:
         serializer_class.save = not_implemented_function
         serializer_class.create = not_implemented_function
         serializer_class.update = not_implemented_function
+        cls._serializer_class = serializer_class
         return serializer_class
 
     @classmethod

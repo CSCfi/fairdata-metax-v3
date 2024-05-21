@@ -9,7 +9,7 @@ import logging
 
 from django.core.exceptions import FieldError
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Prefetch, Q, QuerySet
 from django.http import Http404
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
@@ -311,27 +311,68 @@ class DatasetViewSet(CommonModelViewSet):
         "access_rights__access_type",
         "access_rights__license__reference",
         "access_rights__license",
+        "access_rights__restriction_grounds",
         "access_rights",
+        "actors__organization__homepage",
+        "actors__organization__parent__homepage",
+        "actors__organization__parent",
+        "actors__organization",
+        "actors__person__homepage",
+        "actors__person",
         "actors",
         "data_catalog",
+        "dataset_versions",
+        "draft_of",
         "field_of_science",
         "file_set",
+        "infrastructure",
         "language",
+        "metadata_owner__user",
         "metadata_owner",
+        "next_draft",
         "other_identifiers__identifier_type",
         "other_identifiers",
         "preservation",
+        "projects__funding__funder__funder_type",
+        "projects__funding__funder__organization__homepage",
+        "projects__funding__funder__organization__parent__homepage",
+        "projects__funding__funder__organization__parent",
+        "projects__funding__funder__organization",
+        "projects__funding__funder",
+        "projects__funding",
+        "projects__participating_organizations__homepage",
+        "projects__participating_organizations__parent__homepage",
         "projects",
+        "provenance__event_outcome",
+        "provenance__is_associated_with__organization__homepage",
+        "provenance__is_associated_with__organization__parent__homepage",
+        "provenance__is_associated_with__organization__parent",
+        "provenance__is_associated_with__organization",
+        "provenance__is_associated_with__person__homepage",
+        "provenance__is_associated_with__person",
         "provenance__is_associated_with",
+        "provenance__lifecycle_event",
         "provenance__spatial__reference",
         "provenance__spatial",
-        "provenance__event_outcome",
+        "provenance__temporal",
+        "provenance__used_entity__type",
+        "provenance__used_entity",
+        "provenance__variables__concept",
+        "provenance__variables__universe",
+        "provenance__variables",
         "provenance",
+        "relation__entity__type",
+        "relation__entity",
+        "relation__relation_type",
+        "relation",
+        "remote_resources__file_type",
+        "remote_resources__use_category",
+        "remote_resources",
         "spatial__provenance",
         "spatial__reference",
         "spatial",
+        "temporal",
         "theme",
-        "dataset_versions",
     )
 
     queryset = Dataset.available_objects.prefetch_related(*prefetch_fields)
@@ -399,9 +440,27 @@ class DatasetViewSet(CommonModelViewSet):
         include_all_datasets = self.query_params.get("include_removed") or self.query_params.get(
             "flush"
         )
+        qs: QuerySet
         if include_all_datasets:
-            return self.access_policy.scope_queryset(self.request, self.queryset_include_removed)
-        return self.access_policy.scope_queryset(self.request, self.queryset)
+            qs = self.queryset_include_removed
+        else:
+            qs = self.queryset
+
+        if self.request.method == "GET":
+            # Prefetch Dataset.dataset_versions.datasets to DatasetVersions._datasets
+            # but only for read-only requests to avoid having to invalidate the cached value
+            qs = qs.prefetch_related(
+                Prefetch(
+                    "dataset_versions__datasets",
+                    queryset=Dataset.all_objects.order_by("-version").prefetch_related(
+                        "draft_of", "next_draft"
+                    ),
+                    to_attr="_datasets",
+                )
+            )
+
+        qs = self.access_policy.scope_queryset(self.request, qs)
+        return qs
 
     @action(detail=True, methods=["post"], url_path="new-version")
     def new_version(self, request, pk=None):
