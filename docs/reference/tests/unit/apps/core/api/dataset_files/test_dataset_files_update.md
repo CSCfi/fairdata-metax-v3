@@ -104,3 +104,7 @@
 
 ### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_wrong_storage_for_catalog
 
+## test_dataset_patch_fileset_only_published
+
+### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_patch_fileset_only_published
+

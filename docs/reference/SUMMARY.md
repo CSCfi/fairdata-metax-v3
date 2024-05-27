@@ -243,6 +243,7 @@
                         - [test_files_datasets](tests/unit/apps/files/api/files/test_files_datasets.md)
                         - [test_files_delete](tests/unit/apps/files/api/files/test_files_delete.md)
                         - [test_files_list](tests/unit/apps/files/api/files/test_files_list.md)
+                        - [test_files_published](tests/unit/apps/files/api/files/test_files_published.md)
                 - [models.test_file_storage](tests/unit/apps/files/models/test_file_storage.md)
                 - [serializers.test_fields](tests/unit/apps/files/serializers/test_fields.md)
             - refdata

@@ -4,7 +4,7 @@ from typing import Optional
 
 from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.db import models
-from django.db.models import Count, Sum
+from django.db.models import Count, Q, Sum
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -240,6 +240,34 @@ class FileSet(AbstractBaseModel):
                 delattr(self, prop)
             except AttributeError:
                 logger.info(f"No property {prop} in cache.")
+
+    def update_published(self, queryset=None, exclude_self=False):
+        """Update publication timestamps of files."""
+        if not queryset:
+            queryset = self.files.all()
+
+        published_filesets = FileSet.objects.filter(
+            dataset__state="published",
+            dataset__deprecated__isnull=True,
+            dataset__removed__isnull=True,
+        )
+
+        if exclude_self:
+            # Count current fileset as non-published. Use when
+            # files will be removed from fileset or dataset will be removed.
+            published_filesets = published_filesets.exclude(id=self.id)
+
+        # Published files that should be marked non-published
+        files_to_unpublish = queryset.filter(published__isnull=False).exclude(
+            file_sets__in=published_filesets
+        )
+        files_to_unpublish.update(published=None)
+
+        # Non-published files that should be marked published
+        files_to_publish = queryset.filter(published__isnull=True).filter(
+            file_sets__in=published_filesets
+        )
+        files_to_publish.update(published=timezone.now())
 
     def deprecate_dataset(self):
         """Files are removed, deprecate dataset if needed."""

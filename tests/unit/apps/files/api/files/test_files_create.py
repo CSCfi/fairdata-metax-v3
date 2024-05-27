@@ -18,6 +18,7 @@ def test_files_create(admin_client, ida_file_json):
             "filename": "file.pdf",
             "id": UUIDField(),
             "removed": None,
+            "published": None,
         },
         res.json(),
         check_all_keys_equal=True,

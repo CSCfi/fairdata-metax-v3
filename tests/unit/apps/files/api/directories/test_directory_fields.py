@@ -1,12 +1,19 @@
 import pytest
-from tests.utils import assert_nested_subdict
+from tests.utils import assert_nested_subdict, matchers
 
+from apps.core import factories
 from apps.files.views.directory_view import DirectoryCommonQueryParams
 
 pytestmark = [pytest.mark.django_db, pytest.mark.file]
 
 
 def test_directory_field_values(admin_client, file_tree_b):
+    dataset = factories.PublishedDatasetFactory()
+    factories.FileSetFactory(
+        dataset=dataset,
+        storage=file_tree_b["storage"],
+        files=file_tree_b["files"].values(),
+    )
     res = admin_client.get(
         "/v3/directories",
         {
@@ -59,6 +66,7 @@ def test_directory_field_values(admin_client, file_tree_b):
                     "frozen": file_tree_b["files"]["/rootfile.txt"].frozen,
                     "removed": None,
                     "user": None,
+                    "published": matchers.DateTimeStr(),
                 }
             ],
         },
@@ -117,6 +125,7 @@ def test_directory_all_directory_fields(admin_client, file_tree_b):
         "/v3/directories",
         {
             "pagination": False,
+            "count_published": True,
             "directory_fields": ",".join(DirectoryCommonQueryParams.allowed_directory_fields),
             **file_tree_b["params"],
         },

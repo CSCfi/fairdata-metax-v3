@@ -135,7 +135,7 @@ class AbstractDatasetProperty(AbstractBaseModel):
     title = HStoreField(help_text='example: {"en":"title", "fi":"otsikko"}')
 
     def __str__(self):
-        return self.url
+        return self.url or str(self.id)
 
     class Meta(AbstractBaseModel.Meta):
         abstract = True

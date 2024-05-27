@@ -54,6 +54,9 @@ class DirectoryActionSerializer(ActionSerializerBase):
 
     pathname = DirectoryPathField()
     dataset_metadata = DirectoryMetadataSerializer(required=False, allow_null=True)
+    only_unpublished = serializers.BooleanField(
+        default=False, help_text="Only add/remove files not in any published dataset."
+    )
 
 
 class FileSetSerializer(StrictSerializer):
@@ -298,6 +301,8 @@ class FileSetSerializer(StrictSerializer):
         removes = Q()
         for action in directory_actions:
             filtr = Q(directory_path__startswith=action["pathname"])
+            if action["only_unpublished"]:
+                filtr &= Q(published__isnull=True)
             if action["action"] == Action.ADD:
                 adds = adds | filtr
                 if removes:
@@ -543,6 +548,7 @@ class FileSetSerializer(StrictSerializer):
                         }
                     )
                 file_set.files.add(*files_to_add)
+                file_set.update_published()
 
         # file counts and dataset storage project may have changed, clear cached values
         file_set.clear_cached_file_properties()

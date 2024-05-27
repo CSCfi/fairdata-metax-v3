@@ -24,3 +24,15 @@
 
 ### :::tests.unit.apps.files.api.directories.test_directory_dataset.test_directory_exclude_dataset_a
 
+## test_directory_count_published
+
+### :::tests.unit.apps.files.api.directories.test_directory_dataset.test_directory_count_published
+
+## test_directory_count_and_filter_published
+
+### :::tests.unit.apps.files.api.directories.test_directory_dataset.test_directory_count_and_filter_published
+
+## test_directory_count_and_filter_unpublished
+
+### :::tests.unit.apps.files.api.directories.test_directory_dataset.test_directory_count_and_filter_unpublished
+

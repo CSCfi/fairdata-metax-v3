@@ -670,6 +670,8 @@ class Dataset(V2DatasetMixin, CatalogRecord):
 
         self.set_update_reason(f"{self.state}-{self.published_revision}.{self.draft_revision}")
         super().save(*args, **kwargs)
+        if hasattr(self, "file_set"):
+            self.file_set.update_published()
 
     def signal_update(self, created=False):
         """Send dataset_update or dataset_created signal."""

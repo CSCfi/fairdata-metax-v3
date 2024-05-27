@@ -122,6 +122,8 @@ class FileSerializer(CreateOnlyFieldsMixin, CommonModelSerializer):
             "frozen",
             "modified",
             "removed",
+            "published",
             "user",
             "dataset_metadata",
         ]
+        extra_kwargs = {"published": {"read_only": True}}

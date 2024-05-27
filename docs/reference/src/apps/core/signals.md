@@ -40,3 +40,7 @@
 
 ### :::src.apps.core.signals.handle_dataset_created
 
+## handle_dataset_pre_delete
+
+### :::src.apps.core.signals.handle_dataset_pre_delete
+

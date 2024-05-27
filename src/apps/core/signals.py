@@ -6,7 +6,7 @@ import requests
 import urllib3
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db.models.signals import m2m_changed, post_delete
+from django.db.models.signals import m2m_changed, post_delete, pre_delete
 from django.dispatch import Signal, receiver
 from rest_framework import exceptions, status
 
@@ -25,11 +25,16 @@ class LegacyUpdateFailed(exceptions.APIException):
 
 
 @receiver(m2m_changed, sender=FileSet.files.through)
-def handle_fileset_files_changed(sender, instance: FileSet, action, **kwargs):
+def handle_fileset_files_changed(sender, instance: FileSet, action, pk_set, **kwargs):
     if instance.skip_files_m2m_changed:  # allow skipping handler
         return
-
-    if action in ("post_remove", "post_clear"):
+    if action == "post_add":
+        instance.update_published()
+    elif action == "pre_clear":
+        instance.update_published(exclude_self=True)
+    elif action == "pre_remove":
+        instance.update_published(queryset=instance.files.filter(id__in=pk_set), exclude_self=True)
+    elif action in ("post_remove", "post_clear"):
         instance.remove_unused_file_metadata()
 
 
@@ -119,9 +124,25 @@ def update_dataset_in_v2(dataset: Dataset, created=False):
 
 @receiver(dataset_updated)
 def handle_dataset_updated(sender, data: Dataset, **kwargs):
+    if data.state == Dataset.StateChoices.PUBLISHED and (
+        fileset := getattr(data, "file_set", None)
+    ):
+        fileset.update_published()
     update_dataset_in_v2(data)
 
 
 @receiver(dataset_created)
 def handle_dataset_created(sender, data: Dataset, **kwargs):
+    if data.state == Dataset.StateChoices.PUBLISHED and (
+        fileset := getattr(data, "file_set", None)
+    ):
+        fileset.update_published()
     update_dataset_in_v2(data, created=True)
+
+
+@receiver(pre_delete, sender=Dataset)
+def handle_dataset_pre_delete(sender, instance: Dataset, **kwargs):
+    if instance.state == Dataset.StateChoices.PUBLISHED and (
+        fileset := getattr(instance, "file_set", None)
+    ):
+        fileset.update_published(exclude_self=True)

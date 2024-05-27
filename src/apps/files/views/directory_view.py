@@ -57,6 +57,8 @@ class DirectoryCommonQueryParams(serializers.Serializer):
 
     path = OptionalSlashDirectoryPathField(default="/")
     include_parent = fields.BooleanField(default=True)
+    published = fields.BooleanField(default=None, allow_null=True)
+    count_published = fields.BooleanField(default=False)
 
     # directory filters (only affect direct children of current directory)
     name = fields.CharField(default=None)
@@ -182,6 +184,8 @@ class DirectoryViewSet(QueryParamsMixin, AccessViewSetMixin, viewsets.ViewSet):
         )
         if name := params["name"]:
             files = files.filter(filename__icontains=name)
+        if params["published"] is not None:
+            files = files.filter(published__isnull=not params["published"])
 
         # retrieve only requested fields
         files = self.annotate_file_property_fields(params, files)
@@ -205,6 +209,10 @@ class DirectoryViewSet(QueryParamsMixin, AccessViewSetMixin, viewsets.ViewSet):
 
         path = params["path"]
         subdirectory_level = path.count("/") + 1
+        file_filters = {}
+        if params["published"] is not None:
+            file_filters["published__isnull"] = not params["published"]
+
         dirs = (
             self.get_project_files(params)
             .filter(
@@ -220,6 +228,7 @@ class DirectoryViewSet(QueryParamsMixin, AccessViewSetMixin, viewsets.ViewSet):
             )
             .annotate(
                 file_count=Count("*"),
+                published_file_count=Count("published"),
                 size=Sum("size"),
                 created=Min("modified"),
                 modified=Max("modified"),
@@ -282,11 +291,16 @@ class DirectoryViewSet(QueryParamsMixin, AccessViewSetMixin, viewsets.ViewSet):
         subdirs = directories.exclude(name="")  # exclude current dir
         if name := params.get("name"):
             subdirs = subdirs.filter(name__icontains=name)
+        if params["published"] is True:
+            subdirs = subdirs.exclude(published_file_count=0)
+        elif params["published"] is False:
+            subdirs = subdirs.exclude(file_count=F("published_file_count"))
         return subdirs
 
     def get_parent_data(self, params, directories):
         """Aggregate totals for parent directory."""
         file_count = sum(d.get("file_count", 0) for d in directories)
+        published_file_count = sum(d.get("published_file_count", 0) for d in directories)
         size = sum(d.get("size", 0) for d in directories)
         created = min((d.get("created") for d in directories), default=None)
         modified = max((d.get("modified") for d in directories), default=None)
@@ -295,6 +309,7 @@ class DirectoryViewSet(QueryParamsMixin, AccessViewSetMixin, viewsets.ViewSet):
                 "name": params["path"].split("/")[-2],
                 "pathname": params["path"],
                 "file_count": file_count,
+                "published_file_count": published_file_count,
                 "size": size,
                 "created": created,
                 "modified": modified,
@@ -375,6 +390,7 @@ class DirectoryViewSet(QueryParamsMixin, AccessViewSetMixin, viewsets.ViewSet):
                     "request": self.request,
                     "directory_fields": params.get("directory_fields"),
                     "file_fields": params.get("file_fields"),
+                    "count_published": params["count_published"],
                     "storage": storage,
                     **dataset_metadata,  # add file and directory metadata to context
                 },

@@ -42,6 +42,7 @@ class File(SystemCreatorBaseModel, CustomSoftDeletableModel):
     frozen = models.DateTimeField(null=True, blank=True, db_index=True)
     modified = models.DateTimeField()
     removed = models.DateTimeField(null=True, blank=True)
+    published = models.DateTimeField(null=True, blank=True)
 
     # TODO: characteristics = JSONField(blank=True, null=True)
     # TODO?: characteristics_extension = JSONField(blank=True, null=True)

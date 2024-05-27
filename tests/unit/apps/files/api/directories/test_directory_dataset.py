@@ -8,7 +8,7 @@ pytestmark = [pytest.mark.django_db, pytest.mark.file]
 
 @pytest.fixture
 def file_tree_with_datasets(file_tree_a):
-    dataset_a = factories.DatasetFactory()
+    dataset_a = factories.PublishedDatasetFactory()
     file_tree_a["dataset_a"] = dataset_a
     factories.FileSetFactory(
         dataset=dataset_a,
@@ -199,3 +199,107 @@ def test_directory_exclude_dataset_a(admin_client, file_tree_with_datasets):
         res.data,
         check_list_length=True,
     )
+
+
+def test_directory_count_published(admin_client, file_tree_with_datasets):
+    res = admin_client.get(
+        "/v3/directories",
+        {
+            "pagination": False,
+            "count_published": True,  # files in dataset_a are published
+            "path": "/dir",
+            **file_tree_with_datasets["params"],
+        },
+    )
+    assert res.status_code == 200
+    assert res.data["directory"]["published_file_count"] == 5
+    assert {d["pathname"]: d["published_file_count"] for d in res.data["directories"]} == {
+        "/dir/sub1/": 2,
+        "/dir/sub2/": 0,
+        "/dir/sub3/": 0,
+        "/dir/sub4/": 0,
+        "/dir/sub5/": 0,
+        "/dir/sub6/": 1,
+    }
+
+
+def test_directory_count_and_filter_published(admin_client, file_tree_a, file_tree_with_datasets):
+    res = admin_client.get(
+        "/v3/directories",
+        {
+            "pagination": False,
+            "published": True,
+            "count_published": True,  # files in dataset_a are published
+            "path": "/dir",
+            **file_tree_with_datasets["params"],
+        },
+    )
+    assert res.status_code == 200
+    assert res.data["directory"]["file_count"] == 15
+    assert {
+        d["pathname"]: (d["published_file_count"], d["file_count"])
+        for d in res.data["directories"]
+    } == {
+        "/dir/sub1/": (2, 3),
+        "/dir/sub6/": (1, 1),
+    }
+    assert [f["pathname"] for f in res.data["files"]] == [
+        "/dir/c.txt",
+        "/dir/d.txt",
+    ]
+
+
+def test_directory_count_and_filter_unpublished(
+    admin_client, file_tree_a, file_tree_with_datasets
+):
+    res = admin_client.get(
+        "/v3/directories",
+        {
+            "pagination": False,
+            "published": False,
+            "count_published": True,  # files in dataset_a are published
+            "path": "/dir",
+            **file_tree_with_datasets["params"],
+        },
+    )
+    assert res.status_code == 200
+    assert res.data["directory"]["file_count"] == 15
+    assert {
+        d["pathname"]: (d["published_file_count"], d["file_count"])
+        for d in res.data["directories"]
+    } == {
+        "/dir/sub1/": (2, 3),
+        "/dir/sub2/": (0, 1),
+        "/dir/sub3/": (0, 1),
+        "/dir/sub4/": (0, 1),
+        "/dir/sub5/": (0, 2),
+    }
+    assert [f["pathname"] for f in res.data["files"]] == [
+        "/dir/a.txt",
+        "/dir/b.txt",
+        "/dir/e.txt",
+        "/dir/f.txt",
+    ]
+
+    file_tree_with_datasets["dataset_a"].file_set.files.add(
+        file_tree_a["files"]["/dir/sub5/file1.csv"], file_tree_a["files"]["/dir/sub5/file2.csv"]
+    )
+    res = admin_client.get(
+        "/v3/directories",
+        {
+            "pagination": False,
+            "published": False,
+            "count_published": True,  # files in dataset_a are published
+            "path": "/dir",
+            **file_tree_with_datasets["params"],
+        },
+    )
+    assert {
+        d["pathname"]: (d["published_file_count"], d["file_count"])
+        for d in res.data["directories"]
+    } == {
+        "/dir/sub1/": (2, 3),
+        "/dir/sub2/": (0, 1),
+        "/dir/sub3/": (0, 1),
+        "/dir/sub4/": (0, 1),
+    }

@@ -77,6 +77,7 @@ class FileFilterSet(FileCommonFilterset):
     )
 
     dataset = filters.UUIDFilter(field_name="file_sets__dataset_id")
+    published = filters.BooleanFilter(lookup_expr="isnull", exclude=True)
 
     class Meta:
         model = File

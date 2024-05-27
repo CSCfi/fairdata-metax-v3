@@ -44,6 +44,7 @@ class BaseDirectorySerializer(ContextFileStorageMixin, serializers.Serializer):
     name = serializers.CharField()
     pathname = serializers.CharField()
     file_count = serializers.IntegerField()  # total file count including subdirectories
+    published_file_count = serializers.IntegerField()  # number of files in some public dataset
     size = serializers.IntegerField()  # total byte size including subdirectories
     created = serializers.DateTimeField(default=None)  # oldest file modification
     modified = serializers.DateTimeField(default=None)  # most recent file modification
@@ -59,6 +60,8 @@ class BaseDirectorySerializer(ContextFileStorageMixin, serializers.Serializer):
         rep = super().to_representation(instance)
         if "directory_metadata" not in self.context:
             rep.pop("dataset_metadata", None)
+        if not self.context.get("count_published"):
+            rep.pop("published_file_count", None)
 
         # FileStorage should be available in context for directories
         if storage := self.get_storage(instance):

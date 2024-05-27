@@ -842,3 +842,50 @@ def test_dataset_files_wrong_storage_for_catalog(admin_client, deep_file_tree, d
     )
     assert res.status_code == 400
     assert "does not allow files from service ida" in res.json()["fileset"]["storage_service"]
+
+
+def test_dataset_patch_fileset_only_published(admin_client, deep_file_tree, data_urls):
+    published = factories.PublishedDatasetFactory()
+    factories.FileSetFactory(
+        dataset=published,
+        storage=deep_file_tree["storage"],
+        files=[
+            deep_file_tree["files"]["/dir2/subdir1/file3.txt"],
+            deep_file_tree["files"]["/dir2/subdir2/file1.txt"],
+            deep_file_tree["files"]["/dir2/subdir2/file2.txt"],
+            deep_file_tree["files"]["/dir2/subdir2/file3.txt"],
+            deep_file_tree["files"]["/dir2/subdir2/subsub/subsubsub1/file.txt"],
+        ],
+    )
+
+    dataset = factories.DatasetFactory()
+    actions = {
+        **deep_file_tree["params"],
+        "directory_actions": [
+            {"pathname": "/dir2/", "only_unpublished": True},
+        ],
+        "file_actions": [
+            {"pathname": "/dir2/subdir2/file2.txt"},
+        ],
+    }
+
+    urls = data_urls(dataset)
+    res = admin_client.patch(
+        urls["dataset"], {"fileset": actions}, content_type="application/json"
+    )
+    assert res.status_code == 200
+
+    fileset = res.data["fileset"]
+    assert fileset["added_files_count"] == 6
+    assert fileset["removed_files_count"] == 0
+    assert fileset["total_files_count"] == 6
+
+    res = admin_client.get(urls["files"])
+    assert [f["pathname"] for f in res.data["results"]] == [
+        "/dir2/a.txt",
+        "/dir2/subdir1/file1.txt",
+        "/dir2/subdir1/file2.txt",
+        "/dir2/subdir2/file2.txt",
+        "/dir2/subdir2/subsub/subsubsub2/file1.txt",
+        "/dir2/subdir2/subsub/subsubsub2/file2.txt",
+    ]
