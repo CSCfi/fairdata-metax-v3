@@ -4,6 +4,7 @@ import re
 import uuid
 from contextlib import contextmanager
 from datetime import datetime, timezone as tz
+from itertools import islice
 from textwrap import dedent
 from typing import Any, Dict, Optional
 from urllib.parse import SplitResult, parse_qsl, quote, urlencode, urlsplit, urlunsplit
@@ -390,3 +391,15 @@ def is_field_value_provided(model, field_name: str, args: list, kwargs: dict):
 
     # Field does not exist in model
     raise ValueError(f"Concrete model field not found: {model.__name__}.{field_name}")
+
+
+def batched(iterable, n):
+    """Implementation of itertools.batched upcoming in Python 12.
+
+    See https://docs.python.org/3/library/itertools.html#itertools.batched
+    """
+    if n < 1:
+        raise ValueError("n must be at least one")
+    it = iter(iterable)
+    while batch := tuple(islice(it, n)):
+        yield batch

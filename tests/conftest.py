@@ -140,6 +140,11 @@ def pytest_collection_modifyitems(items):
             item.add_marker("unit")
             item.add_marker(pytest.mark.django_db)
 
+    # When some tests contain @pytest.mark.only, run only those tests.
+    only = [item for item in items if item.get_closest_marker("only")]
+    if only:
+        items[:] = only
+
 
 @pytest.fixture
 def data_catalog(fairdata_users_group, service_group) -> DataCatalog:

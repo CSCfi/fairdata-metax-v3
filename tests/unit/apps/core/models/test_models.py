@@ -31,7 +31,7 @@ def test_model_pk_field():
     """All models should have an explicitly defined primary key field."""
     auto_created_fields = []
     for name, model in get_models():
-        field = model.id.field
+        field = model._meta.get_field("id")
         if field.auto_created:
             auto_created_fields.append(name)
     assert auto_created_fields == []

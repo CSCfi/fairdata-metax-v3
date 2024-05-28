@@ -221,7 +221,7 @@ python manage.py migrate
 python manage.py collectstatic --no-input
 ```
 
-- After successful setup, the profiler is available at /silk endpoint
+- After successful setup, the profiler is available at /v3/silk endpoint
 - More information about Silk can be found from [official docs](https://github.com/jazzband/django-silk)
 
 ### Disabling debug-toolbar

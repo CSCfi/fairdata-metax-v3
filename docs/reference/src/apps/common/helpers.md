@@ -112,3 +112,7 @@
 
 ### :::src.apps.common.helpers.is_field_value_provided
 
+## batched
+
+### :::src.apps.common.helpers.batched
+

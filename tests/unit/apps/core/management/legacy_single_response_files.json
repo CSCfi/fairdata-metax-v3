@@ -1,0 +1,95 @@
+[
+  {
+    "open_access": true,
+    "date_created": "2020-07-16T18:20:14+03:00",
+    "file_storage": {
+      "identifier": "urn:nbn:fi:att:file-storage-ida",
+      "id": 1
+    },
+    "parent_directory": {
+      "identifier": "dir-f00f",
+      "id": 1
+    },
+    "file_frozen": "2021-04-12T12:23:45Z",
+    "identifier": "file-1",
+    "checksum": {
+      "checked": "2021-04-12T12:23:45Z",
+      "value": "12b23850ab29a9a43738dbad0279a872547cb9e7820dd36f0e07e906828b1ccc",
+      "algorithm": "SHA-256"
+    },
+    "file_format": "txt",
+    "removed": false,
+    "file_uploaded": "2021-03-12T12:23:45Z",
+    "file_modified": "2018-04-12T12:23:45Z",
+    "pas_compatible": true,
+    "byte_size": 1000,
+    "file_name": "README.txt",
+    "file_path": "/README.txt",
+    "service_created": "ida",
+    "project_identifier": "2001479",
+    "user_created": "someuser@cscuserid",
+    "id": 1
+  },
+  {
+    "open_access": true,
+    "date_created": "2020-07-16T18:20:14+03:00",
+    "file_storage": {
+      "identifier": "urn:nbn:fi:att:file-storage-ida",
+      "id": 1
+    },
+    "parent_directory": {
+      "identifier": "directory-123",
+      "id": 2
+    },
+    "file_frozen": "2021-04-12T12:23:45Z",
+    "identifier": "file-2",
+    "checksum": {
+      "checked": "2021-04-12T12:23:45Z",
+      "value": "b2b23850ab29a9a43738dbad0279a872547cb9e7820dd36f0e07e906828b1ccc",
+      "algorithm": "SHA-256"
+    },
+    "file_format": "csv",
+    "removed": false,
+    "file_uploaded": "2021-03-12T12:23:45Z",
+    "file_modified": "2018-04-12T12:23:45Z",
+    "pas_compatible": true,
+    "byte_size": 1500,
+    "file_name": "file1.csv",
+    "file_path": "/data/file1.csv",
+    "service_created": "ida",
+    "project_identifier": "2001479",
+    "user_created": "someuser@cscuserid",
+    "id": 2
+  },
+  {
+    "open_access": true,
+    "date_created": "2020-07-16T18:20:14+03:00",
+    "file_storage": {
+      "identifier": "urn:nbn:fi:att:file-storage-ida",
+      "id": 1
+    },
+    "parent_directory": {
+      "identifier": "directory-123",
+      "id": 2
+    },
+    "file_frozen": "2021-04-12T12:23:45Z",
+    "identifier": "file-3",
+    "checksum": {
+      "checked": "2021-04-12T12:23:45Z",
+      "value": "b2b23850ab29a9a43738dbad0279a872547cb9e7820dd36f0e07e906828b1ccc",
+      "algorithm": "SHA-256"
+    },
+    "file_format": "csv",
+    "removed": false,
+    "file_uploaded": "2021-03-12T12:23:45Z",
+    "file_modified": "2018-04-12T12:23:45Z",
+    "pas_compatible": true,
+    "byte_size": 500,
+    "file_name": "file2.csv",
+    "file_path": "/data/file2.csv",
+    "service_created": "ida",
+    "project_identifier": "2001479",
+    "user_created": "someuser@cscuserid",
+    "id": 3
+  }
+]

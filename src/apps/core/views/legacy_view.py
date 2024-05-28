@@ -21,6 +21,10 @@ class LegacyDatasetFilter(filters.FilterSet):
 
 class LegacyDatasetViewSet(CommonModelViewSet):
     serializer_class = LegacyDatasetModelSerializer
-    queryset = LegacyDataset.available_objects.all()
+    queryset = LegacyDataset.available_objects.all().prefetch_related(
+        "dataset__access_rights__license",
+        "dataset__access_rights",
+        "dataset__actors",
+    )
     filterset_class = LegacyDatasetFilter
     access_policy = LegacyDatasetAccessPolicy

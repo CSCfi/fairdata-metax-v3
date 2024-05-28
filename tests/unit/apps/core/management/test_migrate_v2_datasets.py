@@ -1,14 +1,51 @@
+import json
 import os
+import re
 from base64 import b64decode
+from datetime import timedelta
 from io import StringIO
 from unittest.mock import patch
 
 import pytest
 from django.core.management import call_command
+from django.utils import timezone
 
-from apps.core.models import LegacyDataset
+from apps.core.models import Dataset, LegacyDataset
 
-pytestmark = [pytest.mark.django_db, pytest.mark.management, pytest.mark.adapter]
+pytestmark = [
+    pytest.mark.django_db,
+    pytest.mark.management,
+    pytest.mark.adapter,
+    pytest.mark.usefixtures("data_catalog", "v2_integration_settings"),
+]
+
+match_start = r"^\d+ \(\d+ updated\):"
+match_id = r".*identifier='(?P<identifier>[\w-]+?)'"
+match_reason = r".*reason='(?P<reason>[\w-]+?)'"
+match_created_objects = r".*created_objects=(?P<created_objects>\{.*?\})"
+line_re = re.compile(match_start + match_id + match_reason + match_created_objects)
+
+
+def parse_output_updates(output: str) -> list:
+    """Parse updated dataset output lines of migrate_v2_datasets."""
+    parsed = []
+    lines = output.split("\n")
+    for line in lines:
+        match = line_re.match(line)
+        if match:
+            try:
+                parsed.append(
+                    dict(
+                        identifier=match.group("identifier"),
+                        reason=match.group("reason"),
+                        created_objects=json.loads(
+                            match.group("created_objects").replace("'", '"')
+                        ),
+                    )
+                )
+            except Exception:
+                pass
+    return parsed
 
 
 @pytest.fixture(autouse=True)
@@ -23,8 +60,10 @@ def test_migrate_command(mock_response, reference_data):
     out = StringIO()
     err = StringIO()
     call_command("migrate_v2_datasets", stdout=out, stderr=err, use_env=True, allow_fail=True)
-    assert "10 datasets updated succesfully" in out.getvalue().strip()
-    assert "Invalid identifier 'invalid', ignoring" in err.getvalue()
+    output = out.getvalue()
+    errors = err.getvalue()
+    assert "Invalid identifier 'invalid', ignoring" in errors
+    assert "10 datasets updated succesfully" in output
 
 
 def test_migrate_command_error(mock_response, reference_data):
@@ -57,7 +96,7 @@ def test_migrate_command_file(mock_response_single_catalog, mock_response, refer
     assert "Ignored invalid legacy data:\n- research_dataset.rights_holder[0]" in output
 
 
-def test_migrate_command_identifier(mock_response_single, reference_data):
+def test_migrate_command_identifier(mock_response_single, reference_data, legacy_files):
     out = StringIO()
     err = StringIO()
     call_command(
@@ -67,7 +106,37 @@ def test_migrate_command_identifier(mock_response_single, reference_data):
         use_env=True,
         identifiers=["c955e904-e3dd-4d7e-99f1-3fed446f96d1"],
     )
-    assert "1 datasets updated succesfully" in out.getvalue().strip()
+    output = out.getvalue()
+    updates = parse_output_updates(output)
+    assert updates == [
+        {
+            "identifier": "c955e904-e3dd-4d7e-99f1-3fed446f96d1",
+            "reason": "created",
+            "created_objects": {
+                "Organization": 1,
+                "FunderType": 1,
+                "FileSet": 1,
+                "FileSetFileMetadata": 1,
+                "FileSetDirectoryMetadata": 1,
+            },
+        }
+    ]
+    assert "1 datasets updated succesfully" in output
+
+
+def test_migrate_command_identifier_missing_files(mock_response_single, reference_data):
+    out = StringIO()
+    err = StringIO()
+    call_command(
+        "migrate_v2_datasets",
+        stdout=out,
+        stderr=err,
+        use_env=True,
+        allow_fail=True,
+        identifiers=["c955e904-e3dd-4d7e-99f1-3fed446f96d1"],
+    )
+    errors = err.getvalue()
+    assert "Missing files for dataset c955e904-e3dd-4d7e-99f1-3fed446f96d1" in errors
 
 
 def test_migrate_command_identifier_error_in_data(mock_response_single_invalid, reference_data):
@@ -107,9 +176,9 @@ def test_migrate_command_catalog(mock_response_single_catalog, mock_response, re
         stdout=out,
         stderr=err,
         use_env=True,
-        catalogs=["c955e904-e3dd-4d7e-99f1-3fed446f96d1", "unknown_catalog"],
+        catalogs=["urn:nbn:fi:att:data-catalog-ida", "unknown_catalog"],
     )
-    assert "Migrating catalog: c955e904-e3dd-4d7e-99f1-3fed446f96d1" in out.getvalue()
+    assert "Migrating catalog: urn:nbn:fi:att:data-catalog-ida" in out.getvalue()
     assert "Invalid catalog identifier: unknown_catalog" in err.getvalue()
     assert "10 datasets updated" in out.getvalue()
 
@@ -125,12 +194,12 @@ def test_migrate_command_catalog_stop_after(
         stderr=err,
         use_env=True,
         stop_after=1,
-        catalogs=["c955e904-e3dd-4d7e-99f1-3fed446f96d1"],
+        catalogs=["urn:nbn:fi:att:data-catalog-ida"],
     )
     assert "1 datasets updated" in out.getvalue()
 
 
-def test_migrate_command_update(mock_response_single, reference_data):
+def test_migrate_command_update(mock_response_single, reference_data, legacy_files):
     call_command(
         "migrate_v2_datasets",
         identifiers=["c955e904-e3dd-4d7e-99f1-3fed446f96d1"],
@@ -151,7 +220,7 @@ def test_migrate_command_update(mock_response_single, reference_data):
     assert "0 datasets updated succesfully" in output
 
 
-def test_migrate_command_update_wrong_api_version(mock_response_single, reference_data):
+def test_migrate_command_remigrate_modified(mock_response_single, reference_data, legacy_files):
     call_command(
         "migrate_v2_datasets",
         identifiers=["c955e904-e3dd-4d7e-99f1-3fed446f96d1"],
@@ -159,7 +228,157 @@ def test_migrate_command_update_wrong_api_version(mock_response_single, referenc
     )
     out = StringIO()
     err = StringIO()
-    LegacyDataset.objects.filter(id="c955e904-e3dd-4d7e-99f1-3fed446f96d1").update(api_version=3)
+
+    # Update modification time, dataset should get updated
+    dataset_json = mock_response_single["dataset"]._responses[0]._params["json"]
+    dataset_json["date_modified"] = (timezone.now() + timedelta(weeks=2)).isoformat()
+    call_command(
+        "migrate_v2_datasets",
+        stdout=out,
+        stderr=err,
+        use_env=True,
+        identifiers=["c955e904-e3dd-4d7e-99f1-3fed446f96d1"],
+    )
+    assert err.getvalue() == ""
+    output = out.getvalue()
+    assert "Processed 1 datasets" in output
+    assert "1 datasets updated succesfully" in output
+
+
+def test_migrate_command_change_files(mock_response_single, reference_data, legacy_files):
+    dataset_json = mock_response_single["dataset"]._responses[0]._params["json"]
+    files_json = mock_response_single["files"]._responses[0]._params["json"]
+    file_ids = mock_response_single["file_ids"]._responses[0]._params["json"]
+
+    # Include only /README.txt, /data/file1.csv
+    file_ids[:] = [files_json[0]["id"], files_json[1]["id"]]
+    dataset_json["research_dataset"]["total_files_byte_size"] = sum(
+        (f["byte_size"] for f in [files_json[0], files_json[1]])
+    )
+    call_command(
+        "migrate_v2_datasets",
+        identifiers=["c955e904-e3dd-4d7e-99f1-3fed446f96d1"],
+        use_env=True,
+    )
+    assert list(
+        LegacyDataset.objects.get(
+            id="c955e904-e3dd-4d7e-99f1-3fed446f96d1"
+        ).dataset.file_set.files.values_list("filename", flat=True)
+    ) == ["README.txt", "file1.csv"]
+
+    # Include all files
+    file_ids[:] = [files_json[0]["id"], files_json[1]["id"], files_json[2]["id"]]
+    dataset_json["research_dataset"]["total_files_byte_size"] = sum(
+        (f["byte_size"] for f in [files_json[0], files_json[1], files_json[2]])
+    )
+    call_command(
+        "migrate_v2_datasets",
+        use_env=True,
+        force=True,
+        identifiers=["c955e904-e3dd-4d7e-99f1-3fed446f96d1"],
+    )
+    assert list(
+        LegacyDataset.objects.get(
+            id="c955e904-e3dd-4d7e-99f1-3fed446f96d1"
+        ).dataset.file_set.files.values_list("filename", flat=True)
+    ) == ["README.txt", "file1.csv", "file2.csv"]
+
+
+def test_migrate_command_change_files_metadata(mock_response_single, reference_data, legacy_files):
+    def migrate():
+        call_command(
+            "migrate_v2_datasets",
+            identifiers=["c955e904-e3dd-4d7e-99f1-3fed446f96d1"],
+            use_env=True,
+            force=True,
+        )
+
+    # Create files metadata
+    migrate()
+    dataset = LegacyDataset.objects.get(id="c955e904-e3dd-4d7e-99f1-3fed446f96d1").dataset
+    assert list(dataset.file_set.file_metadata.values("file__filename", "title")) == [
+        {"file__filename": "README.txt", "title": "Read me"}
+    ]
+
+    # Update existing metadata
+    dataset_json = mock_response_single["dataset"]._responses[0]._params["json"]
+    dataset_json["research_dataset"]["files"][0]["title"] = "Something else"
+    migrate()
+    assert list(dataset.file_set.file_metadata.values("file__filename", "title")) == [
+        {"file__filename": "README.txt", "title": "Something else"}
+    ]
+
+    # Delete metadata, create another
+    dataset_json["research_dataset"]["files"] = [
+        {
+            "title": "Some data",
+            "description": "File containing data.",
+            "file_type": {
+                "in_scheme": "http://uri.suomi.fi/codelist/fairdata/file_type",
+                "identifier": "http://uri.suomi.fi/codelist/fairdata/file_type/code/text",
+                "pref_label": {"en": "Text", "fi": "Teksti", "und": "Teksti"},
+            },
+            "identifier": "file-2",
+            "use_category": {
+                "in_scheme": "http://uri.suomi.fi/codelist/fairdata/use_category",
+                "identifier": "http://uri.suomi.fi/codelist/fairdata/use_category/code/something",
+                "pref_label": {
+                    "en": "Something",
+                },
+            },
+            "details": {"id": 2, "file_path": "/data/file1.csv"},
+        }
+    ]
+
+    migrate()
+    assert list(dataset.file_set.file_metadata.values("file__filename", "title")) == [
+        {"file__filename": "file1.csv", "title": "Some data"}
+    ]
+
+
+def test_migrate_command_change_directories_metadata(
+    mock_response_single, reference_data, legacy_files
+):
+    def migrate():
+        call_command(
+            "migrate_v2_datasets",
+            identifiers=["c955e904-e3dd-4d7e-99f1-3fed446f96d1"],
+            use_env=True,
+            force=True,
+        )
+
+    # Create directories metadata
+    migrate()
+    dataset = LegacyDataset.objects.get(id="c955e904-e3dd-4d7e-99f1-3fed446f96d1").dataset
+    assert list(dataset.file_set.directory_metadata.values("pathname", "title")) == [
+        {"pathname": "/data/", "title": "Run data"}
+    ]
+
+    # Update existing metadata
+    dataset_json = mock_response_single["dataset"]._responses[0]._params["json"]
+    dataset_json["research_dataset"]["directories"][0]["title"] = "Something else"
+    migrate()
+    assert list(dataset.file_set.directory_metadata.values("pathname", "title")) == [
+        {"pathname": "/data/", "title": "Something else"}
+    ]
+
+    # Delete metadata
+    dataset_json["research_dataset"]["directories"] = []
+    migrate()
+    assert not dataset.file_set.directory_metadata.exists()
+
+
+def test_migrate_command_update_wrong_api_version(
+    mock_response_single, reference_data, legacy_files
+):
+    call_command(
+        "migrate_v2_datasets",
+        identifiers=["c955e904-e3dd-4d7e-99f1-3fed446f96d1"],
+        use_env=True,
+    )
+    out = StringIO()
+    err = StringIO()
+    Dataset.objects.filter(id="c955e904-e3dd-4d7e-99f1-3fed446f96d1").update(api_version=3)
     call_command(
         "migrate_v2_datasets",
         stdout=out,
@@ -211,7 +430,7 @@ def test_migrate_command_update_file(mock_response_single, reference_data):
 def test_migrate_missing_args():
     err = StringIO()
     call_command("migrate_v2_datasets", stderr=err)
-    assert "Metax instance not specified and not using --file or --update." in err.getvalue()
+    assert "Metax instance not specified." in err.getvalue()
 
 
 def test_migrate_prompt_credentials(requests_mock):

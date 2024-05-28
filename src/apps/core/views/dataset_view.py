@@ -50,7 +50,7 @@ from apps.core.serializers.dataset_serializer import (
     ExpandCatalogQueryParamsSerializer,
     LatestVersionQueryParamsSerializer,
 )
-from apps.core.serializers.legacy_serializer import LegacyDatasetUpdateSerializer
+from apps.core.serializers.legacy_serializer import LegacyDatasetConversionValidationSerializer
 from apps.core.views.common_views import DefaultValueOrdering
 from apps.files.models import File
 from apps.files.serializers import DirectorySerializer
@@ -486,7 +486,7 @@ class DatasetViewSet(CommonModelViewSet):
                         errors["invalid"] = invalid
                     if fixed := converter.get_fixed_values_by_path():
                         errors["fixed"] = fixed
-                    serializer = LegacyDatasetUpdateSerializer(
+                    serializer = LegacyDatasetConversionValidationSerializer(
                         data=data, context={"dataset": None}
                     )
                     serializer.is_valid(raise_exception=True)

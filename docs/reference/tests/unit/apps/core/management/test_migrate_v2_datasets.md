@@ -1,5 +1,9 @@
 # test_migrate_v2_datasets
 
+## parse_output_updates
+
+### :::tests.unit.apps.core.management.test_migrate_v2_datasets.parse_output_updates
+
 ## integration_settings
 
 ### :::tests.unit.apps.core.management.test_migrate_v2_datasets.integration_settings
@@ -20,6 +24,10 @@
 
 ### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_command_identifier
 
+## test_migrate_command_identifier_missing_files
+
+### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_command_identifier_missing_files
+
 ## test_migrate_command_identifier_error_in_data
 
 ### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_command_identifier_error_in_data
@@ -39,6 +47,22 @@
 ## test_migrate_command_update
 
 ### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_command_update
+
+## test_migrate_command_remigrate_modified
+
+### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_command_remigrate_modified
+
+## test_migrate_command_change_files
+
+### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_command_change_files
+
+## test_migrate_command_change_files_metadata
+
+### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_command_change_files_metadata
+
+## test_migrate_command_change_directories_metadata
+
+### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_command_change_directories_metadata
 
 ## test_migrate_command_update_wrong_api_version
 

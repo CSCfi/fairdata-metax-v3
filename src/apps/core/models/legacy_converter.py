@@ -638,6 +638,13 @@ class LegacyDatasetConverter:
             or self.dataset_json.get("date_created")
         )
 
+    def convert_metadata_owner(self):
+        user = self.dataset_json.get("metadata_provider_user")
+        org = self.dataset_json.get("metadata_provider_org") or self.dataset_json.get(
+            "metadata_owner_org"
+        )
+        return {"user": user, "organization": org}
+
     def convert_root_level_fields(self):
         modified = self.get_modified()
 
@@ -661,6 +668,7 @@ class LegacyDatasetConverter:
                     self.created_objects.update(["User"])
 
         fields = {
+            "metadata_owner": self.convert_metadata_owner(),
             "data_catalog": self.convert_data_catalog(),
             "cumulation_started": self.dataset_json.get("date_cumulation_started"),
             "cumulation_ended": self.dataset_json.get("date_cumulation_ended"),
@@ -686,8 +694,8 @@ class LegacyDatasetConverter:
         issued = None
         if issued_data := self.legacy_research_dataset.get("issued"):
             issued = issued_data
-        elif not self.convert_only:
-            issued = datetime_to_date(parse_datetime(self.get_modified()))
+        elif not self.convert_only and (modified := self.get_modified()):
+            issued = datetime_to_date(parse_datetime(modified))
 
         return {
             "persistent_identifier": self.legacy_research_dataset.get("preferred_identifier"),
@@ -752,7 +760,9 @@ class LegacyDatasetConverter:
 
             nonpublic = LegacyDatasetUpdateSerializer.Meta.nonpublic_fields
             data = {k: v for k, v in data.items() if k not in nonpublic}
-
+        else:
+            data["id"] = self.dataset_json.get("identifier")
+            data["api_version"] = self.dataset_json.get("api_meta", {}).get("version", 1)
         return data
 
     def get_invalid_values_by_path(self):

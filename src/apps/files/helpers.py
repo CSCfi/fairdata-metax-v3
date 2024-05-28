@@ -1,8 +1,11 @@
 import copy
+from typing import Optional
 from urllib import parse
 
 from django.conf import settings
 from django.utils.module_loading import import_string
+
+from apps.common.helpers import ensure_dict
 
 
 def remove_query_param(url, *params):
@@ -59,3 +62,12 @@ def get_file_metadata_serializer():
 
 def get_directory_metadata_serializer():
     return import_string(settings.DATASET_FILE_METADATA_SERIALIZERS["directory"])
+
+
+def convert_checksum_v2_to_v3(checksum: dict, value_key="value") -> Optional[str]:
+    if not checksum:
+        return None
+    ensure_dict(checksum)
+    algorithm = checksum.get("algorithm", "").lower().replace("-", "")
+    value = checksum.get(value_key, "").lower()
+    return f"{algorithm}:{value}"

@@ -1,14 +1,11 @@
 import copy
-import getpass
 import json
 import logging
-import uuid
 from argparse import ArgumentParser
-from typing import Optional
+from dataclasses import dataclass
+from typing import Callable, Dict, List, Optional, Union
 
-import requests
 from cachalot.api import cachalot_disabled
-from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db.models import Q
 from isodate import parse_datetime
@@ -16,7 +13,23 @@ from isodate import parse_datetime
 from apps.common.helpers import is_valid_uuid, parse_iso_dates_in_nested_dict
 from apps.core.models import LegacyDataset
 
+from ._v2_client import MigrationV2Client
+
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class MigrationData:
+    identifier: str
+    dataset_json: dict
+    # When file_ids is None, existing file_ids is used when updating
+    # When file_ids is callable, it is called when updating dataset
+    file_ids: Optional[Union[dict, Callable]] = None
+
+    def get_file_ids(self):
+        if callable(self.file_ids):
+            self.file_ids = self.file_ids()
+        return self.file_ids
 
 
 class Command(BaseCommand):
@@ -41,18 +54,15 @@ class Command(BaseCommand):
     ok_after_update = 0
     migration_limit = 0
     compatibility_errors = 0
-    dataset_cache = {}
+    dataset_cache: Dict[str, LegacyDataset] = {}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.failed_datasets = []
-        self.datasets = []
         self.dataset_cache = {}
-        self.metax_instance = None
-        self.metax_user = None
-        self.metax_password = None
 
     def add_arguments(self, parser: ArgumentParser):
+        MigrationV2Client.add_arguments(parser)
         parser.add_argument(
             "--identifiers",
             "-ids",
@@ -89,29 +99,7 @@ class Command(BaseCommand):
             help="Run migration using existing migrated datasets as data source.",
         ),
         parser.add_argument(
-            "--metax-instance",
-            "-mi",
-            type=str,
-            required=False,
-            help="Fully qualified Metax instance URL to migrate datasets from",
-        )
-        parser.add_argument(
-            "--use-env",
-            action="store_true",
-            required=False,
-            default=False,
-            help="Read Metax instance and credentials from Django environment settings.",
-        )
-        parser.add_argument(
-            "--prompt-credentials",
-            action="store_true",
-            required=False,
-            default=False,
-            help="Prompt Metax V2 credentials.",
-        )
-
-        parser.add_argument(
-            "--pagination_size",
+            "--pagination-size",
             "-ps",
             type=int,
             required=False,
@@ -135,6 +123,15 @@ class Command(BaseCommand):
             help="Stop after updating this many datasets",
         )
 
+    @property
+    def common_dataset_fetch_params(self):
+        return {
+            "include_user_metadata": "true",  # include dataset-specific file/directory metadata
+            "file_details": "true",  # include files[].details and directories[].details
+            "file_fields": "id,identifier,file_path",  # fields in files[].details
+            "directory_fields": "id,identifier,directory_path",  # fields in directories[].details
+        }
+
     def get_v3_version(self, dataset: LegacyDataset):
         if v3_version := getattr(dataset, "_v3_version", None):
             return v3_version
@@ -144,19 +141,29 @@ class Command(BaseCommand):
         )
         return dataset._v3_version
 
-    def get_update_reason(self, dataset: LegacyDataset, dataset_json, created) -> Optional[str]:
+    def get_update_reason(
+        self, legacy_dataset: LegacyDataset, dataset_json, created
+    ) -> Optional[str]:
         """Get reason, why dataset is migrated again, or None if no update is needed."""
         if created:
             return "created"
 
-        if dataset.migration_errors or not dataset.last_successful_migration:
+        if legacy_dataset.migration_errors or not legacy_dataset.last_successful_migration:
             return "migration-errors"
 
         modified = parse_datetime(
             dataset_json.get("date_modified") or dataset_json.get("date_created")
         )
-        if modified > dataset.last_successful_migration:
+        if modified > legacy_dataset.last_successful_migration:
             return "modified"
+
+        has_files = dataset_json["research_dataset"].get(
+            "total_files_byte_size"
+        ) or dataset_json.get("deprecated")
+        dataset = legacy_dataset.dataset
+        if has_files and dataset and not hasattr(dataset, "file_set"):
+            # Dataset should have files but does not have file_set, so some are definitely missing
+            return "missing-files"
 
         if self.force:
             return "force"
@@ -225,123 +232,148 @@ class Command(BaseCommand):
                 f"{self.migrated} ({self.ok_after_update} updated{failed}): {identifier=}, {update_reason=}, {created_objects=}"
             )
 
-    def migrate_dataset(self, data: dict):
-        identifier = data["identifier"]
-
+    def pre_migrate_checks(self, data: MigrationData) -> bool:
+        identifier = data.identifier
+        dataset_json = data.dataset_json
         if not is_valid_uuid(identifier):
             self.stderr.write(f"Invalid identifier '{identifier}', ignoring")
-            return None
+            return False
 
-        if data.get("api_meta", {}).get("version") >= 3:
+        if dataset_json.get("api_meta", {}).get("version") >= 3:
             self.stdout.write(f"Dataset '{identifier}' is from a later Metax version, ignoring")
-            return None
+            return False
 
-        if data.get("state") != "published":
+        if dataset_json.get("state") != "published":
             # Migrating drafts not supported currently
             self.stdout.write(f"Dataset '{identifier}' is not published, ignoring")
+            return False
+        return True
+
+    def update_legacy_dataset(self, data: MigrationData):
+        identifier = data.identifier
+        dataset_json = data.dataset_json
+        ignored = None
+        fixed = None
+        created = False
+        errors = None
+        legacy_dataset = self.dataset_cache.get(identifier)
+        if not legacy_dataset:
+            legacy_dataset, created = LegacyDataset.all_objects.get_or_create(
+                id=identifier,
+                defaults={"dataset_json": dataset_json, "legacy_file_ids": data.get_file_ids()},
+            )
+
+        update_reason = self.get_update_reason(
+            legacy_dataset, dataset_json=dataset_json, created=created
+        )
+
+        if update_reason and legacy_dataset.dataset and legacy_dataset.dataset.api_version > 2:
+            self.stdout.write(
+                f"{self.migrated} Dataset '{identifier}' has been modified in V3, not updating"
+            )
+            return
+
+        if update_reason:
+            legacy_dataset.dataset_json = dataset_json
+            legacy_dataset.legacy_file_ids = data.get_file_ids()
+            if not created and legacy_dataset.tracker.changed():
+                legacy_dataset.save()
+
+            self.updated += 1
+            legacy_dataset.update_from_legacy(raise_serializer_errors=False)
+            fixed = legacy_dataset.fixed_legacy_values
+            ignored = legacy_dataset.invalid_legacy_values
+            errors = legacy_dataset.migration_errors
+            if not errors:
+                self.ok_after_update += 1
+
+        self.print_status_line(legacy_dataset, update_reason)
+        self.print_fixed(fixed)
+        self.print_ignored(ignored)
+        self.print_errors(identifier, errors)
+        return errors
+
+    def migrate_dataset(self, data: MigrationData):
+        identifier = data.identifier
+        if not self.pre_migrate_checks(data):
             return None
 
         try:
             self.migrated += 1
-            ignored = None
-            fixed = None
-            errors = None
-            created = False
-            dataset = self.dataset_cache.get(identifier)
-            if not dataset:
-                dataset, created = LegacyDataset.all_objects.get_or_create(
-                    id=identifier,
-                    defaults={"dataset_json": data},
-                )
-            update_reason = self.get_update_reason(dataset, dataset_json=data, created=created)
-
-            if update_reason:
-                if dataset.api_version > 2:
-                    self.stdout.write(
-                        f"{self.migrated} Dataset '{identifier}' has been modified in V3, not updating"
-                    )
-                    return None
-
-                self.updated += 1
-                dataset.dataset_json = data
-                dataset.update_from_legacy(raise_serializer_errors=False)
-                fixed = dataset.fixed_legacy_values
-                ignored = dataset.invalid_legacy_values
-                errors = dataset.migration_errors
-                if not errors:
-                    self.ok_after_update += 1
-
-            self.print_status_line(dataset, update_reason)
-            self.print_fixed(fixed)
-            self.print_ignored(ignored)
-            self.print_errors(identifier, errors)
-
-            if errors:
+            if errors := self.update_legacy_dataset(data):
                 if not self.allow_fail:
                     raise ValueError(errors)
                 self.failed_datasets.append(identifier)
-            else:
-                self.datasets.append(identifier)
 
-            return dataset
         except Exception as e:
             if self.allow_fail:
                 self.stderr.write(repr(e))
-                self.stderr.write(f"Exception migrating dataset {data['identifier']}\n\n")
+                self.stderr.write(f"Exception migrating dataset {identifier}\n\n")
                 self.failed_datasets.append(identifier)
                 return None
             else:
                 logger.error(f"Failed while processing {identifier}")
-                raise e
+                raise
 
-    def cache_existing_datasets(self, list_json):
+    def cache_existing_datasets(self, data_list: List[MigrationData]):
         """Get datasets in bulk and assign to dataset_cache."""
         with cachalot_disabled():
-            datasets = LegacyDataset.all_objects.in_bulk(
-                [ide for d in list_json if is_valid_uuid(ide := d["identifier"])]
+            datasets = LegacyDataset.all_objects.defer("legacy_file_ids").in_bulk(
+                [ide for d in data_list if is_valid_uuid(ide := d.identifier)]
             )
         self.dataset_cache = {str(k): v for k, v in datasets.items()}
 
-    def migrate_from_list(self, list_json):
-        self.cache_existing_datasets(list_json)
-        created_instances = []
-        for data in list_json:
+    def migrate_from_list(self, data_list: List[MigrationData]):
+        self.cache_existing_datasets(data_list)
+        for data in data_list:
             if self.update_limit != 0 and self.updated >= self.update_limit:
                 break
-            dataset = self.migrate_dataset(data)
-            if dataset:
-                created_instances.append(dataset)
-        return created_instances
+            self.migrate_dataset(data)
 
-    def loop_pagination(self, response):
-        response_json = response.json()
-        self.datasets.extend(self.migrate_from_list(response_json["results"]))
-        while next_url := response_json.get("next"):
-            if self.update_limit != 0 and self.updated >= self.update_limit:
-                break
-            response = requests.get(next_url, auth=self.metax_auth)
-            response.raise_for_status()
-            response_json = response.json()
-            self.datasets.extend(self.migrate_from_list(response_json["results"]))
+    def migrate_from_json_list(self, dataset_json_list: list, request_files=False):
+        data_list = [self.dataset_json_to_data(dataset_json) for dataset_json in dataset_json_list]
+        if request_files:
+            for item in data_list:
+                self.add_dataset_files_callable(item)
+        self.migrate_from_list(data_list)
 
     def update(self, options):
         q = Q()
         if identifiers := options.get("identifiers"):
             q = Q(id__in=identifiers)
         if catalogs := options.get("catalogs"):
-            q = Q(data_catalog__in=catalogs)
-        datasets = LegacyDataset.all_objects.filter(q).values_list("dataset_json", flat=True)
-        self.migrate_from_list(datasets)
+            q = Q(dataset__data_catalog__in=catalogs)
+        dataset_json_list = LegacyDataset.all_objects.filter(q).values_list(
+            "dataset_json", flat=True
+        )
+        self.migrate_from_json_list(dataset_json_list)
+
+    def dataset_json_to_data(self, dataset_json: dict) -> MigrationData:
+        return MigrationData(identifier=dataset_json["identifier"], dataset_json=dataset_json)
+
+    def file_dataset_to_data(self, file_dataset: dict) -> MigrationData:
+        # File containing MigrationData dicts
+        if dataset_json := file_dataset.get("dataset_json"):
+            return MigrationData(
+                identifier=file_dataset["identifier"],
+                dataset_json=dataset_json,
+                file_ids=file_dataset.get("files"),
+            )
+        # File containing dataset_json dicts
+        return self.dataset_json_to_data(file_dataset)
 
     def migrate_from_file(self, options):
         file = options.get("file")
         identifiers = set(options.get("identifiers") or [])
         catalogs = options.get("catalogs")
         datasets = []
+
         with open(file) as f:
             datasets = json.load(f)
             if isinstance(datasets, dict):
-                datasets = []
+                datasets = [self.file_dataset_to_data(datasets)]  # single dataset
+            else:
+                datasets = [self.file_dataset_to_data(d) for d in datasets]
             if identifiers:
                 datasets = [d for d in datasets if d.get("identifier") in identifiers]
             if catalogs:
@@ -354,7 +386,6 @@ class Command(BaseCommand):
         identifiers = options.get("identifiers")
         catalogs = options.get("catalogs")
         migrate_all = not (catalogs or identifiers)
-        metax_instance = self.metax_instance
         self.allow_fail = options.get("allow_fail")
         limit = options.get("pagination_size")
         self.force = options.get("force")
@@ -362,33 +393,38 @@ class Command(BaseCommand):
 
         if identifiers:
             for identifier in identifiers:
-                response = self.fetch_dataset(identifier)
-                dataset_json = response.json()
-                self.datasets.append(self.migrate_dataset(dataset_json))
+                dataset_json = self.client.fetch_dataset(
+                    identifier, params=self.common_dataset_fetch_params
+                )
+                data = self.dataset_json_to_data(dataset_json)
+                self.add_dataset_files_callable(data)
+                self.migrate_dataset(data)
 
         if migrate_all:
-            response = self.fetch_datasets(limit=limit)
-            self.loop_pagination(response)
-            response = self.fetch_datasets(limit=limit, removed="true")
-            self.loop_pagination(response)
+            params = {**self.common_dataset_fetch_params, "limit": limit}
+            dataset_batches = self.client.fetch_datasets(params, batched=True)
+            for batch in dataset_batches:
+                self.migrate_from_json_list(batch, request_files=True)
 
         if catalogs:
             for catalog in catalogs:
                 if self.migration_limit != 0 and self.migration_limit <= self.migrated:
                     break
+
                 self.stdout.write(f"Migrating catalog: {catalog}")
-                response = requests.get(f"{metax_instance}/rest/datacatalogs/{catalog}")
-                if response.status_code == 200:
-                    response_json = response.json()
-                    _catalog = response_json["catalog_json"]["identifier"]
-                else:
+                _catalog = self.client.check_catalog(catalog)
+                if not _catalog:
                     self.stderr.write(f"Invalid catalog identifier: {catalog}")
                     continue
 
-                response = self.fetch_datasets(data_catalog=_catalog, limit=limit)
-                self.loop_pagination(response)
-                response = self.fetch_datasets(data_catalog=_catalog, limit=limit, removed="true")
-                self.loop_pagination(response)
+                params = {
+                    **self.common_dataset_fetch_params,
+                    "data_catalog": _catalog,
+                    "limit": limit,
+                }
+                dataset_batches = self.client.fetch_datasets(params, batched=True)
+                for batch in dataset_batches:
+                    self.migrate_from_json_list(batch, request_files=True)
 
     def print_summary(self):
         not_ok = self.updated - self.ok_after_update
@@ -396,54 +432,21 @@ class Command(BaseCommand):
         self.stdout.write(f"- {self.ok_after_update} datasets updated succesfully")
         self.stdout.write(f"- {not_ok} datasets failed")
 
-    @property
-    def metax_auth(self):
-        if self.metax_user is None:
-            return None
-        return (self.metax_user, self.metax_password)
+    def dataset_may_have_files(self, dataset_json: dict):
+        byte_size = None
+        try:
+            byte_size = dataset_json["research_dataset"].get("total_files_byte_size")
+        except Exception:
+            pass
+        return bool(byte_size or dataset_json.get("deprecated"))
 
-    def fetch_dataset(self, identifier, **params):
-        metax_instance = self.metax_instance
-        response = requests.get(
-            f"{metax_instance}/rest/v2/datasets/{identifier}?removed=true",
-            params=params,
-            auth=self.metax_auth,
-        )
-        response.raise_for_status()
-        return response
-
-    def fetch_datasets(self, **params):
-        metax_instance = self.metax_instance
-        response = requests.get(
-            f"{metax_instance}/rest/v2/datasets",
-            params={"state": "published", "include_legacy": "true", **params},
-            auth=self.metax_auth,
-        )
-        response.raise_for_status()
-        return response
-
-    def handle_metax_settings(self, options) -> bool:
-        if options.get("file") or options.get("update"):
-            return True
-
-        if options.get("use_env"):
-            self.metax_instance = settings.METAX_V2_HOST
-            self.metax_user = settings.METAX_V2_USER
-            self.metax_password = settings.METAX_V2_PASSWORD
-
-        if instance := options.get("metax_instance"):
-            self.metax_instance = instance
-
-        if not self.metax_instance:
-            self.stderr.write("Metax instance not specified and not using --file or --update.")
-            return False
-
-        if options.get("prompt_credentials"):
-            self.stdout.write(f"Please input credentials for {self.metax_instance}")
-            self.metax_user = input("Username: ")
-            self.metax_password = getpass.getpass("Password: ")
-
-        return True
+    def add_dataset_files_callable(self, data: MigrationData):
+        """Fetch dataset files lazily when needed using callable."""
+        if self.dataset_may_have_files(data.dataset_json):
+            data.file_ids = lambda: self.client.fetch_dataset_file_ids(data.identifier)
+        else:
+            data.file_ids = []
+        return data
 
     def handle(self, *args, **options):
         identifiers = options.get("identifiers")
@@ -463,15 +466,16 @@ class Command(BaseCommand):
             self.stderr.write("The --identifiers and --catalogs options are mutually exclusive.")
             return
 
-        if not self.handle_metax_settings(options):
-            return
-
         try:
             if update:
                 self.update(options)
             elif file:
                 self.migrate_from_file(options)
             else:
+                self.client = MigrationV2Client(options, stdout=self.stdout, stderr=self.stderr)
+                if not self.client.ok:
+                    self.stderr.write("Missing Metax V2 configuration")
+                    return
                 self.migrate_from_metax(options)
         except KeyboardInterrupt:
             pass  # Print summary after Ctrl+C

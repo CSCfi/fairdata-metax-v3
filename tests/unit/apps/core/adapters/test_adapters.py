@@ -10,6 +10,7 @@ from rest_framework import serializers
 from apps.core import factories
 from apps.core.models import LegacyDataset
 from apps.core.models.legacy_compatibility import LegacyCompatibility
+from apps.files.models import File, FileStorage
 
 logger = logging.getLogger(__name__)
 
@@ -85,14 +86,17 @@ def test_v2_to_v3_dataset_conversion(
     # Data prep
     test_data_path = os.path.dirname(os.path.abspath(__file__)) + "/testdata/"
     data = None
-    files_data = None
+    file_ids = None
     with open(test_data_path + test_file_path) as json_file:
         data = json.load(json_file)
     if files_path:
         with open(test_data_path + files_path) as json_file:
-            files_data = json.load(json_file)
+            file_data = json.load(json_file)
+            for f in file_data:
+                File.create_from_legacy(f)
+            file_ids = [f["id"] for f in file_data]
 
-    v2_dataset = LegacyDataset(id=data["identifier"], dataset_json=data, files_json=files_data)
+    v2_dataset = LegacyDataset(id=data["identifier"], dataset_json=data, legacy_file_ids=file_ids)
     v2_dataset.save()
     v2_dataset.update_from_legacy()
     diff = LegacyCompatibility(v2_dataset).get_compatibility_diff()
@@ -127,7 +131,7 @@ def test_v2_to_v3_dataset_conversion_removed(harvested_json, license_reference_d
     v2_dataset = LegacyDataset(id=data["identifier"], dataset_json=data)
     v2_dataset.save()
     v2_dataset.update_from_legacy()
-    assert isinstance(v2_dataset.removed, datetime)
+    assert isinstance(v2_dataset.dataset.removed, datetime)
 
 
 @pytest.mark.django_db
@@ -138,7 +142,7 @@ def test_v2_to_v3_dataset_conversion_removed_restored(harvested_json, license_re
     v2_dataset = LegacyDataset(id=data["identifier"], dataset_json=data)
     v2_dataset.save()
     v2_dataset.update_from_legacy()
-    assert v2_dataset.removed is None
+    assert v2_dataset.dataset.removed is None
 
 
 @pytest.mark.django_db

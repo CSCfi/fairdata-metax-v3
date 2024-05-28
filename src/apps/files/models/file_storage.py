@@ -267,12 +267,14 @@ class FileStorage(ProxyBasePolymorphicModel, AbstractBaseModel):
         )
         return f"<{self.__class__.__name__}: {values}>"
 
-    def get_directory_paths(self, file_set=None) -> Set[str]:
+    def get_directory_paths(self, file_set=None, include_removed=False) -> Set[str]:
         """Get directory paths used in the storage as a set.
 
         If dataset is supplied, return only directories belonging to dataset.
         Otherwise all directories are returned."""
         qs = self.files
+        if include_removed:
+            qs = self.files(manager="all_objects")
         if file_set:
             qs = qs.filter(file_sets=file_set)
         file_pathnames = (
@@ -470,6 +472,22 @@ class FileStorage(ProxyBasePolymorphicModel, AbstractBaseModel):
                     file.setdefault("errors", {}).update(errors)
 
         return files
+
+    @classmethod
+    def get_or_create_from_legacy(cls, legacy_file: dict) -> "FileStorage":
+        legacy_storage = legacy_file["file_storage"]["identifier"]
+        csc_project = legacy_file["project_identifier"]
+        storage_service = settings.LEGACY_FILE_STORAGE_TO_V3_STORAGE_SERVICE.get(legacy_storage)
+        if not storage_service:
+            raise ValueError(f"Unknown legacy storage service: {legacy_storage}")
+
+        if storage_service not in settings.STORAGE_SERVICE_FILE_STORAGES:
+            raise ValueError({"storage_service": f"Unknown storage service: '{storage_service}'"})
+        storage, _created = cls.available_objects.get_or_create(
+            csc_project=csc_project,
+            storage_service=storage_service,
+        )
+        return storage
 
 
 class BasicFileStorage(FileStorage):

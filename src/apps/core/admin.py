@@ -144,30 +144,21 @@ class DatasetProjectAdmin(admin.ModelAdmin):
 
 
 @admin.register(LegacyDataset)
-class LegacyDatasetAdmin(DatasetAdmin):
+class LegacyDatasetAdmin(admin.ModelAdmin):
     fields = (
+        "id",
+        "created",
+        "modified",
         "dataset_json",
         "contract_json",
-        "title",
-        "data_catalog",
-        "access_rights",
-        "keyword",
-        "deprecated",
-        "created",
-        "modified",
-        "issued",
         "v2_dataset_compatibility_diff",
+        "last_successful_migration",
     )
     readonly_fields = (
-        "title",
-        "data_catalog",
         "created",
         "modified",
-        "issued",
-        "access_rights",
-        "keyword",
-        "deprecated",
-        # "v2_dataset_compatibility_diff",
+        "v2_dataset_compatibility_diff",
+        "last_successful_migration",
     )
     formfield_overrides = {models.JSONField: {"widget": JSONEditorWidget}}
 

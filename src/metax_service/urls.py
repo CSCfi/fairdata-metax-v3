@@ -64,7 +64,7 @@ if settings.ENABLE_DEBUG_TOOLBAR:
     urlpatterns = urlpatterns + [path("__debug__/", include("debug_toolbar.urls"))]
 
 if settings.ENABLE_SILK_PROFILER:
-    urlpatterns = urlpatterns + [path("silk/", include("silk.urls", namespace="silk"))]
+    urlpatterns = urlpatterns + [path("v3/silk/", include("silk.urls", namespace="silk"))]
 
 if settings.NO_NGINX_PROXY:
     urlpatterns = urlpatterns + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

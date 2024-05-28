@@ -39,8 +39,10 @@
         - [factories](src/apps/core/factories.md)
         - [helpers](src/apps/core/helpers.md)
         - management.commands
+            - [_v2_client](src/apps/core/management/commands/_v2_client.md)
             - [load_test_data](src/apps/core/management/commands/load_test_data.md)
             - [migrate_v2_datasets](src/apps/core/management/commands/migrate_v2_datasets.md)
+            - [migrate_v2_files](src/apps/core/management/commands/migrate_v2_files.md)
         - models
             - [access_rights](src/apps/core/models/access_rights.md)
             - catalog_record
@@ -206,6 +208,8 @@
                     - [conftest](tests/unit/apps/core/management/conftest.md)
                     - [test_load_test_data](tests/unit/apps/core/management/test_load_test_data.md)
                     - [test_migrate_v2_datasets](tests/unit/apps/core/management/test_migrate_v2_datasets.md)
+                    - [test_migrate_v2_files](tests/unit/apps/core/management/test_migrate_v2_files.md)
+                    - [test_v2_client](tests/unit/apps/core/management/test_v2_client.md)
                 - models
                     - [conftest](tests/unit/apps/core/models/conftest.md)
                     - [test_abstract_base_object](tests/unit/apps/core/models/test_abstract_base_object.md)

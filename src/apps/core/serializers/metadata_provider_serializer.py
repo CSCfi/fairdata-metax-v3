@@ -45,6 +45,8 @@ class MetadataProviderModelSerializer(StrictSerializer, AbstractDatasetModelSeri
 
     def is_custom_value_allowed(self):
         """End-users should not be allowed to use custom values."""
+        if self.context.get("migrating"):
+            return True
         request = self.context["request"]
         return DatasetAccessPolicy().query_object_permission(  # note that instance may be null
             user=request.user, object=self.instance, action="<op:custom_metadata_owner>"
@@ -58,7 +60,9 @@ class MetadataProviderModelSerializer(StrictSerializer, AbstractDatasetModelSeri
         data = self._validated_data
 
         # Default to existing values or values from authenticated user
-        if self.instance:
+        if data and self.is_custom_value_allowed():
+            ctx_data = data
+        elif self.instance:
             ctx_data = {
                 "user": self.instance.user.username,
                 "organization": self.instance.organization,
@@ -73,7 +77,7 @@ class MetadataProviderModelSerializer(StrictSerializer, AbstractDatasetModelSeri
         if not data:
             # Data is empty, use values from request user
             data = ctx_data
-        elif not self.is_custom_value_allowed():
+        else:
             # Data has values but they should match the request user
             errors = {}
             if data["user"] != ctx_data["user"]:

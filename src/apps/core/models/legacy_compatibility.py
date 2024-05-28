@@ -2,7 +2,7 @@ import copy
 import json
 import logging
 import re
-from typing import Dict, Optional
+from typing import Dict
 
 import shapely
 from deepdiff import DeepDiff, extract
@@ -28,8 +28,8 @@ def regex(path: str):
 class LegacyCompatibility:
     """Helper class for legacy dataset compatibility checks."""
 
-    def __init__(self, dataset: LegacyDataset) -> None:
-        self.dataset = dataset
+    def __init__(self, legacy_dataset: LegacyDataset) -> None:
+        self.legacy_dataset = legacy_dataset
 
     ignored_migration_errors = {
         "dictionary_item_added": [
@@ -57,9 +57,10 @@ class LegacyCompatibility:
             "root['preservation_dataset_origin_version']",
             "root['preservation_identifier']",
             "root['research_dataset']['version_notes']",
-            "root['research_dataset']['total_files_byte_size']",
             "root['research_dataset']['total_remote_resources_byte_size']",
             "root['research_dataset']['access_rights']['access_url']",
+            "root['research_dataset']['files']",  # Uses separate V2 files API
+            "root['research_dataset']['directories']",  # Uses separate V2 files API
             regex("root['research_dataset']['language'][\\d+]['title']['und']"),
             regex("root['research_dataset']['other_identifier'][\\d+]['old_notation']"),
             regex("root['research_dataset']['language'][\\d+]['title']['und']"),
@@ -79,6 +80,7 @@ class LegacyCompatibility:
             regex(".*['contributor_type']$"),
             regex(".*['contributor_role']$"),
             regex(".*['telephone']$"),
+            regex(".*['definition']$"),  # remove silly definition values
             "root['contract']",  # TODO
         ],
         "iterable_item_added": [
@@ -99,11 +101,13 @@ class LegacyCompatibility:
 
     def should_ignore_removed(self, path) -> bool:
         """Allow removing None or [] dictionary values."""
-        removed_value = extract(self.dataset.dataset_json, path)
+        removed_value = extract(self.legacy_dataset.dataset_json, path)
         if path == "root['date_deprecated']":
-            return not self.dataset.dataset_json.get("deprecated")
-        if path == "root['date_removed']":
-            return not self.dataset.dataset_json.get("removed")
+            return not self.legacy_dataset.dataset_json.get("deprecated")
+        elif path == "root['date_removed']":
+            return not self.legacy_dataset.dataset_json.get("removed")
+        elif path == "root['research_dataset']['total_files_byte_size']":
+            return removed_value == 0
         if type(removed_value) is str:
             return removed_value.strip() == ""
         elif removed_value in [None, []]:
@@ -119,7 +123,7 @@ class LegacyCompatibility:
         parts = path.split(".")
         dd_parts = []
         for part in parts:
-            dd_parts.append(re.sub("(^\w+)", r"['\1']", part))
+            dd_parts.append(re.sub(r"(^\w+)", r"['\1']", part))
 
         return "root" + "".join(dd_parts)
 
@@ -132,6 +136,11 @@ class LegacyCompatibility:
 
         if type(new) == type(old) == str and new == old.strip():
             return True  # Allow stripping whitespace
+
+        if path == "root['research_dataset']['total_files_byte_size']":
+            # Deprecated V2 dataset file size sometimes includes removed files and sometimes not
+            if self.legacy_dataset.dataset.deprecated and old == 0 and new > 0:
+                return True
 
     def get_migration_errors_from_diff(self, diff) -> dict:
         errors = {}
@@ -170,9 +179,12 @@ class LegacyCompatibility:
     def normalize_dataset(self, data: dict) -> dict:
         """Process dataset json dict to avoid unnecessary diff values."""
 
-        invalid = self.dataset.invalid_legacy_values or {}
+        invalid = self.legacy_dataset.invalid_legacy_values or {}
 
-        wkt_re = re.compile(".*as_wkt\[\d+\]$")
+        wkt_re = re.compile(r".*as_wkt\[\d+\]$")
+        from apps.core.models import Dataset
+
+        data["state"] = str(data["state"])  # Convert Dataset.StateChoices to str
 
         def pre_handler(value, path):
             if inv := invalid.get(path):
@@ -193,7 +205,7 @@ class LegacyCompatibility:
                     value = self.normalize_float_str(value)
                 # Remove leading and trailing whitespace
                 return value
-            if isinstance(value, dict):
+            elif isinstance(value, dict):
                 # Omit empty values from dict
                 return omit_empty(value)
             return value
@@ -232,7 +244,7 @@ class LegacyCompatibility:
 
     def get_fixed_deepdiff_paths(self) -> list:
         """Get deepdiff paths to values that have been fixed in the migration conversion."""
-        fixed = self.dataset.fixed_legacy_values or {}
+        fixed = self.legacy_dataset.fixed_legacy_values or {}
         fixed_paths = []
         for path, val in fixed.items():
             fields = val.get("fields", [])
@@ -243,9 +255,42 @@ class LegacyCompatibility:
 
         return [self.dot_path_to_deepdiff_path(p) for p in fixed_paths]
 
+    def get_file_count_changes(self) -> dict:
+        """Check if migrated file and file metadata counts match."""
+        research_dataset = self.legacy_dataset.legacy_research_dataset
+        v2_file_count = 0
+        v2_file_metadata_count = len(research_dataset.get("files") or [])
+        v2_directory_metadata_count = len(research_dataset.get("directories") or [])
+        if legacy_ids := self.legacy_dataset.legacy_file_ids:
+            v2_file_count = len(legacy_ids)
+
+        v3_file_count = 0
+        v3_file_metadata_count = 0
+        v3_directory_metadata_count = 0
+        if fileset := getattr(self.legacy_dataset.dataset, "file_set", None):
+            v3_file_count = fileset.total_files_count
+            v3_file_metadata_count = fileset.file_metadata.count()
+            v3_directory_metadata_count = fileset.directory_metadata.count()
+
+        ret = {}
+        if v2_file_count != v3_file_count:
+            ret["file_count_changed"] = {"old_value": v2_file_count, "new_value": v3_file_count}
+        if v2_file_metadata_count != v3_file_metadata_count:
+            ret["file_metadata_count_changed"] = {
+                "old_value": v2_file_metadata_count,
+                "new_value": v3_file_metadata_count,
+            }
+        if v2_directory_metadata_count != v3_directory_metadata_count:
+            ret["directory_metadata_count_changed"] = {
+                "old_value": v2_directory_metadata_count,
+                "new_value": v3_directory_metadata_count,
+            }
+        return ret
+
     def get_compatibility_diff(self) -> Dict:
-        v2_version = self.normalize_dataset(self.dataset.dataset_json)
-        v3_version = self.normalize_dataset(self.dataset.as_v2_dataset())
+        v2_version = self.normalize_dataset(self.legacy_dataset.dataset_json)
+        v3_version = self.normalize_dataset(self.legacy_dataset.dataset.as_v2_dataset())
+
         diff = DeepDiff(
             v2_version,
             v3_version,
@@ -277,4 +322,6 @@ class LegacyCompatibility:
             exclude_obj_callback=self.exclude_from_diff,
         )
         json_diff = diff.to_json()
-        return json.loads(json_diff)
+        output = json.loads(json_diff)
+        output.update(self.get_file_count_changes())
+        return output

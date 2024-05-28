@@ -8,3 +8,7 @@
 
 ### :::src.apps.core.serializers.legacy_serializer.LegacyDatasetUpdateSerializer
 
+## LegacyDatasetConversionValidationSerializer
+
+### :::src.apps.core.serializers.legacy_serializer.LegacyDatasetConversionValidationSerializer
+

@@ -3,7 +3,7 @@
   "identifier": "c955e904-e3dd-4d7e-99f1-3fed446f96d1",
   "data_catalog": {
     "id": 1,
-    "identifier": "urn:nbn:fi:att:2955e904-e3dd-4d7e-99f1-3fed446f96d1"
+    "identifier": "urn:nbn:fi:att:data-catalog-ida"
   },
   "dataset_version_set": [
     {
@@ -95,8 +95,108 @@
       "This version contains changes to x and y."
     ],
     "preferred_identifier": "urn:nbn:fi:att:1955e904-e3dd-4d7e-99f1-3fed446f96d1",
-    "total_files_byte_size": 300,
-    "metadata_version_identifier": "1955e904-e3dd-4d7e-99f1-3fed446f96d1"
+    "total_files_byte_size": 3000,
+    "metadata_version_identifier": "1955e904-e3dd-4d7e-99f1-3fed446f96d1",
+    "files": [
+      {
+        "title": "Read me",
+        "description": "Documentation for the data.",
+        "file_type": {
+          "in_scheme": "http://uri.suomi.fi/codelist/fairdata/file_type",
+          "identifier": "http://uri.suomi.fi/codelist/fairdata/file_type/code/text",
+          "pref_label": {
+            "en": "Text",
+            "fi": "Teksti",
+            "und": "Teksti"
+          }
+        },
+        "identifier": "file-1",
+        "use_category": {
+          "in_scheme": "http://uri.suomi.fi/codelist/fairdata/use_category",
+          "identifier": "http://uri.suomi.fi/codelist/fairdata/use_category/code/documentation",
+          "pref_label": {
+            "en": "Documentation",
+            "fi": "Dokumentaatio",
+            "und": "Dokumentaatio"
+          }
+        },
+        "details": {
+          "id": 1,
+          "file_path": "/README.txt"
+        }
+      }
+    ],
+    "directories": [
+      {
+        "title": "Run data",
+        "identifier": "directory-123",
+        "description": "This directory contains all the data.",
+        "use_category": {
+          "in_scheme": "http://uri.suomi.fi/codelist/fairdata/use_category",
+          "identifier": "http://uri.suomi.fi/codelist/fairdata/use_category/code/source",
+          "pref_label": {
+            "en": "Source material",
+            "fi": "Lähdeaineisto",
+            "und": "Lähdeaineisto"
+          }
+        },
+        "details": {
+          "directory_path": "/data"
+        }
+      }
+    ],
+    "is_output_of": [
+      {
+        "name": {
+          "en": "ERC Consolidator Grant UniSDyn"
+        },
+        "identifier": " 818665",
+        "funder_type": {
+          "in_scheme": "http://uri.suomi.fi/codelist/fairdata/funder_type",
+          "identifier": "http://uri.suomi.fi/codelist/fairdata/funder_type/code/eu-framework-programme",
+          "pref_label": {
+            "en": "EU Framework Programme",
+            "fi": "EU puiteohjelmat",
+            "und": "EU puiteohjelmat"
+          }
+        },
+        "has_funding_agency": [
+          {
+            "name": {
+              "en": "European Union"
+            },
+            "@type": "Organization"
+          }
+        ],
+        "source_organization": [
+          {
+            "name": {
+              "fi": "Department of Computer Science",
+              "und": "Department of Computer Science"
+            },
+            "@type": "Organization",
+            "identifier": "http://uri.suomi.fi/codelist/fairdata/organization/code/10076-T313",
+            "is_part_of": {
+              "name": {
+                "en": "Aalto University",
+                "fi": "Aalto-yliopisto",
+                "sv": "Aalto-universitetet",
+                "und": "Aalto-yliopisto"
+              },
+              "@type": "Organization",
+              "identifier": "http://uri.suomi.fi/codelist/fairdata/organization/code/10076"
+            }
+          },
+          {
+            "name": {
+              "en": "Max Planck Institute for Solar System Research"
+            },
+            "@type": "Organization"
+          }
+        ],
+        "has_funder_identifier": "This project has received funding from the European Research Council (ERC)  under the European Union's Horizon 2020 research and innovation  programme (project \"UniSDyn\", grant agreement n:o 818665)"
+      }
+    ]
   },
   "preservation_state": 0,
   "state": "published",

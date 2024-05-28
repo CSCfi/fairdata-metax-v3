@@ -262,6 +262,15 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         "theme",
     )
 
+    is_legacy = models.BooleanField(
+        default=False, help_text="Is the dataset migrated from legacy Metax"
+    )
+
+    def __init__(self, *args, **kwargs):
+        if kwargs.pop("_saving_legacy", None):
+            self._saving_legacy = True
+        super().__init__(*args, **kwargs)
+
     def has_permission_to_edit(self, user: MetaxUser):
         if user.is_superuser:
             return True
@@ -299,10 +308,6 @@ class Dataset(V2DatasetMixin, CatalogRecord):
     @cached_property
     def first_published_revision(self):
         return self.get_revision(publication_number=1)
-
-    @property
-    def is_legacy(self):
-        return getattr(self, "legacydataset", None)
 
     @property
     def has_files(self):
@@ -727,7 +732,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         """Saves the dataset and increments the draft or published revision number as needed."""
         self.validate_unique_fields()
         self.validate_catalog()
-        if not getattr(self, "saving_legacy", False):
+        if not getattr(self, "_saving_legacy", False):
             self._update_cumulative_state()
 
         # Prevent changing state of a published dataset

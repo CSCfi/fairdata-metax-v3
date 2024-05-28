@@ -1,66 +1,37 @@
-{"id":1,"catalog_json":{"title":{"en":"Test data catalog name","fi":"Testidatakatalogin nimi"},"issued":"2014-02-27","homepage":[{"title":{"en":"Test website","fi":"Testi-verkkopalvelu"},"identifier":"http://testing.com"},{"title":{"en":"Another website","fi":"Toinen verkkopalvelu"},"identifier":"http://www.testing.fi"}],"language":[{"title":{"en":"Finnish","fi":"suomi","sv":"finska","und":"suomi"},"identifier":"http://lexvo.org/id/iso639-3/fin"},{"title":{"en":"English","fi":"englanti","sv":"engelska","und":"englanti"},"identifier":"http://lexvo.org/id/iso639-3/eng"}],"modified":"2014-01-17T08:19:58Z","harvested":false,"publisher":{"name":{"en":"Data catalog publisher organization","fi":"Datakatalogin julkaisijaorganisaatio"},"homepage":[{"title":{"en":"Publisher organization website","fi":"Julkaisijaorganisaation kotisivu"},"identifier":"http://www.publisher.fi/"}],"identifier":"http://isni.org/isni/0000000405129137"},"identifier":"urn:nbn:fi:att:2955e904-e3dd-4d7e-99f1-3fed446f96d1","access_rights":{"license":[{"title":{"en":"Creative Commons Attribution 4.0 International (CC BY 4.0)","fi":"Creative Commons Nimeä 4.0 Kansainvälinen (CC BY 4.0)","und":"Creative Commons Nimeä 4.0 Kansainvälinen (CC BY 4.0)"},"identifier":"http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0"}],"access_type":[{"identifier":"http://uri.suomi.fi/codelist/fairdata/access_type/code/open","pref_label":{"en":"Open","fi":"Avoin","und":"Avoin"}}],"description":{"fi":"Käyttöehtojen kuvaus"},"has_rights_related_agent":[{"name":{"en":"A rights related organization","fi":"Oikeuksiin liittyvä organisaatio"},"identifier":"org_id"},{"name":{"en":"Org in ref data","fi":"Org referenssidatassa"},"email":"wahatever@madeupdomain.com","telephone":["+12353495823424"],"identifier":"http://uri.suomi.fi/codelist/fairdata/organization/code/10076"}]},"field_of_science":[{"identifier":"http://www.yso.fi/onto/okm-tieteenala/ta1172","pref_label":{"en":"Environmental sciences","fi":"Ympäristötiede"}}],"dataset_versioning":true,"research_dataset_schema":"ida"},
-  "results": [{
+{
   "id": 1,
-  "identifier": "c955e904-e3dd-4d7e-99f1-3fed446f96d1",
-  "data_catalog": {
-    "id": 1,
-    "identifier": "urn:nbn:fi:att:2955e904-e3dd-4d7e-99f1-3fed446f96d1"
-  },
-  "dataset_version_set": [
-    {
-      "identifier": "c955e904-e3dd-4d7e-99f1-3fed446f96d1",
-      "preferred_identifier": "urn:nbn:fi:att:1955e904-e3dd-4d7e-99f1-3fed446f96d1",
-      "date_created": "2017-05-23T13:07:22+03:00",
-      "removed": false
-    }
-  ],
-  "deprecated": false,
-  "metadata_owner_org": "abc-org-123",
-  "metadata_provider_org": "abc-org-123",
-  "metadata_provider_user": "abc-user-123",
-  "research_dataset": {
+  "catalog_json": {
     "title": {
-      "en": "Wonderful Title"
+      "en": "Test data catalog name",
+      "fi": "Testidatakatalogin nimi"
     },
-    "issued": "2019-01-01",
-    "creator": [
+    "issued": "2014-02-27",
+    "homepage": [
       {
-        "name": "Teppo Testaaja",
-        "@type": "Person",
-        "member_of": {
-          "name": {
-            "fi": "Mysteeriorganisaatio"
-          },
-          "@type": "Organization"
+        "title": {
+          "en": "Test website",
+          "fi": "Testi-verkkopalvelu"
         },
-        "contributor_role": [
-          {
-            "in_scheme": "http://uri.suomi.fi/codelist/fairdata/contributor_role",
-            "identifier": "http://uri.suomi.fi/codelist/fairdata/contributor_role/code/visualization",
-            "pref_label": {
-              "en": "Visualization",
-              "fi": "Visualisointi",
-              "sv": "Visualisering",
-              "und": "Visualisointi"
-            }
-          }
-        ]
-      }
-    ],
-    "curator": [
+        "identifier": "http://testing.com"
+      },
       {
-        "name": "Rahikainen",
-        "@type": "Person",
-        "member_of": {
-          "name": {
-            "fi": "MysteeriOrganisaatio"
-          },
-          "@type": "Organization"
+        "title": {
+          "en": "Another website",
+          "fi": "Toinen verkkopalvelu"
         },
-        "identifier": "id:of:curator:rahikainen"
+        "identifier": "http://www.testing.fi"
       }
     ],
     "language": [
+      {
+        "title": {
+          "en": "Finnish",
+          "fi": "suomi",
+          "sv": "finska",
+          "und": "suomi"
+        },
+        "identifier": "http://lexvo.org/id/iso639-3/fin"
+      },
       {
         "title": {
           "en": "English",
@@ -72,41 +43,192 @@
       }
     ],
     "modified": "2014-01-17T08:19:58Z",
+    "harvested": false,
     "publisher": {
       "name": {
-        "fi": "Mysteeriorganisaatio"
+        "en": "Data catalog publisher organization",
+        "fi": "Datakatalogin julkaisijaorganisaatio"
       },
-      "@type": "Organization"
+      "homepage": [
+        {
+          "title": {
+            "en": "Publisher organization website",
+            "fi": "Julkaisijaorganisaation kotisivu"
+          },
+          "identifier": "http://www.publisher.fi/"
+        }
+      ],
+      "identifier": "http://isni.org/isni/0000000405129137"
     },
-    "description": {
-      "en": "A descriptive description describing the contents of this dataset. Must be descriptive."
-    },
+    "identifier": "urn:nbn:fi:att:data-catalog-ida",
     "access_rights": {
-      "access_type": {
-        "in_scheme": "http://uri.suomi.fi/codelist/fairdata/access_type",
-        "identifier": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open",
+      "license": [
+        {
+          "title": {
+            "en": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+            "fi": "Creative Commons Nimeä 4.0 Kansainvälinen (CC BY 4.0)",
+            "und": "Creative Commons Nimeä 4.0 Kansainvälinen (CC BY 4.0)"
+          },
+          "identifier": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0"
+        }
+      ],
+      "access_type": [
+        {
+          "identifier": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open",
+          "pref_label": {
+            "en": "Open",
+            "fi": "Avoin",
+            "und": "Avoin"
+          }
+        }
+      ],
+      "description": {
+        "fi": "Käyttöehtojen kuvaus"
+      },
+      "has_rights_related_agent": [
+        {
+          "name": {
+            "en": "A rights related organization",
+            "fi": "Oikeuksiin liittyvä organisaatio"
+          },
+          "identifier": "org_id"
+        },
+        {
+          "name": {
+            "en": "Org in ref data",
+            "fi": "Org referenssidatassa"
+          },
+          "email": "wahatever@madeupdomain.com",
+          "telephone": [
+            "+12353495823424"
+          ],
+          "identifier": "http://uri.suomi.fi/codelist/fairdata/organization/code/10076"
+        }
+      ]
+    },
+    "field_of_science": [
+      {
+        "identifier": "http://www.yso.fi/onto/okm-tieteenala/ta1172",
         "pref_label": {
-          "en": "Open",
-          "fi": "Avoin",
-          "und": "Avoin"
+          "en": "Environmental sciences",
+          "fi": "Ympäristötiede"
         }
       }
-    },
-    "version_notes": [
-      "This version contains changes to x and y."
     ],
-    "preferred_identifier": "urn:nbn:fi:att:1955e904-e3dd-4d7e-99f1-3fed446f96d1",
-    "total_files_byte_size": 300,
-    "metadata_version_identifier": "1955e904-e3dd-4d7e-99f1-3fed446f96d1"
+    "dataset_versioning": true,
+    "research_dataset_schema": "ida"
   },
-  "preservation_state": 0,
-  "state": "published",
-  "cumulative_state": 0,
-  "api_meta": {
-    "version": 1
-  },
-  "date_modified": "2017-06-23T13:07:22+03:00",
-  "date_created": "2017-05-23T13:07:22+03:00",
-  "service_created": "metax",
-  "removed": false
-}]}
+  "results": [
+    {
+      "id": 1,
+      "identifier": "c955e904-e3dd-4d7e-99f1-3fed446f96d1",
+      "data_catalog": {
+        "id": 1,
+        "identifier": "urn:nbn:fi:att:data-catalog-ida"
+      },
+      "dataset_version_set": [
+        {
+          "identifier": "c955e904-e3dd-4d7e-99f1-3fed446f96d1",
+          "preferred_identifier": "urn:nbn:fi:att:1955e904-e3dd-4d7e-99f1-3fed446f96d1",
+          "date_created": "2017-05-23T13:07:22+03:00",
+          "removed": false
+        }
+      ],
+      "deprecated": false,
+      "metadata_owner_org": "abc-org-123",
+      "metadata_provider_org": "abc-org-123",
+      "metadata_provider_user": "abc-user-123",
+      "research_dataset": {
+        "title": {
+          "en": "Wonderful Title"
+        },
+        "issued": "2019-01-01",
+        "creator": [
+          {
+            "name": "Teppo Testaaja",
+            "@type": "Person",
+            "member_of": {
+              "name": {
+                "fi": "Mysteeriorganisaatio"
+              },
+              "@type": "Organization"
+            },
+            "contributor_role": [
+              {
+                "in_scheme": "http://uri.suomi.fi/codelist/fairdata/contributor_role",
+                "identifier": "http://uri.suomi.fi/codelist/fairdata/contributor_role/code/visualization",
+                "pref_label": {
+                  "en": "Visualization",
+                  "fi": "Visualisointi",
+                  "sv": "Visualisering",
+                  "und": "Visualisointi"
+                }
+              }
+            ]
+          }
+        ],
+        "curator": [
+          {
+            "name": "Rahikainen",
+            "@type": "Person",
+            "member_of": {
+              "name": {
+                "fi": "MysteeriOrganisaatio"
+              },
+              "@type": "Organization"
+            },
+            "identifier": "id:of:curator:rahikainen"
+          }
+        ],
+        "language": [
+          {
+            "title": {
+              "en": "English",
+              "fi": "englanti",
+              "sv": "engelska",
+              "und": "englanti"
+            },
+            "identifier": "http://lexvo.org/id/iso639-3/eng"
+          }
+        ],
+        "modified": "2014-01-17T08:19:58Z",
+        "publisher": {
+          "name": {
+            "fi": "Mysteeriorganisaatio"
+          },
+          "@type": "Organization"
+        },
+        "description": {
+          "en": "A descriptive description describing the contents of this dataset. Must be descriptive."
+        },
+        "access_rights": {
+          "access_type": {
+            "in_scheme": "http://uri.suomi.fi/codelist/fairdata/access_type",
+            "identifier": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open",
+            "pref_label": {
+              "en": "Open",
+              "fi": "Avoin",
+              "und": "Avoin"
+            }
+          }
+        },
+        "version_notes": [
+          "This version contains changes to x and y."
+        ],
+        "preferred_identifier": "urn:nbn:fi:att:1955e904-e3dd-4d7e-99f1-3fed446f96d1",
+        "total_files_byte_size": 300,
+        "metadata_version_identifier": "1955e904-e3dd-4d7e-99f1-3fed446f96d1"
+      },
+      "preservation_state": 0,
+      "state": "published",
+      "cumulative_state": 0,
+      "api_meta": {
+        "version": 1
+      },
+      "date_modified": "2017-06-23T13:07:22+03:00",
+      "date_created": "2017-05-23T13:07:22+03:00",
+      "service_created": "metax",
+      "removed": false
+    }
+  ]
+}

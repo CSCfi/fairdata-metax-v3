@@ -32,3 +32,7 @@
 
 ### :::src.apps.files.helpers.get_directory_metadata_serializer
 
+## convert_checksum_v2_to_v3
+
+### :::src.apps.files.helpers.convert_checksum_v2_to_v3
+
