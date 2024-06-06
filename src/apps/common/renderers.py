@@ -1,11 +1,9 @@
-import datetime
 import logging
 import re
 
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from rest_framework import renderers
-from rest_framework.utils.encoders import JSONEncoder
 
 logger = logging.getLogger(__name__)
 

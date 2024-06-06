@@ -1,17 +1,10 @@
 import logging
 
-from django_filters import rest_framework as filters
-from drf_yasg.utils import swagger_auto_schema
 from rest_framework.generics import get_object_or_404
 
 from apps.common.views import CommonModelViewSet
 from apps.core.models import Dataset
 from apps.core.permissions import DatasetAccessPolicy, DatasetNestedAccessPolicy
-from apps.core.serializers import (
-    AccessRightsModelSerializer,
-    DatasetActorSerializer,
-    ProvenanceModelSerializer,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -51,9 +44,12 @@ class DatasetNestedViewSet(CommonModelViewSet):
         return context
 
     def get_dataset_instance(self) -> Dataset:
+        if instance := getattr(self, "_dataset_instance", None):
+            return instance
         dataset_qs = Dataset.available_objects.filter(id=self.kwargs["dataset_pk"])
         dataset_qs = DatasetAccessPolicy().scope_queryset(self.request, dataset_qs)
-        return get_object_or_404(dataset_qs)
+        self._dataset_instance = get_object_or_404(dataset_qs)
+        return self._dataset_instance
 
 
 class DatasetNestedOneToOneView(DatasetNestedViewSet):

@@ -44,9 +44,12 @@ class BaseAccessPolicy(AccessPolicy):
     """
 
     id = "base-policy"
-    statements = [
-        {"action": ["list", "retrieve", "<safe_methods>"], "principal": "*", "effect": "allow"},
+    admin_statements = [
         {"action": "*", "principal": "admin", "effect": "allow"},
+    ]
+    statements = [
+        *admin_statements,
+        {"action": ["list", "retrieve", "<safe_methods>"], "principal": "*", "effect": "allow"},
     ]
 
     def is_system_creator(self, request, view, action):

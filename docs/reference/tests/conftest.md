@@ -8,6 +8,14 @@
 
 ### :::tests.conftest.dataset_signal_handlers
 
+## enable_sso
+
+### :::tests.conftest.enable_sso
+
+## disable_sso
+
+### :::tests.conftest.disable_sso
+
 ## fairdata_users_group
 
 ### :::tests.conftest.fairdata_users_group

@@ -94,6 +94,7 @@ class DatasetAccessPolicy(BaseAccessPolicy):
             Q(state=Dataset.StateChoices.PUBLISHED)
             | Q(metadata_owner__user=request.user)
             | Q(system_creator=request.user)
+            | Q(permissions__editors=request.user)
             | Q(data_catalog__dataset_groups_admin__in=groups)
         ).distinct()
 
@@ -103,7 +104,9 @@ class DatasetAccessPolicy(BaseAccessPolicy):
 
         if request.user.is_anonymous:
             return Dataset.available_objects.none()
-        return queryset.filter(metadata_owner__user=request.user)
+        return queryset.filter(
+            Q(metadata_owner__user=request.user) | Q(permissions__editors=request.user)
+        ).distinct()
 
 
 class DataCatalogAccessPolicy(BaseAccessPolicy):
@@ -170,19 +173,28 @@ class DatasetNestedAccessPolicy(BaseAccessPolicy):
             "action": ["create", "update", "partial_update", "destroy"],
             "principal": "authenticated",
             "effect": "allow",
-            "condition": "is_dataset_owner",
+            "condition": "is_dataset_editor",
         },
     ] + BaseAccessPolicy.statements
 
-    def is_dataset_owner(self, request, view, action) -> bool:
-        dataset = view.get_dataset_instance()
-        if not dataset.metadata_owner:
-            return request.user == dataset.system_creator
-        else:
-            return (
-                request.user == dataset.metadata_owner.user
-                or request.user == dataset.system_creator
-            )
+    def is_dataset_editor(self, request, view, action) -> bool:
+        from .models import Dataset
+
+        dataset: Dataset = view.get_dataset_instance()
+        return dataset.has_permission_to_edit(request.user)
+
+
+class DatasetPermissionsAccessPolicy(DatasetNestedAccessPolicy):
+    """Dataset permissions are viewable only by users who can edit the dataset."""
+
+    statements = [
+        {
+            "action": ["list", "retrieve", "create", "update", "partial_update", "destroy"],
+            "principal": "authenticated",
+            "effect": "allow",
+            "condition": "is_dataset_editor",
+        },
+    ] + BaseAccessPolicy.admin_statements
 
 
 class ContractAccessPolicy(BaseAccessPolicy):

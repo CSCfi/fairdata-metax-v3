@@ -19,6 +19,7 @@ from apps.common.helpers import datetime_to_date
 from apps.common.history import SnapshotHistoricalRecords
 from apps.common.models import AbstractBaseModel
 from apps.core.models.access_rights import AccessRights, AccessTypeChoices
+from apps.core.models.catalog_record.dataset_permissions import DatasetPermissions
 from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
 from apps.core.models.data_catalog import DataCatalog
 from apps.core.models.mixins import V2DatasetMixin
@@ -65,8 +66,6 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         theme (models.ManyToManyField): Keyword ManyToMany relation
         title (HStoreField): Title of the dataset
     """
-
-    history = HistoricalRecords()
 
     # Model nested copying configuration
     copier = ModelCopier(
@@ -166,8 +165,12 @@ class Dataset(V2DatasetMixin, CatalogRecord):
     dataset_versions = models.ForeignKey(
         DatasetVersions, related_name="datasets", on_delete=models.SET_NULL, null=True
     )
+    permissions = models.ForeignKey(
+        DatasetPermissions, related_name="datasets", on_delete=models.SET_NULL, null=True
+    )
     history = SnapshotHistoricalRecords(
-        m2m_fields=(language, theme, field_of_science, infrastructure, other_identifiers)
+        m2m_fields=(language, theme, field_of_science, infrastructure, other_identifiers),
+        excluded_fields=["permissions"],
     )
 
     class CumulativeState(models.IntegerChoices):
@@ -219,6 +222,8 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         "next_draft",
         "other_identifiers__identifier_type",
         "other_identifiers",
+        "permissions",
+        "permissions__editors",
         "preservation",
         "projects__funding__funder__funder_type",
         "projects__funding__funder__organization__homepage",
@@ -262,6 +267,15 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         "theme",
     )
 
+    dataset_versions_prefetch_fields = (
+        "draft_of",
+        "next_draft",
+        "permissions",
+        "permissions__editors",
+        "metadata_owner",
+        "metadata_owner__user",
+    )
+
     is_legacy = models.BooleanField(
         default=False, help_text="Is the dataset migrated from legacy Metax"
     )
@@ -279,6 +293,8 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         elif user == self.system_creator:
             return True
         elif self.metadata_owner and self.metadata_owner.user == user:
+            return True
+        elif self.permissions and self.permissions.editors.contains(user):
             return True
         elif self.data_catalog and DataCatalogAccessPolicy().query_object_permission(
             user=user, object=self.data_catalog, action="<op:admin_dataset>"
@@ -763,8 +779,10 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             if previous_state == self.StateChoices.PUBLISHED and self.state != previous_state:
                 raise ValidationError({"state": _("Cannot change value into non-published.")})
 
-        if not self.dataset_versions:
+        if not self.dataset_versions_id:
             self.dataset_versions = DatasetVersions.objects.create()
+        if not self.permissions_id:
+            self.permissions = DatasetPermissions.objects.create()
         if self.state == self.StateChoices.DRAFT:
             self.draft_revision += 1
         elif self.state == self.StateChoices.PUBLISHED:

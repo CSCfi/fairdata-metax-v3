@@ -272,6 +272,7 @@ SWAGGER_SETTINGS = {
     "SECURITY_DEFINITIONS": {
         "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"}
     },
+    "VALIDATOR_URL": None,
 }
 REDOC_SETTINGS = {"HIDE_HOSTNAME": True}
 

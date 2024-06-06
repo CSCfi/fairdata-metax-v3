@@ -91,6 +91,9 @@ class SSOAuthentication(authentication.SessionAuthentication):
         except jwt.exceptions.DecodeError as e:
             logger.error(f"Authentication failed: {e}")
             raise exceptions.AuthenticationFailed(e)
+        except jwt.exceptions.ExpiredSignatureError as e:
+            logger.warning("Signature expired, ignoring SSO token")
+            return None, None
 
     def parse_sso_token(self, token):
         return jwt.decode(token, key=settings.SSO_SECRET_KEY, algorithms=["HS256"])
@@ -139,12 +142,13 @@ class SSOAuthentication(authentication.SessionAuthentication):
             user.organization = (
                 sso_session.get("authenticated_user").get("organization", {}).get("id")
             )
+            user.email = sso_session.get("authenticated_user").get("email", "")
 
             fairdata_user = sso_session.get("fairdata_user", {})
             user.fairdata_username = fairdata_user.get("id")
             user.is_active = not fairdata_user.get("locked", True)
             if fairdata_user:
-                group, created = Group.objects.get_or_create(name="fairdata_users")
+                group, _created = Group.objects.get_or_create(name="fairdata_users")
                 user.groups.add(group)
 
             csc_projects = sso_session.get("services", {}).get("IDA", {}).get("projects", [])

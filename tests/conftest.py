@@ -57,6 +57,21 @@ def dataset_signal_handlers() -> DatasetSignalHandlers:
 
 
 @pytest.fixture
+def enable_sso(settings):
+    settings.ENABLE_SSO_AUTH = True
+    settings.SSO_SECRET_KEY = "TOP_SECRET"
+    settings.SSO_SESSION_COOKIE = "sso_session_test"
+    settings.SSO_HOST = "https://fake-sso"
+    settings.SSO_METAX_SERVICE_NAME = "METAX"
+    settings.SSO_TRUSTED_SERVICE_TOKEN = "trusted-token"
+
+
+@pytest.fixture
+def disable_sso(settings):
+    settings.ENABLE_SSO_AUTH = False
+
+
+@pytest.fixture
 def fairdata_users_group():
     group, _ = Group.objects.get_or_create(name="fairdata_users")
     return group
@@ -71,7 +86,12 @@ def service_group():
 @pytest.fixture
 def user(fairdata_users_group):
     user, created = MetaxUser.objects.get_or_create(
-        username="test_user", first_name="Teppo", last_name="Testaaja", is_hidden=False
+        username="test_user",
+        fairdata_username="test_user",
+        first_name="Teppo",
+        last_name="Testaaja",
+        email="teppo@example.com",
+        is_hidden=False,
     )
     user.groups.set([fairdata_users_group])
     user.set_password("teppo")
@@ -81,10 +101,15 @@ def user(fairdata_users_group):
 
 @pytest.fixture
 def user2(fairdata_users_group):
-    user, created = MetaxUser.objects.get_or_create(
-        username="test_user2", first_name="Matti", last_name="Mestaaja", is_hidden=False
+    user, _created = MetaxUser.objects.get_or_create(
+        username="test_user2",
+        fairdata_username="test_user2",
+        first_name="Matti",
+        last_name="Mestaaja",
+        email="matti@example.com",
+        is_hidden=False,
     )
-    group, _ = Group.objects.get_or_create(name="fairdata_users")
+    _group, _ = Group.objects.get_or_create(name="fairdata_users")
     user.groups.set([fairdata_users_group])
     user.set_password("matti")
     user.save()
@@ -685,6 +710,7 @@ def tweaked_settings(settings):
     settings.TEMPLATE_DEBUG = False
     settings.METAX_V2_INTEGRATION_ENABLED = False
     settings.METAX_V2_HOST = "metaxv2host"
+    settings.ENABLE_SSO_AUTH = False
 
 
 @pytest.fixture

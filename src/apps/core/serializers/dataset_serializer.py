@@ -112,7 +112,7 @@ class DatasetSerializer(CommonNestedModelSerializer):
             # Use prefetched results stored in _datasets when available
             versions = getattr(version_set, "_datasets", None) or version_set.datasets(
                 manager="all_objects"
-            ).order_by("-version").prefetch_related("draft_of", "next_draft")
+            ).order_by("-version").prefetch_related(*Dataset.dataset_versions_prefetch_fields)
 
             if not instance.has_permission_to_see_drafts(self.context["request"].user):
                 versions = [

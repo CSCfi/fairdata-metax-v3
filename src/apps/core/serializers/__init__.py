@@ -17,6 +17,10 @@ from .dataset_files_serializer import FileSetSerializer
 from .dataset_serializer import DatasetSerializer
 from .legacy_serializer import LegacyDatasetModelSerializer
 from .metadata_provider_serializer import MetadataProviderModelSerializer
+from .permissions_serializer import (
+    DatasetPermissionsSerializer,
+    DatasetPermissionsUserModelSerializer,
+)
 from .preservation_serializers import ContractModelSerializer, PreservationModelSerializer
 from .project_serializer import ProjectModelSerializer
 from .provenance_serializers import ProvenanceModelSerializer

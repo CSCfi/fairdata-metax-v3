@@ -161,6 +161,17 @@ class DictContainingMatcher(BaseMatcher):
         return self._match(self.partial_dict, other)
 
 
+class StringContainingMatcher(BaseMatcher):
+    """Match partial string."""
+
+    def __init__(self, string: str) -> None:
+        self.string = string
+        super().__init__(type=str)
+
+    def match(self, other: str):
+        return self.string in other
+
+
 class Matchers:
     Any = AnyMatcher
     DateTime = DateTimeMatcher
@@ -169,6 +180,7 @@ class Matchers:
     List = ListMatcher
     URL = URLMatcher
     DictContaining = DictContainingMatcher
+    StringContaining = StringContainingMatcher
 
 
 matchers = Matchers()

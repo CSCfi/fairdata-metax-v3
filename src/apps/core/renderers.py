@@ -4,7 +4,6 @@ from typing import Optional, Union
 import shapely
 from datacite import schema43
 from django.db.models import Sum
-from django.utils.dateparse import parse_date
 from django.utils.translation import gettext as _
 from jsonschema import exceptions as jsonschema_exceptions
 from rest_framework import renderers, serializers

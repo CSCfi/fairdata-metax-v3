@@ -33,6 +33,8 @@ def test_create_new_version(language, theme, dataset):
     assert old_version.access_rights.id != new_version.access_rights.id
     assert old_version.actors.difference(new_version.actors.all()).count() == 3
     assert old_version.provenance.difference(new_version.provenance.all()).count() == 1
+    assert new_version.permissions_id == old_version.permissions_id
+    assert new_version.dataset_versions_id == old_version.dataset_versions_id
 
     # Preservation status is reset for new version
     assert old_version.preservation
@@ -218,6 +220,7 @@ def test_dataset_copied_fields():
         "dataset.last_modified_by",
         "dataset.metadata_owner",
         "dataset.other_identifiers.identifier_type",
+        "dataset.permissions",
         "dataset.projects.funding.funder.funder_type",
         "dataset.provenance.event_outcome",
         "dataset.provenance.lifecycle_event",

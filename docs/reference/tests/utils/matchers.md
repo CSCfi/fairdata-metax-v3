@@ -40,6 +40,10 @@
 
 ### :::tests.utils.matchers.DictContainingMatcher
 
+## StringContainingMatcher
+
+### :::tests.utils.matchers.StringContainingMatcher
+
 ## Matchers
 
 ### :::tests.utils.matchers.Matchers

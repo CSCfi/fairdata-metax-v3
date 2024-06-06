@@ -15,21 +15,6 @@ def user_as_json():
 
 
 @pytest.fixture
-def enable_sso(settings):
-    settings.ENABLE_SSO_AUTH = True
-    settings.SSO_SECRET_KEY = "TOP_SECRET"
-    settings.SSO_SESSION_COOKIE = "sso_session_test"
-    settings.SSO_HOST = "https://fake-sso"
-    settings.SSO_METAX_SERVICE_NAME = "METAX"
-    settings.SSO_TRUSTED_SERVICE_TOKEN = "trusted-token"
-
-
-@pytest.fixture
-def disable_sso(settings):
-    settings.ENABLE_SSO_AUTH = False
-
-
-@pytest.fixture
 def sso_format_datetime():
     def f(dt):
         return dt.strftime("%Y-%m-%dT%H:%M:%SZ")

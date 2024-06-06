@@ -386,7 +386,7 @@ class DatasetViewSet(CommonModelViewSet):
                 Prefetch(
                     "dataset_versions__datasets",
                     queryset=Dataset.all_objects.order_by("-version").prefetch_related(
-                        "draft_of", "next_draft"
+                        *Dataset.dataset_versions_prefetch_fields
                     ),
                     to_attr="_datasets",
                 )

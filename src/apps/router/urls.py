@@ -34,6 +34,11 @@ router.register(
     core_views.DatasetDirectoryViewSet,
     basename="dataset-directories",
 )
+router.register(
+    r"datasets/(?P<dataset_pk>[^/.]+)/permissions/editors",
+    core_views.DatasetPermissionsEditorsViewSet,
+    basename="dataset-permissions-editors",
+)
 
 # router.register(r"dataset-actors", DatasetActorViewSet, basename="dataset-actor")
 router.register(r"migrated-datasets", core_views.LegacyDatasetViewSet, basename="migrated-dataset")
@@ -65,6 +70,11 @@ urlpatterns = [
             {"get": "retrieve", "patch": "partial_update", "put": "update", "delete": "destroy"}
         ),
         name="dataset-preservation-detail",
+    ),
+    re_path(
+        r"^datasets/(?P<dataset_pk>[^/.]+)/permissions$",
+        core_views.DatasetPermissionsViewSet.as_view({"get": "retrieve"}),
+        name="dataset-permissions-detail",
     ),
     path("", include(router.urls)),
     path("", include(dataset_router.urls)),

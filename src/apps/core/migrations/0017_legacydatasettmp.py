@@ -8,7 +8,6 @@ import django.db.models.deletion
 import django.utils.timezone
 import model_utils.fields
 import uuid
-from django.forms.models import model_to_dict
 
 def copy_to_new(apps, schema_editor):
     old = apps.get_model("core", "LegacyDataset")

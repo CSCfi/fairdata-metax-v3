@@ -47,6 +47,7 @@
             - [access_rights](src/apps/core/models/access_rights.md)
             - catalog_record
                 - [dataset](src/apps/core/models/catalog_record/dataset.md)
+                - [dataset_permissions](src/apps/core/models/catalog_record/dataset_permissions.md)
                 - [meta](src/apps/core/models/catalog_record/meta.md)
                 - [related](src/apps/core/models/catalog_record/related.md)
             - [concepts](src/apps/core/models/concepts.md)
@@ -77,6 +78,7 @@
             - [file_metadata_serializer](src/apps/core/serializers/file_metadata_serializer.md)
             - [legacy_serializer](src/apps/core/serializers/legacy_serializer.md)
             - [metadata_provider_serializer](src/apps/core/serializers/metadata_provider_serializer.md)
+            - [permissions_serializer](src/apps/core/serializers/permissions_serializer.md)
             - [preservation_serializers](src/apps/core/serializers/preservation_serializers.md)
             - [project_serializer](src/apps/core/serializers/project_serializer.md)
             - [provenance_serializers](src/apps/core/serializers/provenance_serializers.md)
@@ -90,6 +92,7 @@
             - [index_view](src/apps/core/views/index_view.md)
             - [legacy_view](src/apps/core/views/legacy_view.md)
             - [nested_views](src/apps/core/views/nested_views.md)
+            - [permissions_view](src/apps/core/views/permissions_view.md)
             - [preservation_view](src/apps/core/views/preservation_view.md)
     - download
         - [apps](src/apps/download/apps.md)
@@ -185,6 +188,7 @@
                         - [test_dataset_catalogs](tests/unit/apps/core/api/dataset/test_dataset_catalogs.md)
                         - [test_dataset_contact](tests/unit/apps/core/api/dataset/test_dataset_contact.md)
                         - [test_dataset_drafts](tests/unit/apps/core/api/dataset/test_dataset_drafts.md)
+                        - [test_dataset_permissions](tests/unit/apps/core/api/dataset/test_dataset_permissions.md)
                         - [test_dataset_pids](tests/unit/apps/core/api/dataset/test_dataset_pids.md)
                         - [test_dataset_timestamps](tests/unit/apps/core/api/dataset/test_dataset_timestamps.md)
                         - [test_dataset_v2_integration](tests/unit/apps/core/api/dataset/test_dataset_v2_integration.md)

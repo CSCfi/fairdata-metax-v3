@@ -10,7 +10,7 @@ from rest_framework.response import Response
 
 
 class OffsetPagination(LimitOffsetPagination):
-    default_limit = 50
+    default_limit = 20
 
     # Allow disabling pagination with pagination=false
     pagination_param = "pagination"

@@ -295,12 +295,14 @@ def format_multiline(string: str, *args, **kwargs) -> str:
     return dedent(string).format(*args, **kwargs)
 
 
-def single_translation(value: dict) -> Optional[str]:
+def single_translation(value: dict, preferred_lang=None) -> Optional[str]:
     """Return single translation value for multilanguage dict."""
     if not value:
         return value
 
     order = ["en", "fi", "sv", "und"]
+    if preferred_lang:
+        order = [preferred_lang, *order]
     for lang in order:
         if translation := value.get(lang):
             return translation

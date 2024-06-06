@@ -58,10 +58,8 @@ def test_filter_pid(
     dataset_a_json["data_catalog"] = datacatalog_harvested_json["id"]
     dataset_b_json["data_catalog"] = datacatalog_harvested_json["id"]
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
-    print(f"{res.data=}")
     assert res.status_code == 201
     res = admin_client.post("/v3/datasets", dataset_b_json, content_type="application/json")
-    print(f"{res.data=}")
     assert res.status_code == 201
     res = admin_client.get("/v3/datasets?persistent_identifier=some_pid")
     assert res.data["count"] == 1
@@ -269,7 +267,9 @@ def test_patch_metadata_owner(admin_client, dataset_a_json, data_catalog, refere
     assert_nested_subdict(new_owner, res.data["metadata_owner"])
 
 
-def test_put_dataset_by_user(user_client, dataset_a_json, data_catalog, reference_data):
+def test_put_dataset_by_user(
+    user_client, dataset_a_json, data_catalog, reference_data, requests_mock
+):
     res = user_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 201
     user = res.data["metadata_owner"]["user"]

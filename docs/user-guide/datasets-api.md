@@ -225,7 +225,7 @@ Dataset needs to be on datacatalog with `dataset_versioning_enabled` set to true
 
 #### Working with versions
 
-Datasets have `previous_version`, `next_version`, `first_version`, `last_version` and `other_versions` fields that have links to other versions of the dataset. Published revisions can be queried from `/v3/datasets/{id}/revisions` endpoint. 
+Datasets have a `dataset_versions` field has links to other versions of the dataset.
 
 ## Dataset files
 
