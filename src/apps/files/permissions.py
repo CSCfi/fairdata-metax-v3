@@ -31,7 +31,7 @@ class FilesAccessPolicy(BaseFilesAccessPolicy):
 
     @classmethod
     def scope_queryset(cls, request, queryset, dataset_id=None):
-        if q := super().scope_queryset(request, queryset):
+        if (q := super().scope_queryset(request, queryset)) is not None:
             return q
         elif request.user.groups.filter(name="ida").exists():
             return queryset
