@@ -28,6 +28,9 @@ class ConceptProxyMixin:
         serializer_class.Meta.extra_kwargs = {
             field: {"read_only": True} for field in serializer_class.Meta.fields if field != "url"
         }
+        # Remove uniqueness validator since we're not creating new reference data
+        serializer_class.Meta.extra_kwargs["url"] = {"validators": []}
+
         serializer_class.Meta.list_serializer_class = URLReferencedModelListField
         serializer_class.save = not_implemented_function
         serializer_class.create = not_implemented_function

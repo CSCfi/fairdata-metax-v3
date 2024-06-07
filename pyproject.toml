@@ -17,7 +17,7 @@ packages = [{ include = "src" }]
 [tool.poetry.dependencies]
 python = "^3.8.10"
 Django = "<5.0"
-djangorestframework = "^3.14.0"
+djangorestframework = "^3.15.1"
 django-model-utils = "^4.3.1"
 django-split-settings = "^1.2.0"
 python-dotenv = "^0.19.2"
