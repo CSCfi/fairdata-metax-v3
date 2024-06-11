@@ -292,6 +292,16 @@ class AccessRightsFactory(factory.django.DjangoModelFactory):
         else:
             self.license.set([DatasetLicenseFactory()])
 
+    @factory.post_generation
+    def restriction_grounds(self, create, extracted, **kwargs):
+        if not create:
+            return
+        if extracted:
+            for restriction_grounds in extracted:
+                self.restriction_grounds.add(restriction_grounds)
+        else:
+            self.restriction_grounds.set([RestrictionGroundsFactory()])
+
 
 class DataCatalogFactory(factory.django.DjangoModelFactory):
     class Meta:

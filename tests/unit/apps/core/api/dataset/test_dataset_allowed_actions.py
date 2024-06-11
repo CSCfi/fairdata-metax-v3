@@ -29,6 +29,10 @@ def create_dataset(admin_client, end_users, dataset_a_json):
         dataset_a_json["access_rights"]["license"] = [
             {"url": "http://uri.suomi.fi/codelist/fairdata/license/code/other"}
         ]
+        if access_rights["access_type"]["url"] != AccessTypeChoices.OPEN:
+            dataset_a_json["access_rights"]["restriction_grounds"] = [
+            {"url": "http://uri.suomi.fi/codelist/fairdata/restriction_grounds/code/research"}
+        ]
         dataset_a_json["state"] = state
         res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
         assert res.status_code == 201

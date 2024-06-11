@@ -27,6 +27,11 @@
     "access_type": {
       "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/restricted"
     },
+    "restriction_grounds": [
+      {
+        "url": "http://uri.suomi.fi/codelist/fairdata/restriction_grounds/code/research"
+      }
+    ],
     "license": [
       {
         "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0"
@@ -41,9 +46,7 @@
           "en": "creator org"
         }
       },
-      "roles": [
-        "creator"
-      ]
+      "roles": ["creator"]
     },
     {
       "organization": {
@@ -51,9 +54,7 @@
           "en": "publisher org"
         }
       },
-      "roles": [
-        "publisher"
-      ]
+      "roles": ["publisher"]
     }
   ]
 }

@@ -164,6 +164,21 @@ def data_catalog(fairdata_users_group, service_group) -> DataCatalog:
     catalog.dataset_groups_create.set([fairdata_users_group, service_group])
     return catalog
 
+@pytest.fixture
+def data_catalog_harvested(fairdata_users_group, service_group) -> DataCatalog:
+    identifier = "urn:nbn:fi:att:data-catalog-harvested"
+    title = {
+        "en": "Harvested datasets",
+    }
+    catalog = factories.DataCatalogFactory (
+        id=identifier,
+        title=title,
+        harvested=True,
+        allow_remote_resources=True,
+    )
+    catalog.dataset_groups_create.set([fairdata_users_group, service_group])
+    return catalog
+
 
 @pytest.mark.django_db
 @pytest.fixture

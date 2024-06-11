@@ -20,7 +20,7 @@ pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
 
 @pytest.fixture
 def dataset(
-    admin_client, dataset_a_json, access_type_reference_data, license_reference_data, data_catalog
+    admin_client, dataset_a_json, reference_data, data_catalog
 ):
     del dataset_a_json["language"]
     del dataset_a_json["field_of_science"]
@@ -47,7 +47,7 @@ def patch_dataset(admin_client, dataset):
 
 @pytest.fixture
 def another_dataset_with_actors(
-    admin_client, dataset_b_json, access_type_reference_data, license_reference_data, data_catalog
+    admin_client, dataset_b_json, reference_data, data_catalog
 ):
     del dataset_b_json["language"]
     del dataset_b_json["field_of_science"]
