@@ -483,6 +483,7 @@ class V2DatasetMixin:
                 document["research_dataset"][role].append(data)
 
     def as_v2_dataset(self) -> Dict:
+        self.ensure_prefetch()
         research_dataset = {
             "title": self.title,
             "description": self.description,

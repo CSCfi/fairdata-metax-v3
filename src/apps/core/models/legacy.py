@@ -278,6 +278,7 @@ class LegacyDataset(Dataset):
         if updated:
             from apps.core.models.legacy_compatibility import LegacyCompatibility
 
+            self.refresh_from_db()  # Needed for prefetch to work in as_v2_datasets
             compat = LegacyCompatibility(self)
             diff = compat.get_compatibility_diff()
             self.v2_dataset_compatibility_diff = diff

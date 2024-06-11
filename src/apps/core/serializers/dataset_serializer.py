@@ -161,6 +161,7 @@ class DatasetSerializer(CommonNestedModelSerializer):
         return super().save(**kwargs)
 
     def to_representation(self, instance: Dataset):
+        instance.ensure_prefetch()
         request = self.context["request"]
         self.context["show_emails"] = instance.has_permission_to_edit(request.user)
         ret = super().to_representation(instance)
@@ -318,7 +319,6 @@ class DatasetSerializer(CommonNestedModelSerializer):
         fileset = data.get("file_set", existing_fileset)
         remote_resources = data.get("remote_resources", existing_remote_resources)
         if fileset and remote_resources:
-            print(fileset, remote_resources)
             errors[api_settings.NON_FIELD_ERRORS_KEY] = (
                 "Cannot have files and remote resources in the same dataset."
             )

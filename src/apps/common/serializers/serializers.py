@@ -453,6 +453,10 @@ class NestedModelSerializer(serializers.ModelSerializer):
 
         # Assign many-to-many relations
         for source, related_instance in many_instances.items():
+            if not related_instance:
+                # Ignore empty list because the m2m relation should already
+                # be empty for a newly created object
+                continue
             is_many_to_many = self.model_field_info.relations[source].to_field is None
             if is_many_to_many:
                 model_field = getattr(instance, source)

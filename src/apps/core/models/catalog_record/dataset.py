@@ -191,6 +191,77 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         "self", related_name="next_draft", on_delete=models.CASCADE, null=True, blank=True
     )
 
+    is_prefetched = False  # Should be set to True when using prefetch_related
+
+    # Fields that should be prefetched with prefetch_related
+    common_prefetch_fields = (
+        "access_rights__access_type",
+        "access_rights__license__reference",
+        "access_rights__license",
+        "access_rights__restriction_grounds",
+        "access_rights",
+        "actors__organization__homepage",
+        "actors__organization__parent__homepage",
+        "actors__organization__parent",
+        "actors__organization",
+        "actors__person__homepage",
+        "actors__person",
+        "actors",
+        "data_catalog",
+        "dataset_versions",
+        "draft_of",
+        "field_of_science",
+        "file_set",
+        "infrastructure",
+        "language",
+        "metadata_owner__user",
+        "metadata_owner",
+        "next_draft",
+        "other_identifiers__identifier_type",
+        "other_identifiers",
+        "preservation",
+        "projects__funding__funder__funder_type",
+        "projects__funding__funder__organization__homepage",
+        "projects__funding__funder__organization__parent__homepage",
+        "projects__funding__funder__organization__parent",
+        "projects__funding__funder__organization",
+        "projects__funding__funder",
+        "projects__funding",
+        "projects__participating_organizations__homepage",
+        "projects__participating_organizations__parent__homepage",
+        "projects",
+        "provenance__event_outcome",
+        "provenance__is_associated_with__organization__homepage",
+        "provenance__is_associated_with__organization__parent__homepage",
+        "provenance__is_associated_with__organization__parent",
+        "provenance__is_associated_with__organization",
+        "provenance__is_associated_with__person__homepage",
+        "provenance__is_associated_with__person",
+        "provenance__is_associated_with",
+        "provenance__lifecycle_event",
+        "provenance__spatial__reference",
+        "provenance__spatial",
+        "provenance__temporal",
+        "provenance__used_entity__type",
+        "provenance__used_entity",
+        "provenance__variables__concept",
+        "provenance__variables__universe",
+        "provenance__variables",
+        "provenance",
+        "relation__entity__type",
+        "relation__entity",
+        "relation__relation_type",
+        "relation",
+        "remote_resources__file_type",
+        "remote_resources__use_category",
+        "remote_resources",
+        "spatial__provenance",
+        "spatial__reference",
+        "spatial",
+        "temporal",
+        "theme",
+    )
+
     def has_permission_to_edit(self, user: MetaxUser):
         if user.is_superuser:
             return True
@@ -646,6 +717,12 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         if fileset := getattr(self, "file_set", None):
             self.validate_allow_storage_service(fileset.storage_service)
 
+    def ensure_prefetch(self):
+        """Ensure related fields have been prefetched."""
+        if not self.is_prefetched:
+            models.prefetch_related_objects([self], *self.common_prefetch_fields)
+            self.is_prefetched = True
+
     def save(self, *args, **kwargs):
         """Saves the dataset and increments the draft or published revision number as needed."""
         self.validate_unique_fields()
@@ -670,6 +747,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
 
         self.set_update_reason(f"{self.state}-{self.published_revision}.{self.draft_revision}")
         super().save(*args, **kwargs)
+        self.is_prefetched = False  # Saving clears the prefetch cache
         if hasattr(self, "file_set"):
             self.file_set.update_published()
 
