@@ -9,7 +9,7 @@ from dataclasses import asdict, dataclass
 from enum import Enum
 from typing import Dict, List, Optional
 
-from django.db.models import F
+from django.db.models import F, prefetch_related_objects
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
@@ -371,24 +371,15 @@ class FileBulkSerializer(serializers.ListSerializer):
         }
 
         being_created = {f.id for f in files if f._state.adding}
-        files_to_create = [f for f in files if f.id in being_created]
-        files_to_update = [f for f in files if f.id not in being_created]
-
-        File.objects.bulk_create(files_to_create)
-        File.objects.bulk_update(files_to_update, fields=fields_to_update)
-
-        # Get new and updated values from db
-        new_files_by_id = File.objects.prefetch_related("storage").in_bulk([f.id for f in files])
-        new_files = []  # List files in original order
-        for f in files:
-            if new_file := new_files_by_id.get(f.id, None):
-                new_files.append(new_file)
-            else:
-                # This should not happen unless bulk_create manages to fail silently
-                self.fail(
-                    object=f._original_data,
-                    errors={api_settings.NON_FIELD_ERRORS_KEY: _("Unknown error.")},
-                )
+        files = File.objects.bulk_create(
+            files,
+            batch_size=5000,
+            update_conflicts=True,  # Update files that already exist
+            unique_fields=["id"],
+            update_fields=fields_to_update,
+        )
+        # Related objects need to be fetched again from DB after save
+        prefetch_related_objects(files, "storage")
 
         def file_action(file):
             if file.id in being_created:
@@ -401,7 +392,7 @@ class FileBulkSerializer(serializers.ListSerializer):
                 "object": f,
                 "action": file_action(f).value,
             }
-            for f in new_files
+            for f in files
         ]
 
     def do_delete(self, files: List[File]) -> List[dict]:
