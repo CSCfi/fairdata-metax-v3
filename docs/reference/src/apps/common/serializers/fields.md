@@ -44,3 +44,7 @@
 
 ### :::src.apps.common.serializers.fields.PrivateEmailField
 
+## ConstantField
+
+### :::src.apps.common.serializers.fields.ConstantField
+

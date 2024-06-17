@@ -272,3 +272,19 @@ class NullableCharField(serializers.CharField):
 
 class PrivateEmailField(serializers.EmailField):
     """Email field that is hidden by CommonModelSerializer by default."""
+
+
+class ConstantField(serializers.Field):
+    """Read-only field that always returns constant value."""
+
+    def __init__(self, value, *args, **kwargs):
+        self._value = value
+        kwargs["read_only"] = True
+        kwargs["default"] = value
+        super().__init__(*args, **kwargs)
+
+    def get_attribute(self, instance):
+        return self._value
+
+    def to_representation(self, value):
+        return value

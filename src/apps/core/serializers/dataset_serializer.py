@@ -17,6 +17,7 @@ from apps.common.serializers import (
     CommonNestedModelSerializer,
     OneOf,
 )
+from apps.common.serializers.fields import ConstantField
 from apps.core.models import DataCatalog, Dataset
 from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
 from apps.core.serializers.common_serializers import (
@@ -84,6 +85,7 @@ class LinkedDraftSerializer(CommonNestedModelSerializer):
 
 
 class DatasetSerializer(CommonNestedModelSerializer):
+    metadata_repository = ConstantField(value="Fairdata")
     access_rights = AccessRightsModelSerializer(required=False, allow_null=True, many=False)
     field_of_science = FieldOfScience.get_serializer_field(required=False, many=True)
     infrastructure = ResearchInfra.get_serializer_field(required=False, many=True)
@@ -197,6 +199,7 @@ class DatasetSerializer(CommonNestedModelSerializer):
             "next_draft",
             "version",
             "api_version",
+            "metadata_repository",
         )
         fields = (
             "id",  # read only

@@ -18,13 +18,13 @@ logger = logging.getLogger(__name__)
 
 pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
 
-
 @pytest.mark.usefixtures("data_catalog", "reference_data")
 def test_create_dataset(admin_client, dataset_a_json, dataset_signal_handlers):
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 201
     assert_nested_subdict({"user": "admin", "organization": "admin"}, res.data["metadata_owner"])
     assert_nested_subdict(dataset_a_json, res.data)
+    assert res.data["metadata_repository"] == "Fairdata" # Constant value
     dataset_signal_handlers.assert_call_counts(created=1, updated=0)
 
 
@@ -451,6 +451,7 @@ def test_dataset_put_maximal_and_minimal(
         "draft_revision",
         "id",
         "metadata_owner",
+        "metadata_repository",
         "modified",
         "pid_type",
         "state",

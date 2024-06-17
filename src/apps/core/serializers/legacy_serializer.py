@@ -144,6 +144,7 @@ class LegacyDatasetUpdateSerializer(CommonNestedModelSerializer):
             for field in DatasetSerializer.Meta.fields
             if field
             not in [
+                "metadata_repository",  # field is not writable
                 "dataset_versions",  # field is not writable
                 "fileset",  # assigned directly in LegacyDataset
             ]
