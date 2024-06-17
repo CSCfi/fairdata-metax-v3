@@ -305,6 +305,9 @@ STORAGE_SERVICE_FILE_STORAGES = {
     "legacy-test-storage-1": "ProjectFileStorage",
 }
 
+# User groups that can see all projects in storage service
+PROJECT_STORAGE_SERVICE_USER_GROUPS = {"ida", "pas"}
+
 
 # Profiling
 ENABLE_DEBUG_TOOLBAR = env.bool("ENABLE_DEBUG_TOOLBAR", True)

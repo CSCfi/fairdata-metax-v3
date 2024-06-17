@@ -48,6 +48,10 @@
 
 ### :::tests.conftest.data_catalog
 
+## data_catalog_harvested
+
+### :::tests.conftest.data_catalog_harvested
+
 ## organization_reference_data
 
 ### :::tests.conftest.organization_reference_data

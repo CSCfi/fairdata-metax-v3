@@ -40,6 +40,25 @@ def test_dataset_files_post_empty(admin_client, deep_file_tree, data_urls):
     assert res.json()["count"] == 0
 
 
+def test_dataset_files_project_without_files(user_client, user, data_urls):
+    user.csc_projects = ["user_project"]
+    user.save()
+
+    # User can create an empty (no files) IDA FileStorage if they are a member of the csc_project
+    dataset = factories.DatasetFactory(metadata_owner=factories.MetadataProviderFactory(user=user))
+    actions = {"storage_service": "ida", "csc_project": "user_project"}
+    urls = data_urls(dataset)
+    res = user_client.patch(urls["dataset"], {"fileset": actions}, content_type="application/json")
+    assert res.status_code == 200
+
+    # Forbid creating IDA FileStorage if user is not a member of csc_project
+    dataset = factories.DatasetFactory(metadata_owner=factories.MetadataProviderFactory(user=user))
+    actions = {"storage_service": "ida", "csc_project": "userdoesnothavethisproject"}
+    urls = data_urls(dataset)
+    res = user_client.patch(urls["dataset"], {"fileset": actions}, content_type="application/json")
+    assert res.status_code == 400
+
+
 def test_dataset_files_post_multiple_file_sets(admin_client, deep_file_tree, data_urls):
     dataset = factories.DatasetFactory()
     actions = deep_file_tree["params"]
@@ -497,6 +516,49 @@ def test_dataset_files_post_none_directory_metadata(admin_client, deep_file_tree
     assert res.data["directories"][0]["dataset_metadata"] is None
 
 
+def test_dataset_files_update_metadata_as_non_project_member(
+    dataset_with_metadata, user_client, user, deep_file_tree, data_urls
+):
+    dataset_with_metadata.metadata_owner.user = user
+    dataset_with_metadata.metadata_owner.save()
+
+    # Updating metadata does not require csc_project membership
+    actions = {
+        **deep_file_tree["params"],
+        "directory_actions": [
+            {
+                "action": "update",
+                "pathname": "/dir2/subdir1/",
+                "dataset_metadata": {"title": "new title"},
+            },
+        ],
+    }
+    urls = data_urls(dataset_with_metadata)
+    res = user_client.patch(
+        urls["dataset"],
+        {"fileset": actions},
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    res = user_client.get(urls["directories"], {"pagination": "false"})
+    assert res.data["directories"][0]["dataset_metadata"] is None
+
+    # Adding/removing files requires csc_project membership
+    actions = {
+        **deep_file_tree["params"],
+        "directory_actions": [
+            {"action": "remove", "pathname": "/dir2/subdir1/"},
+        ],
+    }
+    urls = data_urls(dataset_with_metadata)
+    res = user_client.patch(
+        urls["dataset"],
+        {"fileset": actions},
+        content_type="application/json",
+    )
+    assert res.status_code == 400
+
+
 def test_dataset_files_multiple_post_requests(admin_client, deep_file_tree, data_urls):
     dataset = factories.DatasetFactory()
 
@@ -684,7 +746,28 @@ def test_dataset_files_wrong_project_identifier(admin_client, deep_file_tree, da
     assert "File not found" in str(res.data["fileset"]["file_actions"])
 
 
-def test_dataset_files_unknown_project_identifier(admin_client, deep_file_tree, data_urls):
+def test_dataset_files_unknown_project_identifier(user_client, user, deep_file_tree, data_urls):
+    dataset = factories.DatasetFactory()
+    dataset.metadata_owner.user = user
+    dataset.metadata_owner.save()
+    actions = {
+        "csc_project": "bleh",
+        "storage_service": deep_file_tree["params"]["storage_service"],
+        "directory_actions": [{"pathname": "/dir1/"}],
+    }
+    urls = data_urls(dataset)
+    res = user_client.patch(
+        urls["dataset"],
+        {"fileset": actions},
+        content_type="application/json",
+    )
+    assert res.status_code == 400
+    assert "csc_project" in str(res.data["fileset"])
+
+
+def test_dataset_files_unknown_project_identifier_by_admin(
+    admin_client, deep_file_tree, data_urls
+):
     dataset = factories.DatasetFactory()
     actions = {
         "csc_project": "bleh",

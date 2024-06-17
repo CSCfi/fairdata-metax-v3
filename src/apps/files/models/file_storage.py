@@ -24,6 +24,7 @@ from rest_framework.serializers import ValidationError
 from apps.common.helpers import get_attr_or_item
 from apps.common.managers import ProxyBasePolymorphicManager
 from apps.common.models import AbstractBaseModel, ProxyBasePolymorphicModel
+from apps.users.models import MetaxUser
 
 
 class FileStorageManagerMixin(ProxyBasePolymorphicManager):
@@ -229,8 +230,14 @@ class FileStorage(ProxyBasePolymorphicModel, AbstractBaseModel):
                 data.pop(field, None)
         return data
 
+    def check_user_can_access(self, user: MetaxUser):
+        """Check user can access files in the FileSorage.
+
+        Subclasses should raise a ValidationError if user is not allowed to
+        add files from the FileStorage to a FileSet."""
+
     @classmethod
-    def validate_object(cls, object):
+    def validate_object(cls, object: dict):
         """Make sure object has required file storage fields as attributes or items.
 
         Useful for:
@@ -498,9 +505,22 @@ class BasicFileStorage(FileStorage):
 
 
 class ProjectFileStorage(FileStorage):
-    """FileStorage that requires project to be set."""
+    """FileStorage that requires csc_project to be set."""
 
     required_extra_fields = {"csc_project"}
+
+    def check_user_can_access(self, user: MetaxUser):
+        """Check user is member of csc_project or belongs to privileged group."""
+        super().check_user_can_access(user)
+        service_groups = settings.PROJECT_STORAGE_SERVICE_USER_GROUPS
+        if not (
+            user.is_superuser
+            or self.csc_project in user.csc_projects
+            or user.groups.filter(name__in=service_groups).exists()
+        ):
+            raise ValidationError(
+                {"csc_project": f"User does not have access to project {self.csc_project}"}
+            )
 
     class Meta:
         proxy = True

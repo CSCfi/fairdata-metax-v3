@@ -204,17 +204,38 @@ class FileSetSerializer(StrictSerializer):
 
         # Replace storage dict with a FileStorage instance.
         storage_params = value.pop("storage", {})
+        FileStorage.validate_object(storage_params)
         try:
-            FileStorage.validate_object(storage_params)
             storage = FileStorage.available_objects.get(
                 csc_project=storage_params.get("csc_project"),
                 storage_service=storage_params.get("storage_service"),
             )
             value["storage"] = storage
         except FileStorage.DoesNotExist:
-            raise serializers.ValidationError(
-                {"storage": _("File storage not found with parameters {}.").format(storage_params)}
-            )
+            storage: FileStorage = None
+
+            # Special case to allow associating dataset with a project that has no files yet.
+            # Directory and file actions will fail in any case without files so don't
+            # attempt to create a FileStorage if there are any actions.
+            if not value.get("directory_actions") and not value.get("file_actions"):
+                storage = FileStorage.get_proxy_instance(**storage_params)
+                user = self.context["request"].user
+                try:
+                    # User needs access to csc_project to create a matching FileStorage
+                    storage.check_user_can_access(user)
+                    storage.save()
+                except serializers.ValidationError:
+                    storage = None
+
+            if not storage:
+                raise serializers.ValidationError(
+                    {
+                        "storage": _("File storage not found with parameters {}.").format(
+                            storage_params
+                        )
+                    }
+                )
+            value["storage"] = storage
 
         self.assign_file_ids(storage=value["storage"], file_actions=value.get("file_actions"))
 
@@ -483,11 +504,21 @@ class FileSetSerializer(StrictSerializer):
                     ).format(conflicting_file_set.storage.params_dict)
                 }
             )
-        file_set, created = FileSet.objects.get_or_create(
-            dataset=dataset,
-            storage=data["storage"],
-        )
-        return file_set
+
+        storage: FileStorage = data["storage"]
+        user = self.context["request"].user
+        try:
+            return FileSet.available_objects.get(
+                dataset=dataset,
+                storage=storage,
+            )
+        except FileSet.DoesNotExist:
+            # Creating new fileset only allowed if user has access to the csc_project
+            storage.check_user_can_access(user)
+            return FileSet.available_objects.create(
+                dataset=dataset,
+                storage=storage,
+            )
 
     def create(self, validated_data):
         """Create or update FileSet and its file relations."""
@@ -497,6 +528,29 @@ class FileSetSerializer(StrictSerializer):
 
         instance = self.get_or_create_instance_for_dataset(validated_data, dataset=dataset)
         return self.update(instance, validated_data)
+
+    def check_file_changes_allowed(self, instance: FileSet):
+        try:
+            user = self.context["request"].user
+            instance.storage.check_user_can_access(user)
+        except serializers.ValidationError:
+            raise serializers.ValidationError(
+                {"action": "Project membership is required for adding or removing files."}
+            )
+
+    def check_allow_removing_files(self, instance: FileSet):
+        self.check_file_changes_allowed(instance)
+        if not instance.dataset.allow_removing_files:
+            raise serializers.ValidationError(
+                {"action": _("Removing files from a published dataset is not allowed.")}
+            )
+
+    def check_allow_adding_files(self, instance: FileSet):
+        self.check_file_changes_allowed(instance)
+        if not instance.dataset.allow_adding_files:
+            raise serializers.ValidationError(
+                {"action": _("Adding files to a published noncumulative dataset is not allowed.")}
+            )
 
     def update(self, instance: FileSet, validated_data):
         """Update file relations and metadata of FileSet."""
@@ -524,10 +578,9 @@ class FileSetSerializer(StrictSerializer):
                     .values_list("id", flat=True)
                 )
                 file_set.removed_files_count = len(files_to_remove)
-                if file_set.removed_files_count > 0 and not instance.dataset.allow_removing_files:
-                    raise serializers.ValidationError(
-                        {"action": _("Removing files from a published dataset is not allowed.")}
-                    )
+                if file_set.removed_files_count > 0:
+                    self.check_allow_removing_files(instance)
+
                 file_set.files.remove(*files_to_remove)
 
             # add files
@@ -539,14 +592,9 @@ class FileSetSerializer(StrictSerializer):
                     .values_list("id", flat=True)
                 )
                 file_set.added_files_count = len(files_to_add)
-                if file_set.added_files_count > 0 and not instance.dataset.allow_adding_files:
-                    raise serializers.ValidationError(
-                        {
-                            "action": _(
-                                "Adding files to a published noncumulative dataset is not allowed."
-                            )
-                        }
-                    )
+                if file_set.added_files_count > 0:
+                    self.check_allow_adding_files(instance)
+
                 file_set.files.add(*files_to_add)
                 file_set.update_published()
 

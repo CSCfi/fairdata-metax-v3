@@ -196,6 +196,14 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_missing_required_fields
 
+## test_missing_restriction_grounds
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_missing_restriction_grounds
+
+## test_unnecessary_restriction_grounds
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_unnecessary_restriction_grounds
+
 ## test_get_dataset_no_multiple_objects_error
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_get_dataset_no_multiple_objects_error

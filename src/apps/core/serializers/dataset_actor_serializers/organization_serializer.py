@@ -49,7 +49,7 @@ class DatasetOrganizationSerializer(DatasetMemberSerializer):
         )
         extra_kwargs = {
             "pref_label": {"required": False},  # checked by save_validator
-            "url": {"validators": []}, # remove uniquenes validator
+            "url": {"validators": []},  # remove uniquenes validator
         }
         list_serializer_class = CommonListSerializer
 

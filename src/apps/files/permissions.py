@@ -1,3 +1,5 @@
+from django.conf import settings
+
 from apps.common.permissions import BaseAccessPolicy
 
 
@@ -31,9 +33,10 @@ class FilesAccessPolicy(BaseFilesAccessPolicy):
 
     @classmethod
     def scope_queryset(cls, request, queryset, dataset_id=None):
+        service_groups = settings.PROJECT_STORAGE_SERVICE_USER_GROUPS
         if (q := super().scope_queryset(request, queryset)) is not None:
             return q
-        elif request.user.groups.filter(name="ida").exists():
+        elif request.user.groups.filter(name__in=service_groups).exists():
             return queryset
         elif dataset_id:
             if cls.can_view_dataset(request, dataset_id):

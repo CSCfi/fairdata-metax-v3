@@ -407,5 +407,4 @@ class DirectoryViewSet(QueryParamsMixin, AccessViewSetMixin, viewsets.ViewSet):
                 and not directories.exists()
             ):
                 del results["directory"]
-
             return Response({**pagination_data, **results})

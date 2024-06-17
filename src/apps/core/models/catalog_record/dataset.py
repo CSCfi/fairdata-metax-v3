@@ -683,9 +683,9 @@ class Dataset(V2DatasetMixin, CatalogRecord):
                 )
                 errors["access_rights"] = access_rights_errors
             if (
-            self.access_rights
-            and self.access_rights.access_type.url == AccessTypeChoices.OPEN
-            and self.access_rights.restriction_grounds.exists()
+                self.access_rights
+                and self.access_rights.access_type.url == AccessTypeChoices.OPEN
+                and self.access_rights.restriction_grounds.exists()
             ):
                 access_rights_errors.append(_("Open datasets do not accept restriction grounds."))
                 errors["access_rights"] = access_rights_errors

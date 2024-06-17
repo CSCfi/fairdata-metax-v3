@@ -4,6 +4,10 @@
 
 ### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_post_empty
 
+## test_dataset_files_project_without_files
+
+### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_project_without_files
+
 ## test_dataset_files_post_multiple_file_sets
 
 ### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_post_multiple_file_sets
@@ -56,6 +60,10 @@
 
 ### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_post_none_directory_metadata
 
+## test_dataset_files_update_metadata_as_non_project_member
+
+### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_update_metadata_as_non_project_member
+
 ## test_dataset_files_multiple_post_requests
 
 ### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_multiple_post_requests
@@ -79,6 +87,10 @@
 ## test_dataset_files_unknown_project_identifier
 
 ### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_unknown_project_identifier
+
+## test_dataset_files_unknown_project_identifier_by_admin
+
+### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_update.test_dataset_files_unknown_project_identifier_by_admin
 
 ## test_dataset_files_file_from_wrong_storage_service
 

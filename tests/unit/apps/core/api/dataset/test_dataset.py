@@ -792,7 +792,9 @@ def test_get_dataset_include_nulls(admin_client, dataset_a_json, data_catalog, r
     assert res.data["deprecated"] == None
 
 
-def test_missing_required_fields(admin_client, data_catalog, data_catalog_harvested, reference_data):
+def test_missing_required_fields(
+    admin_client, data_catalog, data_catalog_harvested, reference_data
+):
     # title
     dataset = {"state": "published"}
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
@@ -817,9 +819,7 @@ def test_missing_required_fields(admin_client, data_catalog, data_catalog_harves
         **dataset,
         "data_catalog": "urn:nbn:fi:att:data-catalog-ida",
         "access_rights": {
-            "access_type": {
-                "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open"
-            },
+            "access_type": {"url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open"},
         },
         "description": {"en": "test"},
         "actors": [
@@ -830,32 +830,36 @@ def test_missing_required_fields(admin_client, data_catalog, data_catalog_harves
     }
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
     assert res.status_code == 400
-    assert "If data catalog is not harvested and dataset is published, pid_type needs to be given" in str(res.data["pid_type"])
+    assert (
+        "If data catalog is not harvested and dataset is published, pid_type needs to be given"
+        in str(res.data["pid_type"])
+    )
 
     # data_catalog(harvested), access_rights, description, actors
-    harvested_dataset = {
-        **dataset,
-        "data_catalog": "urn:nbn:fi:att:data-catalog-harvested"
-    }
-    harvested_res = admin_client.post("/v3/datasets", harvested_dataset, content_type="application/json")
+    harvested_dataset = {**dataset, "data_catalog": "urn:nbn:fi:att:data-catalog-harvested"}
+    harvested_res = admin_client.post(
+        "/v3/datasets", harvested_dataset, content_type="application/json"
+    )
     assert harvested_res.status_code == 400
-    assert "Dataset in a harvested catalog has to have a persistent identifier" in str(harvested_res.data["persistent_identifier"])
+    assert "Dataset in a harvested catalog has to have a persistent identifier" in str(
+        harvested_res.data["persistent_identifier"]
+    )
 
     # ida-catalog: pid_type
-    dataset = {
-        **dataset,
-        "pid_type": "URN"
-    }
+    dataset = {**dataset, "pid_type": "URN"}
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
 
     # harvested_catalog: persistent_identifier
-    harvested_dataset = {
-        **harvested_dataset,
-        "persistent_identifier": "PID"
-    }
-    harvested_res = admin_client.post("/v3/datasets", harvested_dataset, content_type="application/json")
+    harvested_dataset = {**harvested_dataset, "persistent_identifier": "PID"}
+    harvested_res = admin_client.post(
+        "/v3/datasets", harvested_dataset, content_type="application/json"
+    )
     assert res.status_code == harvested_res.status_code == 400
-    assert str(res.data["actors"][0]["organization"]) == str(harvested_res.data["actors"][0]["organization"]) == "This field is required"
+    assert (
+        str(res.data["actors"][0]["organization"])
+        == str(harvested_res.data["actors"][0]["organization"])
+        == "This field is required"
+    )
 
     # continue with ida-dataset
     # actor organization
@@ -878,28 +882,30 @@ def test_missing_required_fields(admin_client, data_catalog, data_catalog_harves
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
     assert res.status_code == 201
 
+
 def test_missing_restriction_grounds(admin_client, dataset_a_json, data_catalog, reference_data):
     dataset_a_json["access_rights"]["access_type"] = {
         "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/restricted"
     }
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 400
-    assert "Dataset access rights has to contain restriction grounds if access type is not 'Open'." in str(res.data["access_rights"])
+    assert (
+        "Dataset access rights has to contain restriction grounds if access type is not 'Open'."
+        in str(res.data["access_rights"])
+    )
 
     dataset_a_json["access_rights"]["restriction_grounds"] = [
-        {
-            "url": "http://uri.suomi.fi/codelist/fairdata/restriction_grounds/code/research"
-        }
+        {"url": "http://uri.suomi.fi/codelist/fairdata/restriction_grounds/code/research"}
     ]
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 201
 
 
-def test_unnecessary_restriction_grounds(admin_client, dataset_a_json, data_catalog, reference_data):
+def test_unnecessary_restriction_grounds(
+    admin_client, dataset_a_json, data_catalog, reference_data
+):
     dataset_a_json["access_rights"]["restriction_grounds"] = [
-        {
-            "url": "http://uri.suomi.fi/codelist/fairdata/restriction_grounds/code/research"
-        }
+        {"url": "http://uri.suomi.fi/codelist/fairdata/restriction_grounds/code/research"}
     ]
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 400
