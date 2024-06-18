@@ -214,6 +214,43 @@
     "dataset_groups_admin": ["abo"]
   },
   {
+    "title": {
+      "en": "University of Helsinki data catalog",
+      "fi": "Helsingin yliopiston aineistokatalogi",
+      "sv": "Helsingfors universitet datakatalog"
+    },
+    "language": [
+      {
+        "url": "http://lexvo.org/id/iso639-3/fin"
+      }
+    ],
+    "harvested": true,
+    "publisher": {
+      "name": {
+        "en": "Testing",
+        "fi": "Testi"
+      },
+      "homepage": [
+        {
+          "title": {
+            "en": "Publisher organization website",
+            "fi": "Julkaisijaorganisaation kotisivu"
+          },
+          "url": "http://www.testi.fi/"
+        }
+      ]
+    },
+    "id": "urn:nbn:fi:att:data-catalog-hy",
+    "description": {
+      "en": "Data catalog for testing University of Helsinki's Metax-integration",
+      "fi": "Testikatalogi Helsingin yliopiston Metax-integraatiolle",
+      "sv": "Datakatalog för testning av Helsingfors universitets Metax-integration"
+    },
+    "dataset_versioning_enabled": false,
+    "dataset_groups_create": ["hy"],
+    "dataset_groups_admin": ["hy"]
+  },
+  {
     "id": "urn:nbn:fi:att:data-catalog-ida",
     "description": {
       "en": "Datasets stored in the IDA service",
