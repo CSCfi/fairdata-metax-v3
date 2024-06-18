@@ -116,7 +116,7 @@ Endpoints to manage datasets' editor permissions are not implemented to v3 yet b
 | research_dataset.temporal [list]             | temporal [list]                              |                                                                                                                 |
 | research_dataset.theme [list]                | theme [list]                                 |                                                                                                                 |
 | research_dataset.title [dict]                | title [dict]                                 |                                                                                                                 |
-| total_files_byte_size [int]                  | fileset.total_files_size [int]               | See [Dataset Files](#dataset-files) for more information on `fileset`.                                          |
+| research_dataset.total_files_byte_size [int] | fileset.total_files_size [int]               | See [Dataset Files](#dataset-files) for more information on `fileset`.                                          |
 | user_created                                 | **not used in V3**                           | This information can now be found in `metadata_owner.user`.                                                     |
 
 ### Complex fields
