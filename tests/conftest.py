@@ -8,19 +8,18 @@
     - https://docs.pytest.org/en/stable/writing_plugins.html
 """
 
+import logging
 import re
-import secrets
 from dataclasses import dataclass, field
-from typing import Callable, Optional
+from typing import Optional
 from unittest.mock import Mock
 
 import django
 import factory.random
 import pytest
-import requests_mock
 from django.conf import settings
 from django.contrib.auth.models import Group
-from django.dispatch import Signal, receiver
+from django.dispatch import receiver
 from django.test.client import Client
 from rest_framework.test import APIClient, RequestsClient
 
@@ -686,8 +685,6 @@ def user_client_2(user2):
 
 @pytest.fixture(autouse=True)
 def tweaked_settings(settings):
-    import logging
-
     logging.disable(logging.CRITICAL)
     settings.CACHES = {
         "default": {

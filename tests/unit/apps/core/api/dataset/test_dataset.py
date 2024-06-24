@@ -1,4 +1,3 @@
-import json
 import logging
 from unittest.mock import ANY
 
@@ -945,3 +944,15 @@ def test_not_a_list(admin_client, dataset_a_json, data_catalog, reference_data, 
     )
     assert res.status_code == 400
     assert "Expected a list" in res.json()["provenance"]["non_field_errors"][0]
+
+
+def test_remove_rights(admin_client, dataset_a_json, data_catalog, reference_data):
+    dataset = factories.DatasetFactory()
+    dataset_id = dataset.id
+    res = admin_client.patch(
+        f"/v3/datasets/{dataset_id}",
+        {"access_rights": None},
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert "access_rights" not in res.data

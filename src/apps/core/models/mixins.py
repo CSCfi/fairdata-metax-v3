@@ -470,8 +470,8 @@ class V2DatasetMixin:
                 document["access_granter"] = access_granter
 
     def add_actor(self, role: str, document: Dict):
-        actors = self.actors.filter(roles__contains=[role])
-        if actors.count() == 0:
+        actors = [actor for actor in self.actors.all() if role in actor.roles]
+        if not actors:
             return
         if role != "publisher":
             document["research_dataset"][role] = []

@@ -212,3 +212,7 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_not_a_list
 
+## test_remove_rights
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_remove_rights
+

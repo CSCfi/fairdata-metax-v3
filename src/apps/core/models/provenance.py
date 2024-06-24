@@ -82,11 +82,11 @@ class Provenance(AbstractBaseModel):
         return copy, original
 
     def __str__(self):
-        default = self.id
-        if self.title is not None:
-            return str(next(iter(self.title.items()), default))
+        label = self.title or self.description
+        if label is not None:
+            return str(next(iter(label.items())))
         else:
-            return str(next(iter(self.description.items()), default))
+            return str(self.id)
 
 
 class VariableUniverse(AbstractFreeformConcept):

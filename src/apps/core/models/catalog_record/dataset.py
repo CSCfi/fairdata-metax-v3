@@ -1,16 +1,15 @@
 import logging
 
-from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.core.validators import MinLengthValidator
 from django.db import models
+from django.db.models import prefetch_related_objects
 from django.db.models.signals import post_delete
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 from model_utils import FieldTracker
 from rest_framework.exceptions import ValidationError
-from simple_history.models import HistoricalRecords
 from typing_extensions import Self
 
 from apps.common.copier import ModelCopier
@@ -673,15 +672,27 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         if not self.description:
             errors["description"] = _("Dataset has to have a description when publishing.")
 
+        # Count roles
+        creator_count = 0
+        publisher_count = 0
+        prefetch_related_objects([str(self.id)], "actors")  # make sure actors.all() is cached
+        for actor in self.actors.all():
+            if "publisher" in actor.roles:
+                publisher_count += 1
+            if "creator" in actor.roles:
+                creator_count += 1
+
         # Some legacy/harvested datasets are missing creator or publisher
         # Some legacy datasets are also missing license or restriction grounds
         is_harvested = self.data_catalog and self.data_catalog.harvested
         if not (self.is_legacy and is_harvested):
-            if self.actors.filter(roles__contains=["creator"]).count() <= 0:
+            # Creator required
+            if creator_count == 0:
                 actor_errors.append(_("An actor with creator role is required."))
                 errors["actors"] = actor_errors
+
         if not self.is_legacy:
-            if self.actors.filter(roles__contains=["publisher"]).count() != 1:
+            if publisher_count != 1:
                 actor_errors.append(_("Exactly one actor with publisher role is required."))
                 errors["actors"] = actor_errors
             if self.access_rights and not self.access_rights.license.exists():
@@ -792,7 +803,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
 
         self.set_update_reason(f"{self.state}-{self.published_revision}.{self.draft_revision}")
         super().save(*args, **kwargs)
-        self.is_prefetched = False  # Saving clears the prefetch cache
+        self.is_prefetched = False  # Prefetch again after save
         if hasattr(self, "file_set"):
             self.file_set.update_published()
 

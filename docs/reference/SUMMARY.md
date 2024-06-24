@@ -26,6 +26,7 @@
         - [models](src/apps/common/models.md)
         - [pagination](src/apps/common/pagination.md)
         - [permissions](src/apps/common/permissions.md)
+        - [profiling](src/apps/common/profiling.md)
         - [renderers](src/apps/common/renderers.md)
         - [responses](src/apps/common/responses.md)
         - serializers
@@ -171,7 +172,11 @@
                 - [commands.test_index_organizations](tests/unit/apps/actors/commands/test_index_organizations.md)
                 - [models.test_organization](tests/unit/apps/actors/models/test_organization.md)
             - [cache.test_cache](tests/unit/apps/cache/test_cache.md)
-            - [common.serializers.test_fields](tests/unit/apps/common/serializers/test_fields.md)
+            - common
+                - serializers
+                    - [test_fields](tests/unit/apps/common/serializers/test_fields.md)
+                    - [test_serializers](tests/unit/apps/common/serializers/test_serializers.md)
+                - [test_profiling](tests/unit/apps/common/test_profiling.md)
             - [conftest](tests/unit/apps/conftest.md)
             - core
                 - adapters
@@ -194,6 +199,7 @@
                         - [test_dataset_metrics](tests/unit/apps/core/api/dataset/test_dataset_metrics.md)
                         - [test_dataset_permissions](tests/unit/apps/core/api/dataset/test_dataset_permissions.md)
                         - [test_dataset_pids](tests/unit/apps/core/api/dataset/test_dataset_pids.md)
+                        - [test_dataset_spatial](tests/unit/apps/core/api/dataset/test_dataset_spatial.md)
                         - [test_dataset_timestamps](tests/unit/apps/core/api/dataset/test_dataset_timestamps.md)
                         - [test_dataset_v2_integration](tests/unit/apps/core/api/dataset/test_dataset_v2_integration.md)
                         - [test_legacy](tests/unit/apps/core/api/dataset/test_legacy.md)

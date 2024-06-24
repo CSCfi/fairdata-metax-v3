@@ -1,6 +1,5 @@
 import logging
 
-from apps.common.models import AbstractFreeformConcept
 from apps.common.serializers.serializers import CommonListSerializer, CommonNestedModelSerializer
 from apps.common.serializers.validators import AnyOf
 from apps.core.models import EventOutcome, LifecycleEvent, PreservationEvent, Provenance
@@ -32,8 +31,8 @@ class VariableUniverseSerializer(AbstractFreeformConceptSerializer):
 
 
 class ProvenanceVariableSerializer(CommonNestedModelSerializer):
-    concept = VariableConceptSerializer(required=False, allow_null=True)
-    universe = VariableUniverseSerializer(required=False, allow_null=True)
+    concept = VariableConceptSerializer(required=False, allow_null=True, lazy=True)
+    universe = VariableUniverseSerializer(required=False, allow_null=True, lazy=True)
 
     class Meta:
         model = ProvenanceVariable
@@ -42,14 +41,14 @@ class ProvenanceVariableSerializer(CommonNestedModelSerializer):
 
 
 class ProvenanceModelSerializer(CommonNestedModelSerializer):
-    spatial = SpatialModelSerializer(required=False, allow_null=True)
-    temporal = TemporalModelSerializer(required=False, allow_null=True)
+    spatial = SpatialModelSerializer(required=False, allow_null=True, lazy=True)
+    temporal = TemporalModelSerializer(required=False, allow_null=True, lazy=True)
     lifecycle_event = LifecycleEvent.get_serializer_field(required=False, allow_null=True)
     preservation_event = PreservationEvent.get_serializer_field(required=False, allow_null=True)
     event_outcome = EventOutcome.get_serializer_field(required=False, allow_null=True)
     is_associated_with = DatasetActorProvenanceSerializer(many=True, required=False)
-    used_entity = EntitySerializer(many=True, required=False)
-    variables = ProvenanceVariableSerializer(many=True, required=False)
+    used_entity = EntitySerializer(many=True, required=False, lazy=True)
+    variables = ProvenanceVariableSerializer(many=True, required=False, lazy=True)
 
     class Meta:
         model = Provenance

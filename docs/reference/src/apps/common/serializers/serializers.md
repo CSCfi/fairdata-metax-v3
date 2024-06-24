@@ -24,6 +24,14 @@
 
 ### :::src.apps.common.serializers.serializers.DeleteListReturnValueSerializer
 
+## LazyInstanceSaver
+
+### :::src.apps.common.serializers.serializers.LazyInstanceSaver
+
+## LazyableModelSerializer
+
+### :::src.apps.common.serializers.serializers.LazyableModelSerializer
+
 ## NestedModelSerializer
 
 ### :::src.apps.common.serializers.serializers.NestedModelSerializer

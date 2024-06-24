@@ -24,3 +24,7 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_provenance.test_provenance_new_version
 
+## test_replace_existing_provenances
+
+### :::tests.unit.apps.core.api.dataset.test_provenance.test_replace_existing_provenances
+

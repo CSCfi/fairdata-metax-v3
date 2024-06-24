@@ -2,8 +2,10 @@ import logging
 
 import pytest
 from tests.utils import matchers
+from tests.utils.utils import assert_nested_subdict
 
 from apps.core.models import Dataset
+from apps.core.models.provenance import Provenance
 
 pytestmark = [pytest.mark.django_db, pytest.mark.dataset, pytest.mark.provenance]
 
@@ -145,3 +147,62 @@ def test_provenance_new_version(dataset_with_provenance_json, provenance_a_reque
     )
 
     assert new.provenance.first().is_associated_with.first().id == new.actors.first().id
+
+
+def test_replace_existing_provenances(
+    admin_client, dataset_with_provenance_json, data_catalog, reference_data, mocker
+):
+    dataset = {**dataset_with_provenance_json}
+    resp = admin_client.post("/v3/datasets", dataset, content_type="application/json")
+    assert resp.status_code == 201
+
+    dataset_id = resp.json()["id"]
+    provenances = [
+        {
+            "title": {"fi": "uusi otsikko"},
+            "description": {"fi": "uusi kuvaus"},
+            "spatial": {"reference": {"url": "http://www.yso.fi/onto/onto/yso/c_9908ce39"}},
+            "lifecycle_event": {
+                "url": "http://uri.suomi.fi/codelist/fairdata/lifecycle_event/code/planned",
+            },
+            "event_outcome": {
+                "url": "http://uri.suomi.fi/codelist/fairdata/event_outcome/code/success"
+            },
+            "is_associated_with": [
+                {
+                    "organization": {
+                        "pref_label": {"fi": "CSC"},
+                    },
+                    "person": {"name": "john"},
+                }
+            ],
+            "used_entity": [
+                {
+                    "title": {"en": "New entity"},
+                    "description": {"en": "This a new entity"},
+                    "entity_identifier": "https://example.com/some_sound",
+                    "type": {
+                        "url": "http://uri.suomi.fi/codelist/fairdata/resource_type/code/sound"
+                    },
+                }
+            ],
+        },
+        {"title": {"en": "simple provenance"}},
+    ]
+
+    create = mocker.spy(Provenance.objects, "create")
+    bulk_create = mocker.spy(Provenance.objects, "bulk_create")
+
+    resp = admin_client.patch(
+        f"/v3/datasets/{dataset_id}", {"provenance": provenances}, content_type="application/json"
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert_nested_subdict(
+        provenances,
+        data["provenance"],
+    )
+
+    assert Provenance.all_objects.count() == 4
+    assert create.call_count == 0
+    assert bulk_create.call_count == 1
