@@ -7,6 +7,7 @@
 import json
 import logging
 from collections import OrderedDict
+from typing import Mapping
 
 import shapely.wkt
 from django.core.exceptions import ObjectDoesNotExist
@@ -85,6 +86,51 @@ class URLReferencedModelListField(serializers.ListField):
         return entries
 
 
+class ReferenceDataCache:
+    """Helper class for caching reference data in serializer context."""
+
+    notfound = object()  # Notfound in cache indicates object does not exist
+
+    def __init__(self, model):
+        self.model = model
+        self.entries = {}
+
+    @classmethod
+    def from_context(cls, context: dict, model):
+        caches = context.setdefault("refdata_caches", {})
+        model_name = model.__name__
+        cache = caches.get(model_name)
+        if not cache:
+            # Create new cache for model
+            cache = cls(model)
+            caches[model_name] = cache
+        return cache
+
+    def add_url(self, url):
+        """Add url to entries."""
+        self.entries.setdefault(url, None)  # Entry is None if queried yet
+
+    def get(self, url):
+        """Get entry from cache or query entry from DB."""
+        self.add_url(url)
+        val = self.entries[url]
+        if val is None:
+            # Entry not queried yet, query all entries that haven't been queried yet
+            instances = self.model.available_objects.filter(
+                url__in=[_url for _url, entry in self.entries.items() if entry is None]
+            )
+            self.entries.update({entry.url: entry for entry in instances})
+
+            # If entry with url wasn't found, mark it as not found
+            for _url, entry in self.entries.items():
+                if entry is None:
+                    self.entries[_url] = self.notfound
+            val = self.entries[url]
+        if val is self.notfound:
+            raise self.model.DoesNotExist()
+        return val
+
+
 class URLReferencedModelField(serializers.RelatedField):
     """Serialized RelatedField for URL-referenced concepts.
 
@@ -128,9 +174,21 @@ class URLReferencedModelField(serializers.RelatedField):
         except serializers.ValidationError as exc:
             raise serializers.ValidationError(exc.detail)
 
+    def preprocess(self, data):
+        """Collect urls in a "refdata" dict in context."""
+        if isinstance(data, Mapping):
+            if url := data.get("url"):
+                cache = ReferenceDataCache.from_context(
+                    context=self.context, model=self.child.Meta.model
+                )
+                cache.add_url(url)
+
     def to_internal_value(self, data):
         try:
-            return self.get_queryset().get(url=data["url"])
+            cache = ReferenceDataCache.from_context(
+                context=self.context, model=self.child.Meta.model
+            )
+            return cache.get(data["url"])
         except ObjectDoesNotExist:
             model_name = self.child.Meta.model.__name__
             self.fail("does_not_exist", url_value=data["url"], model_name=model_name)

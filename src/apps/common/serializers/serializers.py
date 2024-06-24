@@ -8,9 +8,10 @@ import copy
 import json
 import logging
 from contextlib import contextmanager
+from typing import Mapping
 from uuid import UUID
 
-from django.core.exceptions import FieldDoesNotExist, ObjectDoesNotExist
+from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
@@ -26,6 +27,15 @@ logger = logging.getLogger(__name__)
 
 
 class CommonListSerializer(serializers.ListSerializer):
+    def preprocess(self, data):
+        """Call preprocess method of child if available."""
+        if not isinstance(data, list):  # Ensure data is a list
+            return
+
+        if preprocess := getattr(self.child, "preprocess", None):
+            for item in data:
+                preprocess(item)
+
     def get_child_ordering_field(self):
         """Get field which is used for order value of child model.
 
@@ -59,6 +69,9 @@ class CommonListSerializer(serializers.ListSerializer):
 
     def to_internal_value(self, data):
         """Same as original to_internal_value but with ordering field in child_extra_attrs."""
+        if not self.parent:  # Root serializer calls preprocess
+            self.preprocess(data)
+
         if html.is_html_input(data):
             data = html.parse_html_list(data, default=[])
 
@@ -515,6 +528,32 @@ class CommonModelSerializer(PatchModelSerializer, serializers.ModelSerializer):
                 if not self.context.get("show_emails"):
                     continue
             yield field
+
+    def preprocess(self, data):
+        """Call preprocess method of nested fields where available.
+
+        The preprocess step is an extra step before to_internal_value
+        that allows a field to e.g. collect all required reference data identifiers
+        in preprocess and then get the data in a single query in to_internal_value.
+        """
+        if data is None:
+            return
+
+        if not isinstance(data, Mapping):
+            message = self.error_messages["invalid"].format(datatype=type(data).__name__)
+            raise ValidationError({api_settings.NON_FIELD_ERRORS_KEY: [message]}, code="invalid")
+        fields = self._writable_fields
+        for field in fields:
+            # Check for preprocess method, call it with field value
+            if preprocess := getattr(field, "preprocess", None):
+                primitive_value = field.get_value(data)
+                if primitive_value is not empty:
+                    preprocess(primitive_value)
+
+    def to_internal_value(self, data):
+        if not self.parent:  # Root serializer calls preprocess
+            self.preprocess(data)
+        return super().to_internal_value(data)
 
     def create(self, validated_data):
         instance = super().create(validated_data)

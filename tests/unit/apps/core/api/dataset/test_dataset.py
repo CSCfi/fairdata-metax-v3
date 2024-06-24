@@ -18,13 +18,14 @@ logger = logging.getLogger(__name__)
 
 pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
 
+
 @pytest.mark.usefixtures("data_catalog", "reference_data")
 def test_create_dataset(admin_client, dataset_a_json, dataset_signal_handlers):
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 201
     assert_nested_subdict({"user": "admin", "organization": "admin"}, res.data["metadata_owner"])
     assert_nested_subdict(dataset_a_json, res.data)
-    assert res.data["metadata_repository"] == "Fairdata" # Constant value
+    assert res.data["metadata_repository"] == "Fairdata"  # Constant value
     dataset_signal_handlers.assert_call_counts(created=1, updated=0)
 
 
@@ -925,3 +926,22 @@ def test_get_dataset_no_multiple_objects_error(service_client):
     dataset = factories.PublishedDatasetFactory(data_catalog=data_catalog)
     res = service_client.patch(f"/v3/datasets/{dataset.id}", {}, content_type="application/json")
     assert res.status_code == 200
+
+
+def test_not_a_list(admin_client, dataset_a_json, data_catalog, reference_data, monkeypatch):
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    provenances = {
+        "spatial": {
+            "geographic_name": "Tapiola",
+            "reference": {"url": "http://www.yso.fi/onto/yso/p105747"},
+        },
+    }
+
+    dataset_id = res.data["id"]
+    res = admin_client.patch(
+        f"/v3/datasets/{dataset_id}",
+        {"provenance": provenances},
+        content_type="application/json",
+    )
+    assert res.status_code == 400
+    assert "Expected a list" in res.json()["provenance"]["non_field_errors"][0]
