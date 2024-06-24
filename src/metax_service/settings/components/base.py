@@ -388,3 +388,6 @@ METAX_V2_PASSWORD = env.str("METAX_V2_PASSWORD", None)
 # Ensure redirect v1/v2 -> v3
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# Metrics
+METRICS_REPORT_URL = env.str("METRICS_REPORT_URL", None)

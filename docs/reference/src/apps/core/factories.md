@@ -128,3 +128,7 @@
 
 ### :::src.apps.core.factories.ProvenanceFactory
 
+## DatasetMetricsFactory
+
+### :::src.apps.core.factories.DatasetMetricsFactory
+

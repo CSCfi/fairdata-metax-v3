@@ -711,6 +711,7 @@ def tweaked_settings(settings):
     settings.METAX_V2_INTEGRATION_ENABLED = False
     settings.METAX_V2_HOST = "metaxv2host"
     settings.ENABLE_SSO_AUTH = False
+    settings.METRICS_REPORT_URL = "https://example.com/metrics/reports/datasets.json"
 
 
 @pytest.fixture

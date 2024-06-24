@@ -1,4 +1,6 @@
 import factory
+import factory.django
+import factory.fuzzy
 from django.utils import timezone
 
 from apps.actors.factories import OrganizationFactory, PersonFactory
@@ -455,3 +457,25 @@ class ProvenanceFactory(factory.django.DjangoModelFactory):
 
     description = factory.Dict({"en": factory.Sequence(lambda n: f"provenance-desc-{n}")})
     title = factory.Dict({"en": factory.Sequence(lambda n: f"provenance-{n}")})
+
+
+class DatasetMetricsFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.DatasetMetrics
+
+    downloads_complete_failed = factory.fuzzy.FuzzyInteger(1, 1000)
+    downloads_complete_successful = factory.fuzzy.FuzzyInteger(1, 1000)
+    downloads_file_failed = factory.fuzzy.FuzzyInteger(1, 1000)
+    downloads_file_successful = factory.fuzzy.FuzzyInteger(1, 1000)
+    downloads_package_failed = factory.fuzzy.FuzzyInteger(1, 1000)
+    downloads_package_successful = factory.fuzzy.FuzzyInteger(1, 1000)
+    downloads_partial_failed = factory.fuzzy.FuzzyInteger(1, 1000)
+    downloads_partial_successful = factory.fuzzy.FuzzyInteger(1, 1000)
+    downloads_total_failed = factory.fuzzy.FuzzyInteger(1, 1000)
+    downloads_total_requests = factory.fuzzy.FuzzyInteger(1, 1000)
+    downloads_total_successful = factory.fuzzy.FuzzyInteger(1, 1000)
+    views_data_views = factory.fuzzy.FuzzyInteger(1, 1000)
+    views_details_views = factory.fuzzy.FuzzyInteger(1, 1000)
+    views_events_views = factory.fuzzy.FuzzyInteger(1, 1000)
+    views_maps_views = factory.fuzzy.FuzzyInteger(1, 1000)
+    views_total_views = factory.fuzzy.FuzzyInteger(1, 1000)

@@ -24,6 +24,10 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset_permissions.test_dataset_permissions_add_editor_check_dataset
 
+## test_dataset_permissions_for_draft_dataset
+
+### :::tests.unit.apps.core.api.dataset.test_dataset_permissions.test_dataset_permissions_for_draft_dataset
+
 ## test_dataset_permissions_add_creator_as_editor
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset_permissions.test_dataset_permissions_add_creator_as_editor

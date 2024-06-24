@@ -31,6 +31,7 @@ from apps.core.serializers.concept_serializers import SpatialModelSerializer
 from apps.core.serializers.data_catalog_serializer import DataCatalogModelSerializer
 from apps.core.serializers.dataset_actor_serializers import DatasetActorSerializer
 from apps.core.serializers.dataset_allowed_actions import DatasetAllowedActionsSerializer
+from apps.core.serializers.dataset_metrics_serializer import DatasetMetricsSerializer
 from apps.core.serializers.metadata_provider_serializer import MetadataProviderModelSerializer
 from apps.core.serializers.preservation_serializers import PreservationModelSerializer
 from apps.core.serializers.project_serializer import ProjectModelSerializer
@@ -108,6 +109,7 @@ class DatasetSerializer(CommonNestedModelSerializer):
     modified = serializers.DateTimeField(required=False, read_only=False)
     next_draft = LinkedDraftSerializer(read_only=True)
     draft_of = LinkedDraftSerializer(read_only=True)
+    metrics = DatasetMetricsSerializer(read_only=True)  # Included when include_metrics=true
 
     def get_dataset_versions(self, instance):
         if version_set := instance.dataset_versions:
@@ -142,6 +144,8 @@ class DatasetSerializer(CommonNestedModelSerializer):
         fields = super().get_fields()
         if not self.context["view"].query_params.get("include_allowed_actions"):
             fields.pop("allowed_actions", None)
+        if not self.context["view"].query_params.get("include_metrics"):
+            fields.pop("metrics", None)
         return fields
 
     def save(self, **kwargs):
@@ -200,6 +204,7 @@ class DatasetSerializer(CommonNestedModelSerializer):
             "version",
             "api_version",
             "metadata_repository",
+            "metrics",
         )
         fields = (
             "id",  # read only

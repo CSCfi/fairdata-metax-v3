@@ -3,6 +3,7 @@ from .catalog_record import (
     CatalogRecord,
     Dataset,
     DatasetActor,
+    DatasetMetrics,
     DatasetProject,
     EntityRelation,
     FileSet,

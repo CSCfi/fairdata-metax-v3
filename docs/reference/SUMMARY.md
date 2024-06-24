@@ -43,10 +43,12 @@
             - [load_test_data](src/apps/core/management/commands/load_test_data.md)
             - [migrate_v2_datasets](src/apps/core/management/commands/migrate_v2_datasets.md)
             - [migrate_v2_files](src/apps/core/management/commands/migrate_v2_files.md)
+            - [update_metrics](src/apps/core/management/commands/update_metrics.md)
         - models
             - [access_rights](src/apps/core/models/access_rights.md)
             - catalog_record
                 - [dataset](src/apps/core/models/catalog_record/dataset.md)
+                - [dataset_metrics](src/apps/core/models/catalog_record/dataset_metrics.md)
                 - [dataset_permissions](src/apps/core/models/catalog_record/dataset_permissions.md)
                 - [meta](src/apps/core/models/catalog_record/meta.md)
                 - [related](src/apps/core/models/catalog_record/related.md)
@@ -74,6 +76,7 @@
                 - [person_serializer](src/apps/core/serializers/dataset_actor_serializers/person_serializer.md)
             - [dataset_allowed_actions](src/apps/core/serializers/dataset_allowed_actions.md)
             - [dataset_files_serializer](src/apps/core/serializers/dataset_files_serializer.md)
+            - [dataset_metrics_serializer](src/apps/core/serializers/dataset_metrics_serializer.md)
             - [dataset_serializer](src/apps/core/serializers/dataset_serializer.md)
             - [file_metadata_serializer](src/apps/core/serializers/file_metadata_serializer.md)
             - [legacy_serializer](src/apps/core/serializers/legacy_serializer.md)
@@ -188,6 +191,7 @@
                         - [test_dataset_catalogs](tests/unit/apps/core/api/dataset/test_dataset_catalogs.md)
                         - [test_dataset_contact](tests/unit/apps/core/api/dataset/test_dataset_contact.md)
                         - [test_dataset_drafts](tests/unit/apps/core/api/dataset/test_dataset_drafts.md)
+                        - [test_dataset_metrics](tests/unit/apps/core/api/dataset/test_dataset_metrics.md)
                         - [test_dataset_permissions](tests/unit/apps/core/api/dataset/test_dataset_permissions.md)
                         - [test_dataset_pids](tests/unit/apps/core/api/dataset/test_dataset_pids.md)
                         - [test_dataset_timestamps](tests/unit/apps/core/api/dataset/test_dataset_timestamps.md)
@@ -213,6 +217,7 @@
                     - [test_load_test_data](tests/unit/apps/core/management/test_load_test_data.md)
                     - [test_migrate_v2_datasets](tests/unit/apps/core/management/test_migrate_v2_datasets.md)
                     - [test_migrate_v2_files](tests/unit/apps/core/management/test_migrate_v2_files.md)
+                    - [test_update_metrics](tests/unit/apps/core/management/test_update_metrics.md)
                     - [test_v2_client](tests/unit/apps/core/management/test_v2_client.md)
                 - models
                     - [conftest](tests/unit/apps/core/models/conftest.md)

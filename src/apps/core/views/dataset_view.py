@@ -45,6 +45,7 @@ from apps.core.serializers.contact_serializer import (
 from apps.core.serializers.dataset_allowed_actions import (
     DatasetAllowedActionsQueryParamsSerializer,
 )
+from apps.core.serializers.dataset_metrics_serializer import DatasetMetricsQueryParamsSerializer
 from apps.core.serializers.dataset_serializer import (
     DatasetRevisionsQueryParamsSerializer,
     ExpandCatalogQueryParamsSerializer,
@@ -290,6 +291,10 @@ class DatasetViewSet(CommonModelViewSet):
         },
         {
             "class": DatasetAllowedActionsQueryParamsSerializer,
+            "actions": ["retrieve", "list", "create", "update", "partial_update", "revisions"],
+        },
+        {
+            "class": DatasetMetricsQueryParamsSerializer,
             "actions": ["retrieve", "list", "create", "update", "partial_update", "revisions"],
         },
         {

@@ -243,6 +243,7 @@ def test_dataset_copied_fields():
     assert omit == {
         "dataset.projects.participating_organizations.children",
         "dataset.legacydataset",
+        "dataset.metrics",
         "dataset.provenance.is_associated_with.organization.children",
         "dataset.actors.organization.children",
         "dataset.projects.funding.funder.organization.children",
