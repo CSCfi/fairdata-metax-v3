@@ -101,6 +101,17 @@ class FileSetSerializer(StrictSerializer):
     removed_files_count = serializers.IntegerField(read_only=True)
     total_files_count = serializers.IntegerField(read_only=True)
     total_files_size = serializers.IntegerField(read_only=True)
+    file_types = serializers.SerializerMethodField(read_only=True)
+
+    def get_file_types(self, instance):
+        if any(instance.file_types):
+            file_types = {"en": set(), "fi": set()}
+            for type in instance.file_types:
+                if not type:
+                    continue
+                file_types["en"].add(type.get("en"))
+                file_types["fi"].add(type.get("fi"))
+            return file_types
 
     def assign_reference_data(self, actions: list, key: str, model: Model):
         """Replace reference data in actions' dataset_metadata with reference data instances."""
@@ -257,6 +268,9 @@ class FileSetSerializer(StrictSerializer):
             del rep["added_files_count"]
         if rep["removed_files_count"] is None:
             del rep["removed_files_count"]
+
+        if rep["file_types"] is None:
+            del rep["file_types"]
         return rep
 
     def get_file_exist_errors(self, attrs) -> Dict:

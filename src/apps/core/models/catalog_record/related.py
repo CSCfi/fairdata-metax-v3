@@ -217,6 +217,10 @@ class FileSet(AbstractBaseModel):
             total_files_count=Count("*"), total_files_size=Coalesce(Sum("size"), 0)
         )
 
+    @cached_property
+    def file_types(self):
+        return self.file_metadata.values_list("file_type__pref_label", flat=True)
+
     @property
     def total_files_size(self) -> int:
         return self.total_files_aggregates["total_files_size"]
@@ -235,7 +239,7 @@ class FileSet(AbstractBaseModel):
 
     def clear_cached_file_properties(self):
         """Clear cached file properties after changes to FileSet files."""
-        for prop in ["total_files_aggregates"]:
+        for prop in ["total_files_aggregates", "file_types"]:
             try:
                 delattr(self, prop)
             except AttributeError:
