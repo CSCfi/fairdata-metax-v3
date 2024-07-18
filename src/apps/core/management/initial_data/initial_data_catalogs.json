@@ -286,5 +286,40 @@
     "dataset_groups_admin": ["ida"],
     "allow_remote_resources": false,
     "storage_services": ["ida"]
+  },
+  {
+    "title": {
+      "en": "METIS - FMI's EUDAT B2SHARE research data repository",
+      "fi": "METIS - Ilmatieteen laitoksen EUDAT B2SHARE tutkimusaineistojen data-arkisto"
+    },
+    "language": [
+      {
+        "url": "http://lexvo.org/id/iso639-3/fin"
+      }
+    ],
+    "harvested": true,
+    "publisher": {
+      "name": {
+        "en": "FMI's EUDAT B2SHARE research data repository",
+        "fi": "METIS - Ilmatieteen laitoksen EUDAT B2SHARE tutkimusaineistojen data-arkisto"
+      },
+      "homepage": [
+        {
+          "title": {
+            "en": "Publisher organization website",
+            "fi": "Julkaisijaorganisaation kotisivu"
+          },
+          "url": "http://www.testi.fi/"
+        }
+      ]
+    },
+    "id": "urn:nbn:fi:att:data-catalog-fmi",
+    "description": {
+      "en": "Data catalog for testing FMI's EUDAT B2SHARE research data repository's Metax-integration",
+      "fi": "Testikatalogi Ilmatieteen laitoksen EUDAT B2SHARE tutkimusaineistojen data-arkiston Metax-integraatiolle"
+    },
+    "dataset_versioning_enabled": false,
+    "dataset_groups_create": ["fmi"],
+    "dataset_groups_admin": ["fmi"]
   }
 ]
