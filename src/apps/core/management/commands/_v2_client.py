@@ -134,6 +134,7 @@ class MigrationV2Client:
         response = self.session.get(
             f"{metax_instance}/rest/v2/datasets/{identifier}",
             params={
+                "include_editor_permissions": "true",
                 "removed": "true",  # returns both removed and non-removed
                 **params,
             },
@@ -161,6 +162,7 @@ class MigrationV2Client:
         response = self.session.get(
             f"{metax_instance}/rest/v2/datasets",
             params={
+                "include_editor_permissions": "true",
                 "include_legacy": "true",
                 **params,
             },

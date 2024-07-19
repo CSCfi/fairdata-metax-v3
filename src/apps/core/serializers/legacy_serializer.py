@@ -65,7 +65,14 @@ class LegacyDatasetModelSerializer(CommonModelSerializer):
         def pre_handler(value, path):
             if isinstance(value, dict):
                 for key in value.keys():
-                    if key in {"email", "telephone", "phone", "access_granter", "rems_identifier"}:
+                    if key in {
+                        "email",
+                        "telephone",
+                        "phone",
+                        "access_granter",
+                        "rems_identifier",
+                        "editor_permissions",
+                    }:
                         value[key] = "<hidden>"
             return value
 
@@ -128,6 +135,11 @@ class LegacyDatasetUpdateSerializer(CommonNestedModelSerializer):
     is_legacy = serializers.HiddenField(default=True)
     api_version = serializers.IntegerField()
     id = serializers.UUIDField()
+    permissions_id = serializers.UUIDField(required=False, allow_null=True)
+
+    no_put_default_fields = {
+        "permissions_id"
+    }  # Keep existing permissions_id if one is not provided
 
     class Meta:
         model = Dataset
@@ -138,6 +150,7 @@ class LegacyDatasetUpdateSerializer(CommonNestedModelSerializer):
             "cumulation_ended",
             "is_legacy",
             "api_version",
+            "permissions_id",
         ]
         fields = [
             field

@@ -1,5 +1,7 @@
 # URL where organization data is fetched from
-ORGANIZATION_FETCH_API_URL = "https://researchfi-api-production.2.rahtiapp.fi/portalapi/organization/_search?size=100"
+ORGANIZATION_FETCH_API_URL = (
+    "https://researchfi-api-production.2.rahtiapp.fi/portalapi/organization/_search?size=100"
+)
 
 # File where fetched organization data is cached
 ORGANIZATION_DATA_FILE = "src/apps/actors/local_data/organizations.csv"

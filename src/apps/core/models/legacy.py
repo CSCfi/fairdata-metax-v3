@@ -4,12 +4,15 @@ import logging
 import re
 import uuid
 from collections import Counter
+from datetime import datetime
+from typing import List, Optional, Tuple
 
 from cachalot.api import cachalot_disabled
 from django.contrib.postgres.fields import ArrayField
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models, transaction
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from django.utils.translation import gettext as _
 from model_utils import FieldTracker
 from rest_framework import exceptions, serializers
@@ -17,10 +20,12 @@ from rest_framework import exceptions, serializers
 from apps.common.helpers import ensure_dict
 from apps.common.models import AbstractBaseModel
 from apps.core.models import FileSet
+from apps.core.models.catalog_record import DatasetPermissions
 from apps.core.models.concepts import FileType, UseCategory
 from apps.core.models.file_metadata import FileSetDirectoryMetadata, FileSetFileMetadata
 from apps.core.models.legacy_converter import LegacyDatasetConverter
 from apps.files.models import File
+from apps.users.models import MetaxUser
 
 from .catalog_record import Dataset
 from .preservation import Contract
@@ -280,6 +285,75 @@ class LegacyDataset(AbstractBaseModel):
             id__in=[m.id for m in existing_metadata.values() if not getattr(m, "_found", False)]
         ).delete()
 
+    def get_modified_editors(
+        self, permissions: DatasetPermissions, editors: List[dict]
+    ) -> Tuple[List[dict], Optional[datetime]]:
+        """Return modified editors and latest modification timestamp."""
+        latest_modified: Optional[datetime] = permissions.legacy_modified
+        modified_editors = []
+        for editor in editors:
+            modified = parse_datetime(editor.get("date_modified") or editor.get("date_created"))
+            if (not permissions.legacy_modified) or modified > permissions.legacy_modified:
+                modified_editors.append(editor)
+                if (not latest_modified) or modified > latest_modified:
+                    latest_modified = modified
+        return modified_editors, latest_modified
+
+    def get_or_create_users(self, user_ids: List[str]) -> List[MetaxUser]:
+        """Get users by username, create missing users."""
+        existing = {
+            user.username: user for user in MetaxUser.all_objects.filter(username__in=user_ids)
+        }
+        new = [MetaxUser(username=user_id) for user_id in user_ids if user_id not in existing]
+        new = MetaxUser.all_objects.bulk_create(new)
+        return [*existing.values(), *new]
+
+    def update_permissions(self) -> Optional[str]:
+        """Update changed DatasetPermissions.
+
+        Returns:
+            str or None: DatasetPermissions id that should be associated with the dataset.
+        """
+        perms_json = self.dataset_json.get("editor_permissions")
+        if not perms_json:
+            return None  # Value of dataset.permissions_id will be unchanged
+
+        # Use same uuid for DatasetPermissions as in V2
+        perms_id = perms_json["id"]
+        perms, created = DatasetPermissions.all_objects.get_or_create(id=perms_id)
+
+        # User with "creator" role is always metadata_owner_user in V2,
+        # which is redundant so only users with "editor" role are relevant
+        json_editors = [
+            user for user in perms_json.get("users", []) if user.get("role") == "editor"
+        ]
+        if not json_editors:
+            return str(perms_id)
+
+        existing_editors = []
+        if not created:
+            existing_editors = perms.editors.values_list("username", flat=True)
+
+        # Determine users that should be added or removed
+        added = []
+        removed = []
+        modified_editors, latest_modification = self.get_modified_editors(perms, json_editors)
+        for user in modified_editors:
+            user_id = user["user_id"]
+            if user.get("removed"):
+                if user_id in existing_editors:
+                    removed.append(user_id)
+            else:
+                if user_id not in existing_editors:
+                    added.append(user_id)
+
+        if added or removed:
+            perms.legacy_modified = latest_modification
+            perms.save()
+            perms.editors.add(*self.get_or_create_users(added))
+            perms.editors.remove(*MetaxUser.available_objects.filter(username__in=removed))
+        return perms_id
+
     def update_from_legacy(self, context=None, raise_serializer_errors=True, create_files=False):
         """Update dataset fields from legacy data dictionaries."""
         if self._state.adding:
@@ -303,6 +377,8 @@ class LegacyDataset(AbstractBaseModel):
                     dataset_json=self.dataset_json, convert_only=False
                 )
                 data = converter.convert_dataset()
+                if perms_id := self.update_permissions():
+                    data["permissions_id"] = perms_id
                 self.created_objects.update(converter.created_objects)
                 self.invalid_legacy_values = converter.get_invalid_values_by_path()
                 self.fixed_legacy_values = converter.get_fixed_values_by_path()

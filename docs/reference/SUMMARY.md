@@ -203,6 +203,7 @@
                         - [test_dataset_timestamps](tests/unit/apps/core/api/dataset/test_dataset_timestamps.md)
                         - [test_dataset_v2_integration](tests/unit/apps/core/api/dataset/test_dataset_v2_integration.md)
                         - [test_legacy](tests/unit/apps/core/api/dataset/test_legacy.md)
+                        - [test_legacy_permissions](tests/unit/apps/core/api/dataset/test_legacy_permissions.md)
                         - [test_metadata_download](tests/unit/apps/core/api/dataset/test_metadata_download.md)
                         - [test_preservation](tests/unit/apps/core/api/dataset/test_preservation.md)
                         - [test_provenance](tests/unit/apps/core/api/dataset/test_provenance.md)

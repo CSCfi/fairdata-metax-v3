@@ -32,6 +32,10 @@
 
 ### :::tests.unit.apps.core.api.dataset.conftest.legacy_dataset_a_json
 
+## legacy_dataset_b_json
+
+### :::tests.unit.apps.core.api.dataset.conftest.legacy_dataset_b_json
+
 ## dataset_access_right_error_json
 
 ### :::tests.unit.apps.core.api.dataset.conftest.dataset_access_right_error_json

@@ -194,4 +194,4 @@ class DatasetPermissionsSerializer(CommonModelSerializer):
 
     class Meta:
         model = DatasetPermissions
-        fields = ["creators", "editors"]
+        fields = ["id", "creators", "editors"]

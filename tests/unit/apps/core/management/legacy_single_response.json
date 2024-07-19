@@ -207,5 +207,25 @@
   "date_modified": "2017-06-23T13:07:22+03:00",
   "date_created": "2017-05-23T13:07:22+03:00",
   "service_created": "metax",
-  "removed": false
+  "removed": false,
+  "editor_permissions": {
+    "id": "4efd0669-33d4-4feb-93fb-5372d0f93a92",
+    "users": [
+      {
+        "id": "4f576de4-74e7-4a8c-b4e5-3c838b56b0f9",
+        "active": true,
+        "removed": false,
+        "date_modified": null,
+        "user_modified": null,
+        "date_created": "2020-01-02T03:04:05+03:00",
+        "user_created": null,
+        "service_modified": null,
+        "service_created": null,
+        "date_removed": null,
+        "user_id": "editor_user",
+        "role": "editor",
+        "editor_permissions": "4efd0669-33d4-4feb-93fb-5372d0f93a92"
+      }
+    ]
+  }
 }

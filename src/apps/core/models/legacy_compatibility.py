@@ -82,6 +82,7 @@ class LegacyCompatibility:
             regex(".*['telephone']$"),
             regex(".*['definition']$"),  # remove silly definition values
             "root['contract']",  # TODO
+            "root['editor_permissions']",  # TODO V3->V2
         ],
         "iterable_item_added": [
             regex("root['research_dataset']['spatial'][\\d+]['as_wkt'][\\d+]"),

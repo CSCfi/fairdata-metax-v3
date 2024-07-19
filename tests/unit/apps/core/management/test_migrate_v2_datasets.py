@@ -122,6 +122,9 @@ def test_migrate_command_identifier(mock_response_single, reference_data, legacy
         }
     ]
     assert "1 datasets updated succesfully" in output
+    dataset = Dataset.objects.get(id="c955e904-e3dd-4d7e-99f1-3fed446f96d1")
+    assert str(dataset.permissions_id) == "4efd0669-33d4-4feb-93fb-5372d0f93a92"
+    assert [user.username for user in dataset.permissions.editors.all()] == ["editor_user"]
 
 
 def test_migrate_command_identifier_missing_files(mock_response_single, reference_data):

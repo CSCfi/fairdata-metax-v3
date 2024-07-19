@@ -56,6 +56,11 @@ def legacy_dataset_a_json():
 
 
 @pytest.fixture
+def legacy_dataset_b_json():
+    return load_test_json("legacy_dataset_b.json")
+
+
+@pytest.fixture
 def dataset_access_right_error_json():
     return load_test_json("access_right_error.json")
 

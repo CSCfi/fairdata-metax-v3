@@ -3,7 +3,6 @@ from datetime import datetime
 import pytest
 from rest_framework.reverse import reverse
 
-from apps.actors.factories import OrganizationFactory
 from apps.core.models import LegacyDataset
 from apps.core.models.catalog_record.dataset import Dataset
 

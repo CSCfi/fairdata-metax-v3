@@ -23,6 +23,12 @@ class DatasetPermissions(AbstractBaseModel):
 
     editors = models.ManyToManyField(MetaxUser, related_name="dataset_edit_permissions")
 
+    # When importing a legacy dataset, Editor additions/removals older than the
+    # legacy_modified timestamp are ignored and assumed to have already been handled.
+    legacy_modified = models.DateTimeField(
+        null=True, blank=True, help_text="Latest modification from legacy Metax."
+    )
+
     history = SnapshotHistoricalRecords(m2m_fields=[editors])
 
     def set_context_dataset(self, dataset):

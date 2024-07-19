@@ -1,5 +1,9 @@
 # serializers
 
+## parse_html_data_to_list
+
+### :::src.apps.common.serializers.serializers.parse_html_data_to_list
+
 ## CommonListSerializer
 
 ### :::src.apps.common.serializers.serializers.CommonListSerializer
