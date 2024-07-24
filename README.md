@@ -9,9 +9,7 @@
 ### Python dependencies
 
 - This repository uses Poetry for managing Python dependencies securely
-- Poetry generates a very strict `requirements.txt` file
 - Poetry enables easy updates of minor security/bug patches from pip with `pyproject.toml`-defined version constraints
-- The generated `requirements.txt` file is guaranteed to lock all dependencies and sub-dependencies
 - The Poetry file `poetry.lock` stores hashes of all dependencies, if the integrity of the dependency-tree ever needs to be verified
 - [Poetry documentation](https://python-poetry.org/docs/)
 
@@ -243,10 +241,6 @@ poetry update
 
 # Removing dependencies
 poetry remove (-D) <package>
-
-# Regenerating requirements.txt after modification of pyproject.toml
-poetry export --without-hashes -o requirements.txt
-poetry export --dev --without-hashes -o dev-requirements.txt
 ```
 
 ## Formatting code
