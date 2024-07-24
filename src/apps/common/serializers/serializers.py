@@ -7,6 +7,7 @@
 import copy
 import json
 import logging
+from ast import literal_eval
 from contextlib import contextmanager
 from uuid import UUID
 
@@ -532,6 +533,8 @@ class CommonModelSerializer(PatchModelSerializer, serializers.ModelSerializer):
         return super().validate(data)
 
     def to_representation(self, instance):
+        if isinstance(instance, str):
+            instance = literal_eval(instance)
         rep = super().to_representation(instance)
         if not self.context.get("include_nulls"):
             rep = {k: v for k, v in rep.items() if v is not None}
