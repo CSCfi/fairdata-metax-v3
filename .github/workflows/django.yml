@@ -1,0 +1,54 @@
+name: Django CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+env:
+  POSTGRES_USER: postgres
+  POSTGRES_PASS: postgres
+  POSTGRES_DATABASE_NAME: github_actions
+jobs:
+  build:
+    services:
+      postgres:
+        image: postgres:12
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: github_actions
+        ports:
+          - 5432:5432
+        # needed because the postgres container does not provide a healthcheck
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.8, 3.9]
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install poetry
+      uses: abatilo/actions-poetry@v2
+    - name: Setup a local virtual environment (if no poetry.toml file)
+      run: |
+          poetry config virtualenvs.create true --local
+          poetry config virtualenvs.in-project true --local
+    - name: Install Dependencies
+      run: |
+        poetry lock --no-update
+        poetry install --no-root
+    - name: Run migrations
+      run: |
+        source .venv/bin/activate
+        python manage.py migrate
+    - name: Run Tests
+      run: |
+        source .venv/bin/activate
+        pytest -n 2 --ff
