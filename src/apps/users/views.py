@@ -9,7 +9,7 @@ from django.views.decorators.cache import never_cache
 from knox.models import AuthToken
 from knox.views import LoginView as KnoxLoginView
 from rest_access_policy.access_view_set_mixin import AccessViewSetMixin
-from rest_framework import exceptions, serializers, status
+from rest_framework import exceptions, status
 from rest_framework.decorators import action
 from rest_framework.renderers import AdminRenderer, JSONRenderer
 from rest_framework.response import Response
@@ -17,7 +17,7 @@ from rest_framework.views import APIView
 
 from apps.common.responses import HttpResponseSeeOther
 from apps.common.serializers.serializers import FlushQueryParamsSerializer
-from apps.common.views import CommonReadOnlyModelViewSet, QueryParamsMixin
+from apps.common.views import CommonReadOnlyModelViewSet
 from apps.users.authentication import SSOAuthentication
 from apps.users.permissions import UsersViewAccessPolicy
 from apps.users.serializers import (

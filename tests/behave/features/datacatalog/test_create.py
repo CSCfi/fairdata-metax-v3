@@ -2,7 +2,7 @@ import json
 import logging
 
 import pytest
-from pytest_bdd import given, scenario, then, when
+from pytest_bdd import scenario, then, when
 from rest_framework.reverse import reverse
 
 from apps.core.models import DataCatalog

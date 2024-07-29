@@ -81,7 +81,7 @@ def test_other_versions(dataset):
     assert third.version == 3
     assert first.next_existing_version.id == second.id
     assert second.next_existing_version.id == third.id
-    assert third.next_existing_version == None
+    assert third.next_existing_version is None
     assert first.created < second.created < third.created
 
 

@@ -1,11 +1,9 @@
-import json
 import logging
 import uuid
 
 import requests
 from django.conf import settings
 from django.utils.module_loading import import_string
-from requests.auth import HTTPBasicAuth
 from rest_framework.exceptions import APIException
 
 _logger = logging.getLogger(__name__)
@@ -18,7 +16,7 @@ class _DummyPIDMSClient:
         # Empty constructor
         pass
 
-    def createURN(self, dataset_id):
+    def create_urn(self, dataset_id):
         dummy_pid = "urn:nbn:fi:fd-dummy-" + str(uuid.uuid4())
         return dummy_pid
 
@@ -29,7 +27,7 @@ class _PIDMSClient:
         self.pid_ms_apikey = settings.PID_MS_APIKEY
         self.etsin_url = settings.ETSIN_URL
 
-    def createURN(self, dataset_id):
+    def create_urn(self, dataset_id):
         payload = {
             "url": f"https://{self.etsin_url}/dataset/{dataset_id}",
             "type": "URN",

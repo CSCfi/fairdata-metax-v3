@@ -1,12 +1,8 @@
-import logging
 from datetime import datetime, timedelta
 
 import jwt
 import pytest
 from django.conf import settings as django_settings
-from rest_framework.test import APIClient
-
-from apps.users.models import MetaxUser
 
 
 @pytest.fixture

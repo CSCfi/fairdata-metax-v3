@@ -1,6 +1,5 @@
 import pytest
 
-from apps.core.models import Contract
 
 pytestmark = [pytest.mark.django_db, pytest.mark.contract]
 

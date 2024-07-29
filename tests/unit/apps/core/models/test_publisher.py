@@ -1,6 +1,3 @@
-import pytest
-
-
 def test_create_publisher_with_webpage(catalog_homepage, dataset_publisher):
     dataset_publisher.homepage.add(catalog_homepage)
     assert dataset_publisher.id is not None

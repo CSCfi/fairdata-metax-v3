@@ -1,9 +1,8 @@
 import logging
 
 import pytest
-from django.forms import model_to_dict
 from django.utils import timezone
-from pytest_bdd import given, then, when
+from pytest_bdd import given, when
 
 from apps.core.factories import DatasetFactory
 from apps.core.models import DataCatalog, Dataset

@@ -126,7 +126,7 @@ class DateTimeStrMatcher(BaseMatcher):
         try:
             if dateparse.parse_datetime(other):
                 return True
-        except:
+        except:  # noqa: E722
             pass
         return False
 

@@ -1,7 +1,6 @@
 import copy
 import logging
 
-from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from apps.common.helpers import process_nested
@@ -17,21 +16,16 @@ from apps.core.serializers.common_serializers import (
 )
 from apps.core.serializers.concept_serializers import SpatialModelSerializer
 from apps.core.serializers.dataset_actor_serializers import DatasetActorSerializer
-from apps.core.serializers.dataset_actor_serializers.actor_serializer import DatasetActorSerializer
 from apps.core.serializers.dataset_allowed_actions import DatasetAllowedActionsSerializer
 from apps.core.serializers.dataset_files_serializer import FileSetSerializer
 from apps.core.serializers.dataset_serializer import DatasetSerializer, LinkedDraftSerializer
 from apps.core.serializers.preservation_serializers import PreservationModelSerializer
 from apps.core.serializers.project_serializer import ProjectModelSerializer
 from apps.core.serializers.provenance_serializers import ProvenanceModelSerializer
+from apps.common.serializers.serializers import CommonModelSerializer
+
 
 logger = logging.getLogger(__name__)
-
-
-from django.utils.translation import gettext as _
-
-from apps.common.serializers.serializers import CommonModelSerializer
-from apps.core.models import LegacyDataset
 
 
 class LegacyDatasetModelSerializer(CommonModelSerializer):

@@ -8,7 +8,6 @@ from rest_framework.exceptions import NotAuthenticated
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from rest_framework.viewsets import ViewSet
 
 from apps.common.permissions import BaseAccessPolicy
 

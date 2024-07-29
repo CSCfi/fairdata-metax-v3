@@ -15,14 +15,14 @@ class OrganizationFactory(factory.django.DjangoModelFactory):
     is_reference_data = True
 
     @factory.lazy_attribute_sequence
-    def code(obj, n):
+    def code(obj, n):  # noqa: N805
         prefix = ""
         if obj.parent:
             prefix = f"{obj.parent.code}-"
         return f"{prefix}{n}"
 
     @factory.lazy_attribute
-    def url(obj):
+    def url(obj):  # noqa: N805
         return f"https://{settings.ORGANIZATION_BASE_URI}{obj.code}"
 
 

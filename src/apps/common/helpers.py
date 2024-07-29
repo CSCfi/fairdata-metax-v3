@@ -5,14 +5,13 @@ import uuid
 from contextlib import contextmanager
 from datetime import datetime, timezone as tz
 from textwrap import dedent
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 from urllib.parse import SplitResult, parse_qsl, quote, urlencode, urlsplit, urlunsplit
 
 import shapely
 from cachalot.api import cachalot_disabled
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db import models
 from django.utils.dateparse import parse_date, parse_datetime
 from django_filters import NumberFilter
 from drf_yasg import openapi
@@ -313,8 +312,8 @@ def omit_none(value: dict) -> dict:
     return {key: val for key, val in value.items() if val is not None}
 
 
-def is_empty_string(value: str) -> str:
-    return type(value) is str and value.strip() == ""
+def is_empty_string(value: str) -> bool:
+    return isinstance(value, str) and value.strip() == ""
 
 
 def omit_empty(value: dict, recurse=False) -> dict:

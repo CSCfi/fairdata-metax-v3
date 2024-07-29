@@ -252,6 +252,20 @@ poetry remove (-D) <package>
 git config blame.ignoreRevsFile .git-blame-ignore-revs
 ```
 
+### Using ruff
+
+Install ruff globally with 
+
+```bash
+pipx install ruff
+```
+
+on the repository root, run ruff check ./
+
+```bash
+ruff check ./
+```
+
 ## Notes
 
 ### setup.cfg

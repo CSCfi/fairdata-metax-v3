@@ -3,7 +3,6 @@ import logging
 
 import pytest
 from rest_framework.reverse import reverse
-from tests.utils import matchers
 
 from apps.core.models import DataCatalog
 
@@ -50,9 +49,7 @@ def test_change_datacatalog(
 ):
     _now = datetime.datetime.now()
 
-    res1 = admin_client.post(
-        data_catalog_list_url, datacatalog_c_json, content_type="application/json"
-    )
+    admin_client.post(data_catalog_list_url, datacatalog_c_json, content_type="application/json")
     response = admin_client.put(
         f"{reverse('datacatalog-detail', args=['urn:nbn:fi:att:data-catalog-uusitesti'])}",
         datacatalog_put_json,
@@ -67,9 +64,7 @@ def test_change_datacatalog_to_minimal(
     admin_client, datacatalog_a_json, datacatalog_d_json, reference_data, data_catalog_list_url
 ):
     _now = datetime.datetime.now()
-    res1 = admin_client.post(
-        data_catalog_list_url, datacatalog_a_json, content_type="application/json"
-    )
+    admin_client.post(data_catalog_list_url, datacatalog_a_json, content_type="application/json")
     response = admin_client.put(
         f"{reverse('datacatalog-detail', args=['urn:nbn:fi:att:data-catalog-testi'])}",
         datacatalog_d_json,
@@ -81,9 +76,7 @@ def test_change_datacatalog_to_minimal(
 def test_change_datacatalog_from_minimal(
     admin_client, datacatalog_a_json, datacatalog_d_json, reference_data, data_catalog_list_url
 ):
-    res1 = admin_client.post(
-        data_catalog_list_url, datacatalog_d_json, content_type="application/json"
-    )
+    admin_client.post(data_catalog_list_url, datacatalog_d_json, content_type="application/json")
     response = admin_client.put(
         f"{reverse('datacatalog-detail', args=['urn:nbn:fi:att:data-catalog-testi'])}",
         datacatalog_a_json,

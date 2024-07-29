@@ -62,7 +62,7 @@ def test_dataset_post_dataset_with_files(
     admin_client, deep_file_tree, dataset_json_with_files, data_urls
 ):
     res = admin_client.post(
-        f"/v3/datasets",
+        "/v3/datasets",
         dataset_json_with_files,
         content_type="application/json",
     )
@@ -88,7 +88,7 @@ def test_dataset_post_dataset_with_files_new_version(
     admin_client, deep_file_tree, dataset_json_with_files_published, data_urls, reference_data
 ):
     res = admin_client.post(
-        f"/v3/datasets",
+        "/v3/datasets",
         dataset_json_with_files_published,
         content_type="application/json",
     )
@@ -137,7 +137,7 @@ def test_dataset_post_dataset_with_files_new_version(
 
 def test_dataset_get_dataset_with_files(admin_client, deep_file_tree, dataset_json_with_files):
     res = admin_client.post(
-        f"/v3/datasets",
+        "/v3/datasets",
         dataset_json_with_files,
         content_type="application/json",
     )
@@ -158,7 +158,7 @@ def test_dataset_get_dataset_with_no_files(
     admin_client, deep_file_tree, dataset_json_with_no_files
 ):
     res = admin_client.post(
-        f"/v3/datasets",
+        "/v3/datasets",
         dataset_json_with_no_files,
         content_type="application/json",
     )
@@ -173,7 +173,7 @@ def test_dataset_modify_dataset_with_files(
     admin_client, deep_file_tree, dataset_json_with_files, data_urls
 ):
     res = admin_client.post(
-        f"/v3/datasets",
+        "/v3/datasets",
         dataset_json_with_files,
         content_type="application/json",
     )
@@ -185,7 +185,7 @@ def test_dataset_modify_dataset_with_files(
         "file_actions": [{"id": deep_file_tree["files"]["/dir3/sub1/file.txt"].id}],
     }
 
-    dataset_json = {k: v for k, v in res.data.items() if v != None}
+    dataset_json = {k: v for k, v in res.data.items() if v is not None}
 
     dataset_id = res.data["id"]
     urls = data_urls(dataset_id)

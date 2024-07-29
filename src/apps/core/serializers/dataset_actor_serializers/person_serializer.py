@@ -1,7 +1,6 @@
 import logging
 from typing import Dict
 
-from django.utils.translation import gettext_lazy as _
 
 from apps.actors.models import Person
 from apps.actors.serializers import HomePageSerializer

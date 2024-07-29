@@ -1,5 +1,3 @@
-from collections import Counter
-
 import pytest
 from django.db import IntegrityError
 

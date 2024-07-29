@@ -10,3 +10,18 @@ from .related import (
     RemoteResource,
     Temporal,
 )
+
+__all__ = [
+    "Dataset",
+    "CatalogRecord",
+    "MetadataProvider",
+    "OtherIdentifier",
+    "DatasetActor",
+    "DatasetProject",
+    "EntityRelation",
+    "FileSet",
+    "Funder",
+    "Funding",
+    "RemoteResource",
+    "Temporal",
+]

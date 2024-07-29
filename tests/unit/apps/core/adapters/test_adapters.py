@@ -2,7 +2,6 @@ import json
 import logging
 import os
 from datetime import datetime
-from pprint import pprint
 
 import pytest
 from rest_framework import serializers

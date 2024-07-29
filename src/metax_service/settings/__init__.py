@@ -9,7 +9,7 @@ To change settings file:
 from os import environ
 
 from dotenv import load_dotenv
-from split_settings.tools import include, optional
+from split_settings.tools import include
 
 load_dotenv()
 # Managing environment via DJANGO_ENV variable:

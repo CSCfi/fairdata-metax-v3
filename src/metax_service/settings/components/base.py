@@ -9,7 +9,6 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
-import json
 import os
 import sys
 from datetime import timedelta
@@ -256,7 +255,7 @@ if ENABLE_DRF_TOKEN_AUTH:
 # some deprecation checks while settings have not been fully loaded.
 # Import late in file to avoid e.g. warnings about changed default
 # in USE_TZ.
-from drf_yasg.app_settings import SWAGGER_DEFAULTS
+from drf_yasg.app_settings import SWAGGER_DEFAULTS  # noqa: E402
 
 SWAGGER_SETTINGS = {
     "DEEP_LINKING": True,  # Automatically update URL fragment with current operation in Swagger UI

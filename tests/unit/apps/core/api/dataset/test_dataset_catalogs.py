@@ -1,19 +1,10 @@
-import json
 import logging
-from copy import deepcopy
-from unittest.mock import ANY
 
 import pytest
 from django.contrib.auth.models import Group
-from rest_framework.reverse import reverse
-from tests.utils import assert_nested_subdict, matchers
 
 from apps.core import factories
-from apps.core.factories import DatasetFactory, MetadataProviderFactory
-from apps.core.models import OtherIdentifier
 from apps.core.models.catalog_record.dataset import Dataset
-from apps.core.models.concepts import IdentifierType
-from apps.files.factories import FileStorageFactory
 
 logger = logging.getLogger(__name__)
 

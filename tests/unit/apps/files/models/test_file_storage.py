@@ -1,6 +1,4 @@
 import pytest
-from django.conf import settings as s
-from rest_framework import serializers
 
 from apps.files.models.file_storage import (
     BasicFileStorage,

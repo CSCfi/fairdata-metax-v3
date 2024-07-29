@@ -196,7 +196,7 @@ def test_files_list_include_removed(admin_client, file_tree_a):
         "include_removed": False,
     }
     res = admin_client.get(
-        f"/v3/files",
+        "/v3/files",
         {**params, "storage_identifier": storage_identifier},
         content_type="application/json",
     )
@@ -204,7 +204,7 @@ def test_files_list_include_removed(admin_client, file_tree_a):
 
     # also non-removed files should be included
     res = admin_client.get(
-        f"/v3/files",
+        "/v3/files",
         {**params, "storage_identifier": storage_identifier, "include_removed": True},
         content_type="application/json",
     )
@@ -214,7 +214,7 @@ def test_files_list_include_removed(admin_client, file_tree_a):
 
     # also non-removed files should be included
     res = admin_client.get(
-        f"/v3/files",
+        "/v3/files",
         {**params, "pathname": "/dir/", "include_removed": True},
         content_type="application/json",
     )
@@ -256,13 +256,14 @@ def test_files_retrieve_include_removed(admin_client, file_tree_a):
 
 def test_files_list_invalid_storage_service(admin_client, file_tree_a):
     res = admin_client.get(
-        f"/v3/files?storage_service=doesnotexist",
+        "/v3/files?storage_service=doesnotexist",
         content_type="application/json",
     )
     assert res.status_code == 400
     assert "'doesnotexist' is not a valid choice. Valid choices are" in str(
         res.data["storage_service"]
     )
+
 
 # new dataset
 # existing dataset
@@ -273,12 +274,3 @@ def test_files_list_invalid_storage_service(admin_client, file_tree_a):
 # ?delete files?
 
 # *test also with files in other dataset
-
-
-def test_files_get(admin_client, file_tree_a):
-    res = admin_client.get(
-        "/v3/files",
-        file_tree_a["params"],
-        content_type="application/json",
-    )
-    assert res.data["count"] == 16

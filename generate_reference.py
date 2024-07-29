@@ -299,7 +299,7 @@ def write_docs(modules: list) -> None:
     used_files.add(write_summary(modules))
 
     handle_obsolete_files(used_files)
-    logger.info(f"Reference updated.")
+    logger.info("Reference updated.")
 
 
 def generate_refs(packages, exclude=[], include_only_files=None) -> None:

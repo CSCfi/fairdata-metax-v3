@@ -1,14 +1,14 @@
 import logging
 
-import jwt
 import pytest
 from django.conf import settings as django_settings
-from django.urls import NoReverseMatch, reverse
+from django.urls import reverse
 from django.utils import timezone
-from rest_framework.test import force_authenticate
+from http.cookies import SimpleCookie
+
 
 logger = logging.getLogger(__name__)
-from http.cookies import SimpleCookie
+
 
 
 @pytest.mark.django_db

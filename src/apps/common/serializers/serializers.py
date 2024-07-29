@@ -11,7 +11,7 @@ from ast import literal_eval
 from contextlib import contextmanager
 from uuid import UUID
 
-from django.core.exceptions import FieldDoesNotExist, ObjectDoesNotExist
+from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers

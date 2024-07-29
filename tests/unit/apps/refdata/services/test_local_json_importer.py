@@ -48,7 +48,7 @@ def test_import_update(local_ref_data_importer, caplog):
         pref_label={"en": "Öppen"},  # Will be updated to "Open"
         deprecated="2022-02-05T01:02:03Z",  # Will be updated to None
     )
-    unchanged_accesstype = AccessType.all_objects.create(
+    AccessType.all_objects.create(
         url="http://uri.suomi.fi/codelist/fairdata/access_type/code/restricted",
         in_scheme="http://uri.suomi.fi/codelist/fairdata/access_type",
         pref_label={"fi": "Saatavuutta rajoitettu", "en": "Restricted use"},

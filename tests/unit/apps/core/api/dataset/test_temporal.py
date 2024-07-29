@@ -1,9 +1,7 @@
 import logging
 
 import pytest
-from rest_framework import serializers
 
-from apps.core.serializers import SpatialModelSerializer
 
 logger = logging.getLogger(__name__)
 

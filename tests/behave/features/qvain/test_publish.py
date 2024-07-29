@@ -1,5 +1,3 @@
-from unittest.mock import Mock, patch
-
 import pytest
 from pytest_bdd import scenario, then, when
 

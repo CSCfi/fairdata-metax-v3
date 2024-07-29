@@ -20,3 +20,26 @@ from .metadata_provider_serializer import MetadataProviderModelSerializer
 from .preservation_serializers import ContractModelSerializer, PreservationModelSerializer
 from .project_serializer import ProjectModelSerializer
 from .provenance_serializers import ProvenanceModelSerializer
+
+__all__ = [
+    "AccessRightsModelSerializer",
+    "CatalogHomePageModelSerializer",
+    "DatasetPublisherModelSerializer",
+    "LicenseModelSerializer",
+    "OtherIdentifierModelSerializer",
+    "TemporalModelSerializer",
+    "SpatialModelSerializer",
+    "DataCatalogModelSerializer",
+    "DatasetActorProvenanceSerializer",
+    "DatasetActorSerializer",
+    "DatasetAllowedActionsQueryParamsSerializer",
+    "DatasetAllowedActionsSerializer",
+    "FileSetSerializer",
+    "DatasetSerializer",
+    "LegacyDatasetModelSerializer",
+    "MetadataProviderModelSerializer",
+    "ContractModelSerializer",
+    "PreservationModelSerializer",
+    "ProjectModelSerializer",
+    "ProvenanceModelSerializer",
+]

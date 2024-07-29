@@ -1,6 +1,5 @@
 import logging
 
-from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.core.validators import MinLengthValidator
 from django.db import models
@@ -513,7 +512,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         self._change_reason = reason
 
     def create_persistent_identifier(self):
-        if self.persistent_identifier != None:
+        if self.persistent_identifier is not None:
             logger.info("Dataset already has a PID. PID is not created")
             return
         if self.state == self.StateChoices.DRAFT:
@@ -522,10 +521,10 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         if self.pid_type == self.PIDTypes.URN and self._can_create_urn():
             dataset_id = self.id
             try:
-                pid = PIDMSClient.createURN(dataset_id)
+                pid = PIDMSClient.create_urn(dataset_id)
                 self.persistent_identifier = pid
             except ServiceUnavailableError as e:
-                e.detail = f"Error when creating persistent identifier. Please try again later."
+                e.detail = "Error when creating persistent identifier. Please try again later."
                 raise e
 
     def publish(self):

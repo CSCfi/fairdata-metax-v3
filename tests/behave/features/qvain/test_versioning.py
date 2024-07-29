@@ -5,7 +5,6 @@ from django.forms import model_to_dict
 from pytest_bdd import scenario, then, when
 
 from apps.core.models import Dataset
-from apps.users.models import MetaxUser
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +39,7 @@ def created_new_dataset_version(published_dataset):
     del original_fields["creator"]
     new_version = Dataset(**original_fields)
 
-    new_version = ResearchDataset(**original_fields)
+    new_version = Dataset(**original_fields)
     new_version.data_catalog = published_dataset.data_catalog
     new_version.title = {"en": "new title"}
 

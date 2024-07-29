@@ -100,7 +100,7 @@ def test_dataset_snippets(
     assert parse_datetime(temporal_json["temporal"][1]["start_date"]) == parse_datetime(
         res.data["temporal"][1]["start_date"]
     )
-    assert res.data["temporal"][1]["end_date"] == None
+    assert res.data["temporal"][1]["end_date"] is None
 
     assert len(res.data["spatial"]) == 1
     assert_nested_subdict(spatial_json, res.data["spatial"][0])

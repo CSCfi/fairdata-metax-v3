@@ -1,17 +1,10 @@
 import logging
 
-from django_filters import rest_framework as filters
-from drf_yasg.utils import swagger_auto_schema
 from rest_framework.generics import get_object_or_404
 
 from apps.common.views import CommonModelViewSet
 from apps.core.models import Dataset
 from apps.core.permissions import DatasetAccessPolicy, DatasetNestedAccessPolicy
-from apps.core.serializers import (
-    AccessRightsModelSerializer,
-    DatasetActorSerializer,
-    ProvenanceModelSerializer,
-)
 
 logger = logging.getLogger(__name__)
 

@@ -7,12 +7,10 @@
 
 import logging
 
-from django.core.exceptions import FieldError
 from django.db import transaction
 from django.db.models import Prefetch, Q, QuerySet
 from django.http import Http404
 from django.utils.decorators import method_decorator
-from django.utils.translation import gettext_lazy as _
 from django_filters import rest_framework as filters
 from django_filters.fields import CSVWidget
 from drf_yasg.openapi import TYPE_STRING, Parameter, Response
@@ -26,7 +24,6 @@ from watson import search
 
 from apps.common.filters import MultipleCharFilter
 from apps.common.helpers import ensure_dict, omit_empty
-from apps.common.pagination import OffsetPagination
 from apps.common.serializers.serializers import (
     FlushQueryParamsSerializer,
     IncludeRemovedQueryParamsSerializer,
@@ -34,7 +31,6 @@ from apps.common.serializers.serializers import (
 from apps.common.views import CommonModelViewSet
 from apps.core.models.catalog_record import Dataset, FileSet
 from apps.core.models.data_catalog import DataCatalog
-from apps.core.models.legacy import LegacyDataset
 from apps.core.models.legacy_converter import LegacyDatasetConverter
 from apps.core.models.preservation import Preservation
 from apps.core.permissions import DataCatalogAccessPolicy, DatasetAccessPolicy

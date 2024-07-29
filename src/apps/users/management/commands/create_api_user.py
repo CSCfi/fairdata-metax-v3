@@ -31,7 +31,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         with transaction.atomic():
-            User = get_user_model()
+            User = get_user_model()  # noqa: N806
             user, created = User.objects.get_or_create(username=options["username"])
             groups = options.get("groups")
             token_override = options.get("token_override")

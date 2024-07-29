@@ -62,9 +62,6 @@ class AccessRights(AbstractBaseModel):
     )
     history = SnapshotHistoricalRecords(m2m_fields=(license,))
 
-    class Meta(AbstractBaseModel.Meta):
-        verbose_name_plural = "Access rights"
-
     def __str__(self):
         description = self.description
         if isinstance(description, str):
@@ -107,3 +104,4 @@ class AccessRights(AbstractBaseModel):
 
     class Meta:
         ordering = ["created", "id"]
+        verbose_name_plural = "Access rights"

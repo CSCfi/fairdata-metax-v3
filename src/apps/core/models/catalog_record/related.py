@@ -4,7 +4,7 @@ from typing import Optional
 
 from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.db import models
-from django.db.models import Count, Q, Sum
+from django.db.models import Count, Sum
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.utils.functional import cached_property

@@ -1,6 +1,5 @@
 from rest_framework import status
-from rest_framework.exceptions import APIException, AuthenticationFailed, _get_error_details
-from rest_framework.serializers import ValidationError
+from rest_framework.exceptions import APIException, AuthenticationFailed
 from rest_framework.views import exception_handler as default_handler
 
 from apps.common.helpers import get_attr_or_item

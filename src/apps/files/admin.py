@@ -1,5 +1,3 @@
-from copy import copy
-
 from django.conf import settings
 from django.contrib import admin
 from django.db.models import TextField
@@ -83,11 +81,6 @@ class FileStorageProxyAdmin(AbstractDatasetPropertyBaseAdmin, PolymorphicChildMo
 
 
 @admin.register(BasicFileStorage)
-class BasicFileStorageAdmin(FileStorageProxyAdmin):
-    pass
-
-
-@admin.register(ProjectFileStorage)
 class BasicFileStorageAdmin(FileStorageProxyAdmin):
     pass
 

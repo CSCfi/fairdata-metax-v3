@@ -1,7 +1,6 @@
 import pytest
 
 from apps.core.factories import DatasetActorFactory
-from apps.core.models.catalog_record.dataset import Dataset
 
 pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
 

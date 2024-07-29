@@ -146,7 +146,7 @@ def test_directory_dataset_include_all(admin_client, file_tree_with_datasets):
 
 
 def test_directory_dataset_no_files_dataset(admin_client, file_tree_with_datasets):
-    dataset = factories.DatasetFactory()
+    factories.DatasetFactory()
     res = admin_client.get(
         "/v3/directories",
         {

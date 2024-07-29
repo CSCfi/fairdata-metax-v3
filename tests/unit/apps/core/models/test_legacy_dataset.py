@@ -1,6 +1,6 @@
 import pytest
 
-from apps.core.models import Dataset, LegacyDataset
+from apps.core.models import LegacyDataset
 
 pytestmark = [pytest.mark.adapter]
 

@@ -1,7 +1,6 @@
 from datetime import datetime
 
 import pytest
-from tests.utils import matchers
 
 from apps.core.factories import LocationFactory
 from apps.core.models import Theme
@@ -33,7 +32,7 @@ def test_convert_spatial(converter):
         }
     )
     assert spatial["reference"]["pref_label"]["fi"] == "Alppikylä (Helsinki)"
-    assert spatial["custom_wkt"] == None
+    assert spatial["custom_wkt"] is None
 
     # as_wkt does not match place_uri location, keep in custom_wkt
     spatial = converter.convert_spatial(
@@ -79,12 +78,12 @@ def test_fix_url(converter):
         "https://example.com/space here and%20here?msg=hello world space#1 2"
     )
     assert url == "https://example.com/space%20here%20and%20here?msg=hello+world+space#1%202"
-    assert fixed == True
+    assert fixed is True
 
     # Fix whitespace silently
     url, fixed = converter.fix_url("  https://example.com/ok  ")
     assert url == "https://example.com/ok"
-    assert fixed == False
+    assert fixed is False
 
 
 def test_convert_create_missing_reference_data():

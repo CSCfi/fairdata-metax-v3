@@ -1,4 +1,3 @@
-import json
 import logging
 from unittest.mock import ANY
 
@@ -90,7 +89,7 @@ def test_aggregation_and_filters(
     assert res.data["count"] == 3
 
     res = admin_client.get("/v3/datasets/aggregates")
-    assert res.data != None
+    assert res.data is not None
     assert list(sorted(key for key, value in res.data.items())) == [
         "access_type",
         "creator",
@@ -693,7 +692,7 @@ def test_empty_description(admin_client, dataset_a_json, data_catalog, reference
         content_type="application/json",
     )
     assert res.status_code == 200
-    assert res.json()["description"] == None
+    assert res.json()["description"] is None
 
 
 def test_api_version(admin_client, dataset_a_json, data_catalog, reference_data):
@@ -789,7 +788,7 @@ def test_get_dataset_include_nulls(admin_client, dataset_a_json, data_catalog, r
     res = admin_client.get(
         f"/v3/datasets/{dataset_id}?include_nulls=true", content_type="application/json"
     )
-    assert res.data["deprecated"] == None
+    assert res.data["deprecated"] is None
 
 
 def test_missing_required_fields(admin_client, data_catalog, reference_data):

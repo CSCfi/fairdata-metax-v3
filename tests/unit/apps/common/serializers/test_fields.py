@@ -11,7 +11,7 @@ def test_multi_language_field():
 
 def test_multi_language_field_null():
     field = MultiLanguageField(allow_null=True)
-    assert field.to_internal_value({"nothing": ""}) == None
+    assert field.to_internal_value({"nothing": ""}) is None
 
 
 def test_multi_language_field_null_not_allowed():
@@ -22,6 +22,6 @@ def test_multi_language_field_null_not_allowed():
 
 def test_nullable_char_field():
     field = NullableCharField(allow_null=True)
-    assert field.run_validation("     ") == None
+    assert field.run_validation("     ") is None
     field = NullableCharField(allow_null=True, trim_whitespace=False)
     assert field.run_validation("     ") == "     "

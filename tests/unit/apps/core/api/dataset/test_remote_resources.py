@@ -1,10 +1,8 @@
 import logging
 
 import pytest
-from rest_framework import serializers
 from tests.utils.utils import assert_nested_subdict
 
-from apps.core.serializers import SpatialModelSerializer
 from apps.files.factories import FileStorageFactory
 
 logger = logging.getLogger(__name__)

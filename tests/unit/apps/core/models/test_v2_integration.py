@@ -1,10 +1,9 @@
 import re
 
 import pytest
+from apps.core.signals import LegacyUpdateFailed, dataset_created, dataset_updated
 
 pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
-
-from apps.core.signals import LegacyUpdateFailed, dataset_created, dataset_updated
 
 
 @pytest.mark.adapter

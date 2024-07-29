@@ -1,5 +1,5 @@
 import pytest
-from rest_framework.fields import DateTimeField, UUIDField
+from rest_framework.fields import UUIDField
 from tests.utils import assert_nested_subdict
 
 pytestmark = [pytest.mark.django_db, pytest.mark.file]

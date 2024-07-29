@@ -20,10 +20,6 @@
 
 ### :::src.apps.files.admin.BasicFileStorageAdmin
 
-## BasicFileStorageAdmin
-
-### :::src.apps.files.admin.BasicFileStorageAdmin
-
 ## IDAFileStorageAdmin
 
 ### :::src.apps.files.admin.IDAFileStorageAdmin

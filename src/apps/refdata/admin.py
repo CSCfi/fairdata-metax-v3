@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib import admin
-from django.db.models import Case, F, When
+from django.db.models import Case, When
 
 from apps.common.admin import SystemCreatorBaseAdmin
 from apps.refdata.models import reference_data_models

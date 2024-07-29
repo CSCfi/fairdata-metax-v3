@@ -10,7 +10,7 @@ pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
 
 # Create a dataset with PID into a harvested catalog
 # Check that PID is saved properly
-def test_create_harvested_dataset_with_PID(
+def test_create_harvested_dataset_with_pid(
     admin_client, dataset_a_json, datacatalog_harvested_json, reference_data
 ):
     dataset = dataset_a_json
@@ -38,7 +38,7 @@ def test_create_harvested_dataset_with_PID(
 
 # Create a dataset without PID into a harvested catalog
 # Check that dataset creation results into an error
-def test_create_harvested_dataset_without_PID(
+def test_create_harvested_dataset_without_pid(
     admin_client, dataset_a_json, datacatalog_harvested_json, reference_data
 ):
     dataset = dataset_a_json
@@ -54,7 +54,7 @@ def test_create_harvested_dataset_without_PID(
 
 # Try to create a dataset with PID into a non-harvested catalog
 # Check that dataset creation results into an error
-def test_create_dataset_with_PID(admin_client, dataset_a_json, data_catalog, reference_data):
+def test_create_dataset_with_pid(admin_client, dataset_a_json, data_catalog, reference_data):
     dataset = dataset_a_json
     dataset["persistent_identifier"] = "some_pid"
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
@@ -63,7 +63,7 @@ def test_create_dataset_with_PID(admin_client, dataset_a_json, data_catalog, ref
 
 # Create a dataset with pid_type=URN
 # Check that it is generated
-def test_create_dataset_with_URN(admin_client, dataset_a_json, data_catalog, reference_data):
+def test_create_dataset_with_urn(admin_client, dataset_a_json, data_catalog, reference_data):
     dataset = dataset_a_json
     dataset["pid_type"] = "URN"
     dataset.pop("persistent_identifier", None)
@@ -71,7 +71,7 @@ def test_create_dataset_with_URN(admin_client, dataset_a_json, data_catalog, ref
     assert res.status_code == 201
     pid = res.json().get("persistent_identifier", None)
     ds_id = res.json().get("id", None)
-    assert pid != None
+    assert pid is not None
 
     # Check that PID stays the same after the dataset has been updated
     new_title = {"title": {"en": "updated title"}}
@@ -90,14 +90,14 @@ def test_create_dataset_with_URN(admin_client, dataset_a_json, data_catalog, ref
 # Try to add remote_resources
 # Check that dataset update results into an error
 # Check that remote resources are not added
-def test_create_dataset_with_DOI(admin_client, dataset_a_json, data_catalog, reference_data):
+def test_create_dataset_with_doi(admin_client, dataset_a_json, data_catalog, reference_data):
     pytest.xfail("PID MS - DOI implementation missing")
     dataset = dataset_a_json
     dataset["pid_type"] = "DOI"
     dataset.pop("persistent_identifier", None)
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
     assert res.status_code == 201
-    assert res.json().pop("persistent_identifier", None) != None
+    assert res.json().pop("persistent_identifier", None) is not None
     ds_id = res.json()["id"]
     remote_resources = [
         {
@@ -131,20 +131,20 @@ def test_create_draft_dataset(admin_client, dataset_a_json, data_catalog, refere
     assert res.status_code == 201
     pid = res.json().get("persistent_identifier", None)
     ds_id = res.json().get("id", None)
-    assert pid == None
+    assert pid is None
 
     res2 = admin_client.post(f"/v3/datasets/{ds_id}/publish", content_type="application/json")
     pid2 = res2.json().get("persistent_identifier", None)
-    assert pid2 != None
+    assert pid2 is not None
 
 
-def mock_createURN_fail(self):
+def mock_create_urn_fail(self):
     raise (ServiceUnavailableError("PID creation failed"))
 
 
 @pytest.fixture()
-def patch_mock_createURN_fail():
-    with mock.patch.object(PIDMSClient, "createURN", mock_createURN_fail) as _fixture:
+def patch_mock_create_urn_fail():
+    with mock.patch.object(PIDMSClient, "create_urn", mock_create_urn_fail) as _fixture:
         yield _fixture
 
 
@@ -152,8 +152,8 @@ def patch_mock_createURN_fail():
 # Check that error message is correct
 # Check that dataset is not created
 @pytest.mark.django_db
-def test_create_dataset_with_failed_PID(
-    admin_client, dataset_a_json, data_catalog, reference_data, patch_mock_createURN_fail
+def test_create_dataset_with_failed_pid(
+    admin_client, dataset_a_json, data_catalog, reference_data, patch_mock_create_urn_fail
 ):
     old_count = Dataset.available_objects.all().count()
     dataset = dataset_a_json
@@ -179,17 +179,17 @@ def test_new_version_has_no_pid(admin_client, dataset_a_json, data_catalog, refe
     assert res.status_code == 201
     pid = res.json().get("persistent_identifier", None)
     ds_id = res.json().get("id", None)
-    assert pid != None
+    assert pid is not None
 
     res2 = admin_client.post(f"/v3/datasets/{ds_id}/new-version")
     assert res2.status_code == 201
     pid2 = res2.json().get("persistent_identifier", None)
     ds_id2 = res2.json().get("id", None)
-    assert pid2 == None
+    assert pid2 is None
 
     res3 = admin_client.post(f"/v3/datasets/{ds_id2}/publish", content_type="application/json")
     pid3 = res3.json().get("persistent_identifier", None)
-    assert pid3 != None
+    assert pid3 is not None
     assert pid3 != pid
 
 

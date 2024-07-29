@@ -1,18 +1,10 @@
-import json
 import logging
 from copy import deepcopy
-from unittest.mock import ANY
 
 import pytest
-from rest_framework.reverse import reverse
-from tests.utils import assert_nested_subdict, matchers
+from tests.utils import assert_nested_subdict
 
-from apps.core import factories
-from apps.core.factories import DatasetFactory, MetadataProviderFactory
-from apps.core.models import OtherIdentifier
 from apps.core.models.catalog_record.dataset import Dataset
-from apps.core.models.concepts import IdentifierType
-from apps.files.factories import FileStorageFactory
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +21,7 @@ def pop_nested_ids(dataset: dict) -> dict:
         if isinstance(object, dict):
             if "id" in object:
                 obj_id = object.pop("id")
-                if not "pref_label" in object:  # ignore refdata
+                if "pref_label" not in object:  # ignore refdata
                     ids[obj_id] = object
             for key, value in object.items():
                 if key != "dataset_versions":  # ignore dataset_versions

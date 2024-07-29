@@ -2,12 +2,11 @@ import copy
 import json
 import logging
 import re
-from typing import Dict, Optional
+from typing import Dict
 
 import shapely
 from deepdiff import DeepDiff, extract
 from django.conf import settings
-from django.utils.translation import gettext as _
 
 from apps.common.helpers import omit_empty, parse_iso_dates_in_nested_dict, process_nested
 from apps.core.models.legacy import LegacyDataset
@@ -104,7 +103,7 @@ class LegacyCompatibility:
             return not self.dataset.dataset_json.get("deprecated")
         if path == "root['date_removed']":
             return not self.dataset.dataset_json.get("removed")
-        if type(removed_value) is str:
+        if isinstance(removed_value, str):
             return removed_value.strip() == ""
         elif removed_value in [None, []]:
             return True
@@ -127,10 +126,10 @@ class LegacyCompatibility:
         if path in fixed_paths:
             return True  # Value has been fixed and we expected it to change
 
-        if type(new) is dict and list(new) == ["as_wkt"]:
+        if isinstance(new, dict) and list(new) == ["as_wkt"]:
             return True  # Allow changes from normalizing as_wkt values
 
-        if type(new) == type(old) == str and new == old.strip():
+        if type(new) == type(old) == str and new == old.strip():  # noqa: E721
             return True  # Allow stripping whitespace
 
     def get_migration_errors_from_diff(self, diff) -> dict:
@@ -183,7 +182,7 @@ class LegacyCompatibility:
                     }
                 else:
                     return None  # Remove entire object
-            if type(value) is str:
+            if isinstance(value, str):
                 value = value.strip()
                 if wkt_re.match(path):
                     # Normalize wkt

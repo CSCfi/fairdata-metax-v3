@@ -4,7 +4,6 @@ import uuid
 from django.db import models
 
 from apps.common.copier import ModelCopier
-from apps.common.models import AbstractBaseModel
 from apps.files.models import File, FileStorage
 
 from .concepts import FileType, UseCategory

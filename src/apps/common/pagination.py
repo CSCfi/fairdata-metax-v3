@@ -26,7 +26,7 @@ class OffsetPagination(LimitOffsetPagination):
     def pagination_enabled(self, request):
         try:
             value = request.query_params[self.pagination_param]
-            if NullBooleanField().to_python(value) == False:
+            if not NullBooleanField().to_python(value):
                 return False
         except (KeyError, ValueError):
             pass

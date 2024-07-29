@@ -3,3 +3,14 @@ from .dataset_view import DatasetDirectoryViewSet, DatasetFilesViewSet, DatasetV
 from .index_view import IndexView
 from .legacy_view import LegacyDatasetViewSet
 from .preservation_view import ContractViewSet, PreservationViewSet
+
+__all__ = [
+    "DataCatalogView",
+    "DatasetDirectoryViewSet",
+    "DatasetFilesViewSet",
+    "DatasetViewSet",
+    "IndexView",
+    "LegacyDatasetViewSet",
+    "ContractViewSet",
+    "PreservationViewSet",
+]

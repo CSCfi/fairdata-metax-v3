@@ -2,7 +2,6 @@ import copy
 import getpass
 import json
 import logging
-import uuid
 from argparse import ArgumentParser
 from typing import Optional
 

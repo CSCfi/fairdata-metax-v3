@@ -5,6 +5,7 @@ fields that accept reference data.
 
 Used for generating the table in `docs/user-guide/reference-data.md`.
 """
+# ruff: noqa: E402
 
 import os
 import sys
@@ -39,7 +40,7 @@ def get_url(serializer):
 
 
 extra_refdata_serializers = {
-    DatasetOrganizationSerializer: reverse(f"organization-list"),
+    DatasetOrganizationSerializer: reverse("organization-list"),
     LicenseModelSerializer: get_url(License.get_serializer_class()()),
 }
 

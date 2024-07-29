@@ -1,17 +1,13 @@
 import logging
 
-import jwt
 import pytest
 from django.conf import settings as django_settings
-from django.test import Client
-from django.urls import NoReverseMatch, reverse
-from knox.models import AuthToken
-from knox.settings import CONSTANTS
 from rest_framework.reverse import reverse
-from rest_framework.test import APIClient, force_authenticate
+from rest_framework.test import APIClient
+from http.cookies import SimpleCookie
 
 logger = logging.getLogger(__name__)
-from http.cookies import SimpleCookie
+
 
 
 @pytest.fixture

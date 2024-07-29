@@ -11,7 +11,7 @@ from rest_framework import serializers
 
 from apps.common.serializers import CommonNestedModelSerializer
 from apps.core.models import DataCatalog, Language
-from apps.core.serializers import AccessRightsModelSerializer, DatasetPublisherModelSerializer
+from apps.core.serializers import DatasetPublisherModelSerializer
 
 logger = logging.getLogger(__name__)
 

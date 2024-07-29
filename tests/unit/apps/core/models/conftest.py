@@ -5,21 +5,18 @@ from apps.core.models import (
     AccessRights,
     AccessType,
     CatalogHomePage,
-    CatalogRecord,
     Contract,
-    DataCatalog,
     Dataset,
     DatasetLicense,
     DatasetPublisher,
     FieldOfScience,
     Language,
     MetadataProvider,
-    Preservation,
     ResearchInfra,
     Theme,
 )
 from apps.files.factories import FileFactory
-from apps.files.models import File, FileStorage
+from apps.files.models import File
 
 
 @pytest.fixture

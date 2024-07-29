@@ -4,7 +4,6 @@ import pytest
 from rest_framework import serializers
 
 from apps.core.serializers import LicenseModelSerializer
-from apps.refdata.models import License
 
 logger = logging.getLogger(__name__)
 

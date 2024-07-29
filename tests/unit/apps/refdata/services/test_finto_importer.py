@@ -1,8 +1,6 @@
 from os import path
-from uuid import UUID
 
 import pytest
-from django.conf import settings
 
 from apps.refdata.models import FieldOfScience, Location
 from apps.refdata.services.importers import FintoImporter, FintoLocationImporter

@@ -2,8 +2,6 @@ import pytest
 from tests.utils import matchers
 
 from apps.core import factories
-from apps.files import factories as filefactories
-from apps.users.models import MetaxUser
 
 pytestmark = [pytest.mark.django_db, pytest.mark.file]
 

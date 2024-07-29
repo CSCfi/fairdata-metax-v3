@@ -200,7 +200,7 @@ class ProxyBasePolymorphicModel(PolymorphicModel):
         """Return new proxy model instance with supplied arguments.
 
         Proxy model is determined from proxy lookup field value in keyword arguments."""
-        if not cls.proxy_lookup_field in kwargs:
+        if cls.proxy_lookup_field not in kwargs:
             raise ValueError(f"Expected {cls.proxy_lookup_field} keyword argument.")
         model = cls.get_proxy_model(kwargs[cls.proxy_lookup_field])
         return model(*args, **kwargs)

@@ -10,7 +10,6 @@ from rest_framework.test import APIClient
 from apps.core import factories
 from apps.core.models.data_catalog import DataCatalog
 
-from .json_models import DatasetActor, Organization, Person
 
 logger = logging.getLogger(__name__)
 
@@ -60,11 +59,8 @@ def datacatalog_d_json():
 
 @pytest.fixture
 def datacatalog_harvested_json(admin_client, data_catalog_list_url, reference_data):
-    url = data_catalog_list_url
     datacatalog_json = load_test_json("datacatalog_harvested.json")
-    res1 = admin_client.post(
-        "/v3/data-catalogs", datacatalog_json, content_type="application/json"
-    )
+    admin_client.post("/v3/data-catalogs", datacatalog_json, content_type="application/json")
     return datacatalog_json
 
 

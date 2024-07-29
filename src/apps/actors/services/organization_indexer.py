@@ -9,7 +9,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from apps.actors.models import Organization
-from metax_service.settings.components.actors import ORGANIZATION_SCHEME
+from metax_service.settings.components.actors import ORGANIZATION_SCHEME  # noqa: F401
 
 _logger = logging.getLogger(__name__)
 
@@ -77,7 +77,7 @@ class OrganizationIndexer:
                 )
                 writer.writeheader()
                 writer.writerows(orgs)
-            _logger.info(f"CSV updated.")
+            _logger.info("CSV updated.")
         return orgs
 
     def row_to_dict(self, org: dict):
@@ -133,7 +133,7 @@ class OrganizationIndexer:
         return org
 
     def get_orgs_from_csv(self):
-        _logger.info(f"Reading organizations from csv")
+        _logger.info("Reading organizations from csv")
         with open(settings.ORGANIZATION_DATA_FILE) as f:
             reader = csv.DictReader(f, delimiter=",", quotechar='"', lineterminator="\n")
             return list(reader)
@@ -198,7 +198,7 @@ class OrganizationIndexer:
                 org.parent = None
 
             org.save()
-        _logger.info(f"Organizations updated")
+        _logger.info("Organizations updated")
 
     def index(self, cached=False):
         orgs: list

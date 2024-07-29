@@ -1,10 +1,3 @@
-from os import access
-
-import pytest
-
-from apps.core.models.catalog_record import MetadataProvider
-
-
 def test_create_metadata_provider_with_user(metadata_provider, user):
     metadata_provider.user = user
     metadata_provider.save()

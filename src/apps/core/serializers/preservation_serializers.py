@@ -48,7 +48,7 @@ class PreservationModelSerializer(CommonModelSerializer):
 
             if contract is None and state > -1:
                 raise serializers.ValidationError(
-                    {"contract": _(f"Dataset in preservation process must have a contract.")}
+                    {"contract": _("Dataset in preservation process must have a contract.")}
                 )
 
         return super().validate(attrs)

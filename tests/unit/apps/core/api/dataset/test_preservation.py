@@ -1,7 +1,6 @@
 import pytest
 from tests.utils import assert_nested_subdict
 
-from apps.core.factories import ContractFactory, PreservationFactory
 from apps.core.models.catalog_record.dataset import Dataset
 
 pytestmark = [pytest.mark.django_db, pytest.mark.dataset]

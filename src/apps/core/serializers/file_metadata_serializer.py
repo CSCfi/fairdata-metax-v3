@@ -5,7 +5,6 @@
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
 
-from django.utils.translation import gettext_lazy as _
 
 from apps.common.serializers.serializers import CommonModelSerializer, StrictSerializer
 from apps.core.models.concepts import FileType, UseCategory

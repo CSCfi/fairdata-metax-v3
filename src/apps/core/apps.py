@@ -58,7 +58,5 @@ class CoreConfig(AppConfig):
     name = "apps.core"
 
     def ready(self):
-        from apps.core import signals
-
         dataset = self.get_model("Dataset")
         search.register(dataset, DatasetSearchAdapter)

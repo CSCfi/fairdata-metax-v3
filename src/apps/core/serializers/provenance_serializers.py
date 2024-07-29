@@ -1,6 +1,5 @@
 import logging
 
-from apps.common.models import AbstractFreeformConcept
 from apps.common.serializers.serializers import CommonListSerializer, CommonNestedModelSerializer
 from apps.common.serializers.validators import AnyOf
 from apps.core.models import EventOutcome, LifecycleEvent, PreservationEvent, Provenance

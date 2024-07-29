@@ -1,6 +1,5 @@
 from django.contrib.postgres.fields import HStoreField
 from django.db import models
-from django.utils.translation import gettext as _
 
 from apps.common.copier import ModelCopier
 from apps.common.models import AbstractBaseModel

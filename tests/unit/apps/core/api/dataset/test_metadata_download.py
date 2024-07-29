@@ -17,7 +17,7 @@ from apps.files.factories import FileFactory
 @pytest.fixture
 def doi_dataset(admin_client, dataset_maximal_json, data_catalog, reference_data):
     dataset_maximal_json["pid_type"] = "DOI"
-    res = admin_client.post(f"/v3/datasets", dataset_maximal_json, content_type="application/json")
+    res = admin_client.post("/v3/datasets", dataset_maximal_json, content_type="application/json")
     assert res.status_code == 201
 
     # DOI generation not supported yet, create identifier manually
@@ -147,7 +147,7 @@ def test_dataset_metadata_download_datacite(admin_client, doi_dataset):
     ]
 
     # language (only one allowed)
-    assert select(root, f"/resource/language/text()") == ["fi"]
+    assert select(root, "/resource/language/text()") == ["fi"]
 
     # licenses
     assert select(root, "//rightsList/rights/concat(@xml:lang, ':', text())") == [
@@ -235,9 +235,9 @@ def test_dataset_metadata_download_license_custom_url(admin_client):
 
 
 def test_dataset_metadata_download_invalid_id(admin_client):
-    res = admin_client.get(f"/v3/datasets/invalid_id/metadata-download")
+    res = admin_client.get("/v3/datasets/invalid_id/metadata-download")
     assert res.status_code == 404
-    assert res.headers.get("Content-Disposition") == None
+    assert res.headers.get("Content-Disposition") is None
     assert res.data == "Dataset not found."
 
 

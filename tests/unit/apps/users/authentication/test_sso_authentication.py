@@ -6,7 +6,6 @@ import pytest
 from dateutil.parser import parse
 from django.conf import settings as django_settings
 from rest_framework import exceptions
-from rest_framework.reverse import reverse
 from rest_framework.test import APIRequestFactory
 
 from apps.users.authentication import SSOAuthentication
@@ -41,7 +40,7 @@ def test_sso_authentication_ok(make_sso_auth_request, sso_session_teppo):
     user, error = make_sso_auth_request(sso_session_teppo)
     assert user.username == "fd_teppo3"
     assert user.csc_projects == ["fd_teppo3_project"]
-    assert error == None
+    assert error is None
 
 
 def test_sso_authentication_sync(make_sso_auth_request, sso_session_teppo, sso_format_datetime):
@@ -54,7 +53,7 @@ def test_sso_authentication_sync(make_sso_auth_request, sso_session_teppo, sso_f
     # session is newer than previous sync, should sync user details
     user, error = make_sso_auth_request(sso_session_teppo)
     assert user.csc_projects == ["fd_teppo3_project", "new_project"]
-    assert error == None
+    assert error is None
 
 
 def test_sso_authentication_dont_sync_old(make_sso_auth_request, sso_session_teppo):
@@ -64,13 +63,13 @@ def test_sso_authentication_dont_sync_old(make_sso_auth_request, sso_session_tep
     # session is not newer than previous sync, should not sync user details
     user, error = make_sso_auth_request(sso_session_teppo)
     assert user.csc_projects == ["fd_teppo3_project"]
-    assert error == None
+    assert error is None
 
 
 def test_sso_authentication_unauthenticated(make_sso_auth_request):
     user, error = make_sso_auth_request(None)
-    assert user == None
-    assert error == None
+    assert user is None
+    assert error is None
 
 
 # Configuration tests
@@ -79,8 +78,8 @@ def test_sso_authentication_unauthenticated(make_sso_auth_request):
 def test_sso_authentication_disabled(make_sso_auth_request, sso_session_teppo, settings):
     settings.ENABLE_SSO_AUTH = False
     user, error = make_sso_auth_request(sso_session_teppo)
-    assert user == None
-    assert error == None
+    assert user is None
+    assert error is None
 
 
 def test_sso_authentication_missing_secret(make_sso_auth_request, sso_session_teppo, settings):
@@ -108,19 +107,19 @@ def test_sso_authentication_wrong_secret(make_sso_auth_request, sso_session_tepp
 def test_sso_authentication_missing_fairdata_user_id(make_sso_auth_request, sso_session_teppo):
     sso_session_teppo["fairdata_user"]["id"] = None
     user, error = make_sso_auth_request(sso_session_teppo)
-    assert user == None
+    assert user is None
     assert error == "missing_fairdata_user_id"
 
 
 def test_sso_authentication_missing_organization_user_id(make_sso_auth_request, sso_session_teppo):
     sso_session_teppo["authenticated_user"]["organization"]["id"] = None
     user, error = make_sso_auth_request(sso_session_teppo)
-    assert user == None
+    assert user is None
     assert error == "missing_organization_id"
 
 
 def test_sso_authentication_locked_user(make_sso_auth_request, sso_session_teppo):
     sso_session_teppo["fairdata_user"]["locked"] = True
     user, error = make_sso_auth_request(sso_session_teppo)
-    assert user == None
+    assert user is None
     assert error == "fairdata_user_locked"

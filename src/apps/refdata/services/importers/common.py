@@ -4,7 +4,6 @@ from typing import Protocol
 
 from django.conf import settings
 from django.db import transaction
-from django.db.models import prefetch_related_objects
 from django.utils import timezone
 
 from apps.common.helpers import cachalot_toggle

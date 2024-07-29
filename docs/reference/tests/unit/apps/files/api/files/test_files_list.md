@@ -76,7 +76,3 @@
 
 ### :::tests.unit.apps.files.api.files.test_files_list.test_files_list_invalid_storage_service
 
-## test_files_get
-
-### :::tests.unit.apps.files.api.files.test_files_list.test_files_get
-

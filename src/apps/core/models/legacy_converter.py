@@ -9,7 +9,6 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
-from django.utils.translation import gettext as _
 from rest_framework import serializers
 
 from apps.actors.models import Organization

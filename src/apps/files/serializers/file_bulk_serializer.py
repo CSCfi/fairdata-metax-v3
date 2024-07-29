@@ -17,7 +17,7 @@ from rest_framework.settings import api_settings
 
 from apps.common.helpers import get_technical_metax_user
 from apps.common.serializers import StrictSerializer
-from apps.files.models.file import File, FileStorage
+from apps.files.models.file import File
 from apps.files.models.file_storage import FileStorage
 from apps.files.serializers.file_serializer import FileSerializer
 
