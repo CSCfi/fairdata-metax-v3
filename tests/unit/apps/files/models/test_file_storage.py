@@ -22,7 +22,7 @@ def file_storage_settings(settings):
 
 def test_create_file_storage_basic():
     storage = FileStorage.objects.create(storage_service="basic")
-    assert type(storage) == BasicFileStorage
+    assert isinstance(storage, BasicFileStorage)
 
 
 def test_create_file_storage_basic_with_project():
@@ -32,7 +32,7 @@ def test_create_file_storage_basic_with_project():
 
 def test_create_file_storage_project():
     storage = FileStorage.objects.create(storage_service="csc_project", csc_project="x")
-    assert type(storage) == ProjectFileStorage
+    assert isinstance(storage, ProjectFileStorage)
 
 
 def test_create_file_storage_project_without_project():
@@ -42,7 +42,7 @@ def test_create_file_storage_project_without_project():
 
 def test_create_file_storage_ida():
     storage = FileStorage.objects.create(storage_service="ida", csc_project="x")
-    assert type(storage) == IDAFileStorage
+    assert isinstance(storage, IDAFileStorage)
 
 
 def test_create_file_storage_ida_without_project():
