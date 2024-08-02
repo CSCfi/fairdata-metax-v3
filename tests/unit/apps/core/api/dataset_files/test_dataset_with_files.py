@@ -32,36 +32,38 @@ def dataset_json_with_files(deep_file_tree, data_catalog):
 
 
 @pytest.fixture
-def dataset_json_with_files_with_file_types(dataset_json_with_files, deep_file_tree, data_catalog, reference_data):
-    dataset = {
-        **dataset_json_with_files
-    }
-    dataset["fileset"]["file_actions"].extend([
-        {
-            "id": deep_file_tree["files"]["/dir2/subdir2/file1.txt"].id,
-            "dataset_metadata": {
-                "file_type": {
-                    "url": "http://uri.suomi.fi/codelist/fairdata/file_type/code/text"
-                }
-            }
-        },
-        {
-            "id": deep_file_tree["files"]["/dir2/subdir2/file2.txt"].id,
-            "dataset_metadata": {
-                "file_type": {
-                    "url": "http://uri.suomi.fi/codelist/fairdata/file_type/code/video"
-                }
-            }
-        },
-        {
-            "id": deep_file_tree["files"]["/dir2/subdir2/file3.txt"].id,
-            "dataset_metadata": {
-                "file_type": {
-                    "url": "http://uri.suomi.fi/codelist/fairdata/file_type/code/video"
-                }
-            }
-        }
-    ])
+def dataset_json_with_files_with_file_types(
+    dataset_json_with_files, deep_file_tree, data_catalog, reference_data
+):
+    dataset = {**dataset_json_with_files}
+    dataset["fileset"]["file_actions"].extend(
+        [
+            {
+                "id": deep_file_tree["files"]["/dir2/subdir2/file1.txt"].id,
+                "dataset_metadata": {
+                    "file_type": {
+                        "url": "http://uri.suomi.fi/codelist/fairdata/file_type/code/text"
+                    }
+                },
+            },
+            {
+                "id": deep_file_tree["files"]["/dir2/subdir2/file2.txt"].id,
+                "dataset_metadata": {
+                    "file_type": {
+                        "url": "http://uri.suomi.fi/codelist/fairdata/file_type/code/video"
+                    }
+                },
+            },
+            {
+                "id": deep_file_tree["files"]["/dir2/subdir2/file3.txt"].id,
+                "dataset_metadata": {
+                    "file_type": {
+                        "url": "http://uri.suomi.fi/codelist/fairdata/file_type/code/video"
+                    }
+                },
+            },
+        ]
+    )
     return dataset
 
 
@@ -188,7 +190,9 @@ def test_dataset_get_dataset_with_files(admin_client, deep_file_tree, dataset_js
     }
 
 
-def test_dataset_get_dataset_with_files_with_file_types(admin_client, deep_file_tree, dataset_json_with_files_with_file_types):
+def test_dataset_get_dataset_with_files_with_file_types(
+    admin_client, deep_file_tree, dataset_json_with_files_with_file_types
+):
     res = admin_client.post(
         f"/v3/datasets",
         dataset_json_with_files_with_file_types,

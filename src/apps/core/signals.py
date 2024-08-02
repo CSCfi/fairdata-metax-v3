@@ -1,6 +1,7 @@
 import json
 import logging
 from datetime import date, datetime
+from typing import List
 
 import requests
 import urllib3
@@ -57,7 +58,7 @@ def delete_dataset_from_v2(sender, instance: Dataset, **kwargs):
         params["hard"] = None
 
     host, headers = get_v2_request_settings()
-    res = requests.delete(url=f"{host}/{instance.id}", headers=headers, params=params)
+    res = requests.delete(url=f"{host}/datasets/{instance.id}", headers=headers, params=params)
 
     if res.status_code <= 204:
         logger.info(f"response form metax v2: {res}")
@@ -68,11 +69,11 @@ def delete_dataset_from_v2(sender, instance: Dataset, **kwargs):
 
 def fetch_dataset_from_v2(pid: str):
     host, headers = get_v2_request_settings()
-    return requests.get(url=f"{host}?preferred_identifier={pid}", headers=headers)
+    return requests.get(url=f"{host}/datasets?preferred_identifier={pid}", headers=headers)
 
 
 def get_v2_request_settings():
-    host = f"{settings.METAX_V2_HOST}/rest/v2/datasets"
+    host = f"{settings.METAX_V2_HOST}/rest/v2"
     headers = urllib3.make_headers(
         basic_auth=f"{settings.METAX_V2_USER}:{settings.METAX_V2_PASSWORD}",
     )
@@ -102,17 +103,17 @@ def update_dataset_in_v2(dataset: Dataset, created=False):
 
     found = False
     if not created:
-        response = requests.get(url=f"{host}/{identifier}", headers=headers)
+        response = requests.get(url=f"{host}/datasets/{identifier}", headers=headers)
         found = response.status_code == 200
 
     res: requests.Response
     body = json.dumps(v2_dataset, cls=DjangoJSONEncoder)
     if found:
         res = requests.put(
-            url=f"{host}/{identifier}?migration_override", data=body, headers=headers
+            url=f"{host}/datasets/{identifier}?migration_override", data=body, headers=headers
         )
     else:
-        res = requests.post(url=f"{host}?migration_override", data=body, headers=headers)
+        res = requests.post(url=f"{host}/datasets?migration_override", data=body, headers=headers)
     if res.status_code in {200, 201}:
         logger.info(f"Sync {identifier} to V2: {res.status_code=}")
     else:

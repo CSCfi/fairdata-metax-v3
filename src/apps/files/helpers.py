@@ -71,3 +71,27 @@ def convert_checksum_v2_to_v3(checksum: dict, value_key="value") -> Optional[str
     algorithm = checksum.get("algorithm", "").lower().replace("-", "")
     value = checksum.get(value_key, "").lower()
     return f"{algorithm}:{value}"
+
+
+def convert_checksum_v3_to_v2(checksum: str) -> Optional[dict]:
+    if not checksum:
+        return None
+
+    try:
+        algo, value = checksum.split(":", maxsplit=1)
+    except ValueError:
+        algo = None
+        value = checksum
+
+    v2_algos = {
+        "md5": "MD5",
+        "sha1": "SHA-1",
+        "sha224": "SHA-224",
+        "sha256": "SHA-384",
+        "sha512": "SHA-512",
+    }
+    v2_algo = v2_algos.get(algo, "OTHER")
+    return {
+        "checksum_value": value,
+        "algorithm": v2_algo,
+    }

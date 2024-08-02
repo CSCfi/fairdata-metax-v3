@@ -297,6 +297,9 @@ LEGACY_FILE_STORAGE_TO_V3_STORAGE_SERVICE = {
     "urn:nbn:fi:att:file-storage-pas": "pas",
     "pid:urn:storageidentifier1": "legacy-test-storage-1",
 }
+V3_STORAGE_SERVICE_TO_LEGACY_FILE_STORAGE = {
+    value: key for key, value in LEGACY_FILE_STORAGE_TO_V3_STORAGE_SERVICE.items()
+}
 
 # Define supported storage services and their FileStorage proxy class
 STORAGE_SERVICE_FILE_STORAGES = {

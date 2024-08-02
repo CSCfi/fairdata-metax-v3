@@ -34,7 +34,7 @@ from apps.files.serializers.file_bulk_serializer import (
     FileBulkReturnValueSerializer,
     FileBulkSerializer,
 )
-from apps.files.signals import pre_files_deleted
+from apps.files.signals import pre_files_deleted, sync_files
 
 logger = logging.getLogger(__name__)
 
@@ -285,6 +285,10 @@ class FileViewSet(BaseFileViewSet):
         status = 200
         if serializer.data.get("failed") and not ignore_errors:
             status = 400
+
+        if serializer.instance:
+            sync_files.send(sender=File, actions=serializer.instance)
+
         return Response(serializer.data, status=status)
 
     @swagger_auto_schema(
@@ -345,11 +349,32 @@ class FileViewSet(BaseFileViewSet):
         count = queryset.count()
 
         pre_files_deleted.send(sender=File, queryset=queryset)
+        sync_files.send(
+            sender=File,
+            actions=[{"action": BulkAction.DELETE, "object": file} for file in queryset],
+        )
 
         queryset.delete()
-
         return Response(DeleteListReturnValueSerializer(instance={"count": count}).data, 200)
+
+    def perform_create(self, serializer):
+        super().perform_create(serializer)
+        sync_files.send(
+            sender=File,
+            actions=[{"action": BulkAction.INSERT, "object": serializer.instance}],
+        )
+
+    def perform_update(self, serializer):
+        super().perform_update(serializer)
+        sync_files.send(
+            sender=File,
+            actions=[{"action": BulkAction.UPDATE, "object": serializer.instance}],
+        )
 
     def perform_destroy(self, instance):
         pre_files_deleted.send(sender=File, queryset=File.objects.filter(id=instance.id))
-        return super().perform_destroy(instance)
+        super().perform_destroy(instance)
+        sync_files.send(
+            sender=File,
+            actions=[{"action": BulkAction.DELETE, "object": instance}],
+        )

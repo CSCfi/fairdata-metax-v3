@@ -1,7 +1,11 @@
 from collections import OrderedDict
+from datetime import datetime, timedelta, timezone as tz
+from typing import Union
 
 from django.utils.dateparse import parse_date, parse_datetime
 from rest_framework import exceptions, fields
+
+from apps.common.helpers import parse_date_or_datetime
 
 
 def _values_eql(a, b):
@@ -83,3 +87,20 @@ def assert_nested_subdict(
             )
 
     recurse(sub, full, path="")
+
+
+def ensure_datetime(value: Union[str, datetime]) -> datetime:
+    if isinstance(value, datetime):
+        return value
+    try:
+        # Depending on error, parse_datetime may return None or raise TypeError
+        if dt := parse_datetime(value):
+            return dt.astimezone(tz.utc)
+    except TypeError:
+        raise AssertionError(f"Value {value} is not a valid date or datetime")
+
+
+def assert_same_datetime(a: Union[str, datetime], b: Union[str, datetime], tolerance=1.0):
+    date_a = ensure_datetime(a)
+    date_b = ensure_datetime(b)
+    assert abs(date_a - date_b) <= timedelta(seconds=tolerance)

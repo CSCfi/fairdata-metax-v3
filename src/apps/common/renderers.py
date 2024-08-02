@@ -1,5 +1,6 @@
 import logging
 import re
+from datetime import timezone as tz
 
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
@@ -33,7 +34,7 @@ class CustomTimeJSONRenderer(renderers.JSONRenderer):
                     current_timezone = timezone.get_current_timezone()
                     if timezone.is_naive(datetime_obj):
                         datetime_obj = timezone.make_aware(datetime_obj, current_timezone)
-                    utc_datetime = datetime_obj.astimezone(timezone.utc)
+                    utc_datetime = datetime_obj.astimezone(tz.utc)
                     return utc_datetime.strftime(time_format)
                 except ValueError as e:
                     logger.error(e)
