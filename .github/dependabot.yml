@@ -10,10 +10,12 @@ updates:
     schedule:
       interval: "daily"
     groups:
-      django-related:
+      django-related-patches:
         applies-to: version-updates
         patterns:
         - "django*"
+        update-types:
+        - "patch"
       development-dependencies:
         dependency-type: "development"
         exclude-patterns:
