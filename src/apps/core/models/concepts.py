@@ -44,6 +44,9 @@ class ConceptProxyMixin:
         serializer = cls.get_serializer_class()()
         return URLReferencedModelField(child=serializer, **kwargs)
 
+    def __str__(self):
+        return self.get_label()
+
     class Meta:
         proxy = True
 

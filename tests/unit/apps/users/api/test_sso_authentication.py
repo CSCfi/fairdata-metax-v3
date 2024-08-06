@@ -10,7 +10,6 @@ from rest_framework.test import force_authenticate
 logger = logging.getLogger(__name__)
 from http.cookies import SimpleCookie
 
-
 @pytest.mark.django_db
 def test_sso_login(client, user, enable_sso):
     resp = client.get(reverse("login") + "?next=/v3/somewhere")
