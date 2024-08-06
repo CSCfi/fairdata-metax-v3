@@ -35,7 +35,5 @@ def minimal_dataset_with_files_json():
 @pytest.fixture
 def harvested_datacatalog(admin_client, reference_data):
     datacatalog_json = load_test_json("data-catalog-harvested.json")
-    admin_client.post(
-        "/v3/data-catalogs", datacatalog_json, content_type="application/json"
-    )
+    admin_client.post("/v3/data-catalogs", datacatalog_json, content_type="application/json")
     return datacatalog_json

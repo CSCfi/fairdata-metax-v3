@@ -19,6 +19,7 @@ class OrganizationAdmin(admin.ModelAdmin):
     search_fields = ("url", "pref_label")
     list_display = ("id", "url", "label_en", "parent_label")
     ordering = ["url"]
+    autocomplete_fields = ("parent", )
 
     def get_queryset(self, request):
         return super().get_queryset(request).prefetch_related("parent", "children")
@@ -46,8 +47,11 @@ class ActorAdmin(admin.ModelAdmin):
         "person",
         "organization",
     )
+    search_fields = ("person__name", "person__email", "organization__pref_label__values")
+    autocomplete_fields = ("organization",)
 
 
 @admin.register(Person)
 class PersonAdmin(admin.ModelAdmin):
     list_display = ("name", "email")
+    search_fields = ("name", "email")

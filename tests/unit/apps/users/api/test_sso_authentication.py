@@ -10,7 +10,6 @@ from http.cookies import SimpleCookie
 logger = logging.getLogger(__name__)
 
 
-
 @pytest.mark.django_db
 def test_sso_login(client, user, enable_sso):
     resp = client.get(reverse("login") + "?next=/v3/somewhere")

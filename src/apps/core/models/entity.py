@@ -29,5 +29,19 @@ class Entity(AbstractBaseModel):
         blank=True,
     )
 
+    def __str__(self):
+        if self.title:
+            return (
+                self.title.get("en") or self.title.get("fi") or next(iter(self.title.values()), "")
+            )
+        elif self.description:
+            return (
+                self.description.get("en")
+                or self.description.get("fi")
+                or next(iter(self.description.values()), "")
+            )
+        else:
+            return str(self.id)
+
     class Meta(AbstractBaseModel.Meta):
         verbose_name_plural = "Entities"

@@ -100,20 +100,9 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         Language,
         related_name="datasets",
         blank=True,
-        limit_choices_to={"is_essential_choice": True},
     )
-    theme = models.ManyToManyField(
-        Theme,
-        related_name="datasets",
-        blank=True,
-        limit_choices_to={"is_essential_choice": True},
-    )
-    field_of_science = models.ManyToManyField(
-        FieldOfScience,
-        related_name="datasets",
-        blank=True,
-        limit_choices_to={"is_essential_choice": True},
-    )
+    theme = models.ManyToManyField(Theme, related_name="datasets", blank=True)
+    field_of_science = models.ManyToManyField(FieldOfScience, related_name="datasets", blank=True)
     infrastructure = models.ManyToManyField(
         ResearchInfra,
         related_name="datasets",

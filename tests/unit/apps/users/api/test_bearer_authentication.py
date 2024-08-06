@@ -9,7 +9,6 @@ from http.cookies import SimpleCookie
 logger = logging.getLogger(__name__)
 
 
-
 @pytest.fixture
 def sso_authenticated_client(client, enable_sso, sso_session_teppo, get_sso_token):
     token = get_sso_token(sso_session_teppo)
