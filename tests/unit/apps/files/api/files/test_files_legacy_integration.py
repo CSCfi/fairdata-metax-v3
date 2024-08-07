@@ -3,8 +3,8 @@ import re
 import pytest
 from django.db.models import F
 from django.utils.dateparse import parse_datetime
-from tests.utils.utils import assert_same_datetime
 from tests.utils import matchers
+from tests.utils.utils import assert_same_datetime
 
 from apps.files.models.file import File
 

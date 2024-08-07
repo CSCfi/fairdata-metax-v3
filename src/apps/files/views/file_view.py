@@ -183,6 +183,13 @@ class FileBulkQuerySerializer(serializers.Serializer):
     )
 
 
+bulk_response_schemas = {
+    200: FileBulkReturnValueSerializer(),
+    207: FileBulkReturnValueSerializer(),
+    400: FileBulkReturnValueSerializer(),
+}
+
+
 class FileViewSet(BaseFileViewSet):
     http_method_names = ["get", "post", "patch", "put", "delete"]
 
@@ -283,8 +290,11 @@ class FileViewSet(BaseFileViewSet):
         serializer.save()
 
         status = 200
-        if serializer.data.get("failed") and not ignore_errors:
-            status = 400
+        if serializer.data.get("failed"):
+            if serializer.data.get("success"):
+                status = 207  # Multi-status, both successes and failures
+            else:
+                status = 400  # Everything failed
 
         if serializer.instance:
             sync_files.send(sender=File, actions=serializer.instance)
@@ -293,7 +303,7 @@ class FileViewSet(BaseFileViewSet):
 
     @swagger_auto_schema(
         request_body=FileBulkSerializer(action=BulkAction.INSERT),
-        responses={200: FileBulkReturnValueSerializer()},
+        responses=bulk_response_schemas,
     )
     @action(detail=False, methods=["post"], url_path="post-many")
     def post_many(self, request):
@@ -301,7 +311,7 @@ class FileViewSet(BaseFileViewSet):
 
     @swagger_auto_schema(
         request_body=FileBulkSerializer(action=BulkAction.UPDATE),
-        responses={200: FileBulkReturnValueSerializer()},
+        responses=bulk_response_schemas,
     )
     @action(detail=False, methods=["post"], url_path="patch-many")
     def patch_many(self, request):
@@ -309,7 +319,7 @@ class FileViewSet(BaseFileViewSet):
 
     @swagger_auto_schema(
         request_body=FileBulkSerializer(action=BulkAction.UPSERT),
-        responses={200: FileBulkReturnValueSerializer()},
+        responses=bulk_response_schemas,
     )
     @action(detail=False, methods=["post"], url_path="put-many")
     def put_many(self, request):
@@ -317,7 +327,7 @@ class FileViewSet(BaseFileViewSet):
 
     @swagger_auto_schema(
         request_body=FileBulkSerializer(action=BulkAction.DELETE),
-        responses={200: FileBulkReturnValueSerializer()},
+        responses=bulk_response_schemas,
     )
     @action(detail=False, methods=["post"], url_path="delete-many")
     def delete_many(self, request):

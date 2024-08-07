@@ -179,8 +179,17 @@ The response of the bulk file operations is in the following shape:
 
 By default, any errors in a creating or updating a file cause the entire request to fail with a `400`
 status code, with the failed objects listed in the `failed` array. When the query parameter `ignore_errors`
-is enabled, the response code will be `200` even when there are errors. In that case, the `success`
-array contains objects that were updated and `failed` array contains objects that weren't.
+is enabled, the response code will be
+
+- `200` when everything was successful
+- `207` when there were both successful and failed operations
+- `400` when all operations failed.
+
+!!! NOTE
+    The `207 Multi-Status` code is defined in the WebDAV protocol and is not
+    part of the standard HTTP codes. Metax does not implement WebDAV and
+    only uses the code to indicate that a request was partially successful.
+
 
 ## Files API fields
 
