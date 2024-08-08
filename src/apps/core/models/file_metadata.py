@@ -1,15 +1,23 @@
 import logging
 import uuid
+from typing import Optional
 
 from django.db import models
 
 from apps.common.copier import ModelCopier
-from apps.common.models import AbstractBaseModel
+from apps.common.helpers import omit_empty
 from apps.files.models import File, FileStorage
+from apps.refdata.models import AbstractConcept
 
 from .concepts import FileType, UseCategory
 
 logger = logging.getLogger(__name__)
+
+
+def refdata_to_legacy(concept: Optional[AbstractConcept]):
+    if not concept:
+        return None
+    return {"identifier": concept.url}
 
 
 class FileSetFileMetadata(models.Model):
@@ -26,6 +34,17 @@ class FileSetFileMetadata(models.Model):
     description = models.TextField(null=True, blank=True)
     file_type = models.ForeignKey(FileType, null=True, on_delete=models.SET_NULL)
     use_category = models.ForeignKey(UseCategory, null=True, on_delete=models.SET_NULL)
+
+    def to_legacy(self):
+        return omit_empty(
+            {
+                "identifier": str(self.file.id),
+                "title": self.title,
+                "description": self.description,
+                "file_type": refdata_to_legacy(self.file_type),
+                "use_category": refdata_to_legacy(self.use_category),
+            }
+        )
 
     class Meta:
         ordering = ["id"]
@@ -46,6 +65,16 @@ class FileSetDirectoryMetadata(models.Model):
     title = models.TextField(null=True, blank=True)
     description = models.TextField(null=True, blank=True)
     use_category = models.ForeignKey(UseCategory, null=True, on_delete=models.SET_NULL)
+
+    def to_legacy(self):
+        return omit_empty(
+            {
+                "directory_path": self.pathname,
+                "title": self.title,
+                "description": self.description,
+                "use_category": refdata_to_legacy(self.use_category),
+            }
+        )
 
     class Meta:
         ordering = ["id"]

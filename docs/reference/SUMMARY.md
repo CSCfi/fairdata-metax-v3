@@ -213,7 +213,9 @@
                         - [test_temporal](tests/unit/apps/core/api/dataset/test_temporal.md)
                         - [test_versioning](tests/unit/apps/core/api/dataset/test_versioning.md)
                     - dataset_files
+                        - [conftest](tests/unit/apps/core/api/dataset_files/conftest.md)
                         - [test_dataset_files_allowed_actions](tests/unit/apps/core/api/dataset_files/test_dataset_files_allowed_actions.md)
+                        - [test_dataset_files_legacy_integration](tests/unit/apps/core/api/dataset_files/test_dataset_files_legacy_integration.md)
                         - [test_dataset_files_list](tests/unit/apps/core/api/dataset_files/test_dataset_files_list.md)
                         - [test_dataset_files_update](tests/unit/apps/core/api/dataset_files/test_dataset_files_update.md)
                         - [test_dataset_with_files](tests/unit/apps/core/api/dataset_files/test_dataset_with_files.md)

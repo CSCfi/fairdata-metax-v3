@@ -32,6 +32,10 @@
 
 ### :::src.apps.core.signals.update_dataset_in_v2
 
+## update_dataset_files_in_v2
+
+### :::src.apps.core.signals.update_dataset_files_in_v2
+
 ## handle_dataset_updated
 
 ### :::src.apps.core.signals.handle_dataset_updated

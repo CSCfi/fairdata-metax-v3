@@ -1,4 +1,5 @@
 from io import StringIO
+from uuid import UUID
 
 import pytest
 from django.conf import settings
@@ -63,7 +64,7 @@ metrics_json = {
 
 def test_update_metrics_fetch(requests_mock):
     requests_mock.get(settings.METRICS_REPORT_URL, json=metrics_json)
-    dataset = factories.PublishedDatasetFactory(id="c955e904-e3dd-4d7e-99f1-3fed446f96d1")
+    dataset = factories.PublishedDatasetFactory(id=UUID("c955e904-e3dd-4d7e-99f1-3fed446f96d1"))
     out = StringIO()
     err = StringIO()
     call_command(
@@ -92,7 +93,7 @@ def test_update_metrics_fetch(requests_mock):
 
 
 def test_update_metrics_fake():
-    dataset = factories.PublishedDatasetFactory(id="c955e904-e3dd-4d7e-99f1-3fed446f96d1")
+    dataset = factories.PublishedDatasetFactory(id=UUID("c955e904-e3dd-4d7e-99f1-3fed446f96d1"))
 
     out = StringIO()
     err = StringIO()
@@ -109,7 +110,7 @@ def test_update_metrics_fake():
 
 
 def test_update_metrics_fake_dataset_not_found():
-    dataset = factories.PublishedDatasetFactory(id="c955e904-e3dd-4d7e-99f1-3fed446f96d1")
+    dataset = factories.PublishedDatasetFactory(id=UUID("c955e904-e3dd-4d7e-99f1-3fed446f96d1"))
 
     out = StringIO()
     err = StringIO()

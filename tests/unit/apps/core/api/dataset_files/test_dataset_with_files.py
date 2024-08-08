@@ -9,7 +9,13 @@ pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
 
 
 @pytest.fixture
-def dataset_json_with_files(deep_file_tree, data_catalog):
+def dataset_json_with_files(deep_file_tree, data_catalog, use_category_reference_data):
+    use_category = {
+        "use_category": {
+            "url": "http://uri.suomi.fi/codelist/fairdata/use_category/code/documentation"
+        }
+    }
+
     return {
         "data_catalog": data_catalog.id,
         "title": {"en": "Test dataset"},
@@ -18,13 +24,13 @@ def dataset_json_with_files(deep_file_tree, data_catalog):
             "directory_actions": [
                 {
                     "pathname": "/dir1/",
-                    "dataset_metadata": {"title": "directory"},
+                    "dataset_metadata": {"title": "directory", **use_category},
                 }
             ],
             "file_actions": [
                 {
                     "id": deep_file_tree["files"]["/rootfile.txt"].id,
-                    "dataset_metadata": {"title": "file"},
+                    "dataset_metadata": {"title": "file", **use_category},
                 }
             ],
         },
@@ -33,7 +39,11 @@ def dataset_json_with_files(deep_file_tree, data_catalog):
 
 @pytest.fixture
 def dataset_json_with_files_with_file_types(
-    dataset_json_with_files, deep_file_tree, data_catalog, reference_data
+    dataset_json_with_files,
+    deep_file_tree,
+    data_catalog,
+    reference_data,
+    use_category_json,
 ):
     dataset = {**dataset_json_with_files}
     dataset["fileset"]["file_actions"].extend(
@@ -43,7 +53,8 @@ def dataset_json_with_files_with_file_types(
                 "dataset_metadata": {
                     "file_type": {
                         "url": "http://uri.suomi.fi/codelist/fairdata/file_type/code/text"
-                    }
+                    },
+                    **use_category_json,
                 },
             },
             {
@@ -51,7 +62,8 @@ def dataset_json_with_files_with_file_types(
                 "dataset_metadata": {
                     "file_type": {
                         "url": "http://uri.suomi.fi/codelist/fairdata/file_type/code/video"
-                    }
+                    },
+                    **use_category_json,
                 },
             },
             {
@@ -59,7 +71,8 @@ def dataset_json_with_files_with_file_types(
                 "dataset_metadata": {
                     "file_type": {
                         "url": "http://uri.suomi.fi/codelist/fairdata/file_type/code/video"
-                    }
+                    },
+                    **use_category_json,
                 },
             },
         ]

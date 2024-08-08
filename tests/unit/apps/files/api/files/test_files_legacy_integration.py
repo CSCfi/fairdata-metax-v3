@@ -36,7 +36,6 @@ class V2SyncMock:
 @pytest.fixture
 def mock_v2_files_integration(requests_mock, v2_integration_settings):
     host = v2_integration_settings.METAX_V2_HOST
-    # requests_mock.register_uri("POST", f"{host}/rest/v2/files/sync_from_v3", status_code=200, )
     syncmock = V2SyncMock()
     return {
         "sync_mock": requests_mock.post(

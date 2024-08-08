@@ -675,7 +675,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         # Count roles
         creator_count = 0
         publisher_count = 0
-        prefetch_related_objects([str(self.id)], "actors")  # make sure actors.all() is cached
+        prefetch_related_objects([self], "actors")  # make sure actors.all() is cached
         for actor in self.actors.all():
             if "publisher" in actor.roles:
                 publisher_count += 1

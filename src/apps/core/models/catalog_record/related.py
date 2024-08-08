@@ -318,7 +318,9 @@ class FileSet(AbstractBaseModel):
     def save(self, *args, **kwargs):
         # Verify that dataset is allowed to have files in the storage_service.
         # When _updating is set, dataset is responsible for the check.
-        if (dataset := self.dataset) and not getattr(dataset, "_updating", False):
+        if (dataset := getattr(self, "dataset", None)) and not getattr(
+            dataset, "_updating", False
+        ):
             dataset.validate_allow_storage_service(self.storage_service)
         return super().save(*args, **kwargs)
 
