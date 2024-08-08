@@ -2311,17 +2311,18 @@ testing = ["argcomplete", "hypothesis (>=3.56)", "mock", "nose", "pygments (>=2.
 
 [[package]]
 name = "pytest-bdd"
-version = "6.1.1"
+version = "7.2.0"
 description = "BDD for pytest"
 optional = false
-python-versions = ">=3.7,<4.0"
+python-versions = ">=3.8"
 files = [
-    {file = "pytest_bdd-6.1.1-py3-none-any.whl", hash = "sha256:57eba5878d77036f356a85fb1d108cb061d8af4fb4d032b1a424fa9abe9e498b"},
-    {file = "pytest_bdd-6.1.1.tar.gz", hash = "sha256:138af3592bcce5d4684b0d690777cf199b39ce45d423ca28086047ffe6111010"},
+    {file = "pytest_bdd-7.2.0-py3-none-any.whl", hash = "sha256:c89996dc18b72033c471c40ef1281a0f77f5a7419bc53720c52e70c68c886e64"},
+    {file = "pytest_bdd-7.2.0.tar.gz", hash = "sha256:96e9dc5437100fe627596e366dbe60e02f105974134e9aee8fe83ed67c2404d6"},
 ]
 
 [package.dependencies]
 Mako = "*"
+packaging = "*"
 parse = "*"
 parse-type = "*"
 pytest = ">=6.2.0"
@@ -3010,4 +3011,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8.10"
-content-hash = "c028581b54fc09b13305a58f541a383445e521a37b759691b1bc7f9ca76bd38e"
+content-hash = "a1dfbd99824011af1388d0fde6354fafcefe1f2d90a2627f07782077a5d05450"
