@@ -57,7 +57,7 @@ datacite = "^1.1.4"
 elementpath = "^4.4.0"
 lxml = "^5.1.0"
 requests-mock = "^1.11.0"
-psycopg = {extras = ["binary"], version = "^3.1.18"}
+psycopg = {extras = ["binary"], version = "^3.2.1"}
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.13.2"
