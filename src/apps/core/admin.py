@@ -103,14 +103,14 @@ class DatasetFieldOfScience(CoreRefDataAdminMixin, admin.ModelAdmin):
 
 
 @admin.register(Funding)
-class Funding(admin.ModelAdmin):
+class FundingAdmin(admin.ModelAdmin):
     search_fields = ["funding_identifier"]
     list_filter = ("created", "modified")
     readonly_fields = ("funder",)
 
 
 @admin.register(RestrictionGrounds)
-class RestrictionGrounds(CoreRefDataAdminMixin, admin.ModelAdmin):
+class RestrictionGroundsAdmin(CoreRefDataAdminMixin, admin.ModelAdmin):
     pass
 
 
