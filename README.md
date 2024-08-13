@@ -1,4 +1,5 @@
 # fairdata-metax-service
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/e977dc412a19496bb3369b2d961cdbba)](https://app.codacy.com/gh/EarthModule/fairdata-metax-v3/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
 - Metax is a metadata storage for Finnish research data
 
