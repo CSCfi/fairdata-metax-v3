@@ -34,6 +34,7 @@ from apps.files.serializers.file_bulk_serializer import (
     FileBulkReturnValueSerializer,
     FileBulkSerializer,
 )
+from apps.files.serializers.legacy_files_serializer import LegacyFilesSerializer
 from apps.files.signals import pre_files_deleted, sync_files
 
 logger = logging.getLogger(__name__)
@@ -338,7 +339,7 @@ class FileViewSet(BaseFileViewSet):
         manual_parameters=get_filter_openapi_parameters(FileDeleteListFilterSet),
         responses={200: DeleteListReturnValueSerializer()},
     )
-    def destroy_list(self, *args, **kwargs):
+    def destroy_list(self, request):
         """Delete files matching query parameters.
 
         The `csc_project` parameter is required. If no `storage_service` is defined,
@@ -359,10 +360,11 @@ class FileViewSet(BaseFileViewSet):
         count = queryset.count()
 
         pre_files_deleted.send(sender=File, queryset=queryset)
-        sync_files.send(
-            sender=File,
-            actions=[{"action": BulkAction.DELETE, "object": file} for file in queryset],
-        )
+        if not request.user.is_v2_migration:
+            sync_files.send(
+                sender=File,
+                actions=[{"action": BulkAction.DELETE, "object": file} for file in queryset],
+            )
 
         queryset.delete()
         return Response(DeleteListReturnValueSerializer(instance={"count": count}).data, 200)
@@ -388,3 +390,11 @@ class FileViewSet(BaseFileViewSet):
             sender=File,
             actions=[{"action": BulkAction.DELETE, "object": instance}],
         )
+
+    @swagger_auto_schema(request_body=LegacyFilesSerializer())
+    @action(detail=False, methods=["post"], url_path="from-legacy")
+    def from_legacy(self, request):
+        serializer = LegacyFilesSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        counts = serializer.save()
+        return Response(counts.__dict__, status=200)

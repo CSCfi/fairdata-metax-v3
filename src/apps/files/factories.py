@@ -1,5 +1,5 @@
-from typing import Dict
-from uuid import uuid4
+from typing import Dict, List
+from uuid import UUID, uuid4
 
 import factory
 from django.utils import timezone
@@ -128,3 +128,69 @@ def create_project_with_files(*args, csc_project=None, storage_service=None, **k
             "storage_service": storage.storage_service,
         },
     }
+
+
+def create_v2_file_data(projects: Dict[str, List[str]]) -> List[dict]:
+    """Create V2 file list payload for testing migration logic.
+
+    Example:
+    ```
+    create_v2_file_data({
+        "ida:project_x": [
+            "/data/file1",
+            "/data/file2",
+            "/data/file3",
+        ],
+    })
+    ```
+    will return three legacy files belonging to "project_x" in service "ida".
+    """
+    template = {
+        "open_access": True,
+        "date_created": "2020-07-16T18:20:14+03:00",
+        "file_storage": {"identifier": "urn:nbn:fi:att:file-storage-<change-me>", "id": 1},
+        "parent_directory": {"identifier": "<ignored-by-v3>", "id": 1},
+        "file_frozen": "2021-04-12T12:23:45Z",
+        "identifier": "<changeme>",
+        "checksum": {
+            "checked": "2021-04-12T12:23:45Z",
+            "value": "12b23850ab29a9a43738dbad0279a872547cb9e7820dd36f0e07e906828b1ccc",
+            "algorithm": "SHA-256",
+        },
+        "file_format": "<ignored-by-v3>",
+        "removed": False,
+        "file_uploaded": "2021-03-12T12:23:45Z",
+        "file_modified": "2018-04-12T12:23:45Z",
+        "pas_compatible": True,
+        "byte_size": 1000,
+        "file_name": "<ignored-by-v3>",
+        "file_path": "<change-me>",
+        "service_created": "ida",
+        "project_identifier": "<change-me>",
+        "user_created": "someuser@cscuserid",
+        "id": 0,
+    }
+
+    files = []
+    num = 0
+    for project, paths in projects.items():
+        storage, project_identifier = project.split(":")
+        for path in paths:
+            date_removed = None
+            if path.startswith("-"):  # start path with - to remove file
+                date_removed = "2022-01-03T12:13:14Z"
+                path = path[1:]
+            num += 1
+            files.append(
+                {
+                    **template,
+                    "file_path": path,
+                    "file_storage": {"identifier": f"urn:nbn:fi:att:file-storage-{storage}"},
+                    "id": num,
+                    "identifier": str(UUID(int=num)),
+                    "project_identifier": project_identifier,
+                    "removed": bool(date_removed),
+                    "date_removed": date_removed,
+                }
+            )
+    return files

@@ -1,5 +1,6 @@
 import pytest
 
+
 @pytest.fixture
 def use_category_json(use_category_reference_data):
     return {

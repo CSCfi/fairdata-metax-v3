@@ -29,6 +29,11 @@ class FilesAccessPolicy(BaseFilesAccessPolicy):
             "principal": "*",
             "effect": "allow",
         },
+        {
+            "action": ["from_legacy", "destroy_list"],
+            "principal": "group:v2_migration",
+            "effect": "allow",
+        },
     ]
 
     @classmethod

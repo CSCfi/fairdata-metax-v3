@@ -4,13 +4,13 @@ import logging
 import re
 
 import pytest
-from apps.core.models.catalog_record.related import FileSet
-from apps.core.models.file_metadata import FileSetFileMetadata
-from apps.refdata.models import UseCategory
 from tests.unit.apps.core.api.conftest import load_test_json
 
 from apps.core import factories
+from apps.core.models.catalog_record.related import FileSet
+from apps.core.models.file_metadata import FileSetFileMetadata
 from apps.files.models import File
+from apps.refdata.models import UseCategory
 
 pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
 
@@ -98,9 +98,9 @@ def test_dataset_files_legacy_sync_fail(
     res = admin_client.patch(
         urls["dataset"], {"fileset": actions}, content_type="application/json"
     )
-    assert res.status_code == 409 # Failed due to 400 from v2
+    assert res.status_code == 409  # Failed due to 400 from v2
     mock = mock_v2_dataset_files_integration_fail["sync_mock"]
-    assert mock.call_count == 1 # V2 files_from_v3 should be called once
+    assert mock.call_count == 1  # V2 files_from_v3 should be called once
 
 
 def test_dataset_files_legacy_sync_missing_legacy_id(
@@ -117,7 +117,7 @@ def test_dataset_files_legacy_sync_missing_legacy_id(
     )
     assert res.status_code == 409  # Sync fails due to missing legacy_ids
     mock = mock_v2_dataset_files_integration["sync_mock"]
-    assert not mock.called # V2 files_from_v3 should not be called
+    assert not mock.called  # V2 files_from_v3 should not be called
 
 
 def test_dataset_files_legacy_sync_metadata(

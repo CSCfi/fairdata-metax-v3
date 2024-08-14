@@ -1,12 +1,10 @@
-import uuid
 from io import StringIO
 
 import pytest
 from django.core.management import call_command
 
+from apps.files.factories import create_v2_file_data
 from apps.files.models import File
-
-from .conftest import get_mock_data
 
 pytestmark = [
     pytest.mark.django_db,
@@ -14,33 +12,6 @@ pytestmark = [
     pytest.mark.adapter,
     pytest.mark.usefixtures("data_catalog", "reference_data", "v2_integration_settings"),
 ]
-
-
-def create_v2_file_data(projects: dict):
-    template = get_mock_data("legacy_file_template.json")
-    files = []
-    num = 0
-    for project, paths in projects.items():
-        storage, project_identifier = project.split(":")
-        for path in paths:
-            date_removed = None
-            if path.startswith("-"):  # start path with - to remove file
-                date_removed = "2022-01-03T12:13:14Z"
-                path = path[1:]
-            num += 1
-            files.append(
-                {
-                    **template,
-                    "file_path": path,
-                    "file_storage": {"identifier": f"urn:nbn:fi:att:file-storage-{storage}"},
-                    "id": num,
-                    "identifier": str(uuid.UUID(int=num)),
-                    "project_identifier": project_identifier,
-                    "removed": bool(date_removed),
-                    "date_removed": date_removed,
-                }
-            )
-    return files
 
 
 def fake_files_endpoint(projects):

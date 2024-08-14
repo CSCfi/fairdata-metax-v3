@@ -116,6 +116,7 @@
             - [fields](src/apps/files/serializers/fields.md)
             - [file_bulk_serializer](src/apps/files/serializers/file_bulk_serializer.md)
             - [file_serializer](src/apps/files/serializers/file_serializer.md)
+            - [legacy_files_serializer](src/apps/files/serializers/legacy_files_serializer.md)
         - [signals](src/apps/files/signals.md)
         - views
             - [directory_view](src/apps/files/views/directory_view.md)
@@ -265,6 +266,7 @@
                         - [test_files_create](tests/unit/apps/files/api/files/test_files_create.md)
                         - [test_files_datasets](tests/unit/apps/files/api/files/test_files_datasets.md)
                         - [test_files_delete](tests/unit/apps/files/api/files/test_files_delete.md)
+                        - [test_files_from_legacy](tests/unit/apps/files/api/files/test_files_from_legacy.md)
                         - [test_files_legacy_integration](tests/unit/apps/files/api/files/test_files_legacy_integration.md)
                         - [test_files_list](tests/unit/apps/files/api/files/test_files_list.md)
                         - [test_files_published](tests/unit/apps/files/api/files/test_files_published.md)

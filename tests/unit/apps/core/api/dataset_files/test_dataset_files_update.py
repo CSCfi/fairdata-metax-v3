@@ -9,6 +9,7 @@ from apps.core import factories
 
 pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
 
+
 def test_dataset_files_post_empty(admin_client, deep_file_tree, data_urls):
     dataset = factories.DatasetFactory()
     actions = {
@@ -202,9 +203,7 @@ def test_dataset_files_post_noop_remove(admin_client, deep_file_tree, data_urls)
 
 
 @pytest.fixture
-def dataset_with_metadata(
-    admin_client, deep_file_tree, data_urls, use_category_json
-) -> Dict:
+def dataset_with_metadata(admin_client, deep_file_tree, data_urls, use_category_json) -> Dict:
     dataset = factories.DatasetFactory()
 
     actions = {
@@ -234,7 +233,9 @@ def dataset_with_metadata(
     return dataset
 
 
-def test_dataset_files_post_metadata_get_files(admin_client, dataset_with_metadata, data_urls, use_category_json):
+def test_dataset_files_post_metadata_get_files(
+    admin_client, dataset_with_metadata, data_urls, use_category_json
+):
     url = data_urls(dataset_with_metadata)["files"]
     res = admin_client.get(url)
     assert_nested_subdict(

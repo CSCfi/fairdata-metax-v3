@@ -4,6 +4,7 @@ from django.contrib.auth.models import AbstractUser
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.utils.functional import cached_property
 from model_utils.models import SoftDeletableModel
 
 
@@ -26,6 +27,10 @@ class MetaxUser(AbstractUser, SoftDeletableModel):
         self.is_removed = False
         self.is_hidden = False
         self.save()
+
+    @cached_property
+    def is_v2_migration(self):
+        return any(g for g in self.groups.all() if g.name == "v2_migration")
 
     def __str__(self):
         return self.username

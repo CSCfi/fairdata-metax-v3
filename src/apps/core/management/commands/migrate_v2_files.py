@@ -6,10 +6,11 @@ import requests
 from cachalot.api import cachalot_disabled
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from isodate import parse_datetime
 
-from apps.common.helpers import batched
-from apps.files.models import File, FileStorage
+from apps.files.serializers.legacy_files_serializer import (
+    FileMigrationCounts,
+    LegacyFilesSerializer,
+)
 
 from ._v2_client import MigrationV2Client
 
@@ -55,25 +56,9 @@ class Command(BaseCommand):
     migration_limit = 0
     compatibility_errors = 0
 
-    update_fields = [
-        "record_modified",
-        "filename",
-        "directory_path",
-        "size",
-        "checksum",
-        "frozen",
-        "modified",
-        "removed",
-        "is_pas_compatible",
-        "user",
-    ]  # fields that are updated
-    diff_fields = set(update_fields) - {"record_modified"}  # fields used for diffing
-    date_diff_fields = {"frozen", "modified"}  # date fields used for diffing
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.failed_datasets = []
-        self.storage_cache = {}
         self.metax_instance = None
         self.metax_user = None
         self.metax_password = None
@@ -131,70 +116,20 @@ class Command(BaseCommand):
         fps = processed / (timezone.now() - self.started).total_seconds()
         self.stdout.write(f"{processed=}, {created=:}, {updated=} ({fps:.1f}/s)")
 
-    def get_file_storage(self, legacy_file: dict):
-        """Cache file storages corresponding to legacy storage and project."""
-        key = (legacy_file["file_storage"]["identifier"], legacy_file["project_identifier"])
-        if key not in self.storage_cache:
-            self.storage_cache[key] = FileStorage.get_or_create_from_legacy(legacy_file)
-        return self.storage_cache.get(key)
-
-    def is_file_changed(self, old_values: dict, new_values: dict):
-        """Determine if file has changed values that should be updated."""
-        for field in self.diff_fields:
-            old_value = old_values.get(field)
-            new_value = new_values.get(field)
-            if old_value != new_value:
-                if field == "removed" and old_value and new_value:
-                    continue  # Ignore exact removal dates if both are removed
-                if field in self.date_diff_fields and old_value and new_value:
-                    if old_value == parse_datetime(new_value):
-                        continue
-                return True
-        return False
-
-    def determine_file_operations(self, legacy_v3_values: dict):
-        """Determine file objects to be created or updated."""
-        now = timezone.now()
-        found_legacy_ids = set()  # Legacy ids of found files
-        update = []  # Existing files that need to be updated
-        existing_v3_files = File.all_objects.filter(legacy_id__in=legacy_v3_values).values()
-        for file in existing_v3_files:
-            legacy_id = file["legacy_id"]
-            if legacy_file_as_v3 := legacy_v3_values.get(legacy_id):
-                found_legacy_ids.add(legacy_id)
-                # Update only changed files
-                if self.is_file_changed(file, legacy_file_as_v3):
-                    # Assign file id and updated values
-                    legacy_file_as_v3["id"] = file["id"]
-                    legacy_file_as_v3["record_modified"] = now
-                    update.append(File(**legacy_file_as_v3))
-
-        create = [
-            File(**legacy_file_as_v3)
-            for legacy_id, legacy_file_as_v3 in legacy_v3_values.items()
-            if legacy_id not in found_legacy_ids
-        ]
-        return create, update
-
     def migrate_files(self, files: List[dict]):
         """Create or update list of legacy file dicts."""
         if not files:
             return
 
-        for file_batch in batched(files, 10000):
-            legacy_v3_values = {  # Mapping of {legacy_id: v3 dict} for v2 files
-                f["id"]: File.values_from_legacy(f, self.get_file_storage(f)) for f in file_batch
-            }
-            create, update = self.determine_file_operations(legacy_v3_values)
-            created = File.all_objects.bulk_create(create, batch_size=2000)
-            self.created += len(created)
-            updated_count = File.all_objects.bulk_update(
-                update, fields=self.update_fields, batch_size=2000
-            )
-            self.updated += updated_count
-            self.migrated += len(file_batch)
+        def callback(counts: FileMigrationCounts):
+            self.created += counts.created
+            self.updated += counts.updated
+            self.migrated += counts.created + counts.updated + counts.unchanged
             self.print_status_line()
 
+        serializer = LegacyFilesSerializer(data=files)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(batch_callback=callback)
         return None
 
     def migrate_dataset_files(self, dataset_json: dict):

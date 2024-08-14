@@ -1,9 +1,5 @@
 # test_migrate_v2_files
 
-## create_v2_file_data
-
-### :::tests.unit.apps.core.management.test_migrate_v2_files.create_v2_file_data
-
 ## fake_files_endpoint
 
 ### :::tests.unit.apps.core.management.test_migrate_v2_files.fake_files_endpoint
