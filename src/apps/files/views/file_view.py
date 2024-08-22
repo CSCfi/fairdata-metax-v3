@@ -12,6 +12,7 @@ from django.contrib.postgres.aggregates import ArrayAgg
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import F, Q, QuerySet, Value
 from django.db.models.functions import Concat
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_filters import rest_framework as filters
 from drf_yasg.utils import swagger_auto_schema
@@ -358,15 +359,34 @@ class FileViewSet(BaseFileViewSet):
         queryset = self.filter_queryset(queryset)
 
         count = queryset.count()
+        if count > 0:
+            pre_files_deleted.send(sender=File, queryset=queryset)
+            files_to_sync = None
+            if not request.user.is_v2_migration:
+                # Collect files before they are potentially deleted from DB
+                files_to_sync = list(queryset.all())
 
-        pre_files_deleted.send(sender=File, queryset=queryset)
-        if not request.user.is_v2_migration:
-            sync_files.send(
-                sender=File,
-                actions=[{"action": BulkAction.DELETE, "object": file} for file in queryset],
-            )
+            queryset.delete()
+            if files_to_sync:
+                # Sync removals to V2.
+                # Flush is not currently implemented in sync,
+                # soft delete is used instead.
+                now = timezone.now()
+                if not flush:
+                    # When not flushing, get removal timestamp from
+                    # first removed file and use it for all files.
+                    first = files_to_sync[0]
+                    first.refresh_from_db()
+                    now = first.removed
 
-        queryset.delete()
+                for file in files_to_sync:
+                    file.removed = now
+                sync_files.send(
+                    sender=File,
+                    actions=[
+                        {"action": BulkAction.DELETE, "object": file} for file in files_to_sync
+                    ],
+                )
         return Response(DeleteListReturnValueSerializer(instance={"count": count}).data, 200)
 
     def perform_create(self, serializer):

@@ -198,3 +198,26 @@ def test_sync_batch_remove_files(admin_client, mock_v2_files_integration):
     assert post_data[1]["removed"] == True
     assert_same_datetime(post_data[1]["date_removed"], removed)
     assert_same_datetime(post_data[1]["file_deleted"], removed)
+
+
+def test_sync_delete_files_list(admin_client, mock_v2_files_integration):
+    sync_mock = mock_v2_files_integration["sync_mock"]
+    files = [get_file_json(name="testfile1.txt"), get_file_json(name="testfile2.txt")]
+    res = admin_client.post("/v3/files/put-many", files, content_type="application/json")
+    assert res.status_code == 200
+    assert sync_mock.call_count == 1
+
+    # Make sure deleting files using destroy_list gets synced to V2
+    res = admin_client.delete(
+        "/v3/files?csc_project=fd_test_project", files, content_type="application/json"
+    )
+    assert res.status_code == 200
+    assert res.data == {"count": 2}
+    assert sync_mock.call_count == 2
+    delete_call = sync_mock.request_history[1].json()
+    assert len(delete_call) == 2
+    file_data = [{"path": f["file_path"], "removed": f["removed"]} for f in delete_call]
+    assert file_data == [
+        {"path": "/data/testfile1.txt", "removed": True},
+        {"path": "/data/testfile2.txt", "removed": True},
+    ]

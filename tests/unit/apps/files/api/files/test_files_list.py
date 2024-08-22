@@ -265,17 +265,6 @@ def test_files_list_invalid_storage_service(admin_client, file_tree_a):
     )
 
 
-# new dataset
-# existing dataset
-# remove dataset *
-# remove files from dataset using dataset api *
-# add files
-# remove files directly *
-# ?delete files?
-
-# *test also with files in other dataset
-
-
 def test_files_get(admin_client, file_tree_a):
     res = admin_client.get(
         "/v3/files",

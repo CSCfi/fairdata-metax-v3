@@ -40,3 +40,7 @@
 
 ### :::tests.unit.apps.files.api.files.test_files_legacy_integration.test_sync_batch_remove_files
 
+## test_sync_delete_files_list
+
+### :::tests.unit.apps.files.api.files.test_files_legacy_integration.test_sync_delete_files_list
+
