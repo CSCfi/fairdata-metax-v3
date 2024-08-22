@@ -159,11 +159,17 @@ class FileBulkSerializer(serializers.ListSerializer):
     def populate_id_from_external_identifier(self, files):
         """Add id value to files that already exist based on external id."""
 
+        insert_allowed = self.action in self.BULK_INSERT_ACTIONS
         files_missing_id = [f for f in files if "id" not in f]
         for storage_service, storage_files in self.group_files_by_storage_service(
             files_missing_id
         ).items():
             if not storage_service:
+                if not insert_allowed:
+                    for f in storage_files:
+                        f["errors"][
+                            "storage_service"
+                        ] = "Either storage_service or id is required."
                 continue
 
             files_by_external_id = {}
@@ -171,6 +177,10 @@ class FileBulkSerializer(serializers.ListSerializer):
             for f in storage_files:
                 if external_id := f.get("storage_identifier"):
                     files_by_external_id.setdefault(external_id, []).append(f)
+                elif not insert_allowed:
+                    f["errors"][
+                        "storage_identifier"
+                    ] = "Either storage_identifier or id is required."
 
             # Get all files with matching external id
             existing_files = File.available_objects.filter(
@@ -209,7 +219,7 @@ class FileBulkSerializer(serializers.ListSerializer):
             # All files should be existing and have an id
             for file in files:
                 if "id" not in file and "id" not in file["errors"]:
-                    file["errors"]["id"] = _("File not found.")
+                    file["errors"]["id"] = "File not found."
         return files
 
     def check_changing_existing_allowed(self, files: List[dict]) -> List[dict]:

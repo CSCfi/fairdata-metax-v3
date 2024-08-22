@@ -124,3 +124,15 @@
 
 ### :::tests.unit.apps.files.api.files.test_files_bulk.test_files_delete_duplicate_id
 
+## test_files_bulk_delete_unknown_storage_identifier
+
+### :::tests.unit.apps.files.api.files.test_files_bulk.test_files_bulk_delete_unknown_storage_identifier
+
+## test_files_bulk_delete_missing_storage_service
+
+### :::tests.unit.apps.files.api.files.test_files_bulk.test_files_bulk_delete_missing_storage_service
+
+## test_files_bulk_delete_missing_storage_identifier
+
+### :::tests.unit.apps.files.api.files.test_files_bulk.test_files_bulk_delete_missing_storage_identifier
+

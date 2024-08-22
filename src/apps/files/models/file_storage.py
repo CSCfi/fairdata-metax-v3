@@ -11,7 +11,7 @@ import operator
 import re
 import uuid
 from collections import namedtuple
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List, Set, Tuple, Union
 
 from django.conf import settings
 from django.db import models
@@ -237,13 +237,19 @@ class FileStorage(ProxyBasePolymorphicModel, AbstractBaseModel):
         add files from the FileStorage to a FileSet."""
 
     @classmethod
-    def validate_object(cls, object: dict):
+    def validate_object(cls, object: Union["FileStorage", dict]):
         """Make sure object has required file storage fields as attributes or items.
 
         Useful for:
         * Checking a FileStorage object is valid and can be saved.
         * Checking that file dict values correspond to a valid FileStorage.
         """
+        if isinstance(object, dict) and object.get("errors", {}).get("id"):
+            # File not found, skip remaining validation here
+            # to avoid misleading errors in fields that would be filled
+            # automatically for existing fields
+            return
+
         storage_service = get_attr_or_item(object, "storage_service")
         if not storage_service:
             raise ValidationError({"storage_service": _("Value is required.")})
