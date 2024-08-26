@@ -10,6 +10,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.settings import api_settings
+from watson.search import skip_index_update
 
 from apps.common.serializers import (
     CommonListSerializer,
@@ -365,11 +366,14 @@ class DatasetSerializer(CommonNestedModelSerializer):
         # reverse and many-to-many relations to the newly created
         # dataset before it is actually published.
         state = validated_data.pop("state", None)
-        instance: Dataset = super().create(validated_data=validated_data)
-
-        # Now reverse and many-to-many relations have been assigned, try to publish
+        instance: Dataset
         if state == Dataset.StateChoices.PUBLISHED:
+            with skip_index_update():  # Don't add draft to search index if publish fails
+                instance = super().create(validated_data=validated_data)
+            # Now reverse and many-to-many relations have been assigned, try to publish
             instance.publish()
+        else:
+            instance = super().create(validated_data=validated_data)
         return instance
 
 

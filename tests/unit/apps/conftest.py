@@ -117,7 +117,7 @@ def end_users(faker, fairdata_users_group):
 
 @pytest.fixture
 def service_user(faker):
-    group = Group.objects.create(name="service")
+    group, _ = Group.objects.get_or_create(name="service")
     user = get_user_model().objects.create(
         username=faker.simple_profile()["username"], password=faker.password()
     )
@@ -128,7 +128,7 @@ def service_user(faker):
 
 @pytest.fixture
 def ida_service_user(service_user):
-    group_ida = Group.objects.create(name="ida")
+    group_ida, _ = Group.objects.get_or_create(name="ida")
     service_user.user.groups.add(group_ida)
     return service_user
 
