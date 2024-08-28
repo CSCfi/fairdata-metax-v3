@@ -676,11 +676,19 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         creator_count = 0
         publisher_count = 0
         prefetch_related_objects([self], "actors", "actors__person")  # cache actors
+        missing_roles = False
         for actor in self.actors.all():
+            if not actor.roles:
+                missing_roles = True
             if "publisher" in actor.roles:
                 publisher_count += 1
             if "creator" in actor.roles:
                 creator_count += 1
+
+        if missing_roles:
+            actor_errors.append(
+                _("All actors in a published dataset should have at least one role.")
+            )
 
         # Some legacy/harvested datasets are missing creator or publisher
         # Some legacy datasets are also missing license or restriction grounds
@@ -689,12 +697,10 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             # Creator required
             if creator_count == 0:
                 actor_errors.append(_("An actor with creator role is required."))
-                errors["actors"] = actor_errors
 
         if not self.is_legacy:
             if publisher_count != 1:
                 actor_errors.append(_("Exactly one actor with publisher role is required."))
-                errors["actors"] = actor_errors
             if self.access_rights and not self.access_rights.license.exists():
                 access_rights_errors.append(_("Dataset has to have a license when publishing."))
                 errors["access_rights"] = access_rights_errors
@@ -717,6 +723,8 @@ class Dataset(V2DatasetMixin, CatalogRecord):
                 access_rights_errors.append(_("Open datasets do not accept restriction grounds."))
                 errors["access_rights"] = access_rights_errors
 
+        if actor_errors:
+            errors["actors"] = actor_errors
         if errors:
             raise ValidationError(errors)
 

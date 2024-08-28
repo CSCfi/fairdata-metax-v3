@@ -805,15 +805,18 @@ def test_missing_required_fields(
     dataset = {
         **dataset,
         "title": {"en": "test"},
+        "actors": [{"roles": [], "organization": {"pref_label": {"en": "Test Org"}}}],
     }
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
 
+    data = res.json()
     assert res.status_code == 400
-    assert "Dataset has to have a data catalog when publishing." in str(res.data["data_catalog"])
-    assert "Dataset has to have access rights when publishing." in str(res.data["access_rights"])
-    assert "Dataset has to have a description when publishing." in str(res.data["description"])
-    assert "An actor with creator role is required." in str(res.data["actors"])
-    assert "Exactly one actor with publisher role is required." in str(res.data["actors"])
+    assert "Dataset has to have a data catalog when publishing." in data["data_catalog"]
+    assert "Dataset has to have access rights when publishing." in data["access_rights"]
+    assert "Dataset has to have a description when publishing." in data["description"]
+    assert "An actor with creator role is required." in data["actors"]
+    assert "Exactly one actor with publisher role is required." in data["actors"]
+    assert "All actors in a published dataset should have at least one role." in data["actors"]
 
     # data_catalog(ida), access_rights, description, actors
     dataset = {

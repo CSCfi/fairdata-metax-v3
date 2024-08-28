@@ -14,7 +14,7 @@ pytestmark = [pytest.mark.django_db, pytest.mark.dataset, pytest.mark.versioning
 
 
 def test_create_new_version(language, theme, dataset):
-    DatasetActorFactory.create_batch(2, dataset=dataset)
+    DatasetActorFactory.create_batch(2, dataset=dataset, roles=["creator"])
     ProvenanceFactory(dataset=dataset)
     dataset.language.add(language)
     dataset.theme.add(theme)

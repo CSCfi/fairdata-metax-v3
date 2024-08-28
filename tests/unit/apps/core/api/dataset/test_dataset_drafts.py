@@ -140,9 +140,8 @@ def test_merge_draft(admin_client, dataset_a_json, dataset_maximal_json, dataset
     assert res.status_code == 201
     assert res.data["state"] == "published"
     dataset_id = res.data["id"]
-
     res = admin_client.post(
-        f"/v3/datasets/{dataset_id}/create-draft", dataset_a_json, content_type="application/json"
+        f"/v3/datasets/{dataset_id}/create-draft", content_type="application/json"
     )
     assert res.status_code == 201
     draft_id = res.data["id"]
