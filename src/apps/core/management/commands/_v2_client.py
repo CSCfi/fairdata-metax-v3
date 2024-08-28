@@ -6,6 +6,8 @@ from typing import Any, Iterator
 import requests
 from django.conf import settings
 
+from apps.common.helpers import datetime_to_header
+
 logger = logging.getLogger(__name__)
 
 
@@ -142,20 +144,26 @@ class MigrationV2Client:
         response.raise_for_status()
         return response.json()
 
-    def _fetch_files(self, params={}, batched=False) -> Iterator[dict]:
+    def _fetch_files(self, params={}, batched=False, modified_since=None) -> Iterator[dict]:
         metax_instance = self.metax_instance
+        headers = {}
+        if modified_since:
+            headers["If-Modified-Since"] = datetime_to_header(modified_since)
         response = self.session.get(
-            f"{metax_instance}/rest/v2/files",
-            params={**params, "ordering": "id"},
+            f"{metax_instance}/rest/v2/files", params={**params, "ordering": "id"}, headers=headers
         )
         response.raise_for_status()
         removed = params.get("removed", "false")
         self.stdout.write(f"Found {response.json().get('count', 0)} files with removed={removed}")
         return self.loop_pagination(response, batched=batched)
 
-    def fetch_files(self, params={}, batched=False):
-        yield from self._fetch_files(params={**params, "removed": "false"}, batched=batched)
-        yield from self._fetch_files(params={**params, "removed": "true"}, batched=batched)
+    def fetch_files(self, params={}, batched=False, modified_since=None):
+        yield from self._fetch_files(
+            params={**params, "removed": "false"}, batched=batched, modified_since=modified_since
+        )
+        yield from self._fetch_files(
+            params={**params, "removed": "true"}, batched=batched, modified_since=modified_since
+        )
 
     def _fetch_datasets(self, params={}, batched=False):
         metax_instance = self.metax_instance

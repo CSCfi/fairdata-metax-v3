@@ -405,3 +405,8 @@ def batched(iterable, n):
     it = iter(iterable)
     while batch := tuple(islice(it, n)):
         yield batch
+
+
+def datetime_to_header(dt: datetime):
+    """Convert datetime into format used by e.g. If-Modified-Since HTTP header."""
+    return dt.astimezone(tz.utc).strftime("%a, %d %b %Y %H:%M:%S GMT")

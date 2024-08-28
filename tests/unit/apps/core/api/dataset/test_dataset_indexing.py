@@ -6,32 +6,21 @@ from watson.search import search_context_manager
 
 logger = logging.getLogger(__name__)
 
-pytestmark = [pytest.mark.dataset]
+pytestmark = [pytest.mark.dataset, pytest.mark.django_db]
 
 
-@pytest.mark.django_db(transaction=True)
-def test_dataset_indexing(
-    dataset_a_json,
-    data_catalog,
-    reference_data,
-    live_server,
-    requests_client,
-    service_user,
-    update_request_client_auth_token,
-):
+def test_dataset_indexing(dataset_a_json, data_catalog, reference_data, admin_client):
     """Ensure dataset that fails publish validation does not create a SearchEntry."""
-    update_request_client_auth_token(requests_client, service_user.token)
-
+    # Open search context so the request behaves like when watson middleware is enabled.
+    # The context is closed automatically after the next request.
+    search_context_manager.start()
     dataset_license = dataset_a_json["access_rights"].pop("license")
-    search_context_manager.start()  # emulate watson middleware
-    res = requests_client.post(f"{live_server.url}/v3/datasets", json=dataset_a_json)
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 400
-    search_context_manager.end()
     assert SearchEntry.objects.count() == 0
 
-    dataset_a_json["access_rights"]["license"] = dataset_license
     search_context_manager.start()
-    res = requests_client.post(f"{live_server.url}/v3/datasets", json=dataset_a_json)
+    dataset_a_json["access_rights"]["license"] = dataset_license
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 201
-    search_context_manager.end()
     assert SearchEntry.objects.count() == 1

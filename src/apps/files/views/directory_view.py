@@ -5,7 +5,6 @@
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
 
-
 from django.db.models import CharField, Count, F, Max, Min, Sum, Value
 from django.db.models.functions import Concat
 from drf_yasg.utils import swagger_auto_schema

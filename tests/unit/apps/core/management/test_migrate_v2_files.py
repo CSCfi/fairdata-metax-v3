@@ -89,6 +89,24 @@ def test_migrate_command(mock_response, mock_endpoint_files):
     assert mock_endpoint_files.call_count == 2  # not removed + removed
 
 
+def test_migrate_command_modified_since(mock_response, mock_endpoint_files):
+    out = StringIO()
+    err = StringIO()
+    call_command(
+        "migrate_v2_files",
+        stdout=out,
+        stderr=err,
+        use_env=True,
+        modified_since="2024-08-09T12:34:56+03:00",
+    )
+    assert File.all_objects.count() == 9
+    assert len(err.readlines()) == 0
+    assert mock_endpoint_files.call_count == 2  # not removed + removed
+    history = mock_endpoint_files.request_history
+    assert history[0].headers.get("If-Modified-Since") == "Fri, 09 Aug 2024 09:34:56 GMT"
+    assert history[1].headers.get("If-Modified-Since") == "Fri, 09 Aug 2024 09:34:56 GMT"
+
+
 def test_migrate_command_update(mock_response, mock_endpoint_files):
     # Do initial migration
     out = StringIO()
@@ -231,7 +249,10 @@ def test_migrate_missing_config():
 def test_migrate_invalid_args():
     err = StringIO()
     call_command("migrate_v2_files", stderr=err, projects=["x"], datasets=["y"])
-    assert "projects and storages arguments are not supported with datasets" in err.getvalue()
+    assert (
+        "projects, storages, and modified-since arguments are not supported with datasets"
+        in err.getvalue()
+    )
 
 
 def test_migrate_dataset_error(requests_mock):

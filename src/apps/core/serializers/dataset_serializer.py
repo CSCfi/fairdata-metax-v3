@@ -282,38 +282,38 @@ class DatasetSerializer(CommonNestedModelSerializer):
         ds_is_published = self._ds_is_published(data)
         if self.context["request"].method in {"POST", "PUT"}:
             if data.get("persistent_identifier") != None and data.get("data_catalog") == None:
-                errors[
-                    "persistent_identifier"
-                ] = "Can't assign persistent_identifier if data_catalog isn't given"
+                errors["persistent_identifier"] = (
+                    "Can't assign persistent_identifier if data_catalog isn't given"
+                )
             elif data.get("data_catalog") != None:
                 if data.get("persistent_identifier") != None and dc_is_harvested == False:
-                    errors[
-                        "persistent_identifier"
-                    ] = "persistent_identifier can't be assigned to a dataset in a non-harvested data catalog"
+                    errors["persistent_identifier"] = (
+                        "persistent_identifier can't be assigned to a dataset in a non-harvested data catalog"
+                    )
                 if data.get("persistent_identifier") == None and dc_is_harvested == True:
-                    errors[
-                        "persistent_identifier"
-                    ] = "Dataset in a harvested catalog has to have a persistent identifier"
+                    errors["persistent_identifier"] = (
+                        "Dataset in a harvested catalog has to have a persistent identifier"
+                    )
 
             if dc_is_harvested == False and ds_is_published and data.get("pid_type") == None:
-                errors[
-                    "pid_type"
-                ] = "If data catalog is not harvested and dataset is published, pid_type needs to be given"
+                errors["pid_type"] = (
+                    "If data catalog is not harvested and dataset is published, pid_type needs to be given"
+                )
 
         elif self.context["request"].method in {"PATCH"}:
             if data.get("persistent_identifier") != None and dc_is_harvested == False:
-                errors[
-                    "persistent_identifier"
-                ] = "persistent_identifier can't be assigned to a dataset in a non-harvested data catalog"
+                errors["persistent_identifier"] = (
+                    "persistent_identifier can't be assigned to a dataset in a non-harvested data catalog"
+                )
 
             if (
                 self.instance.persistent_identifier == None
                 and data.get("persistent_identifier") == None
                 and dc_is_harvested == True
             ):
-                errors[
-                    "persistent_identifier"
-                ] = "Dataset in a harvested catalog has to have a persistent identifier"
+                errors["persistent_identifier"] = (
+                    "Dataset in a harvested catalog has to have a persistent identifier"
+                )
 
         return errors
 
@@ -328,9 +328,9 @@ class DatasetSerializer(CommonNestedModelSerializer):
         fileset = data.get("file_set", existing_fileset)
         remote_resources = data.get("remote_resources", existing_remote_resources)
         if fileset and remote_resources:
-            errors[
-                api_settings.NON_FIELD_ERRORS_KEY
-            ] = "Cannot have files and remote resources in the same dataset."
+            errors[api_settings.NON_FIELD_ERRORS_KEY] = (
+                "Cannot have files and remote resources in the same dataset."
+            )
         return errors
 
     def to_internal_value(self, data):

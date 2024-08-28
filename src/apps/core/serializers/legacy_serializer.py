@@ -28,7 +28,6 @@ from apps.core.serializers.provenance_serializers import ProvenanceModelSerializ
 
 logger = logging.getLogger(__name__)
 
-
 from django.utils.translation import gettext as _
 
 from apps.common.serializers.serializers import CommonModelSerializer

@@ -13,7 +13,6 @@ from metax_service.settings.components.actors import ORGANIZATION_SCHEME
 
 _logger = logging.getLogger(__name__)
 
-
 CSV_HEADERS = [
     "org_name_fi",
     "org_name_en",

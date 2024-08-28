@@ -1,11 +1,12 @@
 import logging
 from argparse import ArgumentParser
-from typing import List
+from typing import List, Optional
 
 import requests
 from cachalot.api import cachalot_disabled
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 
 from apps.files.serializers.legacy_files_serializer import (
     FileMigrationCounts,
@@ -15,7 +16,6 @@ from apps.files.serializers.legacy_files_serializer import (
 from ._v2_client import MigrationV2Client
 
 logger = logging.getLogger(__name__)
-
 
 storage_shorthands = {
     "ida": "urn:nbn:fi:att:file-storage-ida",
@@ -108,6 +108,13 @@ class Command(BaseCommand):
             default=False,
             help="Allow individual datasets to fail without halting the migration",
         )
+        parser.add_argument(
+            "--modified-since",
+            type=str,
+            required=False,
+            default=False,
+            help="Migrate only files modified since datetime (in ISO 8601 format).",
+        )
 
     def print_status_line(self):
         created = self.created
@@ -165,13 +172,20 @@ class Command(BaseCommand):
         for project in self.projects:
             params["project_identifier"] = project
             self.stdout.write(f"--- Migrating files for project {project} ---")
-            file_batches = self.client.fetch_files(params=params, batched=True)
+            file_batches = self.client.fetch_files(
+                params=params, batched=True, modified_since=self.modified_since
+            )
             for batch in file_batches:
                 self.migrate_files(batch)
 
     def migrate_all_files(self, params):
-        self.stdout.write("--- Migrating all files ---")
-        file_batches = self.client.fetch_files(params, batched=True)
+        if self.modified_since:
+            self.stdout.write(f"--- Migrating files modified since {self.modified_since} ---")
+        else:
+            self.stdout.write("--- Migrating all files ---")
+        file_batches = self.client.fetch_files(
+            params, batched=True, modified_since=self.modified_since
+        )
         for batch in file_batches:
             self.migrate_files(batch)
 
@@ -221,6 +235,14 @@ class Command(BaseCommand):
             pass
         return bool(byte_size or dataset_json.get("deprecated"))
 
+    def parse_datetime(self, datetime_str: Optional[str]):
+        if not datetime_str:
+            return None
+        parsed = parse_datetime(datetime_str)
+        if not parsed:
+            raise ValueError(f"Invalid datetime: {datetime_str}")
+        return parsed
+
     def handle(self, *args, **options):
         self.started = timezone.now()
         self.datasets = options.get("datasets") or []
@@ -230,10 +252,17 @@ class Command(BaseCommand):
         self.allow_fail = options.get("allow_fail")
         self.force = options.get("force")
         self.verbosity = options.get("verbosity")  # defaults to 1
+        try:
+            self.modified_since = self.parse_datetime(options.get("modified_since"))
+        except ValueError as e:
+            self.stderr.write(str(e))
+            return
 
-        if (self.datasets or self.datasets_from_catalogs) and (self.projects or self.storages):
+        if (self.datasets or self.datasets_from_catalogs) and (
+            self.projects or self.storages or self.modified_since
+        ):
             self.stderr.write(
-                "The projects and storages arguments are not supported with datasets"
+                "The projects, storages, and modified-since arguments are not supported with datasets"
             )
             return
 
