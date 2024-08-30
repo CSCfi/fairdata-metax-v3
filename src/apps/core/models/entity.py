@@ -4,6 +4,7 @@ from django.utils.translation import gettext as _
 
 from apps.common.copier import ModelCopier
 from apps.common.models import AbstractBaseModel
+from common.helpers import single_translation
 
 from .concepts import ResourceType
 
@@ -32,15 +33,9 @@ class Entity(AbstractBaseModel):
 
     def __str__(self):
         if self.title:
-            return (
-                self.title.get("en") or self.title.get("fi") or next(iter(self.title.values()), "")
-            )
+            return single_translation(self.title)
         elif self.description:
-            return (
-                self.description.get("en")
-                or self.description.get("fi")
-                or next(iter(self.description.values()), "")
-            )
+            return single_translation(self.description)
         else:
             return str(self.id)
 

@@ -82,7 +82,7 @@ class MetadataProviderAdmin(admin.ModelAdmin):
 
 
 class CoreRefDataAdminMixin:
-    search_fields = ["pref_label__values"]
+    search_fields = ["pref_label__values", "url"]
     readonly_fields = ["broader"]
     list_filter = ("created", "modified")
 
