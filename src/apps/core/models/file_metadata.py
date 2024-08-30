@@ -38,7 +38,7 @@ class FileSetFileMetadata(models.Model):
     def to_legacy(self):
         return omit_empty(
             {
-                "identifier": str(self.file.id),
+                "identifier": str(self.file.storage_identifier),
                 "title": self.title,
                 "description": self.description,
                 "file_type": refdata_to_legacy(self.file_type),

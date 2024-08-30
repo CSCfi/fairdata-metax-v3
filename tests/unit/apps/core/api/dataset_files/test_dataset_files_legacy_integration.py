@@ -173,7 +173,7 @@ def test_dataset_files_legacy_sync_metadata(
     assert request_data["user_metadata"] == {
         "files": [
             {
-                "identifier": str(files["/dir2/subdir1/file1.txt"].id),
+                "identifier": str(files["/dir2/subdir1/file1.txt"].storage_identifier),
                 "title": "File1 title",
                 "description": "File1 description",
                 "file_type": {

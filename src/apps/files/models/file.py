@@ -96,7 +96,7 @@ class File(SystemCreatorBaseModel, CustomSoftDeletableModel):
             "file_path": self.pathname,
             "file_uploaded": self.modified,
             "file_modified": self.modified,
-            "file_frozen": self.frozen,
+            "file_frozen": self.frozen or self.modified,
             "byte_size": self.size,
             "file_storage": settings.V3_STORAGE_SERVICE_TO_LEGACY_FILE_STORAGE[
                 self.storage_service
