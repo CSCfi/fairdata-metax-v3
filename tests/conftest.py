@@ -674,6 +674,7 @@ def requests_client():
 def user_client(user):
     client = Client()
     client.force_login(user)
+    client._user = user
     return client
 
 
@@ -681,6 +682,7 @@ def user_client(user):
 def user_client_2(user2):
     client = Client()
     client.force_login(user2)
+    client._user = user2
     return client
 
 

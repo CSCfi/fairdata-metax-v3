@@ -28,7 +28,7 @@ class DatasetAccessPolicy(BaseAccessPolicy):
             "effect": "allow",
         },
         {
-            # Note that there is no actual "download" action in the viewset at the moment.
+            # Note that there is no actual "download" action in the viewset
             "action": ["<op:download>"],
             "principal": "*",
             "effect": "allow",
@@ -95,6 +95,7 @@ class DatasetAccessPolicy(BaseAccessPolicy):
             | Q(metadata_owner__user=request.user)
             | Q(system_creator=request.user)
             | Q(permissions__editors=request.user)
+            | Q(file_set__storage__csc_project__in=request.user.csc_projects)
             | Q(data_catalog__dataset_groups_admin__in=groups)
         ).distinct()
 
@@ -105,7 +106,9 @@ class DatasetAccessPolicy(BaseAccessPolicy):
         if request.user.is_anonymous:
             return Dataset.available_objects.none()
         return queryset.filter(
-            Q(metadata_owner__user=request.user) | Q(permissions__editors=request.user)
+            Q(metadata_owner__user=request.user)
+            | Q(permissions__editors=request.user)
+            | Q(file_set__storage__csc_project__in=request.user.csc_projects)
         ).distinct()
 
 

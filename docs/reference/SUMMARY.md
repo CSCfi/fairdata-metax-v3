@@ -201,6 +201,7 @@
                         - [test_dataset_indexing](tests/unit/apps/core/api/dataset/test_dataset_indexing.md)
                         - [test_dataset_metrics](tests/unit/apps/core/api/dataset/test_dataset_metrics.md)
                         - [test_dataset_permissions](tests/unit/apps/core/api/dataset/test_dataset_permissions.md)
+                        - [test_dataset_permissions_csc_project](tests/unit/apps/core/api/dataset/test_dataset_permissions_csc_project.md)
                         - [test_dataset_pids](tests/unit/apps/core/api/dataset/test_dataset_pids.md)
                         - [test_dataset_spatial](tests/unit/apps/core/api/dataset/test_dataset_spatial.md)
                         - [test_dataset_timestamps](tests/unit/apps/core/api/dataset/test_dataset_timestamps.md)

@@ -1,22 +1,13 @@
-import json
 import logging
-from unittest.mock import ANY
 from urllib.parse import parse_qs
 
 import pytest
 from django.conf import settings as django_settings
-from django.contrib.auth.models import Group
 from django.core import mail
 from django.test import override_settings
-from rest_framework.reverse import reverse
-from tests.utils import assert_nested_subdict, matchers
-from watson.models import SearchEntry
+from tests.utils import matchers
 
 from apps.core import factories
-from apps.core.factories import DatasetFactory, MetadataProviderFactory
-from apps.core.models import OtherIdentifier
-from apps.core.models.catalog_record.dataset import Dataset
-from apps.files.factories import FileStorageFactory
 
 logger = logging.getLogger(__name__)
 
