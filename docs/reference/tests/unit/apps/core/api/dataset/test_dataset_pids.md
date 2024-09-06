@@ -16,9 +16,9 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_create_dataset_with_URN
 
-## test_create_dataset_with_DOI
+## test_create_dataset_with_doi
 
-### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_create_dataset_with_DOI
+### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_create_dataset_with_doi
 
 ## test_create_draft_dataset
 
@@ -64,3 +64,6 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_pid_cant_be_updated
 
+## test_create_dataset_with_doi_fail
+
+### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_create_dataset_with_doi_fail

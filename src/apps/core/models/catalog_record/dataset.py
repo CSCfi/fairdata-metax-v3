@@ -613,7 +613,14 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         if self.pid_type == self.PIDTypes.URN and self._can_create_urn():
             dataset_id = self.id
             try:
-                pid = PIDMSClient.createURN(dataset_id)
+                pid = PIDMSClient().createURN(dataset_id)
+                self.persistent_identifier = pid
+            except ServiceUnavailableError as e:
+                e.detail = f"Error when creating persistent identifier. Please try again later."
+                raise e
+        if self.pid_type == self.PIDTypes.DOI:
+            try:
+                pid = PIDMSClient().create_doi(self.id)
                 self.persistent_identifier = pid
             except ServiceUnavailableError as e:
                 e.detail = f"Error when creating persistent identifier. Please try again later."

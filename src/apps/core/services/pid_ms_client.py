@@ -5,7 +5,6 @@ import uuid
 import requests
 from django.conf import settings
 from django.utils.module_loading import import_string
-from requests.auth import HTTPBasicAuth
 from rest_framework.exceptions import APIException
 
 _logger = logging.getLogger(__name__)
@@ -20,6 +19,11 @@ class _DummyPIDMSClient:
 
     def createURN(self, dataset_id):
         dummy_pid = "urn:nbn:fi:fd-dummy-" + str(uuid.uuid4())
+        return dummy_pid
+
+    def create_doi(self, dataset):
+        _uuid = str(uuid.uuid4())
+        dummy_pid = f"10.82614/{_uuid}"
         return dummy_pid
 
 
@@ -37,7 +41,22 @@ class _PIDMSClient:
         }
         headers = {"apikey": self.pid_ms_apikey}
         try:
-            response = requests.post(self.pid_ms_url + "/v1/pid", json=payload, headers=headers)
+            response = requests.post(f"https://{settings.PID_MS_BASEURL}/v1/pid", json=payload, headers=headers)
+            response.raise_for_status()
+            return response.text
+        except Exception as e:
+            _logger.error(f"Exception in PIDMSClient: {e}")
+            raise ServiceUnavailableError
+
+    def create_doi(self, dataset_id):
+        from apps.common.datacitedata import Datacitedata
+        payload = Datacitedata().get_datacite_json(dataset_id)
+        payload["data"]["attributes"]["event"] = "publish"
+        payload["data"]["attributes"]["url"] = f"https://{self.etsin_url}/dataset/{dataset_id}"
+        headers = {"apikey": self.pid_ms_apikey,
+                   "Content-Type": "application/json"}
+        try:
+            response = requests.post(f"https://{settings.PID_MS_BASEURL}/v1/pid/doi", json=payload, headers=headers)
             response.raise_for_status()
             return response.text
         except Exception as e:
@@ -51,4 +70,11 @@ class ServiceUnavailableError(APIException):
     default_code = "service_unavailable"
 
 
-PIDMSClient = import_string(settings.PID_MS_CLIENT_INSTANCE)()
+class PIDMSClient:
+    def createURN(self, dataset_id):
+        _client = import_string(settings.PID_MS_CLIENT_INSTANCE)()
+        return _client.createURN(dataset_id)
+
+    def create_doi(self, dataset_id):
+        _client = import_string(settings.PID_MS_CLIENT_INSTANCE)()
+        return _client.create_doi(dataset_id)

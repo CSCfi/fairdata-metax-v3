@@ -1,9 +1,12 @@
 from unittest import mock
 
 import pytest
+from django.test import override_settings
+from importlib import reload
 
 from apps.core.models import Dataset
 from apps.core.services.pid_ms_client import PIDMSClient, ServiceUnavailableError
+from tests.unit.apps.core.api.dataset.conftest import dataset
 
 pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
 
@@ -90,10 +93,11 @@ def test_create_dataset_with_URN(admin_client, dataset_a_json, data_catalog, ref
 # Try to add remote_resources
 # Check that dataset update results into an error
 # Check that remote resources are not added
-def test_create_dataset_with_DOI(admin_client, dataset_a_json, data_catalog, reference_data):
-    pytest.xfail("PID MS - DOI implementation missing")
-    dataset = dataset_a_json
+@override_settings(PID_MS_CLIENT_INSTANCE="apps.core.services.pid_ms_client._PIDMSClient")
+def test_create_dataset_with_doi(admin_client, dataset_maximal_json, data_catalog, reference_data):
+    dataset = dataset_maximal_json
     dataset["pid_type"] = "DOI"
+    dataset["state"] = "published"
     dataset.pop("persistent_identifier", None)
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
     assert res.status_code == 201
@@ -116,6 +120,18 @@ def test_create_dataset_with_DOI(admin_client, dataset_a_json, data_catalog, ref
         f"/v3/datasets/{ds_id}", remote_resources, content_type="application/json"
     )
     assert res.status_code == 400
+
+
+
+@override_settings(PID_MS_CLIENT_INSTANCE="apps.core.services.pid_ms_client._PIDMSClient")
+@pytest.mark.noautomock
+def test_create_dataset_with_doi_fail(admin_client, dataset_maximal_json, data_catalog, reference_data):
+    dataset = dataset_maximal_json
+    dataset["state"] = "published"
+    dataset["pid_type"] = "DOI"
+    dataset.pop("persistent_identifier", None)
+    res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
+    assert res.status_code == 503
 
 
 # Create a draft dataset
@@ -151,10 +167,11 @@ def patch_mock_createURN_fail():
 # Try to create a dataset, but PID MS fails
 # Check that error message is correct
 # Check that dataset is not created
+@override_settings(PID_MS_CLIENT_INSTANCE="apps.core.services.pid_ms_client._PIDMSClient")
+@pytest.mark.noautomock
 @pytest.mark.django_db
 def test_create_dataset_with_failed_PID(
-    admin_client, dataset_a_json, data_catalog, reference_data, patch_mock_createURN_fail
-):
+    admin_client, dataset_a_json, data_catalog, reference_data):
     old_count = Dataset.available_objects.all().count()
     dataset = dataset_a_json
     dataset["pid_type"] = "URN"
