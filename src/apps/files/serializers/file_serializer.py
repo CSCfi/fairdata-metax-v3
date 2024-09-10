@@ -10,11 +10,16 @@ from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
-from apps.common.helpers import get_attr_or_item
+from apps.common.helpers import get_attr_or_item, omit_empty
 from apps.common.serializers.fields import ChecksumField, ListValidChoicesField
-from apps.common.serializers.serializers import CommonModelSerializer
+from apps.common.serializers.serializers import (
+    CommonModelSerializer,
+    CommonNestedModelSerializer,
+    StrictSerializer,
+)
 from apps.files.helpers import get_file_metadata_serializer
 from apps.files.models.file import File
+from apps.files.models.file_characteristics import FileCharacteristics, FileFormatVersion
 from apps.files.models.file_storage import FileStorage
 
 from .fields import FileNameField, FilePathField
@@ -50,7 +55,33 @@ class CreateOnlyFieldsMixin:
         return super().update(instance, validated_data)
 
 
-class FileSerializer(CreateOnlyFieldsMixin, CommonModelSerializer):
+class FileCharacteristicsSerializer(CommonModelSerializer, StrictSerializer):
+    file_format_version = FileFormatVersion.get_serializer_field(required=False, allow_null=True)
+    encoding = ListValidChoicesField(
+        choices=FileCharacteristics.EncodingChoices.choices, required=False, allow_null=True
+    )
+    csv_delimiter = ListValidChoicesField(
+        choices=FileCharacteristics.CSVDelimiterChoices.choices, required=False, allow_null=True
+    )
+    csv_record_separator = ListValidChoicesField(
+        choices=FileCharacteristics.CSVRecordSeparatorChoices.choices,
+        required=False,
+        allow_null=True,
+    )
+
+    class Meta:
+        model = FileCharacteristics
+        fields = [
+            "file_format_version",
+            "encoding",
+            "csv_has_header",
+            "csv_quoting_char",
+            "csv_delimiter",
+            "csv_record_separator",
+        ]
+
+
+class FileSerializer(CreateOnlyFieldsMixin, CommonNestedModelSerializer):
     create_only_fields = [
         "pathname",
         "csc_project",
@@ -69,6 +100,8 @@ class FileSerializer(CreateOnlyFieldsMixin, CommonModelSerializer):
     filename = FileNameField(read_only=True)
 
     dataset_metadata = serializers.SerializerMethodField()
+
+    characteristics = FileCharacteristicsSerializer(required=False, allow_null=True)
 
     def get_dataset_metadata(self, obj):
         if "file_metadata" in self.context:
@@ -125,5 +158,7 @@ class FileSerializer(CreateOnlyFieldsMixin, CommonModelSerializer):
             "published",
             "user",
             "dataset_metadata",
+            "characteristics",
+            "characteristics_extension",
         ]
         extra_kwargs = {"published": {"read_only": True}}

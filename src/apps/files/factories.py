@@ -7,6 +7,21 @@ from django.utils import timezone
 from . import models
 
 
+class FileFormatVersionFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.FileFormatVersion
+        django_get_or_create = ("url",)
+
+    pref_label = factory.Dict({"en": factory.Sequence(lambda n: f"dataset-file-type-{n}")})
+    in_scheme = factory.Faker("url")
+    file_format = factory.Faker("mime_type")
+    format_version = factory.Faker("random_digit")
+
+    @factory.sequence
+    def url(self):
+        return f"https://dataset-file-type-{self}.fi"
+
+
 class FileStorageFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.FileStorage

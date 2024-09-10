@@ -4,6 +4,7 @@ from typing import List
 import pytest
 from rest_framework.reverse import reverse
 from rest_framework.serializers import DateTimeField, RegexField
+from apps.files.models import FileCharacteristics
 from tests.utils import assert_nested_subdict
 
 from apps.files import factories
@@ -24,6 +25,11 @@ def build_files_json(file_kwargs: List[dict], storage=None):
     instances = []
     for kwargs in file_kwargs:
         factory_args = {k: v for k, v in kwargs.items() if k not in ["exists", "fields"]}
+        if characteristics_data := factory_args.pop("characteristics", None):
+            factory_args["characteristics"] = FileCharacteristics.objects.create(
+                **characteristics_data
+            )
+
         if kwargs.get("exists"):
             instances.append(factory.create(storage=storage, **factory_args))
         else:

@@ -32,8 +32,8 @@ class DatasetNestedViewSet(CommonModelViewSet):
         return resp
 
     def perform_create(self, serializer):
-        dataset = self.get_dataset_instance()
-        return serializer.save(dataset_id=dataset.id)
+        self.get_dataset_instance()
+        return serializer.save()
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -69,19 +69,8 @@ class DatasetNestedOneToOneView(DatasetNestedViewSet):
         return obj
 
     def update(self, request, *args, **kwargs):
-        obj = None
         if not kwargs.get("patch"):
             # Allow creating new object when in PUT mode
-            queryset = self.get_queryset()
-            (
-                obj,
-                created,
-            ) = queryset.get_or_create()  # Create initial object if it does not exist yet
-            if created:
-                from apps.core.models.catalog_record.dataset import Dataset
-
-                # Assign created object to Dataset.<dataset_field_name>
-                Dataset.objects.filter(id=self.kwargs["dataset_pk"]).update(
-                    **{self.dataset_field_name: obj}
-                )
+            if not self.get_queryset().exists():
+                return self.create(request, *args, **kwargs)
         return super().update(request, *args, **kwargs)

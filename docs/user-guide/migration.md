@@ -48,7 +48,7 @@ There's a few changes made for the datasets endpoints. Bulk actions are removed.
 Endpoints to manage datasets' editor permissions are not implemented to v3 yet but will be replaced with similar system as in Metax v2. Metax V2 editor permissions continue to work as before.
 
 | type   | v2 endpoint                                         | v3 endpoint             | notes                                    |
-| -------| --------------------------------------------------- | ----------------------- | ---------------------------------------- |
+|--------|-----------------------------------------------------|-------------------------|------------------------------------------|
 | PUT    | /datasets[list]                                     | **Not used in V3**      | Update of a list of datasets.            |
 | PATCH  | /datasets[list]                                     | **Not used in V3**      | Partial update of a list of datasets.    |
 | DELETE | /datasets                                           | **Not used in V3**      | Delete of a list of datasets             |
@@ -386,13 +386,13 @@ These are the *changed* query parameters used in datasets listing (`/v3/datasets
 !!! NOTE
     You can check the supported http methods from the [Swagger documentation](/v3/swagger/), this table lists only the resource path changes.
 
-| V1-V2 endpoint                              | V3 endpoint                        |
-|---------------------------------------------|------------------------------------|
-| `/datasets/identifiers`                     | :clock:                            |
-| `/datasets/list`                            | `/datasets`                        |
-| `/datasets/metadata_versions`               | :no-entry:                         |
-| `/datasets/unique_preferred_identifiers`    | :no-entry:                         |
-| `/datasets/{CRID}/editor_permissions/users` | :question:                         |
+| V1-V2 endpoint                              | V3 endpoint |
+|---------------------------------------------|-------------|
+| `/datasets/identifiers`                     | :clock:     |
+| `/datasets/list`                            | `/datasets` |
+| `/datasets/metadata_versions`               | :no-entry:  |
+| `/datasets/unique_preferred_identifiers`    | :no-entry:  |
+| `/datasets/{CRID}/editor_permissions/users` | :question:  |
 
 #### RPC endpoints
 
@@ -555,29 +555,31 @@ may exist in multiple services.
 
 #### Field names
 
-| Field                                 | V1/V2                                                      | V3                                                    |
-|---------------------------------------|------------------------------------------------------------|-------------------------------------------------------|
-| File id                               | id [int]                                                   | id [uuid] :star:                                      |
-| File id in external service           | identifier [str]                                           | storage_identifier [str] :star:                       |
-| External service                      | file_storage [str]<br>e.g. urn:nbn:fi:att:file-storage-ida | storage_service [str]<br>e.g. ida :star:              |
-| Project identifier                    | project_identifier [str]                                   | csc_project [str] :clock:                             |
-| Modification date in external service | file_modified [datetime]                                   | modified [datetime] :star:                            |
-| Freeze date in external service       | file_frozen [datetime]                                     | frozen [datetime] :star:                              |
-| File removal date from Metax          | file_removed                                               | removed [datetime] :star:                             |
-| Deletion date                         | file_deleted [datetime]                                    | :no-entry:                                            |
-| Upload date in external service       | file_uploaded [datetime]                                   | :no-entry:                                            |
-| File extension                        | file_format [str]                                          | :no-entry:                                            |
-| File characteristics                  | file_characteristics [object]                              | :question:                                            |
-| File characteristics extension        | file_characteristics_extension [object]                    | :question:                                            |
-| Parent directory                      | parent_directory [obj]                                     | :no-entry:                                            |
-| Full file path                        | file_path [str]                                            | pathname [str] :star:                                 |
-| File name                             | file_name [str]                                            | filename, determined from pathname [str] :star:       |
-| Open access                           | open_access [bool]                                         | :no-entry:                                            |
-| PAS compatible                        | pas_compatible [bool]                                      | is_pas_compatible [bool] :clock:                      |
-| File size in bytes                    | byte_size [int]                                            | size [int] :star:                                     |
-| Checksum algorithm                    | checksum_algorithm                                         | checksum [algorithm:value], e.g. "sha256:f00f" :star: |
-| Checksum value                        | checksum_value                                             | merged with checksum_algorithm :star:                 |
-| Checksum check date                   | checksum_checked                                           | :no-entry:                                            |
+| Field                                 | V1/V2                                                      | V3                                                        |
+|---------------------------------------|------------------------------------------------------------|-----------------------------------------------------------|
+| File id                               | id [int]                                                   | id [uuid] :star:                                          |
+| File id in external service           | identifier [str]                                           | storage_identifier [str] :star:                           |
+| External service                      | file_storage [str]<br>e.g. urn:nbn:fi:att:file-storage-ida | storage_service [str]<br>e.g. ida :star:                  |
+| Project identifier                    | project_identifier [str]                                   | csc_project [str] :clock:                                 |
+| Modification date in external service | file_modified [datetime]                                   | modified [datetime] :star:                                |
+| Freeze date in external service       | file_frozen [datetime]                                     | frozen [datetime] :star:                                  |
+| File removal date from Metax          | file_removed                                               | removed [datetime] :star:                                 |
+| Deletion date                         | file_deleted [datetime]                                    | :no-entry:                                                |
+| Upload date in external service       | file_uploaded [datetime]                                   | :no-entry:                                                |
+| File extension                        | file_format [str]                                          | :no-entry:                                                |
+| File characteristics                  | file_characteristics [object]                              | characteristics :star:                                    |
+| File characteristics file format      | file_characteristics.file_format [object]                  | characteristics.file_format_version.file_format :star:    |
+| File characteristics format version   | file_characteristics.format_version [object]               | characteristics.file_format_version.format_version :star: |
+| File characteristics extension        | file_characteristics_extension [object]                    | characteristics_extension :star:                          |
+| Parent directory                      | parent_directory [obj]                                     | :no-entry:                                                |
+| Full file path                        | file_path [str]                                            | pathname [str] :star:                                     |
+| File name                             | file_name [str]                                            | filename, determined from pathname [str] :star:           |
+| Open access                           | open_access [bool]                                         | :no-entry:                                                |
+| PAS compatible                        | pas_compatible [bool]                                      | is_pas_compatible [bool] :clock:                          |
+| File size in bytes                    | byte_size [int]                                            | size [int] :star:                                         |
+| Checksum algorithm                    | checksum_algorithm                                         | checksum [algorithm:value], e.g. "sha256:f00f" :star:     |
+| Checksum value                        | checksum_value                                             | merged with checksum_algorithm :star:                     |
+| Checksum check date                   | checksum_checked                                           | :no-entry:                                                |
 
 ### Directories
 

@@ -109,6 +109,7 @@
         - [helpers](src/apps/files/helpers.md)
         - models
             - [file](src/apps/files/models/file.md)
+            - [file_characteristics](src/apps/files/models/file_characteristics.md)
             - [file_storage](src/apps/files/models/file_storage.md)
         - [permissions](src/apps/files/permissions.md)
         - serializers
@@ -119,6 +120,7 @@
             - [legacy_files_serializer](src/apps/files/serializers/legacy_files_serializer.md)
         - [signals](src/apps/files/signals.md)
         - views
+            - [characteristics_view](src/apps/files/views/characteristics_view.md)
             - [directory_view](src/apps/files/views/directory_view.md)
             - [file_view](src/apps/files/views/file_view.md)
     - refdata
@@ -265,6 +267,7 @@
                         - [conftest](tests/unit/apps/files/api/files/conftest.md)
                         - [test_auth](tests/unit/apps/files/api/files/test_auth.md)
                         - [test_files_bulk](tests/unit/apps/files/api/files/test_files_bulk.md)
+                        - [test_files_characteristics](tests/unit/apps/files/api/files/test_files_characteristics.md)
                         - [test_files_create](tests/unit/apps/files/api/files/test_files_create.md)
                         - [test_files_datasets](tests/unit/apps/files/api/files/test_files_datasets.md)
                         - [test_files_delete](tests/unit/apps/files/api/files/test_files_delete.md)

@@ -25,6 +25,7 @@ from django.test.client import Client
 from rest_framework.test import APIClient, RequestsClient
 
 from apps.core import factories
+from apps.files import factories as files_factories
 from apps.core.models.data_catalog import DataCatalog
 from apps.core.signals import dataset_created, dataset_updated
 from apps.users.factories import MetaxUserFactory
@@ -487,6 +488,30 @@ def file_type_reference_data():
 
 
 @pytest.fixture
+def file_format_reference_data():
+    common_args = {
+        "in_scheme": "http://uri.suomi.fi/codelist/fairdata/file_format_version",
+    }
+    files_factories.FileFormatVersionFactory(
+        url="http://uri.suomi.fi/codelist/fairdata/file_format_version/code/text_csv",
+        pref_label={"en": "text/csv", "fi": "text/csv"},
+        file_format="text/csv",
+        format_version="",
+        **common_args,
+    )
+    files_factories.FileFormatVersionFactory(
+        url="http://uri.suomi.fi/codelist/fairdata/file_format_version/code/application_pdf_1.2",
+        pref_label={
+            "en": "application/pdf 1.2",
+            "fi": "application/pdf 1.2",
+        },
+        file_format="application/pdf",
+        format_version="1.2",
+        **common_args,
+    )
+
+
+@pytest.fixture
 def use_category_reference_data():
     common_args = {
         "in_scheme": "http://uri.suomi.fi/codelist/fairdata/use_category",
@@ -656,6 +681,7 @@ def reference_data(
     funder_type_reference_data,
     organization_reference_data,
     preservation_event_reference_data,
+    file_format_reference_data,
 ):
     """Collection of reference data"""
 
@@ -673,6 +699,7 @@ def requests_client():
 @pytest.fixture
 def user_client(user):
     client = Client()
+    client._user = user
     client.force_login(user)
     client._user = user
     return client

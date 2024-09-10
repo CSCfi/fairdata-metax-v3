@@ -5,7 +5,7 @@ from rest_framework_nested import routers
 from apps.actors.views import OrganizationViewSet
 from apps.core import views as core_views
 from apps.download import views as download_views
-from apps.files.views import DirectoryViewSet, FileViewSet
+from apps.files.views import DirectoryViewSet, FileViewSet, FileCharacteristicsViewSet
 from apps.refdata.models import reference_data_models
 from apps.refdata.views import get_viewset_for_model
 from apps.users.views import UserViewSet
@@ -75,6 +75,13 @@ urlpatterns = [
         r"^datasets/(?P<dataset_pk>[^/.]+)/permissions$",
         core_views.DatasetPermissionsViewSet.as_view({"get": "retrieve"}),
         name="dataset-permissions-detail",
+    ),
+    re_path(
+        r"^files/(?P<pk>[^/.]+)/characteristics$",
+        FileCharacteristicsViewSet.as_view(
+            {"get": "retrieve", "patch": "partial_update", "put": "update", "delete": "destroy"}
+        ),
+        name="file-characteristics-detail",
     ),
     path("", include(router.urls)),
     path("", include(dataset_router.urls)),

@@ -19,6 +19,8 @@ def test_files_create(admin_client, ida_file_json):
             "id": UUIDField(),
             "removed": None,
             "published": None,
+            "characteristics": None,
+            "characteristics_extension": None,
         },
         res.json(),
         check_all_keys_equal=True,

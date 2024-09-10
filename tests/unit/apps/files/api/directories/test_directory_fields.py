@@ -67,6 +67,8 @@ def test_directory_field_values(admin_client, file_tree_b):
                     "removed": None,
                     "user": None,
                     "published": matchers.DateTimeStr(),
+                    "characteristics": None,
+                    "characteristics_extension": None,
                 }
             ],
         },

@@ -238,5 +238,5 @@ def test_put_dataset_nonexisting_preservation(
         {"state": -1},
         content_type="application/json",
     )
-    assert resp.status_code == 200
+    assert resp.status_code == 201
     dataset_signal_handlers.assert_call_counts(created=0, updated=1)

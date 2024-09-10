@@ -399,6 +399,12 @@ class NestedModelSerializer(LazyableModelSerializer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.has_relation_info = False
+
+    def collect_relation_info(self):
+        """Collect information about nested relations."""
+        if self.has_relation_info:
+            return
 
         # Get writable serializer fields that correspond to a relation
         model_class = self.Meta.model
@@ -429,6 +435,8 @@ class NestedModelSerializer(LazyableModelSerializer):
                     self.reverse_serializers[name] = field
                 else:
                     self.forward_serializers[name] = field
+
+        self.has_relation_info = True
 
     def get_reverse_field(self, serializer):
         model_class = self.Meta.model
@@ -574,6 +582,7 @@ class NestedModelSerializer(LazyableModelSerializer):
         }
 
     def create(self, validated_data):
+        self.collect_relation_info()
         self.check_lazy_transaction()
         if self.parent is None:  # Root serializer handles lazy save
             LazyInstanceSaver.create_in_context(self.context)
@@ -613,6 +622,7 @@ class NestedModelSerializer(LazyableModelSerializer):
         return instance
 
     def update(self, instance, validated_data):
+        self.collect_relation_info()
         self.check_lazy_transaction()
         if self.parent is None:  # Root serializer handles lazy save
             LazyInstanceSaver.create_in_context(self.context)

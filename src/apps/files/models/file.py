@@ -14,6 +14,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from model_utils.fields import AutoCreatedField, AutoLastModifiedField
 
+from apps.files.models.file_characteristics import FileCharacteristics
 from apps.common.models import CustomSoftDeletableModel, SystemCreatorBaseModel
 from apps.common.serializers.fields import ChecksumField
 from apps.files.helpers import convert_checksum_v2_to_v3, convert_checksum_v3_to_v2
@@ -48,8 +49,10 @@ class File(SystemCreatorBaseModel, CustomSoftDeletableModel):
     removed = models.DateTimeField(null=True, blank=True)
     published = models.DateTimeField(null=True, blank=True)
 
-    # TODO: characteristics = JSONField(blank=True, null=True)
-    # TODO?: characteristics_extension = JSONField(blank=True, null=True)
+    characteristics = models.OneToOneField(
+        FileCharacteristics, related_name="file", on_delete=models.SET_NULL, null=True
+    )
+    characteristics_extension = models.JSONField(blank=True, null=True)
 
     storage = models.ForeignKey(FileStorage, related_name="files", on_delete=models.CASCADE)
     is_pas_compatible = models.BooleanField(default=None, null=True, blank=True)

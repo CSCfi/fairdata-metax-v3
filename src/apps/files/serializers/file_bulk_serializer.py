@@ -17,7 +17,7 @@ from rest_framework.settings import api_settings
 
 from apps.common.helpers import get_technical_metax_user
 from apps.common.serializers import StrictSerializer
-from apps.files.models.file import File, FileStorage
+from apps.files.models.file import File, FileCharacteristics, FileStorage
 from apps.files.models.file_storage import FileStorage
 from apps.files.serializers.file_serializer import FileSerializer
 
@@ -342,16 +342,34 @@ class FileBulkSerializer(serializers.ListSerializer):
         instance.record_modified = timezone.now()
         return instance
 
+    def assign_characteristics(self, file: File, characteristics_data: Optional[dict]):
+        """Assign characteristics data (not saved yet) to file."""
+        if not characteristics_data:
+            file.characteristics = None
+            return
+        if characteristics := file.characteristics:
+            file.characteristics._changed = False
+            for field, value in characteristics_data.items():
+                if getattr(characteristics, field) != value:
+                    file.characteristics._changed = True
+                    setattr(characteristics, field, value)
+        else:
+            file.characteristics = FileCharacteristics(**characteristics_data)
+            file.characteristics._changed = True
+
     def get_file_instances(self, validated_data) -> List[File]:
         """Return not yet saved instances from validated data."""
         system_creator = get_technical_metax_user()
 
-        existing_files_by_id = File.available_objects.prefetch_related("storage").in_bulk(
-            [f["id"] for f in validated_data if "id" in f]
+        existing_files_by_id = (
+            File.available_objects.prefetch_related("storage")
+            .select_related("characteristics")
+            .in_bulk([f["id"] for f in validated_data if "id" in f])
         )
 
         files = []
         for f in validated_data:
+            characteristics_data = f.pop("characteristics", serializers.empty)
             if "id" not in f:  # new file
                 # Note: To determine if a File instance is not yet in the DB,
                 # use instance._state.adding. For a UUID-style id, the id is
@@ -370,6 +388,9 @@ class FileBulkSerializer(serializers.ListSerializer):
                     file = self.update_file_instance(file, f)
                 if file:
                     files.append(file)
+
+            if file and characteristics_data is not serializers.empty:
+                self.assign_characteristics(file, characteristics_data)
         return files
 
     def do_create_or_update(self, files: List[File]) -> List[dict]:
@@ -379,6 +400,25 @@ class FileBulkSerializer(serializers.ListSerializer):
             for field in File._meta.get_fields()
             if field.concrete and field.name not in {"id", *FileSerializer.create_only_fields}
         }
+        characteristics_fields = [
+            field.name
+            for field in FileCharacteristics._meta.get_fields()
+            if field.concrete and field.name != "id"
+        ]
+
+        # Create or update files and characteristics
+        changed_characteristics = [
+            file.characteristics
+            for file in files
+            if file.characteristics and getattr(file.characteristics, "_changed", False)
+        ]
+        FileCharacteristics.objects.bulk_create(
+            changed_characteristics,
+            batch_size=5000,
+            update_conflicts=True,  # Update characteristics that already exist
+            unique_fields=["id"],
+            update_fields=characteristics_fields,
+        )
 
         being_created = {f.id for f in files if f._state.adding}
         files = File.objects.bulk_create(
@@ -389,7 +429,10 @@ class FileBulkSerializer(serializers.ListSerializer):
             update_fields=fields_to_update,
         )
         # Related objects need to be fetched again from DB after save
-        prefetch_related_objects(files, "storage")
+        prefetch_related_objects(files, "storage", "characteristics")
+
+        # Cleanup any orphaned characteristics
+        FileCharacteristics.objects.filter(file__isnull=True).delete()
 
         def file_action(file):
             if file.id in being_created:

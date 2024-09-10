@@ -92,6 +92,10 @@
 
 ### :::tests.conftest.file_type_reference_data
 
+## file_format_reference_data
+
+### :::tests.conftest.file_format_reference_data
+
 ## use_category_reference_data
 
 ### :::tests.conftest.use_category_reference_data

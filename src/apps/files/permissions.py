@@ -1,6 +1,7 @@
 from django.conf import settings
 
 from apps.common.permissions import BaseAccessPolicy
+from apps.files.models.file import File
 
 
 class BaseFilesAccessPolicy(BaseAccessPolicy):
@@ -51,6 +52,37 @@ class FilesAccessPolicy(BaseFilesAccessPolicy):
         else:
             csc_projects = getattr(request.user, "csc_projects", [])
             return queryset.filter(storage__csc_project__in=csc_projects)
+
+
+class FileCharacteristicsAccessPolicy(FilesAccessPolicy):
+    statements = FilesAccessPolicy.statements + [
+        {
+            "action": ["*"],
+            "principal": "*",
+            "condition": "is_project_or_dataset_member",
+            "effect": "allow",
+        },
+    ]
+
+    def is_project_or_dataset_member(self, request, view, action) -> bool:
+        service_groups = settings.PROJECT_STORAGE_SERVICE_USER_GROUPS
+        if request.user.groups.filter(name__in=service_groups).exists():
+            return True
+
+        # Allow editing characteristics if user belongs to csc_project of file
+        file: File = view.get_file_instance()
+        csc_projects = getattr(request.user, "csc_projects", [])
+        if file.storage.csc_project in csc_projects:
+            return True
+
+        # Allow editing characteristics if user can edit a dataset the file belongs to
+        from apps.core.models.catalog_record.dataset import Dataset
+        from apps.core.permissions import DatasetAccessPolicy
+
+        datasets = Dataset.objects.filter(file_set__files=file)
+        return DatasetAccessPolicy.scope_queryset_owned_or_shared(
+            request, queryset=datasets
+        ).exists()
 
 
 class DirectoriesAccessPolicy(BaseFilesAccessPolicy):

@@ -6,46 +6,8 @@ from django.utils.translation import gettext as _
 
 from apps.common.copier import ModelCopier
 from apps.common.models import AbstractBaseModel
-from apps.common.serializers.fields import URLReferencedModelField, URLReferencedModelListField
 from apps.refdata import models as refdata
-
-
-def not_implemented_function(*args, **kwargs):
-    raise NotImplementedError()
-
-
-class ConceptProxyMixin:
-    """Mixin class for Concept-based proxy models."""
-
-    @classmethod
-    def get_serializer_class(cls):
-        """Make non-url fields read-only"""
-        if serializer_class := getattr(cls, "_serializer_class", None):
-            return serializer_class  # Reuse class instead of always creating new
-
-        serializer_class = super(ConceptProxyMixin, cls).get_serializer_class()
-        serializer_class.omit_related = True
-        serializer_class.Meta.extra_kwargs = {
-            field: {"read_only": True} for field in serializer_class.Meta.fields if field != "url"
-        }
-        # Remove uniqueness validator since we're not creating new reference data
-        serializer_class.Meta.extra_kwargs["url"] = {"validators": []}
-
-        serializer_class.Meta.list_serializer_class = URLReferencedModelListField
-        serializer_class.save = not_implemented_function
-        serializer_class.create = not_implemented_function
-        serializer_class.update = not_implemented_function
-        cls._serializer_class = serializer_class
-        return serializer_class
-
-    @classmethod
-    def get_serializer_field(cls, **kwargs):
-        """Return serializer relation field for concept instances."""
-        serializer = cls.get_serializer_class()()
-        return URLReferencedModelField(child=serializer, **kwargs)
-
-    class Meta:
-        proxy = True
+from apps.refdata.models import ConceptProxyMixin
 
 
 class AccessType(ConceptProxyMixin, refdata.AccessType):
