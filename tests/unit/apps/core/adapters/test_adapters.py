@@ -188,3 +188,16 @@ def test_v2_to_v3_dataset_conversion_ignore_invalid_email(harvested_json, licens
             },
         },
     }
+
+
+def test_get_version_identifiers():
+    dataset = factories.DatasetFactory()
+    dataset2 = factories.DatasetFactory()
+    dataset.dataset_versions.datasets.add(dataset2)
+    assert dataset._get_version_identifiers() == sorted([str(dataset.id), str(dataset2.id)])
+
+    # If dataset has no dataset_versions, dataset id should be returned
+    dataset.dataset_versions.delete(soft=False)
+    dataset.refresh_from_db()
+    assert dataset.dataset_versions is None
+    assert dataset._get_version_identifiers() == [str(dataset.id)]

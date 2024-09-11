@@ -8,22 +8,22 @@ from apps.core.signals import LegacyUpdateFailed, dataset_created, dataset_updat
 
 
 @pytest.mark.adapter
-def test_v2_integration_create_dataset(mock_v2_integration, dataset_with_foreign_keys):
+def test_v2_integration_create_dataset(requests_mock, mock_v2_integration, dataset_with_foreign_keys):
     dataset_created.send(sender=None, data=dataset_with_foreign_keys)
-    assert mock_v2_integration.call_count == 1
-    call = mock_v2_integration.request_history[0]
+    assert requests_mock.call_count == 1
+    call = requests_mock.request_history[0]
     assert call.method == "POST"
     assert call.url == "https://metax-v2-test/rest/v2/datasets?migration_override"
 
 
 @pytest.mark.adapter
-def test_v2_integration_update_dataset(mock_v2_integration, dataset_with_foreign_keys):
+def test_v2_integration_update_dataset(requests_mock, mock_v2_integration, dataset_with_foreign_keys):
     dataset_updated.send(sender=None, data=dataset_with_foreign_keys)
-    assert mock_v2_integration.call_count == 2
-    call = mock_v2_integration.request_history[0]
+    assert requests_mock.call_count == 2
+    call = requests_mock.request_history[0]
     assert call.method == "GET"
     assert call.url == f"https://metax-v2-test/rest/v2/datasets/{dataset_with_foreign_keys.id}"
-    call = mock_v2_integration.request_history[1]
+    call = requests_mock.request_history[1]
     assert call.method == "PUT"
     assert (
         call.url
@@ -38,11 +38,11 @@ def test_v2_integration_update_dataset_notfound(
     matcher = re.compile(v2_integration_settings.METAX_V2_HOST)
     requests_mock.register_uri("GET", matcher, status_code=404)
     dataset_updated.send(sender=None, data=dataset_with_foreign_keys)
-    assert mock_v2_integration.call_count == 2
-    call = mock_v2_integration.request_history[0]
+    assert requests_mock.call_count == 2
+    call = requests_mock.request_history[0]
     assert call.method == "GET"
     assert call.url == f"https://metax-v2-test/rest/v2/datasets/{dataset_with_foreign_keys.id}"
-    call = mock_v2_integration.request_history[1]
+    call = requests_mock.request_history[1]
     assert call.method == "POST"
     assert call.url == "https://metax-v2-test/rest/v2/datasets?migration_override"
 
@@ -51,8 +51,8 @@ def test_v2_integration_update_dataset_notfound(
 def test_v2_integration_hard_delete_dataset(mock_v2_integration, dataset_with_foreign_keys):
     dataset_id = dataset_with_foreign_keys.id
     dataset_with_foreign_keys.delete(soft=False)
-    assert mock_v2_integration.call_count == 1
-    call = mock_v2_integration.request_history[0]
+    assert mock_v2_integration["delete"].call_count == 1
+    call = mock_v2_integration["delete"].request_history[0]
     assert call.method == "DELETE"
     assert (
         call.url == f"https://metax-v2-test/rest/v2/datasets/{dataset_id}?removed=true&hard=true"
@@ -63,8 +63,8 @@ def test_v2_integration_hard_delete_dataset(mock_v2_integration, dataset_with_fo
 def test_v2_integration_soft_delete_dataset(mock_v2_integration, dataset_with_foreign_keys):
     dataset_id = dataset_with_foreign_keys.id
     dataset_with_foreign_keys.delete(soft=True)
-    assert mock_v2_integration.call_count == 1
-    call = mock_v2_integration.request_history[0]
+    assert mock_v2_integration["delete"].call_count == 1
+    call = mock_v2_integration["delete"].request_history[0]
     assert call.method == "DELETE"
     assert call.url == f"https://metax-v2-test/rest/v2/datasets/{dataset_id}?removed=true"
 
@@ -75,14 +75,14 @@ def test_v2_integration_hard_delete_a_soft_deleted_dataset(
 ):
     dataset_id = dataset_with_foreign_keys.id
     dataset_with_foreign_keys.delete(soft=True)
-    assert mock_v2_integration.call_count == 1
-    call = mock_v2_integration.request_history[0]
+    assert mock_v2_integration["delete"].call_count == 1
+    call = mock_v2_integration["delete"].request_history[0]
     assert call.method == "DELETE"
     assert call.url == f"https://metax-v2-test/rest/v2/datasets/{dataset_id}?removed=true"
 
     dataset_with_foreign_keys.delete(soft=False)
-    assert mock_v2_integration.call_count == 2
-    call = mock_v2_integration.request_history[1]
+    assert mock_v2_integration["delete"].call_count == 2
+    call = mock_v2_integration["delete"].request_history[1]
     assert call.method == "DELETE"
     assert (
         call.url == f"https://metax-v2-test/rest/v2/datasets/{dataset_id}?removed=true&hard=true"
@@ -91,26 +91,26 @@ def test_v2_integration_hard_delete_a_soft_deleted_dataset(
 
 @pytest.mark.adapter
 def test_v2_integration_disabled_create_dataset(
-    mock_v2_integration, v2_integration_settings_disabled, dataset_with_foreign_keys
+    requests_mock, mock_v2_integration, v2_integration_settings_disabled, dataset_with_foreign_keys
 ):
     dataset_created.send(sender=None, data=dataset_with_foreign_keys)
-    assert mock_v2_integration.call_count == 0
+    assert requests_mock.call_count == 0
 
 
 @pytest.mark.adapter
 def test_v2_integration_disabled_update_dataset(
-    mock_v2_integration, v2_integration_settings_disabled, dataset_with_foreign_keys
+    requests_mock, mock_v2_integration, v2_integration_settings_disabled, dataset_with_foreign_keys
 ):
     dataset_updated.send(sender=None, data=dataset_with_foreign_keys)
-    assert mock_v2_integration.call_count == 0
+    assert requests_mock.call_count == 0
 
 
 @pytest.mark.adapter
 def test_v2_integration_disabled_delete_dataset(
-    mock_v2_integration, v2_integration_settings_disabled, dataset_with_foreign_keys
+    requests_mock, mock_v2_integration, v2_integration_settings_disabled, dataset_with_foreign_keys
 ):
     dataset_with_foreign_keys.delete(soft=False)
-    assert mock_v2_integration.call_count == 0
+    assert requests_mock.call_count == 0
 
 
 @pytest.mark.adapter

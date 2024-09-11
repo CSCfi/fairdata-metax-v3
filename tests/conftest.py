@@ -759,11 +759,12 @@ def v2_integration_settings_disabled(v2_integration_settings):
 @pytest.fixture
 def mock_v2_integration(requests_mock, v2_integration_settings):
     matcher = re.compile(v2_integration_settings.METAX_V2_HOST)
-    requests_mock.register_uri("POST", matcher, status_code=201)
-    requests_mock.register_uri("DELETE", matcher, status_code=204)
-    requests_mock.register_uri("GET", matcher, status_code=200)
-    requests_mock.register_uri("PUT", matcher, status_code=200)
-    yield requests_mock
+    yield {
+        "post": requests_mock.register_uri("POST", matcher, status_code=201),
+        "delete": requests_mock.register_uri("DELETE", matcher, status_code=204),
+        "get": requests_mock.register_uri("GET", matcher, status_code=200),
+        "put": requests_mock.register_uri("PUT", matcher, status_code=200),
+    }
 
 
 @pytest.fixture(autouse=True)

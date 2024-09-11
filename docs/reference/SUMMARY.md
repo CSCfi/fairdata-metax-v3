@@ -15,6 +15,7 @@
         - [admin](src/apps/common/admin.md)
         - [apps](src/apps/common/apps.md)
         - [copier](src/apps/common/copier.md)
+        - [datacitedata](src/apps/common/datacitedata.md)
         - [exceptions](src/apps/common/exceptions.md)
         - [filters](src/apps/common/filters.md)
         - [generators](src/apps/common/generators.md)

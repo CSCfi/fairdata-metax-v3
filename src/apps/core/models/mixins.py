@@ -3,7 +3,8 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 from django.contrib.auth import get_user_model
-from django.db.models import QuerySet
+from django.db.models import QuerySet, CharField
+from django.db.models.functions import Cast
 
 from apps.common.helpers import date_to_datetime, omit_empty, omit_none, single_translation
 from apps.refdata.models import AbstractConcept
@@ -482,6 +483,15 @@ class V2DatasetMixin:
             else:
                 document["research_dataset"][role].append(data)
 
+    def _get_version_identifiers(self) -> List[str]:
+        if not self.dataset_versions:
+            return [str(self.id)]
+        return sorted(
+            self.dataset_versions.datasets(manager="all_objects").values_list(
+                Cast("id", output_field=CharField()), flat=True
+            )
+        )
+
     def as_v2_dataset(self) -> Dict:
         self.ensure_prefetch()
         research_dataset = {
@@ -508,6 +518,7 @@ class V2DatasetMixin:
             "date_created": self.created.isoformat(),
             "removed": self._construct_v2_removed_field(),
             "research_dataset": research_dataset,
+            "version_identifiers": self._get_version_identifiers(),
         }
         if self.deprecated:
             doc["date_deprecated"] = self.deprecated.isoformat()

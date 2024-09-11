@@ -12,3 +12,7 @@
 
 ### :::src.apps.core.services.pid_ms_client.ServiceUnavailableError
 
+## PIDMSClient
+
+### :::src.apps.core.services.pid_ms_client.PIDMSClient
+
