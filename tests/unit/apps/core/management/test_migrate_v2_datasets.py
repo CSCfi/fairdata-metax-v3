@@ -413,7 +413,7 @@ def test_migrate_command_update_wrong_api_version_in_v2(
     assert "from a later Metax version, ignoring" in out.getvalue()
 
 
-def test_migrate_command_update_draft(mock_response_draft, reference_data):
+def test_migrate_command_update_draft(mock_response_draft, reference_data, legacy_files):
     out = StringIO()
     call_command(
         "migrate_v2_datasets",
@@ -421,7 +421,10 @@ def test_migrate_command_update_draft(mock_response_draft, reference_data):
         identifiers=["c955e904-e3dd-4d7e-99f1-3fed446f96d1"],
         use_env=True,
     )
-    assert "is not published, ignoring" in out.getvalue()
+    output = out.getvalue()
+    assert "Processed 1 datasets" in output
+    assert Dataset.objects.count() == 1
+    assert Dataset.objects.get(id="c955e904-e3dd-4d7e-99f1-3fed446f96d1").state == "draft"
 
 
 def test_migrate_command_update_file(mock_response_single, reference_data):

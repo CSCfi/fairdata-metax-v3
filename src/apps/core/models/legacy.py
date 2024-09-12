@@ -354,6 +354,23 @@ class LegacyDataset(AbstractBaseModel):
             perms.editors.remove(*MetaxUser.available_objects.filter(username__in=removed))
         return perms_id
 
+    def attach_draft(self) -> Optional[str]:
+        """Attach draft_of and next_draft values to dataset."""
+        if draft_of := self.dataset_json.get("draft_of"):
+            draft_of = Dataset.all_objects.filter(id=draft_of["identifier"]).first()
+            if draft_of:  # Assign draft_of if dataset found
+                self.dataset.draft_of = draft_of
+                Dataset.all_objects.filter(id=self.dataset.id).update(draft_of=draft_of)
+                logger.info(f"Assigned {draft_of.id} to draft_of for dataset {self.dataset.id} ")
+
+        if next_draft := self.dataset_json.get("next_draft"):
+            next_draft = Dataset.all_objects.filter(id=next_draft["identifier"]).first()
+            if next_draft:  # Assign draft_of of the next_draft dataset if found
+                Dataset.all_objects.filter(id=next_draft.id).update(draft_of=self.dataset)
+                logger.info(
+                    f"Assigned {next_draft.id} to next_draft for dataset {self.dataset.id} "
+                )
+
     def update_from_legacy(self, context=None, raise_serializer_errors=True, create_files=False):
         """Update dataset fields from legacy data dictionaries."""
         if self._state.adding:
@@ -391,6 +408,7 @@ class LegacyDataset(AbstractBaseModel):
                 serializer.is_valid(raise_exception=True)
                 dataset_versions = get_or_create_dataset_versions(self)
                 self.dataset = serializer.save(dataset_versions=dataset_versions)
+                self.attach_draft()
                 with cachalot_disabled():
                     self.attach_files()
                 self.attach_contract()

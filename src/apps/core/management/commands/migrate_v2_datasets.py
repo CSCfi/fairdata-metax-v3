@@ -243,10 +243,6 @@ class Command(BaseCommand):
             self.stdout.write(f"Dataset '{identifier}' is from a later Metax version, ignoring")
             return False
 
-        if dataset_json.get("state") != "published":
-            # Migrating drafts not supported currently
-            self.stdout.write(f"Dataset '{identifier}' is not published, ignoring")
-            return False
         return True
 
     def update_legacy_dataset(self, data: MigrationData):

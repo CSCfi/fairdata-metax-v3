@@ -11,6 +11,7 @@ from django.utils.translation import gettext as _
 from model_utils import FieldTracker
 from rest_framework.exceptions import ValidationError
 from typing_extensions import Self
+from watson.search import skip_index_update
 
 from apps.common.copier import ModelCopier
 from apps.common.exceptions import TopLevelValidationError
@@ -504,9 +505,10 @@ class Dataset(V2DatasetMixin, CatalogRecord):
                 dft_value = getattr(dft, field.name)
                 setattr(self, field.name, dft_value)
 
-        dft.draft_of = None
-        # Update draft to remove unique one-to-one values, skip Dataset.save to avoid validation
-        models.Model.save(dft)
+        with skip_index_update():  # Avoid watson update from temporary draft changes
+            dft.draft_of = None
+            # Update draft to remove unique one-to-one values, skip Dataset.save to avoid validation
+            models.Model.save(dft)
         self.save()
         self.next_draft = None  # Remove cached related object
         dft.delete(soft=False)
@@ -835,5 +837,5 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         from apps.core.signals import dataset_created, dataset_updated
 
         if created:
-            return dataset_created.send(sender=self.__class__, data=self)
-        return dataset_updated.send(sender=self.__class__, data=self)
+            return dataset_created.send(sender=self.__class__, instance=self)
+        return dataset_updated.send(sender=self.__class__, instance=self)

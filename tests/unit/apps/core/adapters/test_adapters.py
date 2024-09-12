@@ -1,6 +1,8 @@
+import copy
 import json
 import logging
 import os
+import uuid
 from datetime import datetime
 from pprint import pprint
 
@@ -201,3 +203,46 @@ def test_get_version_identifiers():
     dataset.refresh_from_db()
     assert dataset.dataset_versions is None
     assert dataset._get_version_identifiers() == [str(dataset.id)]
+
+
+@pytest.mark.django_db
+def test_v2_to_v3_dataset_conversion_draft_of(harvested_json, license_reference_data):
+    data = harvested_json
+    data_draft = copy.deepcopy(data)
+    data_draft["identifier"] = str(uuid.UUID(int=123))
+    data_draft["state"] = "draft"
+    data_draft["research_dataset"]["preferred_identifier"] = "i am a draft"
+    data_draft["draft_of"] = {"identifier": data["identifier"]}
+    data["next_draft"] = {"identifier": data_draft["identifier"]}
+
+    # Save original dataset first, draft assignment happens based on draft_of
+    v2_dataset = LegacyDataset(id=data["identifier"], dataset_json=data)
+    v2_dataset.save()
+    v2_dataset.update_from_legacy()
+
+    draft_dataset = LegacyDataset(id=data_draft["identifier"], dataset_json=data_draft)
+    draft_dataset.save()
+    draft_dataset.update_from_legacy()
+    assert draft_dataset.dataset.draft_of == v2_dataset.dataset
+
+
+@pytest.mark.django_db
+def test_v2_to_v3_dataset_conversion_next_draft(harvested_json, license_reference_data):
+    data = harvested_json
+    data_draft = copy.deepcopy(data)
+    data_draft["identifier"] = str(uuid.UUID(int=123))
+    data_draft["state"] = "draft"
+    data_draft["research_dataset"]["preferred_identifier"] = "i am a draft"
+    data_draft["draft_of"] = {"identifier": data["identifier"]}
+    data["next_draft"] = {"identifier": data_draft["identifier"]}
+
+    # Save draft dataset first, draft assignment happens based on next_draft
+    draft_dataset = LegacyDataset(id=data_draft["identifier"], dataset_json=data_draft)
+    draft_dataset.save()
+    draft_dataset.update_from_legacy()
+
+    v2_dataset = LegacyDataset(id=data["identifier"], dataset_json=data)
+    v2_dataset.save()
+    v2_dataset.update_from_legacy()
+    draft_dataset.dataset.refresh_from_db()
+    assert draft_dataset.dataset.draft_of == v2_dataset.dataset

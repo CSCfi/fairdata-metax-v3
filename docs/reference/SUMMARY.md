@@ -88,7 +88,9 @@
             - [preservation_serializers](src/apps/core/serializers/preservation_serializers.md)
             - [project_serializer](src/apps/core/serializers/project_serializer.md)
             - [provenance_serializers](src/apps/core/serializers/provenance_serializers.md)
-        - [services.pid_ms_client](src/apps/core/services/pid_ms_client.md)
+        - services
+            - [metax_v2_client](src/apps/core/services/metax_v2_client.md)
+            - [pid_ms_client](src/apps/core/services/pid_ms_client.md)
         - [signals](src/apps/core/signals.md)
         - views
             - [common_views](src/apps/core/views/common_views.md)
@@ -255,6 +257,7 @@
                     - [test_publisher](tests/unit/apps/core/models/test_publisher.md)
                     - [test_v2_integration](tests/unit/apps/core/models/test_v2_integration.md)
                     - [test_versioning](tests/unit/apps/core/models/test_versioning.md)
+                - [services.test_metax_v2_client](tests/unit/apps/core/services/test_metax_v2_client.md)
             - [download.api.test_download](tests/unit/apps/download/api/test_download.md)
             - files
                 - api

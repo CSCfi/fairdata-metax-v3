@@ -1,17 +1,21 @@
+import logging
 import re
 
 import pytest
 
 pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
 
-from apps.core.signals import LegacyUpdateFailed, dataset_created, dataset_updated
+from tests.utils import matchers
+
+from apps.core.services.metax_v2_client import LegacyUpdateFailed
+from apps.core.signals import dataset_created, dataset_updated
 
 
 @pytest.mark.adapter
 def test_v2_integration_create_dataset(
     requests_mock, mock_v2_integration, dataset_with_foreign_keys
 ):
-    dataset_created.send(sender=None, data=dataset_with_foreign_keys)
+    dataset_created.send(sender=None, instance=dataset_with_foreign_keys)
     assert requests_mock.call_count == 1
     call = requests_mock.request_history[0]
     assert call.method == "POST"
@@ -22,7 +26,7 @@ def test_v2_integration_create_dataset(
 def test_v2_integration_update_dataset(
     requests_mock, mock_v2_integration, dataset_with_foreign_keys
 ):
-    dataset_updated.send(sender=None, data=dataset_with_foreign_keys)
+    dataset_updated.send(sender=None, instance=dataset_with_foreign_keys)
     assert requests_mock.call_count == 2
     call = requests_mock.request_history[0]
     assert call.method == "GET"
@@ -41,7 +45,7 @@ def test_v2_integration_update_dataset_notfound(
 ):
     matcher = re.compile(v2_integration_settings.METAX_V2_HOST)
     requests_mock.register_uri("GET", matcher, status_code=404)
-    dataset_updated.send(sender=None, data=dataset_with_foreign_keys)
+    dataset_updated.send(sender=None, instance=dataset_with_foreign_keys)
     assert requests_mock.call_count == 2
     call = requests_mock.request_history[0]
     assert call.method == "GET"
@@ -94,10 +98,28 @@ def test_v2_integration_hard_delete_a_soft_deleted_dataset(
 
 
 @pytest.mark.adapter
+def test_v2_integration_delete_dataset_log_error(
+    caplog, requests_mock, mock_v2_integration, dataset_with_foreign_keys
+):
+    logging.disable(logging.NOTSET)
+    delete_mock = requests_mock.delete(mock_v2_integration["delete"]._url, status_code=404)
+
+    dataset_id = dataset_with_foreign_keys.id
+    dataset_with_foreign_keys.delete(soft=True)
+    assert delete_mock.call_count == 1
+    call = delete_mock.request_history[0]
+    assert call.method == "DELETE"
+    assert call.url == f"https://metax-v2-test/rest/v2/datasets/{dataset_id}?removed=true"
+    assert caplog.messages == [
+        matchers.StringContaining(f"Failed to delete dataset {dataset_id} from Metax v2")
+    ]
+
+
+@pytest.mark.adapter
 def test_v2_integration_disabled_create_dataset(
     requests_mock, mock_v2_integration, v2_integration_settings_disabled, dataset_with_foreign_keys
 ):
-    dataset_created.send(sender=None, data=dataset_with_foreign_keys)
+    dataset_created.send(sender=None, instance=dataset_with_foreign_keys)
     assert requests_mock.call_count == 0
 
 
@@ -105,7 +127,7 @@ def test_v2_integration_disabled_create_dataset(
 def test_v2_integration_disabled_update_dataset(
     requests_mock, mock_v2_integration, v2_integration_settings_disabled, dataset_with_foreign_keys
 ):
-    dataset_updated.send(sender=None, data=dataset_with_foreign_keys)
+    dataset_updated.send(sender=None, instance=dataset_with_foreign_keys)
     assert requests_mock.call_count == 0
 
 
@@ -124,4 +146,4 @@ def test_v2_integration_create_dataset_fail(
     matcher = re.compile(v2_integration_settings.METAX_V2_HOST)
     requests_mock.register_uri("POST", matcher, status_code=400)
     with pytest.raises(LegacyUpdateFailed):
-        dataset_created.send(sender=None, data=dataset_with_foreign_keys)
+        dataset_created.send(sender=None, instance=dataset_with_foreign_keys)

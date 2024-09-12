@@ -1,18 +1,10 @@
-import json
 import logging
 from copy import deepcopy
-from unittest.mock import ANY
 
 import pytest
-from rest_framework.reverse import reverse
-from tests.utils import assert_nested_subdict, matchers
+from tests.utils import assert_nested_subdict
 
-from apps.core import factories
-from apps.core.factories import DatasetFactory, MetadataProviderFactory
-from apps.core.models import OtherIdentifier
 from apps.core.models.catalog_record.dataset import Dataset
-from apps.core.models.concepts import IdentifierType
-from apps.files.factories import FileStorageFactory
 
 logger = logging.getLogger(__name__)
 
@@ -163,7 +155,7 @@ def test_merge_draft(admin_client, dataset_a_json, dataset_maximal_json, dataset
     assert res.status_code == 200
     merge_data = res.json()  # response should be the updated original dataset
     dataset_signal_handlers.assert_call_counts(created=0, updated=1)
-    assert str(dataset_signal_handlers.updated.call_args.kwargs["data"].id) == dataset_id
+    assert str(dataset_signal_handlers.updated.call_args.kwargs["instance"].id) == dataset_id
 
     # Dataset has been updated
     res = admin_client.get(

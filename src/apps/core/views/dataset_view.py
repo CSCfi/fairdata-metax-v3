@@ -7,6 +7,7 @@
 
 import logging
 
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Prefetch, Q, QuerySet, Value
 from django.http import Http404
@@ -53,6 +54,7 @@ from apps.core.serializers.dataset_serializer import (
     LatestVersionQueryParamsSerializer,
 )
 from apps.core.serializers.legacy_serializer import LegacyDatasetConversionValidationSerializer
+from apps.core.services import MetaxV2Client
 from apps.core.views.common_views import DefaultValueOrdering
 from apps.files.models import File
 from apps.files.serializers import DirectorySerializer
@@ -413,6 +415,13 @@ class DatasetViewSet(CommonModelViewSet):
         serializer = self.get_serializer(new_version)
         data = serializer.data
         new_version.signal_update(created=True)
+
+        if settings.METAX_V2_INTEGRATION_ENABLED:
+            # New version is a initially a draft that is not synced to V2,
+            # so V2 does not know it exists. Mark original as having been
+            # updated in V3 to prevent creating more versions in V2.
+            MetaxV2Client().update_api_meta(dataset)
+
         return response.Response(data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["post"], url_path="create-draft")
@@ -438,6 +447,7 @@ class DatasetViewSet(CommonModelViewSet):
           and deletes the draft.
         """
         dataset: Dataset = self.get_object()
+        dataset.api_version = 3
         published_dataset = dataset.publish()
         data = self.get_serializer(published_dataset).data
         published_dataset.signal_update()
