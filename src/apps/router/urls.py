@@ -5,7 +5,7 @@ from rest_framework_nested import routers
 from apps.actors.views import OrganizationViewSet
 from apps.core import views as core_views
 from apps.download import views as download_views
-from apps.files.views import DirectoryViewSet, FileViewSet, FileCharacteristicsViewSet
+from apps.files.views import DirectoryViewSet, FileCharacteristicsViewSet, FileViewSet
 from apps.refdata.models import reference_data_models
 from apps.refdata.views import get_viewset_for_model
 from apps.users.views import UserViewSet

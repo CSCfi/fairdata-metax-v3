@@ -35,6 +35,10 @@ logger = logging.getLogger(__name__)
 class DatasetVersions(AbstractBaseModel):
     """A collection of dataset's versions."""
 
+    # List of ids of legacy datasets belonging to set. May contain ids
+    # of datasets that haven't been migrated yet.
+    legacy_versions = ArrayField(models.UUIDField(), default=list, blank=True)
+
 
 class Dataset(V2DatasetMixin, CatalogRecord):
     """A collection of data available for access or download in one or many representations.
@@ -293,7 +297,9 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             return True
         elif self.metadata_owner and self.metadata_owner.user == user:
             return True
-        elif (fileset := getattr(self, 'file_set', None)) and fileset.storage.csc_project in user.csc_projects:
+        elif (
+            fileset := getattr(self, "file_set", None)
+        ) and fileset.storage.csc_project in user.csc_projects:
             return True
         elif self.permissions and self.permissions.editors.contains(user):
             return True

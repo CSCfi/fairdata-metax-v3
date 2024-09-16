@@ -367,6 +367,7 @@ class LegacyDataset(AbstractBaseModel):
                 detail="Dataset has been modified with a later API version."
             )
 
+        from apps.core.models.legacy_versions import get_or_create_dataset_versions
         from apps.core.serializers.legacy_serializer import LegacyDatasetUpdateSerializer
 
         is_creating_dataset = not self.dataset
@@ -388,7 +389,8 @@ class LegacyDataset(AbstractBaseModel):
                     context={**context, "dataset": self.dataset, "migrating": True},
                 )
                 serializer.is_valid(raise_exception=True)
-                self.dataset = serializer.save()
+                dataset_versions = get_or_create_dataset_versions(self)
+                self.dataset = serializer.save(dataset_versions=dataset_versions)
                 with cachalot_disabled():
                     self.attach_files()
                 self.attach_contract()

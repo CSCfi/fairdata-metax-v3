@@ -61,6 +61,7 @@
             - [legacy](src/apps/core/models/legacy.md)
             - [legacy_compatibility](src/apps/core/models/legacy_compatibility.md)
             - [legacy_converter](src/apps/core/models/legacy_converter.md)
+            - [legacy_versions](src/apps/core/models/legacy_versions.md)
             - [mixins](src/apps/core/models/mixins.md)
             - [preservation](src/apps/core/models/preservation.md)
             - [provenance](src/apps/core/models/provenance.md)
@@ -181,6 +182,7 @@
                 - serializers
                     - [test_fields](tests/unit/apps/common/serializers/test_fields.md)
                     - [test_serializers](tests/unit/apps/common/serializers/test_serializers.md)
+                - [test_helpers](tests/unit/apps/common/test_helpers.md)
                 - [test_profiling](tests/unit/apps/common/test_profiling.md)
             - [conftest](tests/unit/apps/conftest.md)
             - core
@@ -211,6 +213,7 @@
                         - [test_dataset_v2_integration](tests/unit/apps/core/api/dataset/test_dataset_v2_integration.md)
                         - [test_legacy](tests/unit/apps/core/api/dataset/test_legacy.md)
                         - [test_legacy_permissions](tests/unit/apps/core/api/dataset/test_legacy_permissions.md)
+                        - [test_legacy_versions](tests/unit/apps/core/api/dataset/test_legacy_versions.md)
                         - [test_metadata_download](tests/unit/apps/core/api/dataset/test_metadata_download.md)
                         - [test_preservation](tests/unit/apps/core/api/dataset/test_preservation.md)
                         - [test_provenance](tests/unit/apps/core/api/dataset/test_provenance.md)
@@ -235,6 +238,7 @@
                     - [test_migrate_v2_files](tests/unit/apps/core/management/test_migrate_v2_files.md)
                     - [test_update_metrics](tests/unit/apps/core/management/test_update_metrics.md)
                     - [test_v2_client](tests/unit/apps/core/management/test_v2_client.md)
+                - [migrations.test_migrate_legacy_versions](tests/unit/apps/core/migrations/test_migrate_legacy_versions.md)
                 - models
                     - [conftest](tests/unit/apps/core/models/conftest.md)
                     - [test_abstract_base_object](tests/unit/apps/core/models/test_abstract_base_object.md)

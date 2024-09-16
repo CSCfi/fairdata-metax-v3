@@ -10,8 +10,8 @@ import uuid
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from apps.refdata import models as refdata
 from apps.common.models import SystemCreatorBaseModel
+from apps.refdata import models as refdata
 from apps.refdata.models import ConceptProxyMixin
 
 

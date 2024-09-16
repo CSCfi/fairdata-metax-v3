@@ -304,6 +304,7 @@ def write_docs(modules: list) -> None:
 
 def generate_refs(packages, exclude=[], include_only_files=None) -> None:
     """Analyze python files from package directories and write reference documentation."""
+    excludes_re = [re.compile(e) for e in exclude]
     modules = []
     for package in packages:
         files = Path(package).rglob("*.py")
@@ -317,8 +318,8 @@ def generate_refs(packages, exclude=[], include_only_files=None) -> None:
                     logger.debug(f"Skip file (not in include): {path}")
                     continue
 
-            for exclude_path in exclude:
-                if exclude_path in path:
+            for exclude_re in excludes_re:
+                if exclude_re.match(path):
                     skip = True
                     logger.debug(f"Skip file (path excluded): {path}")
                     break
@@ -344,5 +345,7 @@ if settings.git_files_only:
     include_only_files = get_git_files()
 
 generate_refs(
-    ["src/apps", "tests"], exclude=["/migrations/"], include_only_files=include_only_files
+    ["src/apps", "tests"],
+    exclude=["src/apps/[^/]+/migrations/.*"],
+    include_only_files=include_only_files,
 )

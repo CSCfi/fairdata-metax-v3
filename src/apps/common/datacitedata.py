@@ -11,7 +11,7 @@ from apps.core.models import Dataset, DatasetActor
 logger = logging.getLogger(__file__)
 
 
-class Datacitedata():
+class Datacitedata:
 
     language = None  # 2-character language code
 
@@ -436,4 +436,3 @@ class Datacitedata():
         jsondata = {"data": {"type": "dois", "attributes": datacite_json}}
 
         return jsondata
-

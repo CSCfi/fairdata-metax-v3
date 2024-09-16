@@ -5,6 +5,7 @@ from .catalog_record import (
     DatasetActor,
     DatasetMetrics,
     DatasetProject,
+    DatasetVersions,
     EntityRelation,
     FileSet,
     Funder,

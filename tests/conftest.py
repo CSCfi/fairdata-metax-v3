@@ -25,9 +25,9 @@ from django.test.client import Client
 from rest_framework.test import APIClient, RequestsClient
 
 from apps.core import factories
-from apps.files import factories as files_factories
 from apps.core.models.data_catalog import DataCatalog
 from apps.core.signals import dataset_created, dataset_updated
+from apps.files import factories as files_factories
 from apps.users.factories import MetaxUserFactory
 from apps.users.models import MetaxUser
 
@@ -774,18 +774,26 @@ def change_pi_url(settings):
 
 @pytest.fixture(autouse=True)
 def mock_pid_ms(request, requests_mock, settings):
-    if 'noautomock' not in request.keywords:
+    if "noautomock" not in request.keywords:
         matcher = re.compile(f"http://localhost")
-        responselist1 = [{'text': f"urn:nbn:fi:att:{str(uuid.uuid4())}", 'status_code': 201},
-                         {'text': f"urn:nbn:fi:att:{str(uuid.uuid4())}", 'status_code': 201},
-                         {'text': f"urn:nbn:fi:att:{str(uuid.uuid4())}", 'status_code': 201},
-                         {'text': f"urn:nbn:fi:att:{str(uuid.uuid4())}", 'status_code': 201}]
-        responselist2 = [{'text': f"10.82614/{str(uuid.uuid4())}", 'status_code': 201},
-                         {'text': f"10.82614/{str(uuid.uuid4())}", 'status_code': 201},
-                         {'text': f"10.82614/{str(uuid.uuid4())}", 'status_code': 201},
-                         {'text': f"10.82614/{str(uuid.uuid4())}", 'status_code': 201}]
-        requests_mock.register_uri("POST", f"https://{settings.PID_MS_BASEURL}/v1/pid", responselist1)
-        requests_mock.register_uri("POST", f"https://{settings.PID_MS_BASEURL}/v1/pid/doi", responselist2)
+        responselist1 = [
+            {"text": f"urn:nbn:fi:att:{str(uuid.uuid4())}", "status_code": 201},
+            {"text": f"urn:nbn:fi:att:{str(uuid.uuid4())}", "status_code": 201},
+            {"text": f"urn:nbn:fi:att:{str(uuid.uuid4())}", "status_code": 201},
+            {"text": f"urn:nbn:fi:att:{str(uuid.uuid4())}", "status_code": 201},
+        ]
+        responselist2 = [
+            {"text": f"10.82614/{str(uuid.uuid4())}", "status_code": 201},
+            {"text": f"10.82614/{str(uuid.uuid4())}", "status_code": 201},
+            {"text": f"10.82614/{str(uuid.uuid4())}", "status_code": 201},
+            {"text": f"10.82614/{str(uuid.uuid4())}", "status_code": 201},
+        ]
+        requests_mock.register_uri(
+            "POST", f"https://{settings.PID_MS_BASEURL}/v1/pid", responselist1
+        )
+        requests_mock.register_uri(
+            "POST", f"https://{settings.PID_MS_BASEURL}/v1/pid/doi", responselist2
+        )
         requests_mock.register_uri("GET", matcher, real_http=True)
         requests_mock.register_uri("POST", matcher, real_http=True)
         requests_mock.register_uri("PUT", matcher, real_http=True)

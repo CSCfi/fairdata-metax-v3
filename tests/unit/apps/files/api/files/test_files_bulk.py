@@ -4,11 +4,10 @@ from typing import List
 import pytest
 from rest_framework.reverse import reverse
 from rest_framework.serializers import DateTimeField, RegexField
-from apps.files.models import FileCharacteristics
 from tests.utils import assert_nested_subdict
 
 from apps.files import factories
-from apps.files.models import File, FileStorage
+from apps.files.models import File, FileCharacteristics, FileStorage
 from apps.files.serializers import FileSerializer
 
 pytestmark = [pytest.mark.django_db, pytest.mark.file]

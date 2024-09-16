@@ -1,7 +1,7 @@
 import logging
 
-from rest_framework.generics import get_object_or_404
 from rest_framework import serializers
+from rest_framework.generics import get_object_or_404
 
 from apps.common.views import CommonModelViewSet
 from apps.files.models.file import File, FileCharacteristics

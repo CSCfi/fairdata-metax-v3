@@ -2,11 +2,12 @@ import copy
 import logging
 import re
 import uuid
+from collections.abc import Hashable
 from contextlib import contextmanager
 from datetime import datetime, timezone as tz
 from itertools import islice
 from textwrap import dedent
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 from urllib.parse import SplitResult, parse_qsl, quote, urlencode, urlsplit, urlunsplit
 
 import shapely
@@ -410,3 +411,35 @@ def batched(iterable, n):
 def datetime_to_header(dt: datetime):
     """Convert datetime into format used by e.g. If-Modified-Since HTTP header."""
     return dt.astimezone(tz.utc).strftime("%a, %d %b %Y %H:%M:%S GMT")
+
+
+def merge_sets(sets: List[Iterable[Hashable]]) -> List[set]:
+    """Merge all sets that contain at least one common element."""
+    supersets = []
+    superset_by_value = {}
+    for current_set in sets:
+        # Find if a value in set is already in a superset
+        superset = None
+        for value in current_set:
+            if existing_superset := superset_by_value.get(value):
+                if superset is None:
+                    superset = existing_superset
+                elif existing_superset is not superset:
+                    # Set has values from multiple supersets,
+                    # move all values from other supersets to current
+                    superset.update(existing_superset)
+                    for other_value in existing_superset:
+                        superset_by_value[other_value] = superset
+                    existing_superset.clear()
+
+        # No superset found, create new
+        if not superset:
+            superset = set()
+            supersets.append(superset)
+
+        superset.update(current_set)
+        for value in current_set:
+            superset_by_value[value] = superset
+
+    # Return non-empty sets
+    return [s for s in supersets if len(s) > 0]

@@ -2,8 +2,7 @@ import logging
 
 import pytest
 
-from apps.core.factories import DatasetFactory, PublishedDatasetFactory
-from apps.core.factories import DatasetFactory, FileSetFactory
+from apps.core.factories import DatasetFactory, FileSetFactory, PublishedDatasetFactory
 
 logger = logging.getLogger(__name__)
 

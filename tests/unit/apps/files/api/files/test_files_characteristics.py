@@ -1,10 +1,10 @@
 import pytest
 from rest_framework.reverse import reverse
-from apps.files.models.file import FileCharacteristics
 from tests.utils import assert_nested_subdict
 
 from apps.core import factories
 from apps.files.models import File
+from apps.files.models.file import FileCharacteristics
 
 pytestmark = [pytest.mark.django_db, pytest.mark.file]
 

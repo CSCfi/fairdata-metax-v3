@@ -14,10 +14,10 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from model_utils.fields import AutoCreatedField, AutoLastModifiedField
 
-from apps.files.models.file_characteristics import FileCharacteristics
 from apps.common.models import CustomSoftDeletableModel, SystemCreatorBaseModel
 from apps.common.serializers.fields import ChecksumField
 from apps.files.helpers import convert_checksum_v2_to_v3, convert_checksum_v3_to_v2
+from apps.files.models.file_characteristics import FileCharacteristics
 
 from .file_storage import FileStorage
 

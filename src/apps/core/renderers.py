@@ -9,9 +9,10 @@ from jsonschema import exceptions as jsonschema_exceptions
 from rest_framework import renderers, serializers
 
 from apps.actors.models import Organization, Person
+from apps.common.datacitedata import Datacitedata
 from apps.common.helpers import deduplicate_list
 from apps.core.models import Dataset, DatasetActor
-from apps.common.datacitedata import Datacitedata
+
 logger = logging.getLogger(__file__)
 
 
