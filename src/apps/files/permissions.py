@@ -6,7 +6,7 @@ from apps.files.models.file import File
 
 class BaseFilesAccessPolicy(BaseAccessPolicy):
     statements = [
-        {"action": "*", "principal": ["admin", "group:ida"], "effect": "allow"},
+        {"action": "*", "principal": ["admin", "group:ida", "group:pas"], "effect": "allow"},
     ]
 
     @classmethod
