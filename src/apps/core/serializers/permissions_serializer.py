@@ -184,7 +184,7 @@ class DatasetPermissionsUserModelSerializer(CommonModelSerializer):
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
-        ret = handle_private_emails(ret, show_emails=False)
+        handle_private_emails(ret, show_emails=False)
         return ret
 
 

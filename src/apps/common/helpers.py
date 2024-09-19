@@ -1,5 +1,6 @@
 import copy
 import logging
+import pickle
 import re
 import uuid
 from collections.abc import Hashable
@@ -443,3 +444,8 @@ def merge_sets(sets: List[Iterable[Hashable]]) -> List[set]:
 
     # Return non-empty sets
     return [s for s in supersets if len(s) > 0]
+
+
+def pickle_deepcopy(value):
+    """Deep copy value using pickle. Faster than copy.deepcopy()."""
+    return pickle.loads(pickle.dumps(value, protocol=pickle.HIGHEST_PROTOCOL))

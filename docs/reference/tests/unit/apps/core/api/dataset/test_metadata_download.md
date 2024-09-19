@@ -1,5 +1,9 @@
 # test_metadata_download
 
+## ns_select
+
+### :::tests.unit.apps.core.api.dataset.test_metadata_download.ns_select
+
 ## doi_dataset
 
 ### :::tests.unit.apps.core.api.dataset.test_metadata_download.doi_dataset

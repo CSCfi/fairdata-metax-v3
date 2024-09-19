@@ -6,10 +6,12 @@
 # :license: MIT
 
 import logging
+from typing import List
 
 from django.conf import settings
+from django.core.cache import caches
 from django.db import transaction
-from django.db.models import Prefetch, Q, QuerySet, Value
+from django.db.models import Prefetch, Q, QuerySet, Value, prefetch_related_objects
 from django.http import Http404
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
@@ -20,12 +22,14 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import exceptions, response, serializers, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotAuthenticated
+from rest_framework.generics import get_object_or_404
 from rest_framework.renderers import JSONRenderer
 from rest_framework.reverse import reverse
 from watson import search
 
 from apps.common.filters import MultipleCharFilter
 from apps.common.helpers import ensure_dict, omit_empty
+from apps.common.profiling import count_queries
 from apps.common.serializers.serializers import (
     FieldsQueryParamsSerializer,
     FlushQueryParamsSerializer,
@@ -50,6 +54,7 @@ from apps.core.serializers.dataset_allowed_actions import (
 from apps.core.serializers.dataset_metrics_serializer import DatasetMetricsQueryParamsSerializer
 from apps.core.serializers.dataset_serializer import (
     DatasetRevisionsQueryParamsSerializer,
+    DatasetSerializerCache,
     ExpandCatalogQueryParamsSerializer,
     LatestVersionQueryParamsSerializer,
 )
@@ -64,6 +69,7 @@ from apps.files.views.file_view import BaseFileViewSet, FileCommonFilterset
 from .dataset_aggregation import aggregate_queryset
 
 logger = logging.getLogger(__name__)
+serialized_datasets_cache = caches["serialized_datasets"]
 
 
 class DatasetFilter(filters.FilterSet):
@@ -394,18 +400,108 @@ class DatasetViewSet(CommonModelViewSet):
         if self.request.method == "GET":
             # Prefetch Dataset.dataset_versions.datasets to DatasetVersions._datasets
             # but only for read-only requests to avoid having to invalidate the cached value
-            qs = qs.prefetch_related(
-                Prefetch(
-                    "dataset_versions__datasets",
-                    queryset=Dataset.all_objects.order_by("-version").prefetch_related(
-                        *Dataset.dataset_versions_prefetch_fields
-                    ),
-                    to_attr="_datasets",
-                )
-            )
+            qs = qs.prefetch_related(Dataset.get_versions_prefetch())
 
         qs = self.access_policy.scope_queryset(self.request, qs)
         return qs
+
+    def allow_cache(self) -> bool:
+        """Disallow caching when include_nulls=True."""
+        return not self.include_nulls
+
+    def get_serializer(self, *args, cached_instances=[], cache_autocommit=True, **kwargs):
+        serializer_cache = None
+        if self.allow_cache():
+            # Use cached fields for serialization of datasets in cached_instances
+            serializer_cache = DatasetSerializerCache(
+                cached_instances, autocommit=cache_autocommit
+            )
+        return super().get_serializer(*args, cache=serializer_cache, **kwargs)
+
+    def apply_partial_prefetch(
+        self, datasets: List[Dataset], serializer: DatasetSerializer, prefetches: list
+    ):
+        """Prefetch related objects with support for partial prefetch for cached datasets."""
+        values = {}
+        if cache := serializer.cache:
+            values = cache.values
+        uncached_datasets = [d for d in datasets if d.id not in values]
+        cached_datasets = [d for d in datasets if d.id in values]
+
+        # Do normal prefetch for datasets not in cache
+        prefetch_related_objects(uncached_datasets, *prefetches)
+
+        # For cached datasets, prefetch only uncached relations, e.g. draft_of, other_identifiers
+        cached_fields = set(serializer.get_cached_field_sources())
+        partial_prefetches = []  # Prefetches that are not in cached_fields
+        for prefetch in prefetches:
+            if type(prefetch) is str:
+                prefix = prefetch.split("__", 1)[0]
+                if prefix in cached_fields:
+                    continue
+            partial_prefetches.append(prefetch)
+        prefetch_related_objects(cached_datasets, *partial_prefetches)
+
+    def list(self, request, *args, **kwargs):
+        """List datasets. Modified for cache use."""
+        queryset = self.filter_queryset(self.get_queryset())
+
+        # Defer prefetching until after pagination is done
+        # and we know which datasets are in serialized datasets cache
+        prefetches = queryset._prefetch_related_lookups
+        queryset = queryset.prefetch_related(None)
+
+        page = self.paginate_queryset(queryset)
+
+        datasets: List[Dataset]
+        if page is None:
+            datasets = queryset.all()
+        else:
+            datasets = page
+
+        list_serializer = self.get_serializer(
+            datasets, cached_instances=datasets, cache_autocommit=False, many=True
+        )
+        dataset_serializer: DatasetSerializer = list_serializer.child
+        cache = dataset_serializer.cache
+        if cache and settings.DEBUG_DATASET_CACHE:
+            logger.info(f"Datasets in cache: {len(cache.values)}/{len(datasets)}")
+        self.apply_partial_prefetch(datasets, list_serializer.child, prefetches)
+
+        serialized_data = list_serializer.data  # Run serialization
+        if cache:
+            cache.commit_changed_to_source()  # Commit updated serializations to cache
+
+        if page is None:
+            return response.Response(serialized_data)
+        else:
+            return self.get_paginated_response(serialized_data)
+
+    def _get_object_with_deferred_prefetch(self):
+        """Get object without triggering prefetch."""
+        queryset = self.get_queryset()
+
+        # Defer prefetching until we know if dataset is in cache
+        prefetches = queryset._prefetch_related_lookups
+        queryset = queryset.prefetch_related(None)
+
+        # Perform the lookup filtering.
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
+        obj = get_object_or_404(queryset, **filter_kwargs)
+        self.check_object_permissions(self.request, obj)
+        return obj, prefetches
+
+    def retrieve(self, request, *args, **kwargs):
+        """Retrieve single dataset. Modified for cache use."""
+        instance, prefetches = self._get_object_with_deferred_prefetch()
+
+        serializer: DatasetSerializer = self.get_serializer(instance, cached_instances=[instance])
+        if (cache := serializer.cache) and settings.DEBUG_DATASET_CACHE:
+            logger.info(f"Dataset in cache: {instance.id in cache.values}")
+
+        self.apply_partial_prefetch([instance], serializer, prefetches)
+        return response.Response(serializer.data)
 
     @action(detail=True, methods=["post"], url_path="new-version")
     def new_version(self, request, pk=None):

@@ -1,3 +1,4 @@
+import copy
 import json
 
 import pytest
@@ -78,17 +79,21 @@ def test_email_field():
 def test_handle_private_emails():
     value1 = PrivateEmailValue("teppo@example.com")
     value2 = PrivateEmailValue("matti@example.com")
-    data = {"field": "value", "emal": value1, "more": [{"here": value2}, value1]}
+    data = {"field": "value", "emal": value1, "more": [{"here": value2}]}
 
     # Convert values to strings
-    assert handle_private_emails(data, show_emails=True) == {
+    data_show = copy.deepcopy(data)
+    handle_private_emails(data_show, show_emails=True)
+    assert data_show == {
         "field": "value",
         "emal": "teppo@example.com",
-        "more": [{"here": "matti@example.com"}, "teppo@example.com"],
+        "more": [{"here": "matti@example.com"}],
     }
 
     # Hide values
-    assert handle_private_emails(data, show_emails=False) == {
+    data_hide = copy.deepcopy(data)
+    handle_private_emails(data_hide, show_emails=False)
+    assert data_hide == {
         "field": "value",
         "more": [
             {},

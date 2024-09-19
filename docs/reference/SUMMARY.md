@@ -11,6 +11,7 @@
     - cache
         - [apps](src/apps/cache/apps.md)
         - [caches](src/apps/cache/caches.md)
+        - [serializer_cache](src/apps/cache/serializer_cache.md)
     - common
         - [admin](src/apps/common/admin.md)
         - [apps](src/apps/common/apps.md)
@@ -38,10 +39,13 @@
     - core
         - [admin](src/apps/core/admin.md)
         - [apps](src/apps/core/apps.md)
+        - [cache](src/apps/core/cache.md)
         - [factories](src/apps/core/factories.md)
         - [helpers](src/apps/core/helpers.md)
         - management.commands
             - [_v2_client](src/apps/core/management/commands/_v2_client.md)
+            - [cache_datasets](src/apps/core/management/commands/cache_datasets.md)
+            - [clear_dataset_cache](src/apps/core/management/commands/clear_dataset_cache.md)
             - [load_test_data](src/apps/core/management/commands/load_test_data.md)
             - [migrate_v2_datasets](src/apps/core/management/commands/migrate_v2_datasets.md)
             - [migrate_v2_files](src/apps/core/management/commands/migrate_v2_files.md)
@@ -202,6 +206,7 @@
                         - [test_convert_from_legacy](tests/unit/apps/core/api/dataset/test_convert_from_legacy.md)
                         - [test_dataset](tests/unit/apps/core/api/dataset/test_dataset.md)
                         - [test_dataset_allowed_actions](tests/unit/apps/core/api/dataset/test_dataset_allowed_actions.md)
+                        - [test_dataset_cache](tests/unit/apps/core/api/dataset/test_dataset_cache.md)
                         - [test_dataset_catalogs](tests/unit/apps/core/api/dataset/test_dataset_catalogs.md)
                         - [test_dataset_contact](tests/unit/apps/core/api/dataset/test_dataset_contact.md)
                         - [test_dataset_drafts](tests/unit/apps/core/api/dataset/test_dataset_drafts.md)
@@ -235,6 +240,7 @@
                     - [test_data_catalog](tests/unit/apps/core/api/test_data_catalog.md)
                 - management
                     - [conftest](tests/unit/apps/core/management/conftest.md)
+                    - [test_cache_datasets](tests/unit/apps/core/management/test_cache_datasets.md)
                     - [test_load_test_data](tests/unit/apps/core/management/test_load_test_data.md)
                     - [test_migrate_v2_datasets](tests/unit/apps/core/management/test_migrate_v2_datasets.md)
                     - [test_migrate_v2_files](tests/unit/apps/core/management/test_migrate_v2_files.md)

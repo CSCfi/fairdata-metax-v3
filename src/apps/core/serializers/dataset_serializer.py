@@ -13,6 +13,7 @@ from rest_framework import serializers
 from rest_framework.settings import api_settings
 from watson.search import skip_index_update
 
+from apps.cache.serializer_cache import SerializerCacheSerializer
 from apps.common.serializers import (
     CommonListSerializer,
     CommonModelSerializer,
@@ -20,6 +21,7 @@ from apps.common.serializers import (
     OneOf,
 )
 from apps.common.serializers.fields import ConstantField, handle_private_emails
+from apps.core.cache import DatasetSerializerCache
 from apps.core.helpers import clean_pid
 from apps.core.models import DataCatalog, Dataset
 from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
@@ -104,7 +106,7 @@ class DatasetListSerializer(CommonListSerializer):
         return pids
 
     def map_pids_to_datasets(self, data):
-        """Store mapping of persistent_identifier to dataset.id in serializer context."""
+        """Save mapping of persistent_identifier to dataset id to serializer context."""
         pids = self.collect_pids(data)
         pids_ids = Dataset.available_objects.filter(
             persistent_identifier__in=pids, state=Dataset.StateChoices.PUBLISHED
@@ -119,7 +121,7 @@ class DatasetListSerializer(CommonListSerializer):
         return super().to_representation(data)
 
 
-class DatasetSerializer(CommonNestedModelSerializer):
+class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
     metadata_repository = ConstantField(value="Fairdata")
     access_rights = AccessRightsModelSerializer(required=False, allow_null=True, many=False)
     field_of_science = FieldOfScience.get_serializer_field(required=False, many=True)
@@ -147,7 +149,9 @@ class DatasetSerializer(CommonNestedModelSerializer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.versions_serializer = VersionSerializer(many=True)  # Reuse versions serializer
+        self.versions_serializer = VersionSerializer(
+            many=True
+        )  # Avoid initing VersionSerializer multiple times
 
     def can_view_drafts(self, instance) -> bool:
         """Return true if user can see drafts related to an instance they can see."""
@@ -214,7 +218,6 @@ class DatasetSerializer(CommonNestedModelSerializer):
     def to_representation(self, instance: Dataset):
         instance.ensure_prefetch()
         request = self.context["request"]
-        self.context["show_emails"] = instance.has_permission_to_edit(request.user)
         ret = super().to_representation(instance)
 
         # Drafts should be hidden from users without access to them
@@ -222,6 +225,16 @@ class DatasetSerializer(CommonNestedModelSerializer):
             ret.pop("draft_revision", None)
             ret.pop("next_draft", None)
             ret.pop("draft_of", None)
+
+        has_emails = self.context.pop("has_emails", False)
+
+        # Save to serializer cache
+        if cache := self.cache:
+            if value_context := cache.get_value_context(instance):
+                has_emails = has_emails or value_context.get("has_emails", False)
+            cache.set_value(
+                instance, ret, value_context={"has_emails": has_emails}, only_if_modified=True
+            )
 
         view = self.context["view"]
         if view.query_params.get("expand_catalog"):
@@ -237,23 +250,41 @@ class DatasetSerializer(CommonNestedModelSerializer):
                 )
             ret = {k: v for k, v in ret.items() if k in fields}
 
-        # Handle email values. Copies dicts and lists to avoid accidentally modifying
-        # data that has not yet been committed to cache.
-        if self.context.pop("has_emails", False):
-            ret = handle_private_emails(
+        if has_emails:
+            # Handle email values. Copies dicts and lists to avoid accidentally modifying
+            # data that has not yet been committed to cache.
+            handle_private_emails(
                 ret,
                 show_emails=instance.has_permission_to_edit(request.user),
                 ignore_fields={  # These fields should not contain PrivateEmailValue objects
                     "access_rights",
+                    "api_version",
+                    "created",
+                    "cumulative_state",
+                    "data_catalog",
+                    "infrastructure",
+                    "dataset_versions",
                     "description",
+                    "field_of_science",
                     "fileset",
+                    "id",
+                    "issued",
+                    "keyword",
+                    "language",
                     "metadata_owner",
+                    "metadata_repository",
+                    "modified",
                     "other_identifiers",
+                    "persistent_identifier",
+                    "published_revision",
                     "relation",
                     "remote_resources",
                     "spatial",
+                    "state",
                     "temporal",
+                    "theme",
                     "title",
+                    "version",
                 },
             )
         return ret

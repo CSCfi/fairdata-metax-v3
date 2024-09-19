@@ -3,6 +3,7 @@
     - user-guide/*
 - [Developer Guide](developer-guide/index.md)
     - [V1-V2 Adapter](developer-guide/adapter.md)
+    - [Caching](developer-guide/caching.md)
     - [Contributing](developer-guide/contributing/index.md)
         - developer-guide/contributing/*
     - [Dependencies](developer-guide/dependencies/index.md)

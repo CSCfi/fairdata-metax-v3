@@ -283,6 +283,16 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         "next_draft",
     )
 
+    @classmethod
+    def get_versions_prefetch(cls):
+        return models.Prefetch(
+            "dataset_versions__datasets",
+            queryset=cls.all_objects.order_by("-version").prefetch_related(
+                *cls.dataset_versions_prefetch_fields
+            ),
+            to_attr="_datasets",
+        )
+
     is_legacy = models.BooleanField(
         default=False, help_text="Is the dataset migrated from legacy Metax"
     )

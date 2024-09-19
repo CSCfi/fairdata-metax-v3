@@ -350,28 +350,35 @@ class PrivateEmailValue:
         return "<PrivateEmailValue>"
 
 
-def handle_private_emails(value: dict, show_emails, ignore_fields=set()) -> dict:
+def handle_private_emails(value: dict, show_emails, ignore_fields=set()):
     """Convert PrivateEmailValues into strings or hide them recursively."""
     omit = object()
 
     def recurse(value):
         if isinstance(value, dict):
-            return {
-                k: sub_value for k, v in value.items() if (sub_value := recurse(v)) is not omit
-            }
+            for k in list(value.keys()):
+                ret = recurse(value[k])
+                if ret is not None:
+                    if ret is omit:
+                        del value[k]
+                    else:
+                        value[k] = ret
+            return None
         if isinstance(value, list):
-            return [sub_value for v in value if (sub_value := recurse(v)) is not omit]
+            for v in value:
+                recurse(v)
+            return None
         if isinstance(value, PrivateEmailValue):
             return value.value if show_emails else omit
-        return value
 
-    ret = {}
-    for k, v in value.items():
-        if k in ignore_fields:
-            ret[k] = v  # Support skipping expensive recursion for specified fields
-        elif (sub_value := recurse(v)) is not omit:
-            ret[k] = sub_value
-    return ret
+    for k in list(value.keys()):
+        if k not in ignore_fields:
+            ret = recurse(value[k])
+            if ret is not None:
+                if ret is omit:
+                    del value[k]
+                else:
+                    value[k] = ret
 
 
 class PrivateEmailField(serializers.EmailField):

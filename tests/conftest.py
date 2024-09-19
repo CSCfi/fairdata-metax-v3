@@ -20,6 +20,7 @@ import factory.random
 import pytest
 from django.conf import settings
 from django.contrib.auth.models import Group
+from django.core.cache import caches
 from django.dispatch import receiver
 from django.test.client import Client
 from rest_framework.test import APIClient, RequestsClient
@@ -719,7 +720,10 @@ def tweaked_settings(settings):
     settings.CACHES = {
         "default": {
             "BACKEND": "django.core.cache.backends.dummy.DummyCache",
-        }
+        },
+        "serialized_datasets": {
+            "BACKEND": "django.core.cache.backends.dummy.DummyCache",
+        },
     }
     settings.DEBUG = False
     settings.PASSWORD_HASHERS = [
@@ -777,7 +781,7 @@ def change_pi_url(settings):
 @pytest.fixture(autouse=True)
 def mock_pid_ms(request, requests_mock, settings):
     if "noautomock" not in request.keywords:
-        matcher = re.compile(f"http://localhost")
+        matcher = re.compile("http://localhost")
         responselist1 = [
             {"text": f"urn:nbn:fi:att:{str(uuid.uuid4())}", "status_code": 201},
             {"text": f"urn:nbn:fi:att:{str(uuid.uuid4())}", "status_code": 201},
@@ -802,3 +806,16 @@ def mock_pid_ms(request, requests_mock, settings):
         requests_mock.register_uri("PATCH", matcher, real_http=True)
         requests_mock.register_uri("DELETE", matcher, real_http=True)
     yield requests_mock
+
+
+@pytest.fixture
+def dataset_cache(settings):
+    """Setup temporary cache for datasets."""
+    settings.CACHES["serialized_datasets"] = {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "serialized-datasets",
+        "OPTIONS": {"MAX_ENTRIES": 100},
+    }
+    cache = caches["serialized_datasets"]
+    yield cache
+    cache.clear()
