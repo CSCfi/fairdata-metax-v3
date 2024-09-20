@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 from django.contrib.auth import get_user_model
-from django.db.models import QuerySet, CharField
+from django.db.models import CharField, QuerySet
 from django.db.models.functions import Cast
 
 from apps.common.helpers import date_to_datetime, omit_empty, omit_none, single_translation

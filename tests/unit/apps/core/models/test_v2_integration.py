@@ -8,7 +8,9 @@ from apps.core.signals import LegacyUpdateFailed, dataset_created, dataset_updat
 
 
 @pytest.mark.adapter
-def test_v2_integration_create_dataset(requests_mock, mock_v2_integration, dataset_with_foreign_keys):
+def test_v2_integration_create_dataset(
+    requests_mock, mock_v2_integration, dataset_with_foreign_keys
+):
     dataset_created.send(sender=None, data=dataset_with_foreign_keys)
     assert requests_mock.call_count == 1
     call = requests_mock.request_history[0]
@@ -17,7 +19,9 @@ def test_v2_integration_create_dataset(requests_mock, mock_v2_integration, datas
 
 
 @pytest.mark.adapter
-def test_v2_integration_update_dataset(requests_mock, mock_v2_integration, dataset_with_foreign_keys):
+def test_v2_integration_update_dataset(
+    requests_mock, mock_v2_integration, dataset_with_foreign_keys
+):
     dataset_updated.send(sender=None, data=dataset_with_foreign_keys)
     assert requests_mock.call_count == 2
     call = requests_mock.request_history[0]

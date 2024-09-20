@@ -6,6 +6,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils import timezone
+from model_utils.fields import AutoCreatedField, AutoLastModifiedField
 
 from apps.common.copier import ModelCopier
 from apps.common.models import AbstractBaseModel
@@ -84,6 +85,10 @@ class CatalogRecord(AbstractBaseModel):
 
     created = models.DateTimeField(default=timezone.now, editable=False)
     modified = models.DateTimeField(default=timezone.now)
+
+    # timestamp fields not writable by users
+    record_created = AutoCreatedField()
+    record_modified = AutoLastModifiedField()
 
     api_version = models.SmallIntegerField(default=3)
 

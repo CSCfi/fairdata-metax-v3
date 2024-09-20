@@ -87,7 +87,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         ]
     )
 
-    persistent_identifier = models.CharField(max_length=255, null=True, blank=True)
+    persistent_identifier = models.CharField(max_length=255, null=True, blank=True, db_index=True)
     issued = models.DateField(
         null=True,
         blank=True,

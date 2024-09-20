@@ -307,7 +307,7 @@ class LegacyCompatibility:
                 "root['research_dataset']['metadata_version_identifier']",
                 "root['dataset_version_set']",  # not directly writable
                 "root['alternate_record_set']",  # list of records sharing same preferred_identifier
-                "root['version_identifiers']", # Used only when syncing to V2
+                "root['version_identifiers']",  # Used only when syncing to V2
                 "date_modified",  # modification date is always set in V3
             ],
             exclude_regex_paths=[
