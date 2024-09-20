@@ -19,7 +19,7 @@ from apps.common.serializers import (
     CommonNestedModelSerializer,
     OneOf,
 )
-from apps.common.serializers.fields import ConstantField
+from apps.common.serializers.fields import ConstantField, handle_private_emails
 from apps.core.helpers import clean_pid
 from apps.core.models import DataCatalog, Dataset
 from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
@@ -145,6 +145,10 @@ class DatasetSerializer(CommonNestedModelSerializer):
     draft_of = LinkedDraftSerializer(read_only=True)
     metrics = DatasetMetricsSerializer(read_only=True)  # Included when include_metrics=true
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.versions_serializer = VersionSerializer(many=True) # Avoid initing VersionSerializer multiple times
+
     def get_dataset_versions(self, instance):
         if version_set := instance.dataset_versions:
             # Use prefetched results stored in _datasets when available
@@ -159,11 +163,8 @@ class DatasetSerializer(CommonNestedModelSerializer):
                     if dataset.state == Dataset.StateChoices.PUBLISHED
                 ]
 
-            return VersionSerializer(
-                instance=versions,
-                many=True,
-                context=self.context,
-            ).data
+            self.versions_serializer._context = self.context
+            return self.versions_serializer.to_representation(versions)
 
     # Fields that should be left unchanged when omitted from PUT
     no_put_default_fields = {
@@ -226,6 +227,25 @@ class DatasetSerializer(CommonNestedModelSerializer):
                 )
             ret = {k: v for k, v in ret.items() if k in fields}
 
+        # Handle email values. Copies dicts and lists to avoid accidentally modifying
+        # data that has not yet been committed to cache.
+        if self.context.pop("has_emails", False):
+            ret = handle_private_emails(
+                ret,
+                show_emails=instance.has_permission_to_edit(request.user),
+                ignore_fields={  # These fields should not contain PrivateEmailValue objects
+                    "access_rights",
+                    "description",
+                    "fileset",
+                    "metadata_owner",
+                    "other_identifiers",
+                    "relation",
+                    "remote_resources",
+                    "spatial",
+                    "temporal",
+                    "title",
+                },
+            )
         return ret
 
     class Meta:

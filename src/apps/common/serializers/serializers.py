@@ -685,18 +685,6 @@ class CommonModelSerializer(PatchModelSerializer, LazyableModelSerializer):
         models.EmailField: PrivateEmailField,
     }
 
-    @property
-    def _readable_fields(self):
-        for field in super()._readable_fields:
-            # Unlike get_fields which is common for all items in a list serializer,
-            # _readable_fields is run for each item in to_representation so
-            # we can have a different context for each item
-            if isinstance(field, PrivateEmailField):
-                # Hide email fields from responses by default
-                if not self.context.get("show_emails"):
-                    continue
-            yield field
-
     def preprocess(self, data):
         """Call preprocess method of nested fields where available.
 

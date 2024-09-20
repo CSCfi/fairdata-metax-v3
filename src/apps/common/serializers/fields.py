@@ -328,8 +328,58 @@ class NullableCharField(serializers.CharField):
         return super().run_validation(data)
 
 
+class PrivateEmailValue:
+    """Value container for email addresses.
+
+    Can be cached. Intentionally not JSON serializable by default
+    to reduce chance of accidentally leaking values. Needs
+    to be removed or converted into string before rendering.
+    """
+
+    def __init__(self, value: str):
+        self.value = value
+
+    def __eq__(self, value: object) -> bool:
+        if isinstance(value, PrivateEmailValue):
+            return self.value == value.value
+        elif isinstance(value, str):
+            return self.value == value
+        return super().__eq__(value)
+
+    def __str__(self) -> str:
+        return "<PrivateEmailValue>"
+
+
+def handle_private_emails(value: dict, show_emails, ignore_fields=set()) -> dict:
+    """Convert PrivateEmailValues into strings or hide them recursively."""
+    omit = object()
+
+    def recurse(value):
+        if isinstance(value, dict):
+            return {
+                k: sub_value for k, v in value.items() if (sub_value := recurse(v)) is not omit
+            }
+        if isinstance(value, list):
+            return [sub_value for v in value if (sub_value := recurse(v)) is not omit]
+        if isinstance(value, PrivateEmailValue):
+            return value.value if show_emails else omit
+        return value
+
+    ret = {}
+    for k, v in value.items():
+        if k in ignore_fields:
+            ret[k] = v  # Support skipping expensive recursion for specified fields
+        elif (sub_value := recurse(v)) is not omit:
+            ret[k] = sub_value
+    return ret
+
+
 class PrivateEmailField(serializers.EmailField):
     """Email field that is hidden by CommonModelSerializer by default."""
+
+    def to_representation(self, value):
+        self.context["has_emails"] = True
+        return PrivateEmailValue(super().to_representation(value))
 
 
 class ConstantField(serializers.Field):

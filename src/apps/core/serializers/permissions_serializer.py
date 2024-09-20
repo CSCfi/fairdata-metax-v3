@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 from apps.common.helpers import format_multiline, single_translation
 from apps.common.mail import send_mail
+from apps.common.serializers.fields import handle_private_emails
 from apps.common.serializers.serializers import CommonModelSerializer, StrictSerializer
 from apps.core.models import Dataset
 from apps.core.models.catalog_record import DatasetPermissions
@@ -180,6 +181,11 @@ class DatasetPermissionsUserModelSerializer(CommonModelSerializer):
             serializer = self.fields["share_message"]
             serializer._validated_data = message
             serializer.save(dataset=dataset, sender=sender, recipient=recipient)
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret = handle_private_emails(ret, show_emails=False)
+        return ret
 
 
 class DatasetPermissionsSerializer(CommonModelSerializer):

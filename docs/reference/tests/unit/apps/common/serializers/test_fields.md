@@ -24,3 +24,11 @@
 
 ### :::tests.unit.apps.common.serializers.test_fields.test_nullable_char_field
 
+## test_email_field
+
+### :::tests.unit.apps.common.serializers.test_fields.test_email_field
+
+## test_handle_private_emails
+
+### :::tests.unit.apps.common.serializers.test_fields.test_handle_private_emails
+

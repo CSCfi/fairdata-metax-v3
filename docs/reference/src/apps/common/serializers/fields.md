@@ -44,6 +44,14 @@
 
 ### :::src.apps.common.serializers.fields.NullableCharField
 
+## PrivateEmailValue
+
+### :::src.apps.common.serializers.fields.PrivateEmailValue
+
+## handle_private_emails
+
+### :::src.apps.common.serializers.fields.handle_private_emails
+
 ## PrivateEmailField
 
 ### :::src.apps.common.serializers.fields.PrivateEmailField
