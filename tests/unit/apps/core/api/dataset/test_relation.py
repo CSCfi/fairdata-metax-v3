@@ -60,6 +60,70 @@ def test_other_identifier_found_in_metax(
     assert str(res2.data["other_identifiers"][0]["metax_ids"][0]) == res1.data["id"]
 
 
+def test_other_identifier_found_in_metax_ignore_draft(
+    admin_client, dataset_a_json, data_catalog, data_catalog_harvested, reference_data
+):
+    dataset_1_json = {
+        **dataset_a_json,
+        "state": "draft",
+        "persistent_identifier": "i have a pid",
+        "data_catalog": data_catalog_harvested.id,
+    }
+
+    res1 = admin_client.post("/v3/datasets", dataset_1_json, content_type="application/json")
+    assert res1.status_code == 201
+
+    # Dataset 1 is a draft, it should be ignored when determining metax_ids
+    other_identifier = {"notation": res1.data["persistent_identifier"]}
+    dataset_a_json["other_identifiers"] = [other_identifier]
+
+    res2 = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res2.status_code == 201
+    assert res2.data["other_identifiers"][0]["metax_ids"] == []
+
+
+def test_other_identifier_found_in_metax_list(
+    admin_client, dataset_a_json, data_catalog, data_catalog_harvested, reference_data
+):
+    """Test multiple datasets with same pid."""
+    # Create 2 datasets with same pid
+    res1 = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res1.status_code == 201
+
+    other_dataset = {
+        **dataset_a_json,
+        "data_catalog": data_catalog_harvested.id,
+        "persistent_identifier": res1.data["persistent_identifier"],
+    }
+    res2 = admin_client.post("/v3/datasets", other_dataset, content_type="application/json")
+    assert res2.status_code == 201
+
+    # Create dataset with other_identifier
+    other_identifier = {"notation": res1.data["persistent_identifier"]}
+    dataset_a_json["other_identifiers"] = [other_identifier]
+
+    res3 = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res3.status_code == 201
+
+    # Dataset should have both previous metax_ids in other_identifier
+    assert set(res3.json()["other_identifiers"][0]["metax_ids"]) == {
+        res1.data["id"],
+        res2.data["id"],
+    }
+
+    # Test that dataset has same other_identifiers when dataset list is requested
+    res4 = admin_client.get("/v3/datasets", content_type="application/json")
+    assert res4.status_code == 200
+    other_identifier_datasets = [
+        item for item in res4.json()["results"] if item["id"] == res3.data["id"]
+    ]
+    assert len(other_identifier_datasets) == 1
+    assert set(other_identifier_datasets[0]["other_identifiers"][0]["metax_ids"]) == {
+        res1.data["id"],
+        res2.data["id"],
+    }
+
+
 def test_relation_pids_given_as_urls(
     admin_client,
     dataset_a_json,

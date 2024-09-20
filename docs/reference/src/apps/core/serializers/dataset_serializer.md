@@ -8,6 +8,10 @@
 
 ### :::src.apps.core.serializers.dataset_serializer.LinkedDraftSerializer
 
+## DatasetListSerializer
+
+### :::src.apps.core.serializers.dataset_serializer.DatasetListSerializer
+
 ## DatasetSerializer
 
 ### :::src.apps.core.serializers.dataset_serializer.DatasetSerializer

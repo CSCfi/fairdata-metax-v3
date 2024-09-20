@@ -177,7 +177,7 @@ class OtherIdentifierModelSerializer(AbstractDatasetModelSerializer):
         return rep
 
     def get_metax_ids(self, instance):
-        return get_metax_identifiers_by_pid(instance.notation)
+        return get_metax_identifiers_by_pid(instance.notation, self.context)
 
 
 class TemporalModelSerializer(AbstractDatasetModelSerializer):
@@ -252,4 +252,4 @@ class EntityRelationSerializer(CommonNestedModelSerializer):
 
     def get_metax_ids(self, instance):
         if instance.entity.entity_identifier:
-            return get_metax_identifiers_by_pid(instance.entity.entity_identifier)
+            return get_metax_identifiers_by_pid(instance.entity.entity_identifier, self.context)

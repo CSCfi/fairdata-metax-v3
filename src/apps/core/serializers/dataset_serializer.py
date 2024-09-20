@@ -5,6 +5,7 @@
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
 import logging
+from typing import List
 
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -19,6 +20,7 @@ from apps.common.serializers import (
     OneOf,
 )
 from apps.common.serializers.fields import ConstantField
+from apps.core.helpers import clean_pid
 from apps.core.models import DataCatalog, Dataset
 from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
 from apps.core.serializers.common_serializers import (
@@ -84,6 +86,37 @@ class LinkedDraftSerializer(CommonNestedModelSerializer):
             "cumulative_state",
         )
         read_only_fields = fields
+
+
+class DatasetListSerializer(CommonListSerializer):
+
+    def collect_pids(self, data: List[Dataset]):
+        """Collect persistent identifiers used in dataset relations."""
+        pids = set()
+        for dataset in data:
+            # Relations and other_identifiers should be prefetched
+            for relation in dataset.relation.all():
+                if pid := relation.entity.entity_identifier:
+                    pids.add(clean_pid(pid))
+            for oi in dataset.other_identifiers.all():
+                if pid := oi.notation:
+                    pids.add(clean_pid(pid))
+        return pids
+
+    def map_pids_to_datasets(self, data):
+        """Store mapping of persistent_identifier to dataset.id in serializer context."""
+        pids = self.collect_pids(data)
+        pids_ids = Dataset.available_objects.filter(
+            persistent_identifier__in=pids, state=Dataset.StateChoices.PUBLISHED
+        ).values_list("persistent_identifier", "id")
+        mapping = {}
+        for pid, id in pids_ids:
+            mapping.setdefault(pid, []).append(id)
+        self.context["datasets_by_pid"] = mapping
+
+    def to_representation(self, data):
+        self.map_pids_to_datasets(data)
+        return super().to_representation(data)
 
 
 class DatasetSerializer(CommonNestedModelSerializer):
@@ -237,6 +270,7 @@ class DatasetSerializer(CommonNestedModelSerializer):
             "title",
             *read_only_fields,
         )
+        list_serializer_class = DatasetListSerializer
 
     def _dc_is_harvested(self, data):
         if self.context["request"].method == "POST":
