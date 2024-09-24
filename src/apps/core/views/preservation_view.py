@@ -35,3 +35,4 @@ class ContractViewSet(CommonModelViewSet):
 class PreservationViewSet(DatasetNestedOneToOneView):
     serializer_class = PreservationModelSerializer
     dataset_field_name = "preservation"
+    use_defaults_when_object_does_not_exist = True

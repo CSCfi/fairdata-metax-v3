@@ -48,6 +48,10 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_preservation.test_get_dataset_preservation_anonymous
 
+## test_get_dataset_nonexisting_preservation
+
+### :::tests.unit.apps.core.api.dataset.test_preservation.test_get_dataset_nonexisting_preservation
+
 ## test_patch_dataset_nonexisting_preservation
 
 ### :::tests.unit.apps.core.api.dataset.test_preservation.test_patch_dataset_nonexisting_preservation

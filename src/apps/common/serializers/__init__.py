@@ -1,8 +1,8 @@
 from .fields import (
+    CommaSeparatedListField,
     ListValidChoicesField,
     URLReferencedModelField,
     URLReferencedModelListField,
-    CommaSeparatedListField,
 )
 from .serializers import (
     AbstractDatasetModelSerializer,

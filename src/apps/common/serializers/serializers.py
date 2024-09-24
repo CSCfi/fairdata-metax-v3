@@ -22,10 +22,10 @@ from rest_framework.settings import api_settings
 from rest_framework.utils import html, model_meta
 
 from apps.common.serializers.fields import (
+    CommaSeparatedListField,
     MultiLanguageField,
     NullableCharField,
     PrivateEmailField,
-    CommaSeparatedListField,
 )
 
 logger = logging.getLogger(__name__)
