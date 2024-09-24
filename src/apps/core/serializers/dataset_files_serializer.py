@@ -111,7 +111,8 @@ class FileSetSerializer(StrictSerializer):
                     continue
                 file_types["en"].add(type.get("en"))
                 file_types["fi"].add(type.get("fi"))
-            return file_types
+
+            return {"en": sorted(file_types["en"]), "fi": sorted(file_types["fi"])}
 
     def assign_reference_data(self, actions: list, key: str, model: Model):
         """Replace reference data in actions' dataset_metadata with reference data instances."""

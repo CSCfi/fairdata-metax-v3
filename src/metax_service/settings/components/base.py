@@ -240,7 +240,7 @@ REST_FRAMEWORK = {
     "DEFAULT_FILTER_BACKENDS": ("apps.common.filters.CustomDjangoFilterBackend",),
     "EXCEPTION_HANDLER": "common.exceptions.exception_handler",
     "DEFAULT_RENDERER_CLASSES": [
-        "apps.common.renderers.CustomTimeJSONRenderer",  # Add the path to your custom renderer
+        "apps.common.renderers.MsgspecJSONRenderer",
         "apps.common.renderers.NoHTMLFormBrowsableAPIRenderer",
     ],
     "DATETIME_FORMAT": "%Y-%m-%dT%H:%M:%SZ",

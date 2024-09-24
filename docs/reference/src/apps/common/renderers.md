@@ -1,8 +1,8 @@
 # renderers
 
-## CustomTimeJSONRenderer
+## MsgspecJSONRenderer
 
-### :::src.apps.common.renderers.CustomTimeJSONRenderer
+### :::src.apps.common.renderers.MsgspecJSONRenderer
 
 ## NoHTMLFormBrowsableAPIRenderer
 
