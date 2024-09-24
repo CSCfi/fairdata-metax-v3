@@ -1,9 +1,5 @@
 # fields
 
-## CommaSeparatedListField
-
-### :::src.apps.files.serializers.fields.CommaSeparatedListField
-
 ## FileNameField
 
 ### :::src.apps.files.serializers.fields.FileNameField

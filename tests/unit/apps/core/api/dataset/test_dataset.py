@@ -206,6 +206,23 @@ def test_list_datasets_with_default_pagination(admin_client, dataset_a, dataset_
     }
 
 
+def test_list_datasets_fields_param(admin_client, dataset_a, dataset_b):
+    res = admin_client.get(reverse("dataset-list"), {"fields": "id,created"})
+    assert res.status_code == 200
+    assert res.data == {
+        "count": 2,
+        "next": None,
+        "previous": None,
+        "results": [{"id": ANY, "created": ANY}, {"id": ANY, "created": ANY}],
+    }
+
+
+def test_list_datasets_faulty_fields_param(admin_client, dataset_a, dataset_b):
+    res = admin_client.get(reverse("dataset-list"), {"fields": "id,foo,bar,created"})
+    assert res.status_code == 400
+    assert res.data == {"fields": "Fields not found in dataset: foo,bar"}
+
+
 def test_list_datasets_with_invalid_query_param(admin_client, dataset_a):
     res = admin_client.get(reverse("dataset-list"), {"päginätiön": "false", "offzet": 10})
     assert res.status_code == 400

@@ -27,6 +27,7 @@ from apps.common.filters import MultipleCharFilter
 from apps.common.helpers import ensure_dict, omit_empty
 from apps.common.serializers.serializers import (
     FlushQueryParamsSerializer,
+    FieldsQueryParamsSerializer,
     IncludeRemovedQueryParamsSerializer,
 )
 from apps.common.views import CommonModelViewSet
@@ -304,6 +305,10 @@ class DatasetViewSet(CommonModelViewSet):
         {
             "class": FlushQueryParamsSerializer,
             "actions": ["destroy"],
+        },
+        {
+            "class": FieldsQueryParamsSerializer,
+            "actions": ["list"],
         },
     ]
     access_policy = DatasetAccessPolicy

@@ -21,7 +21,12 @@ from rest_framework.serializers import ValidationError
 from rest_framework.settings import api_settings
 from rest_framework.utils import html, model_meta
 
-from apps.common.serializers.fields import MultiLanguageField, NullableCharField, PrivateEmailField
+from apps.common.serializers.fields import (
+    MultiLanguageField,
+    NullableCharField,
+    PrivateEmailField,
+    CommaSeparatedListField,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -280,6 +285,14 @@ class FlushQueryParamsSerializer(serializers.Serializer):
 
     flush = serializers.BooleanField(
         required=False, default=False, help_text=_("Completely remove object from database.")
+    )
+
+
+class FieldsQueryParamsSerializer(serializers.Serializer):
+    """Non-filter query parameters for deleting a list."""
+
+    fields = CommaSeparatedListField(
+        required=False, default=False, help_text=_("Filter specific fields of the dataset.")
     )
 
 

@@ -24,6 +24,10 @@
 
 ### :::src.apps.common.serializers.serializers.FlushQueryParamsSerializer
 
+## FieldsQueryParamsSerializer
+
+### :::src.apps.common.serializers.serializers.FieldsQueryParamsSerializer
+
 ## DeleteListReturnValueSerializer
 
 ### :::src.apps.common.serializers.serializers.DeleteListReturnValueSerializer

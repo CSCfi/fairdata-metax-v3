@@ -218,6 +218,14 @@ class DatasetSerializer(CommonNestedModelSerializer):
                 instance.data_catalog, context={"request": request}
             ).data
 
+        if fields := view.query_params.get("fields"):
+            not_found = [field for field in fields if field not in self.get_fields()]
+            if len(not_found):
+                raise serializers.ValidationError(
+                    {"fields": f"Fields not found in dataset: {','.join(not_found)}"}
+                )
+            ret = {k: v for k, v in ret.items() if k in fields}
+
         return ret
 
     class Meta:

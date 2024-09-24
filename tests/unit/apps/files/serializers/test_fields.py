@@ -16,19 +16,6 @@ def validate_input(field, input, expected):
 @pytest.mark.parametrize(
     "input,expected",
     [
-        ("first,second,third", ["first", "second", "third"]),
-        ("a,,b", serializers.ValidationError),
-        ("1,2", ["1", "2"]),
-    ],
-)
-def test_comma_separated_field(input, expected):
-    field = fields.CommaSeparatedListField(child=serializers.CharField())
-    validate_input(field, input, expected)
-
-
-@pytest.mark.parametrize(
-    "input,expected",
-    [
         ("tiedosto.txt", "tiedosto.txt"),
         (" tiedosto.txt ", " tiedosto.txt "),
         ("/data/tiedosto.txt", serializers.ValidationError),

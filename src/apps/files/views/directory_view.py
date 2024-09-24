@@ -14,6 +14,7 @@ from rest_framework.response import Response
 
 from apps.common.helpers import cachalot_toggle, get_attr_or_item
 from apps.common.views import QueryParamsMixin
+from apps.common.serializers.fields import CommaSeparatedListField
 from apps.files.functions import SplitPart
 from apps.files.helpers import (
     get_directory_metadata_model,
@@ -29,7 +30,6 @@ from apps.files.serializers.directory_serializer import (
     SubDirectorySerializer,
 )
 from apps.files.serializers.fields import (
-    CommaSeparatedListField,
     OptionalSlashDirectoryPathField,
     StorageServiceField,
 )

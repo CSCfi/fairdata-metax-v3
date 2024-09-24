@@ -12,28 +12,6 @@ from rest_framework import serializers
 from apps.common.serializers import ListValidChoicesField
 
 
-class CommaSeparatedListField(serializers.ListField):
-    """ListField that serializes into a comma-separated string."""
-
-    def get_value(self, dictionary):
-        return super(serializers.ListField, self).get_value(dictionary)
-
-    def to_internal_value(self, data):
-        data = data.split(",")
-        return super().to_internal_value(data)
-
-    def to_representation(self, data):
-        return ",".join(data)
-
-
-filename_regex = r"^[^/]+$"  # e.g. file
-file_pathname_regex = r"^/([^/]+/)*[^/]+$"  # e.g. /directory/subdirectory/file
-directory_pathname_regex = r"^/([^/]+/)*$"  # e.g. /directory/subdirectory/
-optional_slash_pathname_regex = (
-    r"^/([^/]+/?)*$"  # e.g. /directory/subdirectory/ or /directory/subdirectory
-)
-
-
 class FileNameField(serializers.RegexField):
     default_error_messages = {"invalid": _("Expected file name to not contain slashes.")}
 
@@ -81,3 +59,11 @@ class StorageServiceField(ListValidChoicesField):
     def __init__(self, *args, **kwargs):
         kwargs["choices"] = list(settings.STORAGE_SERVICE_FILE_STORAGES)
         super().__init__(*args, **kwargs)
+
+
+filename_regex = r"^[^/]+$"  # e.g. file
+file_pathname_regex = r"^/([^/]+/)*[^/]+$"  # e.g. /directory/subdirectory/file
+directory_pathname_regex = r"^/([^/]+/)*$"  # e.g. /directory/subdirectory/
+optional_slash_pathname_regex = (
+    r"^/([^/]+/?)*$"  # e.g. /directory/subdirectory/ or /directory/subdirectory
+)

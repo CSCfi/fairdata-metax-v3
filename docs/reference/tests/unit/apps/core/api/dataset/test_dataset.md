@@ -48,6 +48,14 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_list_datasets_with_default_pagination
 
+## test_list_datasets_fields_param
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_list_datasets_fields_param
+
+## test_list_datasets_faulty_fields_param
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_list_datasets_faulty_fields_param
+
 ## test_list_datasets_with_invalid_query_param
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_list_datasets_with_invalid_query_param

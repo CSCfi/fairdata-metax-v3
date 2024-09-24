@@ -346,3 +346,17 @@ class ConstantField(serializers.Field):
 
     def to_representation(self, value):
         return value
+
+
+class CommaSeparatedListField(serializers.ListField):
+    """ListField that serializes into a comma-separated string."""
+
+    def get_value(self, dictionary):
+        return super(serializers.ListField, self).get_value(dictionary)
+
+    def to_internal_value(self, data):
+        data = data.split(",")
+        return super().to_internal_value(data)
+
+    def to_representation(self, data):
+        return ",".join(data)
