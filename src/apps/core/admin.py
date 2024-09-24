@@ -144,8 +144,6 @@ class DatasetAdmin(AbstractDatasetPropertyBaseAdmin, SimpleHistoryAdmin):
     list_select_related = ("access_rights", "data_catalog", "metadata_owner")
     search_fields = ["title__values", "keyword"]
 
-    # inlines = [LanguageInline]
-
     def save_model(self, request, obj: Dataset, form, change):
         created = obj._state.adding
         super().save_model(request, obj, form, change)
