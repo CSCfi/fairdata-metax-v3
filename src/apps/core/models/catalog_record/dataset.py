@@ -23,7 +23,6 @@ from apps.core.models.catalog_record.dataset_permissions import DatasetPermissio
 from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
 from apps.core.models.data_catalog import DataCatalog
 from apps.core.models.mixins import V2DatasetMixin
-from apps.core.permissions import DataCatalogAccessPolicy
 from apps.core.services.pid_ms_client import PIDMSClient, ServiceUnavailableError
 from apps.files.models import File
 from apps.users.models import MetaxUser
@@ -200,8 +199,21 @@ class Dataset(V2DatasetMixin, CatalogRecord):
 
     is_prefetched = False  # Should be set to True when using prefetch_related
 
+    # Fields that may be requested when checking dataset editing permissions
+    permissions_prefetch_fields = (
+        "data_catalog",
+        "data_catalog__dataset_groups_admin",
+        "data_catalog__dataset_groups_create",
+        "file_set",
+        "file_set__storage",
+        "metadata_owner",
+        "metadata_owner__user",
+        "permissions",
+        "permissions__editors",
+    )
     # Fields that should be prefetched with prefetch_related
     common_prefetch_fields = (
+        *permissions_prefetch_fields,
         "access_rights__access_type",
         "access_rights__license__reference",
         "access_rights__license",
@@ -214,20 +226,14 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         "actors__person__homepage",
         "actors__person",
         "actors",
-        "data_catalog",
         "dataset_versions",
         "draft_of",
         "field_of_science",
-        "file_set",
         "infrastructure",
         "language",
-        "metadata_owner__user",
-        "metadata_owner",
         "next_draft",
         "other_identifiers__identifier_type",
         "other_identifiers",
-        "permissions",
-        "permissions__editors",
         "preservation",
         "projects__funding__funder__funder_type",
         "projects__funding__funder__organization__homepage",
@@ -272,12 +278,9 @@ class Dataset(V2DatasetMixin, CatalogRecord):
     )
 
     dataset_versions_prefetch_fields = (
+        *permissions_prefetch_fields,
         "draft_of",
         "next_draft",
-        "permissions",
-        "permissions__editors",
-        "metadata_owner",
-        "metadata_owner__user",
     )
 
     is_legacy = models.BooleanField(
@@ -289,7 +292,8 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             self._saving_legacy = True
         super().__init__(*args, **kwargs)
 
-    def has_permission_to_edit(self, user: MetaxUser):
+    def has_permission_to_edit(self, user: MetaxUser) -> bool:
+        """Determine if user has permission to edit dataset."""
         if user.is_superuser:
             return True
         elif not user.is_authenticated:
@@ -302,11 +306,9 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             fileset := getattr(self, "file_set", None)
         ) and fileset.storage.csc_project in user.csc_projects:
             return True
-        elif self.permissions and self.permissions.editors.contains(user):
+        elif self.permissions and user in self.permissions.editors.all():
             return True
-        elif self.data_catalog and DataCatalogAccessPolicy().query_object_permission(
-            user=user, object=self.data_catalog, action="<op:admin_dataset>"
-        ):
+        elif self.data_catalog and self.data_catalog.can_admin_datasets(user):
             return True
         return False
 

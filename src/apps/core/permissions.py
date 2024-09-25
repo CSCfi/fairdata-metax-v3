@@ -155,9 +155,12 @@ class DataCatalogAccessPolicy(BaseAccessPolicy):
         if user.is_superuser:
             return True
 
+        # This function is often called multiple times per dataset listing request.
+        # Optimize by using prefetched values instead of making a new intersection query here.
         catalog = view.get_object()
+        catalog_admin_groups = set(catalog.dataset_groups_admin.all())
         user_groups = user.groups.all()
-        return catalog.dataset_groups_admin.intersection(user_groups).exists()
+        return any(group in catalog_admin_groups for group in user_groups)
 
 
 class LegacyDatasetAccessPolicy(BaseAccessPolicy):

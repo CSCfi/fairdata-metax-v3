@@ -9,6 +9,8 @@ from simple_history.models import HistoricalRecords
 
 from apps.common.models import AbstractBaseModel, AbstractDatasetProperty
 from apps.core.models.concepts import Language
+from apps.core.permissions import DataCatalogAccessPolicy
+from apps.users.models import MetaxUser
 
 STORAGE_SERVICE_CHOICES = [(s, s) for s in settings.STORAGE_SERVICE_FILE_STORAGES]
 
@@ -81,6 +83,31 @@ class DataCatalog(AbstractBaseModel):
 
     def __str__(self):
         return self.id
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._admin_user_cache = {}  # Map of user.id -> can admin datasets
+
+    def _can_admin_datasets(self, user: MetaxUser) -> bool:
+        return DataCatalogAccessPolicy().query_object_permission(
+            user=user, object=self, action="<op:admin_dataset>"
+        )
+
+    def can_admin_datasets(self, user: MetaxUser) -> bool:
+        """Determine if user has permission to update all datasets in catalog.
+
+        This is potentially called for every dataset in a list, so
+        we memoize the value for the lifetime of the instance."""
+        perms_cache = self._admin_user_cache
+        if user.id not in perms_cache:
+            perms_cache[user.id] = self._can_admin_datasets(user)
+        return perms_cache[user.id]
+
+    def can_create_datasets(self, user: MetaxUser) -> bool:
+        """Determine if user has permission to create datasets in catalog."""
+        return DataCatalogAccessPolicy().query_object_permission(
+            user=user, object=self, action="<op:create_dataset>"
+        )
 
 
 class CatalogHomePage(AbstractDatasetProperty):

@@ -1,11 +1,12 @@
 import json
+
 import pytest
 from rest_framework import serializers
 
 from apps.common.serializers.fields import (
+    CommaSeparatedListField,
     MultiLanguageField,
     NullableCharField,
-    CommaSeparatedListField,
     PrivateEmailField,
     PrivateEmailValue,
     handle_private_emails,

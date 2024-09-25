@@ -147,7 +147,14 @@ class DatasetSerializer(CommonNestedModelSerializer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.versions_serializer = VersionSerializer(many=True) # Avoid initing VersionSerializer multiple times
+        self.versions_serializer = VersionSerializer(many=True)  # Reuse versions serializer
+
+    def can_view_drafts(self, instance) -> bool:
+        """Return true if user can see drafts related to an instance they can see."""
+        return (
+            instance.state == Dataset.StateChoices.DRAFT
+            or instance.has_permission_to_see_drafts(self.context["request"].user)
+        )
 
     def get_dataset_versions(self, instance):
         if version_set := instance.dataset_versions:
@@ -156,7 +163,10 @@ class DatasetSerializer(CommonNestedModelSerializer):
                 manager="all_objects"
             ).order_by("-version").prefetch_related(*Dataset.dataset_versions_prefetch_fields)
 
-            if not instance.has_permission_to_see_drafts(self.context["request"].user):
+            has_drafts = any(
+                dataset for dataset in versions if dataset.state != Dataset.StateChoices.PUBLISHED
+            )
+            if has_drafts and not self.can_view_drafts(instance):
                 versions = [
                     dataset
                     for dataset in versions
@@ -208,7 +218,7 @@ class DatasetSerializer(CommonNestedModelSerializer):
         ret = super().to_representation(instance)
 
         # Drafts should be hidden from users without access to them
-        if not instance.has_permission_to_see_drafts(request.user):
+        if not self.can_view_drafts(instance):
             ret.pop("draft_revision", None)
             ret.pop("next_draft", None)
             ret.pop("draft_of", None)
@@ -220,7 +230,7 @@ class DatasetSerializer(CommonNestedModelSerializer):
             ).data
 
         if fields := view.query_params.get("fields"):
-            not_found = [field for field in fields if field not in self.get_fields()]
+            not_found = [field for field in fields if field not in self.fields]
             if len(not_found):
                 raise serializers.ValidationError(
                     {"fields": f"Fields not found in dataset: {','.join(not_found)}"}

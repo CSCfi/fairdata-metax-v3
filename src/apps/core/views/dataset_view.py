@@ -27,8 +27,8 @@ from watson import search
 from apps.common.filters import MultipleCharFilter
 from apps.common.helpers import ensure_dict, omit_empty
 from apps.common.serializers.serializers import (
-    FlushQueryParamsSerializer,
     FieldsQueryParamsSerializer,
+    FlushQueryParamsSerializer,
     IncludeRemovedQueryParamsSerializer,
 )
 from apps.common.views import CommonModelViewSet
