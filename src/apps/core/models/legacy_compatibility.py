@@ -321,6 +321,7 @@ class LegacyCompatibility:
                 ),
             ],
             truncate_datetime="day",
+            threshold_to_diff_deeper=0,
             exclude_obj_callback=self.exclude_from_diff,
         )
         json_diff = diff.to_json()

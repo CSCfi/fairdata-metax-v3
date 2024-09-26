@@ -14,6 +14,11 @@ from apps.core.models import Dataset
 from apps.files.factories import FileFactory
 
 
+def ns_select(*args, **kwargs):
+    """Elementpath select with added default namespace."""
+    return select(*args, **kwargs, namespaces={"": "http://datacite.org/schema/kernel-4"})
+
+
 @pytest.fixture
 def doi_dataset(admin_client, dataset_maximal_json, data_catalog, reference_data):
     dataset_maximal_json["pid_type"] = "DOI"
@@ -80,37 +85,37 @@ def test_dataset_metadata_download_datacite(admin_client, doi_dataset):
     # et.write("/tmp/datacite.xml", pretty_print=True)
 
     # persistent_identifier
-    assert select(root, "//identifier/concat(@identifierType, ':', text())") == [
+    assert ns_select(root, "//identifier/concat(@identifierType, ':', text())") == [
         "DOI:https://doi.org/some_doi"
     ]
 
     # publisher
-    assert select(root, "//publisher/text()") == ["Testiorganisaatio"]
+    assert ns_select(root, "//publisher/text()") == ["Testiorganisaatio"]
 
     # publication year
-    assert select(root, "//publicationYear/text()") == ["2023"]
+    assert ns_select(root, "//publicationYear/text()") == ["2023"]
 
     # title
-    assert select(root, "//title/concat(@xml:lang, ':', text())") == [
+    assert ns_select(root, "//title/concat(@xml:lang, ':', text())") == [
         "en:All Fields Test Dataset",
         "fi:Kaikkien kenttien testiaineisto testi",
     ]
 
     # description
-    assert select(root, "//description/concat(@xml:lang, ':', text())") == [
+    assert ns_select(root, "//description/concat(@xml:lang, ':', text())") == [
         f'en:{doi_dataset["description"]["en"]}',
         f'fi:{doi_dataset["description"]["fi"]}',
     ]
 
     # creators
     parts = "creatorName/@nameType, ':', creatorName/text(), '(', affiliation/text(), ')'"
-    assert select(root, f"//creator/concat({parts})") == [
+    assert ns_select(root, f"//creator/concat({parts})") == [
         "Personal:Kuvitteellinen Henkilö(test dept.)",
         "Organizational:Testiorganisaatio()",
         "Personal:Another person(Koneen Säätiö)",
     ]
 
-    assert select(root, "//subject/concat(@xml:lang, ':', text())") == [
+    assert ns_select(root, "//subject/concat(@xml:lang, ':', text())") == [
         # themes
         "en:data systems designers",
         "fi:atk-suunnittelijat",
@@ -139,7 +144,7 @@ def test_dataset_metadata_download_datacite(admin_client, doi_dataset):
         "contributorName/text()",
         "affiliation/text()",
     ]
-    assert select(root, f"//contributor/({', '.join(parts)})") == [
+    assert ns_select(root, f"//contributor/({', '.join(parts)})") == [
         "DataCurator",
         "Personal",
         "Unexisting Entity",
@@ -147,10 +152,10 @@ def test_dataset_metadata_download_datacite(admin_client, doi_dataset):
     ]
 
     # language (only one allowed)
-    assert select(root, f"/resource/language/text()") == ["fi"]
+    assert ns_select(root, f"/resource/language/text()") == ["fi"]
 
     # licenses
-    assert select(root, "//rightsList/rights/concat(@xml:lang, ':', text())") == [
+    assert ns_select(root, "//rightsList/rights/concat(@xml:lang, ':', text())") == [
         "en:Other",
         "fi:Muu",
         "en:Creative Commons Attribution 4.0 International (CC BY 4.0)",
@@ -163,26 +168,26 @@ def test_dataset_metadata_download_datacite(admin_client, doi_dataset):
         "geoLocationPoint/pointLongitude/text(), ',', "
         "geoLocationPoint/pointLatitude/text()"
     )
-    assert select(root, f"//geoLocation/concat({parts})") == [
+    assert ns_select(root, f"//geoLocation/concat({parts})") == [
         "Random Address in Helsinki:,",
         "Another Random Address in Espoo:22.0,61.0",
     ]
 
     # multipolygon should be split into multiple polygons
-    espoo_location = select(
+    espoo_location = ns_select(
         root, '//geoLocation[geoLocationPlace/text()="Another Random Address in Espoo"]'
     )[0]
-    assert len(select(espoo_location, "//geoLocationPolygon")) == 2
+    assert len(ns_select(espoo_location, "//geoLocationPolygon")) == 2
 
     # related identifiers
     parts = "@relationType, ':', @relatedIdentifierType, ':', text()"
-    assert select(root, f"//relatedIdentifier/concat({parts})") == [
+    assert ns_select(root, f"//relatedIdentifier/concat({parts})") == [
         "IsIdenticalTo:URL:https://www.example.com",
         "Cites:DOI:https://doi.org/something",
     ]
 
     # dates
-    assert select(root, "//date/concat(@dateType, ':', text())") == [
+    assert ns_select(root, "//date/concat(@dateType, ':', text())") == [
         "Issued:2023-06-28",
         "Other:2023-08-11/2024-08-11",
         "Other:2023-10-10",
@@ -190,7 +195,7 @@ def test_dataset_metadata_download_datacite(admin_client, doi_dataset):
     ]
 
     # total file size
-    assert select(root, "//size/text()") == [
+    assert ns_select(root, "//size/text()") == [
         "3000 bytes",
     ]
 
@@ -206,12 +211,12 @@ def test_dataset_metadata_download_fairdata_datacite(admin_client):
     root = etree.XML(res.content)
 
     # Non-DOI persistent_identifier is stored as an <alternateIdentifier>
-    assert select(root, "//alternateIdentifier/concat(@alternateIdentifierType, ':', text())") == [
-        f"Metax dataset ID:{dataset.id}"
-    ]
+    assert ns_select(
+        root, "//alternateIdentifier/concat(@alternateIdentifierType, ':', text())"
+    ) == [f"Metax dataset ID:{dataset.id}"]
 
     # title
-    assert select(root, "//title/concat(@xml:lang, ':', text())") == [
+    assert ns_select(root, "//title/concat(@xml:lang, ':', text())") == [
         "en:Test draft",
     ]
 
@@ -228,7 +233,9 @@ def test_dataset_metadata_download_license_custom_url(admin_client):
     )
 
     root = etree.XML(res.content)
-    assert select(root, "//rightsList/rights/concat(@xml:lang, ':', @rightsURI, ':', text())") == [
+    assert ns_select(
+        root, "//rightsList/rights/concat(@xml:lang, ':', @rightsURI, ':', text())"
+    ) == [
         "en:https://example.com/license:Other",
         "fi:https://example.com/license:Muu",
     ]
@@ -252,7 +259,7 @@ def test_dataset_metadata_download_datacite_empty_fileset(admin_client, doi_data
     assert res.headers.get("Content-Disposition") == f"attachment; filename={id}-metadata.xml"
 
     root = etree.XML(res.content)
-    assert select(root, "//size/text()") == []
+    assert ns_select(root, "//size/text()") == []
 
 
 def test_dataset_metadata_download_datacite_no_rights(admin_client, doi_dataset):
@@ -262,7 +269,7 @@ def test_dataset_metadata_download_datacite_no_rights(admin_client, doi_dataset)
     assert res.status_code == 200
 
     root = etree.XML(res.content)
-    assert select(root, "//rights/text()") == []
+    assert ns_select(root, "//rights/text()") == []
 
 
 def test_dataset_metadata_download_datacite_unknown_other_identifier(admin_client, doi_dataset):
@@ -275,7 +282,7 @@ def test_dataset_metadata_download_datacite_unknown_other_identifier(admin_clien
     # no "Cites" relation because the identifier type is not known
     root = etree.XML(res.content)
     parts = "@relationType, ':', @relatedIdentifierType, ':', text()"
-    assert select(root, f"//relatedIdentifier/concat({parts})") == [
+    assert ns_select(root, f"//relatedIdentifier/concat({parts})") == [
         "IsIdenticalTo:URL:jeejee",  # assume URL as default type
         "Cites:DOI:https://doi.org/something",
     ]
