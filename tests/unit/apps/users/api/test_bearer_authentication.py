@@ -13,7 +13,6 @@ from rest_framework.test import APIClient, force_authenticate
 logger = logging.getLogger(__name__)
 from http.cookies import SimpleCookie
 
-
 @pytest.fixture
 def sso_authenticated_client(client, enable_sso, sso_session_teppo, get_sso_token):
     token = get_sso_token(sso_session_teppo)

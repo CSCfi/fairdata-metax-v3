@@ -131,34 +131,3 @@ REFERENCE_DATA_SOURCES = {
     **LOCAL_REFERENCE_DATA_SOURCES,
 }
 REFDATA_LANGUAGES = {"en", "fi", "sv", "und"}  # Languages to use from reference data
-ESSENTIAL_LANGUAGE_CHOICE_URLS = [
-    "http://lexvo.org/id/iso639-3/fin",
-    "http://lexvo.org/id/iso639-3/swe",
-    "http://lexvo.org/id/iso639-3/eng",
-]
-ESSENTIAL_FIELD_OF_SCIENCE_CHOICE_URLS = [
-    "http://www.yso.fi/onto/okm-tieteenala/ta5",
-    "http://www.yso.fi/onto/okm-tieteenala/ta113",
-    "http://www.yso.fi/onto/okm-tieteenala/ta114",
-    "http://www.yso.fi/onto/okm-tieteenala/ta116",
-    "http://www.yso.fi/onto/okm-tieteenala/ta213",
-    "http://www.yso.fi/onto/okm-tieteenala/ta216",
-    "http://www.yso.fi/onto/okm-tieteenala/ta218",
-    "http://www.yso.fi/onto/okm-tieteenala/ta519",
-    "http://www.yso.fi/onto/okm-tieteenala/ta1171",
-    "http://www.yso.fi/onto/okm-tieteenala/ta1172",
-    "http://www.yso.fi/onto/okm-tieteenala/ta6121",
-]
-ESSENTIAL_THEME_CHOICE_URLS = [
-    "http://www.yso.fi/onto/koko/p10508",
-    "http://www.yso.fi/onto/koko/p12270",
-    "http://www.yso.fi/onto/koko/p15609",
-    "http://www.yso.fi/onto/koko/p17611",
-    "http://www.yso.fi/onto/koko/p18634",
-    "http://www.yso.fi/onto/koko/p33412",
-    "http://www.yso.fi/onto/koko/p35434",
-    "http://www.yso.fi/onto/koko/p36051",
-    "http://www.yso.fi/onto/koko/p36416",
-    "http://www.yso.fi/onto/koko/p48324",
-    "http://www.yso.fi/onto/koko/p48334",
-]

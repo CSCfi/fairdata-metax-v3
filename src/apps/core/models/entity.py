@@ -4,6 +4,7 @@ from django.utils.translation import gettext as _
 
 from apps.common.copier import ModelCopier
 from apps.common.models import AbstractBaseModel
+from common.helpers import single_translation
 
 from .concepts import ResourceType
 
@@ -29,6 +30,14 @@ class Entity(AbstractBaseModel):
         null=True,
         blank=True,
     )
+
+    def __str__(self):
+        if self.title:
+            return single_translation(self.title)
+        elif self.description:
+            return single_translation(self.description)
+        else:
+            return str(self.id)
 
     class Meta(AbstractBaseModel.Meta):
         verbose_name_plural = "Entities"
