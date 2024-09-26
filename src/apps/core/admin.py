@@ -228,6 +228,7 @@ class LegacyDatasetAdmin(admin.ModelAdmin):
         "last_successful_migration",
     )
     readonly_fields = (
+        "id",
         "created",
         "modified",
         "v2_dataset_compatibility_diff",
