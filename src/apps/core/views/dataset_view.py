@@ -450,6 +450,7 @@ class DatasetViewSet(CommonModelViewSet):
         # and we know which datasets are in serialized datasets cache
         prefetches = queryset._prefetch_related_lookups
         queryset = queryset.prefetch_related(None)
+        queryset = queryset.prefetch_related(*Dataset.permissions_prefetch_fields)
 
         page = self.paginate_queryset(queryset)
 
@@ -484,6 +485,7 @@ class DatasetViewSet(CommonModelViewSet):
         # Defer prefetching until we know if dataset is in cache
         prefetches = queryset._prefetch_related_lookups
         queryset = queryset.prefetch_related(None)
+        queryset = queryset.prefetch_related(*Dataset.permissions_prefetch_fields)
 
         # Perform the lookup filtering.
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
