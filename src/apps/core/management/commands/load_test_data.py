@@ -19,7 +19,9 @@ class Command(BaseCommand):
             return
 
         language = factories.LanguageFactory()
-        data_catalog = factories.DataCatalogFactory(id="urn:nbn:fi:att:data-catalog-test")
+        data_catalog = factories.DataCatalogFactory(
+            id="urn:nbn:fi:att:data-catalog-test", allowed_pid_types=["URN", "DOI"]
+        )
         harvested_data_catalog = factories.DataCatalogFactory(
             id="urn:nbn:fi:att:data-catalog-harvested-test", harvested="True"
         )

@@ -1,5 +1,13 @@
 # data_catalog
 
+## PIDType
+
+### :::src.apps.core.models.data_catalog.PIDType
+
+## default_allowed_pid_types
+
+### :::src.apps.core.models.data_catalog.default_allowed_pid_types
+
 ## DataCatalog
 
 ### :::src.apps.core.models.data_catalog.DataCatalog

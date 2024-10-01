@@ -217,7 +217,11 @@ def test_put_datacatalog(admin_client, datacatalog_a_json, reference_data, data_
     )
     assert res1.status_code == 201
 
-    put_json = {"id": res1.data["id"], "title": {"en": "Put Catalog"}}
+    put_json = {
+        "id": res1.data["id"],
+        "title": {"en": "Put Catalog"},
+        "allowed_pid_types": ["URN", "external"],
+    }
     res2 = admin_client.put(
         reverse("datacatalog-detail", kwargs={"pk": res1.data["id"]}),
         put_json,

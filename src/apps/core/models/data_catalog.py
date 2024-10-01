@@ -1,5 +1,6 @@
 import json
 import uuid
+from typing import List
 
 from django.conf import settings
 from django.contrib.auth.models import Group
@@ -14,6 +15,16 @@ from apps.core.permissions import DataCatalogAccessPolicy
 from apps.users.models import MetaxUser
 
 STORAGE_SERVICE_CHOICES = [(s, s) for s in settings.STORAGE_SERVICE_FILE_STORAGES]
+
+
+class PIDType(models.TextChoices):
+    URN = "URN", "URN"
+    DOI = "DOI", "DOI"
+    EXTERNAL = "external", "External"
+
+
+def default_allowed_pid_types() -> List[PIDType]:
+    return [PIDType.EXTERNAL]
 
 
 class DataCatalog(AbstractBaseModel):
@@ -91,6 +102,15 @@ class DataCatalog(AbstractBaseModel):
         blank=True,
         help_text="Channels in which datasets in this catalog will be published.",
     )
+    allowed_pid_types = ArrayField(
+        models.CharField(max_length=16, choices=PIDType.choices),
+        default=default_allowed_pid_types,
+        blank=True,
+        help_text=(
+            "Persistent identifier types supported for datasets in catalog. "
+            "External PIDs are not managed by Metax."
+        ),
+    )
     history = HistoricalRecords(m2m_fields=(language,))
 
     def __str__(self):
@@ -99,6 +119,11 @@ class DataCatalog(AbstractBaseModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._admin_user_cache = {}  # Map of user.id -> can admin datasets
+
+    @property
+    def managed_pid_types(self):
+        """PID types that are allowed to be generated and managed by Metax."""
+        return [v for v in self.allowed_pid_types if v != PIDType.EXTERNAL]
 
     def _can_admin_datasets(self, user: MetaxUser) -> bool:
         return DataCatalogAccessPolicy().query_object_permission(

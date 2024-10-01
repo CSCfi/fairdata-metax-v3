@@ -29,5 +29,8 @@
     "en": "Contains datasets from Repotronic service",
     "fi": "Sisältää aineistoja Repotronic-palvelusta"
   },
-  "dataset_versioning_enabled": false
+  "dataset_versioning_enabled": false,
+  "allowed_pid_types": [
+    "external"
+  ]
 }

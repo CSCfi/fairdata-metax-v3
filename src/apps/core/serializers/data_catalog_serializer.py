@@ -55,4 +55,5 @@ class DataCatalogModelSerializer(CommonNestedModelSerializer):
             "allow_remote_resources",
             "storage_services",
             "publishing_channels",
+            "allowed_pid_types",
         )

@@ -293,6 +293,7 @@
     "dataset_groups_admin": ["ida"],
     "allow_remote_resources": false,
     "storage_services": ["ida"],
+    "allowed_pid_types": ["URN", "DOI"],
     "publishing_channels": ["etsin", "ttv"]
   },
   {
