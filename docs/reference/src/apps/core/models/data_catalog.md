@@ -4,6 +4,10 @@
 
 ### :::src.apps.core.models.data_catalog.PIDType
 
+## GeneratedPIDType
+
+### :::src.apps.core.models.data_catalog.GeneratedPIDType
+
 ## default_allowed_pid_types
 
 ### :::src.apps.core.models.data_catalog.default_allowed_pid_types

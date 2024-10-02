@@ -23,12 +23,16 @@ pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
 @pytest.fixture
 def catalog_datasets(reference_data):
     # Catalog allows fairdata users to create datasets and edit their own datasets
-    ida_catalog = factories.DataCatalogFactory(id="data-catalog-ida")
+    ida_catalog = factories.DataCatalogFactory(
+        id="data-catalog-ida", allowed_pid_types=["URN", "DOI"]
+    )
     fairdata_users, _ = Group.objects.get_or_create(name="fairdata_users")
     ida_catalog.dataset_groups_create.set([fairdata_users])
 
     # Catalog allows test service to create and edit any datasets
-    service_catalog = factories.DataCatalogFactory(id="data-catalog-test")
+    service_catalog = factories.DataCatalogFactory(
+        id="data-catalog-test", allowed_pid_types=["URN", "DOI"]
+    )
     service_group, _ = Group.objects.get_or_create(name="test")
     service_catalog.dataset_groups_create.set([service_group])
     service_catalog.dataset_groups_admin.set([service_group])

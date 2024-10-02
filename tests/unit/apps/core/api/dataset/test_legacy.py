@@ -10,7 +10,7 @@ pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.dataset, pyte
 
 
 def test_create_legacy_dataset(legacy_dataset_a):
-    assert legacy_dataset_a.status_code == 201
+    assert legacy_dataset_a.status_code == 201, legacy_dataset_a.data
 
 
 def test_create_same_legacy_dataset_twice(admin_client, legacy_dataset_a, legacy_dataset_a_json):
@@ -64,7 +64,9 @@ def test_delete_legacy_dataset(admin_client, legacy_dataset_a, legacy_dataset_a_
     assert LegacyDataset.available_objects.count() == 0
 
 
-def test_legacy_dataset_actors(admin_client, data_catalog, reference_data, legacy_dataset_a_json):
+def test_legacy_dataset_actors(
+    admin_client, data_catalog_att, reference_data, legacy_dataset_a_json
+):
     res = admin_client.post(
         reverse("migrated-dataset-list"), legacy_dataset_a_json, content_type="application/json"
     )
@@ -119,7 +121,7 @@ def test_legacy_dataset_actors(admin_client, data_catalog, reference_data, legac
 
 
 def test_legacy_dataset_actors_invalid_refdata_parent(
-    admin_client, data_catalog, reference_data, legacy_dataset_a_json
+    admin_client, data_catalog_att, reference_data, legacy_dataset_a_json
 ):
     """Reference organization cannot be child of non-reference organization."""
     legacy_dataset_a_json["dataset_json"]["research_dataset"]["creator"] = {
@@ -144,7 +146,7 @@ def test_legacy_dataset_actors_invalid_refdata_parent(
 
 
 def test_legacy_dataset_relation(
-    admin_client, data_catalog, reference_data, legacy_dataset_a_json
+    admin_client, data_catalog_att, reference_data, legacy_dataset_a_json
 ):
     res = admin_client.post(
         reverse("migrated-dataset-list"), legacy_dataset_a_json, content_type="application/json"

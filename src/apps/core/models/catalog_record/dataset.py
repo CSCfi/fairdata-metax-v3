@@ -21,7 +21,7 @@ from apps.common.models import AbstractBaseModel
 from apps.core.models.access_rights import AccessRights, AccessTypeChoices
 from apps.core.models.catalog_record.dataset_permissions import DatasetPermissions
 from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
-from apps.core.models.data_catalog import DataCatalog
+from apps.core.models.data_catalog import DataCatalog, GeneratedPIDType
 from apps.core.models.mixins import V2DatasetMixin
 from apps.core.services.pid_ms_client import PIDMSClient, ServiceUnavailableError
 from apps.files.models import File
@@ -143,16 +143,13 @@ class Dataset(V2DatasetMixin, CatalogRecord):
     cumulation_ended = models.DateTimeField(null=True, blank=True)
     last_cumulative_addition = models.DateTimeField(null=True, blank=True)
 
-    class PIDTypes(models.TextChoices):
-        URN = "URN", _("URN")
-        DOI = "DOI", _("DOI")
-
     generate_pid_on_publish = models.CharField(
         max_length=4,
-        choices=PIDTypes.choices,
+        choices=GeneratedPIDType.choices,
         null=True,
         blank=True,
     )
+    pid_generated_by_fairdata = models.BooleanField(default=False)
 
     class StateChoices(models.TextChoices):
         PUBLISHED = "published", _("Published")
@@ -298,8 +295,13 @@ class Dataset(V2DatasetMixin, CatalogRecord):
     )
 
     def __init__(self, *args, **kwargs):
-        if kwargs.pop("_saving_legacy", None):
-            self._saving_legacy = True
+        """Init Dataset instance.
+
+        Arguments:
+            _saving_legacy (bool): Skip some validation on save when enabled.
+        """
+        if val := kwargs.pop("_saving_legacy", None):
+            self._saving_legacy = val
         super().__init__(*args, **kwargs)
 
     def has_permission_to_edit(self, user: MetaxUser) -> bool:
@@ -412,6 +414,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             created=timezone.now(),
             modified=timezone.now(),
             persistent_identifier=None,
+            pid_generated_by_fairdata=False,
             draft_of=None,
             api_version=3,
         )
@@ -442,6 +445,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             draft_of=self,
             draft_revision=0,
             persistent_identifier=f"draft:{self.persistent_identifier}",
+            pid_generated_by_fairdata=self.pid_generated_by_fairdata,
         )
         copy.create_snapshot(created=True)
         return copy
@@ -618,35 +622,35 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         else:
             return False
 
-    def _can_create_urn(self):
-        return self.generate_pid_on_publish == self.PIDTypes.URN
-
     def set_update_reason(self, reason: str):
         """Set change reason used by simple-history."""
         self._change_reason = reason
 
     def create_persistent_identifier(self):
-        if self.persistent_identifier != None:
-            logger.info("Dataset already has a PID. PID is not created")
-            return
+        if self.persistent_identifier:
+            raise ValueError("Dataset already has a PID. PID is not created")
         if self.state == self.StateChoices.DRAFT:
-            logger.info("State is DRAFT. PID is not created")
-            return
-        if self.generate_pid_on_publish == self.PIDTypes.URN and self._can_create_urn():
-            dataset_id = self.id
-            try:
-                pid = PIDMSClient().createURN(dataset_id)
-                self.persistent_identifier = pid
-            except ServiceUnavailableError as e:
-                e.detail = f"Error when creating persistent identifier. Please try again later."
-                raise e
-        if self.generate_pid_on_publish == self.PIDTypes.DOI:
-            try:
-                pid = PIDMSClient().create_doi(self.id)
-                self.persistent_identifier = pid
-            except ServiceUnavailableError as e:
-                e.detail = f"Error when creating persistent identifier. Please try again later."
-                raise e
+            raise ValueError("Dataset is a draft. PID is not created")
+
+        self.validate_pid_fields()
+        dataset_id = self.id
+        pid = None
+        pid_type = self.generate_pid_on_publish
+        try:
+            if pid_type == GeneratedPIDType.URN:
+                pid = PIDMSClient().create_urn(dataset_id)
+            elif pid_type == GeneratedPIDType.DOI:
+                pid = PIDMSClient().create_doi(dataset_id)
+            else:
+                raise ValueError(f"Unknown PID type '{pid_type}'. Cannot create PID.")
+        except ServiceUnavailableError as e:
+            logger.error(f"Error creating persistent identifier: {e}")
+            e.detail = "Error when creating persistent identifier. Please try again later."
+            raise e
+
+        if pid:
+            self.persistent_identifier = pid
+            self.pid_generated_by_fairdata = True
 
     def publish(self):
         """Publishes the dataset.
@@ -664,7 +668,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
                 return original
 
         self.state = self.StateChoices.PUBLISHED
-        if not self.persistent_identifier:
+        if self.generate_pid_on_publish and not self.persistent_identifier:
             self.validate_published(require_pid=False)  # Don't create pid for invalid dataset
             self.create_persistent_identifier()
 
@@ -690,12 +694,18 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         actor_errors = []
         access_rights_errors = []
 
-        if not self.data_catalog:
+        catalog: DataCatalog = self.data_catalog
+        if not catalog:
             errors["data_catalog"] = _("Dataset has to have a data catalog when publishing.")
         if require_pid and not self.persistent_identifier:
             errors["persistent_identifier"] = _(
                 "Dataset has to have a persistent identifier when publishing."
             )
+            if catalog and catalog.allow_generated_pid and not catalog.allow_external_pid:
+                errors["generate_pid_on_publish"] = _(
+                    "Value is required by the catalog when publishing. "
+                )
+
         if not self.access_rights:
             errors["access_rights"] = _("Dataset has to have access rights when publishing.")
         if not self.description:
@@ -774,7 +784,8 @@ class Dataset(V2DatasetMixin, CatalogRecord):
                 raise ValidationError(
                     {
                         "persistent_identifier": _(
-                            "Data catalog is not allowed to have multiple datasets with same value."
+                            "Data catalog is not allowed to have "
+                            "multiple datasets with the same value."
                         )
                     }
                 )
@@ -797,8 +808,41 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             )
             raise TopLevelValidationError({"fileset": {"storage_service": err_msg}})
 
+    def _validate_pid_type(self):
+        """Check that requested PID generation is allowed by the catalog."""
+        pid_type = self.generate_pid_on_publish
+        data_catalog: DataCatalog = self.data_catalog
+        if data_catalog and pid_type:
+            managed_pid_types = data_catalog.managed_pid_types
+            msg = None
+            if not managed_pid_types:
+                msg = "PID generation is not supported for the catalog."
+            if pid_type not in managed_pid_types:
+                if managed_pid_types:
+                    msg = (
+                        f"'{pid_type}' is not a valid choice for catalog {data_catalog.id}. "
+                        f"Supported values: {', '.join(managed_pid_types)}"
+                    )
+                else:
+                    msg = "The catalog does not allow PID generation."
+            if msg:
+                raise ValidationError({"generate_pid_on_publish": msg})
+
+    def _validate_pid(self):
+        """Check that PID is allowed."""
+        data_catalog: DataCatalog = self.data_catalog
+        if self.persistent_identifier and not data_catalog:
+            msg = "Can't assign persistent_identifier if data_catalog isn't given."
+            raise ValidationError({"persistent_identifier": msg})
+
+    def validate_pid_fields(self):
+        self._validate_pid_type()
+        self._validate_pid()
+
     def validate_catalog(self):
         """Data catalog specific validation of dataset fields."""
+        self.validate_pid_fields()
+
         if self._state.adding:
             return  # Reverse relations are not yet available
 
@@ -816,8 +860,8 @@ class Dataset(V2DatasetMixin, CatalogRecord):
 
     def save(self, *args, **kwargs):
         """Saves the dataset and increments the draft or published revision number as needed."""
-        self.validate_unique_fields()
         self.validate_catalog()
+        self.validate_unique_fields()
         if not getattr(self, "_saving_legacy", False):
             self._update_cumulative_state()
 

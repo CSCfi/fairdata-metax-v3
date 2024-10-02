@@ -19,8 +19,9 @@ def test_create_harvested_dataset_with_PID(
     dataset = dataset_a_json
     dataset["data_catalog"] = datacatalog_harvested_json["id"]
     dataset["persistent_identifier"] = "some_pid"
+    dataset["generate_pid_on_publish"] = None
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
-    assert res.status_code == 201
+    assert res.status_code == 201, res.data
     assert res.json()["persistent_identifier"] == "some_pid"
     ds_id = res.json()["id"]
 
@@ -47,10 +48,11 @@ def test_create_harvested_dataset_without_PID(
     dataset = dataset_a_json
     dataset["data_catalog"] = datacatalog_harvested_json["id"]
     dataset.pop("persistent_identifier", None)
+    dataset.pop("generate_pid_on_publish", None)
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
     assert res.status_code == 400
     assert (
-        "Dataset in a harvested catalog has to have a persistent identifier"
+        "Dataset has to have a persistent identifier when publishing"
         in res.json()["persistent_identifier"]
     )
 
@@ -155,13 +157,13 @@ def test_create_draft_dataset(admin_client, dataset_a_json, data_catalog, refere
     assert pid2 != None
 
 
-def mock_createURN_fail(self):
+def mock_create_urn_fail(self):
     raise (ServiceUnavailableError("PID creation failed"))
 
 
 @pytest.fixture()
-def patch_mock_createURN_fail():
-    with mock.patch.object(PIDMSClient, "createURN", mock_createURN_fail) as _fixture:
+def patch_mock_create_urn_fail():
+    with mock.patch.object(PIDMSClient, "create_urn", mock_create_urn_fail) as _fixture:
         yield _fixture
 
 
@@ -220,11 +222,12 @@ def test_create_dataset_with_existing_pid(
 ):
     dataset_a_json["data_catalog"] = datacatalog_harvested_json["id"]
     dataset_a_json["persistent_identifier"] = "some_pid"
+    dataset_a_json["generate_pid_on_publish"] = None
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 201
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 400
-    assert "Data catalog is not allowed to have multiple datasets with same value" in str(
+    assert "Data catalog is not allowed to have multiple datasets with the same value" in str(
         res.data["persistent_identifier"]
     )
 
@@ -238,6 +241,7 @@ def test_create_dataset_with_existing_soft_deleted_pid(
 ):
     dataset_a_json["data_catalog"] = datacatalog_harvested_json["id"]
     dataset_a_json["persistent_identifier"] = "some_pid"
+    dataset_a_json["generate_pid_on_publish"] = None
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 201
     ds_id = res.json().get("id", None)
@@ -247,7 +251,7 @@ def test_create_dataset_with_existing_soft_deleted_pid(
 
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 400
-    assert "Data catalog is not allowed to have multiple datasets with same value" in str(
+    assert "Data catalog is not allowed to have multiple datasets with the same value" in str(
         res.data["persistent_identifier"]
     )
 
@@ -261,6 +265,7 @@ def test_create_dataset_with_previously_hard_deleted_pid(
 ):
     dataset_a_json["data_catalog"] = datacatalog_harvested_json["id"]
     dataset_a_json["persistent_identifier"] = "some_pid"
+    dataset_a_json["generate_pid_on_publish"] = None
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 201
     ds_id = res.json().get("id", None)
@@ -280,6 +285,7 @@ def test_create_dataset_without_generate_pid_on_publish_and_pid_fails(
     dataset = dataset_a_json
     dataset.pop("generate_pid_on_publish", None)
     dataset.pop("persistent_identifier", None)
+    dataset.pop("generate_pid_on_publish", None)
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
     assert res.status_code != 201
 

@@ -75,7 +75,10 @@ def datacatalog_without_versioning() -> DataCatalog:
         "en": "Datasets with versioning disabled",
     }
     return factories.DataCatalogFactory(
-        id=identifier, title=title, dataset_versioning_enabled=False
+        id=identifier,
+        title=title,
+        dataset_versioning_enabled=False,
+        allowed_pid_types=["URN", "DOI"],
     )
 
 

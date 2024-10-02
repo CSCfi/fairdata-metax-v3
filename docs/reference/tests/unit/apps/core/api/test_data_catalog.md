@@ -60,3 +60,15 @@
 
 ### :::tests.unit.apps.core.api.test_data_catalog.test_patch_datacatalog
 
+## test_add_publishing_channel_to_datacatalog
+
+### :::tests.unit.apps.core.api.test_data_catalog.test_add_publishing_channel_to_datacatalog
+
+## test_create_datacatalog_with_multiple_publishing_channels
+
+### :::tests.unit.apps.core.api.test_data_catalog.test_create_datacatalog_with_multiple_publishing_channels
+
+## test_try_invalid_publishing_channel_in_datacatalog
+
+### :::tests.unit.apps.core.api.test_data_catalog.test_try_invalid_publishing_channel_in_datacatalog
+

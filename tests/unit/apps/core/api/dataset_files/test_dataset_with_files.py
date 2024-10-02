@@ -141,11 +141,12 @@ def test_dataset_post_dataset_with_files_new_version(
         dataset_json_with_files_published,
         content_type="application/json",
     )
-    original_id = res.data["id"]
     assert res.status_code == 201
+    original_id = res.data["id"]
 
     # Create new version of dataset with files
     res = admin_client.post(f"/v3/datasets/{res.data['id']}/new-version")
+    assert res.status_code == 201
     new_id = res.data["id"]
     assert new_id != original_id
 
@@ -159,6 +160,7 @@ def test_dataset_post_dataset_with_files_new_version(
             "files": [{"pathname": "/rootfile.txt", "dataset_metadata": {"title": "file"}}],
         },
         res.json(),
+        ignore=["generate_pid_on_publish"],
     )
 
     # Check that versions have separate but identical file sets

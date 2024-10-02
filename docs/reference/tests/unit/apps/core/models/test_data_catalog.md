@@ -8,3 +8,7 @@
 
 ### :::tests.unit.apps.core.models.test_data_catalog.test_delete_data_catalog_with_foreign_keys
 
+## test_data_catalog_managed_pid_types
+
+### :::tests.unit.apps.core.models.test_data_catalog.test_data_catalog_managed_pid_types
+

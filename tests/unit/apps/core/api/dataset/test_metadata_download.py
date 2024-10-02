@@ -38,7 +38,7 @@ def test_dataset_metadata_download_json(
     id = dataset_a.dataset_id
     res = admin_client.get(f"/v3/datasets/{id}/metadata-download?format=json")
     assert res.status_code == 200
-    assert_nested_subdict(dataset_a_json, res.data)
+    assert_nested_subdict(dataset_a_json, res.data, ignore=["generate_pid_on_publish"])
     assert res.headers.get("Content-Disposition") == f"attachment; filename={id}-metadata.json"
 
 
@@ -61,7 +61,7 @@ def test_dataset_metadata_download_json_with_versions(
     assert update.status_code == 200
     res = admin_client.get(f"/v3/datasets/{new_id}/metadata-download?format=json")
     assert res.status_code == 200
-    assert_nested_subdict(dataset_a_json, res.data)
+    assert_nested_subdict(dataset_a_json, res.data, ignore=["generate_pid_on_publish"])
     assert res.headers.get("Content-Disposition") == f"attachment; filename={new_id}-metadata.json"
 
 
@@ -152,7 +152,7 @@ def test_dataset_metadata_download_datacite(admin_client, doi_dataset):
     ]
 
     # language (only one allowed)
-    assert ns_select(root, f"/resource/language/text()") == ["fi"]
+    assert ns_select(root, "/resource/language/text()") == ["fi"]
 
     # licenses
     assert ns_select(root, "//rightsList/rights/concat(@xml:lang, ':', text())") == [

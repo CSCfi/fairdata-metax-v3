@@ -194,6 +194,24 @@ def data_catalog(fairdata_users_group, service_group) -> DataCatalog:
 
 
 @pytest.fixture
+def data_catalog_att(fairdata_users_group, service_group) -> DataCatalog:
+    identifier = "urn:nbn:fi:att:data-catalog-att"
+    title = {
+        "en": "Fairdata ATT datasets",
+        "fi": "Fairdata ATT-aineistot",
+    }
+    catalog = factories.DataCatalogFactory(
+        id=identifier,
+        title=title,
+        dataset_versioning_enabled=True,
+        allow_remote_resources=True,
+        allowed_pid_types=["URN"],
+    )
+    catalog.dataset_groups_create.set([fairdata_users_group, service_group])
+    return catalog
+
+
+@pytest.fixture
 def data_catalog_harvested(fairdata_users_group, service_group) -> DataCatalog:
     identifier = "urn:nbn:fi:att:data-catalog-harvested"
     title = {

@@ -16,6 +16,7 @@ pytestmark = [pytest.mark.django_db]
 def remote_dataset_json(dataset_a_json):
     dataset = {
         **dataset_a_json,
+        "data_catalog": "urn:nbn:fi:att:data-catalog-att",
         "remote_resources": [
             {
                 "title": {"en": "Remote Resource"},
@@ -33,23 +34,25 @@ def remote_dataset_json(dataset_a_json):
     return dataset
 
 
-def test_remote_resources(admin_client, remote_dataset_json, data_catalog, reference_data):
+def test_remote_resources(admin_client, remote_dataset_json, data_catalog_att, reference_data):
     resp = admin_client.post("/v3/datasets", remote_dataset_json, content_type="application/json")
     assert resp.status_code == 201
     assert_nested_subdict(remote_dataset_json["remote_resources"], resp.json()["remote_resources"])
 
 
 def test_remote_resources_not_allowed(
-    admin_client, remote_dataset_json, data_catalog, reference_data
+    admin_client, remote_dataset_json, data_catalog_att, reference_data
 ):
-    data_catalog.allow_remote_resources = False
-    data_catalog.save()
+    data_catalog_att.allow_remote_resources = False
+    data_catalog_att.save()
     resp = admin_client.post("/v3/datasets", remote_dataset_json, content_type="application/json")
     assert resp.status_code == 400
     assert "does not allow remote resources" in resp.json()["remote_resources"]
 
 
-def test_remote_resources_update(admin_client, remote_dataset_json, data_catalog, reference_data):
+def test_remote_resources_update(
+    admin_client, remote_dataset_json, data_catalog_att, reference_data
+):
     resp = admin_client.post("/v3/datasets", remote_dataset_json, content_type="application/json")
     assert resp.status_code == 201
     patch_json = {
@@ -73,7 +76,7 @@ def test_remote_resources_update(admin_client, remote_dataset_json, data_catalog
 
 
 def test_remote_resources_missing_fields(
-    admin_client, remote_dataset_json, data_catalog, reference_data
+    admin_client, remote_dataset_json, data_catalog_att, reference_data
 ):
     del remote_dataset_json["remote_resources"][0]["title"]
     del remote_dataset_json["remote_resources"][0]["use_category"]
@@ -84,7 +87,7 @@ def test_remote_resources_missing_fields(
 
 
 def test_remote_resources_invalid_media_type(
-    admin_client, remote_dataset_json, data_catalog, reference_data
+    admin_client, remote_dataset_json, data_catalog_att, reference_data
 ):
     remote_dataset_json["remote_resources"][0]["mediatype"] = "kuvatiedosto"
     resp = admin_client.post("/v3/datasets", remote_dataset_json, content_type="application/json")
@@ -95,7 +98,7 @@ def test_remote_resources_invalid_media_type(
 
 
 def test_remote_resources_and_files(
-    admin_client, remote_dataset_json, data_catalog, reference_data
+    admin_client, remote_dataset_json, data_catalog_att, reference_data
 ):
     FileStorageFactory(storage_service="ida", csc_project="project")
     remote_dataset_json["fileset"] = {"storage_service": "ida", "csc_project": "project"}
@@ -107,7 +110,7 @@ def test_remote_resources_and_files(
 
 
 def test_remote_resources_checksum(
-    admin_client, remote_dataset_json, data_catalog, reference_data
+    admin_client, remote_dataset_json, data_catalog_att, reference_data
 ):
     remote_dataset_json["remote_resources"][0]["checksum"] = "sha1:12345fff"
     resp = admin_client.post("/v3/datasets", remote_dataset_json, content_type="application/json")

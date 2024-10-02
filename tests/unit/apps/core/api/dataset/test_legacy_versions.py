@@ -4,7 +4,12 @@ from apps.core.models import Dataset, DatasetVersions
 
 
 def test_create_legacy_datasets_with_versions(
-    admin_client, legacy_dataset_a_json, legacy_dataset_b_json, reference_data, data_catalog
+    admin_client,
+    legacy_dataset_a_json,
+    legacy_dataset_b_json,
+    reference_data,
+    data_catalog,
+    data_catalog_att,
 ):
     """Datasets that are together in a dataset_version_set should be in the same DatasetVersions."""
     legacy_dataset_a_json["dataset_json"]["dataset_version_set"] = [
@@ -13,7 +18,7 @@ def test_create_legacy_datasets_with_versions(
     res = admin_client.post(
         "/v3/migrated-datasets", legacy_dataset_a_json, content_type="application/json"
     )
-    assert res.status_code == 201
+    assert res.status_code == 201, res.data
     assert DatasetVersions.objects.count() == 1
     dataset_a = Dataset.objects.get(id=legacy_dataset_a_json["dataset_json"]["identifier"])
     dataset_a_versions = dataset_a.dataset_versions_id
@@ -42,7 +47,12 @@ def test_create_legacy_datasets_with_versions(
 
 
 def test_create_legacy_datasets_with_versions_reverse(
-    admin_client, legacy_dataset_a_json, legacy_dataset_b_json, reference_data, data_catalog
+    admin_client,
+    legacy_dataset_a_json,
+    legacy_dataset_b_json,
+    reference_data,
+    data_catalog,
+    data_catalog_att,
 ):
     """Reversing Dataset insertion order should not affect resulting DatasetVersions."""
     legacy_dataset_b_json["dataset_json"]["dataset_version_set"] = [
@@ -80,7 +90,12 @@ def test_create_legacy_datasets_with_versions_reverse(
 
 
 def test_create_legacy_datasets_with_versions_disjoint(
-    admin_client, legacy_dataset_a_json, legacy_dataset_b_json, reference_data, data_catalog
+    admin_client,
+    legacy_dataset_a_json,
+    legacy_dataset_b_json,
+    reference_data,
+    data_catalog,
+    data_catalog_att,
 ):
     """Datasets that are not together in a dataset_version_set should be in separate DatasetVersions."""
     legacy_dataset_a_json["dataset_json"]["dataset_version_set"] = [
@@ -121,7 +136,12 @@ def test_create_legacy_datasets_with_versions_disjoint(
 
 
 def test_create_legacy_dataset_with_no_version_set(
-    admin_client, legacy_dataset_a_json, legacy_dataset_b_json, reference_data, data_catalog
+    admin_client,
+    legacy_dataset_a_json,
+    legacy_dataset_b_json,
+    reference_data,
+    data_catalog,
+    data_catalog_att,
 ):
     """Datasets should get a DatasetVersions even if it has no dataset_version_set."""
     legacy_dataset_a_json["dataset_json"]["dataset_version_set"] = None

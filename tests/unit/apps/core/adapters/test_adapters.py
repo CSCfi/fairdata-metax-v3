@@ -79,6 +79,7 @@ pytestmark = [pytest.mark.adapter]
 @pytest.mark.django_db
 def test_v2_to_v3_dataset_conversion(
     data_catalog,
+    data_catalog_att,
     funder_type_reference_data,
     license_reference_data,
     test_file_path,

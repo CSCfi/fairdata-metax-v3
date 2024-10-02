@@ -138,7 +138,7 @@ def dataset_actor_a(dataset_a):
 
 
 @pytest.fixture
-def legacy_dataset_a(admin_client, data_catalog, reference_data, legacy_dataset_a_json):
+def legacy_dataset_a(admin_client, data_catalog_att, reference_data, legacy_dataset_a_json):
     return admin_client.post(
         reverse("migrated-dataset-list"), legacy_dataset_a_json, content_type="application/json"
     )

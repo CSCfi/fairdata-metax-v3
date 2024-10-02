@@ -23,7 +23,7 @@ def test_create_dataset(admin_client, dataset_a_json, dataset_signal_handlers):
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 201
     assert_nested_subdict({"user": "admin", "organization": "admin"}, res.data["metadata_owner"])
-    assert_nested_subdict(dataset_a_json, res.data)
+    assert_nested_subdict(dataset_a_json, res.data, ignore=["generate_pid_on_publish"])
     assert res.data["metadata_repository"] == "Fairdata"  # Constant value
     dataset_signal_handlers.assert_call_counts(created=1, updated=0)
 
@@ -34,9 +34,10 @@ def test_update_dataset(admin_client, dataset_a_json, dataset_b_json, dataset_si
     dataset_signal_handlers.assert_call_counts(created=1, updated=0)
     dataset_signal_handlers.reset()
     id = res.data["id"]
+    dataset_b_json["persistent_identifier"] = res.data["persistent_identifier"]
     res = admin_client.put(f"/v3/datasets/{id}", dataset_b_json, content_type="application/json")
     assert res.status_code == 200
-    assert_nested_subdict(dataset_b_json, res.data)
+    assert_nested_subdict(dataset_b_json, res.data, ignore=["generate_pid_on_publish"])
     dataset_signal_handlers.assert_call_counts(created=0, updated=1)
 
 
@@ -53,12 +54,14 @@ def test_update_dataset_with_project(
 def test_filter_pid(
     admin_client, dataset_a_json, dataset_b_json, datacatalog_harvested_json, reference_data
 ):
+    dataset_a_json["generate_pid_on_publish"] = None
+    dataset_b_json["generate_pid_on_publish"] = None
     dataset_a_json["persistent_identifier"] = "some_pid"
     dataset_b_json["persistent_identifier"] = "other_pid"
     dataset_a_json["data_catalog"] = datacatalog_harvested_json["id"]
     dataset_b_json["data_catalog"] = datacatalog_harvested_json["id"]
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
-    assert res.status_code == 201
+    assert res.status_code == 201, res.data
     res = admin_client.post("/v3/datasets", dataset_b_json, content_type="application/json")
     assert res.status_code == 201
     res = admin_client.get("/v3/datasets?persistent_identifier=some_pid")
@@ -68,12 +71,16 @@ def test_filter_pid(
 def test_search_pid(
     admin_client, dataset_a_json, dataset_b_json, datacatalog_harvested_json, reference_data
 ):
+    dataset_a_json["generate_pid_on_publish"] = None
+    dataset_b_json["generate_pid_on_publish"] = None
     dataset_a_json["persistent_identifier"] = "some_pid"
-    dataset_b_json.pop("persistent_identifier", None)
+    dataset_b_json["persistent_identifier"] = "anotherpid"
     dataset_a_json["data_catalog"] = datacatalog_harvested_json["id"]
     dataset_b_json["data_catalog"] = datacatalog_harvested_json["id"]
-    admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
-    admin_client.post("/v3/datasets", dataset_b_json, content_type="application/json")
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    res = admin_client.post("/v3/datasets", dataset_b_json, content_type="application/json")
+    assert res.status_code == 201
     res = admin_client.get("/v3/datasets?search=some_pid")
     assert res.data["count"] == 1
 
@@ -145,7 +152,7 @@ def test_delete_dataset(admin_client, dataset_a_json, data_catalog, reference_da
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     id = res.data["id"]
     assert res.status_code == 201
-    assert_nested_subdict(dataset_a_json, res.data)
+    assert_nested_subdict(dataset_a_json, res.data, ignore=["generate_pid_on_publish"])
     res = admin_client.delete(f"/v3/datasets/{id}")
     assert res.status_code == 204
 
@@ -157,7 +164,7 @@ def test_get_removed_dataset(admin_client, dataset_a_json, data_catalog, referen
     id = res1.data["id"]
     res2 = admin_client.get(f"/v3/datasets/{id}")
     assert res2.status_code == 200
-    assert_nested_subdict(dataset_a_json, res2.data)
+    assert_nested_subdict(dataset_a_json, res2.data, ignore=["generate_pid_on_publish"])
 
     # delete the dataset...
     res3 = admin_client.delete(f"/v3/datasets/{id}")
@@ -170,28 +177,37 @@ def test_get_removed_dataset(admin_client, dataset_a_json, data_catalog, referen
     # 2. can be found with the query parameter
     res5 = admin_client.get(f"/v3/datasets/{id}?include_removed=True")
     assert res5.status_code == 200
-    assert_nested_subdict(dataset_a_json, res5.data)
+    assert_nested_subdict(dataset_a_json, res5.data, ignore=["generate_pid_on_publish"])
 
 
 def test_list_datasets_with_ordering(
     admin_client, dataset_a_json, dataset_b_json, data_catalog, reference_data
 ):
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
     dataset_a_id = res.data["id"]
-    admin_client.post("/v3/datasets", dataset_b_json, content_type="application/json")
-    admin_client.put(
+    dataset_a_pid = res.data["persistent_identifier"]
+    res = admin_client.post("/v3/datasets", dataset_b_json, content_type="application/json")
+    assert res.status_code == 201
+    dataset_a_json["persistent_identifier"] = dataset_a_pid
+    res = admin_client.put(
         f"/v3/datasets/{dataset_a_id}",
         dataset_a_json,
         content_type="application/json",
     )
+    assert res.status_code == 200, res.data
     res = admin_client.get("/v3/datasets?ordering=created")
     assert_nested_subdict(
-        {0: dataset_a_json, 1: dataset_b_json}, dict(enumerate((res.data["results"])))
+        {0: dataset_a_json, 1: dataset_b_json},
+        dict(enumerate((res.data["results"]))),
+        ignore=["generate_pid_on_publish"],
     )
 
     res = admin_client.get("/v3/datasets?ordering=modified")
     assert_nested_subdict(
-        {0: dataset_b_json, 1: dataset_a_json}, dict(enumerate((res.data["results"])))
+        {0: dataset_b_json, 1: dataset_a_json},
+        dict(enumerate((res.data["results"]))),
+        ignore=["generate_pid_on_publish"],
     )
 
 
@@ -292,6 +308,7 @@ def test_put_dataset_by_user(
     user = res.data["metadata_owner"]["user"]
 
     # metadata owner should remain unchanged by put
+    dataset_a_json["persistent_identifier"] = res.data["persistent_identifier"]
     res = user_client.put(
         f"/v3/datasets/{res.data['id']}", dataset_a_json, content_type="application/json"
     )
@@ -426,7 +443,7 @@ def test_update_dataset_with_other_identifiers(
         {"notation": "updated_bar"},
         {"old_notation": "updated_foo", "notation": "updated_baz"},
     ]
-    res = admin_client.put(
+    res = admin_client.patch(
         f"/v3/datasets/{ds_id}", dataset_a_json, content_type="application/json"
     )
     assert res.status_code == 200
@@ -535,7 +552,7 @@ def test_dataset_restricted(admin_client, dataset_a_json, reference_data, data_c
     ]
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 201
-    assert_nested_subdict(dataset_a_json, res.json())
+    assert_nested_subdict(dataset_a_json, res.json(), ignore=["generate_pid_on_publish"])
 
 
 def test_create_dataset_require_data_catalog(
@@ -849,41 +866,16 @@ def test_missing_required_fields(
             }
         ],
     }
+
+    # actors[].organization
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
     assert res.status_code == 400
     assert (
-        "If data catalog is not harvested and dataset is published, generate_pid_on_publish needs to be given"
-        in str(res.data["generate_pid_on_publish"])
-    )
-
-    # data_catalog(harvested), access_rights, description, actors
-    harvested_dataset = {**dataset, "data_catalog": "urn:nbn:fi:att:data-catalog-harvested"}
-    harvested_res = admin_client.post(
-        "/v3/datasets", harvested_dataset, content_type="application/json"
-    )
-    assert harvested_res.status_code == 400
-    assert "Dataset in a harvested catalog has to have a persistent identifier" in str(
-        harvested_res.data["persistent_identifier"]
-    )
-
-    # ida-catalog: generate_pid_on_publish
-    dataset = {**dataset, "generate_pid_on_publish": "URN"}
-    res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
-
-    # harvested_catalog: persistent_identifier
-    harvested_dataset = {**harvested_dataset, "persistent_identifier": "PID"}
-    harvested_res = admin_client.post(
-        "/v3/datasets", harvested_dataset, content_type="application/json"
-    )
-    assert res.status_code == harvested_res.status_code == 400
-    assert (
         str(res.data["actors"][0]["organization"])
-        == str(harvested_res.data["actors"][0]["organization"])
+        == str(res.data["actors"][0]["organization"])
         == "This field is required"
     )
 
-    # continue with ida-dataset
-    # actor organization
     dataset = {
         **dataset,
         "actors": [
@@ -893,13 +885,41 @@ def test_missing_required_fields(
             }
         ],
     }
+
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
     assert res.status_code == 400
     assert "Dataset has to have a license when publishing." in str(res.data["access_rights"])
 
+    # access_rights.license
     dataset["access_rights"]["license"] = [
         {"url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0"}
     ]
+
+    res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
+    assert res.status_code == 400
+    assert "required by the catalog when publishing" in str(res.data["generate_pid_on_publish"])
+
+    # data_catalog(harvested), access_rights, description, actors, license
+    harvested_dataset = {**dataset, "data_catalog": "urn:nbn:fi:att:data-catalog-harvested"}
+    harvested_res = admin_client.post(
+        "/v3/datasets", harvested_dataset, content_type="application/json"
+    )
+
+    assert harvested_res.status_code == 400
+    assert "Dataset has to have a persistent identifier" in str(
+        harvested_res.data["persistent_identifier"]
+    )
+
+    # harvested_catalog: persistent_identifier
+    harvested_dataset = {**harvested_dataset, "persistent_identifier": "PID"}
+    harvested_res = admin_client.post(
+        "/v3/datasets", harvested_dataset, content_type="application/json"
+    )
+    assert harvested_res.status_code == 201
+
+    # continue with ida-dataset
+    # ida-catalog: pid_type
+    dataset = {**dataset, "generate_pid_on_publish": "URN"}
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
     assert res.status_code == 201
 

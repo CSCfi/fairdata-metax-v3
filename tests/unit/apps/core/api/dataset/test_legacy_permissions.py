@@ -27,7 +27,9 @@ def create_editor_json(user_id, modified=None, removed=False):
     }
 
 
-def test_update_editors(admin_client, legacy_dataset_a_json, license_reference_data):
+def test_update_editors(
+    admin_client, data_catalog_att, legacy_dataset_a_json, license_reference_data
+):
     """Test updating editors in legacy dataset."""
     dataset_id = legacy_dataset_a_json["dataset_json"]["identifier"]
     legacy_dataset_a_json["dataset_json"]["editor_permissions"] = {
@@ -58,7 +60,11 @@ def test_update_editors(admin_client, legacy_dataset_a_json, license_reference_d
 
 
 def test_create_legacy_datasets_with_shared_permissions(
-    admin_client, legacy_dataset_a_json, legacy_dataset_b_json, license_reference_data
+    admin_client,
+    data_catalog_att,
+    legacy_dataset_a_json,
+    legacy_dataset_b_json,
+    license_reference_data,
 ):
     """Test creating multiple legacy datasets that share the same EditorPermissions instance."""
     legacy_dataset_a_json["dataset_json"]["editor_permissions"] = {
@@ -109,7 +115,9 @@ def test_create_legacy_datasets_with_shared_permissions(
     ]
 
 
-def test_remove_editor(admin_client, legacy_dataset_a_json, license_reference_data):
+def test_remove_editor(
+    admin_client, data_catalog_att, legacy_dataset_a_json, license_reference_data
+):
     """Test removing an editor from a legacy dataset."""
     dataset_id = legacy_dataset_a_json["dataset_json"]["identifier"]
     legacy_dataset_a_json["dataset_json"]["editor_permissions"] = {
@@ -140,7 +148,7 @@ def test_remove_editor(admin_client, legacy_dataset_a_json, license_reference_da
 
 
 def test_ignore_previously_added_editor(
-    admin_client, legacy_dataset_a_json, license_reference_data
+    admin_client, data_catalog_att, legacy_dataset_a_json, license_reference_data
 ):
     """Test that only changes newer than DatasetPermissions.legacy_modified are applied."""
     dataset_id = legacy_dataset_a_json["dataset_json"]["identifier"]

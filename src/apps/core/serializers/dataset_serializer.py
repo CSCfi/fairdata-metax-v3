@@ -5,7 +5,8 @@
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
 import logging
-from typing import List
+from enum import Enum
+from typing import List, Optional
 
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -29,6 +30,7 @@ from apps.common.serializers.fields import (
 from apps.core.helpers import clean_pid
 from apps.core.models import DataCatalog, Dataset
 from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
+from apps.core.models.data_catalog import GeneratedPIDType
 from apps.core.serializers.common_serializers import (
     AccessRightsModelSerializer,
     EntityRelationSerializer,
@@ -152,8 +154,9 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
     metrics = DatasetMetricsSerializer(read_only=True)  # Included when include_metrics=true
     pid_type = NoopField(help_text="No longer in use. Replaced by generate_pid_on_publish.")
     generate_pid_on_publish = ListValidChoicesField(
-        choices=Dataset.PIDTypes.choices, required=False, allow_null=True
+        choices=GeneratedPIDType.choices, required=False, allow_null=True
     )
+    pid_generated_by_fairdata = serializers.BooleanField(read_only=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -193,7 +196,6 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
         "id",
         "state",
         "metadata_owner",
-        "persistent_identifier",
         "cumulative_state",
     }
 
@@ -222,6 +224,12 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
             if not self._validated_data.get("metadata_owner"):
                 self._validated_data["metadata_owner"] = {}
         return super().save(**kwargs)
+
+    def omit_pid_fields(self, instance: Dataset, ret: dict):
+        if instance.persistent_identifier:
+            ret.pop("generate_pid_on_publish", None)
+        else:
+            ret.pop("pid_generated_by_fairdata", None)
 
     def to_representation(self, instance: Dataset):
         instance.ensure_prefetch()
@@ -257,6 +265,8 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
                     {"fields": f"Fields not found in dataset: {','.join(not_found)}"}
                 )
             ret = {k: v for k, v in ret.items() if k in fields}
+
+        self.omit_pid_fields(instance, ret)
 
         if has_emails:
             # Handle email values. Copies dicts and lists to avoid accidentally modifying
@@ -335,7 +345,8 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
             "metadata_owner",
             "other_identifiers",
             "persistent_identifier",
-            "pid_type",
+            "pid_generated_by_fairdata",  # read only
+            "pid_type",  # deprecated
             "preservation",
             "projects",
             "provenance",
@@ -389,51 +400,6 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
                 errors["timestamps"] = "Date modified earlier than date created"
         return errors
 
-    def _validate_pids(self, data, errors):
-        dc_is_harvested = self._dc_is_harvested(data)
-        ds_is_published = self._ds_is_published(data)
-        if self.context["request"].method in {"POST", "PUT"}:
-            if data.get("persistent_identifier") != None and data.get("data_catalog") == None:
-                errors["persistent_identifier"] = (
-                    "Can't assign persistent_identifier if data_catalog isn't given"
-                )
-            elif data.get("data_catalog") != None:
-                if data.get("persistent_identifier") != None and dc_is_harvested == False:
-                    errors["persistent_identifier"] = (
-                        "persistent_identifier can't be assigned to a dataset in a non-harvested data catalog"
-                    )
-                if data.get("persistent_identifier") == None and dc_is_harvested == True:
-                    errors["persistent_identifier"] = (
-                        "Dataset in a harvested catalog has to have a persistent identifier"
-                    )
-
-            if (
-                dc_is_harvested == False
-                and ds_is_published
-                and data.get("generate_pid_on_publish") == None
-            ):
-                errors["generate_pid_on_publish"] = (
-                    "If data catalog is not harvested and dataset is published, "
-                    "generate_pid_on_publish needs to be given"
-                )
-
-        elif self.context["request"].method in {"PATCH"}:
-            if data.get("persistent_identifier") != None and dc_is_harvested == False:
-                errors["persistent_identifier"] = (
-                    "persistent_identifier can't be assigned to a dataset in a non-harvested data catalog"
-                )
-
-            if (
-                self.instance.persistent_identifier == None
-                and data.get("persistent_identifier") == None
-                and dc_is_harvested == True
-            ):
-                errors["persistent_identifier"] = (
-                    "Dataset in a harvested catalog has to have a persistent identifier"
-                )
-
-        return errors
-
     def _validate_data(self, data, errors):
         """Check data constraints."""
         existing_fileset = None
@@ -450,6 +416,38 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
             )
         return errors
 
+
+    @classmethod
+    def validate_new_pid(
+        cls,
+        dataset: Optional["Dataset"],
+        new_pid: Optional[str] = None,
+        new_data_catalog: Optional[DataCatalog] = None,
+    ):
+        """Validate that user-provided persistent_identifier is allowed for dataset."""
+        msg = None
+        data_catalog = new_data_catalog
+        old_pid = None
+        if dataset:  # Omit dataset to indicate creating new dataset
+            old_pid = dataset.persistent_identifier
+            data_catalog = data_catalog or dataset.data_catalog
+
+        if new_pid == old_pid:
+            return  # No change, no need to validate new value
+
+        if data_catalog and not data_catalog.allow_external_pid:
+            msg = "Assigning user-defined PID is not supported by the catalog."
+
+        if dataset:
+            if dataset.pid_generated_by_fairdata:
+                msg = "Changing generated PID is not allowed."
+            elif dataset.generate_pid_on_publish:
+                msg = "Cannot assign user-defined PID when using generate_pid_on_publish."
+
+        if msg:
+            raise serializers.ValidationError({"persistent_identifier": msg})
+
+
     def to_internal_value(self, data):
         if self.instance:  # dataset actors need dataset in context
             self.context["dataset"] = self.instance
@@ -459,7 +457,6 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
 
         errors = {}
         errors = self._validate_timestamps(_data, errors)
-        errors = self._validate_pids(_data, errors)
         errors = self._validate_data(_data, errors)
 
         if errors:
@@ -469,15 +466,32 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
         _data["api_version"] = 3
         return _data
 
-    def update(self, instance, validated_data):
+    def update(self, instance: Dataset, validated_data):
         instance._updating = True
         validated_data["last_modified_by"] = self.context["request"].user
+
+        if "persistent_identifier" in validated_data:
+            self.validate_new_pid(
+                dataset=instance,
+                new_pid=validated_data["persistent_identifier"],
+                new_data_catalog=validated_data.get("data_catalog"),
+            )
+
+        # Ensure modification timestamp gets set on PATCH which does not use model defaults
+        if "modified" not in validated_data:
+            validated_data["modified"] = timezone.now()
+
         dataset: Dataset = super().update(instance, validated_data=validated_data)
         instance._updating = False
         return dataset
 
     def create(self, validated_data):
         validated_data["last_modified_by"] = self.context["request"].user
+        self.validate_new_pid(
+            dataset=None,
+            new_pid=validated_data.get("persistent_identifier"),
+            new_data_catalog=validated_data.get("data_catalog"),
+        )
 
         # Always initialize dataset as draft. This allows assigning
         # reverse and many-to-many relations to the newly created

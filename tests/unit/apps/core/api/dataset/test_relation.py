@@ -67,6 +67,7 @@ def test_other_identifier_found_in_metax_ignore_draft(
         **dataset_a_json,
         "state": "draft",
         "persistent_identifier": "i have a pid",
+        "generate_pid_on_publish": None,
         "data_catalog": data_catalog_harvested.id,
     }
 
@@ -94,6 +95,7 @@ def test_other_identifier_found_in_metax_list(
         **dataset_a_json,
         "data_catalog": data_catalog_harvested.id,
         "persistent_identifier": res1.data["persistent_identifier"],
+        "generate_pid_on_publish": None,
     }
     res2 = admin_client.post("/v3/datasets", other_dataset, content_type="application/json")
     assert res2.status_code == 201
@@ -139,6 +141,7 @@ def test_relation_pids_given_as_urls(
 
     dataset_a_json["data_catalog"] = datacatalog_harvested_json["id"]
     dataset_a_json["persistent_identifier"] = "doi:test_doi"
+    dataset_a_json["generate_pid_on_publish"] = None
 
     dataset_with_doi = admin_client.post(
         "/v3/datasets", dataset_a_json, content_type="application/json"
@@ -158,6 +161,7 @@ def test_relation_pids_given_as_urls(
     del dataset_a_json["persistent_identifier"]
     dataset_a_json["relation"] = [relation]
     dataset_a_json["other_identifiers"] = [other_identifier]
+    dataset_a_json["generate_pid_on_publish"] = "URN"
 
     res1 = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res1.status_code == 201

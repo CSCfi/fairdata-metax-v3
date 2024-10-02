@@ -56,6 +56,10 @@
 
 ### :::tests.conftest.data_catalog
 
+## data_catalog_att
+
+### :::tests.conftest.data_catalog_att
+
 ## data_catalog_harvested
 
 ### :::tests.conftest.data_catalog_harvested

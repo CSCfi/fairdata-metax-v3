@@ -35,7 +35,7 @@ def _values_eql(a, b):
 
 
 def assert_nested_subdict(
-    sub: dict, full: dict, check_all_keys_equal=False, check_list_length=False
+    sub: dict, full: dict, check_all_keys_equal=False, check_list_length=False, ignore=[]
 ):
     """Assert that all key-value pairs in dict are contained by another dict.
 
@@ -43,9 +43,11 @@ def assert_nested_subdict(
     * sub: dictionary that should be a subset of `full`
     * full: dictionary that contains all key-value pairs of `sub`
     * check_all_keys_equal: If enabled, values in `full` but not in `sub` fail test.
-    * check_list_length: If enabled, check that lists are equal length."""
+    * check_list_length: If enabled, check that lists are equal length.
+    * ignore: Keys matching items in ignore are ignored.
+    """
 
-    def recurse(sub_value, full_value, path):
+    def recurse(sub_value, full_value, path: str):
         # convert OrderedDict to dict
         if isinstance(sub_value, OrderedDict):
             sub_value = dict(sub_value)
@@ -76,6 +78,8 @@ def assert_nested_subdict(
                 raise AssertionError(f"Keys missing from sub dict: {', '.join(missing_from_sub)}")
 
         for key, inner_sub_value in sub_value.items():
+            if key in ignore:
+                continue
             key_path = f"{path}.{key}" if path else key
             if key not in full_value:
                 raise AssertionError(f"Value missing from full dict: {key_path}={inner_sub_value}")
