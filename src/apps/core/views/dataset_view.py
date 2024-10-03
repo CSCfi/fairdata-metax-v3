@@ -36,6 +36,7 @@ from apps.common.serializers.serializers import (
     IncludeRemovedQueryParamsSerializer,
 )
 from apps.common.views import CommonModelViewSet
+from apps.core.cache import DatasetSerializerCache
 from apps.core.models.catalog_record import Dataset, FileSet
 from apps.core.models.data_catalog import DataCatalog
 from apps.core.models.legacy_converter import LegacyDatasetConverter
@@ -54,7 +55,6 @@ from apps.core.serializers.dataset_allowed_actions import (
 from apps.core.serializers.dataset_metrics_serializer import DatasetMetricsQueryParamsSerializer
 from apps.core.serializers.dataset_serializer import (
     DatasetRevisionsQueryParamsSerializer,
-    DatasetSerializerCache,
     ExpandCatalogQueryParamsSerializer,
     LatestVersionQueryParamsSerializer,
 )

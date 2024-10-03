@@ -64,11 +64,11 @@ def test_create_dataset_with_PID(admin_client, dataset_a_json, data_catalog, ref
     assert res.status_code == 400
 
 
-# Create a dataset with pid_type=URN
+# Create a dataset with generate_pid_on_publish=URN
 # Check that it is generated
 def test_create_dataset_with_URN(admin_client, dataset_a_json, data_catalog, reference_data):
     dataset = dataset_a_json
-    dataset["pid_type"] = "URN"
+    dataset["generate_pid_on_publish"] = "URN"
     dataset.pop("persistent_identifier", None)
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
     assert res.status_code == 201
@@ -88,7 +88,7 @@ def test_create_dataset_with_URN(admin_client, dataset_a_json, data_catalog, ref
     assert res.status_code == 400
 
 
-# Create a dataset with pid_type=DOI
+# Create a dataset with generate_pid_on_publish=DOI
 # Check that it is generated
 # Try to add remote_resources
 # Check that dataset update results into an error
@@ -96,7 +96,7 @@ def test_create_dataset_with_URN(admin_client, dataset_a_json, data_catalog, ref
 @override_settings(PID_MS_CLIENT_INSTANCE="apps.core.services.pid_ms_client._PIDMSClient")
 def test_create_dataset_with_doi(admin_client, dataset_maximal_json, data_catalog, reference_data):
     dataset = dataset_maximal_json
-    dataset["pid_type"] = "DOI"
+    dataset["generate_pid_on_publish"] = "DOI"
     dataset["state"] = "published"
     dataset.pop("persistent_identifier", None)
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
@@ -129,7 +129,7 @@ def test_create_dataset_with_doi_fail(
 ):
     dataset = dataset_maximal_json
     dataset["state"] = "published"
-    dataset["pid_type"] = "DOI"
+    dataset["generate_pid_on_publish"] = "DOI"
     dataset.pop("persistent_identifier", None)
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
     assert res.status_code == 503
@@ -141,7 +141,7 @@ def test_create_dataset_with_doi_fail(
 # Check that it has a PID
 def test_create_draft_dataset(admin_client, dataset_a_json, data_catalog, reference_data):
     dataset = dataset_a_json
-    dataset["pid_type"] = "URN"
+    dataset["generate_pid_on_publish"] = "URN"
     dataset.pop("persistent_identifier", None)
     dataset["state"] = "draft"
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
@@ -176,7 +176,7 @@ def test_create_dataset_with_failed_PID(
 ):
     old_count = Dataset.available_objects.all().count()
     dataset = dataset_a_json
-    dataset["pid_type"] = "URN"
+    dataset["generate_pid_on_publish"] = "URN"
     dataset.pop("persistent_identifier", None)
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
     assert res.status_code == 503
@@ -192,7 +192,7 @@ def test_create_dataset_with_failed_PID(
 # Check that it has a PID
 def test_new_version_has_no_pid(admin_client, dataset_a_json, data_catalog, reference_data):
     dataset = dataset_a_json
-    dataset["pid_type"] = "URN"
+    dataset["generate_pid_on_publish"] = "URN"
     dataset.pop("persistent_identifier", None)
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
     assert res.status_code == 201
@@ -272,31 +272,31 @@ def test_create_dataset_with_previously_hard_deleted_pid(
     assert res.status_code == 201
 
 
-# Try to create a dataset without pid_type and pid
+# Try to create a dataset without generate_pid_on_publish and pid
 # Check that request fails
-def test_create_dataset_without_pid_type_and_pid_fails(
+def test_create_dataset_without_generate_pid_on_publish_and_pid_fails(
     admin_client, dataset_a_json, data_catalog, reference_data
 ):
     dataset = dataset_a_json
-    dataset.pop("pid_type", None)
+    dataset.pop("generate_pid_on_publish", None)
     dataset.pop("persistent_identifier", None)
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
     assert res.status_code != 201
 
 
 # Create a dataset
-# Try to update the dataset using put without pid_type and pid
+# Try to update the dataset using put without generate_pid_on_publish and pid
 # Check that request fails
-def test_update_dataset_without_pid_type_and_pid_fails(
+def test_update_dataset_without_generate_pid_on_publish_and_pid_fails(
     admin_client, dataset_a_json, data_catalog, reference_data
 ):
     dataset = dataset_a_json
-    dataset["pid_type"] = "URN"
+    dataset["generate_pid_on_publish"] = "URN"
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
     assert res.status_code == 201
     ds_id = res.json().get("id", None)
 
-    dataset.pop("pid_type", None)
+    dataset.pop("generate_pid_on_publish", None)
     dataset.pop("persistent_identifier", None)
     res = admin_client.put(f"/v3/datasets/{ds_id}", dataset, content_type="application/json")
     assert res.status_code != 200
@@ -320,3 +320,14 @@ def test_pid_cant_be_updated(admin_client, dataset_a_json, data_catalog, referen
     res2 = admin_client.get(f"/v3/datasets/{ds_id}", content_type="application/json")
     ds_pid2 = res2.json().get("persistent_identifier", None)
     assert ds_pid == ds_pid2
+
+
+# The deprecated pid_type field should be ignored
+def test_pid_type_removed(admin_client, dataset_a_json, data_catalog, reference_data):
+    dataset_a_json["generate_pid_on_publish"] = "DOI"
+    dataset_a_json["pid_type"] = "URN"
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    dataset = Dataset.objects.get(id=res.data["id"])
+    assert "pid_type" not in res.data
+    assert dataset.generate_pid_on_publish == "DOI"

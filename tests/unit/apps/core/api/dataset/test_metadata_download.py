@@ -21,7 +21,7 @@ def ns_select(*args, **kwargs):
 
 @pytest.fixture
 def doi_dataset(admin_client, dataset_maximal_json, data_catalog, reference_data):
-    dataset_maximal_json["pid_type"] = "DOI"
+    dataset_maximal_json["generate_pid_on_publish"] = "DOI"
     res = admin_client.post(f"/v3/datasets", dataset_maximal_json, content_type="application/json")
     assert res.status_code == 201
 

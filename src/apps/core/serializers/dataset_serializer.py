@@ -20,8 +20,12 @@ from apps.common.serializers import (
     CommonNestedModelSerializer,
     OneOf,
 )
-from apps.common.serializers.fields import ConstantField, handle_private_emails
-from apps.core.cache import DatasetSerializerCache
+from apps.common.serializers.fields import (
+    ConstantField,
+    ListValidChoicesField,
+    NoopField,
+    handle_private_emails,
+)
 from apps.core.helpers import clean_pid
 from apps.core.models import DataCatalog, Dataset
 from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
@@ -146,6 +150,10 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
     next_draft = LinkedDraftSerializer(read_only=True)
     draft_of = LinkedDraftSerializer(read_only=True)
     metrics = DatasetMetricsSerializer(read_only=True)  # Included when include_metrics=true
+    pid_type = NoopField(help_text="No longer in use. Replaced by generate_pid_on_publish.")
+    generate_pid_on_publish = ListValidChoicesField(
+        choices=Dataset.PIDTypes.choices, required=False, allow_null=True
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -319,6 +327,7 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
             "description",
             "field_of_science",
             "fileset",
+            "generate_pid_on_publish",
             "infrastructure",
             "issued",
             "keyword",
@@ -398,9 +407,14 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
                         "Dataset in a harvested catalog has to have a persistent identifier"
                     )
 
-            if dc_is_harvested == False and ds_is_published and data.get("pid_type") == None:
-                errors["pid_type"] = (
-                    "If data catalog is not harvested and dataset is published, pid_type needs to be given"
+            if (
+                dc_is_harvested == False
+                and ds_is_published
+                and data.get("generate_pid_on_publish") == None
+            ):
+                errors["generate_pid_on_publish"] = (
+                    "If data catalog is not harvested and dataset is published, "
+                    "generate_pid_on_publish needs to be given"
                 )
 
         elif self.context["request"].method in {"PATCH"}:

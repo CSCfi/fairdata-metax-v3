@@ -231,7 +231,7 @@ class PatchModelSerializer(serializers.ModelSerializer):
             )
         super().__init__(*args, **kwargs)
 
-    def assign_defaults_from_model(self, fields):
+    def assign_defaults_from_model(self, fields: dict):
         """Set default serializer field values from model fields.
 
         Used for PUT-style update where fields that are not included in

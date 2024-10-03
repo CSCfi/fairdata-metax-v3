@@ -450,7 +450,7 @@ def test_dataset_put_maximal_and_minimal(
     minimal_json = {
         "data_catalog": dataset_maximal_json["data_catalog"],
         "title": dataset_maximal_json["title"],
-        "pid_type": "URN",
+        "generate_pid_on_publish": "URN",
     }
     res = admin_client.put(
         f"/v3/datasets/{res.data['id']}?include_nulls=true",
@@ -466,11 +466,11 @@ def test_dataset_put_maximal_and_minimal(
         "data_catalog",
         "dataset_versions",
         "draft_revision",
+        "generate_pid_on_publish",
         "id",
         "metadata_owner",
         "metadata_repository",
         "modified",
-        "pid_type",
         "state",
         "title",
         "version",
@@ -852,8 +852,8 @@ def test_missing_required_fields(
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
     assert res.status_code == 400
     assert (
-        "If data catalog is not harvested and dataset is published, pid_type needs to be given"
-        in str(res.data["pid_type"])
+        "If data catalog is not harvested and dataset is published, generate_pid_on_publish needs to be given"
+        in str(res.data["generate_pid_on_publish"])
     )
 
     # data_catalog(harvested), access_rights, description, actors
@@ -866,8 +866,8 @@ def test_missing_required_fields(
         harvested_res.data["persistent_identifier"]
     )
 
-    # ida-catalog: pid_type
-    dataset = {**dataset, "pid_type": "URN"}
+    # ida-catalog: generate_pid_on_publish
+    dataset = {**dataset, "generate_pid_on_publish": "URN"}
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
 
     # harvested_catalog: persistent_identifier

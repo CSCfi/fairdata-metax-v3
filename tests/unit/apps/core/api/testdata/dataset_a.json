@@ -56,7 +56,7 @@
       "end_date": "2023-11-25"
     }
   ],
-  "pid_type": "URN",
+  "generate_pid_on_publish": "URN",
   "cumulative_state": 0,
   "state": "published"
 }

@@ -389,6 +389,30 @@ class PrivateEmailField(serializers.EmailField):
         return PrivateEmailValue(super().to_representation(value))
 
 
+class NoopField(serializers.Field):
+    """Field that ignores its input and does not produce output.
+
+    The field is visible in Swagger (and can have help text) and
+    does not cause an "invalid field" error when someone tries to
+    write a value.
+    """
+
+    def __init__(self, *args, **kwargs):
+        kwargs["write_only"] = True
+        kwargs["required"] = False
+        kwargs["allow_null"] = True
+        super().__init__(*args, **kwargs)
+
+    def to_internal_value(self, data):
+        raise serializers.SkipField()
+
+    def get_attribute(self, instance):
+        raise serializers.SkipField()
+
+    def to_representation(self, value):
+        return None
+
+
 class ConstantField(serializers.Field):
     """Read-only field that always returns constant value."""
 

@@ -147,7 +147,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         URN = "URN", _("URN")
         DOI = "DOI", _("DOI")
 
-    pid_type = models.CharField(
+    generate_pid_on_publish = models.CharField(
         max_length=4,
         choices=PIDTypes.choices,
         null=True,
@@ -619,7 +619,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             return False
 
     def _can_create_urn(self):
-        return self.pid_type == self.PIDTypes.URN
+        return self.generate_pid_on_publish == self.PIDTypes.URN
 
     def set_update_reason(self, reason: str):
         """Set change reason used by simple-history."""
@@ -632,7 +632,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         if self.state == self.StateChoices.DRAFT:
             logger.info("State is DRAFT. PID is not created")
             return
-        if self.pid_type == self.PIDTypes.URN and self._can_create_urn():
+        if self.generate_pid_on_publish == self.PIDTypes.URN and self._can_create_urn():
             dataset_id = self.id
             try:
                 pid = PIDMSClient().createURN(dataset_id)
@@ -640,7 +640,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             except ServiceUnavailableError as e:
                 e.detail = f"Error when creating persistent identifier. Please try again later."
                 raise e
-        if self.pid_type == self.PIDTypes.DOI:
+        if self.generate_pid_on_publish == self.PIDTypes.DOI:
             try:
                 pid = PIDMSClient().create_doi(self.id)
                 self.persistent_identifier = pid

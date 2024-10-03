@@ -156,6 +156,7 @@ class LegacyDatasetUpdateSerializer(CommonNestedModelSerializer):
             for field in DatasetSerializer.Meta.fields
             if field
             not in [
+                "pid_type",  # field removed
                 "metadata_repository",  # field is not writable
                 "dataset_versions",  # field is not writable
                 "metrics",  # field is not writable

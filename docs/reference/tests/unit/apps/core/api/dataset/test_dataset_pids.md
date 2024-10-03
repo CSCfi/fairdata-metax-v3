@@ -56,15 +56,19 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_create_dataset_with_previously_hard_deleted_pid
 
-## test_create_dataset_without_pid_type_and_pid_fails
+## test_create_dataset_without_generate_pid_on_publish_and_pid_fails
 
-### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_create_dataset_without_pid_type_and_pid_fails
+### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_create_dataset_without_generate_pid_on_publish_and_pid_fails
 
-## test_update_dataset_without_pid_type_and_pid_fails
+## test_update_dataset_without_generate_pid_on_publish_and_pid_fails
 
-### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_update_dataset_without_pid_type_and_pid_fails
+### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_update_dataset_without_generate_pid_on_publish_and_pid_fails
 
 ## test_pid_cant_be_updated
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_pid_cant_be_updated
+
+## test_pid_type_removed
+
+### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_pid_type_removed
 

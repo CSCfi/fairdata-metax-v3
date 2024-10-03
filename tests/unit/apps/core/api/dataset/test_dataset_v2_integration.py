@@ -123,10 +123,12 @@ def test_create_legacy_dataset_new_version_v2_integration(
         "api_meta": {"version": 3},
     }
 
-    # The pid_type field is not yet set for legacy dataset, patch it
+    # The generate_pid_on_publish field is not yet set for legacy dataset, patch it
     version_id = res.data["id"]
     res = admin_client.patch(
-        f"/v3/datasets/{version_id}", {"pid_type": "URN"}, content_type="application/json"
+        f"/v3/datasets/{version_id}",
+        {"generate_pid_on_publish": "URN"},
+        content_type="application/json",
     )
     assert res.status_code == 200
 

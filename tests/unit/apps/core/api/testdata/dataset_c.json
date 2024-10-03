@@ -61,5 +61,5 @@
       }
     }
   ],
-  "pid_type": "URN"
+  "generate_pid_on_publish": "URN"
 }
