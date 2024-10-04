@@ -730,3 +730,13 @@ def test_files_bulk_delete_missing_storage_identifier(ida_client, csc_project, a
             "storage_identifier": "Either storage_identifier or id is required.",
         },
     }
+
+
+def test_files_bulk_not_a_list(ida_client, csc_project, action_url):
+    res = ida_client.post(
+        action_url("insert", ignore_errors=True),
+        {"storage_service": "ida"},
+        content_type="application/json",
+    )
+    assert res.status_code == 400
+    assert res.json() == {"non_field_errors":["Expected a list of items but got type \"dict\"."]}

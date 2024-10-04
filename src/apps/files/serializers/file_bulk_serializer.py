@@ -290,6 +290,12 @@ class FileBulkSerializer(serializers.ListSerializer):
 
     def to_internal_value(self, data) -> List[dict]:
         # Deserialize data and run basic validation
+        if not isinstance(data, list):
+            msg = self.error_messages["not_a_list"].format(input_type=type(data).__name__)
+            raise serializers.ValidationError(
+                {api_settings.NON_FIELD_ERRORS_KEY: [msg]}, code="not_a_list"
+            )
+
         files = []
         for item in data:
             try:
