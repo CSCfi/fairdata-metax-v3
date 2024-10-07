@@ -5,6 +5,7 @@ from django.conf import settings
 from django.contrib.auth.models import Group
 from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.db import models
+from django.utils.translation import gettext as _
 from simple_history.models import HistoricalRecords
 
 from apps.common.models import AbstractBaseModel, AbstractDatasetProperty
@@ -78,6 +79,17 @@ class DataCatalog(AbstractBaseModel):
         default=list,
         blank=True,
         help_text="File storage services supported for datasets in catalog.",
+    )
+
+    class PublishingChannel(models.TextChoices):
+        ETSIN = "etsin", _("etsin")
+        TTV = "ttv", _("ttv")
+
+    publishing_channels = ArrayField(
+        models.CharField(max_length=64, choices=PublishingChannel.choices),
+        default=list,
+        blank=True,
+        help_text="Channels in which datasets in this catalog will be published.",
     )
     history = HistoricalRecords(m2m_fields=(language,))
 

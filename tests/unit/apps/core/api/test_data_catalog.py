@@ -251,3 +251,48 @@ def test_patch_datacatalog(
         **res1.json(),
         **patch_json,
     }
+
+
+def test_add_publishing_channel_to_datacatalog(
+    admin_client, datacatalog_a_json, reference_data, data_catalog_list_url
+):
+    res1 = admin_client.post(
+        data_catalog_list_url, datacatalog_a_json, content_type="application/json"
+    )
+    assert res1.status_code == 201
+
+    patch_json = {"publishing_channels": ["etsin"]}
+    res2 = admin_client.patch(
+        reverse("datacatalog-detail", kwargs={"pk": res1.data["id"]}),
+        patch_json,
+        content_type="application/json",
+    )
+    assert res2.status_code == 200
+
+    # fields in patch_json should replace original values, others unchanged
+    assert res2.json() == {
+        **res1.json(),
+        **patch_json,
+    }
+
+
+def test_create_datacatalog_with_multiple_publishing_channels(
+    admin_client, datacatalog_a_json, reference_data, data_catalog_list_url
+):
+    datacatalog_a_json["publishing_channels"] = ["etsin", "ttv"]
+    res1 = admin_client.post(
+        data_catalog_list_url, datacatalog_a_json, content_type="application/json"
+    )
+    assert res1.status_code == 201
+    assert res1.json()["publishing_channels"] == ["etsin", "ttv"]
+
+
+def test_try_invalid_publishing_channel_in_datacatalog(
+    admin_client, datacatalog_a_json, reference_data, data_catalog_list_url
+):
+    datacatalog_a_json["publishing_channels"] = ["foo"]
+    res1 = admin_client.post(
+        data_catalog_list_url, datacatalog_a_json, content_type="application/json"
+    )
+    assert res1.status_code == 400
+    assert '"foo" is not a valid choice.' in str(res1.json()["publishing_channels"])

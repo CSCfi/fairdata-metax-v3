@@ -54,4 +54,5 @@ class DataCatalogModelSerializer(CommonNestedModelSerializer):
             "dataset_groups_admin",
             "allow_remote_resources",
             "storage_services",
+            "publishing_channels",
         )

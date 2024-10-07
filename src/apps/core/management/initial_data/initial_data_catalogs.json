@@ -1,5 +1,6 @@
 [
   {
+    "id": "urn:nbn:fi:att:data-catalog-fsd",
     "title": {
       "en": "Data catalog for testing FSD integration",
       "fi": "Testi katalogi FSD-integraatiolle"
@@ -25,16 +26,17 @@
         }
       ]
     },
-    "id": "urn:nbn:fi:att:data-catalog-fsd",
     "description": {
       "en": "Test data catalog used in FSD integration",
       "fi": "Testi katalogi FSD-integraatiolle"
     },
     "dataset_versioning_enabled": false,
     "dataset_groups_create": ["fsd"],
-    "dataset_groups_admin": ["fsd"]
+    "dataset_groups_admin": ["fsd"],
+    "publishing_channels": ["etsin", "ttv"]
   },
   {
+    "id": "urn:nbn:fi:att:data-catalog-kielipankki",
     "title": {
       "en": "Data catalog for testing Kielipankki integration",
       "fi": "Testi katalogi Kielipankki-integraatiolle"
@@ -60,16 +62,17 @@
         }
       ]
     },
-    "id": "urn:nbn:fi:att:data-catalog-kielipankki",
     "description": {
       "en": "Test data catalog used in Kielipankki integration",
       "fi": "Testi katalogi Kielipankki-integraatiolle"
     },
     "dataset_versioning_enabled": false,
     "dataset_groups_create": ["kielipankki"],
-    "dataset_groups_admin": ["kielipankki"]
+    "dataset_groups_admin": ["kielipankki"],
+    "publishing_channels": ["etsin", "ttv"]
   },
   {
+    "id": "urn:nbn:fi:att:data-catalog-acris",
     "title": {
       "en": "ACRIS catalog",
       "fi": "ACRIS katalogi",
@@ -96,7 +99,6 @@
         }
       ]
     },
-    "id": "urn:nbn:fi:att:data-catalog-acris",
     "description": {
       "en": "Data catalog for testing Aalto University's Metax-integration",
       "fi": "Testikatalogi Aalto-yliopiston Metax-integraatiolle",
@@ -104,9 +106,11 @@
     },
     "dataset_versioning_enabled": false,
     "dataset_groups_create": ["aalto"],
-    "dataset_groups_admin": ["aalto"]
+    "dataset_groups_admin": ["aalto"],
+    "publishing_channels": ["etsin", "ttv"]
   },
   {
+    "id": "urn:nbn:fi:att:data-catalog-e2e-tests-harvested",
     "title": {
       "en": "Data catalog for testing Cypress E2E integration tests",
       "fi": "Testi katalogi Cypress E2E integraatio testeille"
@@ -132,16 +136,17 @@
         }
       ]
     },
-    "id": "urn:nbn:fi:att:data-catalog-e2e-tests-harvested",
     "description": {
       "en": "Test data catalog used in Cypress E2E tests",
       "fi": "Testi katalogi Cypress E2E testeille"
     },
     "dataset_versioning_enabled": false,
     "dataset_groups_create": ["e2e"],
-    "dataset_groups_admin": ["e2e"]
+    "dataset_groups_admin": ["e2e"],
+    "publishing_channels": ["etsin", "ttv"]
   },
   {
+    "id": "urn:nbn:fi:att:data-catalog-tuni",
     "title": {
       "en": "Data catalog for testing TUNI integration",
       "fi": "Testi katalogi Tampereen Yliopiston Metax-integraatiolle"
@@ -167,16 +172,17 @@
         }
       ]
     },
-    "id": "urn:nbn:fi:att:data-catalog-tuni",
     "description": {
       "en": "Data catalog for testing TUNI integration",
       "fi": "Testi katalogi Tampereen Yliopiston Metax-integraatiolle"
     },
     "dataset_versioning_enabled": false,
     "dataset_groups_create": ["tuni"],
-    "dataset_groups_admin": ["tuni"]
+    "dataset_groups_admin": ["tuni"],
+    "publishing_channels": ["etsin", "ttv"]
   },
   {
+    "id": "urn:nbn:fi:att:data-catalog-abo",
     "title": {
       "en": "Åbo Akademi data catalog",
       "fi": "Åbo Akademi aineistokatalogi",
@@ -203,7 +209,6 @@
         }
       ]
     },
-    "id": "urn:nbn:fi:att:data-catalog-abo",
     "description": {
       "en": "Data catalog for testing Åbo Akademi's Metax-integration",
       "fi": "Testikatalogi Åbo Akademin Metax-integraatiolle",
@@ -211,9 +216,11 @@
     },
     "dataset_versioning_enabled": false,
     "dataset_groups_create": ["abo"],
-    "dataset_groups_admin": ["abo"]
+    "dataset_groups_admin": ["abo"],
+    "publishing_channels": ["etsin", "ttv"]
   },
   {
+    "id": "urn:nbn:fi:att:data-catalog-hy",
     "title": {
       "en": "University of Helsinki data catalog",
       "fi": "Helsingin yliopiston aineistokatalogi",
@@ -240,7 +247,6 @@
         }
       ]
     },
-    "id": "urn:nbn:fi:att:data-catalog-hy",
     "description": {
       "en": "Data catalog for testing University of Helsinki's Metax-integration",
       "fi": "Testikatalogi Helsingin yliopiston Metax-integraatiolle",
@@ -248,7 +254,8 @@
     },
     "dataset_versioning_enabled": false,
     "dataset_groups_create": ["hy"],
-    "dataset_groups_admin": ["hy"]
+    "dataset_groups_admin": ["hy"],
+    "publishing_channels": ["etsin", "ttv"]
   },
   {
     "id": "urn:nbn:fi:att:data-catalog-ida",
@@ -285,9 +292,11 @@
     "dataset_groups_create": ["fairdata_users", "ida"],
     "dataset_groups_admin": ["ida"],
     "allow_remote_resources": false,
-    "storage_services": ["ida"]
+    "storage_services": ["ida"],
+    "publishing_channels": ["etsin", "ttv"]
   },
   {
+    "id": "urn:nbn:fi:att:data-catalog-fmi",
     "title": {
       "en": "METIS - FMI's EUDAT B2SHARE research data repository",
       "fi": "METIS - Ilmatieteen laitoksen EUDAT B2SHARE tutkimusaineistojen data-arkisto"
@@ -313,13 +322,13 @@
         }
       ]
     },
-    "id": "urn:nbn:fi:att:data-catalog-fmi",
     "description": {
       "en": "Data catalog for testing FMI's EUDAT B2SHARE research data repository's Metax-integration",
       "fi": "Testikatalogi Ilmatieteen laitoksen EUDAT B2SHARE tutkimusaineistojen data-arkiston Metax-integraatiolle"
     },
     "dataset_versioning_enabled": false,
     "dataset_groups_create": ["fmi"],
-    "dataset_groups_admin": ["fmi"]
+    "dataset_groups_admin": ["fmi"],
+    "publishing_channels": ["etsin", "ttv"]
   }
 ]
