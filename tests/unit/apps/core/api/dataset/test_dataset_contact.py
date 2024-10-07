@@ -84,7 +84,7 @@ def test_dataset_contact_creator(admin_client, dataset_with_emails):
 
 
 @override_settings(**email_settings)
-def test_dataset_contact_publisher(admin_client, dataset_with_emails):
+def test_dataset_contact_publisher_admin(admin_client, dataset_with_emails):
     message = {
         "reply_to": "teppo@test.fi",
         "subject": "Teppo Testaa taas",
@@ -101,6 +101,41 @@ def test_dataset_contact_publisher(admin_client, dataset_with_emails):
     msg = mail.outbox[0]
     assert set(msg.to) == {"publisher-org@example.com"}
 
+@override_settings(**email_settings)
+def test_dataset_contact_publisher_user(user_client, dataset_with_emails):
+    message = {
+        "reply_to": "seppo@test.fi",
+        "subject": "Seppo Testaa taas",
+        "body": "Viesti julkaisijalle.",
+        "role": "publisher",
+        "service": "etsin",
+    }
+    res = user_client.post(
+        f"/v3/datasets/{dataset_with_emails.id}/contact", message, content_type="application/json"
+    )
+    assert res.status_code == 200
+    assert res.data == {"recipient_count": 1}
+
+    msg = mail.outbox[0]
+    assert set(msg.to) == {"publisher-org@example.com"}
+
+@override_settings(**email_settings)
+def test_dataset_contact_publisher_service(service_client, dataset_with_emails):
+    message = {
+        "reply_to": "test@test.fi",
+        "subject": "Test Testaa taas",
+        "body": "Viesti julkaisijalle.",
+        "role": "publisher",
+        "service": "etsin",
+    }
+    res = service_client.post(
+        f"/v3/datasets/{dataset_with_emails.id}/contact", message, content_type="application/json"
+    )
+    assert res.status_code == 200
+    assert res.data == {"recipient_count": 1}
+
+    msg = mail.outbox[0]
+    assert set(msg.to) == {"publisher-org@example.com"}
 
 @override_settings(**email_settings)
 def test_dataset_contact_curator_no_email(admin_client, dataset_with_emails):

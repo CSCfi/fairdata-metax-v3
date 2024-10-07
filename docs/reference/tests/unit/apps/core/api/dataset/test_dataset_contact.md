@@ -12,9 +12,17 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset_contact.test_dataset_contact_creator
 
-## test_dataset_contact_publisher
+## test_dataset_contact_publisher_admin
 
-### :::tests.unit.apps.core.api.dataset.test_dataset_contact.test_dataset_contact_publisher
+### :::tests.unit.apps.core.api.dataset.test_dataset_contact.test_dataset_contact_publisher_admin
+
+## test_dataset_contact_publisher_user
+
+### :::tests.unit.apps.core.api.dataset.test_dataset_contact.test_dataset_contact_publisher_user
+
+## test_dataset_contact_publisher_service
+
+### :::tests.unit.apps.core.api.dataset.test_dataset_contact.test_dataset_contact_publisher_service
 
 ## test_dataset_contact_curator_no_email
 

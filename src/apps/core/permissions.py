@@ -23,7 +23,7 @@ class DatasetAccessPolicy(BaseAccessPolicy):
             "condition": "is_edit_allowed",
         },
         {
-            "action": "convert_from_legacy",
+            "action": ["convert_from_legacy", "contact"],
             "principal": "*",
             "effect": "allow",
         },
