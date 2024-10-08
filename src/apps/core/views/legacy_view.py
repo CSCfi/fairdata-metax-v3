@@ -28,3 +28,7 @@ class LegacyDatasetViewSet(CommonModelViewSet):
     )
     filterset_class = LegacyDatasetFilter
     access_policy = LegacyDatasetAccessPolicy
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        return LegacyDatasetAccessPolicy.scope_queryset(self.request, qs)

@@ -795,7 +795,8 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         catalog: DataCatalog = self.data_catalog
         allow_remote_resources = catalog and catalog.allow_remote_resources
         if not allow_remote_resources:
-            err_msg = f"Data catalog {catalog.id} does not allow remote resources."
+            catalog_id = (catalog and catalog.id) or None
+            err_msg = f"Data catalog {catalog_id} does not allow remote resources."
             raise TopLevelValidationError({"remote_resources": err_msg})
 
     def validate_allow_storage_service(self, storage_service):
@@ -826,7 +827,10 @@ class Dataset(V2DatasetMixin, CatalogRecord):
                 else:
                     msg = "The catalog does not allow PID generation."
             if msg:
-                raise ValidationError({"generate_pid_on_publish": msg})
+                if getattr(self, "_saving_legacy", False):
+                    logger.warning(f"Dataset {self.id}, {data_catalog.id=}: {msg}")
+                else:
+                    raise ValidationError({"generate_pid_on_publish": msg})
 
     def _validate_pid(self):
         """Check that PID is allowed."""

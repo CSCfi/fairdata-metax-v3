@@ -207,3 +207,76 @@ def test_legacy_dataset_email(admin_client, legacy_dataset_a, legacy_dataset_a_j
     assert res.status_code == 200
     assert res.data["dataset_json"]["research_dataset"]["creator"][0]["email"] == "<hidden>"
     assert res.data["dataset_json"]["access_granter"] == "<hidden>"
+
+
+def test_legacy_dataset_catalog(
+    admin_client, data_catalog_att, reference_data, legacy_dataset_a_json
+):
+    res = admin_client.post(
+        reverse("migrated-dataset-list"), legacy_dataset_a_json, content_type="application/json"
+    )
+    assert res.status_code == 201
+    res = admin_client.get(
+        reverse("dataset-detail", args=[legacy_dataset_a_json["dataset_json"]["identifier"]]),
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert res.data.get("data_catalog") == "urn:nbn:fi:att:data-catalog-att"
+
+
+def test_legacy_dataset_catalog_dft(
+    admin_client, data_catalog_att, reference_data, legacy_dataset_a_json
+):
+    dataset_json = legacy_dataset_a_json["dataset_json"]
+    dataset_json["data_catalog"] = "urn:nbn:fi:att:data-catalog-dft"
+    dataset_json["research_dataset"]["preferred_identifier"] = "draft:some_pid"
+    dataset_json["research_dataset"]["remote_resources"] = None
+    dataset_json["state"] = "draft"
+    dataset_json["draft_of"] = None
+    res = admin_client.post(
+        reverse("migrated-dataset-list"), legacy_dataset_a_json, content_type="application/json"
+    )
+    assert res.status_code == 201, res.data
+    res = admin_client.get(
+        reverse("dataset-detail", args=[dataset_json["identifier"]]),
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+
+    # Catalog urn:nbn:fi:att:data-catalog-dft should be removed along with the temporary PID
+    assert res.data.get("data_catalog") is None
+    assert res.data.get("persistent_identifier") is None
+    assert res.data.get("state") == "draft"
+
+
+@pytest.mark.parametrize(
+    "persistent_identifier,pid_generated_by_fairdata,generate_pid_on_publish",
+    [
+        ("urn:nbn:fi:csc-jotain", True, "URN"),
+        ("urn:nbn:fi:att:jotain-cscn", True, "URN"),
+        ("urn:nbn:fi:eicsc", False, None),
+        ("doi:10.23729/on-csc", True, "DOI"),
+        ("doi:10.12345/eioo-csc", False, None),
+        ("jokumuu:ei-csc", False, None),
+    ],
+)
+def test_legacy_dataset_pid_attributes(
+    admin_client,
+    data_catalog,
+    reference_data,
+    legacy_dataset_a_json,
+    persistent_identifier,
+    pid_generated_by_fairdata,
+    generate_pid_on_publish,
+):
+    dataset_json = legacy_dataset_a_json["dataset_json"]
+    dataset_json["data_catalog"] = data_catalog.id
+    dataset_json["research_dataset"]["preferred_identifier"] = persistent_identifier
+    res = admin_client.post(
+        reverse("migrated-dataset-list"), legacy_dataset_a_json, content_type="application/json"
+    )
+    assert res.status_code == 201
+    dataset = Dataset.objects.get(id=res.data["id"])
+    assert dataset.persistent_identifier == persistent_identifier
+    assert dataset.pid_generated_by_fairdata == pid_generated_by_fairdata
+    assert dataset.generate_pid_on_publish == generate_pid_on_publish

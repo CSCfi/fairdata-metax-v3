@@ -40,3 +40,15 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_legacy.test_legacy_dataset_email
 
+## test_legacy_dataset_catalog
+
+### :::tests.unit.apps.core.api.dataset.test_legacy.test_legacy_dataset_catalog
+
+## test_legacy_dataset_catalog_dft
+
+### :::tests.unit.apps.core.api.dataset.test_legacy.test_legacy_dataset_catalog_dft
+
+## test_legacy_dataset_pid_attributes
+
+### :::tests.unit.apps.core.api.dataset.test_legacy.test_legacy_dataset_pid_attributes
+

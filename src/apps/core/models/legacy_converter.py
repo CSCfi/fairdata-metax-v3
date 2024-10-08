@@ -62,6 +62,15 @@ def regex(path: str):
 class LegacyDatasetConverter:
     """Adapter for converting V2 dataset json to V3 style dataset json."""
 
+    # Catalogs where Metax manages PIDs
+    managed_data_catalogs = [
+        "urn:nbn:fi:att:data-catalog-ida",
+        "urn:nbn:fi:att:data-catalog-pas",
+        "urn:nbn:fi:att:data-catalog-att",
+    ]
+    draft_data_catalog = "urn:nbn:fi:att:data-catalog-dft"
+    datacite_prefix = "10.23729"
+
     def __init__(self, *args, dataset_json, convert_only=True, **kwargs):
         super().__init__(*args, **kwargs)
         self.created_objects = Counter()
@@ -84,6 +93,13 @@ class LegacyDatasetConverter:
     @property
     def legacy_data_catalog(self):
         return self.dataset_json.get("data_catalog")
+
+    @property
+    def legacy_data_catalog_identifier(self):
+        catalog = self.legacy_data_catalog
+        if isinstance(catalog, dict):
+            return catalog.get("identifier")
+        return catalog
 
     def mark_invalid(self, obj: dict, error: str, fields=[]):
         """Mark object as being invalid."""
@@ -175,21 +191,18 @@ class LegacyDatasetConverter:
         }
 
     def convert_data_catalog(self) -> Optional[DataCatalog]:
-        if not self.legacy_data_catalog:
+        catalog_id = self.legacy_data_catalog_identifier
+        if not catalog_id:
             return None
 
         if self.convert_only:
-            try:
-                return self.legacy_data_catalog.get("identifier")
-            except AttributeError:
-                pass
-            return self.legacy_data_catalog
+            return catalog_id
 
-        catalog_id = self.legacy_data_catalog["identifier"]
         catalog, created = DataCatalog.objects.get_or_create(
             id=catalog_id, defaults={"title": {"und": catalog_id}}
         )
         if created:
+            logger.info(f"Created catalog {catalog_id}")
             self.created_objects.update(["DataCatalog"])
         return catalog.id
 
@@ -645,6 +658,30 @@ class LegacyDatasetConverter:
         )
         return {"user": user, "organization": org}
 
+    # Function from Metax V2
+    def is_metax_generated_urn_identifier(self, identifier: str) -> bool:
+        return identifier.startswith("urn:nbn:fi:att:") or identifier.startswith("urn:nbn:fi:csc")
+
+    # Function from Metax V2
+    def is_metax_generated_doi_identifier(self, identifier: str) -> bool:
+        return identifier.startswith(f"doi:{self.datacite_prefix}/")
+
+    def get_pid_attributes(self) -> dict:
+        catalog_id = self.legacy_data_catalog_identifier
+        values = {
+            "pid_generated_by_fairdata": False,
+            "generate_pid_on_publish": None,
+        }
+        pid = self.legacy_research_dataset.get("preferred_identifier")
+        if pid and catalog_id in self.managed_data_catalogs:
+            if self.is_metax_generated_urn_identifier(pid):
+                values["pid_generated_by_fairdata"] = True
+                values["generate_pid_on_publish"] = "URN"
+            elif self.is_metax_generated_doi_identifier(pid):
+                values["pid_generated_by_fairdata"] = True
+                values["generate_pid_on_publish"] = "DOI"
+        return values
+
     def convert_root_level_fields(self):
         modified = self.get_modified()
 
@@ -706,6 +743,20 @@ class LegacyDatasetConverter:
             "bibliographic_citation": self.legacy_research_dataset.get("bibliographic_citation"),
         }
 
+    def handle_new_drafts(self, data: dict):
+        """Remove special draft catalog from drafts."""
+        dataset_json = self.dataset_json
+        is_new_draft = dataset_json.get("state") == "draft" and not dataset_json.get("draft_of")
+        if is_new_draft:
+            if data.get("data_catalog") == self.draft_data_catalog:
+                data["data_catalog"] = None
+                data["persistent_identifier"] = None  # Can't have PID without catalog
+
+            # Remove draft:pid
+            pid = data.get("persistent_identifier")
+            if pid and pid.startswith("draft:"):
+                data["persistent_identifier"] = None
+
     def convert_dataset(self):
         """Convert V2 dataset json to V3 json format.
 
@@ -761,8 +812,10 @@ class LegacyDatasetConverter:
             nonpublic = LegacyDatasetUpdateSerializer.Meta.nonpublic_fields
             data = {k: v for k, v in data.items() if k not in nonpublic}
         else:
+            data.update(self.get_pid_attributes())
             data["id"] = self.dataset_json.get("identifier")
             data["api_version"] = self.dataset_json.get("api_meta", {}).get("version", 1)
+            self.handle_new_drafts(data)
         return data
 
     def get_invalid_values_by_path(self):

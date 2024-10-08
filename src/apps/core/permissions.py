@@ -172,6 +172,18 @@ class LegacyDatasetAccessPolicy(BaseAccessPolicy):
         },
     ] + BaseAccessPolicy.statements
 
+    @classmethod
+    def scope_queryset(cls, request, queryset):
+        from .models import Dataset
+
+        if (q := super().scope_queryset(request, queryset)) is not None:
+            return q
+        elif request.user.groups.filter(name="v2_migration").exists():
+            return queryset.all()
+
+        # Only public datasets are visible for normal users
+        return queryset.filter(dataset_json__state=Dataset.StateChoices.PUBLISHED)
+
 
 class DatasetNestedAccessPolicy(BaseAccessPolicy):
     statements = [
