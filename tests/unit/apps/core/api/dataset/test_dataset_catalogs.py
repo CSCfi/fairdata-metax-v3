@@ -164,3 +164,39 @@ def test_catalog_datasets_update_admin(admin_client, catalog_datasets, dataset_a
     dataset_id = Dataset.objects.get(persistent_identifier="test-public-dataset").id
     res = admin_client.patch(f"/v3/datasets/{dataset_id}", {}, content_type="application/json")
     assert res.status_code == 200
+
+
+# Update catalog
+
+
+def test_catalog_datasets_update_change_catalog(admin_client, data_catalog):
+    """Admin should be able to update all datasets in all catalogs."""
+    ida_catalog = factories.DataCatalogFactory(id="data-catalog-ida")
+    att_catalog = factories.DataCatalogFactory(id="data-catalog-att")
+    dataset = factories.DatasetFactory(data_catalog=None)
+
+    # Add catalog to draft dataset
+    res = admin_client.patch(
+        f"/v3/datasets/{dataset.id}",
+        {"data_catalog": ida_catalog.id},
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert res.data["data_catalog"] == ida_catalog.id
+
+    # Patch same catalog again, should be ok
+    res = admin_client.patch(
+        f"/v3/datasets/{dataset.id}",
+        {"data_catalog": ida_catalog.id},
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+
+    # Patch another catalog, should be disallowed
+    res = admin_client.patch(
+        f"/v3/datasets/{dataset.id}",
+        {"data_catalog": att_catalog.id},
+        content_type="application/json",
+    )
+    assert res.status_code == 400
+    assert "Cannot change data catalog" in res.data["data_catalog"]

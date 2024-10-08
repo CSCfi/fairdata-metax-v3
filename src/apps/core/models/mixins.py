@@ -2,12 +2,12 @@ import logging
 from datetime import datetime
 from typing import Dict, List, Optional
 
-from django.contrib.auth import get_user_model
 from django.db.models import CharField, QuerySet
 from django.db.models.functions import Cast
 
 from apps.common.helpers import date_to_datetime, omit_empty, omit_none, single_translation
 from apps.refdata.models import AbstractConcept
+from apps.users.models import MetaxUser
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +84,7 @@ class V2DatasetMixin:
     cumulation_ended: datetime
     last_cumulative_addition: datetime
     preservation_identifier: str
-    last_modified_by: get_user_model()
+    last_modified_by: MetaxUser
     issued: datetime
 
     def _generate_v2_ref_data_field(

@@ -68,6 +68,10 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_pid_cant_be_updated
 
+## test_external_pid_update_draft
+
+### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_external_pid_update_draft
+
 ## test_pid_type_removed
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_pid_type_removed

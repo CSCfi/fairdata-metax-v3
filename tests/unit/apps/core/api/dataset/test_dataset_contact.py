@@ -101,6 +101,7 @@ def test_dataset_contact_publisher_admin(admin_client, dataset_with_emails):
     msg = mail.outbox[0]
     assert set(msg.to) == {"publisher-org@example.com"}
 
+
 @override_settings(**email_settings)
 def test_dataset_contact_publisher_user(user_client, dataset_with_emails):
     message = {
@@ -119,6 +120,7 @@ def test_dataset_contact_publisher_user(user_client, dataset_with_emails):
     msg = mail.outbox[0]
     assert set(msg.to) == {"publisher-org@example.com"}
 
+
 @override_settings(**email_settings)
 def test_dataset_contact_publisher_service(service_client, dataset_with_emails):
     message = {
@@ -136,6 +138,7 @@ def test_dataset_contact_publisher_service(service_client, dataset_with_emails):
 
     msg = mail.outbox[0]
     assert set(msg.to) == {"publisher-org@example.com"}
+
 
 @override_settings(**email_settings)
 def test_dataset_contact_curator_no_email(admin_client, dataset_with_emails):

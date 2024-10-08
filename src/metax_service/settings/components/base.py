@@ -43,7 +43,7 @@ NO_NGINX_PROXY = os.environ.get("NO_NGINX_PROXY", True)
 MEDIA_ROOT = join(ROOT_DIR, "media")
 
 # watchman storage setting
-WATCHMAN_STORAGE_PATH = 'django-watchman/'
+WATCHMAN_STORAGE_PATH = "django-watchman/"
 
 # look for static assets here
 STATICFILES_DIRS = [

@@ -40,3 +40,7 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset_catalogs.test_catalog_datasets_update_admin
 
+## test_catalog_datasets_update_change_catalog
+
+### :::tests.unit.apps.core.api.dataset.test_dataset_catalogs.test_catalog_datasets_update_change_catalog
+

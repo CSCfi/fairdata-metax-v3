@@ -5,7 +5,6 @@
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
 import logging
-from enum import Enum
 from typing import List, Optional
 
 from django.utils import timezone
@@ -416,6 +415,16 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
             )
         return errors
 
+    @classmethod
+    def validate_new_catalog(
+        cls, dataset: Optional[Dataset], new_data_catalog: Optional[DataCatalog] = None
+    ):
+        old_catalog = None
+        if dataset:  # Omit dataset to indicate creating new dataset
+            old_catalog = dataset.data_catalog
+
+        if old_catalog and old_catalog != new_data_catalog:
+            raise serializers.ValidationError({"data_catalog": "Cannot change data catalog."})
 
     @classmethod
     def validate_new_pid(
@@ -451,7 +460,6 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
         if msg:
             raise serializers.ValidationError({"persistent_identifier": msg})
 
-
     def to_internal_value(self, data):
         if self.instance:  # dataset actors need dataset in context
             self.context["dataset"] = self.instance
@@ -474,6 +482,12 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
         instance._updating = True
         validated_data["last_modified_by"] = self.context["request"].user
 
+        if "data_catalog" in validated_data:
+            self.validate_new_catalog(
+                dataset=instance,
+                new_data_catalog=validated_data["data_catalog"],
+            )
+
         if "persistent_identifier" in validated_data:
             self.validate_new_pid(
                 dataset=instance,
@@ -491,6 +505,10 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
 
     def create(self, validated_data):
         validated_data["last_modified_by"] = self.context["request"].user
+        self.validate_new_catalog(
+            dataset=None,
+            new_data_catalog=validated_data.get("data_catalog"),
+        )
         self.validate_new_pid(
             dataset=None,
             new_pid=validated_data.get("persistent_identifier"),
