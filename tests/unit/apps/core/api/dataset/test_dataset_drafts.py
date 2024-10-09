@@ -132,6 +132,7 @@ def test_merge_draft(admin_client, dataset_a_json, dataset_maximal_json, dataset
     assert res.status_code == 201
     assert res.data["state"] == "published"
     dataset_id = res.data["id"]
+    dataset_pid = res.data["persistent_identifier"]
     res = admin_client.post(
         f"/v3/datasets/{dataset_id}/create-draft", content_type="application/json"
     )
@@ -146,6 +147,7 @@ def test_merge_draft(admin_client, dataset_a_json, dataset_maximal_json, dataset
     )
     assert res.status_code == 200
     draft_data = deepcopy(res.json())
+    assert draft_data["persistent_identifier"] == f"draft:{dataset_pid}"
 
     # Merge draft
     dataset_signal_handlers.reset()
@@ -162,6 +164,7 @@ def test_merge_draft(admin_client, dataset_a_json, dataset_maximal_json, dataset
         f"/v3/datasets/{dataset_id}?include_nulls=true", content_type="application/json"
     )
     assert res.status_code == 200
+    assert dataset_pid == res.data["persistent_identifier"]
 
     published_data = deepcopy(res.json())
     assert published_data == merge_data

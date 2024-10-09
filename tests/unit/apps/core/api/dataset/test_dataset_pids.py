@@ -328,6 +328,45 @@ def test_pid_cant_be_updated(admin_client, dataset_a_json, data_catalog, referen
     assert ds_pid == ds_pid2
 
 
+# Create a dataset
+# Try to update the pid of the dataset
+# Check that request fails
+# Check that pid is still the same
+def test_external_pid_update_draft(
+    admin_client, dataset_a_json, data_catalog_harvested, reference_data
+):
+    dataset = dataset_a_json
+    dataset["data_catalog"] = data_catalog_harvested.id
+    dataset["generate_pid_on_publish"] = None
+    dataset["persistent_identifier"] = "original-pid"
+    res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
+    assert res.status_code == 201
+    ds_id = res.data.get("id")
+    assert res.data.get("persistent_identifier") == "original-pid"
+
+    res = admin_client.post(
+        f"/v3/datasets/{ds_id}/create-draft", dataset, content_type="application/json"
+    )
+    assert res.status_code == 201
+    draft_id = res.data.get("id")
+    assert res.data.get("persistent_identifier") == "draft:original-pid"
+
+    res = admin_client.patch(
+        f"/v3/datasets/{draft_id}",
+        {"persistent_identifier": "new-pid"},
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert res.data.get("persistent_identifier") == "new-pid"
+
+    res = admin_client.post(f"/v3/datasets/{draft_id}/publish", content_type="application/json")
+    assert res.status_code == 200
+    assert res.data.get("persistent_identifier") == "new-pid"
+
+    res = admin_client.get(f"/v3/datasets/{ds_id}", content_type="application/json")
+    assert res.data.get("persistent_identifier") == "new-pid"
+
+
 # The deprecated pid_type field should be ignored
 def test_pid_type_removed(admin_client, dataset_a_json, data_catalog, reference_data):
     dataset_a_json["generate_pid_on_publish"] = "DOI"

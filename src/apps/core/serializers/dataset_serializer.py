@@ -444,6 +444,10 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
             elif dataset.generate_pid_on_publish:
                 msg = "Cannot assign user-defined PID when using generate_pid_on_publish."
 
+        # PIDs starting wih draft: are reserved for "draft_of" draft datasets
+        if new_pid and new_pid.startswith("draft:"):
+            msg = "Cannot assign draft PID."
+
         if msg:
             raise serializers.ValidationError({"persistent_identifier": msg})
 

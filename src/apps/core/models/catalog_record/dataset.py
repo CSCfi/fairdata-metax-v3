@@ -482,7 +482,6 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             "state",
             "published_revision",
             "created",
-            "persistent_identifier",
             "next_draft",
             "draft_of",
             "metadata_owner",
@@ -491,6 +490,10 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             "preservation",
             "draft_revision",
         ]
+
+        # Ignore PID from draft if it starts with "draft:"
+        if dft.persistent_identifier and dft.persistent_identifier.startswith("draft:"):
+            ignored_values.append("persistent_identifier")
 
         for field in self._meta.get_fields():
             if field.name in ignored_values:
@@ -523,7 +526,9 @@ class Dataset(V2DatasetMixin, CatalogRecord):
 
         with skip_index_update():  # Avoid watson update from temporary draft changes
             dft.draft_of = None
-            # Update draft to remove unique one-to-one values, skip Dataset.save to avoid validation
+            dft.persistent_identifier = None
+            # Update draft to remove unique one-to-one values,
+            # skip Dataset.save to avoid validation
             models.Model.save(dft)
         self.save()
         self.next_draft = None  # Remove cached related object

@@ -14,6 +14,7 @@ pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
     [
         (["external"], None, None, "has to have a persistent identifier"),
         (["external"], None, "external-pid", None),
+        (["external"], None, "draft:temp-pid", "Cannot assign draft PID."),
         (["external"], "URN", None, "catalog does not allow PID generation"),
         (["external"], "URN", "external-pid", "using generate_pid_on_publish"),
         (["URN"], None, None, "Value is required by the catalog when publishing"),
