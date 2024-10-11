@@ -117,7 +117,11 @@ class SSOClient:
         _logger.info(f"Creating new MetaxUser for username={username}")
         try:
             name = user_data["name"]
-            first_name, last_name = name.split(" ", maxsplit=1)
+            try:
+                first_name, last_name = name.split(" ", maxsplit=1)
+            except ValueError:
+                first_name = name
+                last_name = ""
             return MetaxUser.objects.create(
                 username=username,
                 first_name=first_name,

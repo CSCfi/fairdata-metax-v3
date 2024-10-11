@@ -1,5 +1,6 @@
 import logging
 import re
+from django.conf import settings as django_settings
 
 import pytest
 
@@ -20,6 +21,55 @@ def test_create_dataset_v2_integration(
     assert Dataset.all_objects.count() == 1
     assert requests_mock.call_count == 1
     assert mock_v2_integration["post"].request_history[0].json()["state"] == "published"
+
+
+@pytest.mark.usefixtures("data_catalog", "reference_data")
+def test_create_dataset_v2_integration_permissions(
+    admin_client,
+    dataset_a_json,
+    mock_v2_integration,
+    requests_mock,
+    v2_integration_settings,
+    enable_sso,
+):
+    """Test that dataset editors are synced to V2."""
+    requests_mock.post(
+        f"{django_settings.SSO_HOST}/user_status",
+        json={
+            "id": "teppo",
+            "email": "teppo@example.com",
+            "locked": False,
+            "modified": "2023-12-14T05:57:11Z",
+            "name": "Teppo",
+            "qvain_admin_organizations": [],
+            "projects": [],
+        },
+    )
+
+    assert Dataset.all_objects.count() == 0
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    dataset_id = res.data["id"]
+
+    # Add user, username should be added to editor_usernames
+    requests_mock.reset_mock()
+    res = admin_client.post(
+        f"/v3/datasets/{dataset_id}/permissions/editors",
+        {"username": "teppo"},
+        content_type="application/json",
+    )
+    assert res.status_code == 201
+    assert len(mock_v2_integration["put"].request_history) == 1
+    assert mock_v2_integration["put"].request_history[0].json()["editor_usernames"] == ["teppo"]
+
+    # Add user, username should be removed from editor_usernames
+    requests_mock.reset_mock()
+    res = admin_client.delete(
+        f"/v3/datasets/{dataset_id}/permissions/editors/teppo", content_type="application/json"
+    )
+    assert res.status_code == 204
+    assert len(mock_v2_integration["put"].request_history) == 1
+    assert mock_v2_integration["put"].request_history[0].json()["editor_usernames"] == []
 
 
 @pytest.mark.usefixtures("data_catalog", "reference_data")

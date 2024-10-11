@@ -492,6 +492,13 @@ class V2DatasetMixin:
             )
         )
 
+    def _get_editor_usernames(self) -> List[str]:
+        return list(
+            self.permissions.editors.exclude(fairdata_username__isnull=True).values_list(
+                "username", flat=True
+            )
+        )
+
     def as_v2_dataset(self) -> Dict:
         self.ensure_prefetch()
         research_dataset = {
@@ -519,6 +526,7 @@ class V2DatasetMixin:
             "removed": self._construct_v2_removed_field(),
             "research_dataset": research_dataset,
             "version_identifiers": self._get_version_identifiers(),
+            "editor_usernames": self._get_editor_usernames(),
         }
         if self.deprecated:
             doc["date_deprecated"] = self.deprecated.isoformat()

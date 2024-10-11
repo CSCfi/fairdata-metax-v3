@@ -35,6 +35,11 @@ class DatasetNestedViewSet(CommonModelViewSet):
         self.get_dataset_instance().signal_update()
         return resp
 
+    def destroy(self, request, *args, **kwargs):
+        resp = super().destroy(request, *args, **kwargs)
+        self.get_dataset_instance().signal_update()
+        return resp
+
     def perform_create(self, serializer):
         self.get_dataset_instance()
         return serializer.save()

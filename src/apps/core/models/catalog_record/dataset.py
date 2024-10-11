@@ -901,7 +901,6 @@ class Dataset(V2DatasetMixin, CatalogRecord):
     def signal_update(self, created=False):
         """Send dataset_update or dataset_created signal."""
         from apps.core.signals import dataset_created, dataset_updated
-
         if created:
             return dataset_created.send(sender=self.__class__, instance=self)
         return dataset_updated.send(sender=self.__class__, instance=self)
