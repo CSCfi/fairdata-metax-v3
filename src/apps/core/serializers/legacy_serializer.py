@@ -184,6 +184,8 @@ class LegacyDatasetUpdateSerializer(CommonNestedModelSerializer):
 class LegacyDatasetConversionValidationSerializer(LegacyDatasetUpdateSerializer):
     """Serializer for validating V2->V3 conversion."""
 
+    # Use non-relational field for data_catalog to ignore missing catalogs
+    data_catalog = serializers.CharField(required=False)
     metadata_owner = MetadataProviderModelSerializer(required=False)
     id = serializers.UUIDField(required=False)
 

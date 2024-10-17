@@ -52,7 +52,10 @@ class Command(BaseCommand):
             defaults={
                 "title": {"en": "Test contract"},
                 "quota": 123456789,
-                "valid_until": "2039-12-31T23:59:00Z",
+                "validity_start_date": "2023-06-15",
+                "validity_end_date": "2043-12-31",
+                "created": "2021-12-31T12:13:14Z",
+                "modified": "2021-12-31T12:13:14Z",
             },
         )
 

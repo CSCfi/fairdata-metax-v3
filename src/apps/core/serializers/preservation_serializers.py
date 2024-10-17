@@ -2,15 +2,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from apps.common.serializers.serializers import CommonModelSerializer
-from apps.core.models import Contract, Preservation
-
-
-class ContractModelSerializer(CommonModelSerializer):
-    """Model serializer for Contract"""
-
-    class Meta:
-        model = Contract
-        fields = ("id", "title", "description", "quota", "valid_until")
+from apps.core.models import Preservation
 
 
 class PreservationModelSerializer(CommonModelSerializer):

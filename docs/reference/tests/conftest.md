@@ -48,6 +48,10 @@
 
 ### :::tests.conftest.ida_client
 
+## pas_client
+
+### :::tests.conftest.pas_client
+
 ## pytest_collection_modifyitems
 
 ### :::tests.conftest.pytest_collection_modifyitems

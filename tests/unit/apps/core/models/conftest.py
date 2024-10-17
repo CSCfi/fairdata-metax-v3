@@ -127,8 +127,18 @@ def contract() -> Contract:
         "sv": "Titel 5",
     }
     quota = 111204
-    valid_from = "2023-12-31 15:25:00+01"
-    return Contract(title=title, quota=quota, valid_until=valid_from)
+    valid_from = "2023-06-15"
+    valid_until = "2023-12-31"
+    created = "2021-12-31T12:13:14Z"
+    modified = "2021-12-31T12:13:14Z"
+    return Contract(
+        created=created,
+        modified=modified,
+        title=title,
+        quota=quota,
+        validity_start_date=valid_from,
+        validity_end_date=valid_until,
+    )
 
 
 @pytest.fixture

@@ -16,3 +16,7 @@
 
 ### :::tests.utils.utils.assert_same_datetime
 
+## normalize_datetime_str
+
+### :::tests.utils.utils.normalize_datetime_str
+

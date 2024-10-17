@@ -8,13 +8,7 @@ from simple_history.models import HistoricalRecords
 
 from apps.common.copier import ModelCopier
 from apps.common.models import AbstractBaseModel, AbstractDatasetProperty
-
-
-class Contract(AbstractDatasetProperty):
-    description = models.CharField(max_length=200, blank=True, null=True)
-    quota = models.BigIntegerField()
-    valid_until = models.DateTimeField()
-    history = HistoricalRecords()
+from apps.core.models.contract import Contract
 
 
 class Preservation(AbstractBaseModel):

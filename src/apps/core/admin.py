@@ -169,7 +169,7 @@ class ContractAdmin(AbstractDatasetPropertyBaseAdmin):
         "title",
         "quota",
     )
-    list_filter = ("valid_until", "created", "modified")
+    list_filter = ("validity_end_date", "created", "modified")
 
 
 @admin.register(DatasetLicense)

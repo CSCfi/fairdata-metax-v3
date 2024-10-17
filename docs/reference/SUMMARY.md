@@ -59,6 +59,7 @@
                 - [meta](src/apps/core/models/catalog_record/meta.md)
                 - [related](src/apps/core/models/catalog_record/related.md)
             - [concepts](src/apps/core/models/concepts.md)
+            - [contract](src/apps/core/models/contract.md)
             - [data_catalog](src/apps/core/models/data_catalog.md)
             - [entity](src/apps/core/models/entity.md)
             - [file_metadata](src/apps/core/models/file_metadata.md)
@@ -75,6 +76,7 @@
             - [common_serializers](src/apps/core/serializers/common_serializers.md)
             - [concept_serializers](src/apps/core/serializers/concept_serializers.md)
             - [contact_serializer](src/apps/core/serializers/contact_serializer.md)
+            - [contract_serializers](src/apps/core/serializers/contract_serializers.md)
             - [data_catalog_serializer](src/apps/core/serializers/data_catalog_serializer.md)
             - dataset_actor_serializers
                 - [actor_serializer](src/apps/core/serializers/dataset_actor_serializers/actor_serializer.md)
@@ -98,6 +100,7 @@
         - [signals](src/apps/core/signals.md)
         - views
             - [common_views](src/apps/core/views/common_views.md)
+            - [contract_view](src/apps/core/views/contract_view.md)
             - [data_catalog_view](src/apps/core/views/data_catalog_view.md)
             - [dataset_aggregation](src/apps/core/views/dataset_aggregation.md)
             - [dataset_view](src/apps/core/views/dataset_view.md)

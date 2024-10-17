@@ -29,6 +29,11 @@ def api_client() -> APIClient:
 
 
 @pytest.fixture
+def legacy_contract_json(client):
+    return load_test_json("legacy_contract.json")
+
+
+@pytest.fixture
 def contract_a_json(client):
     return load_test_json("contract_a.json")
 

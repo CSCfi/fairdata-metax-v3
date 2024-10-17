@@ -216,4 +216,10 @@ class DatasetPermissionsAccessPolicy(DatasetNestedAccessPolicy):
 
 
 class ContractAccessPolicy(BaseAccessPolicy):
-    pass
+    statements = [
+        {
+            "action": ["*"],
+            "principal": "group:pas",
+            "effect": "allow",
+        },
+    ] + BaseAccessPolicy.admin_statements

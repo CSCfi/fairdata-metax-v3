@@ -108,3 +108,9 @@ def assert_same_datetime(a: Union[str, datetime], b: Union[str, datetime], toler
     date_a = ensure_datetime(a)
     date_b = ensure_datetime(b)
     assert abs(date_a - date_b) <= timedelta(seconds=tolerance)
+
+
+def normalize_datetime_str(dt: str):
+    """Round datetime string to seconds, return result in isoformat with Z for +00:00."""
+    t = ensure_datetime(dt)
+    return t.replace(microsecond=0).isoformat().replace("+00:00", "Z")

@@ -14,12 +14,21 @@ from . import models
 class ContractFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.Contract
-        django_get_or_create = ("url",)
+        django_get_or_create = ("contract_identifier",)
 
-    url = factory.Sequence(lambda n: f"contract-{n}")
+    created = factory.LazyFunction(timezone.now)
+    modified = factory.LazyFunction(timezone.now)
     title = factory.Dict({"en": factory.Sequence(lambda n: f"contract-{n}")})
     quota = factory.Faker("random_number")
-    valid_until = factory.LazyFunction(timezone.now)
+    validity_start_date = factory.LazyFunction(timezone.now)
+    validity_end_date = factory.Faker("date_between", start_date=factory.SelfAttribute("..validity_start_date"))
+
+    class Params:
+        identifier_uuid = factory.Faker("uuid4")
+
+    @factory.lazy_attribute
+    def contract_identifier(self):
+        return f"urn:nbn:fi:contract:{self.identifier_uuid}"
 
 
 class PreservationFactory(factory.django.DjangoModelFactory):

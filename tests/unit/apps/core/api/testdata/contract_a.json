@@ -1,6 +1,36 @@
 {
-    "title": {"en": "Test contract A", "fi": "Testisopimus A"},
-    "description": "Description for test contract A",
+    "id": "fef46c7f-d1a0-4701-a7cc-d711c0f8adc6",
+    "contract_identifier": "urn:uuid:5f9d96e1-fd88-42b4-85d7-9d45b36e8865jeejee",
+    "title": {
+        "en": "Test contract A",
+        "fi": "Testisopimus A"
+    },
+    "description": {
+        "en": "Description for test contract A",
+        "fi": "Testisopimus A:n kuvaus"
+    },
     "quota": 123456789,
-    "valid_until": "2029-12-31T23:59Z"
+    "validity": {
+        "start_date": "2022-09-19",
+        "end_date": "2029-12-31"
+    },
+    "created": "2022-09-19T00:00:00Z",
+    "modified": "2022-09-20T09:55:05Z",
+    "organization": {
+        "name": "Helsingin yliopisto",
+        "organization_identifier": "helsinki.fi"
+    },
+    "contact": [
+        {
+            "name": "Data Support",
+            "email": "datasupport@helsinki.fi",
+            "phone": ""
+        }
+    ],
+    "related_service": [
+        {
+            "identifier": "urn:nbn:fi:att:file-storage-pas",
+            "name": "Fairdata-PAS"
+        }
+    ]
 }

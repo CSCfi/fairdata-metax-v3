@@ -8,6 +8,10 @@
 
 ### :::tests.unit.apps.core.api.conftest.api_client
 
+## legacy_contract_json
+
+### :::tests.unit.apps.core.api.conftest.legacy_contract_json
+
 ## contract_a_json
 
 ### :::tests.unit.apps.core.api.conftest.contract_a_json

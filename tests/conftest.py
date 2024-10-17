@@ -140,13 +140,25 @@ def service_client():
 
 
 @pytest.fixture
-def ida_client(client):
+def ida_client():
+    client = Client()
     user = MetaxUserFactory(username="service_test_ida")
     service_group, _ = Group.objects.get_or_create(name="service")
     ida_group, _ = Group.objects.get_or_create(name="ida")
     user.groups.set([service_group, ida_group])
     client.force_login(user)
     return client
+
+@pytest.fixture
+def pas_client():
+    client = Client()
+    user = MetaxUserFactory(username="service_test_pas")
+    service_group, _ = Group.objects.get_or_create(name="service")
+    pas_group, _ = Group.objects.get_or_create(name="pas")
+    user.groups.set([service_group, pas_group])
+    client.force_login(user)
+    return client
+
 
 
 def pytest_collection_modifyitems(items):
