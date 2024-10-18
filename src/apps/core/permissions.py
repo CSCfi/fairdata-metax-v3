@@ -222,4 +222,9 @@ class ContractAccessPolicy(BaseAccessPolicy):
             "principal": "group:pas",
             "effect": "allow",
         },
-    ] + BaseAccessPolicy.admin_statements
+        {
+            "action": ["from_legacy"],
+            "principal": "group:v2_migration",
+            "effect": "allow",
+        },
+    ] + BaseAccessPolicy.statements

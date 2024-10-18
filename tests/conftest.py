@@ -159,6 +159,16 @@ def pas_client():
     client.force_login(user)
     return client
 
+@pytest.fixture
+def v2_migration_client():
+    client = Client()
+    user = MetaxUserFactory(username="service_test_v2_migration")
+    service_group, _ = Group.objects.get_or_create(name="service")
+    pas_group, _ = Group.objects.get_or_create(name="v2_migration")
+    user.groups.set([service_group, pas_group])
+    client.force_login(user)
+    return client
+
 
 
 def pytest_collection_modifyitems(items):

@@ -112,42 +112,18 @@ class Contract(SystemCreatorBaseModel, CustomSoftDeletableModel):
 
     @classmethod
     def create_or_update_from_legacy(cls, legacy_contract: dict) -> Tuple["Contract", bool]:
-        from apps.core.serializers import ContractModelSerializer
+        from apps.core.serializers.contract_serializers import LegacyContractSerializer
 
-        contract_json = {**legacy_contract["contract_json"]}
-        identifier = contract_json.pop("identifier")
-        contract_json["contract_identifier"] = identifier
-
-        # Convert string to multilanguage
-        title = contract_json.pop("title")
-        contract_json["title"] = {"und": title}
-        description = contract_json.pop("description", None)
-        if description:  # optional
-            contract_json["description"] = {"und": description}
-
-        existing = Contract.objects.filter(contract_identifier=identifier).first()
-        serializer = ContractModelSerializer(instance=existing, data=contract_json)
+        serializer = LegacyContractSerializer(data=legacy_contract)
         serializer.is_valid(raise_exception=True)
-        return serializer.save(legacy_id=legacy_contract["id"]), not existing
+        existing = Contract.all_objects.filter(
+            legacy_id=serializer.validated_data.get("legacy_id")
+        ).first()
+        serializer.instance = existing
+        return serializer.save(), not existing
 
     def to_legacy(self) -> dict:
-        from apps.core.serializers import ContractModelSerializer
+        from apps.core.serializers.contract_serializers import LegacyContractSerializer
 
-        serializer = ContractModelSerializer(self)
-        contract_json = {**serializer.data}
-        contract_json.pop("id", None)
-        contract_json["identifier"] = contract_json.pop("contract_identifier")
-
-        # Convert multilanguage to string
-        contract_json["title"] = single_translation(contract_json["title"])
-        description = contract_json.get("description")
-        if description:  # optional
-            contract_json["description"] = single_translation(description)
-
-        data = {
-            "id": self.legacy_id,
-            "contract_json": contract_json,
-            "date_created": self.record_created,
-            "date_modified": self.record_modified,
-        }
-        return data
+        serializer = LegacyContractSerializer(instance=self)
+        return serializer.data

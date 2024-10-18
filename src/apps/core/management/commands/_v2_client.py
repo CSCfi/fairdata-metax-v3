@@ -165,6 +165,25 @@ class MigrationV2Client:
             params={**params, "removed": "true"}, batched=batched, modified_since=modified_since
         )
 
+    def _fetch_contracts(self, params={}) -> Iterator[dict]:
+        metax_instance = self.metax_instance
+        headers = {}
+        response = self.session.get(
+            f"{metax_instance}/rest/v2/contracts",
+            params={**params, "ordering": "id"},
+            headers=headers,
+        )
+        response.raise_for_status()
+        removed = params.get("removed", "false")
+        self.stdout.write(
+            f"Found {response.json().get('count', 0)} contracts with removed={removed}"
+        )
+        return self.loop_pagination(response, batched=False)
+
+    def fetch_contracts(self, params={}):
+        yield from self._fetch_contracts(params={**params, "removed": "false"})
+        yield from self._fetch_contracts(params={**params, "removed": "true"})
+
     def _fetch_datasets(self, params={}, batched=False):
         metax_instance = self.metax_instance
         response = self.session.get(

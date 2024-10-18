@@ -52,3 +52,32 @@ def test_contract_permissions(user_client, pas_client, contract_a):
 
     data = resp.json()
     assert data["title"]["en"] == "pas title"
+
+
+def test_contract_from_legacy(v2_migration_client, legacy_contract_json):
+    """Test contracts from legacy endpoint."""
+    # Create contract from legacy
+    resp = v2_migration_client.post(
+        "/v3/contracts/from-legacy", legacy_contract_json, content_type="application/json"
+    )
+    assert resp.status_code == 201
+    assert resp.data["title"]["und"] == "Testisopimus"
+
+    # Update contract from legacy
+    legacy_contract_json["contract_json"]["title"] = "Uusi otsikko"
+    resp = v2_migration_client.post(
+        "/v3/contracts/from-legacy", legacy_contract_json, content_type="application/json"
+    )
+    assert resp.status_code == 200
+    assert resp.data["title"]["und"] == "Uusi otsikko"
+
+    # Make sure the changes are saved to db
+    assert Contract.all_objects.count() == 1
+    assert Contract.all_objects.first().title["und"] == "Uusi otsikko"
+
+
+def test_contract_from_legacy_permissions(user_client, legacy_contract_json):
+    resp = user_client.post(
+        "/v3/contracts/from-legacy", legacy_contract_json, content_type="application/json"
+    )
+    assert resp.status_code == 403

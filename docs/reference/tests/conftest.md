@@ -52,6 +52,10 @@
 
 ### :::tests.conftest.pas_client
 
+## v2_migration_client
+
+### :::tests.conftest.v2_migration_client
+
 ## pytest_collection_modifyitems
 
 ### :::tests.conftest.pytest_collection_modifyitems

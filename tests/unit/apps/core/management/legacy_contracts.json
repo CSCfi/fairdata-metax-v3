@@ -1,0 +1,116 @@
+[
+  {
+    "id": 123,
+    "contract_json": {
+      "quota": 1234567890,
+      "title": "Testisopimus",
+      "description": "Description of the contract",
+      "contact": [
+        {
+          "name": "Testiyhteys",
+          "email": "testi@example.com",
+          "phone": "+358-10-12345678"
+        },
+        {
+          "name": "Toinen",
+          "email": "toinen@example.com",
+          "phone": ""
+        }
+      ],
+      "created": "2022-09-19T00:00:00.000Z",
+      "modified": "2022-09-20T09:55:05.987Z",
+      "validity": {
+        "start_date": "2022-09-19"
+      },
+      "identifier": "urn:uuid:0d32393b-1be2-454e-98ff-100000000001",
+      "organization": {
+        "name": "Helsingin yliopisto",
+        "organization_identifier": "helsinki.fi"
+      },
+      "related_service": [
+        {
+          "name": "Fairdata-PAS",
+          "identifier": "urn:nbn:fi:att:file-storage-pas"
+        }
+      ]
+    },
+    "date_modified": "2022-09-20T12:55:06+03:00",
+    "date_created": "2022-09-19T14:42:58+03:00",
+    "service_modified": "tpas",
+    "service_created": "tpas",
+    "removed": false
+  },
+  {
+    "id": 124,
+    "contract_json": {
+      "quota": 100200300,
+      "title": "Testisopimus 2",
+      "description": "Sopimuksen kuvaus 2",
+      "contact": [
+        {
+          "name": "Henkilö",
+          "email": "henkilo@example.com",
+          "phone": ""
+        }
+      ],
+      "created": "2022-09-19T00:00:00.000Z",
+      "modified": "2022-09-20T09:55:05.987Z",
+      "validity": {
+        "start_date": "2022-09-19"
+      },
+      "identifier": "urn:uuid:0d32393b-1be2-454e-98ff-100000000002",
+      "organization": {
+        "name": "Joku yliopisto",
+        "organization_identifier": "example.com"
+      },
+      "related_service": [
+        {
+          "name": "Fairdata-PAS",
+          "identifier": "urn:nbn:fi:att:file-storage-pas"
+        }
+      ]
+    },
+    "date_modified": "2024-09-20T12:55:06+03:00",
+    "date_created": "2023-09-19T14:42:58+03:00",
+    "service_modified": "tpas",
+    "service_created": "tpas",
+    "removed": false
+  },
+  {
+    "id": 125,
+    "contract_json": {
+      "quota": 100200301,
+      "title": "Poistettu sopimus",
+      "description": "Poistetun sopimuksen kuvaus",
+      "contact": [
+        {
+          "name": "Henkilö",
+          "email": "henkilo@example.com",
+          "phone": ""
+        }
+      ],
+      "created": "2023-09-19T00:00:00.000Z",
+      "modified": "2024-09-20T09:55:05.987Z",
+      "validity": {
+        "start_date": "2022-09-19"
+      },
+      "identifier": "urn:uuid:0d32393b-1be2-454e-98ff-100000000003",
+      "organization": {
+        "name": "Ylipoisto",
+        "organization_identifier": "example.com"
+      },
+      "related_service": [
+        {
+          "name": "Fairdata-PAS",
+          "identifier": "urn:nbn:fi:att:file-storage-pas"
+        }
+      ]
+    },
+    "date_modified": "2024-09-20T12:55:06+03:00",
+    "date_created": "2023-09-19T14:42:58+03:00",
+    "service_modified": "tpas",
+    "service_created": "tpas",
+    "removed": true,
+    "date_removed": "2025-09-20T12:55:06+03:00"
+  }
+]

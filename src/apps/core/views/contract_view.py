@@ -1,12 +1,14 @@
 from django.utils.decorators import method_decorator
 from django_filters import rest_framework as filters
+from rest_framework.response import Response
+from rest_framework.decorators import action
 from drf_yasg.utils import swagger_auto_schema
 
 from apps.common.views import CommonModelViewSet
 from apps.core.models import Contract
 from apps.core.permissions import ContractAccessPolicy
-from apps.core.serializers import ContractModelSerializer, PreservationModelSerializer
-from apps.core.views.nested_views import DatasetNestedOneToOneView
+from apps.core.serializers import ContractModelSerializer
+from apps.core.serializers.contract_serializers import LegacyContractSerializer
 
 
 class ContractFilter(filters.FilterSet):
@@ -27,3 +29,13 @@ class ContractViewSet(CommonModelViewSet):
     queryset = Contract.objects.all()
     filterset_class = ContractFilter
     access_policy = ContractAccessPolicy
+
+    @swagger_auto_schema(
+        request_body=LegacyContractSerializer(),
+        responses={200: ContractModelSerializer(), 201: ContractModelSerializer},
+    )
+    @action(detail=False, methods=["post"], url_path="from-legacy")
+    def from_legacy(self, request):
+        contract, created = Contract.create_or_update_from_legacy(request.data)
+        rep = ContractModelSerializer(instance=contract).data
+        return Response(rep, status=201 if created else 200)

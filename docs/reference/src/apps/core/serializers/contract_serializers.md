@@ -20,3 +20,11 @@
 
 ### :::src.apps.core.serializers.contract_serializers.ContractModelSerializer
 
+## LegacyContractJSONSerializer
+
+### :::src.apps.core.serializers.contract_serializers.LegacyContractJSONSerializer
+
+## LegacyContractSerializer
+
+### :::src.apps.core.serializers.contract_serializers.LegacyContractSerializer
+
