@@ -17,7 +17,7 @@ from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django_filters import rest_framework as filters
 from django_filters.fields import CSVWidget
-from drf_yasg.openapi import TYPE_STRING, Parameter, Response
+from drf_yasg.openapi import TYPE_STRING, Parameter, Response, Schema
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import exceptions, response, serializers, status
 from rest_framework.decorators import action
@@ -507,7 +507,10 @@ class DatasetViewSet(CommonModelViewSet):
 
     @action(detail=True, methods=["post"], url_path="new-version")
     def new_version(self, request, pk=None):
-        """Create a new version of a published dataset."""
+        """Create a new version of a published dataset.
+
+        The new version is created as a draft.
+        """
         dataset: Dataset = self.get_object()
         new_version = dataset.create_new_version()
         serializer = self.get_serializer(new_version)
@@ -558,7 +561,9 @@ class DatasetViewSet(CommonModelViewSet):
         serializer = self.get_serializer(versions, many=True)
         return response.Response(serializer.data)
 
-    @swagger_auto_schema(responses={200: ContactResponseSerializer})
+    @swagger_auto_schema(
+        request_body=ContactSerializer(), responses={200: ContactResponseSerializer}
+    )
     @action(detail=True, methods=["POST"])
     def contact(self, request, pk=None):
         """Send email to dataset actors with specific role."""
@@ -577,6 +582,7 @@ class DatasetViewSet(CommonModelViewSet):
         serializer = ContactRolesSerializer(instance=dataset)
         return response.Response(serializer.data, status=status.HTTP_200_OK)
 
+    @swagger_auto_schema(request_body=Schema(type="object"), responses={200: DatasetSerializer})
     @action(detail=False, methods=["POST"])
     def convert_from_legacy(self, request):
         """Convert V1 or V2 dataset json into V3 json format.

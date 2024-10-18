@@ -14,7 +14,7 @@ from drf_yasg.inspectors import (
     ReferencingSerializerInspector,
     SwaggerAutoSchema,
 )
-from drf_yasg.utils import force_serializer_instance, param_list_to_odict
+from drf_yasg.utils import force_serializer_instance, no_body, param_list_to_odict
 
 from .serializers.fields import URLReferencedModelField
 
@@ -60,6 +60,29 @@ class ExtendedSwaggerAutoSchema(SwaggerAutoSchema):
                 tags = [operation_keys[0]]
 
         return tags
+
+    def get_request_serializer(self):
+        """Return the request serializer (used for parsing the request payload) for this endpoint.
+
+        Extended to not use the default serializer for custom actions.
+        """
+
+        from drf_yasg.generators import is_custom_action
+
+        body_override = self._get_request_body_override()
+
+        action = self.operation_keys[-1]
+        if (
+            body_override is None
+            and self.method in self.implicit_body_methods
+            and not is_custom_action(action)  # Remove default body schema from custom actions
+        ):
+            return self.get_view_serializer()
+
+        if body_override is no_body:
+            return None
+
+        return body_override
 
     def get_query_parameters(self) -> List[openapi.Parameter]:
         """Return the query parameters accepted by this view.
