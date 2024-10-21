@@ -800,7 +800,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         catalog: DataCatalog = self.data_catalog
         allow_remote_resources = catalog and catalog.allow_remote_resources
         if not allow_remote_resources:
-            catalog_id = (catalog and catalog.id) or None
+            catalog_id = self.data_catalog_id
             err_msg = f"Data catalog {catalog_id} does not allow remote resources."
             raise TopLevelValidationError({"remote_resources": err_msg})
 
@@ -809,8 +809,9 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         catalog: DataCatalog = self.data_catalog
         allowed_storage_services = catalog and catalog.storage_services or []
         if storage_service not in allowed_storage_services:
+            catalog_id = self.data_catalog_id
             err_msg = (
-                f"Data catalog {catalog.id} does not allow files from service {storage_service}."
+                f"Data catalog {catalog_id} does not allow files from service {storage_service}."
             )
             raise TopLevelValidationError({"fileset": {"storage_service": err_msg}})
 

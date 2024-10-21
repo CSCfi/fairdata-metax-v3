@@ -21,6 +21,7 @@ class ShareMessageSerializer(StrictSerializer):
         max_length=2000,
         required=False,
         allow_null=True,
+        allow_blank=True,
         help_text="Optional content provided by user.",
     )
     service = serializers.ChoiceField(choices=("qvain",))
@@ -191,6 +192,7 @@ class DatasetPermissionsUserModelSerializer(CommonModelSerializer):
 class DatasetPermissionsSerializer(CommonModelSerializer):
     creators = DatasetPermissionsUserModelSerializer(many=True, read_only=True)
     editors = DatasetPermissionsUserModelSerializer(many=True, read_only=True)
+    csc_project_members = DatasetPermissionsUserModelSerializer(many=True, read_only=True)
 
     def create(self, validated_data):
         raise NotImplementedError("Serializer is read-only.")
@@ -200,4 +202,4 @@ class DatasetPermissionsSerializer(CommonModelSerializer):
 
     class Meta:
         model = DatasetPermissions
-        fields = ["id", "creators", "editors"]
+        fields = ["id", "creators", "editors", "csc_project_members"]

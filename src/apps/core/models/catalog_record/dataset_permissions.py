@@ -1,3 +1,4 @@
+import logging
 import uuid
 from typing import TYPE_CHECKING
 
@@ -6,9 +7,12 @@ from django.db import models
 from apps.common.history import SnapshotHistoricalRecords
 from apps.common.models import AbstractBaseModel
 from apps.users.models import MetaxUser
+from apps.users.sso_client import SSOClient
 
 if TYPE_CHECKING:
-    from apps.core.models import Dataset
+    from apps.core.models import Dataset, FileSet
+
+logger = logging.getLogger(__name__)
 
 
 class PermissionRole(models.TextChoices):
@@ -42,3 +46,19 @@ class DatasetPermissions(AbstractBaseModel):
     @property
     def creators(self) -> list:
         return [self.get_context_dataset().metadata_owner.user]
+
+    def _get_csc_project_members(self, csc_project) -> list:
+        users = []
+        try:
+            users = SSOClient().get_csc_project_users(csc_project)
+        except Exception as e:
+            logger.error(f"Failed to get csc_project members: {e}")
+        return users
+
+    @property
+    def csc_project_members(self) -> list:
+        dataset = self.get_context_dataset()
+        file_set: FileSet = getattr(dataset, "file_set", None)
+        if file_set and (csc_project := file_set.storage.csc_project):
+            return self._get_csc_project_members(csc_project)
+        return []
