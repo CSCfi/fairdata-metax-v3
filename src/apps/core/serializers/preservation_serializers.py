@@ -1,5 +1,6 @@
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
+from django.utils import timezone
 
 from apps.common.serializers.serializers import CommonModelSerializer
 from apps.core.models import Preservation
@@ -8,15 +9,31 @@ from apps.core.models import Preservation
 class PreservationModelSerializer(CommonModelSerializer):
     """Model serializer for Preservation"""
 
+    dataset_version = serializers.PrimaryKeyRelatedField(
+        source="dataset_version.dataset", read_only=True
+    )
+    dataset_origin_version = serializers.PrimaryKeyRelatedField(
+        source="dataset_origin_version.dataset", read_only=True
+    )
+
     class Meta:
         model = Preservation
         fields = (
-            "contract",
             "id",
+            "contract",
+            "preservation_identifier",
             "state",
+            "state_modified",
             "description",
             "reason_description",
+            "dataset_version",
+            "dataset_origin_version",
         )
+        extra_kwargs = {
+            "state_modified": {"read_only": True},
+            "dataset_version": {"read_only": True},
+            "dataset_origin_version": {"read_only": True},
+        }
 
     def validate(self, attrs):
         preservation = None
@@ -44,3 +61,16 @@ class PreservationModelSerializer(CommonModelSerializer):
                 )
 
         return super().validate(attrs)
+
+    def create(self, validated_data):
+        if (
+            "state" in validated_data
+            and validated_data["state"] >= Preservation.PreservationState.INITIALIZED
+        ):
+            validated_data["state_modified"] = timezone.now()
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        if "state" in validated_data and validated_data["state"] != instance.state:
+            validated_data["state_modified"] = timezone.now()
+        return super().update(instance, validated_data)

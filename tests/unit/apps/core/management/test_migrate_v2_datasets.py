@@ -16,7 +16,7 @@ pytestmark = [
     pytest.mark.django_db,
     pytest.mark.management,
     pytest.mark.adapter,
-    pytest.mark.usefixtures("data_catalog", "v2_integration_settings"),
+    pytest.mark.usefixtures("data_catalog", "contract", "v2_integration_settings"),
 ]
 
 match_start = r"^\d+ \(\d+ updated\):"
@@ -62,6 +62,7 @@ def test_migrate_command(mock_response, reference_data):
     call_command("migrate_v2_datasets", stdout=out, stderr=err, use_env=True, allow_fail=True)
     output = out.getvalue()
     errors = err.getvalue()
+    assert "Errors for dataset" not in errors
     assert "Invalid identifier 'invalid', ignoring" in errors
     assert "10 datasets updated succesfully" in output
 

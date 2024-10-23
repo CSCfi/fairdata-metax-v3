@@ -52,3 +52,11 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_legacy.test_legacy_dataset_pid_attributes
 
+## test_legacy_dataset_preservation_fields
+
+### :::tests.unit.apps.core.api.dataset.test_legacy.test_legacy_dataset_preservation_fields
+
+## test_legacy_dataset_preservation_dataset
+
+### :::tests.unit.apps.core.api.dataset.test_legacy.test_legacy_dataset_preservation_dataset
+

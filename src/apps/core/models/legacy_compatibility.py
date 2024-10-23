@@ -49,13 +49,8 @@ class LegacyCompatibility:
             "root['user_created']",
             "root['previous_dataset_version']",
             "root['next_dataset_version']",
-            "root['preservation_state']",
-            "root['preservation_state_modified']",
-            "root['preservation_description']",
-            "root['preservation_reason_description']",
             "root['preservation_dataset_version']",
             "root['preservation_dataset_origin_version']",
-            "root['preservation_identifier']",
             "root['research_dataset']['version_notes']",
             "root['research_dataset']['total_remote_resources_byte_size']",
             "root['research_dataset']['access_rights']['access_url']",
@@ -228,6 +223,9 @@ class LegacyCompatibility:
         data["research_dataset"] = process_nested(
             data.get("research_dataset"), pre_handler, post_handler, path="research_dataset"
         )
+        # Treat missing preservation_state as 0 which is the V2 default
+        if not data.get("preservation_state"):
+            data["preservation_state"] = 0
         return parse_iso_dates_in_nested_dict(data)
 
     def exclude_from_diff(self, obj, path: str):
@@ -310,6 +308,8 @@ class LegacyCompatibility:
                 "root['version_identifiers']",  # Used only when syncing to V2
                 "root['editor_usernames']",  # Used only when syncing to V2
                 "date_modified",  # modification date is always set in V3
+                "root['preservation_state_modified']",
+                "root['contract']['identifier']",  # Only id used when syncing to V2
             ],
             exclude_regex_paths=[
                 # old_notation is related to a SYKE migration in 2020, not relevant anymore

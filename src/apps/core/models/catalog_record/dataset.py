@@ -231,6 +231,8 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         "other_identifiers__identifier_type",
         "other_identifiers",
         "preservation",
+        "preservation__dataset_version__dataset",
+        "preservation__dataset_origin_version__dataset",
         "projects__funding__funder__funder_type",
         "projects__funding__funder__organization__homepage",
         "projects__funding__funder__organization__parent__homepage",

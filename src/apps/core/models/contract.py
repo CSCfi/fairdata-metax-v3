@@ -75,7 +75,7 @@ class Contract(SystemCreatorBaseModel, CustomSoftDeletableModel):
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    legacy_id = models.BigIntegerField(null=True)
+    legacy_id = models.BigIntegerField(null=True, unique=True)
 
     contract_identifier = models.CharField(max_length=64)
     title = HStoreField(help_text='example: {"en":"title", "fi":"otsikko"}')

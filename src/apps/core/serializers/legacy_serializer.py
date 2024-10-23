@@ -8,6 +8,7 @@ from apps.common.helpers import process_nested
 from apps.common.serializers import CommonNestedModelSerializer
 from apps.core.models import Dataset, LegacyDataset
 from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
+from apps.core.models.preservation import Preservation
 from apps.core.serializers.common_serializers import (
     AccessRightsModelSerializer,
     EntityRelationSerializer,
@@ -102,6 +103,55 @@ class LegacyDatasetModelSerializer(CommonModelSerializer):
         )
 
 
+class LegacyPreservationSerializer(PreservationModelSerializer):
+
+    dataset_version = serializers.UUIDField(
+        source="dataset_version.dataset", required=False, allow_null=True
+    )
+    dataset_origin_version = serializers.UUIDField(
+        source="dataset_origin_version.dataset", required=False, allow_null=True
+    )
+
+    def _handle_preservation_versions(self, instance: Preservation, preservation_versions: dict):
+        try:
+            if preserved := preservation_versions.get("preserved"):
+                other = Preservation.objects.get(dataset=preserved["dataset"])
+                instance.dataset_version = other
+                instance.save()
+            elif origin := preservation_versions.get("origin"):
+                other = Preservation.objects.get(dataset=origin["dataset"])
+                other.dataset_version = instance
+                other.save()
+        except Preservation.DoesNotExist:
+            pass  # Linked dataset has not been migrated yet, skip assigning dataset_version
+
+    def create(self, validated_data: dict):
+        preservation_data = {
+            "origin": validated_data.pop("dataset_origin_version", None),
+            "preserved": validated_data.pop("dataset_version", None),
+        }
+        instance: Preservation = super().create(validated_data)
+        self._handle_preservation_versions(instance, preservation_data)
+        return instance
+
+    def update(self, instance: Preservation, validated_data: dict):
+        preservation_data = {
+            "origin": validated_data.pop("dataset_origin_version", None),
+            "preserved": validated_data.pop("dataset_version", None),
+        }
+        instance = super().update(instance, validated_data)
+        self._handle_preservation_versions(instance, preservation_data)
+        return instance
+
+    class Meta(PreservationModelSerializer.Meta):
+        fields = [
+            *PreservationModelSerializer.Meta.fields,
+            "dataset_version",
+            "dataset_origin_version",
+        ]
+        extra_kwargs = {"state_modified": {"read_only": False}}
+
+
 class LegacyDatasetUpdateSerializer(CommonNestedModelSerializer):
     """Serializer for updating migrated dataset fields.
 
@@ -122,7 +172,7 @@ class LegacyDatasetUpdateSerializer(CommonNestedModelSerializer):
     spatial = SpatialModelSerializer(required=False, many=True)
     temporal = TemporalModelSerializer(required=False, many=True)
     relation = EntityRelationSerializer(required=False, many=True)
-    preservation = PreservationModelSerializer(required=False, many=False)
+    preservation = LegacyPreservationSerializer(required=False, many=False)
     provenance = ProvenanceModelSerializer(required=False, many=True)
     projects = ProjectModelSerializer(required=False, many=True)
     allowed_actions = DatasetAllowedActionsSerializer(read_only=True, source="*")

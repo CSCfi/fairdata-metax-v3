@@ -120,28 +120,6 @@ def license() -> DatasetLicense:
 
 
 @pytest.fixture
-def contract() -> Contract:
-    title = {
-        "en": "Title 5",
-        "fi": "Otsikko 5",
-        "sv": "Titel 5",
-    }
-    quota = 111204
-    valid_from = "2023-06-15"
-    valid_until = "2023-12-31"
-    created = "2021-12-31T12:13:14Z"
-    modified = "2021-12-31T12:13:14Z"
-    return Contract(
-        created=created,
-        modified=modified,
-        title=title,
-        quota=quota,
-        validity_start_date=valid_from,
-        validity_end_date=valid_until,
-    )
-
-
-@pytest.fixture
 def dataset() -> Dataset:
     title = {
         "en": "Title 2",

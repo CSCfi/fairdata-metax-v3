@@ -5,6 +5,7 @@ from django.db import models
 from django.db.models import Q
 from django.utils.translation import gettext as _
 from simple_history.models import HistoricalRecords
+from django.utils import timezone
 
 from apps.common.copier import ModelCopier
 from apps.common.models import AbstractBaseModel, AbstractDatasetProperty
@@ -23,7 +24,8 @@ class Preservation(AbstractBaseModel):
         null=True,
         blank=True,
     )
-    id = models.CharField(primary_key=True, default=uuid.uuid4, max_length=256, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    preservation_identifier = models.CharField(max_length=256, null=True, blank=True)
 
     class PreservationState(models.IntegerChoices):
         NONE = -1
@@ -49,6 +51,11 @@ class Preservation(AbstractBaseModel):
         choices=PreservationState.choices,
         default=PreservationState.NONE,
         help_text=_("Record state in DPRES."),
+    )
+    state_modified = models.DateTimeField(
+        help_text="Last preservation state change",
+        blank=True,
+        null=True,
     )
     description = HStoreField(
         blank=True,

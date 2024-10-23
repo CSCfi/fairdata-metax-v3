@@ -39,7 +39,6 @@ pytestmark = [pytest.mark.adapter]
                 # ],
                 "dictionary_item_added": ["root['research_dataset']['issued']"],
                 "dictionary_item_removed": [
-                    "root['preservation_state']",
                     "root['research_dataset']['total_files_byte_size']",
                 ],
             },
@@ -47,19 +46,13 @@ pytestmark = [pytest.mark.adapter]
         (
             "dataset-ida-files-qvain-created.json",
             "files-ida.json",
-            {
-                "dictionary_item_removed": [
-                    "root['preservation_state']",
-                    "root['preservation_identifier']",
-                ],
-            },
+            {},
         ),
         (
             "dataset-remote-qvain-created.json",
             None,
             {
                 "dictionary_item_removed": [
-                    "root['preservation_state']",
                     "root['research_dataset']['total_remote_resources_byte_size']",
                 ],
             },
@@ -69,7 +62,6 @@ pytestmark = [pytest.mark.adapter]
             None,
             {
                 "dictionary_item_removed": [
-                    "root['preservation_state']",
                     "root['research_dataset']['total_remote_resources_byte_size']",
                 ],
             },
@@ -86,6 +78,7 @@ def test_v2_to_v3_dataset_conversion(
     files_path,
     expected_diff,
 ):
+    factories.ContractFactory(legacy_id=123)
     # Data prep
     test_data_path = os.path.dirname(os.path.abspath(__file__)) + "/testdata/"
     data = None

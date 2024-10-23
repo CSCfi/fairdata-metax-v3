@@ -26,6 +26,7 @@ from django.test.client import Client
 from rest_framework.test import APIClient, RequestsClient
 
 from apps.core import factories
+from apps.core.models.contract import Contract
 from apps.core.models.data_catalog import DataCatalog
 from apps.core.signals import dataset_created, dataset_updated
 from apps.files import factories as files_factories
@@ -149,6 +150,7 @@ def ida_client():
     client.force_login(user)
     return client
 
+
 @pytest.fixture
 def pas_client():
     client = Client()
@@ -168,7 +170,6 @@ def v2_migration_client():
     user.groups.set([service_group, pas_group])
     client.force_login(user)
     return client
-
 
 
 def pytest_collection_modifyitems(items):
@@ -247,6 +248,29 @@ def data_catalog_harvested(fairdata_users_group, service_group) -> DataCatalog:
     )
     catalog.dataset_groups_create.set([fairdata_users_group, service_group])
     return catalog
+
+
+@pytest.fixture
+def contract() -> Contract:
+    title = {
+        "en": "Title 5",
+        "fi": "Otsikko 5",
+        "sv": "Titel 5",
+    }
+    quota = 111204
+    valid_from = "2023-06-15"
+    valid_until = "2023-12-31"
+    created = "2021-12-31T12:13:14Z"
+    modified = "2021-12-31T12:13:14Z"
+    return Contract.objects.create(
+        created=created,
+        modified=modified,
+        title=title,
+        quota=quota,
+        validity_start_date=valid_from,
+        validity_end_date=valid_until,
+        legacy_id=1,
+    )
 
 
 @pytest.mark.django_db

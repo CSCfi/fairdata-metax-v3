@@ -1,8 +1,12 @@
+from uuid import UUID
+import copy
 from datetime import datetime
+from tests.utils import matchers
 
 import pytest
 from rest_framework.reverse import reverse
 
+from apps.core import factories
 from apps.core.models import LegacyDataset
 from apps.core.models.catalog_record.dataset import Dataset
 
@@ -11,6 +15,7 @@ pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.dataset, pyte
 
 def test_create_legacy_dataset(legacy_dataset_a):
     assert legacy_dataset_a.status_code == 201, legacy_dataset_a.data
+    assert legacy_dataset_a.data.get("preservation") is None
 
 
 def test_create_same_legacy_dataset_twice(admin_client, legacy_dataset_a, legacy_dataset_a_json):
@@ -280,3 +285,181 @@ def test_legacy_dataset_pid_attributes(
     assert dataset.persistent_identifier == persistent_identifier
     assert dataset.pid_generated_by_fairdata == pid_generated_by_fairdata
     assert dataset.generate_pid_on_publish == generate_pid_on_publish
+
+
+def test_legacy_dataset_preservation_fields(
+    admin_client,
+    data_catalog_att,
+    reference_data,
+    legacy_dataset_a_json,
+):
+    contract = factories.ContractFactory(legacy_id=123)
+
+    dataset_json = legacy_dataset_a_json["dataset_json"]
+    dataset_json["contract"] = {"id": contract.legacy_id}
+    dataset_json["preservation_state"] = 20
+    dataset_json["preservation_description"] = {"fi": "oke"}
+    dataset_json["preservation_reason_description"] = "Plz preserve"
+    dataset_json["preservation_identifier"] = "preservation_id:123:jee"
+
+    res = admin_client.post(
+        reverse("migrated-dataset-list"), legacy_dataset_a_json, content_type="application/json"
+    )
+    assert res.status_code == 201, res.data
+
+    res = admin_client.get(
+        reverse("dataset-detail", args=[dataset_json["identifier"]]),
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["preservation"] == {
+        "id": matchers.Any(),
+        "contract": str(contract.id),
+        "state": 20,
+        "state_modified": matchers.DateTimeStr(),
+        "description": {"fi": "oke"},
+        "reason_description": "Plz preserve",
+        "preservation_identifier": "preservation_id:123:jee",
+    }
+
+
+def test_legacy_dataset_preservation_fields_contract_errors(
+    admin_client,
+    data_catalog_att,
+    reference_data,
+    legacy_dataset_a_json,
+):
+    contract = factories.ContractFactory(legacy_id=123)
+
+    dataset_json = legacy_dataset_a_json["dataset_json"]
+    dataset_json["contract"] = {"iidee": contract.legacy_id}
+    res = admin_client.post(
+        reverse("migrated-dataset-list"), legacy_dataset_a_json, content_type="application/json"
+    )
+    assert res.status_code == 400
+    assert res.json() == {"contract": "Missing contract.id"}
+
+    dataset_json["contract"] = {"id": "not an integer"}
+    res = admin_client.post(
+        reverse("migrated-dataset-list"), legacy_dataset_a_json, content_type="application/json"
+    )
+    assert res.status_code == 400
+    assert res.json() == {"contract": "Invalid value"}
+
+    dataset_json["contract"] = {"id": 1337}
+    res = admin_client.post(
+        reverse("migrated-dataset-list"), legacy_dataset_a_json, content_type="application/json"
+    )
+    assert res.status_code == 400
+    assert res.json() == {"contract": "Contract with legacy_id=1337 not found"}
+
+
+@pytest.mark.parametrize("origin_first", [True, False])
+def test_legacy_dataset_preservation_dataset(
+    admin_client, data_catalog_att, reference_data, legacy_dataset_a_json, origin_first, contract
+):
+    """Test creating dataset and PAS copy."""
+    legacy_dataset_a_json["dataset_json"]["contract"] = {"id": 1}
+    origin_version = copy.deepcopy(legacy_dataset_a_json)
+    origin_json = origin_version["dataset_json"]
+    origin_json["identifier"] = str(UUID(int=1))
+    origin_json["research_dataset"]["preferred_identifier"] = "pid:1"
+    origin_json["preservation_dataset_version"] = {"identifier": str(UUID(int=2))}
+    origin_json["preservation_dataset_origin_version"] = None
+
+    pas_version = copy.deepcopy(legacy_dataset_a_json)
+    pas_json = pas_version["dataset_json"]
+    pas_json["identifier"] = str(UUID(int=2))
+    pas_json["research_dataset"]["preferred_identifier"] = "pid:2"
+    pas_json["preservation_dataset_version"] = None
+    pas_json["preservation_dataset_origin_version"] = {"identifier": str(UUID(int=1))}
+
+    # Order in which datasets are migrated should not matter
+    if origin_first:
+        payloads = [origin_version, pas_version]
+    else:
+        payloads = [pas_version, origin_version]
+
+    for payload in payloads:
+        res = admin_client.post(
+            reverse("migrated-dataset-list"), payload, content_type="application/json"
+        )
+        assert res.status_code == 201, res.data
+
+    # Check origin version preservation links
+    res = admin_client.get(
+        reverse("dataset-detail", args=[origin_json["identifier"]]),
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["preservation"].get("dataset_version") == pas_json["identifier"]
+    assert data["preservation"].get("dataset_origin_version") is None
+
+    # Check pas version preservation links
+    res = admin_client.get(
+        reverse("dataset-detail", args=[pas_json["identifier"]]),
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["preservation"].get("dataset_version") is None
+    assert data["preservation"].get("dataset_origin_version") == origin_json["identifier"]
+
+
+def test_legacy_dataset_preservation_dataset_update(
+    admin_client, data_catalog_att, reference_data, legacy_dataset_a_json, contract
+):
+    """Test updating existing legacy dataset to make preservation links."""
+    # Original dataset is created without preservation info
+    origin_version = copy.deepcopy(legacy_dataset_a_json)
+    res = admin_client.post(
+        reverse("migrated-dataset-list"), origin_version, content_type="application/json"
+    )
+    assert res.status_code == 201, res.data
+
+    # PAS version is created with no preservation links yet because original has no preservation
+    pas_version = copy.deepcopy(legacy_dataset_a_json)
+    pas_json = pas_version["dataset_json"]
+    pas_json["contract"] = {"id": 1}
+    pas_json["identifier"] = str(UUID(int=2))
+    pas_json["research_dataset"]["preferred_identifier"] = "pid:2"
+    pas_json["preservation_dataset_version"] = None
+    pas_json["preservation_dataset_origin_version"] = {"identifier": str(UUID(int=1))}
+    res = admin_client.post(
+        reverse("migrated-dataset-list"), pas_version, content_type="application/json"
+    )
+    assert res.status_code == 201, res.data
+
+    # Original dataset is updated with preservation info, preservation links are created
+    origin_json = origin_version["dataset_json"]
+    origin_json["contract"] = {"id": 1}
+    origin_json["identifier"] = str(UUID(int=1))
+    origin_json["research_dataset"]["preferred_identifier"] = "pid:1"
+    origin_json["preservation_dataset_version"] = {"identifier": str(UUID(int=2))}
+    origin_json["preservation_dataset_origin_version"] = None
+    res = admin_client.post(
+        reverse("migrated-dataset-list"), origin_version, content_type="application/json"
+    )
+    assert res.status_code == 201, res.data
+
+    # Check origin version preservation links
+    res = admin_client.get(
+        reverse("dataset-detail", args=[origin_json["identifier"]]),
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["preservation"].get("dataset_version") == pas_json["identifier"]
+    assert data["preservation"].get("dataset_origin_version") is None
+
+    # Check PAS version preservation links
+    res = admin_client.get(
+        reverse("dataset-detail", args=[pas_json["identifier"]]),
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["preservation"].get("dataset_version") is None
+    assert data["preservation"].get("dataset_origin_version") == origin_json["identifier"]

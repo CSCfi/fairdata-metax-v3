@@ -499,6 +499,24 @@ class V2DatasetMixin:
             )
         )
 
+    def _generate_v2_preservation_fields(self, doc):
+        if preservation := self.preservation:
+            values = {}
+            if preservation.contract:
+                values["contract"] = {"id": preservation.contract.legacy_id}
+            values["preservation_state"] = preservation.state
+            if values["preservation_state"] == -1:
+                values["preservation_state"] = 0 # Default state is 0 in V2
+            values["preservation_identifier"] = preservation.preservation_identifier
+            values["preservation_state_modified"] = preservation.state_modified
+            values["preservation_description"] = preservation.description
+            values["preservation_reason_description"] = preservation.reason_description
+            if version := preservation.dataset_version:
+                values["preservation_dataset_version"] = version.id
+            if version := getattr(preservation, 'dataset_origin_version', None):
+                values["preservation_dataset_version"] = version.id
+            doc.update(omit_empty(values))
+
     def as_v2_dataset(self) -> Dict:
         self.ensure_prefetch()
         research_dataset = {
@@ -546,9 +564,6 @@ class V2DatasetMixin:
 
         if self.data_catalog:
             doc["data_catalog"] = {"identifier": self.data_catalog.id}
-        if self.preservation:
-            doc["preservation_state"] = self.preservation.state
-            doc["preservation_identifier"] = self.preservation.id
         if self.cumulation_started:
             doc["date_cumulation_started"] = self.cumulation_started.isoformat()
         if self.cumulation_ended:
@@ -571,6 +586,7 @@ class V2DatasetMixin:
         self._generate_v2_relation(doc)
         self._generate_v2_remote_resources(doc)
         self._generate_v2_rems_fields(doc)
+        self._generate_v2_preservation_fields(doc)
 
         for role in ["creator", "publisher", "curator", "contributor", "rights_holder"]:
             self.add_actor(role, doc)

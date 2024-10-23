@@ -25,6 +25,8 @@ from apps.common.helpers import (
     quote_url,
     remove_wkt_point_duplicates,
 )
+from apps.core.models.contract import Contract
+from apps.core.models.preservation import Preservation
 
 from .concepts import (
     AccessType,
@@ -644,6 +646,51 @@ class LegacyDatasetConverter:
         )
         return val
 
+    def convert_preservation(self):
+        dataset_json = self.dataset_json
+        contract_id = None
+        if contract := dataset_json.get("contract"):
+            ensure_dict(contract)
+            try:
+                legacy_id = contract["id"]
+                contract_id = Contract.objects.get(legacy_id=legacy_id).id
+            except KeyError:
+                raise serializers.ValidationError({"contract": "Missing contract.id"})
+            except ValueError:
+                raise serializers.ValidationError({"contract": "Invalid value"})
+            except Contract.DoesNotExist:
+                raise serializers.ValidationError(
+                    {"contract": f"Contract with legacy_id={legacy_id} not found"}
+                )
+
+        dataset_version_id = None
+        if version := dataset_json.get("preservation_dataset_version"):
+            ensure_dict(version)
+            dataset_version_id = version.get("identifier")
+
+        dataset_origin_version_id = None
+        if version := dataset_json.get("preservation_dataset_origin_version"):
+            ensure_dict(version)
+            dataset_origin_version_id = version.get("identifier")
+
+        preservation = {
+            "contract": contract_id,
+            "dataset_version": dataset_version_id,
+            "dataset_origin_version": dataset_origin_version_id,
+            "state": dataset_json.get("preservation_state"),
+            "state_modified": dataset_json.get("preservation_state_modified"),
+            "description": dataset_json.get("preservation_description"),
+            "reason_description": dataset_json.get("preservation_reason_description"),
+            "preservation_identifier": dataset_json.get("preservation_identifier"),
+        }
+        preservation = omit_empty(preservation)
+
+        # V2 datasets have default "preservation_state": 0 (initialized),
+        # while in V3 the default state is -1 (none)
+        if not preservation or preservation == {"state": 0}:
+            return None
+        return preservation
+
     def get_modified(self):
         return (
             self.legacy_research_dataset.get("modified")
@@ -800,6 +847,7 @@ class LegacyDatasetConverter:
             "remote_resources": [
                 self.convert_remote_resource(v) for v in ensure_list(rd.get("remote_resources"))
             ],
+            "preservation": self.convert_preservation(),
         }
 
         data = {**root_level_fields, **omit_empty(research_dataset, recurse=True)}

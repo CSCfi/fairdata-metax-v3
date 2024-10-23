@@ -72,6 +72,10 @@
 
 ### :::tests.conftest.data_catalog_harvested
 
+## contract
+
+### :::tests.conftest.contract
+
 ## organization_reference_data
 
 ### :::tests.conftest.organization_reference_data

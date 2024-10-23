@@ -40,10 +40,6 @@
 
 ### :::tests.unit.apps.core.models.conftest.license
 
-## contract
-
-### :::tests.unit.apps.core.models.conftest.contract
-
 ## dataset
 
 ### :::tests.unit.apps.core.models.conftest.dataset
