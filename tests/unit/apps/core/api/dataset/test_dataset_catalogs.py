@@ -49,6 +49,42 @@ def catalog_datasets(reference_data):
     )
 
 
+@pytest.fixture
+def publishing_channel_catalogs(
+    admin_client, data_catalog_list_url, reference_data, datacatalog_a_json
+):
+    # Catalog with no publishing channels
+    no_pc_dc_json = datacatalog_a_json
+    no_pc_dc_json["id"] = "no-pc-data-catalog"
+    res = admin_client.post(data_catalog_list_url, no_pc_dc_json, content_type="application/json")
+    assert res.status_code == 201
+
+    # Catalog with etsin publishing channel
+    etsin_pc_dc_json = datacatalog_a_json
+    etsin_pc_dc_json["id"] = "etsin-pc-data-catalog"
+    etsin_pc_dc_json["publishing_channels"] = ["etsin"]
+    res = admin_client.post(
+        data_catalog_list_url, etsin_pc_dc_json, content_type="application/json"
+    )
+    assert res.status_code == 201
+
+    # Catalog with ttv publishing channels
+    ttv_pc_dc_json = datacatalog_a_json
+    ttv_pc_dc_json["id"] = "ttv-pc-data-catalog"
+    ttv_pc_dc_json["publishing_channels"] = ["ttv"]
+    res = admin_client.post(data_catalog_list_url, ttv_pc_dc_json, content_type="application/json")
+    assert res.status_code == 201
+
+    # Catalog with both publishing channels
+    both_pc_dc_json = datacatalog_a_json
+    both_pc_dc_json["id"] = "both-pc-data-catalog"
+    both_pc_dc_json["publishing_channels"] = ["etsin", "ttv"]
+    res = admin_client.post(
+        data_catalog_list_url, both_pc_dc_json, content_type="application/json"
+    )
+    assert res.status_code == 201
+
+
 # List datasets
 
 
@@ -164,6 +200,127 @@ def test_catalog_datasets_update_admin(admin_client, catalog_datasets, dataset_a
     dataset_id = Dataset.objects.get(persistent_identifier="test-public-dataset").id
     res = admin_client.patch(f"/v3/datasets/{dataset_id}", {}, content_type="application/json")
     assert res.status_code == 200
+
+
+# Publishing Channels
+
+
+@pytest.mark.parametrize(
+    "dc_id,publishing_channels,expected_count",
+    [
+        ("no-pc-data-catalog", "etsin", 0),
+        ("etsin-pc-data-catalog", "etsin", 1),
+        ("ttv-pc-data-catalog", "etsin", 0),
+        ("both-pc-data-catalog", "etsin", 1),
+        ("no-pc-data-catalog", "ttv", 0),
+        ("etsin-pc-data-catalog", "ttv", 0),
+        ("ttv-pc-data-catalog", "ttv", 1),
+        ("both-pc-data-catalog", "ttv", 1),
+        ("no-pc-data-catalog", "all", 1),
+        ("etsin-pc-data-catalog", "all", 1),
+        ("ttv-pc-data-catalog", "all", 1),
+        ("both-pc-data-catalog", "all", 1),
+    ],
+)
+def test_catalog_datasets_publishing_channels(
+    admin_client,
+    dataset_a_json,
+    publishing_channel_catalogs,
+    dc_id,
+    publishing_channels,
+    expected_count,
+):
+    dataset_json = dataset_a_json
+    dataset_json["data_catalog"] = dc_id
+    res = admin_client.post("/v3/datasets", dataset_json, content_type="application/json")
+    assert res.status_code == 201
+
+    res = admin_client.get(f"/v3/datasets?publishing_channels={publishing_channels}")
+    actual_count = res.json()["count"]
+    assert (
+        actual_count == expected_count
+    ), f"data catalog id: {dc_id}, publishing_channels: {publishing_channels}, expected_count: {expected_count}, actual count: {actual_count}"
+
+
+@pytest.mark.parametrize(
+    "dc_id,expected_count",
+    [
+        ("no-pc-data-catalog", 0),
+        ("etsin-pc-data-catalog", 1),
+        ("ttv-pc-data-catalog", 0),
+        ("both-pc-data-catalog", 1),
+    ],
+)
+def test_catalog_datasets_default_publishing_channels(
+    admin_client, dataset_a_json, publishing_channel_catalogs, dc_id, expected_count
+):
+    dataset_json = dataset_a_json
+    dataset_json["data_catalog"] = dc_id
+    res = admin_client.post("/v3/datasets", dataset_json, content_type="application/json")
+    assert res.status_code == 201
+
+    res = admin_client.get(f"/v3/datasets")
+    actual_count = res.json()["count"]
+    assert (
+        actual_count == expected_count
+    ), f"data catalog id: {dc_id}, expected_count: {expected_count}, actual count: {actual_count}"
+
+
+def test_catalog_datasets_invalid_publishing_channels(
+    admin_client, dataset_a_json, publishing_channel_catalogs
+):
+    dataset_json = dataset_a_json
+    dataset_json["data_catalog"] = "both-pc-data-catalog"
+    res = admin_client.post("/v3/datasets", dataset_json, content_type="application/json")
+    print(res.json())
+    assert res.status_code == 201
+
+    res = admin_client.get("/v3/datasets?publishing_channels=foo")
+    assert res.status_code == 400
+    assert "Value 'foo' is not a valid choice" in str(res.json())
+
+
+def test_catalog_datasets_publishing_channels_single_dataset(
+    admin_client, dataset_a_json, publishing_channel_catalogs
+):
+    dataset_json = dataset_a_json
+    dataset_json["data_catalog"] = "no-pc-data-catalog"
+    res = admin_client.post(f"/v3/datasets", dataset_json, content_type="application/json")
+    assert res.status_code == 201
+    cr_id = res.json()["id"]
+
+    res = admin_client.get(f"/v3/datasets/{cr_id}")
+    assert res.status_code == 200
+    assert res.json()["id"] == cr_id
+
+
+@pytest.mark.parametrize(
+    "publishing_channels,expected_count",
+    [
+        ("etsin", 1),
+        ("ttv", 0),
+        ("all", 1),
+        (None, 1),
+    ],
+)
+def test_get_datasets_without_catalog(
+    admin_client, dataset_a_json, publishing_channel_catalogs, publishing_channels, expected_count
+):
+    dataset_json = dataset_a_json
+    dataset_json.pop("data_catalog")
+    dataset_json["state"] = "draft"
+    res = admin_client.post(f"/v3/datasets", dataset_json, content_type="application/json")
+    assert res.status_code == 201
+
+    if publishing_channels:
+        res = admin_client.get(f"/v3/datasets?publishing_channels={publishing_channels}")
+    else:
+        res = admin_client.get(f"/v3/datasets")
+
+    actual_count = res.json()["count"]
+    assert (
+        actual_count == expected_count
+    ), f"publishing_channels: {publishing_channels}, expected_count: {expected_count}, actual count: {actual_count}"
 
 
 # Update catalog

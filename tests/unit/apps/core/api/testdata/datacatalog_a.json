@@ -31,6 +31,8 @@
   },
   "dataset_versioning_enabled": false,
   "allowed_pid_types": [
+    "URN",
+    "DOI",
     "external"
   ]
 }

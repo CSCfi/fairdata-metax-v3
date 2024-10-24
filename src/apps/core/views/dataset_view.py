@@ -5,6 +5,7 @@
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
 
+from enum import Enum
 import logging
 from typing import List
 
@@ -27,7 +28,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.reverse import reverse
 from watson import search
 
-from apps.common.filters import MultipleCharFilter
+from apps.common.filters import MultipleCharFilter, VerboseChoiceFilter
 from apps.common.helpers import ensure_dict, omit_empty
 from apps.common.profiling import count_queries
 from apps.common.serializers.serializers import (
@@ -129,6 +130,11 @@ class DatasetFilter(filters.FilterSet):
         choices=Preservation.PreservationState.choices,
         label="preservation_state",
         field_name="preservation__state",
+    )
+    publishing_channels = VerboseChoiceFilter(
+        choices=[("etsin", "etsin"), ("ttv", "ttv"), ("all", "all")],
+        method="filter_publishing_channels",
+        help_text="Filter datasets based on the publishing channels of the dataset's catalog. The default value is 'etsin'.",
     )
     state = filters.ChoiceFilter(
         choices=Dataset.StateChoices.choices,
@@ -247,6 +253,16 @@ class DatasetFilter(filters.FilterSet):
     def filter_project(self, queryset, name, value):
         return self._filter_list(queryset, value, filter_param="projects__title__values__contains")
 
+    def filter_publishing_channels(self, queryset, name, value):
+        if value == "all":
+            return queryset
+        if value == "etsin":
+            return queryset.filter(
+                Q(data_catalog__publishing_channels__contains=["etsin"])
+                | Q(data_catalog__isnull=True)
+            )
+        return queryset.filter(data_catalog__publishing_channels__contains=[value])
+
     def _filter_list(self, queryset, value, filter_param):
         result = queryset
         for group in value:
@@ -275,6 +291,12 @@ class DatasetFilter(filters.FilterSet):
         if value:
             return DatasetAccessPolicy.scope_queryset_owned_or_shared(self.request, queryset)
         return queryset
+
+    def filter_queryset(self, queryset):
+        # Use "etsin" as the default publishing channel filter value
+        if not self.form.cleaned_data["publishing_channels"]:
+            self.form.cleaned_data["publishing_channels"] = "etsin"
+        return super().filter_queryset(queryset)
 
 
 @method_decorator(

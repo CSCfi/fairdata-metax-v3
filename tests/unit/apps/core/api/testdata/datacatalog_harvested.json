@@ -25,5 +25,6 @@
     "fi": "Harvestoitu katalogi"
   },
   "dataset_versioning_enabled": true,
-  "harvested": true
+  "harvested": true,
+  "publishing_channels": ["etsin", "ttv"]
 }
