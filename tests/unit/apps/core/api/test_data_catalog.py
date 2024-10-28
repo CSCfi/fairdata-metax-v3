@@ -231,6 +231,7 @@ def test_put_datacatalog(admin_client, datacatalog_a_json, reference_data, data_
 
     # values not in put_json should be cleared to defaults
     put_json["allow_remote_resources"] = True  # default is true
+    put_json["publishing_channels"] = ["etsin", "ttv"]  # default channels
     assert put_json == {key: value for key, value in res2.json().items() if value}
 
 

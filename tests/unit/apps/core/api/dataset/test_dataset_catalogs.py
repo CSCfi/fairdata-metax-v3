@@ -56,6 +56,7 @@ def publishing_channel_catalogs(
     # Catalog with no publishing channels
     no_pc_dc_json = datacatalog_a_json
     no_pc_dc_json["id"] = "no-pc-data-catalog"
+    no_pc_dc_json["publishing_channels"] = []
     res = admin_client.post(data_catalog_list_url, no_pc_dc_json, content_type="application/json")
     assert res.status_code == 201
 

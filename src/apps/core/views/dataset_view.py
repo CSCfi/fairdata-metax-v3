@@ -5,8 +5,8 @@
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
 
-from enum import Enum
 import logging
+from enum import Enum
 from typing import List
 
 from django.conf import settings

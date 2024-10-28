@@ -1,8 +1,8 @@
 import logging
 import re
-from django.conf import settings as django_settings
 
 import pytest
+from django.conf import settings as django_settings
 
 from apps.core.models.catalog_record.dataset import Dataset
 

@@ -171,7 +171,6 @@ def v2_migration_client():
     client.force_login(user)
     return client
 
-
 def pytest_collection_modifyitems(items):
     """Pytest provided hook function
 

@@ -36,6 +36,10 @@ def default_allowed_pid_types() -> List[PIDType]:
     return [PIDType.EXTERNAL]
 
 
+def default_publishing_channels() -> List["DataCatalog.PublishingChannel"]:
+    return [DataCatalog.PublishingChannel.ETSIN, DataCatalog.PublishingChannel.TTV]
+
+
 class DataCatalog(AbstractBaseModel):
     """A curated collection of metadata about resources.
 
@@ -107,7 +111,7 @@ class DataCatalog(AbstractBaseModel):
 
     publishing_channels = ArrayField(
         models.CharField(max_length=64, choices=PublishingChannel.choices),
-        default=list,
+        default=default_publishing_channels,
         blank=True,
         help_text="Channels in which datasets in this catalog will be published.",
     )

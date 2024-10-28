@@ -21,7 +21,9 @@ class ContractFactory(factory.django.DjangoModelFactory):
     title = factory.Dict({"en": factory.Sequence(lambda n: f"contract-{n}")})
     quota = factory.Faker("random_number")
     validity_start_date = factory.LazyFunction(timezone.now)
-    validity_end_date = factory.Faker("date_between", start_date=factory.SelfAttribute("..validity_start_date"))
+    validity_end_date = factory.Faker(
+        "date_between", start_date=factory.SelfAttribute("..validity_start_date")
+    )
 
     class Params:
         identifier_uuid = factory.Faker("uuid4")

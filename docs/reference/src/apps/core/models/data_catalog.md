@@ -12,6 +12,10 @@
 
 ### :::src.apps.core.models.data_catalog.default_allowed_pid_types
 
+## default_publishing_channels
+
+### :::src.apps.core.models.data_catalog.default_publishing_channels
+
 ## DataCatalog
 
 ### :::src.apps.core.models.data_catalog.DataCatalog
