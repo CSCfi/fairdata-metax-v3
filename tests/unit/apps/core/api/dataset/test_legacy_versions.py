@@ -20,7 +20,8 @@ def test_create_legacy_datasets_with_versions(
     )
     assert res.status_code == 201, res.data
     assert DatasetVersions.objects.count() == 1
-    dataset_a = Dataset.objects.get(id=legacy_dataset_a_json["dataset_json"]["identifier"])
+    dataset_a_id = legacy_dataset_a_json["dataset_json"]["identifier"]
+    dataset_a = Dataset.objects.get(id=dataset_a_id)
     dataset_a_versions = dataset_a.dataset_versions_id
 
     # Add new dataset that has updated dataset_version_set
@@ -34,7 +35,8 @@ def test_create_legacy_datasets_with_versions(
     )
     assert res.status_code == 201
     assert DatasetVersions.objects.count() == 1
-    dataset_b = Dataset.objects.get(id=legacy_dataset_b_json["dataset_json"]["identifier"])
+    dataset_b_id = legacy_dataset_b_json["dataset_json"]["identifier"]
+    dataset_b = Dataset.objects.get(id=dataset_b_id)
     dataset_b_versions = dataset_b.dataset_versions_id
     assert dataset_a_versions == dataset_b_versions
     assert dataset_a.dataset_versions.legacy_versions == sorted(
@@ -44,6 +46,16 @@ def test_create_legacy_datasets_with_versions(
             UUID(int=123),
         ]
     )
+
+    # Assert that version numbers are serialized correctly
+    res_b = admin_client.get(f"/v3/datasets/{dataset_b_id}", content_type="application/json")
+    dataset_versions_b = res_b.json()["dataset_versions"]
+    assert dataset_versions_b[0]["version"] == 2
+    assert dataset_versions_b[1]["version"] == 1
+
+    res_a = admin_client.get(f"/v3/datasets/{dataset_a_id}", content_type="application/json")
+    dataset_versions_a = res_a.json()["dataset_versions"]
+    assert dataset_versions_a == dataset_versions_b
 
 
 def test_create_legacy_datasets_with_versions_reverse(

@@ -360,7 +360,7 @@ class DatasetViewSet(CommonModelViewSet):
             # Return only latest versions available for the current user
             available_datasets = self.get_queryset()
             latest_versions = available_datasets.order_by(
-                "dataset_versions_id", "-version"
+                "dataset_versions_id", "-created"
             ).distinct("dataset_versions_id")
             return queryset.filter(id__in=latest_versions)
 

@@ -78,9 +78,6 @@ def test_other_versions(dataset):
     second.publish()
     third = Dataset.create_new_version(second)
     assert first.dataset_versions == second.dataset_versions == third.dataset_versions
-    assert first.version == 1
-    assert second.version == 2
-    assert third.version == 3
     assert first.next_existing_version.id == second.id
     assert second.next_existing_version.id == third.id
     assert third.next_existing_version == None

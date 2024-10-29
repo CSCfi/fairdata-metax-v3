@@ -55,6 +55,8 @@ logger = logging.getLogger(__name__)
 
 
 class VersionSerializer(CommonModelSerializer):
+    version = serializers.IntegerField(source="version_number", read_only=True)
+
     class Meta:
         model = Dataset
         fields = [
@@ -70,6 +72,9 @@ class VersionSerializer(CommonModelSerializer):
             "version",
         ]
         list_serializer_class = CommonListSerializer
+
+    def get_version(self, instance):
+        return instance.version_number
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
@@ -150,6 +155,7 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
     modified = serializers.DateTimeField(required=False, read_only=False)
     next_draft = LinkedDraftSerializer(read_only=True)
     draft_of = LinkedDraftSerializer(read_only=True)
+    version = serializers.IntegerField(source="version_number", read_only=True)
     metrics = DatasetMetricsSerializer(read_only=True)  # Included when include_metrics=true
     pid_type = NoopField(help_text="No longer in use. Replaced by generate_pid_on_publish.")
     generate_pid_on_publish = ListValidChoicesField(
@@ -170,12 +176,15 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
             or instance.has_permission_to_see_drafts(self.context["request"].user)
         )
 
+    def get_version(self, instance):
+        return instance.version_number
+
     def get_dataset_versions(self, instance):
         if version_set := instance.dataset_versions:
             # Use prefetched results stored in _datasets when available
             versions = getattr(version_set, "_datasets", None) or version_set.datasets(
                 manager="all_objects"
-            ).order_by("-version").prefetch_related(*Dataset.dataset_versions_prefetch_fields)
+            ).order_by("-created").prefetch_related(*Dataset.dataset_versions_prefetch_fields)
 
             has_drafts = any(
                 dataset for dataset in versions if dataset.state != Dataset.StateChoices.PUBLISHED

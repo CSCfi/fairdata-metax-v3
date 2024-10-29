@@ -161,6 +161,7 @@ class LegacyDatasetUpdateSerializer(CommonNestedModelSerializer):
                 "dataset_versions",  # field is not writable
                 "metrics",  # field is not writable
                 "fileset",  # assigned directly in LegacyDataset
+                "version",  # field is not writable
             ]
         ] + nonpublic_fields
 

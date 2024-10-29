@@ -10,6 +10,13 @@ pytestmark = [pytest.mark.django_db, pytest.mark.dataset, pytest.mark.versioning
 logger = logging.getLogger(__name__)
 
 
+def _get_dataset_from_dataset_versions(dataset_versions, ds_id):
+    for ds in dataset_versions:
+        if ds["id"] == ds_id:
+            return ds
+    return None
+
+
 @pytest.mark.parametrize(
     "query_param",
     ["latest_published=true", "published_revision=1", "all_published_revisions=true"],
@@ -70,6 +77,31 @@ def test_dataset_versions(admin_client, user_client, dataset_a_json, data_catalo
     res = admin_client.get(f"/v3/datasets/{res1.data['id']}")
     assert res.status_code == 200
     assert len(res.data["dataset_versions"]) == 2
+
+
+def test_dataset_version_numbers(admin_client, dataset_a_json, data_catalog, reference_data):
+    res1 = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res1.status_code == 201
+    ds1_id = res1.data["id"]
+
+    res2 = admin_client.post(f"/v3/datasets/{ds1_id}/new-version", content_type="application/json")
+    assert res2.status_code == 201
+    ds2_id = res2.data["id"]
+
+    # Ensure version numbers are serialized correctly in dataset_versions
+    res1 = admin_client.get(f"/v3/datasets/{ds1_id}")
+    dataset_versions1 = res1.data["dataset_versions"]
+    ds1_version = _get_dataset_from_dataset_versions(dataset_versions1, ds1_id)["version"]
+    ds2_version = _get_dataset_from_dataset_versions(dataset_versions1, ds2_id)["version"]
+    assert res1.data["version"] == 1
+    assert ds1_version == 1
+    assert ds2_version == 2
+
+    # Ensure that dataset_versions are identical
+    res2 = admin_client.get(f"/v3/datasets/{ds2_id}")
+    dataset_versions2 = res2.data["dataset_versions"]
+    assert res2.data["version"] == 2
+    assert dataset_versions1 == dataset_versions2
 
 
 def test_creating_version_of_a_draft(admin_client, dataset_c_json, data_catalog, reference_data):
@@ -167,62 +199,103 @@ def test_version_draft_permissions(
     res1 = user_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res1.status_code == 201
     assert res1.data["version"] == 1
+    ds1_id = res1.data["id"]
 
     # user1 creates a second version
-    res2 = user_client.post(f"/v3/datasets/{res1.data['id']}/new-version")
+    res2 = user_client.post(f"/v3/datasets/{ds1_id}/new-version")
     assert res2.status_code == 201
     assert res2.data["version"] == 2
+    ds2_id = res2.data["id"]
 
     # ensure user1 can see the second version draft in dataset_versions
-    res = user_client.get(f"/v3/datasets/{res1.data['id']}")
+    res = user_client.get(f"/v3/datasets/{ds1_id}")
     assert res.status_code == 200
     assert len(res.data["dataset_versions"]) == 2
 
     # ensure user2 cannot see the second version draft in dataset_versions
-    res = user_client_2.get(f"/v3/datasets/{res1.data['id']}")
+    res = user_client_2.get(f"/v3/datasets/{ds1_id}")
     assert res.status_code == 200
     assert len(res.data["dataset_versions"]) == 1
 
     # user1 publishes the second version draft
-    res = user_client.post(f"/v3/datasets/{res2.data['id']}/publish")
+    res = user_client.post(f"/v3/datasets/{ds2_id}/publish")
     assert res.status_code == 200
     assert res.data["version"] == 2
 
     # ensure user2 can see it now
-    res = user_client_2.get(f"/v3/datasets/{res1.data['id']}")
+    res = user_client_2.get(f"/v3/datasets/{ds1_id}")
     assert res.status_code == 200
     assert len(res.data["dataset_versions"]) == 2
 
     # user1 creates a draft of edits of second version
-    res3 = user_client.post(f"/v3/datasets/{res2.data['id']}/create-draft")
+    res3 = user_client.post(f"/v3/datasets/{ds2_id}/create-draft")
     assert res3.status_code == 201
     assert res3.data["version"] == 2
+    ds3_id = res3.data["id"]
 
     # ensure user1 can see the draft information
-    res = user_client.get(f"/v3/datasets/{res1.data['id']}?include_nulls=true")
+    res = user_client.get(f"/v3/datasets/{ds1_id}?include_nulls=true")
     assert res.status_code == 200
     assert len(res.data["dataset_versions"]) == 3
     assert "next_draft" in res.data["dataset_versions"][1].keys()
 
     # ensure user2 cannot see this information
-    res = user_client_2.get(f"/v3/datasets/{res1.data['id']}?include_nulls=true")
+    res = user_client_2.get(f"/v3/datasets/{ds1_id}?include_nulls=true")
     assert res.status_code == 200
     assert len(res.data["dataset_versions"]) == 2
     assert "next_draft" not in res.data["dataset_versions"][1].keys()
 
     # user1 makes yet another version (3)
-    res = user_client.post(f"/v3/datasets/{res2.data['id']}/new-version?include_nulls=true")
-    assert res.status_code == 201
+    res4 = user_client.post(f"/v3/datasets/{ds2_id}/new-version?include_nulls=true")
+    assert res4.status_code == 201
+    ds4_id = res4.data["id"]
 
     # ensure version numbering is correct even with all the drafts (v2 edit draft and v3 version draft)
-    assert res.data["version"] == 3
+    assert res4.data["version"] == 3
 
     # ensure correct amount of versions is shown to both users (2 published, 2 drafts)
-    assert len(res.data["dataset_versions"]) == 4
+    assert len(res4.data["dataset_versions"]) == 4
 
-    res = user_client_2.get(f"/v3/datasets/{res1.data['id']}")
+    res = user_client_2.get(f"/v3/datasets/{ds1_id}")
     assert res.status_code == 200
     assert len(res.data["dataset_versions"]) == 2
+
+    # ensure that version numbers are serialized correctly
+    res1 = admin_client.get(f"/v3/datasets/{ds1_id}")
+    res2 = admin_client.get(f"/v3/datasets/{ds2_id}")
+    res3 = admin_client.get(f"/v3/datasets/{ds3_id}")
+    res4 = admin_client.get(f"/v3/datasets/{ds4_id}")
+
+    ds1_version = res1.data["version"]
+    ds2_version = res2.data["version"]
+    ds3_version = res3.data["version"]
+    ds4_version = res4.data["version"]
+
+    assert ds1_version == 1
+    assert ds2_version == 2
+    assert ds3_version == 2
+    assert ds4_version == 3
+
+    # ensure that version numbers in dataset_versions are serialized correctly
+    ds1_versions = res1.data["dataset_versions"]
+    ds2_versions = res2.data["dataset_versions"]
+    ds3_versions = res3.data["dataset_versions"]
+    ds4_versions = res4.data["dataset_versions"]
+
+    ds1_version = _get_dataset_from_dataset_versions(ds1_versions, ds1_id)["version"]
+    ds2_version = _get_dataset_from_dataset_versions(ds1_versions, ds2_id)["version"]
+    ds3_version = _get_dataset_from_dataset_versions(ds1_versions, ds3_id)["version"]
+    ds4_version = _get_dataset_from_dataset_versions(ds1_versions, ds4_id)["version"]
+
+    assert ds1_version == 1
+    assert ds2_version == 2
+    assert ds3_version == 2
+    assert ds4_version == 3
+
+    # ensure that dataset_versions are identical
+    assert ds1_versions == ds2_versions
+    assert ds1_versions == ds3_versions
+    assert ds1_versions == ds4_versions
 
 
 @pytest.mark.usefixtures("reference_data", "data_catalog")

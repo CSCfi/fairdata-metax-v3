@@ -160,7 +160,6 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         choices=StateChoices.choices,
         default=StateChoices.DRAFT,
     )
-    version = models.IntegerField(default=1, blank=True, editable=False)
 
     dataset_versions = models.ForeignKey(
         DatasetVersions, related_name="datasets", on_delete=models.SET_NULL, null=True
@@ -284,7 +283,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
     def get_versions_prefetch(cls):
         return models.Prefetch(
             "dataset_versions__datasets",
-            queryset=cls.all_objects.order_by("-version").prefetch_related(
+            queryset=cls.all_objects.order_by("-created").prefetch_related(
                 *cls.dataset_versions_prefetch_fields
             ),
             to_attr="_datasets",
@@ -331,13 +330,36 @@ class Dataset(V2DatasetMixin, CatalogRecord):
     def _historicals_to_instances(historicals):
         return [historical.instance for historical in historicals if historical.instance]
 
+    # Get dataset that has been created after the current dataset and is not a draft of another dataset
     @property
     def next_existing_version(self):
         return (
             self.dataset_versions.datasets.order_by("created")
-            .filter(version__gt=self.version)
+            .filter(draft_of__isnull=True)
+            .filter(created__gt=self.created)
             .first()
         )
+
+    @cached_property
+    def version_number(self):
+        # Version number is calculated by checking how many of the published datasets in dataset_versions have been
+        # created earlier than the current dataset.
+        if versions := getattr(self.dataset_versions, "_datasets", None):  # Prefetched versions
+            index = sum(
+                1 if v.created < self.created and v.state == "published" else 0 for v in versions
+            ) + 1
+        else:
+            index = (
+                self.dataset_versions.datasets.filter(state="published")
+                .filter(created__lt=self.created)
+                .count()
+                + 1
+            )
+        # If dataset is a draft of another dataset, then version number is same as the version number of the
+        # source dataset. In practice, this means that it is 1 less than otherwise
+        if self.draft_of != None:
+            index -= 1
+        return index
 
     @cached_property
     def latest_published_revision(self):
@@ -424,10 +446,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
 
     def create_new_version(self) -> Self:
         self._deny_if_versioning_not_allowed()
-        latest_version = (
-            self.dataset_versions.datasets(manager="all_objects").order_by("version").last()
-        )
-        copy = self.create_copy(version=latest_version.version + 1)
+        copy = self.create_copy()
         copy.create_snapshot(created=True)
         return copy
 
