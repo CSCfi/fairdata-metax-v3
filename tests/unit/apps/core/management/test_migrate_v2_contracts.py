@@ -1,14 +1,13 @@
+import os
 from io import StringIO
 
-from django.core.management import call_command
 import pytest
-import os
+from django.core.management import call_command
 from tests.utils import matchers
 
 from apps.core.models.contract import Contract
 
 from .conftest import get_mock_data
-
 
 pytestmark = [
     pytest.mark.django_db,

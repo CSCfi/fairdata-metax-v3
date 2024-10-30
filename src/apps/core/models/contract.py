@@ -127,3 +127,8 @@ class Contract(SystemCreatorBaseModel, CustomSoftDeletableModel):
 
         serializer = LegacyContractSerializer(instance=self)
         return serializer.data
+
+    def signal_sync(self):
+        from apps.core.signals import sync_contract
+
+        sync_contract.send(sender=Contract, instance=self)

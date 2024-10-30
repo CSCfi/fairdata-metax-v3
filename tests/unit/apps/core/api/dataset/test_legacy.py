@@ -1,10 +1,10 @@
-from uuid import UUID
 import copy
 from datetime import datetime
-from tests.utils import matchers
+from uuid import UUID
 
 import pytest
 from rest_framework.reverse import reverse
+from tests.utils import matchers
 
 from apps.core import factories
 from apps.core.models import LegacyDataset

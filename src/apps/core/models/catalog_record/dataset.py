@@ -347,9 +347,13 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         # Version number is calculated by checking how many of the published datasets in dataset_versions have been
         # created earlier than the current dataset.
         if versions := getattr(self.dataset_versions, "_datasets", None):  # Prefetched versions
-            index = sum(
-                1 if v.created < self.created and v.state == "published" else 0 for v in versions
-            ) + 1
+            index = (
+                sum(
+                    1 if v.created < self.created and v.state == "published" else 0
+                    for v in versions
+                )
+                + 1
+            )
         else:
             index = (
                 self.dataset_versions.datasets.filter(state="published")

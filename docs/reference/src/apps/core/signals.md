@@ -24,3 +24,7 @@
 
 ### :::src.apps.core.signals.handle_dataset_pre_delete
 
+## handle_contract_sync
+
+### :::src.apps.core.signals.handle_contract_sync
+

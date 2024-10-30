@@ -3,9 +3,9 @@ import logging
 from django.conf import settings
 from django.db.models.signals import m2m_changed, post_delete, pre_delete
 from django.dispatch import Signal, receiver
-from rest_framework import exceptions, status
 
 from apps.core.models import Dataset, FileSet
+from apps.core.models.contract import Contract
 from apps.core.services import MetaxV2Client
 from apps.files.models import File
 from apps.files.signals import pre_files_deleted
@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 dataset_updated = Signal()
 dataset_created = Signal()
+sync_contract = Signal()  # Called when contract is updated
 
 
 @receiver(m2m_changed, sender=FileSet.files.through)
@@ -76,3 +77,10 @@ def handle_dataset_pre_delete(sender, instance: Dataset, **kwargs):
         fileset := getattr(instance, "file_set", None)
     ):
         fileset.update_published(exclude_self=True)
+
+
+@receiver(sync_contract)
+def handle_contract_sync(sender, instance: Contract, **kwargs):
+    if settings.METAX_V2_INTEGRATION_ENABLED:
+        client = MetaxV2Client()
+        client.sync_contracts([instance])

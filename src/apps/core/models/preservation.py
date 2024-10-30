@@ -3,9 +3,9 @@ import uuid
 from django.contrib.postgres.fields import HStoreField
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 from django.utils.translation import gettext as _
 from simple_history.models import HistoricalRecords
-from django.utils import timezone
 
 from apps.common.copier import ModelCopier
 from apps.common.models import AbstractBaseModel, AbstractDatasetProperty

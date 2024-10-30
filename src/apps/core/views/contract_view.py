@@ -1,8 +1,8 @@
 from django.utils.decorators import method_decorator
 from django_filters import rest_framework as filters
-from rest_framework.response import Response
-from rest_framework.decorators import action
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from apps.common.views import CommonModelViewSet
 from apps.core.models import Contract
@@ -39,3 +39,15 @@ class ContractViewSet(CommonModelViewSet):
         contract, created = Contract.create_or_update_from_legacy(request.data)
         rep = ContractModelSerializer(instance=contract).data
         return Response(rep, status=201 if created else 200)
+
+    def perform_create(self, serializer):
+        super().perform_create(serializer)
+        serializer.instance.signal_sync()
+
+    def perform_update(self, serializer):
+        super().perform_update(serializer)
+        serializer.instance.signal_sync()
+
+    def perform_destroy(self, instance: Contract):
+        super().perform_destroy(instance)  # soft delete
+        instance.signal_sync()

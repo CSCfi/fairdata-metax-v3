@@ -56,7 +56,15 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_legacy.test_legacy_dataset_preservation_fields
 
+## test_legacy_dataset_preservation_fields_contract_errors
+
+### :::tests.unit.apps.core.api.dataset.test_legacy.test_legacy_dataset_preservation_fields_contract_errors
+
 ## test_legacy_dataset_preservation_dataset
 
 ### :::tests.unit.apps.core.api.dataset.test_legacy.test_legacy_dataset_preservation_dataset
+
+## test_legacy_dataset_preservation_dataset_update
+
+### :::tests.unit.apps.core.api.dataset.test_legacy.test_legacy_dataset_preservation_dataset_update
 

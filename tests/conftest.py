@@ -161,6 +161,7 @@ def pas_client():
     client.force_login(user)
     return client
 
+
 @pytest.fixture
 def v2_migration_client():
     client = Client()

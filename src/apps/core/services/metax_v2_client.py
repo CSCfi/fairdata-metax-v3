@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 import requests
 import urllib3
@@ -8,6 +8,8 @@ from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from rest_framework import exceptions, status
+
+from apps.core.models.contract import Contract
 
 if TYPE_CHECKING:
     # Allow using "Dataset" in type hints while avoiding circular import errors
@@ -189,3 +191,43 @@ class MetaxV2Client:
                 f"\n  {res.content=}, \n  {res.headers=}"
             )
             raise LegacyUpdateFailed(f"Failed to sync dataset {identifier} files to Metax V2")
+
+    def sync_contracts(self, contracts: List[Contract]):
+        if not settings.METAX_V2_INTEGRATION_ENABLED:
+            return
+
+        contracts_without_legacy_ids = {}
+        to_legacy = []
+        for contract in contracts:
+            to_legacy.append(contract.to_legacy())
+            if contract.legacy_id is None:
+                contracts_without_legacy_ids[contract.contract_identifier] = contract
+
+        body = json.dumps(to_legacy, cls=DjangoJSONEncoder)
+        res = requests.post(
+            url=f"{self.host}/contracts/sync_from_v3", data=body, headers=self.headers
+        )
+        if res.status_code in {200, 201}:
+            logger.info(f"Synced {len(to_legacy)} contracts to V2")
+        else:
+            logger.error(
+                f"Syncing contracts to V2 failed: {res.status_code=}:\n  {res.content=}, \n  {res.headers=}"
+            )
+            raise LegacyUpdateFailed("Failed to sync contracts to Metax V2")
+
+        # Fill in missing legacy_ids from response data
+        contracts_with_new_legacy_ids = []
+        for legacy_contract in res.json():
+            identifier = legacy_contract["contract_json"]["identifier"]
+            if contract := contracts_without_legacy_ids.get(identifier):
+                contract.legacy_id = legacy_contract["id"]
+                contracts_with_new_legacy_ids.append(contract)
+                contracts_without_legacy_ids.pop(identifier)
+
+        for key, contract in contracts_without_legacy_ids.items():
+            logger.warning(f"Sync error: contract {key} did not get a legacy id")
+
+        # Update legacy_id values for contracts that didn't have one yet
+        Contract.all_objects.bulk_update(
+            contracts_with_new_legacy_ids, fields=["legacy_id"], batch_size=2000
+        )

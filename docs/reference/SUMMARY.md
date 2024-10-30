@@ -241,6 +241,7 @@
                         - [test_dataset_with_files](tests/unit/apps/core/api/dataset_files/test_dataset_with_files.md)
                     - [json_models](tests/unit/apps/core/api/json_models.md)
                     - [test_contract](tests/unit/apps/core/api/test_contract.md)
+                    - [test_contract_legacy_integration](tests/unit/apps/core/api/test_contract_legacy_integration.md)
                     - [test_data_catalog](tests/unit/apps/core/api/test_data_catalog.md)
                 - management
                     - [conftest](tests/unit/apps/core/management/conftest.md)
