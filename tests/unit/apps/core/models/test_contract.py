@@ -42,3 +42,16 @@ def test_contract_from_legacy(legacy_contract_json):
     to_legacy = contract.to_legacy()
     assert to_legacy["contract_json"] == legacy_contract_json["contract_json"]
     assert to_legacy["id"] == legacy_contract_json["id"]
+
+
+def test_contract_from_legacy_empty_description(legacy_contract_json):
+    """Test that empty description clears description."""
+    legacy_contract_json["contract_json"]["description"] = "test"
+    contract, created = Contract.create_or_update_from_legacy(legacy_contract_json)
+    assert created
+    assert contract.description == {"und": "test"}
+
+    legacy_contract_json["contract_json"]["description"] = ""
+    contract, created = Contract.create_or_update_from_legacy(legacy_contract_json)
+    assert not created
+    assert contract.description is None

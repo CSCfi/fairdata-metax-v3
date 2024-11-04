@@ -90,15 +90,17 @@ class LegacyContractJSONSerializer(ContractModelSerializer):
     """
 
     title = serializers.CharField()
-    description = serializers.CharField(required=False)
+    description = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     identifier = serializers.CharField(source="contract_identifier")
 
     def to_internal_value(self, data):
         # From legacy to V3 dict
         data = super().to_internal_value(data)
         data["title"] = {"und": data["title"]}
-        if description := data.get("description"):
-            data["description"] = {"und": description}
+        if desc := data.get("description"):
+            data["description"] = {"und": desc}
+        else:
+            data["description"] = None
         return data
 
     def to_representation(self, instance):
