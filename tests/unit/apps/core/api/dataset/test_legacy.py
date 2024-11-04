@@ -298,7 +298,7 @@ def test_legacy_dataset_preservation_fields(
     dataset_json = legacy_dataset_a_json["dataset_json"]
     dataset_json["contract"] = {"id": contract.legacy_id}
     dataset_json["preservation_state"] = 20
-    dataset_json["preservation_description"] = {"fi": "oke"}
+    dataset_json["preservation_description"] = "oke"
     dataset_json["preservation_reason_description"] = "Plz preserve"
     dataset_json["preservation_identifier"] = "preservation_id:123:jee"
 
@@ -318,7 +318,7 @@ def test_legacy_dataset_preservation_fields(
         "contract": str(contract.id),
         "state": 20,
         "state_modified": matchers.DateTimeStr(),
-        "description": {"fi": "oke"},
+        "description": {"und": "oke"},
         "reason_description": "Plz preserve",
         "preservation_identifier": "preservation_id:123:jee",
     }

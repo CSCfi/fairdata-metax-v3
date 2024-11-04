@@ -679,10 +679,11 @@ class LegacyDatasetConverter:
             "dataset_origin_version": dataset_origin_version_id,
             "state": dataset_json.get("preservation_state"),
             "state_modified": dataset_json.get("preservation_state_modified"),
-            "description": dataset_json.get("preservation_description"),
             "reason_description": dataset_json.get("preservation_reason_description"),
             "preservation_identifier": dataset_json.get("preservation_identifier"),
         }
+        if description := dataset_json.get("preservation_description"):
+            preservation["description"] = {"und": description}
         preservation = omit_empty(preservation)
 
         # V2 datasets have default "preservation_state": 0 (initialized),
