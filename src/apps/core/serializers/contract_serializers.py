@@ -1,7 +1,9 @@
+import logging
+from django.db import models
 from rest_framework import serializers, validators
 
 from apps.common.helpers import single_translation
-from apps.common.serializers.fields import NoopField
+from apps.common.serializers.fields import LaxIntegerField, NoopField
 from apps.common.serializers.serializers import (
     CommonListSerializer,
     CommonModelSerializer,
@@ -9,7 +11,8 @@ from apps.common.serializers.serializers import (
 )
 from apps.core.models import Contract
 from apps.core.models.contract import ContractContact, ContractService
-from apps.users.models import MetaxUser
+
+logger = logging.getLogger(__name__)
 
 
 class ContractContactSerializer(CommonModelSerializer):
@@ -92,6 +95,7 @@ class LegacyContractJSONSerializer(ContractModelSerializer):
     title = serializers.CharField()
     description = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     identifier = serializers.CharField(source="contract_identifier")
+    quota = LaxIntegerField() # Legacy Metax allows float values in quota
 
     def to_internal_value(self, data):
         # From legacy to V3 dict
@@ -101,6 +105,11 @@ class LegacyContractJSONSerializer(ContractModelSerializer):
             data["description"] = {"und": desc}
         else:
             data["description"] = None
+        if quota := data.get("quota"):
+            # Some legacy test data has quota larger than postgres MAX_BIGINT
+            if quota > models.BigIntegerField.MAX_BIGINT:
+                data["quota"] = models.BigIntegerField.MAX_BIGINT
+                logger.warning(f"Contract quota {quota} too large, setting to MAX_BIGINT.")
         return data
 
     def to_representation(self, instance):

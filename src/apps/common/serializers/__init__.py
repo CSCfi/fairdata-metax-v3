@@ -3,6 +3,8 @@ from .fields import (
     ListValidChoicesField,
     URLReferencedModelField,
     URLReferencedModelListField,
+    MultiLanguageField,
+    LaxIntegerField,
 )
 from .serializers import (
     AbstractDatasetModelSerializer,

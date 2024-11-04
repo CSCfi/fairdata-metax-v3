@@ -4,6 +4,7 @@
 #
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
+import decimal
 import json
 import logging
 from collections import OrderedDict
@@ -441,3 +442,18 @@ class CommaSeparatedListField(serializers.ListField):
 
     def to_representation(self, data):
         return ",".join(data)
+
+
+class LaxIntegerField(serializers.IntegerField):
+    """IntegerField that accepts but truncates float values."""
+
+    def to_internal_value(self, data):
+        if isinstance(data, str) and len(data) > self.MAX_STRING_LENGTH:
+            self.fail("max_string_length")
+
+        try:
+            # Decimal() allows also decimal strings, e.g. "1.2e5" unlike direct int() conversion
+            data = int(decimal.Decimal(data))
+        except (ValueError, TypeError):
+            self.fail("invalid")
+        return data
