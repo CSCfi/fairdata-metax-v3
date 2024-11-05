@@ -197,7 +197,8 @@ class LegacyDatasetConverter:
         if not catalog_id:
             return None
 
-        if self.convert_only:
+        # Draft data catalog is not used in V3 and should not be created
+        if self.convert_only or catalog_id == self.draft_data_catalog:
             return catalog_id
 
         catalog, created = DataCatalog.objects.get_or_create(

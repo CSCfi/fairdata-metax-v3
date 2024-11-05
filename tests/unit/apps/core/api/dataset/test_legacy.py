@@ -9,6 +9,7 @@ from tests.utils import matchers
 from apps.core import factories
 from apps.core.models import LegacyDataset
 from apps.core.models.catalog_record.dataset import Dataset
+from apps.core.models.data_catalog import DataCatalog
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.dataset, pytest.mark.adapter]
 
@@ -250,6 +251,8 @@ def test_legacy_dataset_catalog_dft(
         reverse("migrated-dataset-list"), legacy_dataset_a_json, content_type="application/json"
     )
     assert res.status_code == 201, res.data
+    assert not res.data.get("migration_errors")
+
     res = admin_client.get(
         reverse("dataset-detail", args=[dataset_json["identifier"]]),
         content_type="application/json",
@@ -260,6 +263,7 @@ def test_legacy_dataset_catalog_dft(
     assert res.data.get("data_catalog") is None
     assert res.data.get("persistent_identifier") is None
     assert res.data.get("state") == "draft"
+    assert not DataCatalog.objects.filter(id="urn:nbn:fi:att:data-catalog-dft").exists()
 
 
 @pytest.mark.parametrize(
