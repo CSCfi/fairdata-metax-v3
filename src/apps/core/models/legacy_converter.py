@@ -478,7 +478,6 @@ class LegacyDatasetConverter:
             for dup in actor["duplicates"]:
                 # Actor may have been annotated, copy values to its duplicates
                 dup.update(copy.deepcopy(actor["actor"]))
-
         return adapted
 
     def convert_checksum_v2_to_v3(self, checksum: dict, value_key="value") -> Optional[str]:

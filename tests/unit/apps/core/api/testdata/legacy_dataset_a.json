@@ -120,20 +120,22 @@
           }
         }
       ],
-      "contributor": {
-        "name": "Toni Nurmi",
-        "@type": "Person",
-        "member_of": {
-          "name": {
-            "en": "CSC – IT Center for Science",
-            "fi": "CSC - Tieteen tietotekniikan keskus Oy",
-            "sv": "CSC – IT Center for Science",
-            "und": "CSC - Tieteen tietotekniikan keskus Oy"
-          },
-          "@type": "Organization",
-          "identifier": "http://uri.suomi.fi/codelist/fairdata/organization/code/09206320"
+      "contributor": [
+        {
+          "name": "Toni Nurmi",
+          "@type": "Person",
+          "member_of": {
+            "name": {
+              "en": "CSC – IT Center for Science",
+              "fi": "CSC - Tieteen tietotekniikan keskus Oy",
+              "sv": "CSC – IT Center for Science",
+              "und": "CSC - Tieteen tietotekniikan keskus Oy"
+            },
+            "@type": "Organization",
+            "identifier": "http://uri.suomi.fi/codelist/fairdata/organization/code/09206320"
+          }
         }
-      },
+      ],
       "publisher": {
         "name": "Toni Nurmi",
         "@type": "Person",

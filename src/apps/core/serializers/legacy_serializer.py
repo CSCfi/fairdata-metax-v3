@@ -229,6 +229,10 @@ class LegacyDatasetUpdateSerializer(CommonNestedModelSerializer):
         super().update(instance, validated_data)
         instance._updating = False
         instance._saving_legacy = False
+
+        if getattr(instance, "_prefetched_objects_cache", None):
+            # Make sure prefetched relations are refreshed
+            instance._prefetched_objects_cache.clear()
         return instance
 
 

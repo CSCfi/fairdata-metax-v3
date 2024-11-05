@@ -15,6 +15,7 @@ pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.dataset, pyte
 
 def test_create_legacy_dataset(legacy_dataset_a):
     assert legacy_dataset_a.status_code == 201, legacy_dataset_a.data
+    assert not legacy_dataset_a.data.get("migration_errors")
     assert legacy_dataset_a.data.get("preservation") is None
 
 
@@ -23,6 +24,7 @@ def test_create_same_legacy_dataset_twice(admin_client, legacy_dataset_a, legacy
     res = admin_client.post(
         reverse("migrated-dataset-list"), legacy_dataset_a_json, content_type="application/json"
     )
+    assert not res.data.get("migration_errors")
     assert LegacyDataset.available_objects.count() == 1
 
 
@@ -41,6 +43,7 @@ def test_edit_legacy_dataset(admin_client, legacy_dataset_a, legacy_dataset_a_js
         content_type="application/json",
     )
     assert res.status_code == 200
+    assert not res.data.get("migration_errors")
 
 
 def test_edit_legacy_dataset_deprecation(admin_client, legacy_dataset_a, legacy_dataset_a_json):
@@ -54,6 +57,7 @@ def test_edit_legacy_dataset_deprecation(admin_client, legacy_dataset_a, legacy_
         content_type="application/json",
     )
     assert res.status_code == 200
+    assert not res.data.get("migration_errors")
     dataset_id = res.data["id"]
     dataset = Dataset.objects.get(id=dataset_id)
     assert isinstance(dataset.deprecated, datetime)
@@ -76,6 +80,7 @@ def test_legacy_dataset_actors(
         reverse("migrated-dataset-list"), legacy_dataset_a_json, content_type="application/json"
     )
     assert res.status_code == 201
+    assert not res.data.get("migration_errors")
     res = admin_client.get(
         reverse("dataset-detail", kwargs={"pk": res.data["id"]}), content_type="application/json"
     )
@@ -157,6 +162,7 @@ def test_legacy_dataset_relation(
         reverse("migrated-dataset-list"), legacy_dataset_a_json, content_type="application/json"
     )
     assert res.status_code == 201
+    assert not res.data.get("migration_errors")
     res = admin_client.get(
         reverse("dataset-detail", kwargs={"pk": res.data["id"]}), content_type="application/json"
     )
@@ -210,6 +216,7 @@ def test_legacy_dataset_email(admin_client, legacy_dataset_a, legacy_dataset_a_j
         content_type="application/json",
     )
     assert res.status_code == 200
+    assert not res.data.get("migration_errors")
     assert res.data["dataset_json"]["research_dataset"]["creator"][0]["email"] == "<hidden>"
     assert res.data["dataset_json"]["access_granter"] == "<hidden>"
 
@@ -221,6 +228,7 @@ def test_legacy_dataset_catalog(
         reverse("migrated-dataset-list"), legacy_dataset_a_json, content_type="application/json"
     )
     assert res.status_code == 201
+    assert not res.data.get("migration_errors")
     res = admin_client.get(
         reverse("dataset-detail", args=[legacy_dataset_a_json["dataset_json"]["identifier"]]),
         content_type="application/json",
@@ -281,6 +289,7 @@ def test_legacy_dataset_pid_attributes(
         reverse("migrated-dataset-list"), legacy_dataset_a_json, content_type="application/json"
     )
     assert res.status_code == 201
+    assert not res.data.get("migration_errors")
     dataset = Dataset.objects.get(id=res.data["id"])
     assert dataset.persistent_identifier == persistent_identifier
     assert dataset.pid_generated_by_fairdata == pid_generated_by_fairdata
@@ -306,6 +315,7 @@ def test_legacy_dataset_preservation_fields(
         reverse("migrated-dataset-list"), legacy_dataset_a_json, content_type="application/json"
     )
     assert res.status_code == 201, res.data
+    assert not res.data.get("migration_errors")
 
     res = admin_client.get(
         reverse("dataset-detail", args=[dataset_json["identifier"]]),
@@ -386,6 +396,7 @@ def test_legacy_dataset_preservation_dataset(
             reverse("migrated-dataset-list"), payload, content_type="application/json"
         )
         assert res.status_code == 201, res.data
+        assert not res.data.get("migration_errors")
 
     # Check origin version preservation links
     res = admin_client.get(
@@ -418,6 +429,7 @@ def test_legacy_dataset_preservation_dataset_update(
         reverse("migrated-dataset-list"), origin_version, content_type="application/json"
     )
     assert res.status_code == 201, res.data
+    assert not res.data.get("migration_errors")
 
     # PAS version is created with no preservation links yet because original has no preservation
     pas_version = copy.deepcopy(legacy_dataset_a_json)
@@ -431,6 +443,7 @@ def test_legacy_dataset_preservation_dataset_update(
         reverse("migrated-dataset-list"), pas_version, content_type="application/json"
     )
     assert res.status_code == 201, res.data
+    assert not res.data.get("migration_errors")
 
     # Original dataset is updated with preservation info, preservation links are created
     origin_json = origin_version["dataset_json"]
@@ -443,6 +456,7 @@ def test_legacy_dataset_preservation_dataset_update(
         reverse("migrated-dataset-list"), origin_version, content_type="application/json"
     )
     assert res.status_code == 201, res.data
+    assert not res.data.get("migration_errors")
 
     # Check origin version preservation links
     res = admin_client.get(

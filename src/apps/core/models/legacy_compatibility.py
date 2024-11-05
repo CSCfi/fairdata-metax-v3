@@ -3,6 +3,7 @@ import json
 import logging
 import re
 from typing import Dict
+from uuid import UUID
 
 import shapely
 from deepdiff import DeepDiff, extract
@@ -33,6 +34,7 @@ class LegacyCompatibility:
 
     ignored_migration_errors = {
         "dictionary_item_added": [
+            "root['date_deprecated']",
             "root['date_removed']",
             "root['research_dataset']['modified']",
             "root['research_dataset']['issued']",
@@ -49,8 +51,6 @@ class LegacyCompatibility:
             "root['user_created']",
             "root['previous_dataset_version']",
             "root['next_dataset_version']",
-            "root['preservation_dataset_version']",
-            "root['preservation_dataset_origin_version']",
             "root['research_dataset']['version_notes']",
             "root['research_dataset']['total_remote_resources_byte_size']",
             "root['research_dataset']['access_rights']['access_url']",
@@ -77,7 +77,7 @@ class LegacyCompatibility:
             regex(".*['telephone']$"),
             regex(".*['definition']$"),  # remove silly definition values
             "root['contract']",  # TODO
-            "root['editor_permissions']",  # TODO V3->V2
+            "root['editor_permissions']",
         ],
         "iterable_item_added": [
             regex("root['research_dataset']['spatial'][\\d+]['as_wkt'][\\d+]"),
@@ -177,9 +177,7 @@ class LegacyCompatibility:
 
         invalid = self.legacy_dataset.invalid_legacy_values or {}
 
-        wkt_re = re.compile(r".*as_wkt\[\d+\]$")
-        from apps.core.models import Dataset
-
+        wkt_re = re.compile(r".*\.as_wkt\[\d+\]$")
         data["state"] = str(data["state"])  # Convert Dataset.StateChoices to str
 
         def pre_handler(value, path):
@@ -226,6 +224,12 @@ class LegacyCompatibility:
         # Treat missing preservation_state as 0 which is the V2 default
         if not data.get("preservation_state"):
             data["preservation_state"] = 0
+
+        # Normalize data catalog into identifier string
+        dc = data.get("data_catalog")
+        if dc and isinstance(dc, dict):
+            data["data_catalog"] = dc.get("identifier")
+
         return parse_iso_dates_in_nested_dict(data)
 
     def exclude_from_diff(self, obj, path: str):
@@ -310,6 +314,8 @@ class LegacyCompatibility:
                 "date_modified",  # modification date is always set in V3
                 "root['preservation_state_modified']",
                 "root['contract']['identifier']",  # Only id used when syncing to V2
+                "root['preservation_dataset_version']",
+                "root['preservation_dataset_origin_version']",
             ],
             exclude_regex_paths=[
                 # old_notation is related to a SYKE migration in 2020, not relevant anymore
