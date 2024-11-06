@@ -2,8 +2,11 @@ import logging
 
 import pytest
 from django.db import transaction
+from rest_framework import serializers
 
+from apps.common.serializers import CommonModelSerializer
 from apps.core.factories import DatasetFactory
+from apps.core.models import Dataset, AccessRights
 from apps.core.models.concepts import Spatial
 from apps.core.serializers import DatasetSerializer, SpatialModelSerializer
 
@@ -133,3 +136,32 @@ def test_nested_serializer_lazy_transaction_warning(
     assert caplog.messages == [
         "DatasetSerializer has lazy serializer fields (provenance, spatial, temporal) and should update in a transaction."
     ]
+
+
+def test_nested_serializer_strict():
+    class B(CommonModelSerializer):
+        class Meta:
+            model = AccessRights
+            fields = ["description"]
+
+    class A(CommonModelSerializer):
+        access_rights = B()
+
+        class Meta:
+            model = Dataset
+            fields = ["access_rights"]
+
+    # Default to strict serializer
+    serializer = A(
+        data={"access_rights": {"fielddoesnotexist": "nope", "description": {"en": "Hello"}}}
+    )
+    with pytest.raises(serializers.ValidationError) as ec:
+        serializer.is_valid(raise_exception=True)
+    assert str(ec.value.detail["access_rights"]["fielddoesnotexist"][0]) == "Unexpected field"
+
+    # Allow non-strict serializer by setting strict=False in context
+    serializer = A(
+        data={"access_rights": {"fielddoesnotexist": "nope", "description": {"en": "Hello"}}},
+        context={"strict": False},
+    )
+    assert serializer.is_valid() is True

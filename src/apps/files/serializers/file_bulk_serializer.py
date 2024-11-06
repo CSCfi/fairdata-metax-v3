@@ -22,7 +22,7 @@ from apps.files.models.file_storage import FileStorage
 from apps.files.serializers.file_serializer import FileSerializer
 
 
-class PartialFileSerializer(FileSerializer, StrictSerializer):
+class PartialFileSerializer(FileSerializer):
     """File serializer that does not validate required fields.
 
     All fields have required=False and id is writable.

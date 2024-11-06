@@ -68,6 +68,7 @@ class LicenseModelSerializer(CommonModelSerializer):
     class Meta:
         model = DatasetLicense
         fields = [
+            "id",
             "custom_url",
             "title",
             "description",

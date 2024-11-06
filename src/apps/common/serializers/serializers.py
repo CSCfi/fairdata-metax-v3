@@ -194,12 +194,13 @@ class CommonListSerializer(serializers.ListSerializer):
 class StrictSerializer(serializers.Serializer):
     """Serializer that throws an error for unknown fields."""
 
-    def to_internal_value(self, data):
-        if unknown_fields := set(data).difference(self.fields):
-            raise serializers.ValidationError(
-                {field: _("Unknown field") for field in unknown_fields}
-            )
-        return super().to_internal_value(data)
+    def run_validation(self, data=empty):
+        if self.context.get("strict", True) and isinstance(data, dict):
+            unknown_keys = set(data.keys()) - set(self.fields.keys())
+            if unknown_keys:
+                raise ValidationError({key: ["Unexpected field"] for key in unknown_keys})
+
+        return super().run_validation(data=data)
 
 
 class PatchModelSerializer(serializers.ModelSerializer):
@@ -671,7 +672,7 @@ class NestedModelSerializer(LazyableModelSerializer):
         return instance
 
 
-class CommonModelSerializer(PatchModelSerializer, LazyableModelSerializer):
+class CommonModelSerializer(StrictSerializer, PatchModelSerializer, LazyableModelSerializer):
     """ModelSerializer for behavior common for all model APIs."""
 
     serializer_field_mapping = {
@@ -722,13 +723,6 @@ class CommonModelSerializer(PatchModelSerializer, LazyableModelSerializer):
         if create_snapshot := getattr(instance, "create_snapshot", None):
             create_snapshot()
         return instance
-
-    def validate(self, data):
-        if self.context.get("strict") and hasattr(self, "initial_data"):
-            unknown_keys = set(self.initial_data.keys()) - set(self.fields.keys())
-            if unknown_keys:
-                raise ValidationError({key: "Unexpected field" for key in unknown_keys})
-        return super().validate(data)
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)

@@ -26,7 +26,7 @@ class UsernameField(serializers.CharField):
         return value
 
 
-class MetadataProviderModelSerializer(StrictSerializer, AbstractDatasetModelSerializer):
+class MetadataProviderModelSerializer(AbstractDatasetModelSerializer):
     """Metadata provider handling logic.
 
     Creates or retrieves MetadataProvider object based on request data.

@@ -44,7 +44,7 @@ class UUIDOrTagField(serializers.UUIDField):
         return super().to_representation(value)
 
 
-class DatasetMemberSerializer(StrictSerializer, CommonNestedModelSerializer):
+class DatasetMemberSerializer(CommonNestedModelSerializer):
     """Serialize dataset members that may be in multiple places in same dataset.
 
     Serializer for actors, persons and organizations that allows same object

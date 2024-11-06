@@ -541,7 +541,7 @@ def test_files_upsert_many_unknown_field(ida_client, action_url):
         {
             "success": [],
             "failed": [
-                {"errors": {"thisfielddoesnotexist": "Unknown field"}, "object": files[0]},
+                {"errors": {"thisfielddoesnotexist": "Unexpected field"}, "object": files[0]},
             ],
         },
         res.json(),
