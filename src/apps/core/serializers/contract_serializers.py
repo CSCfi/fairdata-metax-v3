@@ -1,4 +1,5 @@
 import logging
+
 from django.db import models
 from rest_framework import serializers, validators
 
@@ -95,7 +96,7 @@ class LegacyContractJSONSerializer(ContractModelSerializer):
     title = serializers.CharField()
     description = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     identifier = serializers.CharField(source="contract_identifier")
-    quota = LaxIntegerField() # Legacy Metax allows float values in quota
+    quota = LaxIntegerField()  # Legacy Metax allows float values in quota
 
     def to_internal_value(self, data):
         # From legacy to V3 dict

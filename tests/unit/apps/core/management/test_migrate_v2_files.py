@@ -240,6 +240,35 @@ def test_migrate_projects(mock_endpoint_files):
     ]
 
 
+def test_migrate_file_offset(mock_response, mock_endpoint_files):
+    """Test migrating files with offset and project prefix."""
+    out = StringIO()
+    err = StringIO()
+    call_command("migrate_v2_files", stdout=out, stderr=err, use_env=True, file_offset=100000000)
+    assert [
+        (f.storage.storage_service, f.storage.csc_project, f.pathname, bool(f.removed))
+        for f in File.all_objects.order_by("legacy_id").all()
+    ] == [
+        ("ida", "100000000-project_x", "/data/file1", False),
+        ("ida", "100000000-project_x", "/data/file2", False),
+        ("ida", "100000000-project_x", "/data/file3", False),
+        ("pas", "100000000-project_y", "/readme.md", False),
+        ("pas", "100000000-project_y", "/license.txt", False),
+        ("pas", "100000000-project_z", "/dir1/y1.txt", False),
+        ("pas", "100000000-project_z", "/dir1/y2.txt", False),
+        ("pas", "100000000-project_z", "/dir1/y3.txt", True),
+        ("pas", "100000000-project_z", "/dir2/z.txt", False),
+    ]
+    assert all(
+        [
+            (f.legacy_id > 100000000) and f.storage_identifier.startswith("100000000-")
+            for f in File.all_objects.order_by("legacy_id").all()
+        ]
+    )
+    assert len(err.readlines()) == 0
+    assert mock_endpoint_files.call_count == 2  # not removed + removed
+
+
 def test_migrate_missing_config():
     err = StringIO()
     call_command("migrate_v2_files", stderr=err)

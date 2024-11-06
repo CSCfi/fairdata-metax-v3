@@ -40,6 +40,10 @@
 
 ### :::tests.unit.apps.core.management.test_migrate_v2_files.test_migrate_projects
 
+## test_migrate_file_offset
+
+### :::tests.unit.apps.core.management.test_migrate_v2_files.test_migrate_file_offset
+
 ## test_migrate_missing_config
 
 ### :::tests.unit.apps.core.management.test_migrate_v2_files.test_migrate_missing_config

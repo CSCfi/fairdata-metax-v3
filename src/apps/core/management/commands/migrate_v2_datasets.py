@@ -31,6 +31,24 @@ class MigrationData:
             self.file_ids = self.file_ids()
         return self.file_ids
 
+    def offset_files(self, offset: int):
+        if not offset:
+            return
+        rd = self.dataset_json.get("research_dataset", {})
+        for file in rd.get("files") or []:
+            file["identifier"] = f'{offset}-{file["identifier"]}'
+            details = file.get("details")
+            if details:
+                if details.get("id") is not None:
+                    details["id"] += offset
+                if details.get("identifier") is not None:
+                    details["identifier"] = f'{offset}-{details["identifier"]}'
+
+        for directory in rd.get("directories") or []:
+            directory["identifier"] = f'{offset}-{directory["identifier"]}'
+
+        self.file_ids = [fid + offset for fid in self.get_file_ids()]
+
 
 class Command(BaseCommand):
     """Migrate V2 datasets to V3 from specific Metax instance
@@ -121,6 +139,21 @@ class Command(BaseCommand):
             required=False,
             default=0,
             help="Stop after updating this many datasets",
+        )
+        # File ids are not unique across different V2 instances so
+        # they need an offset when migrating data from multiple V2
+        # instances to avoid conflicts. Also project_identifiers
+        # and file identifiers need to be prefixed in case they
+        # overlap between different instance.
+        parser.add_argument(
+            "--file-offset",
+            type=int,
+            required=False,
+            default=0,
+            help=(
+                "Add offset to file ids and prefix projects and file identifiers."
+                "Used for testing migrations from different V2 instances."
+            ),
         )
 
     @property
@@ -271,6 +304,7 @@ class Command(BaseCommand):
 
         if update_reason:
             legacy_dataset.dataset_json = dataset_json
+            data.offset_files(self.file_offset)
             legacy_dataset.legacy_file_ids = data.get_file_ids()
             if not created and legacy_dataset.tracker.changed():
                 legacy_dataset.save()
@@ -453,6 +487,7 @@ class Command(BaseCommand):
         self.force = options.get("force")
         self.update_limit = options.get("stop_after")
         self.verbosity = options.get("verbosity")  # defaults to 1
+        self.file_offset = options.get("file_offset")
 
         if bool(update) + bool(file) > 1:
             self.stderr.write("The --file and --update options are mutually exclusive.")

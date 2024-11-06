@@ -1,10 +1,10 @@
 from .fields import (
     CommaSeparatedListField,
+    LaxIntegerField,
     ListValidChoicesField,
+    MultiLanguageField,
     URLReferencedModelField,
     URLReferencedModelListField,
-    MultiLanguageField,
-    LaxIntegerField,
 )
 from .serializers import (
     AbstractDatasetModelSerializer,

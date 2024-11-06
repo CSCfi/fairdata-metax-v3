@@ -2,9 +2,9 @@ import json
 import logging
 import os
 from typing import Dict
-from django.db import models
 
 import pytest
+from django.db import models
 from tests.utils.utils import normalize_datetime_str
 
 from apps.core.models import Contract
@@ -56,6 +56,7 @@ def test_contract_from_legacy_empty_description(legacy_contract_json):
     contract, created = Contract.create_or_update_from_legacy(legacy_contract_json)
     assert not created
     assert contract.description is None
+
 
 def test_contract_from_legacy_too_big_quota(legacy_contract_json):
     """Test that quota value is clamped to max bigint value (needed for some legacy test data)."""

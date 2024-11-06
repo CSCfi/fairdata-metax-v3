@@ -8,9 +8,12 @@ from unittest.mock import patch
 
 import pytest
 from django.core.management import call_command
+from django.db.models import F, Value
+from django.db.models.functions import Concat
 from django.utils import timezone
 
 from apps.core.models import Dataset, LegacyDataset
+from apps.files.models import File, FileStorage
 
 pytestmark = [
     pytest.mark.django_db,
@@ -140,7 +143,49 @@ def test_migrate_command_identifier_missing_files(mock_response_single, referenc
         identifiers=["c955e904-e3dd-4d7e-99f1-3fed446f96d1"],
     )
     errors = err.getvalue()
+
     assert "Missing files for dataset c955e904-e3dd-4d7e-99f1-3fed446f96d1" in errors
+
+
+def test_migrate_command_file_offset(mock_response_single, reference_data, legacy_files):
+    """Test migrating datasets with file offset and project prefix."""
+    File.all_objects.update(
+        legacy_id=F("legacy_id") + Value(100000000),
+        storage_identifier=Concat(Value("100000000-"), F("storage_identifier")),
+    )
+    FileStorage.all_objects.update(csc_project=Concat(Value("100000000-"), F("csc_project")))
+
+    out = StringIO()
+    err = StringIO()
+    call_command(
+        "migrate_v2_datasets",
+        stdout=out,
+        stderr=err,
+        use_env=True,
+        identifiers=["c955e904-e3dd-4d7e-99f1-3fed446f96d1"],
+        file_offset=100000000,
+    )
+    output = out.getvalue()
+    updates = parse_output_updates(output)
+    assert updates == [
+        {
+            "identifier": "c955e904-e3dd-4d7e-99f1-3fed446f96d1",
+            "reason": "created",
+            "created_objects": {
+                "Organization": 1,
+                "FunderType": 1,
+                "FileSet": 1,
+                "FileSetFileMetadata": 1,
+                "FileSetDirectoryMetadata": 1,
+            },
+        }
+    ]
+    assert "1 datasets updated succesfully" in output
+    dataset = Dataset.objects.get(id="c955e904-e3dd-4d7e-99f1-3fed446f96d1")
+    assert str(dataset.permissions_id) == "4efd0669-33d4-4feb-93fb-5372d0f93a92"
+    assert [user.username for user in dataset.permissions.editors.all()] == ["editor_user"]
+    assert dataset.file_set.storage.csc_project == "100000000-2001479"
+    assert dataset.file_set.files.count() == 3
 
 
 def test_migrate_command_identifier_error_in_data(mock_response_single_invalid, reference_data):

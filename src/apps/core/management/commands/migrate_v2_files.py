@@ -115,6 +115,16 @@ class Command(BaseCommand):
             default=False,
             help="Migrate only files modified since datetime (in ISO 8601 format).",
         )
+        parser.add_argument(
+            "--file-offset",
+            type=int,
+            required=False,
+            default=0,
+            help=(
+                "Add offset to file ids and prefix projects and file identifiers."
+                "Used for testing migrations from different V2 instances."
+            ),
+        )
 
     def print_status_line(self):
         created = self.created
@@ -123,10 +133,20 @@ class Command(BaseCommand):
         fps = processed / (timezone.now() - self.started).total_seconds()
         self.stdout.write(f"{processed=}, {created=:}, {updated=} ({fps:.1f}/s)")
 
+    def offset_files(self, files: List[dict], offset: int):
+        if not offset:
+            return
+        for file in files:
+            file["id"] += offset
+            file["identifier"] = f'{offset}-{file["identifier"]}'
+            file["project_identifier"] = f'{offset}-{file["project_identifier"]}'
+
     def migrate_files(self, files: List[dict]):
         """Create or update list of legacy file dicts."""
         if not files:
             return
+
+        self.offset_files(files, self.file_offset)
 
         def callback(counts: FileMigrationCounts):
             self.created += counts.created
@@ -252,6 +272,7 @@ class Command(BaseCommand):
         self.allow_fail = options.get("allow_fail")
         self.force = options.get("force")
         self.verbosity = options.get("verbosity")  # defaults to 1
+        self.file_offset = options.get("file_offset")
         try:
             self.modified_since = self.parse_datetime(options.get("modified_since"))
         except ValueError as e:

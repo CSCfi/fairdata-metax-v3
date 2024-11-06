@@ -28,6 +28,10 @@
 
 ### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_command_identifier_missing_files
 
+## test_migrate_command_file_offset
+
+### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_command_file_offset
+
 ## test_migrate_command_identifier_error_in_data
 
 ### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_command_identifier_error_in_data
