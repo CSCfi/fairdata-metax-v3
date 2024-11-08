@@ -7,8 +7,10 @@ from apps.core.factories import (
     DatasetLicenseFactory,
     LanguageFactory,
     ProvenanceFactory,
+    DatasetFactory,
+    PublishedDatasetFactory,
 )
-from apps.core.models import Dataset
+from apps.core.models import Dataset, DatasetVersions
 
 pytestmark = [pytest.mark.django_db, pytest.mark.dataset, pytest.mark.versioning]
 
@@ -82,6 +84,13 @@ def test_other_versions(dataset):
     assert second.next_existing_version.id == third.id
     assert third.next_existing_version == None
     assert first.created < second.created < third.created
+
+
+def test_draft_of_dataset_versions():
+    dataset = PublishedDatasetFactory()
+    with pytest.raises(ValueError) as ec:
+        DatasetFactory(draft_of=dataset, dataset_versions=DatasetVersions())
+    assert str(ec.value) == "Draft datasets should be in the same dataset_versions as original"
 
 
 def collect_copy_info(model, path="", copy_info=None, ignore_fields=None, model_stack=[]):

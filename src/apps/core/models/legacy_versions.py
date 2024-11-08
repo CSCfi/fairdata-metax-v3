@@ -5,7 +5,7 @@ from django.apps import apps as django_apps
 from django.db import models
 from rest_framework import serializers
 
-from apps.common.helpers import merge_sets
+from apps.common.helpers import is_valid_uuid, merge_sets
 from apps.core.models import DatasetVersions
 from apps.core.models.legacy import LegacyDataset
 
@@ -21,11 +21,23 @@ def get_or_create_dataset_versions(legacy_dataset: LegacyDataset) -> DatasetVers
     used to determine if an existing DatasetVersions should be used.
     """
     versions_ids = []
-    version_set_json = legacy_dataset.dataset_json.get("dataset_version_set")
+    dataset_json = legacy_dataset.dataset_json
+    version_set_json = dataset_json.get("dataset_version_set")
     if version_set_json:
         serializer = LegacyDatasetVersionSerializer(data=version_set_json, many=True)
         serializer.is_valid(raise_exception=True)
-        versions_ids = sorted(version["identifier"] for version in serializer.validated_data)
+        versions_ids = [version["identifier"] for version in serializer.validated_data]
+
+    # Add draft relations to id list (V2 omits drafts from dataset_version_set listing)
+    for field_name in ["draft_of", "next_draft"]:
+        value = (dataset_json.get(field_name) or {}).get("identifier")
+        if value and is_valid_uuid(value):
+            versions_ids.append(UUID(value))
+
+    # Ensure dataset is in its own legacy_versions
+    versions_ids.append(UUID(legacy_dataset.legacy_identifier))
+
+    versions_ids = sorted(set(versions_ids))
 
     # Does dataset already have dataset_versions?
     dataset_versions = None
@@ -52,6 +64,7 @@ def get_or_create_dataset_versions(legacy_dataset: LegacyDataset) -> DatasetVers
         legacy_versions_set.update(versions_ids)
         dataset_versions.legacy_versions = sorted(legacy_versions_set)
         dataset_versions.save()
+
     return dataset_versions
 
 
@@ -106,13 +119,26 @@ def migrate_dataset_versions(apps=django_apps):
     # Get all legacy dataset_version_set lists
     legacy_versions_data = legacy_dataset_model.objects.filter(
         dataset_json__dataset_version_set__isnull=False
-    ).values_list("dataset_json__dataset_version_set", flat=True)
+    ).values(
+        identifier=models.F("dataset_json__identifier"),
+        next_draft=models.F("dataset_json__next_draft__identifier"),
+        draft_of=models.F("dataset_json__draft_of__identifier"),
+        version_set=models.F("dataset_json__dataset_version_set"),
+    )
 
     # Collect identifiers, merge all sets containing at least one common dataset
-    legacy_version_data_ids = [
-        [UUID(version["identifier"]) for version in version_set]
-        for version_set in legacy_versions_data
-    ]
+    legacy_version_data_ids = []
+    for version_data in legacy_versions_data:
+        ids = [UUID(version["identifier"]) for version in version_data["version_set"]]
+        # Draft dataset isn't listed in its own version_set in V2
+        # so we add the identifier manually just in case
+        if identifier := version_data["identifier"]:
+            ids.append(UUID(identifier))
+        if next_draft := version_data["next_draft"]:
+            ids.append(UUID(next_draft))
+        if draft_of := version_data["draft_of"]:
+            ids.append(UUID(draft_of))
+        legacy_version_data_ids.append(ids)
     legacy_version_sets = merge_sets(legacy_version_data_ids)
 
     dataset_updates = []

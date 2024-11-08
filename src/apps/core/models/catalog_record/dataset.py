@@ -893,6 +893,29 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             models.prefetch_related_objects([self], *self.common_prefetch_fields)
             self.is_prefetched = True
 
+    def ensure_versions_and_permissions(self):
+        """Add dataset_versions and permissions to dataset if they are missing."""
+        draft_relation = self.draft_of or getattr(self, "next_draft", None)
+        if not self.dataset_versions_id:
+            if draft_relation:
+                self.dataset_versions = draft_relation.dataset_versions
+            else:
+                self.dataset_versions = DatasetVersions.objects.create()
+        if not self.permissions_id:
+            if draft_relation:
+                self.permissions = draft_relation.permissions
+            else:
+                self.permissions = DatasetPermissions.objects.create()
+
+        # Ensure related drafts are in the same version set and have same permissions
+        if draft_relation:
+            if draft_relation.dataset_versions_id != self.dataset_versions_id:
+                raise ValueError(
+                    "Draft datasets should be in the same dataset_versions as original"
+                )
+            if draft_relation.permissions_id != self.permissions_id:
+                raise ValueError("Draft datasets should have same dataset permissions as original")
+
     def save(self, *args, **kwargs):
         """Saves the dataset and increments the draft or published revision number as needed."""
         self.validate_catalog()
@@ -900,16 +923,17 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         if not getattr(self, "_saving_legacy", False):
             self._update_cumulative_state()
 
+        if self.draft_of and self.state != self.StateChoices.DRAFT:
+            raise ValueError("Dataset cannot have draft_of if it is not a draft")
+
         # Prevent changing state of a published dataset
         previous_state = self.tracker.previous("state")
         if not self._state.adding:
             if previous_state == self.StateChoices.PUBLISHED and self.state != previous_state:
                 raise ValidationError({"state": _("Cannot change value into non-published.")})
 
-        if not self.dataset_versions_id:
-            self.dataset_versions = DatasetVersions.objects.create()
-        if not self.permissions_id:
-            self.permissions = DatasetPermissions.objects.create()
+        self.ensure_versions_and_permissions()
+
         if self.state == self.StateChoices.DRAFT:
             self.draft_revision += 1
         elif self.state == self.StateChoices.PUBLISHED:

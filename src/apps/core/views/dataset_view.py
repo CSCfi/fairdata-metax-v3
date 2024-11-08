@@ -12,7 +12,7 @@ from typing import List
 from django.conf import settings
 from django.core.cache import caches
 from django.db import transaction
-from django.db.models import Prefetch, Q, QuerySet, Value, prefetch_related_objects
+from django.db.models import OuterRef, Prefetch, Q, QuerySet, Value, prefetch_related_objects
 from django.http import Http404
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
@@ -39,6 +39,7 @@ from apps.common.serializers.serializers import (
 from apps.common.views import CommonModelViewSet
 from apps.core.cache import DatasetSerializerCache
 from apps.core.models.catalog_record import Dataset, FileSet
+from apps.core.models.catalog_record.dataset import DatasetVersions
 from apps.core.models.data_catalog import DataCatalog
 from apps.core.models.legacy_converter import LegacyDatasetConverter
 from apps.core.models.preservation import Preservation

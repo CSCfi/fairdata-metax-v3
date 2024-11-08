@@ -164,3 +164,90 @@ def test_create_legacy_dataset_with_no_version_set(
     assert DatasetVersions.objects.count() == 1
     dataset_a = Dataset.objects.get(id=legacy_dataset_a_json["dataset_json"]["identifier"])
     assert dataset_a.dataset_versions
+
+
+def test_create_legacy_datasets_draft_of_versions(
+    admin_client,
+    legacy_dataset_a_json,
+    legacy_dataset_b_json,
+    reference_data,
+    data_catalog,
+    data_catalog_att,
+):
+    """Dataset in draft_of should belong to same dataset_versions."""
+    legacy_dataset_a_json["dataset_json"]["dataset_version_set"] = [
+        {"identifier": legacy_dataset_a_json["dataset_json"]["identifier"]},
+    ]
+    res = admin_client.post(
+        "/v3/migrated-datasets", legacy_dataset_a_json, content_type="application/json"
+    )
+    assert res.status_code == 201, res.data
+    assert DatasetVersions.objects.count() == 1
+    dataset_a_id = legacy_dataset_a_json["dataset_json"]["identifier"]
+    dataset_a = Dataset.objects.get(id=dataset_a_id)
+
+    # Add new dataset that has updated dataset_version_set
+    legacy_dataset_b_json["dataset_json"].update(
+        {
+            "state": "draft",
+            "dataset_version_set": [],
+            "draft_of": {"identifier": dataset_a_id},
+        }
+    )
+    res = admin_client.post(
+        "/v3/migrated-datasets", legacy_dataset_b_json, content_type="application/json"
+    )
+    assert res.status_code == 201
+    assert DatasetVersions.objects.count() == 1
+    dataset_b_id = legacy_dataset_b_json["dataset_json"]["identifier"]
+    dataset_b = Dataset.objects.get(id=dataset_b_id)
+    assert dataset_a.dataset_versions == dataset_b.dataset_versions
+    assert set(dataset_a.dataset_versions.legacy_versions) == {
+        UUID(dataset_a_id),
+        UUID(dataset_b_id),
+    }
+
+
+def test_create_legacy_datasets_next_draft_versions(
+    admin_client,
+    legacy_dataset_a_json,
+    legacy_dataset_b_json,
+    reference_data,
+    data_catalog,
+    data_catalog_att,
+):
+    """Dataset in next_draft should belong to same dataset_versions."""
+    dataset_b_id = legacy_dataset_b_json["dataset_json"]["identifier"]
+    legacy_dataset_a_json["dataset_json"].update(
+        {
+            "dataset_version_set": [
+                {"identifier": legacy_dataset_a_json["dataset_json"]["identifier"]},
+            ],
+            "next_draft": {"identifier": dataset_b_id},
+        }
+    )
+    res = admin_client.post(
+        "/v3/migrated-datasets", legacy_dataset_a_json, content_type="application/json"
+    )
+    assert res.status_code == 201, res.data
+    assert DatasetVersions.objects.count() == 1
+    dataset_a_id = legacy_dataset_a_json["dataset_json"]["identifier"]
+    dataset_a = Dataset.objects.get(id=dataset_a_id)
+
+    # next_draft should be added to legacy_versions even when it is not in dataset_version_set
+    assert set(dataset_a.dataset_versions.legacy_versions) == {
+        UUID(dataset_a_id),
+        UUID(dataset_b_id),
+    }
+
+    # Check that next_draft actually gets the same dataset_versions
+    legacy_dataset_b_json["dataset_json"]["state"] = "draft"
+    legacy_dataset_b_json["dataset_json"]["dataset_version_set"] = []
+    res = admin_client.post(
+        "/v3/migrated-datasets", legacy_dataset_b_json, content_type="application/json"
+    )
+    assert res.status_code == 201
+    assert DatasetVersions.objects.count() == 1
+    dataset_b_id = legacy_dataset_b_json["dataset_json"]["identifier"]
+    dataset_b = Dataset.objects.get(id=dataset_b_id)
+    assert dataset_a.dataset_versions == dataset_b.dataset_versions
