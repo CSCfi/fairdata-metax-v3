@@ -16,3 +16,11 @@
 
 ### :::tests.unit.apps.core.models.test_contract.test_contract_from_legacy
 
+## test_contract_from_legacy_empty_description
+
+### :::tests.unit.apps.core.models.test_contract.test_contract_from_legacy_empty_description
+
+## test_contract_from_legacy_too_big_quota
+
+### :::tests.unit.apps.core.models.test_contract.test_contract_from_legacy_too_big_quota
+

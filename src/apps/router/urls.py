@@ -4,7 +4,6 @@ from rest_framework_nested import routers
 
 from apps.actors.views import OrganizationViewSet
 from apps.core import views as core_views
-from apps.download import views as download_views
 from apps.files.views import DirectoryViewSet, FileCharacteristicsViewSet, FileViewSet
 from apps.refdata.models import reference_data_models
 from apps.refdata.views import get_viewset_for_model
@@ -42,10 +41,6 @@ router.register(
 
 # router.register(r"dataset-actors", DatasetActorViewSet, basename="dataset-actor")
 router.register(r"migrated-datasets", core_views.LegacyDatasetViewSet, basename="migrated-dataset")
-
-# download app
-router.register(r"download", download_views.DownloadViewSet, basename="download")
-
 # files app
 router.register(r"files", FileViewSet, basename="file")
 router.register(r"directories", DirectoryViewSet, basename="directory")

@@ -68,3 +68,7 @@
 
 ### :::src.apps.common.serializers.fields.CommaSeparatedListField
 
+## LaxIntegerField
+
+### :::src.apps.common.serializers.fields.LaxIntegerField
+

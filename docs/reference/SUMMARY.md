@@ -110,9 +110,6 @@
             - [nested_views](src/apps/core/views/nested_views.md)
             - [permissions_view](src/apps/core/views/permissions_view.md)
             - [preservation_view](src/apps/core/views/preservation_view.md)
-    - download
-        - [apps](src/apps/download/apps.md)
-        - [views](src/apps/download/views.md)
     - files
         - [admin](src/apps/files/admin.md)
         - [apps](src/apps/files/apps.md)
@@ -271,7 +268,6 @@
                     - [test_v2_integration](tests/unit/apps/core/models/test_v2_integration.md)
                     - [test_versioning](tests/unit/apps/core/models/test_versioning.md)
                 - [services.test_metax_v2_client](tests/unit/apps/core/services/test_metax_v2_client.md)
-            - [download.api.test_download](tests/unit/apps/download/api/test_download.md)
             - files
                 - api
                     - [conftest](tests/unit/apps/files/api/conftest.md)

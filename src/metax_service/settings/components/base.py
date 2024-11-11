@@ -101,7 +101,6 @@ LOCAL_APPS = [
     "files.apps.FilesConfig",
     "router.apps.RouterConfig",
     "cache.apps.CacheConfig",
-    "download.apps.DownloadConfig",
 ]
 
 INSTALLED_APPS = LOCAL_APPS + DEFAULT_APPS + THIRD_PARTY_APPS
