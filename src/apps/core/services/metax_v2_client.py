@@ -49,8 +49,14 @@ class MetaxV2Client:
         if res.status_code <= 204:
             logger.info(f"Deleted {instance.id} from Metax v2: {res}")
             return
-
-        logger.warning(f"Failed to delete dataset {instance.id} from Metax v2: {res.content=}")
+        if res.status_code == 404:
+            logger.info(f"Dataset {instance.id} not found from Metax v2: {res}")
+            return
+        logger.error(
+            f"Sync {instance.id} to V2 failed: {res.status_code=}:\n"
+            f"  {res.content=}, \n  {res.headers=}"
+        )
+        raise LegacyUpdateFailed(f"Failed to delete dataset ({instance.id}) from Metax V2")
 
     def _patch_api_meta(self, dataset: "Dataset") -> requests.Response:
         """Patch dataset api_meta to version 3."""

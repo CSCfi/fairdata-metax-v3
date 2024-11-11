@@ -97,8 +97,7 @@ def test_v2_integration_hard_delete_a_soft_deleted_dataset(
     )
 
 
-@pytest.mark.adapter
-def test_v2_integration_delete_dataset_log_error(
+def test_v2_integration_delete_dataset_not_found_log_error(
     caplog, requests_mock, mock_v2_integration, dataset_with_foreign_keys
 ):
     logging.disable(logging.NOTSET)
@@ -111,8 +110,26 @@ def test_v2_integration_delete_dataset_log_error(
     assert call.method == "DELETE"
     assert call.url == f"https://metax-v2-test/rest/v2/datasets/{dataset_id}?removed=true"
     assert caplog.messages == [
-        matchers.StringContaining(f"Failed to delete dataset {dataset_id} from Metax v2")
+        matchers.StringContaining(f"Dataset {dataset_id} not found from Metax v2")
     ]
+
+@pytest.mark.adapter
+def test_v2_integration_delete_dataset_log_error(
+    caplog, requests_mock, mock_v2_integration, dataset_with_foreign_keys
+):
+    logging.disable(logging.NOTSET)
+    delete_mock = requests_mock.delete(mock_v2_integration["delete"]._url, status_code=500)
+
+    dataset_id = dataset_with_foreign_keys.id
+    with pytest.raises(LegacyUpdateFailed):
+        dataset_with_foreign_keys.delete(soft=True)
+        assert delete_mock.call_count == 1
+        call = delete_mock.request_history[0]
+        assert call.method == "DELETE"
+        assert call.url == f"https://metax-v2-test/rest/v2/datasets/{dataset_id}?removed=true"
+        assert caplog.messages == [
+            matchers.StringContaining(f"Failed to delete dataset {dataset_id} from Metax V2")
+        ]
 
 
 @pytest.mark.adapter
