@@ -9,15 +9,15 @@ from django.views.decorators.cache import never_cache
 from knox.models import AuthToken
 from knox.views import LoginView as KnoxLoginView
 from rest_access_policy.access_view_set_mixin import AccessViewSetMixin
-from rest_framework import exceptions, serializers, status
+from rest_framework import exceptions, status
 from rest_framework.decorators import action
 from rest_framework.renderers import AdminRenderer, JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
+from rest_framework.parsers import JSONParser, FormParser
 from apps.common.responses import HttpResponseSeeOther
 from apps.common.serializers.serializers import FlushQueryParamsSerializer
-from apps.common.views import CommonReadOnlyModelViewSet, QueryParamsMixin
+from apps.common.views import CommonReadOnlyModelViewSet
 from apps.users.authentication import SSOAuthentication
 from apps.users.permissions import UsersViewAccessPolicy
 from apps.users.serializers import (
@@ -27,6 +27,7 @@ from apps.users.serializers import (
 )
 
 logger = logging.getLogger(__name__)
+
 
 
 class LoginView(APIView):
@@ -41,6 +42,9 @@ class LoginView(APIView):
 
 
 class LogoutView(APIView):
+    # FormParser needed for handling POST from logout button
+    parser_classes = [JSONParser, FormParser]
+
     @method_decorator(never_cache)
     def post(self, request):
         logout(request)  # Clear DRF login session if it exists
@@ -92,6 +96,9 @@ class APITokenListView(KnoxLoginView):
     )
 
     renderer_classes = [JSONRenderer, TokenListRenderer]
+
+    # FormParser needed for POST from the "Create API token" button
+    parser_classes = [JSONParser, FormParser]
 
     def get_post_response_data(self, request, token, instance):
         data = super().get_post_response_data(request, token, instance)

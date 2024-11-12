@@ -245,6 +245,12 @@ REST_FRAMEWORK = {
         "apps.common.renderers.MsgspecJSONRenderer",
         "apps.common.renderers.NoHTMLFormBrowsableAPIRenderer",
     ],
+    # FormParser is omitted to make error messages more informative when user forgets to
+    # set content-type. Any DRF endpoint that needs to accept POSTs from HTTP forms
+    # needs to explicitly add FormParser to its parser_classes.
+    "DEFAULT_PARSER_CLASSES": [
+        "rest_framework.parsers.JSONParser",
+    ],
     "DATETIME_FORMAT": "%Y-%m-%dT%H:%M:%SZ",
 }
 ENABLE_DRF_TOKEN_AUTH = env.bool("ENABLE_DRF_TOKEN_AUTH", False)
