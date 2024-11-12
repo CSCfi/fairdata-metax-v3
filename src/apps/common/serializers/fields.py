@@ -250,6 +250,9 @@ class ChecksumField(serializers.CharField):
         )
         self.validators.append(validator)
 
+    class Meta:
+        swagger_schema_fields = {"example": "md5:6f5902ac237024bdd0c176cb93063dc4"}
+
 
 class RemoteResourceChecksumField(ChecksumField):
     allowed_algorithms = ChecksumField.allowed_algorithms + ["sha1", "sha224", "sha384", "other"]

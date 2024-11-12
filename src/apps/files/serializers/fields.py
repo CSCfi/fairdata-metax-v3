@@ -19,6 +19,9 @@ class FileNameField(serializers.RegexField):
         kwargs["trim_whitespace"] = False
         super().__init__(filename_regex, *args, **kwargs)
 
+    class Meta:
+        swagger_schema_fields = {"example": "file.txt"}
+
 
 class FilePathField(serializers.RegexField):
     default_error_messages = {"invalid": _("Expected file path to be in format '/path/file'.")}
@@ -27,6 +30,9 @@ class FilePathField(serializers.RegexField):
         kwargs["trim_whitespace"] = False
         super().__init__(file_pathname_regex, *args, **kwargs)
 
+    class Meta:
+        swagger_schema_fields = {"example": "/path/file.txt"}
+
 
 class DirectoryPathField(serializers.RegexField):
     default_error_messages = {"invalid": _("Expected directory path to be in format /path/.")}
@@ -34,6 +40,9 @@ class DirectoryPathField(serializers.RegexField):
     def __init__(self, *args, **kwargs):
         kwargs["trim_whitespace"] = False
         super().__init__(directory_pathname_regex, *args, **kwargs)
+
+    class Meta:
+        swagger_schema_fields = {"example": "/path/"}
 
 
 class OptionalSlashDirectoryPathField(serializers.RegexField):
