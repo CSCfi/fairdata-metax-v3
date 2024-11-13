@@ -113,6 +113,7 @@ def test_v2_integration_delete_dataset_not_found_log_error(
         matchers.StringContaining(f"Dataset {dataset_id} not found from Metax v2")
     ]
 
+
 @pytest.mark.adapter
 def test_v2_integration_delete_dataset_log_error(
     caplog, requests_mock, mock_v2_integration, dataset_with_foreign_keys

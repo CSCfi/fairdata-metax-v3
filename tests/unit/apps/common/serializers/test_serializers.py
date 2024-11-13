@@ -6,7 +6,7 @@ from rest_framework import serializers
 
 from apps.common.serializers import CommonModelSerializer
 from apps.core.factories import DatasetFactory
-from apps.core.models import Dataset, AccessRights
+from apps.core.models import AccessRights, Dataset
 from apps.core.models.concepts import Spatial
 from apps.core.serializers import DatasetSerializer, SpatialModelSerializer
 

@@ -206,6 +206,7 @@ class LegacyContractSerializer(ContractModelSerializer):
     def to_representation(self, instance: Contract):
         rep = super().to_representation(instance)
         rep["date_removed"] = instance.removed
+        rep["id"] = instance.legacy_id
         return rep
 
     def save(self):
