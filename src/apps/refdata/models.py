@@ -142,7 +142,20 @@ class FunderType(AbstractConcept):
 
 
 class IdentifierType(AbstractConcept):
-    pass
+    @classmethod
+    def get_from_identifier(cls, identifier: str):
+        if not identifier:
+            return None
+
+        if identifier.startswith("doi:"):
+            return IdentifierType.objects.get(
+                url="http://uri.suomi.fi/codelist/fairdata/identifier_type/code/doi"
+            )
+        elif identifier.startswith("urn:"):
+            return IdentifierType.objects.get(
+                url="http://uri.suomi.fi/codelist/fairdata/identifier_type/code/urn"
+            )
+        return None
 
 
 class License(AbstractConcept):

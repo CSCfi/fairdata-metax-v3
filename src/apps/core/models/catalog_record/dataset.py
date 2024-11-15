@@ -20,7 +20,13 @@ from apps.common.history import SnapshotHistoricalRecords
 from apps.common.models import AbstractBaseModel
 from apps.core.models.access_rights import AccessRights, AccessTypeChoices
 from apps.core.models.catalog_record.dataset_permissions import DatasetPermissions
-from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
+from apps.core.models.concepts import (
+    FieldOfScience,
+    IdentifierType,
+    Language,
+    ResearchInfra,
+    Theme,
+)
 from apps.core.models.data_catalog import DataCatalog, GeneratedPIDType
 from apps.core.models.mixins import V2DatasetMixin
 from apps.core.services.pid_ms_client import PIDMSClient, ServiceUnavailableError
@@ -476,6 +482,67 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         copy.create_snapshot(created=True)
         return copy
 
+    def create_preservation_version(self) -> Self:
+        """Create preservation dataset version to PAS catalog and add related links."""
+        logger.info(f"Creating new PAS dataset version of dataset {self.id}")
+
+        if (
+            not self.preservation
+            or self.preservation.state <= self.preservation.PreservationState.NONE
+        ):
+            raise ValidationError({"detail": "Dataset is not in preservation."})
+
+        if self.preservation.dataset_version:
+            raise ValidationError({"detail": "Dataset already has a PAS version."})
+        if hasattr(self.preservation, "dataset_origin_version"):
+            raise ValidationError({"detail": "Dataset is a PAS version of another dataset."})
+
+        try:
+            pas_catalog = DataCatalog.objects.get(id="urn:nbn:fi:att:data-catalog-pas")
+        except DataCatalog.DoesNotExist:
+            raise ValidationError({"detail": "PAS catalog does not exist."})
+
+        # Copy dataset and related files
+        pas_version = self.create_copy(
+            file_set=None,
+            preservation=self.preservation.copier.copy(self.preservation),
+            data_catalog=pas_catalog,
+            generate_pid_on_publish=GeneratedPIDType.DOI,
+        )
+        logger.info("Copying file entries to PAS storage_service")
+        if fileset := getattr(self, "file_set", None):
+            pas_version.file_set = fileset.create_preservation_copy(pas_version)
+
+        # Set original dataset PAS version, clear preservation state
+        self.preservation.dataset_version = pas_version.preservation
+        self.preservation.state = self.preservation.PreservationState.NONE
+        self.preservation.save()
+
+        # Add origin version to preservation version other_identifiers
+        pas_version.other_identifiers.add(
+            OtherIdentifier.objects.create(
+                notation=self.persistent_identifier,
+                identifier_type=IdentifierType.get_from_identifier(self.persistent_identifier),
+            )
+        )
+
+        # Publish the PAS copy
+        logger.info("Publishing PAS dataset version")
+        pas_version.publish()
+
+        # PAS copy now has a PID, add it to origin version other_identifiers
+        self.other_identifiers.add(
+            OtherIdentifier.objects.create(
+                notation=pas_version.persistent_identifier,
+                identifier_type=IdentifierType.get_from_identifier(
+                    pas_version.persistent_identifier
+                ),
+            )
+        )
+
+        logger.info("PAS dataset version created with identifier: %s" % pas_version.id)
+        return pas_version
+
     def _check_merge_draft_files(self):
         """Check that merging draft would not cause invalid file changes."""
         dft = self.next_draft
@@ -683,7 +750,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             self.persistent_identifier = pid
             self.pid_generated_by_fairdata = True
 
-    def publish(self):
+    def publish(self) -> Self:
         """Publishes the dataset.
 
         If the dataset is a linked draft, merges

@@ -87,6 +87,12 @@ def service_group():
 
 
 @pytest.fixture
+def pas_group():
+    group, _ = Group.objects.get_or_create(name="pas")
+    return group
+
+
+@pytest.fixture
 def user(fairdata_users_group):
     user, created = MetaxUser.objects.get_or_create(
         username="test_user",
@@ -198,7 +204,7 @@ def pytest_collection_modifyitems(items):
 
 
 @pytest.fixture
-def data_catalog(fairdata_users_group, service_group) -> DataCatalog:
+def data_catalog(fairdata_users_group, service_group, pas_group) -> DataCatalog:
     identifier = "urn:nbn:fi:att:data-catalog-ida"
     title = {
         "en": "Fairdata IDA datasets",
@@ -214,6 +220,7 @@ def data_catalog(fairdata_users_group, service_group) -> DataCatalog:
         allowed_pid_types=["URN", "DOI"],
     )
     catalog.dataset_groups_create.set([fairdata_users_group, service_group])
+    catalog.dataset_groups_admin.set([pas_group])
     return catalog
 
 
@@ -232,6 +239,26 @@ def data_catalog_att(fairdata_users_group, service_group) -> DataCatalog:
         allowed_pid_types=["URN"],
     )
     catalog.dataset_groups_create.set([fairdata_users_group, service_group])
+    return catalog
+
+
+@pytest.fixture
+def data_catalog_pas(pas_group) -> DataCatalog:
+    identifier = "urn:nbn:fi:att:data-catalog-pas"
+    title = {
+        "en": "Fairdata PAS datasets",
+        "fi": "Fairdata PAS-aineistot",
+    }
+    catalog = factories.DataCatalogFactory(
+        id=identifier,
+        title=title,
+        dataset_versioning_enabled=False,
+        allow_remote_resources=False,
+        allowed_pid_types=["URN", "DOI"],
+        storage_services=["pas"]
+    )
+    catalog.dataset_groups_create.set([pas_group])
+    catalog.dataset_groups_admin.set([pas_group])
     return catalog
 
 

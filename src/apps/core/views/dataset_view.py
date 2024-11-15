@@ -585,6 +585,16 @@ class DatasetViewSet(CommonModelViewSet):
         draft.signal_update(created=True)
         return response.Response(data, status=status.HTTP_201_CREATED)
 
+    @action(detail=True, methods=["post"], url_path="create-preservation-version")
+    def create_preservation_version(self, request, pk=None):
+        """Create preservation version of a dataset in PAS process."""
+        dataset: Dataset = self.get_object()
+        new_version = dataset.create_preservation_version()
+        serializer = self.get_serializer(new_version)
+        data = serializer.data
+        new_version.signal_update(created=True)
+        return response.Response(data, status=status.HTTP_201_CREATED)
+
     @action(detail=True, methods=["post"])
     def publish(self, request, pk=None):
         """Publish a dataset.

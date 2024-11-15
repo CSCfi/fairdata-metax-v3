@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from datetime import datetime, timezone as tz
 from itertools import islice
 from textwrap import dedent
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, TypeVar
+from typing import Dict, Iterable, List, Optional
 from urllib.parse import SplitResult, parse_qsl, quote, urlencode, urlsplit, urlunsplit
 
 import shapely

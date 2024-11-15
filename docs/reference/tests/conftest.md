@@ -24,6 +24,10 @@
 
 ### :::tests.conftest.service_group
 
+## pas_group
+
+### :::tests.conftest.pas_group
+
 ## user
 
 ### :::tests.conftest.user
@@ -67,6 +71,10 @@
 ## data_catalog_att
 
 ### :::tests.conftest.data_catalog_att
+
+## data_catalog_pas
+
+### :::tests.conftest.data_catalog_pas
 
 ## data_catalog_harvested
 

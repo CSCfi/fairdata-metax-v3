@@ -9,13 +9,17 @@ from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
+from rest_framework.serializers import ValidationError
+from typing_extensions import Self
 
 from apps.actors.models import Actor, Organization
 from apps.common.copier import ModelCopier
+from apps.common.helpers import prepare_for_copy
 from apps.common.models import AbstractBaseModel, MediaTypeValidator
 from apps.core.models.concepts import FileType, RelationType, UseCategory
 from apps.core.models.file_metadata import FileSetDirectoryMetadata, FileSetFileMetadata
 from apps.files.models import File, FileStorage
+from apps.files.models.file_characteristics import FileCharacteristics
 from apps.refdata import models as refdata
 
 from .dataset import Dataset
@@ -325,6 +329,91 @@ class FileSet(AbstractBaseModel):
         ):
             dataset.validate_allow_storage_service(self.storage_service)
         return super().save(*args, **kwargs)
+
+    def create_preservation_copy(self, preservation_dataset: Dataset) -> Self:
+        if self.storage.storage_service == "pas":
+            raise ValidationError({"detail": "Files are already in PAS storage"})
+
+        # Make sure there is no file metadata data pointing to nonexistent files
+        self.remove_unused_file_metadata()
+
+        storage, _created = FileStorage.objects.get_or_create(
+            storage_service="pas", csc_project=self.storage.csc_project
+        )
+        old_preservation_files = {
+            f.storage_identifier: f
+            for f in File.objects.filter(
+                storage__storage_service="pas",
+                storage_identifier__in=self.files.values("storage_identifier"),
+            )
+        }
+
+        file_mapping = {}
+        new_files = []
+        new_file_characteristics = []
+        files = []
+        for file in self.files.all():
+            if old_file := old_preservation_files.get(file.storage_identifier):
+                # Looks like file has already been copied to preservation storage,
+                # make sure it is the same file.
+                if old_file.pathname != file.pathname:
+                    msg = (
+                        f"File {file.pathname} ({file.storage_identifier}) already "
+                        "exists in PAS storage with a different path {old_file.pathname}"
+                    )
+                    raise ValidationError({"detail": msg})
+                file_mapping[file.id] = old_file
+                files.append(old_file)
+            else:
+                # File entry is copied to PAS storage.
+                # V2 does not support multiple files with same identifier or project+path
+                # even if they are in different storages, so the PAS copies are not synced to V2.
+                old_id = file.id
+                file: File = prepare_for_copy(file)
+                file.id = File.id.field.get_default()
+                file.is_legacy_syncable = False
+                file.legacy_id = None
+                file.storage = storage
+                if characteristics := file.characteristics:
+                    characteristics.id = FileCharacteristics.id.field.get_default()
+                    file.characteristics = characteristics
+                    new_file_characteristics.append(characteristics)
+                new_files.append(file)
+                file_mapping[old_id] = file
+                files.append(file)
+
+        # Create new copies of files and file characteristics
+        FileCharacteristics.objects.bulk_create(new_file_characteristics)
+        File.objects.bulk_create(new_files)
+
+        # Copy self
+        copy = prepare_for_copy(self)
+        copy.skip_files_m2m_changed = True  # Avoid triggering dataset update
+        copy.id = FileSet.id.field.get_default()
+        copy.dataset = preservation_dataset
+        copy.storage = storage
+        copy.save()
+        copy.files.set(files)
+
+        # Copy and assign file and directory metadata
+        file_metadata = []
+        for fm in self.file_metadata.all():
+            fm = prepare_for_copy(fm)
+            fm.file = file_mapping[fm.file_id]
+            fm.file_set = copy
+            file_metadata.append(fm)
+        FileSetFileMetadata.objects.bulk_create(file_metadata)
+
+        directory_metadata = []
+        for dm in self.directory_metadata.all():
+            dm = prepare_for_copy(dm)
+            dm.storage = storage
+            dm.file_set = copy
+            directory_metadata.append(dm)
+        FileSetDirectoryMetadata.objects.bulk_create(directory_metadata)
+
+        copy.skip_files_m2m_changed = False
+        return copy
 
 
 class RemoteResource(AbstractBaseModel):

@@ -28,6 +28,11 @@ class DatasetAccessPolicy(BaseAccessPolicy):
             "effect": "allow",
         },
         {
+            "action": ["create_preservation_version"],
+            "principal": "group:pas",
+            "effect": "allow",
+        },
+        {
             # Note that there is no actual "download" action in the viewset
             "action": ["<op:download>"],
             "principal": "*",

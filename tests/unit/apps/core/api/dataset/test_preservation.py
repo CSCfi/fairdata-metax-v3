@@ -283,3 +283,79 @@ def test_put_dataset_nonexisting_preservation(
         f"/v3/datasets/{dataset['id']}/preservation", content_type="application/json"
     )
     assert resp.status_code == 200
+
+
+@pytest.fixture
+def preservation_dataset_with_fileset(admin_client, preservation_dataset_json):
+    preservation_dataset_json["fileset"] = {"storage_service": "ida", "csc_project": "project"}
+    return admin_client.post(
+        "/v3/datasets", preservation_dataset_json, content_type="application/json"
+    ).json()
+
+
+def test_create_dataset_preservation_version(
+    pas_client, preservation_dataset_with_fileset, data_catalog_pas
+):
+    origin_id = preservation_dataset_with_fileset["id"]
+    origin_pid = preservation_dataset_with_fileset["persistent_identifier"]
+    res = pas_client.post(
+        f"/v3/datasets/{origin_id}/create-preservation-version",
+        content_type="application/json",
+    )
+    assert res.status_code == 201, res.data
+    data = res.json()
+    preserved_id = data["id"]
+    preserved_pid = data["persistent_identifier"]
+    assert data["data_catalog"] == "urn:nbn:fi:att:data-catalog-pas"
+    assert data["fileset"]["storage_service"] == "pas"
+    assert data["fileset"]["csc_project"] == "project"
+    assert data["preservation"]["dataset_origin_version"]["id"] == origin_id
+    assert data["other_identifiers"][0]["notation"] == origin_pid
+
+    # Check original version has new dataset relations but is otherwise unchanged
+    res = pas_client.get(f"/v3/datasets/{origin_id}", content_type="application/json")
+    assert res.status_code == 200, res.data
+    data = res.json()
+    assert data["data_catalog"] == "urn:nbn:fi:att:data-catalog-ida"
+    assert data["fileset"]["storage_service"] == "ida"
+    assert data["fileset"]["csc_project"] == "project"
+    assert data["preservation"]["dataset_version"]["id"] == preserved_id
+    assert data["other_identifiers"][0]["notation"] == preserved_pid
+
+
+def test_create_dataset_preservation_version_no_preservation(
+    pas_client, preservation_dataset_json, data_catalog_pas
+):
+    preservation_dataset_json.pop("preservation")
+    preservation_dataset = pas_client.post(
+        "/v3/datasets", preservation_dataset_json, content_type="application/json"
+    ).json()
+    origin_id = preservation_dataset["id"]
+    res = pas_client.post(
+        f"/v3/datasets/{origin_id}/create-preservation-version",
+        content_type="application/json",
+    )
+    assert res.status_code == 400, res.data
+    data = res.json()
+    assert "not in preservation" in data["detail"]
+
+
+def test_create_dataset_preservation_version_twice(
+    admin_client, pas_client, preservation_dataset_with_fileset, data_catalog_pas
+):
+    origin_id = preservation_dataset_with_fileset["id"]
+    res = pas_client.post(
+        f"/v3/datasets/{origin_id}/create-preservation-version",
+        content_type="application/json",
+    )
+    assert res.status_code == 201, res.data
+    res = pas_client.patch(
+        f"/v3/datasets/{origin_id}/preservation", {"state": 0}, content_type="application/json"
+    )
+    assert res.status_code == 200, res.data
+    res = pas_client.post(
+        f"/v3/datasets/{origin_id}/create-preservation-version",
+        content_type="application/json",
+    )
+    assert res.status_code == 400, res.data
+    assert "already has a PAS version" in res.json()["detail"]

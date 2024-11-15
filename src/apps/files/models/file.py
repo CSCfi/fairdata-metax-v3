@@ -59,6 +59,7 @@ class File(SystemCreatorBaseModel, CustomSoftDeletableModel):
 
     user = models.CharField(max_length=200, null=True, blank=True)
     legacy_id = models.BigIntegerField(unique=True, null=True, blank=True)
+    is_legacy_syncable = models.BooleanField(default=True)
 
     @classmethod
     def values_from_legacy(cls, legacy_file: dict, storage: FileStorage):

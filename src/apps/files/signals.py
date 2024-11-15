@@ -44,11 +44,18 @@ def handle_sync_files(sender, actions: List[dict], **kwargs):
 
     to_legacy = []
     files_without_legacy_ids = {}
+    non_syncable_count = 0
     for file_action in actions:
         file: File = file_action["object"]
+        if not file.is_legacy_syncable:
+            non_syncable_count += 1
+            continue
         if file.legacy_id is None:
             files_without_legacy_ids[(file.storage_service, file.storage_identifier)] = file
         to_legacy.append(file.to_legacy_sync())
+
+    if non_syncable_count > 0:
+        logger.info(f"{non_syncable_count} files are non-syncable and will not be synced to V2")
 
     host, headers = get_v2_request_settings()
     body = json.dumps(to_legacy, cls=DjangoJSONEncoder)

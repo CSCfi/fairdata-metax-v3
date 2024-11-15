@@ -263,6 +263,7 @@
                     - [test_dataset_copy](tests/unit/apps/core/models/test_dataset_copy.md)
                     - [test_dataset_pid](tests/unit/apps/core/models/test_dataset_pid.md)
                     - [test_dataset_property](tests/unit/apps/core/models/test_dataset_property.md)
+                    - [test_fileset](tests/unit/apps/core/models/test_fileset.md)
                     - [test_legacy_dataset](tests/unit/apps/core/models/test_legacy_dataset.md)
                     - [test_metadata_provider](tests/unit/apps/core/models/test_metadata_provider.md)
                     - [test_models](tests/unit/apps/core/models/test_models.md)
@@ -302,7 +303,9 @@
                 - commands
                     - [test_index_reference_data](tests/unit/apps/refdata/commands/test_index_reference_data.md)
                     - [test_update_essential_choices](tests/unit/apps/refdata/commands/test_update_essential_choices.md)
-                - [models.test_concept](tests/unit/apps/refdata/models/test_concept.md)
+                - models
+                    - [test_concept](tests/unit/apps/refdata/models/test_concept.md)
+                    - [test_identifier_type](tests/unit/apps/refdata/models/test_identifier_type.md)
                 - services
                     - [test_finto_importer](tests/unit/apps/refdata/services/test_finto_importer.md)
                     - [test_local_json_importer](tests/unit/apps/refdata/services/test_local_json_importer.md)
