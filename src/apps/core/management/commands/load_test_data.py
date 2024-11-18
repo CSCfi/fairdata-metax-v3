@@ -6,8 +6,9 @@ from django.core.management.base import BaseCommand
 
 import apps.files.factories as file_factories
 from apps.core import factories
-from apps.core.models import Contract, DataCatalog, Dataset
+from apps.core.models import Contract, ContractContact, ContractService, DataCatalog, Dataset
 from apps.core.serializers import DataCatalogModelSerializer
+from apps.core.signals import sync_contract
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +59,17 @@ class Command(BaseCommand):
                 "modified": "2021-12-31T12:13:14Z",
             },
         )
+
+        contract_contact = ContractContact.objects.get_or_create(
+            contract=contract[0],
+            defaults={"name": "Teppo Testaaja", "email": "teppo@email.fi", "phone": ""},
+        )
+
+        contract_service = ContractService.objects.get_or_create(
+            contract=contract[0], defaults={"name": "Teppo's contract"}
+        )
+
+        sync_contract.send(sender=Contract, instance=contract[0])
 
         logger.info(
             f"Created or updated test objects:\n {language=}, \n {data_catalog=}, \n {harvested_data_catalog=},"
