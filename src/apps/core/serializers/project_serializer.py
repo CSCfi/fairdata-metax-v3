@@ -5,6 +5,7 @@ from apps.core.models import DatasetProject, Funder, FunderType, Funding
 from apps.core.serializers.dataset_actor_serializers.organization_serializer import (
     DatasetOrganizationSerializer,
 )
+from apps.common.serializers.validators import AnyOf
 
 
 class FunderSerializer(CommonNestedModelSerializer):
@@ -17,6 +18,7 @@ class FunderSerializer(CommonNestedModelSerializer):
             "organization",
             "funder_type",
         )
+        validators = [AnyOf(["organization", "funder_type"])]
 
 
 class FundingModelSerializer(CommonNestedModelSerializer):
