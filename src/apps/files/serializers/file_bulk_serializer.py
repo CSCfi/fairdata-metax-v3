@@ -20,6 +20,7 @@ from apps.common.serializers import StrictSerializer
 from apps.files.models.file import File, FileCharacteristics, FileStorage
 from apps.files.models.file_storage import FileStorage
 from apps.files.serializers.file_serializer import FileSerializer
+from apps.files.signals import pre_files_deleted
 
 
 class PartialFileSerializer(FileSerializer):
@@ -462,7 +463,9 @@ class FileBulkSerializer(serializers.ListSerializer):
 
         # Update all files in db at once
         file_ids = [f.id for f in files]
-        File.objects.filter(id__in=file_ids).update(removed=now)
+        files_to_delete = File.objects.filter(id__in=file_ids)
+        pre_files_deleted.send(sender=File, queryset=files_to_delete)  # Deprecate datasets
+        files_to_delete.update(removed=now)
 
         return [
             {

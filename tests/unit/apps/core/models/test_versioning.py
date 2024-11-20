@@ -4,10 +4,10 @@ from apps.core.factories import (
     AccessRightsFactory,
     AccessTypeFactory,
     DatasetActorFactory,
+    DatasetFactory,
     DatasetLicenseFactory,
     LanguageFactory,
     ProvenanceFactory,
-    DatasetFactory,
     PublishedDatasetFactory,
 )
 from apps.core.models import Dataset, DatasetVersions

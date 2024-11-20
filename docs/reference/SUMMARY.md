@@ -224,6 +224,7 @@
                         - [test_legacy_versions](tests/unit/apps/core/api/dataset/test_legacy_versions.md)
                         - [test_metadata_download](tests/unit/apps/core/api/dataset/test_metadata_download.md)
                         - [test_preservation](tests/unit/apps/core/api/dataset/test_preservation.md)
+                        - [test_project](tests/unit/apps/core/api/dataset/test_project.md)
                         - [test_provenance](tests/unit/apps/core/api/dataset/test_provenance.md)
                         - [test_relation](tests/unit/apps/core/api/dataset/test_relation.md)
                         - [test_remote_resources](tests/unit/apps/core/api/dataset/test_remote_resources.md)
@@ -231,6 +232,7 @@
                         - [test_versioning](tests/unit/apps/core/api/dataset/test_versioning.md)
                     - dataset_files
                         - [conftest](tests/unit/apps/core/api/dataset_files/conftest.md)
+                        - [test_dataset_deprecation](tests/unit/apps/core/api/dataset_files/test_dataset_deprecation.md)
                         - [test_dataset_files_allowed_actions](tests/unit/apps/core/api/dataset_files/test_dataset_files_allowed_actions.md)
                         - [test_dataset_files_legacy_integration](tests/unit/apps/core/api/dataset_files/test_dataset_files_legacy_integration.md)
                         - [test_dataset_files_list](tests/unit/apps/core/api/dataset_files/test_dataset_files_list.md)

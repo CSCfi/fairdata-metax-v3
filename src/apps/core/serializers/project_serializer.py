@@ -1,11 +1,11 @@
 from rest_framework import validators
 
 from apps.common.serializers import CommonListSerializer, CommonNestedModelSerializer
+from apps.common.serializers.validators import AnyOf
 from apps.core.models import DatasetProject, Funder, FunderType, Funding
 from apps.core.serializers.dataset_actor_serializers.organization_serializer import (
     DatasetOrganizationSerializer,
 )
-from apps.common.serializers.validators import AnyOf
 
 
 class FunderSerializer(CommonNestedModelSerializer):

@@ -11,10 +11,11 @@ from knox.views import LoginView as KnoxLoginView
 from rest_access_policy.access_view_set_mixin import AccessViewSetMixin
 from rest_framework import exceptions, status
 from rest_framework.decorators import action
+from rest_framework.parsers import FormParser, JSONParser
 from rest_framework.renderers import AdminRenderer, JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.parsers import JSONParser, FormParser
+
 from apps.common.responses import HttpResponseSeeOther
 from apps.common.serializers.serializers import FlushQueryParamsSerializer
 from apps.common.views import CommonReadOnlyModelViewSet
@@ -27,7 +28,6 @@ from apps.users.serializers import (
 )
 
 logger = logging.getLogger(__name__)
-
 
 
 class LoginView(APIView):
