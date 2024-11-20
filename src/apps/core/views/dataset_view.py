@@ -331,7 +331,14 @@ class DatasetViewSet(CommonModelViewSet):
         },
         {
             "class": IncludeRemovedQueryParamsSerializer,
-            "actions": ["list", "retrieve", "update", "partial_update"],
+            "actions": [
+                "list",
+                "retrieve",
+                "update",
+                "partial_update",
+                "contact",
+                "contact_roles",
+            ],
         },
         {
             "class": FlushQueryParamsSerializer,

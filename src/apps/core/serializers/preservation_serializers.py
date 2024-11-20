@@ -3,16 +3,22 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from apps.common.serializers.serializers import CommonModelSerializer
-from apps.core.models import Preservation
+from apps.core.models import Preservation, Dataset
+
+
+class PreservationDatasetSerializer(CommonModelSerializer):
+    class Meta:
+        model = Dataset
+        fields = ("id", "persistent_identifier", "removed")
 
 
 class PreservationModelSerializer(CommonModelSerializer):
     """Model serializer for Preservation"""
 
-    dataset_version = serializers.PrimaryKeyRelatedField(
+    dataset_version = PreservationDatasetSerializer(
         source="dataset_version.dataset", read_only=True
     )
-    dataset_origin_version = serializers.PrimaryKeyRelatedField(
+    dataset_origin_version = PreservationDatasetSerializer(
         source="dataset_origin_version.dataset", read_only=True
     )
 

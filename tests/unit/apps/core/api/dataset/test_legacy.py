@@ -409,7 +409,7 @@ def test_legacy_dataset_preservation_dataset(
     )
     assert res.status_code == 200
     data = res.json()
-    assert data["preservation"].get("dataset_version") == pas_json["identifier"]
+    assert data["preservation"].get("dataset_version") == {"id": pas_json["identifier"], "persistent_identifier": pas_json["research_dataset"]["preferred_identifier"]}
     assert data["preservation"].get("dataset_origin_version") is None
 
     # Check pas version preservation links
@@ -420,7 +420,7 @@ def test_legacy_dataset_preservation_dataset(
     assert res.status_code == 200
     data = res.json()
     assert data["preservation"].get("dataset_version") is None
-    assert data["preservation"].get("dataset_origin_version") == origin_json["identifier"]
+    assert data["preservation"].get("dataset_origin_version") == {"id": origin_json["identifier"], "persistent_identifier": origin_json["research_dataset"]["preferred_identifier"]}
 
 
 def test_legacy_dataset_preservation_dataset_update(
@@ -469,7 +469,7 @@ def test_legacy_dataset_preservation_dataset_update(
     )
     assert res.status_code == 200
     data = res.json()
-    assert data["preservation"].get("dataset_version") == pas_json["identifier"]
+    assert data["preservation"].get("dataset_version") == {"id": pas_json["identifier"], "persistent_identifier": pas_json["research_dataset"]["preferred_identifier"]}
     assert data["preservation"].get("dataset_origin_version") is None
 
     # Check PAS version preservation links
@@ -480,4 +480,4 @@ def test_legacy_dataset_preservation_dataset_update(
     assert res.status_code == 200
     data = res.json()
     assert data["preservation"].get("dataset_version") is None
-    assert data["preservation"].get("dataset_origin_version") == origin_json["identifier"]
+    assert data["preservation"].get("dataset_origin_version") == {"id": origin_json["identifier"], "persistent_identifier": origin_json["research_dataset"]["preferred_identifier"]}
