@@ -185,6 +185,7 @@ class DatasetFilter(filters.FilterSet):
             ("created", "created"),
             ("modified", "modified"),
             ("preservation__state", "preservation_state"),  # Needed for FDDPS
+            ("id", "id"),  # Needed for FDDPS
         ),
         default="-modified",
     )
