@@ -19,6 +19,10 @@ class ContractFilter(filters.FilterSet):
         label="title",
     )
     id = filters.CharFilter(max_length=255, lookup_expr="icontains")
+    contract_identifier = filters.CharFilter(
+        field_name="contract_identifier",
+        max_length=256, lookup_expr="icontains"
+    )
 
 
 @method_decorator(
