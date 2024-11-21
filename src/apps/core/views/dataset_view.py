@@ -8,7 +8,10 @@
 import logging
 from enum import Enum
 from typing import List
+import pytz
+from datetime import datetime, timezone
 
+from django.utils.http import parse_http_date
 from django.conf import settings
 from django.core.cache import caches
 from django.db import transaction
@@ -431,6 +434,20 @@ class DatasetViewSet(CommonModelViewSet):
             # Prefetch Dataset.dataset_versions.datasets to DatasetVersions._datasets
             # but only for read-only requests to avoid having to invalidate the cached value
             qs = qs.prefetch_related(Dataset.get_versions_prefetch())
+
+            if timestamp := self.request.META.get("HTTP_IF_MODIFIED_SINCE"):
+                try:
+                    date = datetime.fromtimestamp(parse_http_date(timestamp), timezone.utc)
+                except Exception:
+                    raise exceptions.ValidationError(
+                        {
+                            "headers": {
+                                "If-Modified-Since": "Bad value. If-Modified-Since supports only RFC 2822 datetime format."
+                            }
+                        }
+                    )
+                if date:
+                    qs = qs.filter(modified__gt=date)
 
         qs = self.access_policy.scope_queryset(self.request, qs)
         return qs

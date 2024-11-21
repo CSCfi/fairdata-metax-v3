@@ -1,7 +1,10 @@
 import logging
+import time
+import datetime
 from unittest.mock import ANY
 
 import pytest
+from django.utils.http import http_date
 from django.contrib.auth.models import Group
 from rest_framework.reverse import reverse
 from tests.utils import assert_nested_subdict, matchers
@@ -209,6 +212,58 @@ def test_list_datasets_with_ordering(
         dict(enumerate((res.data["results"]))),
         ignore=["generate_pid_on_publish"],
     )
+
+
+def test_list_datasets_with_if_modified_since_header(
+    admin_client, dataset_a_json, dataset_b_json, data_catalog, reference_data
+):
+    res_a = admin_client.post("/v3/datasets", dataset_b_json, content_type="application/json")
+
+    res_b = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+
+    modified_since_time = http_date(datetime.datetime.now(datetime.timezone.utc).timestamp())
+    modified_a = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=12)
+    modified_b = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=12)
+    print(f"{modified_since_time=}")
+    print(f"modified_a={modified_a}")
+    print(f"modified_b={modified_b}")
+
+    dataset_a_id = res_a.data.get("id")
+    dataset_b_id = res_b.data.get("id")
+
+    dataset_a = Dataset.objects.get(id=dataset_a_id)
+    dataset_b = Dataset.objects.get(id=dataset_b_id)
+
+    Dataset.objects.filter(id=dataset_a.id).update(modified=modified_a)
+
+    Dataset.objects.filter(id=dataset_b.id).update(modified=modified_b)
+
+    res = admin_client.get(
+        "/v3/datasets", content_type="application/json", HTTP_IF_MODIFIED_SINCE=modified_since_time
+    )
+    assert_nested_subdict(
+        {0: dataset_a_json},
+        dict(enumerate((res.data["results"]))),
+        ignore=["generate_pid_on_publish"],
+    )
+
+
+def test_list_datasets_with_bad_if_modified_since_header(
+    admin_client, dataset_a_json, dataset_b_json, data_catalog, reference_data
+):
+    admin_client.post("/v3/datasets", dataset_b_json, content_type="application/json")
+
+    modified_since_time = "not good"
+
+    res = admin_client.get(
+        "/v3/datasets", content_type="application/json", HTTP_IF_MODIFIED_SINCE=modified_since_time
+    )
+    assert res.status_code == 400
+    assert res.json() == {
+        "headers": {
+            "If-Modified-Since": "Bad value. If-Modified-Since supports only RFC 2822 datetime format."
+        }
+    }
 
 
 def test_list_datasets_with_default_pagination(admin_client, dataset_a, dataset_b):
