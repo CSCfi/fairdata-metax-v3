@@ -3,7 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from apps.common.serializers.serializers import CommonModelSerializer
-from apps.core.models import Preservation, Dataset
+from apps.core.models import Dataset, Preservation
 
 
 class PreservationDatasetSerializer(CommonModelSerializer):

@@ -1,8 +1,12 @@
+import logging
 from typing import Iterable
 
+from django.db import transaction
 from django.db.models import Manager, Model
 
 from apps.common.helpers import prepare_for_copy
+
+logger = logging.getLogger(__name__)
 
 
 class ModelCopier:
@@ -27,20 +31,25 @@ class ModelCopier:
     If the same object (as determined by model name and object id) occurs
     multiple times, it is copied only once. However, the copy may get
     multiple updates if it has multiple parents.
+
+
     """
 
     copied_relations: Iterable[str]
     parent_relations: Iterable[str]  # forward or reverse relations to "parent" objects
+    bulk: bool  # when bulk is enabled, objects are bulk created at end of copying
 
     def __init__(
         self,
         copied_relations: Iterable[str],
         parent_relations: Iterable[str] = None,
+        bulk: bool = False,
     ) -> None:
         self.copied_relations = copied_relations
         if parent_relations is None:
             parent_relations = []
         self.parent_relations = parent_relations
+        self.bulk = bulk
 
     def contribute_to_class(self, cls: Model, name: str):
         """Determine which model the copier is attached to.
@@ -105,7 +114,7 @@ class ModelCopier:
                 continue
             if original_value := getattr(original, name, None):
                 copy_value = field.related_model.copier.copy(
-                    original_value, copied_objects=copied_objects
+                    original_value, copied_objects=copied_objects, parent_copier=self
                 )
                 setattr(copy, name, copy_value)
 
@@ -113,13 +122,15 @@ class ModelCopier:
         for key, value in new_values.items():
             setattr(copy, key, value)
 
-        # Copied models using inheritance don't have the parent one-to-one relation
-        # until save. Make an initial save using the plain Django model save
-        # so any saving logic using fields from parent model will work.
-        if original._meta.parents:
-            Model.save(copy)
+        # When bulk is enabled, the root ModelCopier saves the instances with bulk_create
+        if not self.bulk:
+            # Copied models using inheritance don't have the parent one-to-one relation
+            # until save. Make an initial save using the plain Django model save
+            # so any saving logic using fields from parent model will work.
+            if original._meta.parents:
+                Model.save(copy)
+            copy.save()
 
-        copy.save()
         copied_objects[self.model.__name__][str(original.id)] = copy
 
         # Copy reverse OneToOne and ForeignKey relations
@@ -132,17 +143,20 @@ class ModelCopier:
                     new_field_values = {field.remote_field.name: copy}
                     values = [
                         field.related_model.copier.copy(
-                            value, new_values=new_field_values, copied_objects=copied_objects
+                            value,
+                            new_values=new_field_values,
+                            copied_objects=copied_objects,
+                            parent_copier=self,
                         )
                         for value in original_value.all()
                     ]
-                    getattr(copy, name).add(*values)
                 elif original_value is not None:
                     # Reverse OneToOne
                     copy_value = field.related_model.copier.copy(
                         original_value,
                         new_values={field.remote_field.name: copy},
                         copied_objects=copied_objects,
+                        parent_copier=self,
                     )
                     setattr(copy, name, copy_value)
 
@@ -153,7 +167,9 @@ class ModelCopier:
             values = getattr(original, field.name).all()
             if name in self.copied_many_to_many_fields:
                 values = [
-                    field.related_model.copier.copy(value, copied_objects=copied_objects)
+                    field.related_model.copier.copy(
+                        value, copied_objects=copied_objects, parent_copier=self
+                    )
                     for value in values
                 ]
             getattr(copy, name).add(*values)
@@ -164,10 +180,17 @@ class ModelCopier:
             # Update reverse parent relations
             for key, value in new_values.items():
                 setattr(copy, key, value)
-            copy.save()
+            if not copy._state.adding:
+                copy.save()
         return copy
 
-    def copy(self, original: Model, new_values: dict = None, copied_objects: dict = None) -> Model:
+    def copy(
+        self,
+        original: Model,
+        new_values: dict = None,
+        copied_objects: dict = None,
+        parent_copier=None,
+    ) -> Model:
         """Create new copy or return already copied instance.
 
         Values from `new_values` are assigned to the new copy before saving it.
@@ -181,6 +204,8 @@ class ModelCopier:
         object to copy-of-object mappings.
         """
         assert isinstance(original, self.model)
+        if parent_copier is None and transaction.get_autocommit():
+            raise RuntimeError("Copier.copy() should be run in a transaction.")
         copied_objects = copied_objects or {}
         new_values = new_values or {}
 
@@ -193,4 +218,13 @@ class ModelCopier:
             # Update existing copy
             copy = self._update_existing_copy(copy, new_values)
 
+        # Top-level copier is responsible for creating objects in bulk
+        if parent_copier is None:
+            for model_name, instances_by_id in copied_objects.items():
+                unsaved = [
+                    instance for instance in instances_by_id.values() if instance._state.adding
+                ]
+                if unsaved:
+                    model = unsaved[0].__class__
+                    model.objects.bulk_create(unsaved)
         return copy

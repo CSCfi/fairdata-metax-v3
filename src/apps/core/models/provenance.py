@@ -29,6 +29,7 @@ class Provenance(AbstractBaseModel):
     copier = ModelCopier(
         copied_relations=["spatial", "temporal", "is_associated_with", "used_entity", "variables"],
         parent_relations=["dataset"],
+        bulk=True,
     )
 
     title = HStoreField(

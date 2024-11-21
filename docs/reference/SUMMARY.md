@@ -260,6 +260,7 @@
                     - [test_contract](tests/unit/apps/core/models/test_contract.md)
                     - [test_data_catalog](tests/unit/apps/core/models/test_data_catalog.md)
                     - [test_dataset](tests/unit/apps/core/models/test_dataset.md)
+                    - [test_dataset_copy](tests/unit/apps/core/models/test_dataset_copy.md)
                     - [test_dataset_pid](tests/unit/apps/core/models/test_dataset_pid.md)
                     - [test_dataset_property](tests/unit/apps/core/models/test_dataset_property.md)
                     - [test_legacy_dataset](tests/unit/apps/core/models/test_legacy_dataset.md)

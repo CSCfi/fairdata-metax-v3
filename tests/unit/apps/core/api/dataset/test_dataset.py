@@ -1,11 +1,11 @@
+import datetime
 import logging
 import time
-import datetime
 from unittest.mock import ANY
 
 import pytest
-from django.utils.http import http_date
 from django.contrib.auth.models import Group
+from django.utils.http import http_date
 from rest_framework.reverse import reverse
 from tests.utils import assert_nested_subdict, matchers
 from watson.models import SearchEntry

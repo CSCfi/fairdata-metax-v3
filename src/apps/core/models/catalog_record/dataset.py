@@ -435,6 +435,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         Returns:
             Dataset: The copied dataset
         """
+        self.ensure_prefetch()
         new_values = dict(
             preservation=None,
             state=self.StateChoices.DRAFT,

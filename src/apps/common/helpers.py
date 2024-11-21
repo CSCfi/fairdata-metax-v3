@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from datetime import datetime, timezone as tz
 from itertools import islice
 from textwrap import dedent
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, TypeVar
 from urllib.parse import SplitResult, parse_qsl, quote, urlencode, urlsplit, urlunsplit
 
 import shapely
@@ -180,10 +180,14 @@ def get_filter_openapi_parameters(filterset_class):
     return params
 
 
-def prepare_for_copy(obj):
+def prepare_for_copy(obj: models.Model, create_new_id=True) -> models.Model:
     obj = copy.deepcopy(obj)
-    obj.id = None
-    obj.pk = None
+    new_id = None
+    if create_new_id:
+        new_id = obj._meta.get_field("id").get_default()
+    obj.id = new_id
+    obj.pk = new_id
+
     obj._state.adding = True
     # Clear prefetch cache to avoid false reverse and m2m relations
     if cache := getattr(obj, "_prefetched_objects_cache", None):

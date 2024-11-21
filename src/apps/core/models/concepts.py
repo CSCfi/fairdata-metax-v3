@@ -134,7 +134,9 @@ class Spatial(AbstractBaseModel):
 
     """
 
-    copier = ModelCopier(copied_relations=[], parent_relations=["dataset", "provenance"])
+    copier = ModelCopier(
+        copied_relations=[], parent_relations=["dataset", "provenance"], bulk=True
+    )
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     reference = models.ForeignKey(

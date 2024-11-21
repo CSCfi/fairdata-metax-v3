@@ -101,7 +101,9 @@ class Temporal(AbstractBaseModel):
         temporal_coverage (models.TextField): Period expressed as a string
     """
 
-    copier = ModelCopier(copied_relations=[], parent_relations=["dataset", "provenance"])
+    copier = ModelCopier(
+        copied_relations=[], parent_relations=["dataset", "provenance"], bulk=True
+    )
 
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)

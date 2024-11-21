@@ -37,12 +37,18 @@ class HomePage(AbstractBaseModel):
 
 
 class OrganizationModelCopier(ModelCopier):
-    def copy(self, original: Model, new_values: dict = None, copied_objects: dict = None) -> Model:
+    def copy(
+        self,
+        original: Model,
+        new_values: dict = None,
+        copied_objects: dict = None,
+        parent_copier=None,
+    ) -> Model:
         if original.is_reference_data:
             return (
                 original  # Reference data organizations should be used as-is instead of copying.
             )
-        return super().copy(original, new_values, copied_objects)
+        return super().copy(original, new_values, copied_objects, parent_copier=parent_copier)
 
 
 class Organization(AbstractBaseModel):

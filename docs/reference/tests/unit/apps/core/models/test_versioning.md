@@ -20,11 +20,3 @@
 
 ### :::tests.unit.apps.core.models.test_versioning.test_draft_of_dataset_versions
 
-## collect_copy_info
-
-### :::tests.unit.apps.core.models.test_versioning.collect_copy_info
-
-## test_dataset_copied_fields
-
-### :::tests.unit.apps.core.models.test_versioning.test_dataset_copied_fields
-

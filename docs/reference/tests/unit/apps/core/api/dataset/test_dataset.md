@@ -44,6 +44,14 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_list_datasets_with_ordering
 
+## test_list_datasets_with_if_modified_since_header
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_list_datasets_with_if_modified_since_header
+
+## test_list_datasets_with_bad_if_modified_since_header
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_list_datasets_with_bad_if_modified_since_header
+
 ## test_list_datasets_with_default_pagination
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_list_datasets_with_default_pagination
