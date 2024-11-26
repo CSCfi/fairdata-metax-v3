@@ -5,6 +5,8 @@
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
 
+from uuid import UUID
+
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
@@ -76,3 +78,15 @@ directory_pathname_regex = r"^/([^/]+/)*$"  # e.g. /directory/subdirectory/
 optional_slash_pathname_regex = (
     r"^/([^/]+/?)*$"  # e.g. /directory/subdirectory/ or /directory/subdirectory
 )
+
+
+class PrimaryKeyRelatedOrUUIDField(serializers.PrimaryKeyRelatedField):
+    """PrimaryKeyRelated field that supports UUID instances when serializing.
+
+    Normally related instance is a model instance but when using .values(),
+    the instance is just the primary key."""
+
+    def to_representation(self, value):
+        if isinstance(value, UUID):
+            return value
+        return super().to_representation(value)

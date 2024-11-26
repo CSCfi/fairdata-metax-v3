@@ -5,6 +5,7 @@
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
 
+from collections import Counter
 from dataclasses import asdict, dataclass
 from enum import Enum
 from typing import Dict, List, Optional
@@ -33,6 +34,7 @@ class PartialFileSerializer(FileSerializer):
     class Meta(FileSerializer.Meta):
         extra_kwargs = {
             "id": {"read_only": False, "allow_null": True, "required": False},
+            "pas_compatible_file": {"validators": []},  # Do validation in bulk
         }
 
     def to_internal_value(self, data):
@@ -213,6 +215,40 @@ class FileBulkSerializer(serializers.ListSerializer):
                 id_values.add(f["id"])
         return files
 
+    def check_relations(self, files: List[dict]) -> List[dict]:
+        """Validate pas_compatible_file relations."""
+        files_with_pas = [f for f in files if f.get("pas_compatible_file")]
+        if files_with_pas:
+            # Map existing file.id -> file.pas_compatible_file.id relations
+            pas_compatible = [f["pas_compatible_file"].id for f in files_with_pas]
+            pas_relations = dict(
+                File.all_objects.filter(
+                    id__in=pas_compatible, non_pas_compatible_file__isnull=False
+                ).values_list("non_pas_compatible_file", "id")
+            )
+
+            # Determine what the relations would look like after the update
+            tmp_id_counter = 1
+            for f in files_with_pas:
+                _id = f.get("id")
+                if _id is None:  # New files don't have id yet, use temporary int values in mapping
+                    _id = tmp_id_counter
+                    tmp_id_counter += 1
+                pas_relations[_id] = f["pas_compatible_file"].id
+
+            # Count how many pas_compatible_file relations point to each file
+            counts = Counter(pas_relations.values())
+
+            # Check the resulting relations
+            for f in files_with_pas:
+                if f["pas_compatible_file"].id == f.get("id"):
+                    f["errors"]["pas_compatible_file"] = "File cannot refer to itself."
+                elif counts[f["pas_compatible_file"].id] > 1:
+                    f["errors"][
+                        "pas_compatible_file"
+                    ] = "File with this pas_compatible_file already exists."
+        return files
+
     def check_creating_new_allowed(self, files: List[dict]) -> List[dict]:
         """Check if inserting new files is allowed."""
         insert_allowed = self.action in self.BULK_INSERT_ACTIONS
@@ -311,6 +347,7 @@ class FileBulkSerializer(serializers.ListSerializer):
 
         files = self.populate_id_from_external_identifier(files)
         files = self.check_duplicate_ids(files)
+        files = self.check_relations(files)
 
         # Checks for required and forbidden values
         files = self.check_files_allowed_actions(files)

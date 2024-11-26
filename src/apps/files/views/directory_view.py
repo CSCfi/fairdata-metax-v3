@@ -188,7 +188,9 @@ class DirectoryViewSet(QueryParamsMixin, AccessViewSetMixin, viewsets.ViewSet):
         if file_fields := params["file_fields"]:
             files = files.values(*file_fields, "id", storage_service=F("storage__storage_service"))
 
-        return files.order_by(*params["file_ordering"], "filename")
+        return files.order_by(*params["file_ordering"], "filename").prefetch_related(
+            "storage", "characteristics", "pas_compatible_file", "non_pas_compatible_file"
+        )
 
     def get_directories(self, params):
         """Get directory and subdirectory data for path.

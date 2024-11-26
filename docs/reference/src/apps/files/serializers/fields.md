@@ -20,3 +20,7 @@
 
 ### :::src.apps.files.serializers.fields.StorageServiceField
 
+## PrimaryKeyRelatedOrUUIDField
+
+### :::src.apps.files.serializers.fields.PrimaryKeyRelatedOrUUIDField
+

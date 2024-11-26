@@ -7,9 +7,9 @@ from apps.core.factories import (
     DatasetFactory,
     DatasetLicenseFactory,
     LanguageFactory,
+    PreservationFactory,
     ProvenanceFactory,
     PublishedDatasetFactory,
-    PreservationFactory
 )
 from apps.core.models import Dataset, DatasetVersions
 

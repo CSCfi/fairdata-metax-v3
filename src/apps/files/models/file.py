@@ -56,6 +56,13 @@ class File(SystemCreatorBaseModel, CustomSoftDeletableModel):
 
     storage = models.ForeignKey(FileStorage, related_name="files", on_delete=models.CASCADE)
     is_pas_compatible = models.BooleanField(default=None, null=True, blank=True)
+    pas_compatible_file = models.OneToOneField(
+        "self",
+        related_name="non_pas_compatible_file",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
 
     user = models.CharField(max_length=200, null=True, blank=True)
     legacy_id = models.BigIntegerField(unique=True, null=True, blank=True)
@@ -166,5 +173,10 @@ class File(SystemCreatorBaseModel, CustomSoftDeletableModel):
                 condition=models.Q(removed__isnull=True)
                 & models.Q(storage_identifier__isnull=False),
                 name="%(app_label)s_%(class)s_unique_identifier",
+            ),
+            # pas_compatible_file cannot refer to file itself
+            models.CheckConstraint(
+                check=~models.Q(pas_compatible_file=models.F("id")),
+                name="%(app_label)s_%(class)s_no_self_pas_compatible_relation",
             ),
         ]

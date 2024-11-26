@@ -69,6 +69,8 @@ def test_directory_field_values(admin_client, file_tree_b):
                     "published": matchers.DateTimeStr(),
                     "characteristics": None,
                     "characteristics_extension": None,
+                    "pas_compatible_file": None,
+                    "non_pas_compatible_file": None,
                 }
             ],
         },

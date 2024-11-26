@@ -9,8 +9,8 @@ import logging
 from django.contrib.auth.models import Group
 from rest_framework import serializers
 
-from apps.common.serializers.fields import NoopField
 from apps.common.serializers import CommonNestedModelSerializer
+from apps.common.serializers.fields import NoopField
 from apps.core.models import DataCatalog, Language
 from apps.core.serializers import DatasetPublisherModelSerializer
 

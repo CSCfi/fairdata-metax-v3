@@ -103,6 +103,8 @@ class FileSerializer(CreateOnlyFieldsMixin, CommonNestedModelSerializer):
 
     characteristics = FileCharacteristicsSerializer(required=False, allow_null=True)
 
+    non_pas_compatible_file = serializers.PrimaryKeyRelatedField(read_only=True)
+
     def get_dataset_metadata(self, obj):
         if "file_metadata" in self.context:
             if metadata := self.context["file_metadata"].get(obj.id):
@@ -133,6 +135,14 @@ class FileSerializer(CreateOnlyFieldsMixin, CommonNestedModelSerializer):
             )
         return val
 
+    def update(self, instance, validated_data):
+        if pas_compatible_file := validated_data.get("pas_compatible_file"):
+            if pas_compatible_file.id == instance.id:
+                raise serializers.ValidationError(
+                    {"pas_compatible_file": "File cannot refer to itself."}
+                )
+        return super().update(instance, validated_data)
+
     def validate(self, data):
         if not (self.parent and self.parent.many):
             # When in a list, this should be done in a parent serializer
@@ -160,5 +170,7 @@ class FileSerializer(CreateOnlyFieldsMixin, CommonNestedModelSerializer):
             "dataset_metadata",
             "characteristics",
             "characteristics_extension",
+            "pas_compatible_file",
+            "non_pas_compatible_file",
         ]
         extra_kwargs = {"published": {"read_only": True}}

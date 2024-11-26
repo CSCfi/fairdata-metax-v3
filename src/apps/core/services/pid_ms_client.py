@@ -74,12 +74,15 @@ class _PIDMSClient:
 
     def update_doi_dataset(self, dataset_id, doi):
         from apps.common.datacitedata import Datacitedata
+
         payload = Datacitedata().get_datacite_json(dataset_id)
         payload["data"]["attributes"]["url"] = f"https://{self.etsin_url}/dataset/{dataset_id}"
         headers = {"apikey": self.pid_ms_apikey, "Content-Type": "application/json"}
         try:
             response = requests.put(
-                f"https://{settings.PID_MS_BASEURL}/v1/pid/doi/{doi}", json=payload, headers=headers
+                f"https://{settings.PID_MS_BASEURL}/v1/pid/doi/{doi}",
+                json=payload,
+                headers=headers,
             )
             response.raise_for_status()
             return response.text

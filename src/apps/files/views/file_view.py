@@ -111,8 +111,12 @@ class BaseFileViewSet(CommonModelViewSet):
     serializer_class = FileSerializer
     filterset_class = FileFilterSet
     http_method_names = ["get"]
-    queryset = File.available_objects.prefetch_related("storage")
-    queryset_include_removed = File.all_objects.prefetch_related("storage")
+    queryset = File.available_objects.prefetch_related(
+        "storage", "characteristics", "pas_compatible_file", "non_pas_compatible_file"
+    )
+    queryset_include_removed = File.all_objects.prefetch_related(
+        "storage", "characteristics", "pas_compatible_file", "non_pas_compatible_file"
+    )
     access_policy: FilesAccessPolicy = FilesAccessPolicy
 
     # Query serializer info for query_params and swagger generation

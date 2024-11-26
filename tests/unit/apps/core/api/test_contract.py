@@ -44,7 +44,6 @@ def test_update_contract_id(admin_client, contract_a):
     assert "cannot be changed for an existing contract" in resp.json()["id"]
 
 
-
 def test_contract_permissions(user_client, pas_client, contract_a):
     contract_id = contract_a.json()["id"]
 

@@ -46,6 +46,8 @@ def build_files_json(file_kwargs: List[dict], storage=None):
             for field in list(f):
                 if field not in fields:
                     f.pop(field, None)
+        if f.get("pas_compatible_file"):
+            f["pas_compatible_file"] = str(f["pas_compatible_file"])  # UUID -> str
     return files
 
 
@@ -740,3 +742,123 @@ def test_files_bulk_not_a_list(ida_client, csc_project, action_url):
     )
     assert res.status_code == 400
     assert res.json() == {"non_field_errors": ['Expected a list of items but got type "dict".']}
+
+
+def test_files_insert_pas_compatible_file(ida_client, action_url, csc_project):
+    compatible_file = factories.FileFactory()
+    files = build_files_json(
+        [
+            {"exists": False, "id": None, "pas_compatible_file": compatible_file},
+        ],
+        storage=csc_project,
+    )
+    res = ida_client.post(
+        action_url("insert"),
+        files,
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert_nested_subdict(
+        [
+            {"object": files[0], "action": "insert"},
+        ],
+        res.json()["success"],
+    )
+    non_compatible_file_id = res.data["success"][0]["object"]["id"]
+
+    # Check the related file returns update relation
+    res = ida_client.get(
+        f"/v3/files/{compatible_file.id}",
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert res.json()["non_pas_compatible_file"] == non_compatible_file_id
+
+
+def test_files_insert_pas_compatible_file_self(ida_client, action_url, csc_project):
+    file = factories.FileFactory()
+    files = build_files_json(
+        [
+            # File that refers to itself
+            {"id": file.id, "pas_compatible_file": file},
+        ],
+        storage=csc_project,
+    )
+    res = ida_client.post(
+        action_url("insert"),
+        files,
+        content_type="application/json",
+    )
+    assert res.status_code == 400
+    assert_nested_subdict(
+        [
+            {
+                "object": files[0],
+                "errors": {"pas_compatible_file": "File cannot refer to itself."},
+            },
+        ],
+        res.json()["failed"],
+    )
+
+
+def test_files_insert_pas_compatible_file_conflict(ida_client, action_url, csc_project):
+    compatible_file = factories.FileFactory()
+    factories.FileFactory(pas_compatible_file=compatible_file)
+    files = build_files_json(
+        [
+            # Another file already has same pas_compatible_file
+            {"exists": False, "id": None, "pas_compatible_file": compatible_file},
+        ],
+        storage=csc_project,
+    )
+    res = ida_client.post(
+        action_url("insert"),
+        files,
+        content_type="application/json",
+    )
+    assert res.status_code == 400
+    assert_nested_subdict(
+        [
+            {
+                "object": files[0],
+                "errors": {
+                    "pas_compatible_file": "File with this pas_compatible_file already exists."
+                },
+            },
+        ],
+        res.json()["failed"],
+    )
+
+
+def test_files_insert_pas_compatible_file_conflict_in_request(ida_client, action_url, csc_project):
+    compatible_file = factories.FileFactory()
+    files = build_files_json(
+        [  # Multiple new files referring to same pas_compatible_file
+            {"exists": False, "id": None, "pas_compatible_file": compatible_file},
+            {"exists": False, "id": None, "pas_compatible_file": compatible_file},
+        ],
+        storage=csc_project,
+    )
+    res = ida_client.post(
+        action_url("insert"),
+        files,
+        content_type="application/json",
+    )
+    assert res.status_code == 400
+    assert_nested_subdict(
+        [
+            {
+                "object": files[0],
+                "errors": {
+                    "pas_compatible_file": "File with this pas_compatible_file already exists."
+                },
+            },
+            {
+                "object": files[1],
+                "errors": {
+                    "pas_compatible_file": "File with this pas_compatible_file already exists."
+                },
+            },
+        ],
+        res.json()["failed"],
+    )

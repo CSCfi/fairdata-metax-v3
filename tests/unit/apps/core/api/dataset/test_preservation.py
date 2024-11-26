@@ -37,7 +37,6 @@ def test_create_dataset_preservation(admin_client, preservation_dataset_json):
     assert_nested_subdict(preservation_dataset_json["preservation"], resp.json()["preservation"])
 
 
-
 @pytest.mark.usefixtures("data_catalog", "reference_data")
 def test_dataset_preservation_cumulative_state(admin_client, preservation_dataset_json):
     preservation_dataset_json["cumulative_state"] = 1

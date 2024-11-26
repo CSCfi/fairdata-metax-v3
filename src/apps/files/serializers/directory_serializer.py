@@ -13,6 +13,7 @@ from apps.files.helpers import (
     replace_query_path,
 )
 from apps.files.models.file import FileStorage
+from apps.files.serializers.fields import PrimaryKeyRelatedOrUUIDField
 from apps.files.serializers.file_serializer import FileSerializer
 
 
@@ -35,6 +36,12 @@ class ContextFileStorageMixin(serializers.Serializer):
 
 
 class DirectoryFileSerializer(ContextFileStorageMixin, FileSerializer):
+    # Normally pas_compatible_file and non_pas_compatible file are
+    # File objects, but when using e.g. ?file_fields=pas_compatible_file,
+    # queryset.values() is used which makes them UUIDs.
+    pas_compatible_file = PrimaryKeyRelatedOrUUIDField(read_only=True)
+    non_pas_compatible_file = PrimaryKeyRelatedOrUUIDField(read_only=True)
+
     def get_fields(self):
         fields = super().get_fields()
         return remove_hidden_fields(fields, self.context.get("file_fields"))
