@@ -512,9 +512,9 @@ class V2DatasetMixin:
             values["preservation_description"] = single_translation(preservation.description)
             values["preservation_reason_description"] = preservation.reason_description
             if version := preservation.dataset_version:
-                values["preservation_dataset_version"] = str(version.id)
+                values["preservation_dataset_version"] = str(version.dataset.id)
             if version := getattr(preservation, "dataset_origin_version", None):
-                values["preservation_dataset_version"] = str(version.id)
+                values["preservation_dataset_origin_version"] = str(version.dataset.id)
             doc.update(omit_empty(values))
 
     def as_v2_dataset(self) -> Dict:

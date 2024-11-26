@@ -253,3 +253,68 @@ def test_file_metadata_to_legacy_omit_empty(deep_file_tree, use_category_referen
         file_set=fs, file=file, title="Hello world", use_category=use_category
     )
     md.to_legacy = {"title": "Hello world", "use_category": {"identifier": use_category.url}}
+
+
+def test_dataset_files_legacy_sync_dataset_version(
+    admin_client,
+    synced_files,
+    data_urls,
+    mock_v2_dataset_files_integration,
+    use_category_reference_data,
+    file_type_reference_data,
+):
+    """Check behavior of file sync to V2 for preservation copy of dataset."""
+    dataset = factories.PublishedDatasetFactory(preservation=factories.PreservationFactory())
+    actions = {
+        **synced_files["params"],
+        "directory_actions": [
+            {
+                "pathname": "/",
+                "dataset_metadata": {
+                    "title": "Root directory title",
+                    "description": "Root directory description",
+                    "use_category": {
+                        "url": "http://uri.suomi.fi/codelist/fairdata/use_category/code/source"
+                    },
+                },
+            }
+        ],
+    }
+    urls = data_urls(dataset)
+    res = admin_client.patch(
+        urls["dataset"], {"fileset": actions}, content_type="application/json"
+    )
+    assert res.status_code == 200
+    mock = mock_v2_dataset_files_integration["sync_mock"]
+    mock.reset()
+
+    preservation_copy = factories.PublishedDatasetFactory(
+        preservation=factories.PreservationFactory(), file_set=factories.FileSetFactory()
+    )
+    dataset.preservation.dataset_version = preservation_copy.preservation
+    dataset.preservation.save()
+    dataset.refresh_from_db()
+
+    assert hasattr(preservation_copy.preservation, "dataset_origin_version")
+    preservation_copy.signal_update(created=True)
+
+    # Check that files from dataset_origin_version are used in V2
+    # instead of the files of the preservation version.
+    assert mock.call_count == 1
+    request_data = mock.request_history[0].json()
+    assert set(request_data["file_ids"]) == set(
+        dataset.file_set.files.values_list("legacy_id", flat=True)
+    )
+    assert request_data["user_metadata"] == {
+        "files": [],
+        "directories": [
+            {
+                "directory_path": "/",
+                "title": "Root directory title",
+                "description": "Root directory description",
+                "use_category": {
+                    "identifier": "http://uri.suomi.fi/codelist/fairdata/use_category/code/source"
+                },
+            }
+        ],
+    }

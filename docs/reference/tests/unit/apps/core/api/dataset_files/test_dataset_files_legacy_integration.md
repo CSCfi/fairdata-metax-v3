@@ -48,3 +48,7 @@
 
 ### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_legacy_integration.test_file_metadata_to_legacy_omit_empty
 
+## test_dataset_files_legacy_sync_dataset_version
+
+### :::tests.unit.apps.core.api.dataset_files.test_dataset_files_legacy_integration.test_dataset_files_legacy_sync_dataset_version
+

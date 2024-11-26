@@ -13,7 +13,7 @@ from apps.core.models.contract import Contract
 
 if TYPE_CHECKING:
     # Allow using "Dataset" in type hints while avoiding circular import errors
-    from apps.core.models import Dataset
+    from apps.core.models import Dataset, FileSet
 
 
 logger = logging.getLogger(__name__)
@@ -153,23 +153,36 @@ class MetaxV2Client:
                 url=f"{self.host}/datasets?migration_override", data=body, headers=self.headers
             )
         if res.status_code in {200, 201}:
-            logger.info(f"Sync {identifier} to V2: {res.status_code=}")
+            logger.info(f"Sync dataset {identifier} to V2: {res.status_code=}")
         else:
             logger.error(
-                f"Sync {identifier} to V2 failed: {res.status_code=}:\n"
+                f"Sync dataset {identifier} to V2 failed: {res.status_code=}:\n"
                 f"  {res.content=}, \n  {res.headers=}"
             )
             raise LegacyUpdateFailed(f"Failed to sync dataset ({identifier}) to Metax V2")
 
     def update_dataset_files(self, dataset: "Dataset", created=False):
-        fileset = getattr(dataset, "file_set", None)
+        identifier = dataset.id
+        fileset: FileSet
+        try:
+            # For preservation copy of a dataset, use files from the original dataset
+            # instead of the preservation copies of the files to match V2 behavior.
+            # V2 does not make copies of files when creating preservation copy of dataset.
+            origin_version: Dataset = dataset.preservation.dataset_origin_version.dataset
+            fileset = getattr(origin_version, "file_set", None)
+            logger.info(
+                f"Dataset {identifier} is preservation version, "
+                f"syncing files from origin version {origin_version.id} to V2"
+            )
+        except AttributeError:
+            fileset = getattr(dataset, "file_set", None)
+
         if not fileset:
             return
 
         if dataset.state != "published" or dataset.removed or dataset.api_version < 3:
             return
 
-        identifier = dataset.id
         metadata = {
             "files": [d.to_legacy() for d in fileset.file_metadata.all()],
             "directories": [d.to_legacy() for d in fileset.directory_metadata.all()],
@@ -190,10 +203,10 @@ class MetaxV2Client:
             url=f"{self.host}/datasets/{identifier}/files_from_v3", json=data, headers=self.headers
         )
         if res.status_code == 200:
-            logger.info(f"Sync {identifier} files to V2: {res.status_code=}")
+            logger.info(f"Sync dataset {identifier} files to V2: {res.status_code=}")
         else:
             logger.error(
-                f"Sync {identifier} files to V2 failed: {res.status_code=}:"
+                f"Sync dataset {identifier} files to V2 failed: {res.status_code=}:"
                 f"\n  {res.content=}, \n  {res.headers=}"
             )
             raise LegacyUpdateFailed(f"Failed to sync dataset {identifier} files to Metax V2")
