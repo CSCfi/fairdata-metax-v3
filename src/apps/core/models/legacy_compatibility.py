@@ -230,10 +230,11 @@ class LegacyCompatibility:
         if dc and isinstance(dc, dict):
             dc = data["data_catalog"] = dc.get("identifier")
 
-        # Draft data catalog isn't used in V3
-        if data.get("state") == "draft" and dc == "urn:nbn:fi:att:data-catalog-dft":
-            data.pop("data_catalog")
+        if data.get("state") == "draft" and not data.get("draft_of"):
             data["research_dataset"].pop("preferred_identifier", None)
+            # Draft data catalog isn't used in V3
+            if dc == "urn:nbn:fi:att:data-catalog-dft":
+                data.pop("data_catalog")
         return parse_iso_dates_in_nested_dict(data)
 
     def exclude_from_diff(self, obj, path: str):

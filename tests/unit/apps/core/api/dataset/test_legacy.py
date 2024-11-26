@@ -74,6 +74,36 @@ def test_delete_legacy_dataset(admin_client, legacy_dataset_a, legacy_dataset_a_
     assert LegacyDataset.available_objects.count() == 0
 
 
+def test_legacy_draft_use_doi_on_publish(admin_client, legacy_dataset_a_json, reference_data):
+    legacy_dataset_a_json["dataset_json"]["state"] = "draft"
+    legacy_dataset_a_json["dataset_json"]["research_dataset"][
+        "preferred_identifier"
+    ] = "draft:temp-pid"
+    legacy_dataset_a_json["dataset_json"]["use_doi_for_published"] = True
+    res = admin_client.post(
+        reverse("migrated-dataset-list"), legacy_dataset_a_json, content_type="application/json"
+    )
+    assert res.status_code == 201
+    assert not res.data.get("migration_errors")
+    dataset = Dataset.objects.get(id=res.data["id"])
+    assert dataset.generate_pid_on_publish == "DOI"
+
+
+def test_legacy_draft_no_doi(admin_client, legacy_dataset_a_json, reference_data):
+    legacy_dataset_a_json["dataset_json"]["state"] = "draft"
+    legacy_dataset_a_json["dataset_json"]["research_dataset"][
+        "preferred_identifier"
+    ] = "draft:temp-pid"
+    legacy_dataset_a_json["dataset_json"]["use_doi_for_published"] = False
+    res = admin_client.post(
+        reverse("migrated-dataset-list"), legacy_dataset_a_json, content_type="application/json"
+    )
+    assert res.status_code == 201
+    assert not res.data.get("migration_errors")
+    dataset = Dataset.objects.get(id=res.data["id"])
+    assert dataset.generate_pid_on_publish == "URN"
+
+
 def test_legacy_dataset_actors(
     admin_client, data_catalog_att, reference_data, legacy_dataset_a_json
 ):

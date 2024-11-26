@@ -682,6 +682,12 @@ class LegacyDatasetConverter:
             "reason_description": dataset_json.get("preservation_reason_description"),
             "preservation_identifier": dataset_json.get("preservation_identifier"),
         }
+
+        # V2 automatically assigns generated DOI to "preservation_identifier",
+        # which would cause error in V3 if the dataset has no preservation contract.
+        if not preservation["contract"]:
+            preservation.pop("preservation_identifier")
+
         if description := dataset_json.get("preservation_description"):
             preservation["description"] = {"und": description}
         preservation = omit_empty(preservation)
@@ -721,6 +727,9 @@ class LegacyDatasetConverter:
             "generate_pid_on_publish": None,
         }
         pid = self.legacy_research_dataset.get("preferred_identifier")
+        dataset_json = self.dataset_json
+        is_new_draft = dataset_json.get("state") == "draft" and not dataset_json.get("draft_of")
+        use_doi = dataset_json.get("use_doi_for_published")
         if pid and catalog_id in self.managed_data_catalogs:
             if self.is_metax_generated_urn_identifier(pid):
                 values["pid_generated_by_fairdata"] = True
@@ -728,6 +737,11 @@ class LegacyDatasetConverter:
             elif self.is_metax_generated_doi_identifier(pid):
                 values["pid_generated_by_fairdata"] = True
                 values["generate_pid_on_publish"] = "DOI"
+            elif is_new_draft:
+                if use_doi:
+                    values["generate_pid_on_publish"] = "DOI"
+                else:
+                    values["generate_pid_on_publish"] = "URN"
         return values
 
     def convert_root_level_fields(self):
@@ -769,9 +783,6 @@ class LegacyDatasetConverter:
         if not self.convert_only:
             fields["api_version"] = self.dataset_json.get("api_meta", {}).get("version", 1)
             fields["removed"] = removed
-
-        if self.dataset_json.get("use_doi_for_published"):
-            fields["pid_type"] = "DOI"
         return fields
 
     def convert_research_dataset_fields(self):

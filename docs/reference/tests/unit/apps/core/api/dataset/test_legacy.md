@@ -20,6 +20,14 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_legacy.test_delete_legacy_dataset
 
+## test_legacy_draft_use_doi_on_publish
+
+### :::tests.unit.apps.core.api.dataset.test_legacy.test_legacy_draft_use_doi_on_publish
+
+## test_legacy_draft_no_doi
+
+### :::tests.unit.apps.core.api.dataset.test_legacy.test_legacy_draft_no_doi
+
 ## test_legacy_dataset_actors
 
 ### :::tests.unit.apps.core.api.dataset.test_legacy.test_legacy_dataset_actors
