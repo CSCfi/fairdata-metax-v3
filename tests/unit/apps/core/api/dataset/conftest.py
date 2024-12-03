@@ -147,3 +147,8 @@ def legacy_dataset_a(admin_client, data_catalog_att, reference_data, legacy_data
 @pytest.fixture
 def entity_json():
     return load_test_json("entity.json")
+
+
+@pytest.fixture
+def pid_update_payload():
+    return load_test_json("pid_update_payload.json")

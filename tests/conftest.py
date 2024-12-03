@@ -875,6 +875,7 @@ def change_pi_url(settings):
 def mock_pid_ms(request, requests_mock, settings):
     if "noautomock" not in request.keywords:
         matcher = re.compile("http://localhost")
+        matcher_doi = re.compile(f"https://{settings.PID_MS_BASEURL}/v1/pid/doi/10.82614/")
         responselist1 = [
             {"text": f"urn:nbn:fi:att:{str(uuid.uuid4())}", "status_code": 201},
             {"text": f"urn:nbn:fi:att:{str(uuid.uuid4())}", "status_code": 201},
@@ -887,11 +888,18 @@ def mock_pid_ms(request, requests_mock, settings):
             {"text": f"10.82614/{str(uuid.uuid4())}", "status_code": 201},
             {"text": f"10.82614/{str(uuid.uuid4())}", "status_code": 201},
         ]
+        responselist3 = [
+            {"text": "http://localhost/a", "status_code": 200},
+            {"text": "http://localhost/b", "status_code": 200},
+        ]
         requests_mock.register_uri(
             "POST", f"https://{settings.PID_MS_BASEURL}/v1/pid", responselist1
         )
         requests_mock.register_uri(
             "POST", f"https://{settings.PID_MS_BASEURL}/v1/pid/doi", responselist2
+        )
+        requests_mock.register_uri(
+            "PUT", matcher_doi, responselist3
         )
         requests_mock.register_uri("GET", matcher, real_http=True)
         requests_mock.register_uri("POST", matcher, real_http=True)

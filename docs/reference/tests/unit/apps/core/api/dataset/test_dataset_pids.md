@@ -76,3 +76,7 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_pid_type_removed
 
+## test_update_dataset_with_doi
+
+### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_update_dataset_with_doi
+

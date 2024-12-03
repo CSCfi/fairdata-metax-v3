@@ -21,10 +21,15 @@ class _DummyPIDMSClient:
         dummy_pid = "urn:nbn:fi:fd-dummy-" + str(uuid.uuid4())
         return dummy_pid
 
-    def create_doi(self, dataset):
+    def create_doi(self, dataset_id):
         _uuid = str(uuid.uuid4())
         dummy_pid = f"10.82614/{_uuid}"
         return dummy_pid
+
+    def update_doi_dataset(self, dataset_id, doi):
+        _uuid = str(uuid.uuid4())
+        dummy_url = "http://localhost/a"
+        return dummy_url
 
 
 class _PIDMSClient:
@@ -67,6 +72,21 @@ class _PIDMSClient:
             _logger.error(f"Exception in PIDMSClient: {e}")
             raise ServiceUnavailableError
 
+    def update_doi_dataset(self, dataset_id, doi):
+        from apps.common.datacitedata import Datacitedata
+        payload = Datacitedata().get_datacite_json(dataset_id)
+        payload["data"]["attributes"]["url"] = f"https://{self.etsin_url}/dataset/{dataset_id}"
+        headers = {"apikey": self.pid_ms_apikey, "Content-Type": "application/json"}
+        try:
+            response = requests.put(
+                f"https://{settings.PID_MS_BASEURL}/v1/pid/doi/{doi}", json=payload, headers=headers
+            )
+            response.raise_for_status()
+            return response.text
+        except Exception as e:
+            _logger.error(f"Exception in PIDMSClient: {e}")
+            raise ServiceUnavailableError
+
 
 class ServiceUnavailableError(APIException):
     status_code = 503
@@ -82,3 +102,7 @@ class PIDMSClient:
     def create_doi(self, dataset_id):
         _client = import_string(settings.PID_MS_CLIENT_INSTANCE)()
         return _client.create_doi(dataset_id)
+
+    def update_doi_dataset(self, dataset_id, doi):
+        _client = import_string(settings.PID_MS_CLIENT_INSTANCE)()
+        return _client.update_doi_dataset(dataset_id, doi)

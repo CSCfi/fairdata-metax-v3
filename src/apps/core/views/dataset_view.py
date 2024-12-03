@@ -64,7 +64,7 @@ from apps.core.serializers.dataset_serializer import (
     LatestVersionQueryParamsSerializer,
 )
 from apps.core.serializers.legacy_serializer import LegacyDatasetConversionValidationSerializer
-from apps.core.services import MetaxV2Client
+from apps.core.services import MetaxV2Client, PIDMSClient
 from apps.core.views.common_views import DefaultValueOrdering
 from apps.files.models import File
 from apps.files.serializers import DirectorySerializer
@@ -708,6 +708,8 @@ class DatasetViewSet(CommonModelViewSet):
 
     def perform_update(self, serializer):
         dataset: Dataset = serializer.save()
+        if dataset.pid_generated_by_fairdata and dataset.generate_pid_on_publish == "DOI":
+            PIDMSClient().update_doi_dataset(dataset.id, dataset.persistent_identifier)
         dataset.signal_update()
 
     @action(detail=False)

@@ -1,7 +1,9 @@
+import json
 from importlib import reload
 from unittest import mock
-
+import logging
 import pytest
+from deepdiff.serialization import json_loads
 from django.test import override_settings
 from tests.unit.apps.core.api.dataset.conftest import dataset
 
@@ -9,7 +11,7 @@ from apps.core.models import Dataset
 from apps.core.services.pid_ms_client import PIDMSClient, ServiceUnavailableError
 
 pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
-
+logger = logging.getLogger(__name__)
 
 # Create a dataset with PID into a harvested catalog
 # Check that PID is saved properly
@@ -376,3 +378,46 @@ def test_pid_type_removed(admin_client, dataset_a_json, data_catalog, reference_
     dataset = Dataset.objects.get(id=res.data["id"])
     assert "pid_type" not in res.data
     assert dataset.generate_pid_on_publish == "DOI"
+
+
+# Create a dataset with generate_pid_on_publish=DOI
+# Update that dataset
+@override_settings(PID_MS_CLIENT_INSTANCE="apps.core.services.pid_ms_client._PIDMSClient")
+def test_update_dataset_with_doi(settings, requests_mock, admin_client, dataset_maximal_json, pid_update_payload, data_catalog, reference_data):
+    from deepdiff import DeepDiff
+    dataset = dataset_maximal_json
+    dataset["generate_pid_on_publish"] = "DOI"
+    dataset["state"] = "published"
+    dataset.pop("persistent_identifier", None)
+    res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
+    assert res.status_code == 201
+    ds_id = res.json()["id"]
+    dataset["persistent_identifier"] = res.json()["persistent_identifier"]
+    res = admin_client.put(
+        f"/v3/datasets/{ds_id}", dataset, content_type="application/json"
+    )
+    assert res.status_code == 200
+    call = requests_mock.request_history[1]
+    payload = json.loads(call.text)
+    original = pid_update_payload
+    original["data"]["attributes"]["url"] = f"https://{settings.ETSIN_URL}/dataset/{ds_id}"
+    assert DeepDiff(payload, original) == {}
+
+# Using dummy pid client
+# Create a dataset with generate_pid_on_publish=DOI
+# Update that dataset
+@override_settings(PID_MS_CLIENT_INSTANCE="apps.core.services.pid_ms_client._DummyPIDMSClient")
+def test_update_dataset_with_doi_dummy_client(admin_client, dataset_maximal_json, data_catalog, reference_data):
+    dataset = dataset_maximal_json
+    dataset["generate_pid_on_publish"] = "DOI"
+    dataset["state"] = "published"
+    dataset.pop("persistent_identifier", None)
+    res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
+    assert res.status_code == 201
+    ds_id = res.json()["id"]
+    dataset["persistent_identifier"] = res.json()["persistent_identifier"]
+    res = admin_client.put(
+        f"/v3/datasets/{ds_id}", dataset, content_type="application/json"
+    )
+    assert res.status_code == 200
+
