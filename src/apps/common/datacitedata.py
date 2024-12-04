@@ -290,6 +290,8 @@ class Datacitedata:
         publication_year = None
         if issued := dataset.issued:
             publication_year = str(issued.year)
+        else:
+            publication_year = str(dataset.created.year)
 
         datacite_json = {
             "identifiers": self.parse_identifier(

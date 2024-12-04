@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from importlib import reload
 from unittest import mock
 import logging
@@ -421,3 +422,24 @@ def test_update_dataset_with_doi_dummy_client(admin_client, dataset_maximal_json
     )
     assert res.status_code == 200
 
+# Create a draft DOI dataset
+# Check that it does not have PID and issued
+# Publish dataset
+# Check that it has a publicationYear in payload
+@override_settings(PID_MS_CLIENT_INSTANCE="apps.core.services.pid_ms_client._PIDMSClient")
+def test_create_draft_dataset_and_publish(requests_mock, admin_client, dataset_a_json, data_catalog, reference_data):
+    dataset = dataset_a_json
+    dataset["generate_pid_on_publish"] = "DOI"
+    dataset.pop("persistent_identifier", None)
+    dataset.pop("issued", None)
+    dataset["state"] = "draft"
+    res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
+    assert res.status_code == 201
+    pid = res.json().get("persistent_identifier", None)
+    ds_id = res.json().get("id", None)
+    assert pid == None
+
+    res2 = admin_client.post(f"/v3/datasets/{ds_id}/publish", content_type="application/json")
+    call = requests_mock.request_history[0]
+    payload = json.loads(call.text)
+    assert payload["data"]["attributes"]["publicationYear"] == str(datetime.now().year)
