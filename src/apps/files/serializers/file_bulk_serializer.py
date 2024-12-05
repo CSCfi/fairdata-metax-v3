@@ -22,6 +22,7 @@ from apps.files.models.file import File, FileCharacteristics, FileStorage
 from apps.files.models.file_storage import FileStorage
 from apps.files.serializers.file_serializer import FileSerializer
 from apps.files.signals import pre_files_deleted
+from apps.users.models import MetaxUser
 
 
 class PartialFileSerializer(FileSerializer):
@@ -215,6 +216,35 @@ class FileBulkSerializer(serializers.ListSerializer):
                 id_values.add(f["id"])
         return files
 
+    def get_context_user(self) -> Optional[MetaxUser]:
+        if req := self.context.get("request"):
+            return req.user
+        raise ValueError("Missing request in serializer context")
+
+    @property
+    def is_pas_user(self):
+        if not hasattr(self, "_is_pas_user"):
+            user = self.get_context_user()
+            self._is_pas_user = user.is_superuser or any(
+                group.name == "pas" for group in user.groups.all()
+            )
+        return self._is_pas_user
+
+    def check_file_locks(self, files: List[dict]) -> List[dict]:
+        """Check that file updates are not prevented by locks."""
+        if not self.is_pas_user:
+            user = self.get_context_user()
+            existing_files = [f for f in files if "id" in f]
+            file_lock_reasons = File.get_lock_reasons_for_queryset(
+                user=user,
+                queryset=File.all_objects.filter(id__in=[f["id"] for f in existing_files]),
+            )
+            for f in existing_files:
+                if reason := file_lock_reasons.get(f["id"]):
+                    f["errors"]["pas_process_running"] = reason
+
+        return files
+
     def check_relations(self, files: List[dict]) -> List[dict]:
         """Validate pas_compatible_file relations."""
         files_with_pas = [f for f in files if f.get("pas_compatible_file")]
@@ -347,6 +377,7 @@ class FileBulkSerializer(serializers.ListSerializer):
 
         files = self.populate_id_from_external_identifier(files)
         files = self.check_duplicate_ids(files)
+        files = self.check_file_locks(files)
         files = self.check_relations(files)
 
         # Checks for required and forbidden values
@@ -401,6 +432,19 @@ class FileBulkSerializer(serializers.ListSerializer):
             file.characteristics = FileCharacteristics(**characteristics_data)
             file.characteristics._changed = True
 
+    def assign_pas_fields(self, file: File, pas_data: dict) -> Optional[File]:
+        """Set PAS-specific fields to file."""
+        for field, value in pas_data.items():
+            if getattr(file, field) != value:
+                if not self.is_pas_user:
+                    self.fail(
+                        object=file._original_data,
+                        errors={field: "Only PAS service is allowed to set value."},
+                    )
+                    return None
+                setattr(file, field, value)
+        return file
+
     def get_file_instances(self, validated_data) -> List[File]:
         """Return not yet saved instances from validated data."""
         system_creator = get_technical_metax_user()
@@ -413,7 +457,12 @@ class FileBulkSerializer(serializers.ListSerializer):
 
         files = []
         for f in validated_data:
+            pas_data = {}
             characteristics_data = f.pop("characteristics", serializers.empty)
+            for field in FileSerializer.pas_only_fields:
+                if field in f:
+                    pas_data[field] = f.pop(field)
+
             if "id" not in f:  # new file
                 # Note: To determine if a File instance is not yet in the DB,
                 # use instance._state.adding. For a UUID-style id, the id is
@@ -433,6 +482,8 @@ class FileBulkSerializer(serializers.ListSerializer):
                 if file:
                     files.append(file)
 
+            if file and pas_data:
+                file = self.assign_pas_fields(file, pas_data)
             if file and characteristics_data is not serializers.empty:
                 self.assign_characteristics(file, characteristics_data)
         return files

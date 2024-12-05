@@ -6,7 +6,7 @@
 # :license: MIT
 
 import uuid
-from typing import Optional
+from typing import Dict, Optional
 
 from django.conf import settings
 from django.db import models
@@ -18,6 +18,7 @@ from apps.common.models import CustomSoftDeletableModel, SystemCreatorBaseModel
 from apps.common.serializers.fields import ChecksumField
 from apps.files.helpers import convert_checksum_v2_to_v3, convert_checksum_v3_to_v2
 from apps.files.models.file_characteristics import FileCharacteristics
+from apps.users.models import MetaxUser
 
 from .file_storage import FileStorage
 
@@ -67,6 +68,11 @@ class File(SystemCreatorBaseModel, CustomSoftDeletableModel):
     user = models.CharField(max_length=200, null=True, blank=True)
     legacy_id = models.BigIntegerField(unique=True, null=True, blank=True)
     is_legacy_syncable = models.BooleanField(default=True)
+
+    pas_process_running = models.BooleanField(
+        default=False,
+        help_text=_("Only PAS service is allowed to update files while PAS is processing them."),
+    )
 
     @classmethod
     def values_from_legacy(cls, legacy_file: dict, storage: FileStorage):
@@ -143,6 +149,32 @@ class File(SystemCreatorBaseModel, CustomSoftDeletableModel):
     def storage_service(self) -> str:
         if self.storage.storage_service:
             return self.storage.storage_service
+
+    def get_lock_reason(self, user: MetaxUser) -> Optional[str]:
+        """Determine if and why user is locked from modifying the file."""
+        if user.is_superuser:
+            return None
+        if self.pas_process_running and not any(
+            group.name == "pas" for group in user.groups.all()
+        ):
+            return "Only PAS service is allowed to modify the file while it is in PAS process."
+
+        return None
+
+    @classmethod
+    def get_lock_reasons_for_queryset(
+        cls, user: MetaxUser, queryset: models.QuerySet
+    ) -> Dict[uuid.UUID, str]:
+        """Determine if and why user is locked from modifying the file."""
+        if user.is_superuser or any(group.name == "pas" for group in user.groups.all()):
+            return {}
+
+        msg = "Only PAS service is allowed to modify the file while it is in PAS process."
+        return {
+            _id: msg
+            for _id, pas_running in queryset.values_list("id", "pas_process_running")
+            if pas_running
+        }
 
     class Meta:
         indexes = [

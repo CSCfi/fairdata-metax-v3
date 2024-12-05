@@ -20,6 +20,7 @@ from rest_framework import serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from apps.common.exceptions import ResourceLocked
 from apps.common.filters import VerboseChoiceFilter
 from apps.common.helpers import cachalot_toggle, get_filter_openapi_parameters
 from apps.common.serializers import DeleteListReturnValueSerializer, FlushQueryParamsSerializer
@@ -291,7 +292,12 @@ class FileViewSet(BaseFileViewSet):
 
     def bulk_action(self, files, action):
         ignore_errors = self.query_params["ignore_errors"]
-        serializer = FileBulkSerializer(data=files, action=action, ignore_errors=ignore_errors)
+        serializer = FileBulkSerializer(
+            data=files,
+            action=action,
+            ignore_errors=ignore_errors,
+            context={"request": self.request},
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
@@ -364,6 +370,11 @@ class FileViewSet(BaseFileViewSet):
 
         count = queryset.count()
         if count > 0:
+            if lock_reasons := File.get_lock_reasons_for_queryset(request.user, queryset):
+                raise ResourceLocked(
+                    detail=f"Delete aborted due to {len(lock_reasons)} locked files."
+                )
+
             pre_files_deleted.send(sender=File, queryset=queryset)
             files_to_sync = None
             if not request.user.is_v2_migration:

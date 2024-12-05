@@ -6,7 +6,7 @@ from apps.files.models.file import File
 
 class BaseFilesAccessPolicy(BaseAccessPolicy):
     statements = [
-        {"action": "*", "principal": ["admin", "group:ida", "group:pas"], "effect": "allow"},
+        {"action": "*", "principal": "admin", "effect": "allow"},
     ]
 
     @classmethod
@@ -25,17 +25,47 @@ class BaseFilesAccessPolicy(BaseAccessPolicy):
 
 class FilesAccessPolicy(BaseFilesAccessPolicy):
     statements = BaseFilesAccessPolicy.statements + [
+        {"action": ["list", "retrieve", "<safe_methods>"], "effect": "allow", "principal": "*"},
         {
-            "action": ["list", "retrieve", "<safe_methods>"],
-            "principal": "*",
+            # Actions that modify single file. Lock handled by is_not_locked condition.
+            "action": [
+                "update",
+                "partial_update",
+                "destroy",
+            ],
             "effect": "allow",
+            "principal": ["group:ida", "group:pas"],
+            "condition": "is_not_locked",
+        },
+        {
+            "action": [
+                # Actions that modify multiple files. Lock needs to be handled in action.
+                "destroy_list",
+                "patch_many",
+                "put_many",
+                "delete_many",
+                # Non-GET actions that don't modify existing files.
+                "post_many",
+                "create",
+                "datasets",
+            ],
+            "effect": "allow",
+            "principal": ["group:ida", "group:pas"],
         },
         {
             "action": ["from_legacy", "destroy_list"],
-            "principal": "group:v2_migration",
             "effect": "allow",
+            "principal": "group:v2_migration",
         },
     ]
+
+    def is_not_locked(self, request, view, action) -> bool:
+        file: File = view.get_object()
+        if reason := file.get_lock_reason(request.user):
+            self.message = reason
+            self.code = "locked"  # Special code handled by CommonModelViewSet
+            return False
+        return True
 
     @classmethod
     def scope_queryset(cls, request, queryset, dataset_id=None):
@@ -54,15 +84,24 @@ class FilesAccessPolicy(BaseFilesAccessPolicy):
             return queryset.filter(storage__csc_project__in=csc_projects)
 
 
-class FileCharacteristicsAccessPolicy(FilesAccessPolicy):
-    statements = FilesAccessPolicy.statements + [
+class FileCharacteristicsAccessPolicy(BaseFilesAccessPolicy):
+    statements = BaseFilesAccessPolicy.statements + [
+        {"action": ["list", "retrieve", "<safe_methods>"], "effect": "allow", "principal": "*"},
         {
             "action": ["*"],
             "principal": "*",
-            "condition": "is_project_or_dataset_member",
+            "condition_expression": "(is_project_or_dataset_member and is_not_locked)",
             "effect": "allow",
         },
     ]
+
+    def is_not_locked(self, request, view, action) -> bool:
+        file: File = view.get_file_instance()
+        if reason := file.get_lock_reason(request.user):
+            self.message = reason
+            self.code = "locked"  # Special code handled by CommonModelViewSet
+            return False
+        return True
 
     def is_project_or_dataset_member(self, request, view, action) -> bool:
         service_groups = settings.PROJECT_STORAGE_SERVICE_USER_GROUPS
@@ -87,6 +126,7 @@ class FileCharacteristicsAccessPolicy(FilesAccessPolicy):
 
 class DirectoriesAccessPolicy(BaseFilesAccessPolicy):
     statements = BaseFilesAccessPolicy.statements + [
+        {"action": "list", "principal": ["group:ida", "group:pas"], "effect": "allow"},
         {
             "action": ["list"],
             "principal": ["*"],

@@ -5,6 +5,7 @@
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
 import logging
+from typing import Optional
 
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
@@ -88,6 +89,7 @@ class FileSerializer(CreateOnlyFieldsMixin, CommonNestedModelSerializer):
         "storage_service",
         "storage_identifier",
     ]
+    pas_only_fields = ["pas_compatible_file", "pas_process_running"]
 
     # FileStorage specific fields
     storage_service = ListValidChoicesField(choices=list(settings.STORAGE_SERVICE_FILE_STORAGES))
@@ -102,6 +104,8 @@ class FileSerializer(CreateOnlyFieldsMixin, CommonNestedModelSerializer):
     dataset_metadata = serializers.SerializerMethodField()
 
     characteristics = FileCharacteristicsSerializer(required=False, allow_null=True)
+
+    pas_process_running = serializers.BooleanField(required=False)
 
     non_pas_compatible_file = serializers.PrimaryKeyRelatedField(read_only=True)
 
@@ -135,12 +139,37 @@ class FileSerializer(CreateOnlyFieldsMixin, CommonNestedModelSerializer):
             )
         return val
 
+    def check_pas_field_permissions(self, instance: Optional[File], validated_data):
+        user = self.context["request"].user
+        if user.is_superuser or any(group.name == "pas" for group in user.groups.all()):
+            return
+
+        errors = {}
+        for field in self.pas_only_fields:
+            if field not in validated_data:
+                continue
+
+            if instance:
+                if getattr(instance, field) != validated_data[field]:
+                    errors[field] = "Only PAS service is allowed to set value."
+            else:
+                if validated_data[field]:  # Allow falsy values when creating
+                    errors[field] = "Only PAS service is allowed to set value."
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
+    def create(self, validated_data):
+        self.check_pas_field_permissions(instance=None, validated_data=validated_data)
+        return super().create(validated_data)
+
     def update(self, instance, validated_data):
         if pas_compatible_file := validated_data.get("pas_compatible_file"):
             if pas_compatible_file.id == instance.id:
                 raise serializers.ValidationError(
                     {"pas_compatible_file": "File cannot refer to itself."}
                 )
+        self.check_pas_field_permissions(instance=None, validated_data=validated_data)
         return super().update(instance, validated_data)
 
     def validate(self, data):
@@ -170,6 +199,7 @@ class FileSerializer(CreateOnlyFieldsMixin, CommonNestedModelSerializer):
             "dataset_metadata",
             "characteristics",
             "characteristics_extension",
+            "pas_process_running",
             "pas_compatible_file",
             "non_pas_compatible_file",
         ]

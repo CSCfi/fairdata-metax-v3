@@ -148,3 +148,22 @@ def test_delete_file_in_multiple_datasets(admin_client, file_set):
     assert res.status_code == 204
     file_set.dataset.refresh_from_db()
     assert file_set.dataset.deprecated == original_deprecated
+
+
+@pytest.mark.parametrize(
+    "client,should_work", [("admin_client", True), ("pas_client", True), ("ida_client", False)]
+)
+def test_delete_files_pas_process_running(request, client, should_work, file_set):
+    client = request.getfixturevalue(client)  # Select client fixture based on parameter
+    file_set.files.filter(id__in=file_set.files.all()[:2]).update(pas_process_running=True)
+
+    url = f'{reverse("file-list")}?csc_project={file_set.csc_project}&storage_service={file_set.storage_service}'
+    res = client.delete(url, content_type="application/json")
+    if should_work:
+        assert res.status_code == 200
+        assert res.data["count"] == 3
+        assert file_set.files.count() == 0
+    else:
+        assert res.status_code == 423
+        assert "2 locked files" in res.json()["detail"]
+        assert file_set.files.count() == 3

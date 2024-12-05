@@ -1,5 +1,5 @@
 import pytest
-from rest_framework.fields import UUIDField
+from rest_framework.fields import DateTimeField, UUIDField
 from tests.utils import assert_nested_subdict
 
 from apps.files import factories
@@ -25,6 +25,7 @@ def test_files_create(admin_client, ida_file_json):
             "characteristics_extension": None,
             "pas_compatible_file": None,
             "non_pas_compatible_file": None,
+            "pas_process_running": False,
         },
         res.json(),
         check_all_keys_equal=True,
@@ -73,9 +74,9 @@ def test_files_create_missing_identifier(admin_client, ida_file_json):
     assert res.data["storage_identifier"][0] == "Field is required for storage_service 'ida'"
 
 
-def test_files_create_pas_compatible_file(ida_client, ida_file_json):
+def test_files_create_pas_compatible_file(pas_client, ida_file_json):
     file = factories.FileFactory()
-    res = ida_client.post(
+    res = pas_client.post(
         "/v3/files",
         {
             **ida_file_json,
@@ -89,9 +90,9 @@ def test_files_create_pas_compatible_file(ida_client, ida_file_json):
     assert str(file.non_pas_compatible_file.id) == res.json()["id"]
 
 
-def test_files_create_pas_compatible_file_non_existent(ida_client):
+def test_files_create_pas_compatible_file_non_existent(pas_client):
     file = factories.FileFactory()
-    res = ida_client.patch(
+    res = pas_client.patch(
         f"/v3/files/{file.id}",
         {"pas_compatible_file": "00000000-0000-0000-0000-000000000000"},
         content_type="application/json",
@@ -100,12 +101,65 @@ def test_files_create_pas_compatible_file_non_existent(ida_client):
     assert "object does not exist" in res.json()["pas_compatible_file"][0]
 
 
-def test_files_patch_pas_compatible_file_self(ida_client):
+def test_files_patch_pas_compatible_file_self(pas_client):
     file = factories.FileFactory()
-    res = ida_client.patch(
+    res = pas_client.patch(
         f"/v3/files/{file.id}",
         {"pas_compatible_file": file.id},
         content_type="application/json",
     )
     assert res.status_code == 400
     assert res.json() == {"pas_compatible_file": "File cannot refer to itself."}
+
+
+@pytest.mark.parametrize(
+    "client,should_work", [("admin_client", True), ("pas_client", True), ("ida_client", False)]
+)
+def test_files_create_and_update_locked(request, client, admin_client, should_work, ida_file_json):
+    client = request.getfixturevalue(client)  # Select client fixture based on parameter
+    ida_file_json["pas_process_running"] = True
+    res = admin_client.post("/v3/files", ida_file_json, content_type="application/json")
+    assert res.status_code == 201
+
+    url = f'/v3/files/{res.data["id"]}'
+    res = client.patch(url, {"size": 123}, content_type="application/json")
+    if should_work:
+        assert res.status_code == 200
+    else:
+        assert res.status_code == 423
+        assert "Only PAS service is allowed to modify the file" in res.json()["detail"]
+
+    # Request should be successful after lock is removed
+    res = admin_client.patch(url, {"pas_process_running": False}, content_type="application/json")
+    assert res.status_code == 200
+    res = client.patch(url, {"size": 345}, content_type="application/json")
+    assert res.status_code == 200
+
+
+@pytest.mark.parametrize(
+    "client,should_work", [("admin_client", True), ("pas_client", True), ("ida_client", False)]
+)
+def test_files_create_permissions_pas_process_running(request, client, should_work, ida_file_json):
+    client = request.getfixturevalue(client)  # Select client fixture based on parameter
+    ida_file_json["pas_process_running"] = True
+    res = client.post("/v3/files", ida_file_json, content_type="application/json")
+    if should_work:
+        assert res.status_code == 201
+    else:
+        assert res.status_code == 400
+        assert "Only PAS service is allowed to set" in res.json()["pas_process_running"]
+
+
+@pytest.mark.parametrize(
+    "client,should_work", [("admin_client", True), ("pas_client", True), ("ida_client", False)]
+)
+def test_files_create_permissions_pas_compatible_file(request, client, should_work, ida_file_json):
+    pas_compatible_file = factories.FileFactory()
+    client = request.getfixturevalue(client)  # Select client fixture based on parameter
+    ida_file_json["pas_compatible_file"] = pas_compatible_file.id
+    res = client.post("/v3/files", ida_file_json, content_type="application/json")
+    if should_work:
+        assert res.status_code == 201
+    else:
+        assert res.status_code == 400
+        assert "Only PAS service is allowed to set" in res.json()["pas_compatible_file"]

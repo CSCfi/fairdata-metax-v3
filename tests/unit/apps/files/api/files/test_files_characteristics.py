@@ -357,3 +357,42 @@ def test_files_file_characteristics_permissions_shared_dataset(
     file.refresh_from_db()
     assert_csv_characteristics(file.characteristics, encoding="UTF-16")
     assert FileCharacteristics.objects.count() == 1
+
+
+@pytest.mark.parametrize(
+    "client,should_work", [("admin_client", True), ("pas_client", True), ("ida_client", False)]
+)
+def test_add_files_characteristics_update_pas_process_running(
+    request, client, admin_client, should_work, ida_file_json, file_format_reference_data
+):
+    """Test that updating characteristics is prevented when pas_process_running is enabled."""
+    client = request.getfixturevalue(client)  # Select client fixture based on parameter
+    ida_file_json["pas_process_running"] = True
+    res = admin_client.post("/v3/files", ida_file_json, content_type="application/json")
+    assert res.status_code == 201
+
+    # Add characteristics to existing file
+    file_id = res.json()["id"]
+    characteristics_url = reverse("file-characteristics-detail", kwargs={"pk": file_id})
+    res = client.put(
+        characteristics_url, characteristics_detail_json, content_type="application/json"
+    )
+    if should_work:
+        assert res.status_code == 201
+    else:
+        assert res.status_code == 423
+        assert "Only PAS service is allowed to modify the file" in res.json()["detail"]
+
+    # Request should be successful after lock is removed
+    file_url = reverse("file-detail", kwargs={"pk": file_id})
+    res = admin_client.patch(
+        file_url, {"pas_process_running": False}, content_type="application/json"
+    )
+    assert res.status_code == 200
+    res = client.put(
+        characteristics_url, characteristics_detail_json, content_type="application/json"
+    )
+    if should_work:
+        assert res.status_code == 200
+    else:
+        assert res.status_code == 201

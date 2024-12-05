@@ -21,6 +21,7 @@ def admin_client(admin_user):
     """
     client = APIClient()
     client.force_authenticate(user=admin_user)
+    client._user = admin_user
     return client
 
 

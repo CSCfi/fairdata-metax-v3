@@ -149,6 +149,7 @@ def service_client():
     group_test, _ = Group.objects.get_or_create(name="test")
     user.groups.set([group_test, group_service])
     client.force_login(user)
+    client._user = user
     return client
 
 
@@ -160,6 +161,7 @@ def ida_client():
     ida_group, _ = Group.objects.get_or_create(name="ida")
     user.groups.set([service_group, ida_group])
     client.force_login(user)
+    client._user = user
     return client
 
 
@@ -171,6 +173,7 @@ def pas_client():
     pas_group, _ = Group.objects.get_or_create(name="pas")
     user.groups.set([service_group, pas_group])
     client.force_login(user)
+    client._user = user
     return client
 
 

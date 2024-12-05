@@ -744,121 +744,54 @@ def test_files_bulk_not_a_list(ida_client, csc_project, action_url):
     assert res.json() == {"non_field_errors": ['Expected a list of items but got type "dict".']}
 
 
-def test_files_insert_pas_compatible_file(ida_client, action_url, csc_project):
-    compatible_file = factories.FileFactory()
+def test_files_bulk_update_locked_not_allowed(ida_client, action_url):
     files = build_files_json(
         [
-            {"exists": False, "id": None, "pas_compatible_file": compatible_file},
-        ],
-        storage=csc_project,
+            {"size": 100, "pas_process_running": True, "exists": True},
+        ]
     )
-    res = ida_client.post(
-        action_url("insert"),
-        files,
-        content_type="application/json",
+    files[0].pop("pas_process_running")
+    res = ida_client.post(action_url("update"), files, content_type="application/json")
+    assert res.status_code == 400
+    assert res.json()["failed"][0]["errors"] == {
+        "pas_process_running": "Only PAS service is allowed to modify the file while it is in PAS process."
+    }
+
+
+def test_files_bulk_update_locked_ok(pas_client, action_url):
+    files = build_files_json(
+        [
+            {"size": 100, "pas_process_running": True, "exists": True},
+        ]
     )
+    files[0].pop("pas_process_running")
+    res = pas_client.post(action_url("update"), files, content_type="application/json")
     assert res.status_code == 200
-    assert_nested_subdict(
-        [
-            {"object": files[0], "action": "insert"},
-        ],
-        res.json()["success"],
-    )
-    non_compatible_file_id = res.data["success"][0]["object"]["id"]
-
-    # Check the related file returns update relation
-    res = ida_client.get(
-        f"/v3/files/{compatible_file.id}",
-        content_type="application/json",
-    )
-    assert res.status_code == 200
-    assert res.json()["non_pas_compatible_file"] == non_compatible_file_id
 
 
-def test_files_insert_pas_compatible_file_self(ida_client, action_url, csc_project):
-    file = factories.FileFactory()
+def test_files_bulk_update_set_pas_process_running_not_allowed(ida_client, action_url):
     files = build_files_json(
         [
-            # File that refers to itself
-            {"id": file.id, "pas_compatible_file": file},
-        ],
-        storage=csc_project,
+            {"pas_process_running": False, "exists": True},
+        ]
     )
-    res = ida_client.post(
-        action_url("insert"),
-        files,
-        content_type="application/json",
-    )
+    files[0]["pas_process_running"] = True
+    res = ida_client.post(action_url("update"), files, content_type="application/json")
     assert res.status_code == 400
-    assert_nested_subdict(
-        [
-            {
-                "object": files[0],
-                "errors": {"pas_compatible_file": "File cannot refer to itself."},
-            },
-        ],
-        res.json()["failed"],
-    )
+    assert res.json()["failed"][0]["errors"] == {
+        "pas_process_running": "Only PAS service is allowed to set value."
+    }
 
 
-def test_files_insert_pas_compatible_file_conflict(ida_client, action_url, csc_project):
-    compatible_file = factories.FileFactory()
-    factories.FileFactory(pas_compatible_file=compatible_file)
+def test_files_bulk_update_set_pas_compatible_file(ida_client, action_url):
+    pas_file = factories.FileFactory()
     files = build_files_json(
         [
-            # Another file already has same pas_compatible_file
-            {"exists": False, "id": None, "pas_compatible_file": compatible_file},
-        ],
-        storage=csc_project,
+            {"id": None, "pas_compatible_file": pas_file},
+        ]
     )
-    res = ida_client.post(
-        action_url("insert"),
-        files,
-        content_type="application/json",
-    )
+    res = ida_client.post(action_url("insert"), files, content_type="application/json")
     assert res.status_code == 400
-    assert_nested_subdict(
-        [
-            {
-                "object": files[0],
-                "errors": {
-                    "pas_compatible_file": "File with this pas_compatible_file already exists."
-                },
-            },
-        ],
-        res.json()["failed"],
-    )
-
-
-def test_files_insert_pas_compatible_file_conflict_in_request(ida_client, action_url, csc_project):
-    compatible_file = factories.FileFactory()
-    files = build_files_json(
-        [  # Multiple new files referring to same pas_compatible_file
-            {"exists": False, "id": None, "pas_compatible_file": compatible_file},
-            {"exists": False, "id": None, "pas_compatible_file": compatible_file},
-        ],
-        storage=csc_project,
-    )
-    res = ida_client.post(
-        action_url("insert"),
-        files,
-        content_type="application/json",
-    )
-    assert res.status_code == 400
-    assert_nested_subdict(
-        [
-            {
-                "object": files[0],
-                "errors": {
-                    "pas_compatible_file": "File with this pas_compatible_file already exists."
-                },
-            },
-            {
-                "object": files[1],
-                "errors": {
-                    "pas_compatible_file": "File with this pas_compatible_file already exists."
-                },
-            },
-        ],
-        res.json()["failed"],
-    )
+    assert res.json()["failed"][0]["errors"] == {
+        "pas_compatible_file": "Only PAS service is allowed to set value."
+    }

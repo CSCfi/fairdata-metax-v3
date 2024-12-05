@@ -273,7 +273,6 @@ def test_catalog_datasets_invalid_publishing_channels(
     dataset_json = dataset_a_json
     dataset_json["data_catalog"] = "both-pc-data-catalog"
     res = admin_client.post("/v3/datasets", dataset_json, content_type="application/json")
-    print(res.json())
     assert res.status_code == 201
 
     res = admin_client.get("/v3/datasets?publishing_channels=foo")
