@@ -366,7 +366,6 @@ class DatasetFactory(factory.django.DjangoModelFactory):
     data_catalog = factory.SubFactory(DataCatalogFactory)
     title = factory.Dict({"en": factory.Sequence(lambda n: f"research-dataset-{n}")})
     description = factory.Dict({"en": factory.Faker("paragraph")})
-    preservation = factory.SubFactory(PreservationFactory)
     access_rights = factory.SubFactory(AccessRightsFactory)
     system_creator = factory.SubFactory(MetaxUserFactory)
     metadata_owner = factory.SubFactory(MetadataProviderFactory)

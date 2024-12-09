@@ -34,6 +34,8 @@ class PreservationModelSerializer(CommonModelSerializer):
             "reason_description",
             "dataset_version",
             "dataset_origin_version",
+            "pas_package_created",
+            "pas_process_running",
         )
         extra_kwargs = {
             "state_modified": {"read_only": True},

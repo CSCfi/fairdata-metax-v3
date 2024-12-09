@@ -12,6 +12,10 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_preservation.test_create_dataset_preservation
 
+## test_dataset_preservation_cumulative_state
+
+### :::tests.unit.apps.core.api.dataset.test_preservation.test_dataset_preservation_cumulative_state
+
 ## test_create_dataset_preservation_without_contract
 
 ### :::tests.unit.apps.core.api.dataset.test_preservation.test_create_dataset_preservation_without_contract
@@ -75,4 +79,8 @@
 ## test_create_dataset_preservation_version_twice
 
 ### :::tests.unit.apps.core.api.dataset.test_preservation.test_create_dataset_preservation_version_twice
+
+## test_preservation_pas_process_running
+
+### :::tests.unit.apps.core.api.dataset.test_preservation.test_preservation_pas_process_running
 

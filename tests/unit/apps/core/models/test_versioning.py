@@ -9,6 +9,7 @@ from apps.core.factories import (
     LanguageFactory,
     ProvenanceFactory,
     PublishedDatasetFactory,
+    PreservationFactory
 )
 from apps.core.models import Dataset, DatasetVersions
 
@@ -20,8 +21,14 @@ def test_create_new_version(language, theme, dataset):
     ProvenanceFactory(dataset=dataset)
     dataset.language.add(language)
     dataset.theme.add(theme)
-    old_version = dataset
+    dataset.preservation = PreservationFactory(state=-1)
+    dataset.cumulative_state = Dataset.CumulativeState.ACTIVE
+    dataset.save()
     dataset.publish()
+    dataset.cumulative_state = Dataset.CumulativeState.CLOSED
+    dataset.save()
+
+    old_version = dataset
     new_version = Dataset.create_new_version(dataset)
     assert new_version.id != old_version.id
     assert new_version.published_revision == 0
@@ -37,6 +44,7 @@ def test_create_new_version(language, theme, dataset):
     assert old_version.provenance.difference(new_version.provenance.all()).count() == 1
     assert new_version.permissions_id == old_version.permissions_id
     assert new_version.dataset_versions_id == old_version.dataset_versions_id
+    assert new_version.cumulative_state == Dataset.CumulativeState.NOT_CUMULATIVE
 
     # Preservation status is reset for new version
     assert old_version.preservation

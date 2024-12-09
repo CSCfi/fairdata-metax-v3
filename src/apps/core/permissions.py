@@ -58,8 +58,17 @@ class DatasetAccessPolicy(BaseAccessPolicy):
     ] + BaseAccessPolicy.statements
 
     def is_edit_allowed(self, request, view, action) -> bool:
-        dataset = view.get_object()
-        return dataset.has_permission_to_edit(request.user)
+        from .models import Dataset
+
+        dataset: Dataset = view.get_object()
+        if not dataset.has_permission_to_edit(request.user):
+            return False
+
+        if reason := dataset.get_lock_reason(request.user):
+            self.message = reason
+            self.code = "locked"  # Special code handled by CommonModelViewSet
+            return False
+        return True
 
     def is_flush_allowed(self, request, view, action) -> bool:
         dataset = view.get_object()
@@ -196,15 +205,23 @@ class DatasetNestedAccessPolicy(BaseAccessPolicy):
             "action": ["create", "update", "partial_update", "destroy"],
             "principal": "authenticated",
             "effect": "allow",
-            "condition": "is_dataset_editor",
+            "condition": "is_edit_allowed",
         },
     ] + BaseAccessPolicy.statements
 
-    def is_dataset_editor(self, request, view, action) -> bool:
+    def is_edit_allowed(self, request, view, action) -> bool:
         from .models import Dataset
 
         dataset: Dataset = view.get_dataset_instance()
-        return dataset.has_permission_to_edit(request.user)
+        if not dataset.has_permission_to_edit(request.user):
+            return False
+
+        if reason := dataset.get_lock_reason(request.user):
+            self.message = reason
+            self.code = "locked"  # Special code handled by CommonModelViewSet
+            return False
+
+        return True
 
 
 class DatasetPermissionsAccessPolicy(DatasetNestedAccessPolicy):
@@ -215,7 +232,7 @@ class DatasetPermissionsAccessPolicy(DatasetNestedAccessPolicy):
             "action": ["list", "retrieve", "create", "update", "partial_update", "destroy"],
             "principal": "authenticated",
             "effect": "allow",
-            "condition": "is_dataset_editor",
+            "condition": "is_edit_allowed",
         },
     ] + BaseAccessPolicy.admin_statements
 

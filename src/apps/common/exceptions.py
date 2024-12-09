@@ -14,6 +14,14 @@ class TopLevelValidationError(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
 
 
+class ResourceLocked(APIException):
+    """Modifications to resource are prevented due to it being locked for some purpose."""
+
+    default_detail = "Resource is locked."
+    status_code = status.HTTP_423_LOCKED
+    default_code = "locked"
+
+
 def exception_handler(exc, context):
     """Handler for DRF exceptions."""
 

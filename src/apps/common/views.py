@@ -3,13 +3,14 @@ from functools import cached_property
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from rest_access_policy import AccessViewSetMixin
-from rest_framework import serializers, viewsets
+from rest_framework import exceptions, serializers, viewsets
 from rest_framework.exceptions import NotAuthenticated
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
+from apps.common.exceptions import ResourceLocked
 from apps.common.permissions import BaseAccessPolicy
 
 
@@ -203,6 +204,15 @@ class CommonModelViewSet(
         context["strict"] = self.strict
         context["include_nulls"] = self.include_nulls
         return context
+
+    def permission_denied(self, request, message=None, code=None):
+        """If request is not permitted, determine what kind of exception to raise."""
+        if request.authenticators and not request.successful_authenticator:
+            raise exceptions.NotAuthenticated()
+        # Special case for resource being temporarily unavailable for modification
+        if code == "locked":
+            raise ResourceLocked(detail=message, code=code)
+        raise exceptions.PermissionDenied(detail=message, code=code)
 
 
 class CommonReadOnlyModelViewSet(

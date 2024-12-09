@@ -365,6 +365,8 @@ def test_legacy_dataset_preservation_fields(
         "description": {"und": "oke"},
         "reason_description": "Plz preserve",
         "preservation_identifier": "preservation_id:123:jee",
+        "pas_package_created": False,
+        "pas_process_running": False,
     }
 
 

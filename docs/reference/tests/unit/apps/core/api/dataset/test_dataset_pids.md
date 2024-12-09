@@ -80,6 +80,11 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_update_dataset_with_doi
 
+## test_update_dataset_with_doi_dummy_client
+
+### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_update_dataset_with_doi_dummy_client
+
 ## test_create_draft_dataset_and_publish
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_create_draft_dataset_and_publish
+

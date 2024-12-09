@@ -93,6 +93,12 @@ def pas_group():
 
 
 @pytest.fixture
+def ida_group():
+    group, _ = Group.objects.get_or_create(name="ida")
+    return group
+
+
+@pytest.fixture
 def user(fairdata_users_group):
     user, created = MetaxUser.objects.get_or_create(
         username="test_user",
@@ -204,7 +210,7 @@ def pytest_collection_modifyitems(items):
 
 
 @pytest.fixture
-def data_catalog(fairdata_users_group, service_group, pas_group) -> DataCatalog:
+def data_catalog(fairdata_users_group, service_group, pas_group, ida_group) -> DataCatalog:
     identifier = "urn:nbn:fi:att:data-catalog-ida"
     title = {
         "en": "Fairdata IDA datasets",
@@ -220,7 +226,7 @@ def data_catalog(fairdata_users_group, service_group, pas_group) -> DataCatalog:
         allowed_pid_types=["URN", "DOI"],
     )
     catalog.dataset_groups_create.set([fairdata_users_group, service_group])
-    catalog.dataset_groups_admin.set([pas_group])
+    catalog.dataset_groups_admin.set([pas_group, ida_group])
     return catalog
 
 

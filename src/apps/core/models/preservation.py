@@ -3,12 +3,10 @@ import uuid
 from django.contrib.postgres.fields import HStoreField
 from django.db import models
 from django.db.models import Q
-from django.utils import timezone
 from django.utils.translation import gettext as _
-from simple_history.models import HistoricalRecords
 
 from apps.common.copier import ModelCopier
-from apps.common.models import AbstractBaseModel, AbstractDatasetProperty
+from apps.common.models import AbstractBaseModel
 from apps.core.models.contract import Contract
 
 
@@ -78,6 +76,19 @@ class Preservation(AbstractBaseModel):
         null=True,
         related_name="dataset_origin_version",
         help_text=_("Link between the dataset stored in DPRES and the originating dataset"),
+    )
+    pas_package_created = models.BooleanField(
+        default=False,
+        help_text=_(
+            "After a PAS package has been created, "
+            "further changes to the dataset metadata will not be visible in the package."
+        ),
+    )
+    pas_process_running = models.BooleanField(
+        default=False,
+        help_text=_(
+            "Only PAS service is allowed to update the dataset while PAS is processing it."
+        ),
     )
 
     class Meta(AbstractBaseModel.Meta):

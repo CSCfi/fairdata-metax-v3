@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.core.validators import MinLengthValidator
@@ -29,6 +30,7 @@ from apps.core.models.concepts import (
 )
 from apps.core.models.data_catalog import DataCatalog, GeneratedPIDType
 from apps.core.models.mixins import V2DatasetMixin
+from apps.core.models.preservation import Preservation
 from apps.core.services.pid_ms_client import PIDMSClient, ServiceUnavailableError
 from apps.files.models import File
 from apps.users.models import MetaxUser
@@ -331,6 +333,22 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             return True
         return False
 
+    def get_lock_reason(self, user: MetaxUser) -> Optional[str]:
+        """Determine if and why user is locked from modifying the dataset."""
+        if user.is_superuser:
+            return None
+        if (
+            self.preservation
+            and self.preservation.pas_process_running
+            and not any(group.name == "pas" for group in user.groups.all())
+        ):
+            return (
+                "Only PAS service is allowed to modify "
+                "the dataset while PAS process is running."
+            )
+
+        return None
+
     def has_permission_to_see_drafts(self, user: MetaxUser):
         return self.has_permission_to_edit(user)
 
@@ -442,9 +460,15 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             Dataset: The copied dataset
         """
         self.ensure_prefetch()
+        cumulative_state = (
+            self.cumulative_state
+            if self.cumulative_state != self.CumulativeState.CLOSED
+            else self.CumulativeState.NOT_CUMULATIVE
+        )
         new_values = dict(
             preservation=None,
             state=self.StateChoices.DRAFT,
+            cumulative_state=cumulative_state,
             published_revision=0,
             created=timezone.now(),
             modified=timezone.now(),
@@ -668,6 +692,15 @@ class Dataset(V2DatasetMixin, CatalogRecord):
                         state=self.cumulative_state
                     )
                 }
+            )
+
+        if (
+            self.cumulative_state == self.CumulativeState.ACTIVE
+            and self.preservation
+            and self.preservation.state > Preservation.PreservationState.INITIALIZED
+        ):
+            raise ValidationError(
+                {"cumulative_state": "Cumulative datasets are not allowed in the PAS process."}
             )
 
     def _update_cumulative_state(self):

@@ -37,6 +37,18 @@ def test_create_dataset_preservation(admin_client, preservation_dataset_json):
     assert_nested_subdict(preservation_dataset_json["preservation"], resp.json()["preservation"])
 
 
+
+@pytest.mark.usefixtures("data_catalog", "reference_data")
+def test_dataset_preservation_cumulative_state(admin_client, preservation_dataset_json):
+    preservation_dataset_json["cumulative_state"] = 1
+    preservation_dataset_json["preservation"]["state"] = 10
+    resp = admin_client.post(
+        "/v3/datasets", preservation_dataset_json, content_type="application/json"
+    )
+    assert resp.status_code == 400
+    assert "Cumulative datasets are not allowed" in resp.json()["cumulative_state"]
+
+
 @pytest.mark.usefixtures("data_catalog", "reference_data")
 def test_create_dataset_preservation_without_contract(admin_client, preservation_dataset_json):
     """
@@ -226,6 +238,8 @@ def test_get_dataset_nonexisting_preservation(
     assert resp.data == {
         "reason_description": "",
         "state": -1,
+        "pas_package_created": False,
+        "pas_process_running": False,
     }
     dataset_signal_handlers.assert_call_counts(created=0, updated=0)
 
@@ -250,6 +264,8 @@ def test_patch_dataset_nonexisting_preservation(
         "id": matchers.Any(),
         "reason_description": "testing patch",
         "state": -1,
+        "pas_package_created": False,
+        "pas_process_running": False,
     }
     dataset_signal_handlers.assert_call_counts(created=0, updated=1)
 
@@ -359,3 +375,43 @@ def test_create_dataset_preservation_version_twice(
     )
     assert res.status_code == 400, res.data
     assert "already has a PAS version" in res.json()["detail"]
+
+
+@pytest.mark.usefixtures("data_catalog", "reference_data")
+def test_preservation_pas_process_running(pas_client, ida_client, preservation_dataset):
+    # Lock dataset from modifications by non-PAS users
+    resp = pas_client.patch(
+        f"/v3/datasets/{preservation_dataset['id']}/preservation",
+        {"pas_process_running": True},
+        content_type="application/json",
+    )
+    assert resp.status_code == 200
+
+    # Try to patch dataset and nested objects as non-PAS user
+    resp = ida_client.patch(
+        f"/v3/datasets/{preservation_dataset['id']}", {}, content_type="application/json"
+    )
+    assert resp.status_code == 423
+    assert "Only PAS service is allowed to modify the dataset" in resp.json()["detail"]
+
+    resp = ida_client.patch(
+        f"/v3/datasets/{preservation_dataset['id']}/preservation",
+        {},
+        content_type="application/json",
+    )
+    assert resp.status_code == 423
+    assert "Only PAS service is allowed to modify the dataset" in resp.json()["detail"]
+
+    # Release dataset PAS lock
+    resp = pas_client.patch(
+        f"/v3/datasets/{preservation_dataset['id']}/preservation",
+        {"pas_process_running": False},
+        content_type="application/json",
+    )
+    assert resp.status_code == 200
+
+    # Try to patch dataset as non-PAS user
+    resp = ida_client.patch(
+        f"/v3/datasets/{preservation_dataset['id']}", {}, content_type="application/json"
+    )
+    assert resp.status_code == 200
