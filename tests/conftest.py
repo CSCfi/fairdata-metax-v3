@@ -255,7 +255,7 @@ def data_catalog_pas(pas_group) -> DataCatalog:
         dataset_versioning_enabled=False,
         allow_remote_resources=False,
         allowed_pid_types=["URN", "DOI"],
-        storage_services=["pas"]
+        storage_services=["pas"],
     )
     catalog.dataset_groups_create.set([pas_group])
     catalog.dataset_groups_admin.set([pas_group])
@@ -280,6 +280,7 @@ def data_catalog_harvested(fairdata_users_group, service_group) -> DataCatalog:
 
 @pytest.fixture
 def contract() -> Contract:
+    _id = "urn:nbn:fi:contract:test-contract-1"
     title = {
         "en": "Title 5",
         "fi": "Otsikko 5",
@@ -291,6 +292,7 @@ def contract() -> Contract:
     created = "2021-12-31T12:13:14Z"
     modified = "2021-12-31T12:13:14Z"
     return Contract.objects.create(
+        id=_id,
         created=created,
         modified=modified,
         title=title,

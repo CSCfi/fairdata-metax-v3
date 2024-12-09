@@ -696,6 +696,7 @@ class LegacyDatasetConverter:
         # while in V3 the default state is -1 (none)
         if not preservation or preservation == {"state": 0}:
             return None
+
         return preservation
 
     def get_modified(self):

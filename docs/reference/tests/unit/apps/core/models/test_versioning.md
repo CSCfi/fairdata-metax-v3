@@ -20,7 +20,3 @@
 
 ### :::tests.unit.apps.core.models.test_versioning.test_draft_of_dataset_versions
 
-## test_draft_of_dataset_versions
-
-### :::tests.unit.apps.core.models.test_versioning.test_draft_of_dataset_versions
-

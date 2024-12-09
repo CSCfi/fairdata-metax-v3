@@ -75,7 +75,7 @@ class Command(BaseCommand):
                     self.stderr.write(f"Error processing contract: {e}")
                 else:
                     raise
-            self.print_status_line(contract.contract_identifier)
+            self.print_status_line(contract.id)
 
     def migrate_from_metax(self, options):
         self.allow_fail = options.get("allow_fail")

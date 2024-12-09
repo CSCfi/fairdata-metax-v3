@@ -220,7 +220,7 @@ class MetaxV2Client:
         for contract in contracts:
             to_legacy.append(contract.to_legacy())
             if contract.legacy_id is None:
-                contracts_without_legacy_ids[contract.contract_identifier] = contract
+                contracts_without_legacy_ids[contract.id] = contract
 
         body = json.dumps(to_legacy, cls=DjangoJSONEncoder)
         res = requests.post(

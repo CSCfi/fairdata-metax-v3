@@ -8,6 +8,10 @@
 
 ### :::tests.unit.apps.core.api.test_contract.test_update_contract
 
+## test_update_contract_id
+
+### :::tests.unit.apps.core.api.test_contract.test_update_contract_id
+
 ## test_contract_permissions
 
 ### :::tests.unit.apps.core.api.test_contract.test_contract_permissions

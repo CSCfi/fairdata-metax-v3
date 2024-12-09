@@ -1,6 +1,5 @@
 {
-    "id": "fef46c7f-d1a0-4701-a7cc-d711c0f8adc6",
-    "contract_identifier": "urn:uuid:5f9d96e1-fd88-42b4-85d7-9d45b36e8865jeejee",
+    "id": "urn:nbn:fi:contract:test-5f9d96e1-fd88-42b4-85d7-9d45b36e8865",
     "title": {
         "en": "Test contract A",
         "fi": "Testisopimus A"

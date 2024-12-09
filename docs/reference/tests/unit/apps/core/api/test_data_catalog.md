@@ -16,6 +16,10 @@
 
 ### :::tests.unit.apps.core.api.test_data_catalog.test_change_datacatalog
 
+## test_change_datacatalog_id
+
+### :::tests.unit.apps.core.api.test_data_catalog.test_change_datacatalog_id
+
 ## test_change_datacatalog_to_minimal
 
 ### :::tests.unit.apps.core.api.test_data_catalog.test_change_datacatalog_to_minimal

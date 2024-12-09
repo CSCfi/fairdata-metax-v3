@@ -60,6 +60,15 @@ class ContractValiditySerializer(CommonModelSerializer):
 class ContractModelSerializer(CommonNestedModelSerializer):
     """Model serializer for Contract"""
 
+    id = serializers.CharField(
+        max_length=64,
+        validators=[
+            validators.UniqueValidator(
+                queryset=Contract.objects.all(), message="Contract with this value already exists."
+            )
+        ],
+    )
+
     # One-to-one objects included in the contract model
     organization = ContractOrganizationSerializer(source="*")
     validity = ContractValiditySerializer(source="*")
@@ -72,7 +81,6 @@ class ContractModelSerializer(CommonNestedModelSerializer):
         model = Contract
         fields = (
             "id",
-            "contract_identifier",
             "title",
             "description",
             "quota",
@@ -84,7 +92,16 @@ class ContractModelSerializer(CommonNestedModelSerializer):
             "related_service",
             "removed",
         )
-        extra_kwargs = {"removed": {"read_only": True}}
+        extra_kwargs = {
+            "removed": {"read_only": True},
+        }
+
+    def update(self, instance, validated_data):
+        if "id" in validated_data and validated_data["id"] != instance.id:
+            raise serializers.ValidationError(
+                {"id": "Value cannot be changed for an existing contract."}
+            )
+        return super().update(instance, validated_data)
 
 
 class LegacyContractJSONSerializer(ContractModelSerializer):
@@ -95,7 +112,7 @@ class LegacyContractJSONSerializer(ContractModelSerializer):
 
     title = serializers.CharField()
     description = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    identifier = serializers.CharField(source="contract_identifier")
+    identifier = serializers.CharField(source="id")
     quota = LaxIntegerField()  # Legacy Metax allows float values in quota
 
     def to_internal_value(self, data):
@@ -121,28 +138,10 @@ class LegacyContractJSONSerializer(ContractModelSerializer):
             rep["description"] = single_translation(instance.description)
         return rep
 
-    def save(self, **kwargs):
-        # Contract identifier should be unique for non-removed Contracts
-        data = self._validated_data
-        if not data["removed"]:
-            validator = validators.UniqueValidator(queryset=Contract.available_objects.all())
-            try:
-                validator(
-                    value=data["contract_identifier"],
-                    serializer_field=self.fields["identifier"],
-                )
-            except serializers.ValidationError as err:
-                raise serializers.ValidationError({"contact_json": {"identifier": err.detail}})
-        return super().save(**kwargs)
-
     class Meta:
         model = Contract
         fields = (
-            *(
-                f
-                for f in ContractModelSerializer.Meta.fields
-                if f not in {"id", "contract_identifier"}
-            ),
+            *(f for f in ContractModelSerializer.Meta.fields if f != "id"),
             "identifier",
         )
 

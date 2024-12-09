@@ -42,8 +42,8 @@ def test_create_contract_integration(admin_client, contract_a_json, mock_v2_cont
     assert data["contract_json"]["title"] == "Test contract A"
     assert data["contract_json"]["description"] == "Description for test contract A"
     assert data["contract_json"]["quota"] == 123456789
-    assert data["contract_json"]["identifier"] == contract_a_json["contract_identifier"]
-    contract = Contract.objects.get(contract_identifier=contract_a_json["contract_identifier"])
+    assert data["contract_json"]["identifier"] == contract_a_json["id"]
+    contract = Contract.objects.get(id=contract_a_json["id"])
     assert contract.legacy_id == 1
 
 
@@ -61,7 +61,7 @@ def test_update_contract_integration(admin_client, contract_a, mock_v2_contracts
     assert data["contract_json"]["title"] == "New contract title"
     assert data["contract_json"]["description"] == "Description for test contract A"
     assert data["contract_json"]["quota"] == 987654321
-    contract = Contract.objects.get(contract_identifier=contract_a.data["contract_identifier"])
+    contract = Contract.objects.get(id=contract_a.data["id"])
     assert contract.legacy_id == 1
 
 
@@ -75,5 +75,5 @@ def test_delete_contract_integration(admin_client, contract_a, mock_v2_contracts
     assert data["contract_json"]["title"] == "Test contract A"
     assert data["removed"] == True
     assert data["date_removed"] == matchers.DateTimeStr()
-    contract = Contract.all_objects.get(contract_identifier=contract_a.data["contract_identifier"])
+    contract = Contract.all_objects.get(id=contract_a.data["id"])
     assert contract.legacy_id == 1

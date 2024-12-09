@@ -7,7 +7,7 @@ from apps.core import factories
 from apps.core.models import FileSetDirectoryMetadata, FileSetFileMetadata, UseCategory
 from apps.core.models.catalog_record.related import FileSet
 from apps.files.factories import FileFactory
-from apps.files.models import FileStorage, FileCharacteristics
+from apps.files.models import FileCharacteristics, FileStorage
 
 pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
 
@@ -47,7 +47,7 @@ def test_fileset_preservation_copy(dataset_with_files, use_category_reference_da
     assert copy.storage.csc_project == orig.storage.csc_project
     assert copy.storage.storage_service == "pas"
     assert orig.storage.storage_service == "ida"
-    assert FileCharacteristics.objects.count() == 2 # Characteristich should be copied
+    assert FileCharacteristics.objects.count() == 2  # Characteristics should be copied
 
     # Check that copied files have same path, storage_identifier and characteristics
     copy_files = sorted(

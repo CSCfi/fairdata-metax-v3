@@ -57,3 +57,10 @@ class DataCatalogModelSerializer(CommonNestedModelSerializer):
             "publishing_channels",
             "allowed_pid_types",
         )
+
+    def update(self, instance, validated_data):
+        if "id" in validated_data and validated_data["id"] != instance.id:
+            raise serializers.ValidationError(
+                {"id": "Value cannot be changed for an existing data catalog."}
+            )
+        return super().update(instance, validated_data)

@@ -43,7 +43,7 @@ def test_migrate_command(mock_response, mock_endpoint_contracts):
     err = StringIO()
     call_command("migrate_v2_contracts", stdout=out, stderr=err, use_env=True)
     assert [
-        (c.title["und"], c.contract_identifier, c.legacy_id, c.removed)
+        (c.title["und"], c.id, c.legacy_id, c.removed)
         for c in Contract.all_objects.order_by("legacy_id").all()
     ] == [
         ("Testisopimus", "urn:uuid:0d32393b-1be2-454e-98ff-100000000001", 123, None),

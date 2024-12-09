@@ -53,6 +53,7 @@ def test_change_datacatalog(
     res1 = admin_client.post(
         data_catalog_list_url, datacatalog_c_json, content_type="application/json"
     )
+    datacatalog_put_json["id"] = datacatalog_c_json["id"]
     response = admin_client.put(
         f"{reverse('datacatalog-detail', args=['urn:nbn:fi:att:data-catalog-uusitesti'])}",
         datacatalog_put_json,
@@ -61,6 +62,21 @@ def test_change_datacatalog(
     assert response.status_code == 200
     logger.info(str(response.data))
     assert len(response.data.get("language")) == 2
+
+
+def test_change_datacatalog_id(
+    admin_client, datacatalog_c_json, datacatalog_put_json, reference_data, data_catalog_list_url
+):
+    res1 = admin_client.post(
+        data_catalog_list_url, datacatalog_c_json, content_type="application/json"
+    )
+    response = admin_client.patch(
+        f"{reverse('datacatalog-detail', args=['urn:nbn:fi:att:data-catalog-uusitesti'])}",
+        {"id": "i'm changing id"},
+        content_type="application/json",
+    )
+    assert response.status_code == 400
+    assert "cannot be changed for an existing data catalog" in response.json()["id"]
 
 
 def test_change_datacatalog_to_minimal(

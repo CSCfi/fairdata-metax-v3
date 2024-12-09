@@ -14,7 +14,7 @@ from . import models
 class ContractFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.Contract
-        django_get_or_create = ("contract_identifier",)
+        django_get_or_create = ("id",)
 
     created = factory.LazyFunction(timezone.now)
     modified = factory.LazyFunction(timezone.now)
@@ -29,7 +29,7 @@ class ContractFactory(factory.django.DjangoModelFactory):
         identifier_uuid = factory.Faker("uuid4")
 
     @factory.lazy_attribute
-    def contract_identifier(self):
+    def id(self):
         return f"urn:nbn:fi:contract:{self.identifier_uuid}"
 
 

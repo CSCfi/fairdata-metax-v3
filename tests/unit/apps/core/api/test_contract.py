@@ -33,6 +33,18 @@ def test_update_contract(admin_client, contract_a):
     assert data["quota"] == 987654321
 
 
+def test_update_contract_id(admin_client, contract_a):
+    contract_id = contract_a.json()["id"]
+    resp = admin_client.patch(
+        f"/v3/contracts/{contract_id}",
+        {"id": "uusi id"},
+        content_type="application/json",
+    )
+    assert resp.status_code == 400
+    assert "cannot be changed for an existing contract" in resp.json()["id"]
+
+
+
 def test_contract_permissions(user_client, pas_client, contract_a):
     contract_id = contract_a.json()["id"]
 

@@ -54,8 +54,8 @@ class Contract(SystemCreatorBaseModel, CustomSoftDeletableModel):
     """Preservation contract.
 
     Contract (http://iow.csc.fi/ns/mad#Contract) attributes:
+       id                        http://purl.org/dc/terms/identifier
        title                     http://purl.org/dc/terms/title
-       contract_identifier       http://purl.org/dc/terms/identifier
        quota                     http://iow.csc.fi/ns/mad#quota
        validity                  http://iow.csc.fi/ns/mad#validity
        created                   http://purl.org/dc/terms/created
@@ -74,10 +74,9 @@ class Contract(SystemCreatorBaseModel, CustomSoftDeletableModel):
 
     """
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.CharField(max_length=64, primary_key=True, editable=False)
     legacy_id = models.BigIntegerField(null=True, unique=True)
 
-    contract_identifier = models.CharField(max_length=64)
     title = HStoreField(help_text='example: {"en":"title", "fi":"otsikko"}')
     description = HStoreField(
         help_text='example: {"en":"description", "fi":"kuvaus"}', null=True, blank=True
@@ -102,13 +101,12 @@ class Contract(SystemCreatorBaseModel, CustomSoftDeletableModel):
 
     class Meta:
         ordering = ["record_created", "id"]
-        constraints = (
-            models.UniqueConstraint(
-                fields=["contract_identifier"],
-                condition=models.Q(removed__isnull=True),
-                name="%(app_label)s_%(class)s_unique_contract_identifier",
-            ),
-        )
+        constraints = [
+            models.CheckConstraint(
+                check=~models.Q(id=""),
+                name="%(app_label)s_%(class)s_require_nonempty_id",
+            )
+        ]
 
     @classmethod
     def create_or_update_from_legacy(cls, legacy_contract: dict) -> Tuple["Contract", bool]:
