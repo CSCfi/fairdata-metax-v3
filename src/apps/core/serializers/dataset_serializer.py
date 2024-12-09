@@ -369,27 +369,6 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
         )
         list_serializer_class = DatasetListSerializer
 
-    def _dc_is_harvested(self, data):
-        if self.context["request"].method == "POST":
-            if data.get("data_catalog") != None:
-                return DataCatalog.objects.get(id=data["data_catalog"]).harvested
-        elif self.context["request"].method in {"PUT", "PATCH"}:
-            if self.instance and self.instance.data_catalog:
-                return self.instance.data_catalog.harvested
-            elif data.get("data_catalog") != None:
-                return DataCatalog.objects.get(id=data["data_catalog"]).harvested
-        return None
-
-    def _ds_is_published(self, data):
-        state = None
-        if data.get("state"):
-            state = data["state"]
-        elif self.instance:
-            state = self.instance.state
-        if state == "published":
-            return True
-        return False
-
     def _validate_timestamps(self, data, errors):
         _now = timezone.now()
 

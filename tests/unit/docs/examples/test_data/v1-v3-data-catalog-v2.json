@@ -6,7 +6,7 @@
       "fi": "Testidatakatalogin nimi",
       "en": "Test data catalog name"
     },
-    "harvested": false,
+    "is_external": false,
     "language": [
       {
         "identifier": "http://lexvo.org/id/iso639-3/fin",
@@ -67,7 +67,7 @@
           }
         }
       ]
-    },    
+    },
     "dataset_versioning": true
   },
   "service_created": "metax",

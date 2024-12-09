@@ -41,7 +41,7 @@ def datacatalog_json():
                     "url": "http://lexvo.org/id/iso639-3/fin",
                 }
             ],
-            "harvested": False,
+            "is_external": False,
             "publisher": {
                 "name": {"en": "Testing", "fi": "Testi"},
                 "homepage": [

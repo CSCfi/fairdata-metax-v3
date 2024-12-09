@@ -8,7 +8,7 @@
       "url": "http://lexvo.org/id/iso639-3/fin"
     }
   ],
-  "harvested": false,
+  "is_external": false,
   "publisher": {
     "name": {
       "en": "Testing",
@@ -30,9 +30,5 @@
     "fi": "Sisältää aineistoja Repotronic-palvelusta"
   },
   "dataset_versioning_enabled": false,
-  "allowed_pid_types": [
-    "URN",
-    "DOI",
-    "external"
-  ]
+  "allowed_pid_types": ["URN", "DOI", "external"]
 }

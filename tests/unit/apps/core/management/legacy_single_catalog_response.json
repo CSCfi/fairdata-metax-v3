@@ -43,7 +43,7 @@
       }
     ],
     "modified": "2014-01-17T08:19:58Z",
-    "harvested": false,
+    "is_external": false,
     "publisher": {
       "name": {
         "en": "Data catalog publisher organization",
@@ -99,9 +99,7 @@
             "fi": "Org referenssidatassa"
           },
           "email": "wahatever@madeupdomain.com",
-          "telephone": [
-            "+12353495823424"
-          ],
+          "telephone": ["+12353495823424"],
           "identifier": "http://uri.suomi.fi/codelist/fairdata/organization/code/10076"
         }
       ]
@@ -212,9 +210,7 @@
             }
           }
         },
-        "version_notes": [
-          "This version contains changes to x and y."
-        ],
+        "version_notes": ["This version contains changes to x and y."],
         "preferred_identifier": "urn:nbn:fi:att:1955e904-e3dd-4d7e-99f1-3fed446f96d1",
         "total_files_byte_size": 300,
         "metadata_version_identifier": "1955e904-e3dd-4d7e-99f1-3fed446f96d1"

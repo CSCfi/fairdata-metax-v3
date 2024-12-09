@@ -177,7 +177,7 @@ def test_list_datacatalogs(admin_client, post_datacatalog_payloads_a_b_c, data_c
 @pytest.mark.parametrize(
     "catalog_filter, filter_value, filter_result",
     [
-        ("harvested", True, 1),
+        ("is_external", True, 1),
         ("dataset_versioning_enabled", True, 1),
         ("dataset_versioning_enabled", False, 2),
         ("title", "katalogi", 3),

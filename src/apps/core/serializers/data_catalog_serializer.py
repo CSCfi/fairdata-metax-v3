@@ -9,9 +9,10 @@ import logging
 from django.contrib.auth.models import Group
 from rest_framework import serializers
 
+from apps.common.serializers.fields import NoopField
 from apps.common.serializers import CommonNestedModelSerializer
 from apps.core.models import DataCatalog, Language
-from apps.core.serializers import AccessRightsModelSerializer, DatasetPublisherModelSerializer
+from apps.core.serializers import DatasetPublisherModelSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +39,7 @@ class DataCatalogModelSerializer(CommonNestedModelSerializer):
     language = Language.get_serializer_field(required=False, many=True)
     dataset_groups_create = GetOrCreateGroupField(required=False, many=True)
     dataset_groups_admin = GetOrCreateGroupField(required=False, many=True)
+    harvested = NoopField(help_text="No longer in use. Replaced by is_external.")
 
     class Meta:
         model = DataCatalog
@@ -49,6 +51,7 @@ class DataCatalogModelSerializer(CommonNestedModelSerializer):
             "language",
             "title",
             "dataset_versioning_enabled",
+            "is_external",
             "harvested",
             "dataset_groups_create",
             "dataset_groups_admin",

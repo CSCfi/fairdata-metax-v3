@@ -643,25 +643,25 @@ def test_flush_dataset_by_service(service_client, dataset_a_json, data_catalog, 
     res = service_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     dataset_id = res.data["id"]
 
-    # Not harvested, not catalog admin
+    # Not external, not catalog admin
     res = service_client.delete(f"/v3/datasets/{dataset_id}?flush=true")
     assert res.status_code == 403
 
-    # Harvested, not catalog admin
-    data_catalog.harvested = True
+    # external, not catalog admin
+    data_catalog.is_external = True
     data_catalog.save()
     res = service_client.delete(f"/v3/datasets/{dataset_id}?flush=true")
     assert res.status_code == 403
 
-    # Not harvested, catalog admin
-    data_catalog.harvested = False
+    # Not external, catalog admin
+    data_catalog.is_external = False
     data_catalog.save()
     data_catalog.dataset_groups_admin.add(Group.objects.get(name="test"))
     res = service_client.delete(f"/v3/datasets/{dataset_id}?flush=true")
     assert res.status_code == 403
 
-    # Both harvested and catalog admin -> ok
-    data_catalog.harvested = True
+    # Both external and catalog admin -> ok
+    data_catalog.is_external = True
     data_catalog.save()
     res = service_client.delete(f"/v3/datasets/{dataset_id}?flush=true")
     assert res.status_code == 204

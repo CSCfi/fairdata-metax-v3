@@ -51,8 +51,8 @@ class DataCatalog(AbstractBaseModel):
     Attributes:
         title (HStoreField): catalog title
         dataset_versioning_enabled (models.BooleanField): does the catalog have versioning enabled
-        harvested (models.BooleanField):
-            are the catalog resources harvested from some other sources
+        is_external (models.BooleanField):
+            are the catalog resources from some other sources
         language (models.ManyToManyField): default language of the catalog
         publisher (models.ForeignKey): publisher of the cataloged resources
         access_rights (models.ForeignKey): default access rights for the cataloged resources
@@ -66,7 +66,7 @@ class DataCatalog(AbstractBaseModel):
     )
     title = HStoreField(help_text='example: {"en":"title", "fi":"otsikko"}')
     dataset_versioning_enabled = models.BooleanField(default=False)
-    harvested = models.BooleanField(default=False)
+    is_external = models.BooleanField(default=False)
     language = models.ManyToManyField(Language, related_name="catalogs")
     publisher = models.ForeignKey(
         "DatasetPublisher",

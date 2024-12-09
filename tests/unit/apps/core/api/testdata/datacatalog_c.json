@@ -29,5 +29,5 @@
     "fi": "Repotronic katalogi"
   },
   "dataset_versioning_enabled": true,
-  "harvested": true
+  "is_external": true
 }

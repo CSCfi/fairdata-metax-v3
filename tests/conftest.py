@@ -277,7 +277,7 @@ def data_catalog_harvested(fairdata_users_group, service_group) -> DataCatalog:
     catalog = factories.DataCatalogFactory(
         id=identifier,
         title=title,
-        harvested=True,
+        is_external=True,
         allow_remote_resources=True,
     )
     catalog.dataset_groups_create.set([fairdata_users_group, service_group])
@@ -906,9 +906,7 @@ def mock_pid_ms(request, requests_mock, settings):
         requests_mock.register_uri(
             "POST", f"https://{settings.PID_MS_BASEURL}/v1/pid/doi", responselist2
         )
-        requests_mock.register_uri(
-            "PUT", matcher_doi, responselist3
-        )
+        requests_mock.register_uri("PUT", matcher_doi, responselist3)
         requests_mock.register_uri("GET", matcher, real_http=True)
         requests_mock.register_uri("POST", matcher, real_http=True)
         requests_mock.register_uri("PUT", matcher, real_http=True)

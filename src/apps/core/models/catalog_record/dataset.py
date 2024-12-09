@@ -860,10 +860,10 @@ class Dataset(V2DatasetMixin, CatalogRecord):
                 _("All actors in a published dataset should have at least one role.")
             )
 
-        # Some legacy/harvested datasets are missing creator or publisher
+        # Some legacy/external datasets are missing creator or publisher
         # Some legacy datasets are also missing license or restriction grounds
-        is_harvested = self.data_catalog and self.data_catalog.harvested
-        if not (self.is_legacy and is_harvested):
+        is_external = self.data_catalog and self.data_catalog.is_external
+        if not (self.is_legacy and is_external):
             # Creator required
             if creator_count == 0:
                 actor_errors.append(_("An actor with creator role is required."))

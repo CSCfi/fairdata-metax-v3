@@ -19,7 +19,7 @@ class DataCatalogFilter(filters.FilterSet):
         model = DataCatalog
         fields = (
             "dataset_versioning_enabled",
-            "harvested",
+            "is_external",
         )
 
     title = filters.CharFilter(

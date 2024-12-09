@@ -10,7 +10,7 @@
         "url": "http://lexvo.org/id/iso639-3/fin"
       }
     ],
-    "harvested": true,
+    "is_external": true,
     "publisher": {
       "name": {
         "en": "Testing",
@@ -46,7 +46,7 @@
         "url": "http://lexvo.org/id/iso639-3/fin"
       }
     ],
-    "harvested": true,
+    "is_external": true,
     "publisher": {
       "name": {
         "en": "Testing",
@@ -83,7 +83,7 @@
         "url": "http://lexvo.org/id/iso639-3/fin"
       }
     ],
-    "harvested": true,
+    "is_external": true,
     "publisher": {
       "name": {
         "en": "Testing",
@@ -120,7 +120,7 @@
         "url": "http://lexvo.org/id/iso639-3/fin"
       }
     ],
-    "harvested": true,
+    "is_external": true,
     "publisher": {
       "name": {
         "en": "Testing",
@@ -156,7 +156,7 @@
         "url": "http://lexvo.org/id/iso639-3/fin"
       }
     ],
-    "harvested": true,
+    "is_external": true,
     "publisher": {
       "name": {
         "en": "Testing",
@@ -193,7 +193,7 @@
         "url": "http://lexvo.org/id/iso639-3/fin"
       }
     ],
-    "harvested": true,
+    "is_external": true,
     "publisher": {
       "name": {
         "en": "Testing",
@@ -231,7 +231,7 @@
         "url": "http://lexvo.org/id/iso639-3/fin"
       }
     ],
-    "harvested": true,
+    "is_external": true,
     "publisher": {
       "name": {
         "en": "Testing",
@@ -288,7 +288,7 @@
       "fi": "IDA-palvelussa säilytettävät aineistot"
     },
     "dataset_versioning_enabled": true,
-    "harvested": false,
+    "is_external": false,
     "dataset_groups_create": ["fairdata_users", "ida"],
     "dataset_groups_admin": ["ida"],
     "allow_remote_resources": false,
@@ -307,7 +307,7 @@
         "url": "http://lexvo.org/id/iso639-3/fin"
       }
     ],
-    "harvested": true,
+    "is_external": true,
     "publisher": {
       "name": {
         "en": "FMI's EUDAT B2SHARE research data repository",

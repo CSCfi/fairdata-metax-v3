@@ -24,7 +24,7 @@ class Command(BaseCommand):
             id="urn:nbn:fi:att:data-catalog-test", allowed_pid_types=["URN", "DOI"]
         )
         harvested_data_catalog = factories.DataCatalogFactory(
-            id="urn:nbn:fi:att:data-catalog-harvested-test", harvested="True"
+            id="urn:nbn:fi:att:data-catalog-harvested-test", is_external="True"
         )
         dataset = None
         files = None

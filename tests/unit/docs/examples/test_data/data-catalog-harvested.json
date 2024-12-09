@@ -8,7 +8,7 @@
       "url": "http://lexvo.org/id/iso639-3/fin"
     }
   ],
-  "harvested": true,
+  "is_external": true,
   "publisher": {
     "name": {
       "en": "Testing",

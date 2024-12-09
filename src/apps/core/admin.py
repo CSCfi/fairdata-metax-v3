@@ -49,11 +49,11 @@ class DataCatalogAdmin(AbstractDatasetPropertyBaseAdmin, SimpleHistoryAdmin):
     list_display = (
         "id",
         "dataset_versioning_enabled",
-        "harvested",
+        "is_external",
     )
     list_filter = (
         "dataset_versioning_enabled",
-        "harvested",
+        "is_external",
         "created",
         "modified",
     )

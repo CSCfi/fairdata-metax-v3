@@ -75,8 +75,8 @@ class DatasetAccessPolicy(BaseAccessPolicy):
         if dataset.state == "draft":
             return True  # Drafts are always hard deleted
         if catalog := dataset.data_catalog:
-            # Hard delete is allowed for catalog admins in harvested catalogs
-            return catalog.harvested and DataCatalogAccessPolicy().query_object_permission(
+            # Hard delete is allowed for catalog admins in external catalogs
+            return catalog.is_external and DataCatalogAccessPolicy().query_object_permission(
                 user=request.user, object=catalog, action="<op:admin_dataset>"
             )
         return False
