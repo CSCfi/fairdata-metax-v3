@@ -104,6 +104,9 @@ class DataCatalog(AbstractBaseModel):
         blank=True,
         help_text="File storage services supported for datasets in catalog.",
     )
+    rems_enabled = models.BooleanField(
+        default=False, help_text="Is Resource Entitlement Management System enabled in catalog."
+    )
 
     class PublishingChannel(models.TextChoices):
         ETSIN = "etsin", _("etsin")

@@ -56,6 +56,7 @@ class DataCatalogModelSerializer(CommonNestedModelSerializer):
             "storage_services",
             "publishing_channels",
             "allowed_pid_types",
+            "rems_enabled",
         )
 
     def update(self, instance, validated_data):
