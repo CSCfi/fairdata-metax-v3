@@ -411,7 +411,10 @@ def test_legacy_dataset_preservation_dataset(
     origin_json = origin_version["dataset_json"]
     origin_json["identifier"] = str(UUID(int=1))
     origin_json["research_dataset"]["preferred_identifier"] = "pid:1"
-    origin_json["preservation_dataset_version"] = {"identifier": str(UUID(int=2))}
+    origin_json["preservation_dataset_version"] = {
+        "identifier": str(UUID(int=2)),
+        "preservation_state": 0,
+    }
     origin_json["preservation_dataset_origin_version"] = None
 
     pas_version = copy.deepcopy(legacy_dataset_a_json)
@@ -419,7 +422,10 @@ def test_legacy_dataset_preservation_dataset(
     pas_json["identifier"] = str(UUID(int=2))
     pas_json["research_dataset"]["preferred_identifier"] = "pid:2"
     pas_json["preservation_dataset_version"] = None
-    pas_json["preservation_dataset_origin_version"] = {"identifier": str(UUID(int=1))}
+    pas_json["preservation_dataset_origin_version"] = {
+        "identifier": str(UUID(int=1)),
+        "preservation_state": -1,
+    }
 
     # Order in which datasets are migrated should not matter
     if origin_first:
@@ -444,6 +450,7 @@ def test_legacy_dataset_preservation_dataset(
     assert data["preservation"].get("dataset_version") == {
         "id": pas_json["identifier"],
         "persistent_identifier": pas_json["research_dataset"]["preferred_identifier"],
+        "preservation_state": 0
     }
     assert data["preservation"].get("dataset_origin_version") is None
 
@@ -458,6 +465,7 @@ def test_legacy_dataset_preservation_dataset(
     assert data["preservation"].get("dataset_origin_version") == {
         "id": origin_json["identifier"],
         "persistent_identifier": origin_json["research_dataset"]["preferred_identifier"],
+        "preservation_state": 0
     }
 
 
@@ -510,6 +518,7 @@ def test_legacy_dataset_preservation_dataset_update(
     assert data["preservation"].get("dataset_version") == {
         "id": pas_json["identifier"],
         "persistent_identifier": pas_json["research_dataset"]["preferred_identifier"],
+        "preservation_state": 0,
     }
     assert data["preservation"].get("dataset_origin_version") is None
 
@@ -524,4 +533,5 @@ def test_legacy_dataset_preservation_dataset_update(
     assert data["preservation"].get("dataset_origin_version") == {
         "id": origin_json["identifier"],
         "persistent_identifier": origin_json["research_dataset"]["preferred_identifier"],
+        "preservation_state": 0,
     }

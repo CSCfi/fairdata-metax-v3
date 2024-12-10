@@ -72,3 +72,7 @@
 
 ### :::src.apps.common.serializers.fields.LaxIntegerField
 
+## IntegerChoiceField
+
+### :::src.apps.common.serializers.fields.IntegerChoiceField
+

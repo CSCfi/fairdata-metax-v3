@@ -2,14 +2,19 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
+from apps.common.serializers.fields import IntegerChoiceField
 from apps.common.serializers.serializers import CommonModelSerializer
 from apps.core.models import Dataset, Preservation
 
 
 class PreservationDatasetSerializer(CommonModelSerializer):
+    preservation_state = IntegerChoiceField(
+        source="preservation.state", choices=Preservation.PreservationState.choices, read_only=True
+    )
+
     class Meta:
         model = Dataset
-        fields = ("id", "persistent_identifier", "removed")
+        fields = ("id", "persistent_identifier", "preservation_state", "removed")
 
 
 class PreservationModelSerializer(CommonModelSerializer):

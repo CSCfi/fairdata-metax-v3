@@ -460,3 +460,13 @@ class LaxIntegerField(serializers.IntegerField):
         except (ValueError, TypeError):
             self.fail("invalid")
         return data
+
+
+class IntegerChoiceField(serializers.ChoiceField):
+    """ChoiceField that reports its value type as integer in Swagger docs.
+
+    ModelSerializer fields detect choice type automatically for its own model fields,
+    but e.g. when using source="relatedmodel.somefield", the type detection logic fails."""
+
+    class Meta:
+        swagger_schema_fields = {"type": "integer"}

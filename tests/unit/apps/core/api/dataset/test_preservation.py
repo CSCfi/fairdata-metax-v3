@@ -325,6 +325,7 @@ def test_create_dataset_preservation_version(
     assert data["fileset"]["storage_service"] == "pas"
     assert data["fileset"]["csc_project"] == "project"
     assert data["preservation"]["dataset_origin_version"]["id"] == origin_id
+    assert data["preservation"]["dataset_origin_version"]["preservation_state"] == -1
     assert data["other_identifiers"][0]["notation"] == origin_pid
 
     # Check original version has new dataset relations but is otherwise unchanged
@@ -335,6 +336,7 @@ def test_create_dataset_preservation_version(
     assert data["fileset"]["storage_service"] == "ida"
     assert data["fileset"]["csc_project"] == "project"
     assert data["preservation"]["dataset_version"]["id"] == preserved_id
+    assert data["preservation"]["dataset_version"]["preservation_state"] == 0
     assert data["other_identifiers"][0]["notation"] == preserved_pid
 
 
