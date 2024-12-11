@@ -62,7 +62,10 @@ SECRET_KEY = os.environ.get(
 DEBUG = os.environ.get("DEBUG", False)
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,0.0.0.0,127.0.0.1,[::1]").split(", ")
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,0.0.0.0,127.0.0.1,[::1]").split(",")
+# This previously used `split(", ")`. This ensures backwards compatibility.
+ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS]
+
 INTERNAL_IPS = os.environ.get("INTERNAL_IPS", "127.0.0.1").split(",")
 
 # Application definition
