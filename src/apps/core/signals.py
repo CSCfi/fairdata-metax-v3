@@ -4,6 +4,7 @@ from django.conf import settings
 from django.db.models.signals import m2m_changed, post_delete, pre_delete
 from django.dispatch import Signal, receiver
 
+from apps.common.tasks import run_task
 from apps.core.models import Dataset, FileSet
 from apps.core.models.contract import Contract
 from apps.core.services import MetaxV2Client
@@ -22,11 +23,15 @@ def handle_fileset_files_changed(sender, instance: FileSet, action, pk_set, **kw
     if instance.skip_files_m2m_changed:  # allow skipping handler
         return
     if action == "post_add":
-        instance.update_published()
+        run_task(instance.update_published)
     elif action == "pre_clear":
-        instance.update_published(exclude_self=True)
+        run_task(instance.update_published, exclude_self=True)
     elif action == "pre_remove":
-        instance.update_published(queryset=instance.files.filter(id__in=pk_set), exclude_self=True)
+        run_task(
+            instance.update_published,
+            queryset=instance.files.filter(id__in=pk_set),
+            exclude_self=True,
+        )
     elif action in ("post_remove", "post_clear"):
         instance.remove_unused_file_metadata()
 
@@ -47,28 +52,18 @@ def delete_dataset_from_v2(sender, instance: Dataset, soft=False, **kwargs):
 
 @receiver(dataset_updated)
 def handle_dataset_updated(sender, instance: Dataset, **kwargs):
-    if instance.state == Dataset.StateChoices.PUBLISHED and (
-        fileset := getattr(instance, "file_set", None)
-    ):
-        fileset.update_published()
-
     if settings.METAX_V2_INTEGRATION_ENABLED:
         client = MetaxV2Client()
         client.update_dataset(instance)
-        client.update_dataset_files(instance)
+        run_task(client.update_dataset_files, instance)
 
 
 @receiver(dataset_created)
 def handle_dataset_created(sender, instance: Dataset, **kwargs):
-    if instance.state == Dataset.StateChoices.PUBLISHED and (
-        fileset := getattr(instance, "file_set", None)
-    ):
-        fileset.update_published()
-
     if settings.METAX_V2_INTEGRATION_ENABLED:
         client = MetaxV2Client()
         client.update_dataset(instance, created=True)
-        client.update_dataset_files(instance, created=True)
+        run_task(client.update_dataset_files, instance, created=True)
 
 
 @receiver(pre_delete, sender=Dataset)
@@ -76,7 +71,7 @@ def handle_dataset_pre_delete(sender, instance: Dataset, **kwargs):
     if instance.state == Dataset.StateChoices.PUBLISHED and (
         fileset := getattr(instance, "file_set", None)
     ):
-        fileset.update_published(exclude_self=True)
+        run_task(fileset.update_published, exclude_self=True)
 
 
 @receiver(sync_contract)

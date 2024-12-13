@@ -94,6 +94,7 @@ THIRD_PARTY_APPS = [
     "hijack",
     "hijack.contrib.admin",
     "django_json_widget",
+    "django_q",
 ]
 LOCAL_APPS = [
     "common.apps.CommonConfig",

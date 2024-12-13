@@ -19,6 +19,7 @@ from apps.common.exceptions import TopLevelValidationError
 from apps.common.helpers import datetime_to_date
 from apps.common.history import SnapshotHistoricalRecords
 from apps.common.models import AbstractBaseModel
+from apps.common.tasks import run_task
 from apps.core.models.access_rights import AccessRights, AccessTypeChoices
 from apps.core.models.catalog_record.dataset_permissions import DatasetPermissions
 from apps.core.models.concepts import (
@@ -1045,8 +1046,9 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         self.set_update_reason(f"{self.state}-{self.published_revision}.{self.draft_revision}")
         super().save(*args, **kwargs)
         self.is_prefetched = False  # Prefetch again after save
-        if hasattr(self, "file_set"):
-            self.file_set.update_published()
+
+        if self.state == self.StateChoices.PUBLISHED and hasattr(self, "file_set"):
+            run_task(self.file_set.update_published)
 
     def signal_update(self, created=False):
         """Send dataset_update or dataset_created signal."""

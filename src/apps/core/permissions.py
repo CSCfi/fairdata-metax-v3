@@ -250,3 +250,9 @@ class ContractAccessPolicy(BaseAccessPolicy):
             "effect": "allow",
         },
     ] + BaseAccessPolicy.statements
+
+
+class TaskAccessPolicy(BaseAccessPolicy):
+    statements = [
+        {"action": "*", "principal": "admin", "effect": "allow"},
+    ]

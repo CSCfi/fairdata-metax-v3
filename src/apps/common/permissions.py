@@ -72,3 +72,11 @@ class BaseAccessPolicy(AccessPolicy):
         view = DummyView(object=object, action=action)
         request = DummyRequest(user=user, method=method)
         return self.has_permission(request=request, view=view)
+
+
+class ReadOnlyAccessPolicy(BaseAccessPolicy):
+    """Access policy for read-only views available for all users."""
+
+    statements = [
+        {"action": "<safe_methods>", "principal": "*", "effect": "allow"},
+    ]

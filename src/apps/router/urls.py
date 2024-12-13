@@ -52,6 +52,7 @@ for model in reference_data_models:
     )
 # Nested routes
 dataset_router = routers.NestedSimpleRouter(router, r"datasets", lookup="dataset")
+router.register(r"tasks", core_views.TaskViewSet, basename="task")
 
 # Users list
 if settings.ENABLE_USERS_VIEW:

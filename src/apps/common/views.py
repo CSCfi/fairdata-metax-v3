@@ -14,7 +14,7 @@ from apps.common.exceptions import ResourceLocked
 from apps.common.permissions import BaseAccessPolicy
 
 
-class SystemCreatorViewSet(AccessViewSetMixin, viewsets.ModelViewSet):
+class SystemCreatorViewSet(viewsets.ModelViewSet):
     access_policy = BaseAccessPolicy
 
     def perform_create(self, serializer):
@@ -195,7 +195,11 @@ class NonFilteringGetObjectMixin:
 
 
 class CommonModelViewSet(
-    QueryParamsMixin, NonFilteringGetObjectMixin, PatchModelMixin, SystemCreatorViewSet
+    AccessViewSetMixin,
+    QueryParamsMixin,
+    NonFilteringGetObjectMixin,
+    PatchModelMixin,
+    SystemCreatorViewSet,
 ):
     """ViewSet with common functionality."""
 
@@ -216,7 +220,7 @@ class CommonModelViewSet(
 
 
 class CommonReadOnlyModelViewSet(
-    QueryParamsMixin, NonFilteringGetObjectMixin, viewsets.ReadOnlyModelViewSet
+    AccessViewSetMixin, QueryParamsMixin, NonFilteringGetObjectMixin, viewsets.ReadOnlyModelViewSet
 ):
     """ViewSet with common functionality for read only models."""
 

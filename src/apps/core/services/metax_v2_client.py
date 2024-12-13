@@ -197,13 +197,13 @@ class MetaxV2Client:
         if created and not legacy_ids:
             return  # New dataset with no files to sync
 
+        logger.info(f"Syncing {len(legacy_ids)} files for dataset {identifier} to V2")
         data = {"file_ids": legacy_ids, "user_metadata": metadata}
-
         res = requests.post(
             url=f"{self.host}/datasets/{identifier}/files_from_v3", json=data, headers=self.headers
         )
         if res.status_code == 200:
-            logger.info(f"Sync dataset {identifier} files to V2: {res.status_code=}")
+            logger.info(f"Sync dataset {identifier} files to V2 successful: {res.status_code=}")
         else:
             logger.error(
                 f"Sync dataset {identifier} files to V2 failed: {res.status_code=}:"

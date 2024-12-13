@@ -1,6 +1,7 @@
 from django_filters import rest_framework as filters
 from rest_framework import viewsets
 
+from apps.common.permissions import ReadOnlyAccessPolicy
 from apps.common.views import CommonReadOnlyModelViewSet
 
 
@@ -51,5 +52,6 @@ def get_viewset_for_model(model):
         serializer_class = model.get_serializer_class()
         queryset = model.available_objects.prefetch_related("broader", "narrower")
         filterset_class = get_filter_for_model(model)
+        access_policy = ReadOnlyAccessPolicy
 
     return ReferenceDataViewSet

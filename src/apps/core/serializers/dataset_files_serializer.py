@@ -644,7 +644,6 @@ class FileSetSerializer(StrictSerializer):
                 )
                 self._add_files(file_set, files_to_add)
                 logger.info("Updating files published state")
-                file_set.update_published()
 
         # file counts and dataset storage project may have changed, clear cached values
         file_set.clear_cached_file_properties()

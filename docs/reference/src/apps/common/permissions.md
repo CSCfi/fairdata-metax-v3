@@ -12,3 +12,7 @@
 
 ### :::src.apps.common.permissions.BaseAccessPolicy
 
+## ReadOnlyAccessPolicy
+
+### :::src.apps.common.permissions.ReadOnlyAccessPolicy
+

@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 from apps.actors.models import Organization
 from apps.actors.serializers import OrganizationSerializer
+from apps.common.permissions import ReadOnlyAccessPolicy
 from apps.common.views import CommonReadOnlyModelViewSet
 
 
@@ -55,6 +56,7 @@ class OrganizationViewSet(CommonReadOnlyModelViewSet):
     filterset_class = OrganizationFilterSet
     serializer_class = OrganizationSerializer
     query_serializers = [{"class": OrganizationViewSetQueryParamsSerializer}]
+    access_policy = ReadOnlyAccessPolicy
 
     queryset = Organization.available_objects.filter(
         is_reference_data=True,

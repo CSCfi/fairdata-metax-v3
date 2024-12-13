@@ -172,6 +172,16 @@ python manage.py runserver_plus 8002
 python manage.py runserver_plus --bpython 8002
 ```
 
+### Running background tasks
+
+Set `ENABLE_BACKGROUND_TASKS=true` in `.env`.
+Run development server and run the task processing
+cluster in e.g. another terminal
+
+```bash
+python manage.py qcluster
+```
+
 ### Accessing the admin panel
 
 - When the development server is running, access the admin panel at `localhost:<port>/v3/admin`

@@ -24,3 +24,7 @@
 
 ### :::src.apps.core.permissions.ContractAccessPolicy
 
+## TaskAccessPolicy
+
+### :::src.apps.core.permissions.TaskAccessPolicy
+

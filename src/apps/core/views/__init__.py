@@ -5,3 +5,4 @@ from .index_view import IndexView
 from .legacy_view import LegacyDatasetViewSet
 from .permissions_view import DatasetPermissionsEditorsViewSet, DatasetPermissionsViewSet
 from .preservation_view import PreservationViewSet
+from .task_view import TaskViewSet

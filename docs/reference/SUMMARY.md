@@ -35,6 +35,7 @@
             - [fields](src/apps/common/serializers/fields.md)
             - [serializers](src/apps/common/serializers/serializers.md)
             - [validators](src/apps/common/serializers/validators.md)
+        - [tasks](src/apps/common/tasks.md)
         - [views](src/apps/common/views.md)
     - core
         - [admin](src/apps/core/admin.md)
@@ -110,6 +111,7 @@
             - [nested_views](src/apps/core/views/nested_views.md)
             - [permissions_view](src/apps/core/views/permissions_view.md)
             - [preservation_view](src/apps/core/views/preservation_view.md)
+            - [task_view](src/apps/core/views/task_view.md)
     - files
         - [admin](src/apps/files/admin.md)
         - [apps](src/apps/files/apps.md)
@@ -242,6 +244,7 @@
                     - [test_contract](tests/unit/apps/core/api/test_contract.md)
                     - [test_contract_legacy_integration](tests/unit/apps/core/api/test_contract_legacy_integration.md)
                     - [test_data_catalog](tests/unit/apps/core/api/test_data_catalog.md)
+                    - [test_tasks_view](tests/unit/apps/core/api/test_tasks_view.md)
                 - management
                     - [conftest](tests/unit/apps/core/management/conftest.md)
                     - [test_cache_datasets](tests/unit/apps/core/management/test_cache_datasets.md)

@@ -130,7 +130,7 @@ class APITokenListView(KnoxLoginView):
         return HttpResponseSeeOther(reverse("tokens"))
 
 
-class UserViewSet(AccessViewSetMixin, CommonReadOnlyModelViewSet):
+class UserViewSet(CommonReadOnlyModelViewSet):
     """API for listing and deleting users. Not for production use."""
 
     queryset = get_user_model().objects.all()
