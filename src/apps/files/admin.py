@@ -4,11 +4,14 @@ from django.conf import settings
 from django.contrib import admin
 from django.db.models import TextField
 from django.forms import ModelForm, TextInput
+from django.utils.safestring import SafeString
 from polymorphic.admin import PolymorphicChildModelAdmin, PolymorphicParentModelAdmin
+from rest_framework.reverse import reverse
 
 from apps.common.admin import AbstractDatasetPropertyBaseAdmin
 
 # Register your models here.
+from apps.files.helpers import replace_query_param
 from apps.files.models import (
     BasicFileStorage,
     File,
@@ -37,7 +40,6 @@ class FileAdmin(AbstractDatasetPropertyBaseAdmin):
 @admin.register(FileStorage)
 class FileStorageAdmin(AbstractDatasetPropertyBaseAdmin, PolymorphicParentModelAdmin):
     list_display = ("id", "storage_service", "csc_project")
-    readonly_fields = ("file_count",)
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
@@ -52,21 +54,32 @@ class FileStorageAdmin(AbstractDatasetPropertyBaseAdmin, PolymorphicParentModelA
         IDAFileStorage,
     )
 
-    @admin.display
-    def file_count(self, obj):
-        return obj.files.count()
-
 
 class FileStorageForm(ModelForm):
     def __init__(self, *args, **kwargs):
         super(ModelForm, self).__init__(*args, **kwargs)
         model = self._meta.model
         for field in model.required_extra_fields:
-            self.fields[field].required = True
+            if field in self.fields:
+                self.fields[field].required = True
 
 
 class FileStorageProxyAdmin(AbstractDatasetPropertyBaseAdmin, PolymorphicChildModelAdmin):
     base_form = FileStorageForm
+
+    readonly_fields = ("file_count", "project_root")
+
+    @admin.display
+    def file_count(self, obj: FileStorage):
+        return obj.files.count()
+
+    @admin.display
+    def project_root(self, obj: FileStorage):
+        url = reverse("directory-list")
+        url = replace_query_param(url, param="storage_service", value=obj.storage_service)
+        for field in obj.required_extra_fields:
+            url = replace_query_param(url, param=field, value=getattr(obj, field))
+        return SafeString(f'<a href="{url}">{url}</a>')
 
     def formfield_for_choice_field(self, db_field, request, **kwargs):
         """List only storage services that match selected FileStorage class."""

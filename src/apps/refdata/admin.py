@@ -9,9 +9,10 @@ from apps.refdata.models import reference_data_models
 class ReferenceDataAdminForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["broader"].queryset = self.fields["broader"].queryset.exclude(
-            id=self.instance.id
-        )
+        if "broader" in self.fields:
+            self.fields["broader"].queryset = self.fields["broader"].queryset.exclude(
+                id=self.instance.id
+            )
 
 
 class AbstractConceptAdmin(SystemCreatorBaseAdmin):

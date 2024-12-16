@@ -151,10 +151,14 @@
         - [apps](src/apps/router/apps.md)
         - [router](src/apps/router/router.md)
     - users
+        - [admin](src/apps/users/admin.md)
         - [apps](src/apps/users/apps.md)
         - [authentication](src/apps/users/authentication.md)
         - [factories](src/apps/users/factories.md)
-        - [management.commands.create_api_user](src/apps/users/management/commands/create_api_user.md)
+        - management.commands
+            - [create_api_user](src/apps/users/management/commands/create_api_user.md)
+            - [create_appsupport_group](src/apps/users/management/commands/create_appsupport_group.md)
+            - [create_appsupport_user](src/apps/users/management/commands/create_appsupport_user.md)
         - [middleware](src/apps/users/middleware.md)
         - [models](src/apps/users/models.md)
         - [permissions](src/apps/users/permissions.md)
@@ -274,6 +278,7 @@
                     - [test_versioning](tests/unit/apps/core/models/test_versioning.md)
                 - [services.test_metax_v2_client](tests/unit/apps/core/services/test_metax_v2_client.md)
             - files
+                - [admin.test_file_storage_admin](tests/unit/apps/files/admin/test_file_storage_admin.md)
                 - api
                     - [conftest](tests/unit/apps/files/api/conftest.md)
                     - directories
@@ -309,6 +314,7 @@
                     - [test_finto_importer](tests/unit/apps/refdata/services/test_finto_importer.md)
                     - [test_local_json_importer](tests/unit/apps/refdata/services/test_local_json_importer.md)
             - users
+                - [admin.test_user_admin](tests/unit/apps/users/admin/test_user_admin.md)
                 - api
                     - [test_bearer_authentication](tests/unit/apps/users/api/test_bearer_authentication.md)
                     - [test_sso_authentication](tests/unit/apps/users/api/test_sso_authentication.md)
@@ -317,6 +323,7 @@
                     - [test_middleware](tests/unit/apps/users/authentication/test_middleware.md)
                     - [test_sso_authentication](tests/unit/apps/users/authentication/test_sso_authentication.md)
                 - [conftest](tests/unit/apps/users/conftest.md)
+                - [management.test_create_appsupport_user](tests/unit/apps/users/management/test_create_appsupport_user.md)
                 - [models.test_metax_user](tests/unit/apps/users/models/test_metax_user.md)
                 - [templatetags.test_users_tags](tests/unit/apps/users/templatetags/test_users_tags.md)
         - docs.examples

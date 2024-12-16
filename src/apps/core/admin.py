@@ -1,7 +1,6 @@
 import logging
 
 from django.contrib import admin
-from django.contrib.auth import get_user_model
 from django.db import models
 from django_json_widget.widgets import JSONEditorWidget
 from simple_history.admin import SimpleHistoryAdmin
@@ -271,6 +270,3 @@ class EntityRelationAdmin(AbstractDatasetPropertyBaseAdmin):
 @admin.register(FileSet)
 class FileSetAdmin(AbstractDatasetPropertyBaseAdmin):
     pass
-
-
-admin.site.register(get_user_model())
