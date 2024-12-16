@@ -1,9 +1,8 @@
 import logging
+import time
 from collections import Counter
 
-from django.db.models import prefetch_related_objects
-
-from apps.common.profiling import count_queries
+from apps.common.profiling import count_queries, log_duration
 from apps.core import factories
 from apps.core.models import Dataset, Provenance, Spatial
 
@@ -31,3 +30,9 @@ def test_count_queries_log(caplog):
         Dataset.objects.count()
     assert len(caplog.messages) == 1
     assert "{'total': 1, 'SQLCompiler': Counter({'total': 1, 'Dataset': 1})}" in caplog.messages[0]
+
+
+def test_log_duration():
+    with log_duration() as times:
+        time.sleep(0.01)
+    assert times["duration"] >= 0.01

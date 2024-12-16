@@ -5,6 +5,7 @@ from inspect import currentframe, getframeinfo
 from os import path
 
 from django.db.models.sql.compiler import SQLCompiler, SQLInsertCompiler, SQLUpdateCompiler
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -59,3 +60,22 @@ def count_queries(log=False):
         SQLUpdateCompiler.execute_sql = update_exec
         if log:
             logger.info(f"{line}: {counters}")
+
+
+@contextmanager
+def log_duration(log=False):
+    """Log duration of context manager in seconds.
+
+    Usage example:
+
+    >>> with log_duration():
+    >>>    time.sleep(1)
+    INFO ...: Duration 1.00 s
+    """
+
+    line = _get_line()
+    times = {"start": timezone.now()}
+    yield times
+    times["end"] = timezone.now()
+    times["duration"] = (times["end"] - times["start"]).total_seconds()
+    logger.info(f"{line}: Duration {times['duration']:.2f} s")

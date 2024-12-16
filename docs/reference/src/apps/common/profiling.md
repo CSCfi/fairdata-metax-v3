@@ -8,3 +8,7 @@
 
 ### :::src.apps.common.profiling.count_queries
 
+## log_duration
+
+### :::src.apps.common.profiling.log_duration
+

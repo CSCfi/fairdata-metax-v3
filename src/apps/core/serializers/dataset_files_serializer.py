@@ -5,14 +5,18 @@
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
 
-from typing import Dict
+import logging
+from typing import Dict, Iterable
+from uuid import UUID
 
 from cachalot.api import cachalot_disabled
+from django.db import connection
 from django.db.models import Model, Q, TextChoices
 from django.db.models.functions import Concat
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
+from apps.common.helpers import batched
 from apps.common.serializers import StrictSerializer
 from apps.common.serializers.fields import ListValidChoicesField
 from apps.common.serializers.validators import AnyOf
@@ -25,6 +29,8 @@ from apps.core.serializers.file_metadata_serializer import (
 )
 from apps.files.models import FileStorage
 from apps.files.serializers.fields import DirectoryPathField, StorageServiceField
+
+logger = logging.getLogger("__name__")
 
 
 class Action(TextChoices):
@@ -567,10 +573,30 @@ class FileSetSerializer(StrictSerializer):
                 {"action": _("Adding files to a published noncumulative dataset is not allowed.")}
             )
 
+    def _add_files(self, instance: FileSet, files_to_add: Iterable[UUID]):
+        """Add files to fileset using list of file ids.
+
+        A replacement for file_set.files.add(*files_to_add) with the following differences:
+        - Assumes input files are ids, not full objects
+        - Assumes files don't already exist (duplicates will trigger IntegrityError)
+        - Does not send m2m_changed signals
+        - Does not return the created relation objects
+        - Locally benchmarked to be 6-7 times faster when adding 1400000 files (20 sec vs 2 min)
+
+        Cachalot automatically invalidates the core_fileset_file table
+        when running raw SQL insert into the table in Django.
+        """
+        with connection.cursor() as c:
+            for batch in batched(files_to_add, 30000):
+                c.execute(
+                    "INSERT INTO core_fileset_files (fileset_id, file_id)"
+                    "  SELECT %s, * FROM unnest(%s)",  # unnest converts arrays into table columns
+                    [instance.id, list(batch)],
+                )
+
     def update(self, instance: FileSet, validated_data):
         """Update file relations and metadata of FileSet."""
         file_set = instance
-
         storage: FileStorage = validated_data["storage"]
         directory_actions: list = validated_data.get("directory_actions", [])
         file_actions: list = validated_data.get("file_actions", [])
@@ -596,6 +622,9 @@ class FileSetSerializer(StrictSerializer):
                 if file_set.removed_files_count > 0:
                     self.check_allow_removing_files(instance)
 
+                logger.info(
+                    f"Removing {file_set.removed_files_count} files from dataset {instance.dataset_id}"
+                )
                 file_set.files.remove(*files_to_remove)
 
             # add files
@@ -610,7 +639,11 @@ class FileSetSerializer(StrictSerializer):
                 if file_set.added_files_count > 0:
                     self.check_allow_adding_files(instance)
 
-                file_set.files.add(*files_to_add)
+                logger.info(
+                    f"Adding {file_set.added_files_count} files to dataset {instance.dataset_id}"
+                )
+                self._add_files(file_set, files_to_add)
+                logger.info("Updating files published state")
                 file_set.update_published()
 
         # file counts and dataset storage project may have changed, clear cached values
@@ -623,4 +656,5 @@ class FileSetSerializer(StrictSerializer):
         # remove any metadata that points to items not in dataset
         file_set.remove_unused_file_metadata()
 
+        logger.info(f"Fileset for dataset {instance.dataset_id} updated")
         return instance
