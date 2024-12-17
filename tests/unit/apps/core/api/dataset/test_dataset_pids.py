@@ -79,7 +79,7 @@ def test_create_dataset_with_URN(admin_client, dataset_a_json, data_catalog, ref
     assert res.status_code == 201
     pid = res.json().get("persistent_identifier", None)
     ds_id = res.json().get("id", None)
-    assert pid != None
+    assert pid.startswith("urn:")
 
     # Check that PID stays the same after the dataset has been updated
     new_title = {"title": {"en": "updated title"}}
@@ -106,7 +106,7 @@ def test_create_dataset_with_doi(admin_client, dataset_maximal_json, data_catalo
     dataset.pop("persistent_identifier", None)
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
     assert res.status_code == 201
-    assert res.json().pop("persistent_identifier", None) != None
+    assert res.json().pop("persistent_identifier", None).startswith("doi:")
     ds_id = res.json()["id"]
     remote_resources = [
         {
@@ -405,10 +405,12 @@ def test_update_dataset_with_doi(
     dataset["persistent_identifier"] = res.json()["persistent_identifier"]
     res = admin_client.put(f"/v3/datasets/{ds_id}", dataset, content_type="application/json")
     assert res.status_code == 200
+    doi = dataset["persistent_identifier"].replace("doi:", "")
     call = requests_mock.request_history[1]
     payload = json.loads(call.text)
     original = pid_update_payload
     original["data"]["attributes"]["url"] = f"https://{settings.ETSIN_URL}/dataset/{ds_id}"
+    original["data"]["attributes"]["identifiers"].append({'identifier': f'https://doi.org/{doi}', 'identifierType': 'DOI'})
     assert DeepDiff(payload, original) == {}
 
 

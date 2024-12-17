@@ -50,7 +50,7 @@ class Datacitedata:
         "http://purl.org/dc/terms/isPartOf": "IsPartOf",
         "http://www.w3.org/ns/prov#wasDerivedFrom": "IsDerivedFrom",
         "purl.org/spar/cito/isCompiledBy": "IsCompiledBy",
-        "http://purl.org/vocab/frbr/core#alternate": "isVariantFormOf",
+        "http://purl.org/vocab/frbr/core#alternate": "IsVariantFormOf",
         "http://www.w3.org/2002/07/owl#sameAs": "IsIdenticalTo",
         "http://www.w3.org/ns/adms#previous": "IsNewVersionOf",  # A link to previous version
         "http://www.w3.org/ns/adms#next": "IsPreviousVersionOf",  # A link to next version

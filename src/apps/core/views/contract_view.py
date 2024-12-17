@@ -20,7 +20,6 @@ class ContractFilter(filters.FilterSet):
     )
     id = filters.CharFilter(max_length=255, lookup_expr="icontains")
 
-
 @method_decorator(
     name="list", decorator=swagger_auto_schema(operation_description="List Contracts")
 )

@@ -104,8 +104,12 @@ class PIDMSClient:
 
     def create_doi(self, dataset_id):
         _client = import_string(settings.PID_MS_CLIENT_INSTANCE)()
-        return _client.create_doi(dataset_id)
+        doi = _client.create_doi(dataset_id)
+        doi_value = f"doi:{doi}"
+        return doi_value
 
     def update_doi_dataset(self, dataset_id, doi):
         _client = import_string(settings.PID_MS_CLIENT_INSTANCE)()
+        if doi.startswith("doi:"):
+            doi = doi.replace("doi:", "")
         return _client.update_doi_dataset(dataset_id, doi)
