@@ -230,9 +230,24 @@ def test_create_dataset_with_existing_pid(
     assert res.status_code == 201
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 400
-    assert "Data catalog is not allowed to have multiple datasets with the same value" in str(
-        res.data["persistent_identifier"]
-    )
+    assert "Value already exists in the data catalog" in str(res.data["persistent_identifier"])
+
+
+# Create a dataset
+# Try to create the same dataset again
+# Check that error message is correct
+def test_create_dataset_with_existing_pid_in_ida_catalog(
+    admin_client, dataset_a_json, data_catalog, reference_data, datacatalog_harvested_json
+):
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    dataset_a_json["data_catalog"] = datacatalog_harvested_json["id"]
+    dataset_a_json["persistent_identifier"] = str(res.data["persistent_identifier"])
+    dataset_a_json["generate_pid_on_publish"] = None
+
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 400
+    assert "Value already exists in IDA or ATT catalog" in str(res.data["persistent_identifier"])
 
 
 # Create a dataset
@@ -254,9 +269,7 @@ def test_create_dataset_with_existing_soft_deleted_pid(
 
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 400
-    assert "Data catalog is not allowed to have multiple datasets with the same value" in str(
-        res.data["persistent_identifier"]
-    )
+    assert "Value already exists in the data catalog" in str(res.data["persistent_identifier"])
 
 
 # Create a dataset

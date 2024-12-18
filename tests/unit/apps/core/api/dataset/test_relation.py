@@ -84,11 +84,23 @@ def test_other_identifier_found_in_metax_ignore_draft(
 
 
 def test_other_identifier_found_in_metax_list(
-    admin_client, dataset_a_json, data_catalog, data_catalog_harvested, reference_data
+    admin_client,
+    dataset_a_json,
+    data_catalog,
+    data_catalog_harvested_b,
+    data_catalog_harvested,
+    reference_data,
 ):
     """Test multiple datasets with same pid."""
     # Create 2 datasets with same pid
-    res1 = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    first_dataset = {
+        **dataset_a_json,
+        "data_catalog": data_catalog_harvested_b.id,
+        "persistent_identifier": "same pid",
+        "generate_pid_on_publish": None,
+    }
+
+    res1 = admin_client.post("/v3/datasets", first_dataset, content_type="application/json")
     assert res1.status_code == 201
 
     other_dataset = {

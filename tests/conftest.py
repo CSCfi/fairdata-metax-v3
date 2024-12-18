@@ -288,6 +288,22 @@ def data_catalog_harvested(fairdata_users_group, service_group) -> DataCatalog:
 
 
 @pytest.fixture
+def data_catalog_harvested_b(fairdata_users_group, service_group) -> DataCatalog:
+    identifier = "urn:nbn:fi:att:data-catalog-harvested_b"
+    title = {
+        "en": "Harvested datasets",
+    }
+    catalog = factories.DataCatalogFactory(
+        id=identifier,
+        title=title,
+        is_external=True,
+        allow_remote_resources=True,
+    )
+    catalog.dataset_groups_create.set([fairdata_users_group, service_group])
+    return catalog
+
+
+@pytest.fixture
 def contract() -> Contract:
     _id = "urn:nbn:fi:contract:test-contract-1"
     title = {

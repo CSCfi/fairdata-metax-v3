@@ -25,7 +25,7 @@ def published_dataset(file_tree_a):
 
 @pytest.fixture
 def draft_dataset(file_tree_a):
-    dataset = factories.DatasetFactory(persistent_identifier="somepid")
+    dataset = factories.DatasetFactory(persistent_identifier="draft:somepid")
     dataset.actors.add(factories.DatasetActorFactory(roles=["creator", "publisher"]))
     factories.FileSetFactory(
         dataset=dataset,

@@ -914,12 +914,19 @@ class Dataset(V2DatasetMixin, CatalogRecord):
                 .exists()
             ):
                 raise ValidationError(
-                    {
-                        "persistent_identifier": _(
-                            "Data catalog is not allowed to have "
-                            "multiple datasets with the same value."
-                        )
-                    }
+                    {"persistent_identifier": _("Value already exists in the data catalog")}
+                )
+
+            if (
+                Dataset.all_objects.exclude(id=self.id)
+                .filter(
+                    data_catalog__is_external=False,
+                    persistent_identifier=self.persistent_identifier,
+                )
+                .exists()
+            ):
+                raise ValidationError(
+                    {"persistent_identifier": _("Value already exists in IDA or ATT catalog")}
                 )
 
     def validate_allow_remote_resources(self):
