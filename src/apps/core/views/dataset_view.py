@@ -11,6 +11,7 @@ from enum import Enum
 from typing import List
 
 import pytz
+import operator
 from django.conf import settings
 from django.core.cache import caches
 from django.db import transaction
@@ -19,6 +20,8 @@ from django.http import Http404
 from django.utils.decorators import method_decorator
 from django.utils.http import parse_http_date
 from django.utils.translation import gettext_lazy as _
+from django.db.models import Q
+from functools import reduce
 from django_filters import rest_framework as filters
 from django_filters.fields import CSVWidget
 from drf_yasg.openapi import TYPE_STRING, Parameter, Response, Schema
@@ -201,18 +204,20 @@ class DatasetFilter(filters.FilterSet):
 
     def filter_access_type(self, queryset, name, value):
         return self._filter_list(
-            queryset,
-            value,
-            filter_param="access_rights__access_type__pref_label__values__contains",
+            queryset=queryset,
+            value=value,
+            filter_param="access_rights__access_type__pref_label__values__icontains",
         )
 
     def filter_organization(self, queryset, name, value):
         return self._filter_list(
-            queryset, value, filter_param="actors__organization__pref_label__values__contains"
+            queryset=queryset,
+            value=value,
+            filter_param="actors__organization__pref_label__values__icontains",
         )
 
     def filter_keyword(self, queryset, name, value):
-        return self._filter_list(queryset, value, filter_param="keyword__contains")
+        return self._filter_list(queryset, value, filter_param="keyword__icontains")
 
     def filter_creator(self, queryset, name, value):
         result = queryset
@@ -241,23 +246,29 @@ class DatasetFilter(filters.FilterSet):
 
     def filter_field_of_science(self, queryset, name, value):
         return self._filter_list(
-            queryset, value, filter_param="field_of_science__pref_label__values__contains"
+            queryset,
+            value,
+            filter_param="field_of_science__pref_label__values__icontains",
         )
 
     def filter_infrastructure(self, queryset, name, value):
         return self._filter_list(
-            queryset, value, filter_param="infrastructure__pref_label__values__contains"
+            queryset,
+            value,
+            filter_param="infrastructure__pref_label__values__icontains",
         )
 
     def filter_file_type(self, queryset, name, value):
         return self._filter_list(
             queryset,
             value,
-            filter_param="file_set__file_metadata__file_type__pref_label__values__contains",
+            filter_param="file_set__file_metadata__file_type__pref_label__values__icontains",
         )
 
     def filter_project(self, queryset, name, value):
-        return self._filter_list(queryset, value, filter_param="projects__title__values__contains")
+        return self._filter_list(
+            queryset, value, filter_param="projects__title__values__icontains"
+        )
 
     def filter_publishing_channels(self, queryset, name, value):
         if value == "all":
@@ -269,19 +280,11 @@ class DatasetFilter(filters.FilterSet):
             )
         return queryset.filter(data_catalog__publishing_channels__contains=[value])
 
-    def _filter_list(self, queryset, value, filter_param):
+    def _filter_list(self, queryset: QuerySet, value: List[List[str]], filter_param: str):
         result = queryset
         for group in value:
-            union = None
-            for val in group:
-                param = {filter_param: [val]}
-
-                if union is not None:
-                    union = union | queryset.filter(**param)
-                else:
-                    union = queryset.filter(**param)
-            if union:
-                result = result & union
+            union = reduce(operator.or_, (Q(**{filter_param: x}) for x in group))
+            result = result.filter(union)
         return result.distinct()
 
     has_files = filters.BooleanFilter(

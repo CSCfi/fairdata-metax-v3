@@ -99,7 +99,7 @@ def test_aggregation_and_filters(
 
     res = admin_client.get("/v3/datasets/aggregates")
     assert res.data != None
-    assert list(sorted(key for key, value in res.data.items())) == [
+    assert sorted(res.data.keys()) == [
         "access_type",
         "creator",
         "data_catalog",
@@ -120,6 +120,7 @@ def test_aggregation_and_filters(
                 or aggregate["hits"][0]["value"].get("und")
             )
             count = aggregate["hits"][0]["count"]
+            print(f"{aggregate['query_parameter']}, {value}, {count}")
             res = admin_client.get(f"/v3/datasets?{aggregate['query_parameter']}={value}")
             assert res.data["count"] == count
 
