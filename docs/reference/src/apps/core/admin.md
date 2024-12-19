@@ -20,6 +20,30 @@
 
 ### :::src.apps.core.admin.MetadataProviderAdmin
 
+## CoreRefDataAdminMixin
+
+### :::src.apps.core.admin.CoreRefDataAdminMixin
+
+## DatasetLanguage
+
+### :::src.apps.core.admin.DatasetLanguage
+
+## DatasetTheme
+
+### :::src.apps.core.admin.DatasetTheme
+
+## DatasetFieldOfScience
+
+### :::src.apps.core.admin.DatasetFieldOfScience
+
+## Funding
+
+### :::src.apps.core.admin.Funding
+
+## RestrictionGrounds
+
+### :::src.apps.core.admin.RestrictionGrounds
+
 ## DatasetAdmin
 
 ### :::src.apps.core.admin.DatasetAdmin

@@ -6,12 +6,13 @@
 # :license: MIT
 
 import logging
+import operator
 from datetime import datetime, timezone
 from enum import Enum
+from functools import reduce
 from typing import List
 
 import pytz
-import operator
 from django.conf import settings
 from django.core.cache import caches
 from django.db import transaction
@@ -20,8 +21,6 @@ from django.http import Http404
 from django.utils.decorators import method_decorator
 from django.utils.http import parse_http_date
 from django.utils.translation import gettext_lazy as _
-from django.db.models import Q
-from functools import reduce
 from django_filters import rest_framework as filters
 from django_filters.fields import CSVWidget
 from drf_yasg.openapi import TYPE_STRING, Parameter, Response, Schema

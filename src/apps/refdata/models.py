@@ -81,10 +81,6 @@ class AbstractConcept(AbstractBaseModel):
 class FieldOfScience(AbstractConcept):
     # TODO: Add codes (skos:notation)
 
-    is_essential_choice = models.BooleanField(
-        default=False, help_text=_("If the field of science should be selectable in model forms")
-    )
-
     @classmethod
     def get_model_url(cls) -> str:
         return "fields-of-science"
@@ -95,15 +91,11 @@ class FieldOfScience(AbstractConcept):
 
 
 class Language(AbstractConcept):
-    is_essential_choice = models.BooleanField(
-        default=False, help_text=_("If the language should be selectable in model forms")
-    )
+    pass
 
 
 class Theme(AbstractConcept):
-    is_essential_choice = models.BooleanField(
-        default=False, help_text=_("If the theme should be selectable in model forms")
-    )
+    pass
 
 
 class Location(AbstractConcept):
@@ -255,6 +247,9 @@ class ConceptProxyMixin:
         """Return serializer relation field for concept instances."""
         serializer = cls.get_serializer_class()()
         return URLReferencedModelField(child=serializer, **kwargs)
+
+    def __str__(self):
+        return self.get_label()
 
     class Meta:
         proxy = True

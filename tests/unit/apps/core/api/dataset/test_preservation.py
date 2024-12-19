@@ -48,18 +48,20 @@ def test_create_dataset_preservation_non_pas(ida_client, preservation_dataset_js
 
 @pytest.mark.usefixtures("data_catalog", "reference_data")
 def test_update_dataset_preservation_non_pas(ida_client, contract_a, dataset_a_json):
-    resp = ida_client.post(
-        "/v3/datasets", dataset_a_json, content_type="application/json"
-    )
+    resp = ida_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert resp.status_code == 201
     id = resp.json()["id"]
     resp = ida_client.patch(
-        f"/v3/datasets/{id}", {"preservation": {
-            "contract": contract_a.json()["id"],
-            "state": 10,
-            "description": {"en": "Test preservation description"},
-            "reason_description": "Test preservation reason description",
-        },}, content_type="application/json"
+        f"/v3/datasets/{id}",
+        {
+            "preservation": {
+                "contract": contract_a.json()["id"],
+                "state": 10,
+                "description": {"en": "Test preservation description"},
+                "reason_description": "Test preservation reason description",
+            },
+        },
+        content_type="application/json",
     )
     assert resp.status_code == 400
     assert resp.json()["preservation"] == "Only PAS users are allowed to set preservation"

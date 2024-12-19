@@ -423,7 +423,9 @@ def test_update_dataset_with_doi(
     payload = json.loads(call.text)
     original = pid_update_payload
     original["data"]["attributes"]["url"] = f"https://{settings.ETSIN_URL}/dataset/{ds_id}"
-    original["data"]["attributes"]["identifiers"].append({'identifier': f'https://doi.org/{doi}', 'identifierType': 'DOI'})
+    original["data"]["attributes"]["identifiers"].append(
+        {"identifier": f"https://doi.org/{doi}", "identifierType": "DOI"}
+    )
     assert DeepDiff(payload, original) == {}
 
 

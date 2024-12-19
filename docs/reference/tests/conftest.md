@@ -84,6 +84,10 @@
 
 ### :::tests.conftest.data_catalog_harvested
 
+## data_catalog_harvested_b
+
+### :::tests.conftest.data_catalog_harvested_b
+
 ## contract
 
 ### :::tests.conftest.contract

@@ -1,3 +1,4 @@
+from common.helpers import single_translation
 from django.contrib.postgres.fields import HStoreField
 from django.db import models
 from django.utils.translation import gettext as _
@@ -29,6 +30,14 @@ class Entity(AbstractBaseModel):
         null=True,
         blank=True,
     )
+
+    def __str__(self):
+        if self.title:
+            return single_translation(self.title)
+        elif self.description:
+            return single_translation(self.description)
+        else:
+            return str(self.id)
 
     class Meta(AbstractBaseModel.Meta):
         verbose_name_plural = "Entities"

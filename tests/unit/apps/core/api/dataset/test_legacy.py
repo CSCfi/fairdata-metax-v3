@@ -450,7 +450,7 @@ def test_legacy_dataset_preservation_dataset(
     assert data["preservation"].get("dataset_version") == {
         "id": pas_json["identifier"],
         "persistent_identifier": pas_json["research_dataset"]["preferred_identifier"],
-        "preservation_state": 0
+        "preservation_state": 0,
     }
     assert data["preservation"].get("dataset_origin_version") is None
 
@@ -465,7 +465,7 @@ def test_legacy_dataset_preservation_dataset(
     assert data["preservation"].get("dataset_origin_version") == {
         "id": origin_json["identifier"],
         "persistent_identifier": origin_json["research_dataset"]["preferred_identifier"],
-        "preservation_state": 0
+        "preservation_state": 0,
     }
 
 

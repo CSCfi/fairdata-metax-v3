@@ -396,11 +396,10 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
             existing_remote_resources = self.instance.remote_resources.all()
         _user = self.context["request"].user
         preservation = data.get("preservation", None)
-        if (preservation and not (_user.is_superuser
-                                  or any(group.name == "pas" for group in _user.groups.all()))):
-            errors["preservation"] = (
-                "Only PAS users are allowed to set preservation"
-            )
+        if preservation and not (
+            _user.is_superuser or any(group.name == "pas" for group in _user.groups.all())
+        ):
+            errors["preservation"] = "Only PAS users are allowed to set preservation"
         fileset = data.get("file_set", existing_fileset)
         remote_resources = data.get("remote_resources", existing_remote_resources)
         if fileset and remote_resources:

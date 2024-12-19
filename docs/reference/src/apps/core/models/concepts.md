@@ -1,5 +1,9 @@
 # concepts
 
+## not_implemented_function
+
+### :::src.apps.core.models.concepts.not_implemented_function
+
 ## AccessType
 
 ### :::src.apps.core.models.concepts.AccessType

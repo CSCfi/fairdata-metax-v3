@@ -170,6 +170,10 @@ class Funding(AbstractBaseModel):
     )
     funding_identifier = models.CharField(max_length=255, blank=True, null=True)
 
+    def __str__(self):
+        rep = self.funder or self.funding_identifier
+        return str(rep)
+
 
 class Funder(AbstractBaseModel):
     """Project's Funder Agency
@@ -189,7 +193,8 @@ class Funder(AbstractBaseModel):
     )
 
     def __str__(self):
-        return f"{self.pref_label['fi']}"
+        rep = self.organization or self.funder_type or self.id
+        return str(rep)
 
 
 class FileSet(AbstractBaseModel):

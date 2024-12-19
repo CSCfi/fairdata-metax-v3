@@ -146,6 +146,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "metax_service.wsgi.application"
 
+ASGI_APPLICATION = "metax_service.asgi.application"
+
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
