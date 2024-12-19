@@ -1,9 +1,9 @@
 import logging
 import uuid
-from typing import Optional
+from typing import Iterable, Optional
 
 from django.contrib.postgres.fields import ArrayField, HStoreField
-from django.db import models
+from django.db import connection, models
 from django.db.models import Count, Q, Sum
 from django.db.models.functions import Coalesce
 from django.utils import timezone
@@ -14,7 +14,7 @@ from typing_extensions import Self
 
 from apps.actors.models import Actor, Organization
 from apps.common.copier import ModelCopier
-from apps.common.helpers import prepare_for_copy
+from apps.common.helpers import batched, prepare_for_copy
 from apps.common.models import AbstractBaseModel, MediaTypeValidator
 from apps.core.models.concepts import FileType, RelationType, UseCategory
 from apps.core.models.file_metadata import FileSetDirectoryMetadata, FileSetFileMetadata
@@ -256,6 +256,30 @@ class FileSet(AbstractBaseModel):
             except AttributeError:
                 pass
 
+    def add_files_by_id(self, files_to_add: Iterable[uuid.UUID]):
+        """Add files to fileset using list of file ids.
+
+        A replacement for FileSet.files.add(*files_to_add) with the following differences:
+        - Assumes files don't already exist (duplicates will trigger IntegrityError)
+        - Does not send m2m_changed signals
+        - Does not return the created relation objects
+        - Locally benchmarked to be 6-7 times faster when adding 1400000 files (20 sec vs 2 min)
+
+        Cachalot automatically invalidates the core_fileset_file table
+        when running raw SQL insert into the table in Django.
+        """
+        with connection.cursor() as c:
+            for batch in batched(files_to_add, 30000):
+                c.execute(
+                    "INSERT INTO core_fileset_files (fileset_id, file_id)"
+                    "  SELECT %s, * FROM unnest(%s)",  # unnest converts arrays into table columns
+                    [self.id, list(batch)],
+                )
+
+    def add_files(self, files_to_add: Iterable[File]):
+        """Optimized file addition using list of files, see add_files_by_id for details."""
+        self.add_files_by_id([file.id for file in files_to_add])
+
     def update_published(self, queryset=None, exclude_self=False):
         """Update publication timestamps of files."""
         if not queryset:
@@ -398,7 +422,7 @@ class FileSet(AbstractBaseModel):
         copy.dataset = preservation_dataset
         copy.storage = storage
         copy.save()
-        copy.files.set(files)
+        copy.add_files(files)
 
         # Copy and assign file and directory metadata
         file_metadata = []

@@ -18,6 +18,9 @@ ALLOWED_HOSTS = ALLOWED_HOSTS + [
     ".fd-dev.csc.fi",
 ]
 
+SHELL_PLUS_IMPORTS = [
+    "from django.db import connection",
+]
 SHELL_PLUS_SUBCLASSES_IMPORT = [serializers.Serializer]
 
 CORS_ALLOWED_ORIGINS = [

@@ -6,17 +6,14 @@
 # :license: MIT
 
 import logging
-from typing import Dict, Iterable
-from uuid import UUID
+from typing import Dict
 
 from cachalot.api import cachalot_disabled
-from django.db import connection
 from django.db.models import Model, Q, TextChoices
 from django.db.models.functions import Concat
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
-from apps.common.helpers import batched
 from apps.common.serializers import StrictSerializer
 from apps.common.serializers.fields import ListValidChoicesField
 from apps.common.serializers.validators import AnyOf
@@ -573,27 +570,6 @@ class FileSetSerializer(StrictSerializer):
                 {"action": _("Adding files to a published noncumulative dataset is not allowed.")}
             )
 
-    def _add_files(self, instance: FileSet, files_to_add: Iterable[UUID]):
-        """Add files to fileset using list of file ids.
-
-        A replacement for file_set.files.add(*files_to_add) with the following differences:
-        - Assumes input files are ids, not full objects
-        - Assumes files don't already exist (duplicates will trigger IntegrityError)
-        - Does not send m2m_changed signals
-        - Does not return the created relation objects
-        - Locally benchmarked to be 6-7 times faster when adding 1400000 files (20 sec vs 2 min)
-
-        Cachalot automatically invalidates the core_fileset_file table
-        when running raw SQL insert into the table in Django.
-        """
-        with connection.cursor() as c:
-            for batch in batched(files_to_add, 30000):
-                c.execute(
-                    "INSERT INTO core_fileset_files (fileset_id, file_id)"
-                    "  SELECT %s, * FROM unnest(%s)",  # unnest converts arrays into table columns
-                    [instance.id, list(batch)],
-                )
-
     def update(self, instance: FileSet, validated_data):
         """Update file relations and metadata of FileSet."""
         file_set = instance
@@ -642,8 +618,7 @@ class FileSetSerializer(StrictSerializer):
                 logger.info(
                     f"Adding {file_set.added_files_count} files to dataset {instance.dataset_id}"
                 )
-                self._add_files(file_set, files_to_add)
-                logger.info("Updating files published state")
+                file_set.add_files_by_id(files_to_add)
 
         # file counts and dataset storage project may have changed, clear cached values
         file_set.clear_cached_file_properties()
