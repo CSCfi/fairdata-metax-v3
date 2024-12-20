@@ -243,7 +243,7 @@ python manage.py collectstatic --no-input
 
 ```bash
 # Adding developer dependencies
-poetry add -D <package>
+poetry add -G dev <package>
 
 # Adding application dependencies
 poetry add <package>
@@ -256,7 +256,7 @@ poetry remove (-D) <package>
 
 # Regenerating requirements.txt after modification of pyproject.toml
 poetry export --without-hashes -o requirements.txt
-poetry export --dev --without-hashes -o dev-requirements.txt
+poetry export --with dev --without-hashes -o dev-requirements.txt
 ```
 
 ## Formatting code
