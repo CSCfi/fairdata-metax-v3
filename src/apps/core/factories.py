@@ -385,9 +385,12 @@ class PublishedDatasetFactory(DatasetFactory):
         django_get_or_create = ("title",)
         skip_postgeneration_save = True
 
+    class Params:
+        identifier_uuid = factory.Faker("uuid4")
+
     @factory.lazy_attribute
     def persistent_identifier(self):
-        return f"urn:nbn:fi:test:{factory.Faker('uuid')}"
+        return f"urn:nbn:fi:test:{self.identifier_uuid}"
 
     @factory.post_generation
     def actors(self, create, extracted, **kwargs):
