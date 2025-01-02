@@ -29,6 +29,8 @@ def fake_files_endpoint(projects):
             filtered = [f for f in filtered if f["file_storage"]["identifier"] == storage[0]]
         if project := query.get("project_identifier"):
             filtered = [f for f in filtered if f["project_identifier"] == project[0]]
+        if id__gt := query.get("id__gt"):
+            filtered = [f for f in filtered if f["id"] > int(id__gt[0])]
 
         limit = int((query.get("limit") or [10])[0])
         offset = int((query.get("offset") or [0])[0])

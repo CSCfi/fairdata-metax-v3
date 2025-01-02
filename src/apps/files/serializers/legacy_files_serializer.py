@@ -53,7 +53,6 @@ class LegacyFileSerializer(serializers.Serializer):
 
     def to_internal_value(self, data):
         storage = self.get_file_storage(data)
-        storage.refresh_from_db()
         return File.values_from_legacy(data, storage)
 
 
@@ -133,7 +132,7 @@ class LegacyFilesSerializer(serializers.ListSerializer):
             create, update = self.determine_file_operations(legacy_v3_values)
             File.all_objects.bulk_create(
                 [*create, *update],
-                batch_size=2000,
+                batch_size=10000,
                 update_conflicts=True,
                 unique_fields=["legacy_id"],
                 update_fields=self.update_fields,

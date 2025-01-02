@@ -2,11 +2,13 @@ import getpass
 import logging
 from argparse import ArgumentParser
 from typing import Any, Iterator
+from urllib import parse
 
 import requests
 from django.conf import settings
 
 from apps.common.helpers import datetime_to_header
+from apps.files.helpers import replace_query_param
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +97,35 @@ class MigrationV2Client:
                 break
             response = self.session.get(next_url)
 
+    def loop_cursor_pagination_with_id(
+        self, response: requests.Response, batched=False
+    ) -> Iterator[Any]:
+        """Request pages using cursor pagination in a loop while yielding results.
+
+        Assumes ordering=id and requires the V2 endpoint
+        to support id__gt query parameter.
+        """
+        while True:
+            response.raise_for_status()
+            response_json = response.json()
+            if batched:
+                yield response_json["results"]  # yield entire page as a list
+            else:
+                yield from response_json["results"]  # yield results one by one
+
+            next_url = response_json.get("next")
+            if not next_url:
+                break
+
+            # Fetch only items that are newer than the last item on the previous page.
+            # Unlike in offset pagination, adding or removing items during pagination
+            # will not cause missing/duplicate items on the later pages.
+            # This is also faster than offset pagination with large offsets.
+            last_id = response_json["results"][-1]["id"]
+            next_url = replace_query_param(next_url, "id__gt", last_id)
+            next_url = replace_query_param(next_url, "offset", 0)
+            response = self.session.get(next_url)
+
     def fetch_dataset_files(self, identifier: str) -> list:
         metax_instance = self.metax_instance
         response = self.session.get(
@@ -155,7 +186,7 @@ class MigrationV2Client:
         response.raise_for_status()
         removed = params.get("removed", "false")
         self.stdout.write(f"Found {response.json().get('count', 0)} files with removed={removed}")
-        return self.loop_pagination(response, batched=batched)
+        return self.loop_cursor_pagination_with_id(response, batched=batched)
 
     def fetch_files(self, params={}, batched=False, modified_since=None):
         yield from self._fetch_files(

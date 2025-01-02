@@ -58,7 +58,6 @@ class Command(BaseCommand):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.failed_datasets = []
         self.metax_instance = None
         self.metax_user = None
         self.metax_password = None
@@ -157,7 +156,6 @@ class Command(BaseCommand):
         serializer = LegacyFilesSerializer(data=files)
         serializer.is_valid(raise_exception=True)
         serializer.save(batch_callback=callback)
-        return None
 
     def migrate_dataset_files(self, dataset_json: dict):
         identifier = dataset_json["identifier"]
