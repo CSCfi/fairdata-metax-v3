@@ -1,4 +1,5 @@
 import pytest
+from django.utils import timezone
 
 from apps.core import factories
 
@@ -39,8 +40,26 @@ def file_tree_with_datasets(file_tree_a):
             tree["files"]["/dir/c.txt"],
         ],
     )
-
     tree["dataset_d"] = factories.DatasetFactory()
+
+    # Deprecated and removed datasets should be ignored by the /files/datasets endpont
+    dataset_deprecated = factories.DatasetFactory(deprecated=timezone.now())
+    factories.FileSetFactory(
+        dataset=dataset_deprecated,
+        storage=file_tree_a["storage"],
+        files=[
+            tree["files"]["/dir/d.txt"],
+        ],
+    )
+    dataset_deleted = factories.DatasetFactory(removed=timezone.now())
+    factories.FileSetFactory(
+        dataset=dataset_deleted,
+        storage=file_tree_a["storage"],
+        files=[
+            tree["files"]["/dir/d.txt"],
+        ],
+    )
+
     return tree
 
 

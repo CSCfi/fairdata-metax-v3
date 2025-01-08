@@ -227,7 +227,9 @@ class FileViewSet(BaseFileViewSet):
     )
     @action(detail=False, methods=["post"])
     def datasets(self, request):
-        """Return datasets belonging to files.
+        """Return active datasets belonging to files.
+
+        Only datasets that are not deprecated or removed are returned.
 
         The request body should contain an array of file identifiers.
         By default, the file identifiers are internal Metax `id` values.
@@ -271,17 +273,27 @@ class FileViewSet(BaseFileViewSet):
                 queryset = queryset.annotate(
                     values=ArrayAgg(
                         "file_sets__dataset_id",
-                        filter=Q(file_sets__dataset__deprecated__isnull=True),
-                        default=Value([]),
+                        filter=Q(
+                            file_sets__dataset__deprecated__isnull=True,
+                            file_sets__dataset__removed__isnull=True,
+                        ),
+                        default=Value(None),
                     )
                 )
-                return Response({str(v["key"]): v["values"] for v in queryset})
+                return Response(
+                    {str(v["key"]): v["values"] for v in queryset if v["values"] is not None}
+                )
             else:
                 # Return list of dataset ids
                 file_id_filter = Q(**{f"files__{file_id_type}__in": ids})
                 file_set_model = File.file_sets.rel.related_model
                 queryset = (
-                    file_set_model.objects.filter(file_id_filter, storage_filter)
+                    file_set_model.objects.filter(
+                        file_id_filter,
+                        storage_filter,
+                        dataset__deprecated__isnull=True,
+                        dataset__removed__isnull=True,
+                    )
                     .values_list("dataset__id", flat=True)
                     .distinct()
                 )
