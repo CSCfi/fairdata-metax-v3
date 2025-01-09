@@ -1,19 +1,11 @@
-import json
 import logging
-from copy import deepcopy
-from unittest.mock import ANY
 
 import pytest
 from django.contrib.auth.models import Group
-from rest_framework.reverse import reverse
-from tests.utils import assert_nested_subdict, matchers
 
 from apps.core import factories
-from apps.core.factories import DatasetFactory, MetadataProviderFactory
-from apps.core.models import OtherIdentifier
+from apps.core.models import DataCatalog
 from apps.core.models.catalog_record.dataset import Dataset
-from apps.core.models.concepts import IdentifierType
-from apps.files.factories import FileStorageFactory
 
 logger = logging.getLogger(__name__)
 
@@ -133,6 +125,48 @@ def test_catalog_datasets_create_fairdata(user_client, catalog_datasets, dataset
         content_type="application/json",
     )
     assert res.status_code == 403
+
+
+def test_catalog_datasets_create_and_set_catalog_fairdata(
+    user_client, catalog_datasets, dataset_a_json, admin_client
+):
+    # Create draft without catalog
+    dataset_a_json["state"] = "draft"
+    dataset_a_json["data_catalog"] = None
+    res = user_client.post(
+        "/v3/datasets",
+        dataset_a_json,
+        content_type="application/json",
+    )
+    assert res.status_code == 201
+    dataset_id = res.data["id"]
+
+    # Setting catalog should require dataset creation permission in the catalog
+    res = user_client.patch(
+        f"/v3/datasets/{dataset_id}",
+        {"data_catalog": "data-catalog-test"},
+        content_type="application/json",
+    )
+    assert res.status_code == 403
+
+    # Setting catalog should work after creation permission has been added
+    dc = DataCatalog.objects.get(id="data-catalog-test")
+    dc.dataset_groups_create.add(Group.objects.get(name="fairdata_users"))
+    res = user_client.patch(
+        f"/v3/datasets/{dataset_id}",
+        {"data_catalog": "data-catalog-test"},
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+
+    # Patching dataset that is already in the catalog should not require creation permission
+    dc.dataset_groups_create.remove(Group.objects.get(name="fairdata_users"))
+    res = user_client.patch(
+        f"/v3/datasets/{dataset_id}",
+        {"data_catalog": "data-catalog-test"},
+        content_type="application/json",
+    )
+    assert res.status_code == 200
 
 
 def test_catalog_datasets_create_service(service_client, catalog_datasets, dataset_a_json):

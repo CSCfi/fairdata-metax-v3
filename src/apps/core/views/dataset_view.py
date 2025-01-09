@@ -72,6 +72,7 @@ from apps.files.models import File
 from apps.files.serializers import DirectorySerializer
 from apps.files.views.directory_view import DirectoryCommonQueryParams, DirectoryViewSet
 from apps.files.views.file_view import BaseFileViewSet, FileCommonFilterset
+from apps.users.models import MetaxUser
 
 from .dataset_aggregation import aggregate_queryset
 
@@ -696,21 +697,30 @@ class DatasetViewSet(CommonModelViewSet):
             data["errors"] = errors
         return response.Response(data, status=status.HTTP_200_OK)
 
-    def perform_create(self, serializer):
-        if self.request.user.is_anonymous:
-            raise NotAuthenticated("You must be authenticated to perform this action.")
-
-        catalog: DataCatalog = serializer._validated_data["data_catalog"]
-        if catalog and not DataCatalogAccessPolicy().query_object_permission(
+    def _check_allow_create_datasets_in_catalog(self, catalog: DataCatalog):
+        """Raise error if request user is not allowed to create datasets in the catalog."""
+        if not DataCatalogAccessPolicy().query_object_permission(
             user=self.request.user, object=catalog, action="<op:create_dataset>"
         ):
             raise exceptions.PermissionDenied(
                 "You are not allowed to create datasets in this data catalog."
             )
+
+    def perform_create(self, serializer):
+        if self.request.user.is_anonymous:
+            raise NotAuthenticated("You must be authenticated to perform this action.")
+
+        catalog: DataCatalog = serializer._validated_data.get("data_catalog")
+        if catalog:
+            self._check_allow_create_datasets_in_catalog(catalog)
         dataset: Dataset = serializer.save(system_creator=self.request.user)
         dataset.signal_update(created=True)
 
     def perform_update(self, serializer):
+        catalog: DataCatalog = serializer._validated_data.get("data_catalog")
+        if catalog and not serializer.instance.data_catalog:
+            # Setting catalog of a draft needs permission to create datasets in the catalog
+            self._check_allow_create_datasets_in_catalog(catalog)
         dataset: Dataset = serializer.save()
         if dataset.pid_generated_by_fairdata and dataset.generate_pid_on_publish == "DOI":
             PIDMSClient().update_doi_dataset(dataset.id, dataset.persistent_identifier)
