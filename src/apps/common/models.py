@@ -83,7 +83,7 @@ class CustomSoftDeletableManager(models.Manager):
 class CustomSoftDeletableModel(models.Model):
     """Customized version of model_utils SoftDeletableModel"""
 
-    objects = CustomSoftDeletableManager(_emit_deprecation_warnings=True)
+    objects = CustomSoftDeletableManager()
     available_objects = CustomSoftDeletableManager()
     all_objects = models.Manager()
     removed = models.DateTimeField(null=True, blank=True, editable=False)

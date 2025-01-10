@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 def test_user_soft_delete(user):
     user.delete()
     searched_user = MetaxUser.objects.get(username=user.username)
-    assert searched_user.is_removed is True
+    assert searched_user.removed is not None
 
 
 @pytest.mark.django_db
@@ -26,7 +26,7 @@ def test_user_undelete(user):
     user.save()
     user.undelete()
     searched_user = MetaxUser.available_objects.get(username=user.username)
-    assert searched_user.is_removed is False
+    assert searched_user.removed is None
     assert searched_user.is_hidden is False
 
 

@@ -22,7 +22,7 @@ from rest_framework.serializers import ValidationError
 
 from apps.common.helpers import get_attr_or_item
 from apps.common.managers import ProxyBasePolymorphicManager
-from apps.common.models import AbstractBaseModel, ProxyBasePolymorphicModel
+from apps.common.models import AbstractBaseModel, CustomSoftDeletableManager, ProxyBasePolymorphicModel
 from apps.users.models import MetaxUser
 
 
@@ -157,7 +157,7 @@ class FileStorageManagerMixin(ProxyBasePolymorphicManager):
         return files
 
 
-class SoftDeletableFileStorageManager(FileStorageManagerMixin, SoftDeletableManager):
+class SoftDeletableFileStorageManager(FileStorageManagerMixin, CustomSoftDeletableManager):
     pass
 
 

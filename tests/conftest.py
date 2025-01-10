@@ -328,7 +328,6 @@ def contract() -> Contract:
     )
 
 
-@pytest.mark.django_db
 @pytest.fixture
 def organization_reference_data():
     scheme = settings.ORGANIZATION_SCHEME
@@ -356,7 +355,6 @@ def organization_reference_data():
     ]
 
 
-@pytest.mark.django_db
 @pytest.fixture
 def access_type_reference_data():
     common_args = {
@@ -400,7 +398,6 @@ def access_type_reference_data():
     )
 
 
-@pytest.mark.django_db
 @pytest.fixture
 def restriction_grounds_reference_data():
     common_args = {

@@ -19,4 +19,4 @@ def test_delete_metadata_provider_with_foreign_keys(metadata_provider, user):
     metadata_provider.delete()
     user.delete()
     assert metadata_provider.removed
-    assert user.is_removed
+    assert user.removed

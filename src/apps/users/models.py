@@ -5,10 +5,11 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
-from model_utils.models import SoftDeletableModel
+
+from apps.common.models import CustomSoftDeletableModel
 
 
-class MetaxUser(AbstractUser, SoftDeletableModel):
+class MetaxUser(AbstractUser, CustomSoftDeletableModel):
     """Basic Metax User."""
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -24,7 +25,7 @@ class MetaxUser(AbstractUser, SoftDeletableModel):
     organization = models.CharField(max_length=512, blank=True, null=True)
 
     def undelete(self):
-        self.is_removed = False
+        self.removed = None
         self.is_hidden = False
         self.save()
 
