@@ -165,6 +165,26 @@
               "identifier": "http://uri.suomi.fi/codelist/fairdata/organization/code/09206320"
             }
           }
+        ],
+        "used_entity": [
+          {
+            "title": {
+              "fi": "Joku esine"
+            },
+            "description": {
+              "fi": "Kuvaus"
+            },
+            "identifier": "entity_identifier",
+            "type": {
+              "identifier": "http://uri.suomi.fi/codelist/fairdata/resource_type/code/physical_object",
+              "pref_label": {
+                "fi": "Fyysinen objekti",
+                "en": "Physical object",
+                "und": "Fyysinen objekti"
+              },
+              "in_scheme": "http://uri.suomi.fi/codelist/fairdata/resource_type"
+            }
+          }
         ]
       },
       {

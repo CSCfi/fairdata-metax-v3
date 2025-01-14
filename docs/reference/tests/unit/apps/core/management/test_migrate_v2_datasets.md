@@ -92,3 +92,7 @@
 
 ### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_prompt_credentials
 
+## test_migrate_command_files_permission_error
+
+### :::tests.unit.apps.core.management.test_migrate_v2_datasets.test_migrate_command_files_permission_error
+

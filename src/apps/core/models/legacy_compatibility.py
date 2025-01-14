@@ -44,6 +44,10 @@ class LegacyCompatibility:
             # Allow adding default "notspecified" license
             regex("root['research_dataset']['access_rights']['license'][\\d+]['identifier']"),
             regex("root['research_dataset']['access_rights']['license'][\\d+]['title']"),
+            # Some removed legacy datasets get other_identifier.notation from old_notation
+            regex("root['research_dataset']['other_identifier'][\\d+]['notation']"),
+            # Allow adding in_scheme to reference data
+            regex(".*['in_scheme']$"),
         ],
         "dictionary_item_removed": [
             "root['next_draft']",  # Migrating drafts to V2 not supported
@@ -51,7 +55,9 @@ class LegacyCompatibility:
             "root['user_created']",
             "root['previous_dataset_version']",
             "root['next_dataset_version']",
+            "root['research_dataset']['value']",
             "root['research_dataset']['version_notes']",
+            "root['research_dataset']['version_info']",
             "root['research_dataset']['total_remote_resources_byte_size']",
             "root['research_dataset']['access_rights']['access_url']",
             "root['research_dataset']['files']",  # Uses separate V2 files API
@@ -75,6 +81,9 @@ class LegacyCompatibility:
             regex(".*['contributor_type']$"),
             regex(".*['contributor_role']$"),
             regex(".*['telephone']$"),
+            regex(".*['local_identifier_type']"),  # not supported in v3
+            regex(".*['homepage']['description']"),  # homepage description not used in v3
+            regex(".*['total_ida_byte_size']"),  # field only in some removed test datasets in prod
             regex(".*['definition']$"),  # remove silly definition values
             "root['contract']",  # TODO
             "root['editor_permissions']",
@@ -103,7 +112,9 @@ class LegacyCompatibility:
         elif path == "root['date_removed']":
             return not self.legacy_dataset.dataset_json.get("removed")
         elif path == "root['research_dataset']['total_files_byte_size']":
-            return removed_value == 0
+            is_deprecated = self.legacy_dataset.dataset_json.get("deprecated")
+            is_removed = self.legacy_dataset.dataset_json.get("removed")
+            return removed_value == 0 or is_deprecated or is_removed
         if type(removed_value) is str:
             return removed_value.strip() == ""
         elif removed_value in [None, []]:
@@ -154,6 +165,17 @@ class LegacyCompatibility:
                     new = diff[value]["new_value"]
                     old = diff[value]["old_value"]
                     if self.should_ignore_changed(value, new, old, fixed_paths):
+                        continue
+
+                # Removed and deprecated datasets may have
+                # metadata for files/directories that no longer exist
+                if (
+                    diff_type == "directory_metadata_count_changed"
+                    or diff_type == "file_metadata_count_changed"
+                ):
+                    is_deprecated = self.legacy_dataset.dataset_json.get("deprecated")
+                    is_removed = self.legacy_dataset.dataset_json.get("removed")
+                    if is_deprecated or is_removed:
                         continue
 
                 if isinstance(diff, dict):
@@ -224,6 +246,7 @@ class LegacyCompatibility:
         # Treat missing preservation_state as 0 which is the V2 default
         if not data.get("preservation_state"):
             data["preservation_state"] = 0
+            data.pop("preservation_identifier", None)
 
         # Normalize data catalog into identifier string
         dc = data.get("data_catalog")
@@ -267,8 +290,15 @@ class LegacyCompatibility:
         """Check if migrated file and file metadata counts match."""
         research_dataset = self.legacy_dataset.legacy_research_dataset
         v2_file_count = 0
-        v2_file_metadata_count = len(research_dataset.get("files") or [])
-        v2_directory_metadata_count = len(research_dataset.get("directories") or [])
+
+        # Count only objects that have details. File/directory metadata without
+        # details indicates the referred file/directory does not actually exist
+        v2_file_metadata_count = len(
+            [f for f in (research_dataset.get("files") or []) if f.get("details")]
+        )
+        v2_directory_metadata_count = len(
+            [d for d in (research_dataset.get("directories") or []) if d.get("details")]
+        )
         if legacy_ids := self.legacy_dataset.legacy_file_ids:
             v2_file_count = len(legacy_ids)
 

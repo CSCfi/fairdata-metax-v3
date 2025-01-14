@@ -907,17 +907,18 @@ class Dataset(V2DatasetMixin, CatalogRecord):
                     {"persistent_identifier": _("Value already exists in the data catalog")}
                 )
 
-            if (
-                Dataset.all_objects.exclude(id=self.id)
-                .filter(
-                    data_catalog__is_external=False,
-                    persistent_identifier=self.persistent_identifier,
-                )
-                .exists()
-            ):
-                raise ValidationError(
-                    {"persistent_identifier": _("Value already exists in IDA or ATT catalog")}
-                )
+            if not getattr(self, "_saving_legacy", False):
+                if (
+                    Dataset.all_objects.exclude(id=self.id)
+                    .filter(
+                        data_catalog__is_external=False,
+                        persistent_identifier=self.persistent_identifier,
+                    )
+                    .exists()
+                ):
+                    raise ValidationError(
+                        {"persistent_identifier": _("Value already exists in IDA or ATT catalog")}
+                    )
 
     def validate_allow_remote_resources(self):
         """Raise error if dataset cannot have remote resources."""

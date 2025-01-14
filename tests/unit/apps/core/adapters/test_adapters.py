@@ -240,3 +240,19 @@ def test_v2_to_v3_dataset_conversion_next_draft(harvested_json, license_referenc
     v2_dataset.update_from_legacy()
     draft_dataset.dataset.refresh_from_db()
     assert draft_dataset.dataset.draft_of == v2_dataset.dataset
+
+
+@pytest.mark.django_db
+def test_v2_to_v3_dataset_conversion_invalid_license(harvested_json, license_reference_data):
+    data = harvested_json
+    data["removed"] = "2025-01-14T14:45:00Z"
+    data["research_dataset"]["access_rights"]["license"][0][
+        "identifier"
+    ] = "http://example.com/thisisnotavalidlicense"
+    dataset = LegacyDataset(id=data["identifier"], dataset_json=data)
+    dataset.save()
+    dataset.update_from_legacy()
+    assert (
+        dataset.dataset.access_rights.license.first().reference.url
+        == "http://uri.suomi.fi/codelist/fairdata/license/code/other"
+    )

@@ -496,3 +496,24 @@ def test_migrate_prompt_credentials(requests_mock):
     assert mock.call_count == 2
     auth = mock.last_request.headers["authorization"]
     assert b64decode(auth.replace("Basic ", "")) == b"username:password"
+
+
+def test_migrate_command_files_permission_error(mock_response_single, requests_mock):
+    requests_mock.get(
+        url="https://metax-v2-test/rest/v2/datasets/c955e904-e3dd-4d7e-99f1-3fed446f96d1/files?id_list=true",
+        text="no perms 4 u",
+        status_code=403,
+    )
+
+    out = StringIO()
+    err = StringIO()
+    call_command(
+        "migrate_v2_datasets",
+        identifiers=["c955e904-e3dd-4d7e-99f1-3fed446f96d1"],
+        stderr=err,
+        stdout=out,
+        use_env=True,
+        allow_fail=True,
+    )
+    assert "403 Client Error" in err.getvalue()
+    assert "1 datasets failed" in out.getvalue()

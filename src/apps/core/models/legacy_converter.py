@@ -103,6 +103,10 @@ class LegacyDatasetConverter:
             return catalog.get("identifier")
         return catalog
 
+    @property
+    def is_removed(self) -> bool:
+        return bool(self.dataset_json.get("removed"))
+
     def mark_invalid(self, obj: dict, error: str, fields=[]):
         """Mark object as being invalid."""
         already_exists = "_invalid" in obj
@@ -163,17 +167,30 @@ class LegacyDatasetConverter:
             pass
         return temporal_date or timestamp
 
-    def convert_license(self, license: dict) -> dict:
-        ensure_dict(license)
-        url = license.get("identifier")
+    def convert_license(self, license_data: dict) -> dict:
+        ensure_dict(license_data)
+        url = license_data.get("identifier")
         if not url:
             url = "http://uri.suomi.fi/codelist/fairdata/license/code/notspecified"
-        return {
+
+        license = {
             "url": url,
-            "custom_url": license.get("license", None),
-            "title": license.get("title"),
-            "description": license.get("description"),
+            "custom_url": license_data.get("license", None),
+            "title": license_data.get("title"),
+            "description": license_data.get("description"),
         }
+
+        # Some old removed datasets have invalid license urls
+        if (
+            url
+            and not url.startswith("http://uri.suomi.fi/codelist/fairdata/license")
+            and self.is_removed
+        ):
+            license["url"] = "http://uri.suomi.fi/codelist/fairdata/license/code/other"
+            self.mark_fixed(
+                license_data, error="Invalid license identifier", fields=["identifier"]
+            )
+        return license
 
     def convert_access_rights(self) -> dict:
         access_rights = self.legacy_access_rights
@@ -316,18 +333,25 @@ class LegacyDatasetConverter:
 
     def convert_other_identifier(self, other_identifier: dict) -> dict:
         ensure_dict(other_identifier)
-        return {
+        converted = {
             "notation": other_identifier.get("notation"),
             "identifier_type": self.convert_reference_data(
                 IdentifierType, other_identifier.get("type")
             ),
         }
+        if not converted["notation"] and self.is_removed:
+            converted["notation"] = other_identifier.get("old_notation")
+        return converted
 
-    def convert_homepage(self, homepage):
-        if not homepage:
+    def convert_homepage(self, homepage_data):
+        if not homepage_data:
             return None
-        ensure_dict(homepage)
-        return {"title": homepage.get("title"), "url": homepage.get("identifier")}
+        ensure_dict(homepage_data)
+        homepage = {"title": homepage_data.get("title"), "url": homepage_data.get("identifier")}
+        if not is_valid_url(homepage["url"]):
+            self.mark_invalid(homepage_data, error="Invalid URL")
+            return None
+        return homepage
 
     def ensure_refdata_organization(self, v3_organization: dict):
         """Create reference data organization if needed."""
@@ -542,6 +566,7 @@ class LegacyDatasetConverter:
                 self.convert_actor(actor)
                 for actor in ensure_list(provenance.get("was_associated_with"))
             ],
+            "used_entity": [self.convert_entity(entity) for entity in provenance.get("used_entity", [])],
         }
 
     def convert_entity(self, entity: dict) -> dict:
@@ -686,7 +711,7 @@ class LegacyDatasetConverter:
         # V2 automatically assigns generated DOI to "preservation_identifier",
         # which would cause error in V3 if the dataset has no preservation contract.
         if not preservation["contract"]:
-            preservation.pop("preservation_identifier")
+            preservation.pop("preservation_identifier", None)
 
         if description := dataset_json.get("preservation_description"):
             preservation["description"] = {"und": description}

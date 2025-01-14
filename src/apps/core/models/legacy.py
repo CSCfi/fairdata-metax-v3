@@ -215,7 +215,9 @@ class LegacyDataset(AbstractBaseModel):
 
     def attach_file_metadata(self, fileset: FileSet):
         files_metadata = copy.deepcopy(self.legacy_research_dataset.get("files")) or []
-        files_metadata_ids = [f["details"]["id"] for f in files_metadata]
+        files_metadata_ids = [
+            details["id"] for f in files_metadata if (details := f.get("details"))
+        ]
 
         file_ids = {  # Map legacy id to V3 id
             file["legacy_id"]: file["id"]
@@ -258,7 +260,12 @@ class LegacyDataset(AbstractBaseModel):
         directories_metadata = copy.deepcopy(self.legacy_research_dataset.get("directories")) or []
         existing_metadata = {entry.pathname: entry for entry in fileset.directory_metadata.all()}
         for dm in directories_metadata:
-            pathname: str = dm["details"]["directory_path"]
+            details = dm.get("details")
+            if not details:
+                # If directory metadata does not have details, it probably means
+                # the directory does no longer exists in legacy Metax.
+                continue
+            pathname: str = details["directory_path"]
             if not pathname.endswith("/"):
                 pathname += "/"
 

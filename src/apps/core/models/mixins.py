@@ -303,6 +303,17 @@ class V2DatasetMixin:
                 for association in provenance.is_associated_with.all():
                     data["was_associated_with"].append(association.as_v2_data())
 
+            if entities := provenance.used_entity.all():
+                data["used_entity"] = [
+                    {
+                        "title": entity.title or None,
+                        "description": entity.description or None,
+                        "identifier": entity.entity_identifier or None,
+                        "type": self._construct_v2_refdata_object(entity.type),
+                    }
+                    for entity in entities
+                ]
+
             obj_list.append(omit_none(data))
         if len(obj_list) != 0:
             document["research_dataset"]["provenance"] = obj_list

@@ -78,6 +78,7 @@ class Command(BaseCommand):
         super().__init__(*args, **kwargs)
         self.failed_datasets = []
         self.dataset_cache = {}
+        self.dataset_files_fetch_errors = 0
 
     def add_arguments(self, parser: ArgumentParser):
         MigrationV2Client.add_arguments(parser)
@@ -278,6 +279,13 @@ class Command(BaseCommand):
 
         return True
 
+    def get_data_file_ids(self, data: MigrationData):
+        try:
+            return data.get_file_ids()
+        except Exception:
+            self.dataset_files_fetch_errors += 1
+            raise
+
     def update_legacy_dataset(self, data: MigrationData):
         identifier = data.identifier
         dataset_json = data.dataset_json
@@ -289,7 +297,10 @@ class Command(BaseCommand):
         if not legacy_dataset:
             legacy_dataset, created = LegacyDataset.all_objects.get_or_create(
                 id=identifier,
-                defaults={"dataset_json": dataset_json, "legacy_file_ids": data.get_file_ids()},
+                defaults={
+                    "dataset_json": dataset_json,
+                    "legacy_file_ids": self.get_data_file_ids(data),
+                },
             )
 
         update_reason = self.get_update_reason(
@@ -305,7 +316,7 @@ class Command(BaseCommand):
         if update_reason:
             legacy_dataset.dataset_json = dataset_json
             data.offset_files(self.file_offset)
-            legacy_dataset.legacy_file_ids = data.get_file_ids()
+            legacy_dataset.legacy_file_ids = self.get_data_file_ids(data)
             if not created and legacy_dataset.tracker.changed():
                 legacy_dataset.save()
 
@@ -457,7 +468,7 @@ class Command(BaseCommand):
                     self.migrate_from_json_list(batch, request_files=True)
 
     def print_summary(self):
-        not_ok = self.updated - self.ok_after_update
+        not_ok = self.updated - self.ok_after_update + self.dataset_files_fetch_errors
         self.stdout.write(f"Processed {self.migrated} datasets")
         self.stdout.write(f"- {self.ok_after_update} datasets updated succesfully")
         self.stdout.write(f"- {not_ok} datasets failed")
