@@ -154,7 +154,7 @@ def _aggregate_organizations(dataset_ids):
     Organization can appear multiple times in different roles per dataset.
     """
 
-    return _get_organizations(dataset_ids=dataset_ids, get_root_orgs=False)[:40]
+    return _get_organizations(dataset_ids=dataset_ids, get_root_orgs=False)
 
 
 def _aggregate_creator(dataset_ids):
