@@ -1,4 +1,5 @@
 import pytest
+from django.utils import timezone
 
 from apps.core.factories import (
     AccessRightsFactory,
@@ -26,6 +27,7 @@ def test_create_new_version(language, theme, dataset):
     dataset.save()
     dataset.publish()
     dataset.cumulative_state = Dataset.CumulativeState.CLOSED
+    dataset.deprecated = timezone.now()
     dataset.save()
 
     old_version = dataset
@@ -45,6 +47,7 @@ def test_create_new_version(language, theme, dataset):
     assert new_version.permissions_id == old_version.permissions_id
     assert new_version.dataset_versions_id == old_version.dataset_versions_id
     assert new_version.cumulative_state == Dataset.CumulativeState.NOT_CUMULATIVE
+    assert new_version.deprecated is None
 
     # Preservation status is reset for new version
     assert old_version.preservation

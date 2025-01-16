@@ -462,6 +462,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             published_revision=0,
             created=timezone.now(),
             modified=timezone.now(),
+            deprecated=None,
             persistent_identifier=None,
             pid_generated_by_fairdata=False,
             draft_of=None,
