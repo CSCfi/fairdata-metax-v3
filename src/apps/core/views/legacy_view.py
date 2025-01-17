@@ -32,3 +32,10 @@ class LegacyDatasetViewSet(CommonModelViewSet):
     def get_queryset(self):
         qs = super().get_queryset()
         return LegacyDatasetAccessPolicy.scope_queryset(self.request, qs)
+
+    def perform_destroy(self, instance: LegacyDataset):
+        dataset = instance.dataset
+        instance.delete()
+        if dataset:
+            dataset._deleted_in_v2 = True  # Avoid sending deletion back to V2
+            dataset.delete(soft=True)

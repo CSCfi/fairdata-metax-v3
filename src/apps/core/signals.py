@@ -46,7 +46,7 @@ def handle_files_deleted(sender, queryset, **kwargs):
 @receiver(post_delete, sender=Dataset)
 def delete_dataset_from_v2(sender, instance: Dataset, soft=False, **kwargs):
     """Sync Metax V2 when deleting dataset from v3"""
-    if settings.METAX_V2_INTEGRATION_ENABLED:
+    if settings.METAX_V2_INTEGRATION_ENABLED and not getattr(instance, "_deleted_in_v2", False):
         MetaxV2Client().delete_dataset(instance, soft=soft)
 
 

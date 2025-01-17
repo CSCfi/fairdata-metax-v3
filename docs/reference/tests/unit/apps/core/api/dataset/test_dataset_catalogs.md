@@ -24,6 +24,10 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset_catalogs.test_catalog_datasets_create_fairdata
 
+## test_catalog_datasets_create_and_set_catalog_fairdata
+
+### :::tests.unit.apps.core.api.dataset.test_dataset_catalogs.test_catalog_datasets_create_and_set_catalog_fairdata
+
 ## test_catalog_datasets_create_service
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset_catalogs.test_catalog_datasets_create_service

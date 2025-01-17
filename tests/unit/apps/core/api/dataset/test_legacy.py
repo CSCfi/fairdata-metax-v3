@@ -65,13 +65,36 @@ def test_edit_legacy_dataset_deprecation(admin_client, legacy_dataset_a, legacy_
 
 
 def test_delete_legacy_dataset(admin_client, legacy_dataset_a, legacy_dataset_a_json):
+    """Published legacy dataset should be soft deleted."""
     res = admin_client.delete(
         reverse(
             "migrated-dataset-detail", args=[legacy_dataset_a_json["dataset_json"]["identifier"]]
         )
     )
     assert res.status_code == 204
+    assert LegacyDataset.all_objects.count() == 1
+    assert Dataset.all_objects.count() == 1
     assert LegacyDataset.available_objects.count() == 0
+    assert Dataset.available_objects.count() == 0
+
+
+def test_delete_legacy_dataset_draft(admin_client, legacy_dataset_a_json, reference_data):
+    """Draft legacy dataset should be hard deleted."""
+    legacy_dataset_a_json["dataset_json"]["state"] = "draft"
+    res = admin_client.post(
+        reverse("migrated-dataset-list"), legacy_dataset_a_json, content_type="application/json"
+    )
+    assert res.status_code == 201
+    res = admin_client.delete(
+        reverse(
+            "migrated-dataset-detail", args=[legacy_dataset_a_json["dataset_json"]["identifier"]]
+        )
+    )
+    assert res.status_code == 204
+    assert LegacyDataset.all_objects.count() == 0
+    assert Dataset.all_objects.count() == 0
+    assert LegacyDataset.available_objects.count() == 0
+    assert Dataset.available_objects.count() == 0
 
 
 def test_legacy_draft_use_doi_on_publish(admin_client, legacy_dataset_a_json, reference_data):
