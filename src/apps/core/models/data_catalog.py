@@ -55,7 +55,6 @@ class DataCatalog(AbstractBaseModel):
             are the catalog resources from some other sources
         language (models.ManyToManyField): default language of the catalog
         publisher (models.ForeignKey): publisher of the cataloged resources
-        access_rights (models.ForeignKey): default access rights for the cataloged resources
     """
 
     # https://www.w3.org/TR/vocab-dcat-3/#Property:resource_identifier

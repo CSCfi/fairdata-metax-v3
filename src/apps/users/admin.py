@@ -1,15 +1,27 @@
+from django import forms
 from django.contrib import admin
+from django.contrib.auth import password_validation
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.forms import UserCreationForm
 from django.utils.translation import gettext as _
 
 from apps.users.models import MetaxUser
+from apps.users.forms import OptionalPasswordUserCreationForm
 
 
 class MetaxUserAdmin(BaseUserAdmin):
+    add_form = OptionalPasswordUserCreationForm
+
     def get_fieldsets(self, request, obj=None):
         # Superuser can overwrite password and see personal data
         is_superuser = request.user.is_superuser
-        basic_fields = ("username", "password") if is_superuser else ("username",)
+
+        basic_fields = ("username",)
+        if is_superuser:
+            if obj is None:
+                basic_fields = ("username", "password1", "password2")
+            else:
+                basic_fields = ("username", "password")
 
         fieldsets = [
             (None, {"fields": basic_fields}),

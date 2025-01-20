@@ -155,6 +155,7 @@
         - [apps](src/apps/users/apps.md)
         - [authentication](src/apps/users/authentication.md)
         - [factories](src/apps/users/factories.md)
+        - [forms](src/apps/users/forms.md)
         - management.commands
             - [create_api_user](src/apps/users/management/commands/create_api_user.md)
             - [create_appsupport_group](src/apps/users/management/commands/create_appsupport_group.md)
@@ -300,7 +301,9 @@
                     - [test_finto_importer](tests/unit/apps/refdata/services/test_finto_importer.md)
                     - [test_local_json_importer](tests/unit/apps/refdata/services/test_local_json_importer.md)
             - users
-                - [admin.test_user_admin](tests/unit/apps/users/admin/test_user_admin.md)
+                - admin
+                    - [test_user_admin](tests/unit/apps/users/admin/test_user_admin.md)
+                    - [test_user_form](tests/unit/apps/users/admin/test_user_form.md)
                 - api
                     - [test_bearer_authentication](tests/unit/apps/users/api/test_bearer_authentication.md)
                     - [test_sso_authentication](tests/unit/apps/users/api/test_sso_authentication.md)
