@@ -5,6 +5,7 @@ import uuid
 import requests
 from django.conf import settings
 from django.utils.module_loading import import_string
+from rest_framework import status
 from rest_framework.exceptions import APIException
 
 _logger = logging.getLogger(__name__)
@@ -35,8 +36,8 @@ class _DummyPIDMSClient:
 class _PIDMSClient:
     def __init__(self):
         self.pid_ms_url = f"https://{settings.PID_MS_BASEURL}"
-        self.pid_ms_apikey = settings.PID_MS_APIKEY
         self.etsin_url = settings.ETSIN_URL
+        self.headers = {"apikey": settings.PID_MS_APIKEY}
 
     def create_urn(self, dataset_id):
         payload = {
@@ -44,12 +45,13 @@ class _PIDMSClient:
             "type": "URN",
             "persist": 0,
         }
-        headers = {"apikey": self.pid_ms_apikey}
         try:
             response = requests.post(
-                f"https://{settings.PID_MS_BASEURL}/v1/pid", json=payload, headers=headers
+                f"https://{settings.PID_MS_BASEURL}/v1/pid", json=payload, headers=self.headers
             )
             response.raise_for_status()
+            if not response.text:
+                raise Exception(f"PID MS returned: {response.text}")
             return response.text
         except Exception as e:
             _logger.error(f"Exception in PIDMSClient: {e}")
@@ -61,10 +63,32 @@ class _PIDMSClient:
         payload = Datacitedata().get_datacite_json(dataset_id)
         payload["data"]["attributes"]["event"] = "publish"
         payload["data"]["attributes"]["url"] = f"https://{self.etsin_url}/dataset/{dataset_id}"
-        headers = {"apikey": self.pid_ms_apikey, "Content-Type": "application/json"}
         try:
             response = requests.post(
-                f"https://{settings.PID_MS_BASEURL}/v1/pid/doi", json=payload, headers=headers
+                f"https://{settings.PID_MS_BASEURL}/v1/pid/doi", json=payload, headers=self.headers
+            )
+            response.raise_for_status()
+            if not response.text:
+                raise Exception(f"PID MS returned: {response.text}")
+            return response.text
+        except Exception as e:
+            _logger.error(f"Exception in PIDMSClient: {e}")
+            raise ServiceUnavailableError
+
+    def update_doi_dataset(self, dataset_id, doi):
+        # DOI might not exist in PID MS if the dataset was created in Metax V2
+        if not self.check_if_doi_exists(dataset_id, doi):
+            self.insert_pid(dataset_id, doi)
+
+        from apps.common.datacitedata import Datacitedata
+
+        payload = Datacitedata().get_datacite_json(dataset_id)
+        payload["data"]["attributes"]["url"] = f"https://{self.etsin_url}/dataset/{dataset_id}"
+        try:
+            response = requests.put(
+                f"https://{settings.PID_MS_BASEURL}/v1/pid/doi/{doi}",
+                json=payload,
+                headers=self.headers,
             )
             response.raise_for_status()
             return response.text
@@ -72,17 +96,36 @@ class _PIDMSClient:
             _logger.error(f"Exception in PIDMSClient: {e}")
             raise ServiceUnavailableError
 
-    def update_doi_dataset(self, dataset_id, doi):
-        from apps.common.datacitedata import Datacitedata
-
-        payload = Datacitedata().get_datacite_json(dataset_id)
-        payload["data"]["attributes"]["url"] = f"https://{self.etsin_url}/dataset/{dataset_id}"
-        headers = {"apikey": self.pid_ms_apikey, "Content-Type": "application/json"}
+    def check_if_doi_exists(self, dataset_id, doi):
+        dataset_url = f"https://{self.etsin_url}/dataset/{dataset_id}"
         try:
-            response = requests.put(
-                f"https://{settings.PID_MS_BASEURL}/v1/pid/doi/{doi}",
+            response = requests.get(
+                f"https://{settings.PID_MS_BASEURL}/get/v1/pid/{doi}",
+                headers=self.headers,
+            )
+            if response.status_code == status.HTTP_404_NOT_FOUND:
+                return False
+
+            response.raise_for_status()
+
+            if response.text != dataset_url:
+                raise Exception(
+                    f"Dataset url ({dataset_url}) doesn't match in PID MS: {response.text}"
+                )
+            return True
+        except Exception as e:
+            _logger.error(f"Exception in PIDMSClient: {e}")
+            raise ServiceUnavailableError
+
+    def insert_pid(self, dataset_id, pid):
+        payload = {"URL": f"https://{self.etsin_url}/dataset/{dataset_id}"}
+
+        try:
+            _logger.info(f"Inserting PID {pid} to PID-MS")
+            response = requests.post(
+                f"https://{settings.PID_MS_BASEURL}/v1/pid/{pid}",
                 json=payload,
-                headers=headers,
+                headers=self.headers,
             )
             response.raise_for_status()
             return response.text

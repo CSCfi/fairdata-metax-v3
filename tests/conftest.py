@@ -891,37 +891,78 @@ def mock_v2_integration(requests_mock, v2_integration_settings):
     }
 
 
+mock_store = {}
+
+
 @pytest.fixture(autouse=True)
 def change_pi_url(settings):
     settings.PID_MS_BASEURL = "pidmsbaseurl"
+
+
+# Insert PID returns the last two parts of the path (i.e. the inserted DOI)
+def insert_pid_callback(request, context):
+    path = request.path
+    path_parts = path.split("/")
+    response_text = f"{path_parts[-2]}/{path_parts[-1]}"
+    context.status_code = 200
+    return response_text
+
+
+# Create a DOI for a dataset and save the doi and the url to mock_store
+def request_doi_callback(request, context):
+    doi = f"10.82614/{str(uuid.uuid4())}"
+    context.status_code = 201
+    dataset_url = request.json()["data"]["attributes"]["url"]
+    mock_store[doi] = dataset_url
+    return doi
+
+
+# Read the URL for a sepcific DOI from the mock_store
+def get_doi_callback(request, context):
+    path = request.path
+    path_parts = path.split("/")
+    doi = f"{path_parts[-2]}/{path_parts[-1]}"
+    if doi in mock_store:
+        context.status_code = 200
+        return mock_store[doi]
+    context.status_code = 404
+    return None
 
 
 @pytest.fixture(autouse=True)
 def mock_pid_ms(request, requests_mock, settings):
     if "noautomock" not in request.keywords:
         matcher = re.compile("http://localhost")
-        matcher_doi = re.compile(f"https://{settings.PID_MS_BASEURL}/v1/pid/doi/10.82614/")
+        matcher_doi = re.compile(f"https://{settings.PID_MS_BASEURL}/v1/pid/doi/10.(82614|23729)/")
         responselist1 = [
             {"text": f"urn:nbn:fi:att:{str(uuid.uuid4())}", "status_code": 201},
             {"text": f"urn:nbn:fi:att:{str(uuid.uuid4())}", "status_code": 201},
             {"text": f"urn:nbn:fi:att:{str(uuid.uuid4())}", "status_code": 201},
             {"text": f"urn:nbn:fi:att:{str(uuid.uuid4())}", "status_code": 201},
         ]
-        responselist2 = [
-            {"text": f"10.82614/{str(uuid.uuid4())}", "status_code": 201},
-            {"text": f"10.82614/{str(uuid.uuid4())}", "status_code": 201},
-            {"text": f"10.82614/{str(uuid.uuid4())}", "status_code": 201},
-            {"text": f"10.82614/{str(uuid.uuid4())}", "status_code": 201},
-        ]
         responselist3 = [
             {"text": "http://localhost/a", "status_code": 200},
             {"text": "http://localhost/b", "status_code": 200},
         ]
+        # Create URN
         requests_mock.register_uri(
             "POST", f"https://{settings.PID_MS_BASEURL}/v1/pid", responselist1
         )
+        # Create DOI
         requests_mock.register_uri(
-            "POST", f"https://{settings.PID_MS_BASEURL}/v1/pid/doi", responselist2
+            "POST", f"https://{settings.PID_MS_BASEURL}/v1/pid/doi", text=request_doi_callback
+        )
+        # Get PID
+        requests_mock.register_uri(
+            "GET",
+            re.compile(f"https://{settings.PID_MS_BASEURL}/get/v1/pid/*"),
+            text=get_doi_callback,
+        )
+        # Insert PID
+        requests_mock.register_uri(
+            "POST",
+            re.compile(f"https://{settings.PID_MS_BASEURL}/v1/pid/10.(82614|23729)/*"),
+            text=insert_pid_callback,
         )
         requests_mock.register_uri("PUT", matcher_doi, responselist3)
         requests_mock.register_uri("GET", matcher, real_http=True)

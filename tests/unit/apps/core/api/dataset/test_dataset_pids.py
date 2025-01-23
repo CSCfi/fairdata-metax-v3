@@ -1,7 +1,9 @@
 import json
 from datetime import datetime
 from importlib import reload
+import re
 from unittest import mock
+import uuid
 
 import pytest
 from deepdiff.serialization import json_loads
@@ -419,7 +421,7 @@ def test_update_dataset_with_doi(
     res = admin_client.put(f"/v3/datasets/{ds_id}", dataset, content_type="application/json")
     assert res.status_code == 200
     doi = dataset["persistent_identifier"].replace("doi:", "")
-    call = requests_mock.request_history[1]
+    call = requests_mock.request_history[2]
     payload = json.loads(call.text)
     original = pid_update_payload
     original["data"]["attributes"]["url"] = f"https://{settings.ETSIN_URL}/dataset/{ds_id}"
@@ -427,6 +429,164 @@ def test_update_dataset_with_doi(
         {"identifier": f"https://doi.org/{doi}", "identifierType": "DOI"}
     )
     assert DeepDiff(payload, original) == {}
+
+
+# Create a dataset with DOI from Metax V2
+# Update that dataset in V3
+# Assert that datasets gets updated in PID MS
+@override_settings(PID_MS_CLIENT_INSTANCE="apps.core.services.pid_ms_client._PIDMSClient")
+def test_update_dataset_with_doi_from_v2(
+    legacy_dataset_a_json,
+    settings,
+    requests_mock,
+    admin_client,
+    dataset_maximal_json,
+    pid_update_payload,
+    data_catalog,
+    reference_data,
+):
+    from deepdiff import DeepDiff
+
+    # Create legacy dataset
+    pid = f"doi:10.23729/{str(uuid.uuid4())}"
+    legacy_dataset_a_json["dataset_json"]["research_dataset"]["preferred_identifier"] = pid
+    legacy_dataset_a_json["dataset_json"]["data_catalog"] = {"identifier": "urn:nbn:fi:att:data-catalog-ida"}
+    res = admin_client.post(
+        "/v3/migrated-datasets", legacy_dataset_a_json, content_type="application/json"
+    )
+    assert res.status_code == 201
+    ds_id = res.json()["id"]
+
+    # Update dataset in V3
+    dataset = dataset_maximal_json
+    dataset["generate_pid_on_publish"] = "DOI"
+    dataset["persistent_identifier"] = pid
+    res = admin_client.put(f"/v3/datasets/{ds_id}", dataset, content_type="application/json")
+    assert res.status_code == 200
+
+    # Assert that PID has been inserted to PID MS
+    doi = dataset["persistent_identifier"].replace("doi:", "")
+    call = requests_mock.request_history[1]
+    assert call.path == f"/v1/pid/{doi}"
+    assert call.method == "POST"
+
+    # Assert that PID has been updated to PID MS
+    call = requests_mock.request_history[2]
+    payload = json.loads(call.text)
+    original = pid_update_payload
+    original["data"]["attributes"]["url"] = f"https://{settings.ETSIN_URL}/dataset/{ds_id}"
+    original["data"]["attributes"]["identifiers"].append(
+        {"identifier": f"https://doi.org/{doi}", "identifierType": "DOI"}
+    )
+    assert call.path == f"/v1/pid/doi/{doi}"
+    assert call.method == "PUT"
+    assert DeepDiff(payload, original) == {}
+
+
+# Try to create a dataset with DOI, but it fails in PID MS
+# Assert that error is correct
+@override_settings(PID_MS_CLIENT_INSTANCE="apps.core.services.pid_ms_client._PIDMSClient")
+def test_create_dataset_with_doi_pid_ms_error(
+    settings,
+    requests_mock,
+    admin_client,
+    dataset_maximal_json,
+    pid_update_payload,
+    data_catalog,
+    reference_data,
+):
+    matcher = re.compile(f"https://{settings.PID_MS_BASEURL}/v1/pid/doi")
+    requests_mock.register_uri("POST", matcher, status_code=400)
+
+    # Try to create a dataset with DOI
+
+    dataset = dataset_maximal_json
+    dataset["generate_pid_on_publish"] = "DOI"
+    dataset["state"] = "published"
+    dataset.pop("persistent_identifier", None)
+    res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
+    assert res.status_code == 503
+    assert res.json()["detail"] == "Error when creating persistent identifier. Please try again later."
+
+
+# Try to create a dataset with URN, but it fails in PID MS
+# Assert that error is correct
+@override_settings(PID_MS_CLIENT_INSTANCE="apps.core.services.pid_ms_client._PIDMSClient")
+def test_create_dataset_with_urn_pid_ms_error(
+    settings,
+    requests_mock,
+    admin_client,
+    dataset_maximal_json,
+    pid_update_payload,
+    data_catalog,
+    reference_data,
+):
+    matcher = re.compile(f"https://{settings.PID_MS_BASEURL}/v1/pid")
+    requests_mock.register_uri("POST", matcher, status_code=400)
+
+    # Try to create a dataset with URN
+
+    dataset = dataset_maximal_json
+    dataset["generate_pid_on_publish"] = "URN"
+    dataset["state"] = "published"
+    dataset.pop("persistent_identifier", None)
+    res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
+    assert res.status_code == 503
+    assert res.json()["detail"] == "Error when creating persistent identifier. Please try again later."
+
+
+# Try to create a dataset with DOI, but PID MS returns empty string
+# Assert that error is correct
+@override_settings(PID_MS_CLIENT_INSTANCE="apps.core.services.pid_ms_client._PIDMSClient")
+def test_create_dataset_with_urn_pid_ms_returns_empty(
+    settings,
+    requests_mock,
+    admin_client,
+    dataset_maximal_json,
+    pid_update_payload,
+    data_catalog,
+    reference_data,
+):
+    matcher = re.compile(f"https://{settings.PID_MS_BASEURL}/v1/pid/doi")
+    requests_mock.register_uri("POST", matcher, text="", status_code=200)
+
+    # Try to create a dataset with URN
+
+    dataset = dataset_maximal_json
+    dataset["generate_pid_on_publish"] = "DOI"
+    dataset["state"] = "published"
+    dataset.pop("persistent_identifier", None)
+    res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
+    assert res.status_code == 503
+    assert res.json()["detail"] == "Error when creating persistent identifier. Please try again later."
+
+
+# Try to create a dataset with URN, but PID MS returns empty string
+# Assert that error is correct
+@override_settings(PID_MS_CLIENT_INSTANCE="apps.core.services.pid_ms_client._PIDMSClient")
+def test_create_dataset_with_urn_pid_ms_returns_empty(
+    settings,
+    requests_mock,
+    admin_client,
+    dataset_maximal_json,
+    pid_update_payload,
+    data_catalog,
+    reference_data,
+):
+    matcher = re.compile(f"https://{settings.PID_MS_BASEURL}/v1/pid")
+    requests_mock.register_uri("POST", matcher, text="", status_code=200)
+
+    # Try to create a dataset with URN
+
+    dataset = dataset_maximal_json
+    dataset["generate_pid_on_publish"] = "URN"
+    dataset["state"] = "published"
+    dataset.pop("persistent_identifier", None)
+    res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
+    assert res.status_code == 503
+    assert res.json()["detail"] == "Error when creating persistent identifier. Please try again later."
+
+
 
 
 # Using dummy pid client
