@@ -1,10 +1,17 @@
-site_name: Fairdata Metax Docs
-
+site_name: Fairdata Metax Documentation
+site_url: https://metaxv3.fd-dev.csc.fi/docs
 theme:
   name: "material"
   features:
     - content.tabs.link
     - toc.integrate
+    - navigation.tabs
+    - navigation.tabs.sticky
+  logo: tree_nega_cropped.svg
+  favicon: favicon.png
+  palette: 
+    primary: custom
+    accent: custom
 extra_css: [extra.css]
 extra_javascript:
 - https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js

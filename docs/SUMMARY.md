@@ -1,7 +1,7 @@
 - [User Guide](user-guide/index.md)
     - [Differences between V1-V2 and V3](user-guide/migration.md)
     - user-guide/*
-- [Developer Guide](developer-guide/index.md)
+- [Contributing](developer-guide/index.md)
     - [V1-V2 Adapter](developer-guide/adapter.md)
     - [Caching](developer-guide/caching.md)
     - [Contributing](developer-guide/contributing/index.md)
@@ -10,4 +10,6 @@
         - developer-guide/dependencies/*
     - [Installation](developer-guide/install/index.md)
         - developer-guide/install/*
-- [Reference](reference/)
+- [Swagger](/v3/swagger/)
+- [Source Code on GitHub](https://github.com/CSCfi/fairdata-metax-v3)
+

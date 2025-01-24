@@ -1,3 +1,72 @@
+/* COLORS */
+:root {
+  --md-primary-fg-color: #007FAD;
+  --md-accent-fg-color: #005a7a;
+}
+
+/* LOGO SIZE/PLACEMENT */
+
+.md-logo {
+  height: 75px;
+  width: 75px;
+  margin-top: .6rem !important;
+  margin-left: .4rem !important;
+
+  & > img {
+    height: 100% !important;
+  }
+}
+
+@media screen and (max-width: 76.2344em) {
+  .md-logo > img {
+    visibility: hidden;
+  }
+}
+
+.md-header__title {
+  margin-left: .8rem !important;
+}
+
+/* SIDEBAR TWEAKS */
+
+.md-sidebar {
+  width: 14rem;
+}
+
+.md-tabs__item a{
+  font-weight: bold;
+  color: white;
+  opacity: 0.9;
+}
+
+.md-tabs__item--active {
+  font-weight: bold;
+  text-decoration:underline;
+}
+
+.md-sidebar .md-nav a:has(+ nav) {
+  font-weight: bold;
+}
+
+.md-sidebar nav:not([class*=" "]):not([data-md-level]) {
+  border-left: 1px solid rgba(0,0,0,.3);
+  margin: 0;
+}
+
+[data-md-level] {
+  margin-bottom: 0;
+}
+
+.md-nav__item--section > .md-nav {
+  margin-left: 0 !important;
+}
+
+.md-sidebar .md-nav__list {
+  padding-bottom: 0 !important;
+}
+
+/* TABLE TWEAKS */
+
 .md-typeset table:not([class]) {
   font-size: .72rem;
 }
@@ -17,3 +86,4 @@
 .md-typeset table:not([class]) td:nth-child(even){
   background-color: rgba(0,0,0,.025);
 }
+
