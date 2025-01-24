@@ -333,7 +333,7 @@ class DatasetFilter(filters.FilterSet):
 )
 class DatasetViewSet(CommonModelViewSet):
     query_serializers = [
-        {"class": LatestVersionQueryParamsSerializer, "actions": ["list"]},
+        {"class": LatestVersionQueryParamsSerializer, "actions": ["list", "aggregates"]},
         {
             "class": ExpandCatalogQueryParamsSerializer,
             "actions": ["list", "retrieve"],
