@@ -20,6 +20,10 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_search_pid
 
+## test_search_phrase
+
+### :::tests.unit.apps.core.api.dataset.test_dataset.test_search_phrase
+
 ## test_aggregation_and_filters
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_aggregation_and_filters

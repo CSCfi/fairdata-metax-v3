@@ -15,11 +15,6 @@ def parse_csv_string(string):
     return next(reader)
 
 
-def parse_search_string(string):
-    reader = csv.reader([string], delimiter=" ", quotechar='"', escapechar="\\")
-    return next(reader)
-
-
 class VerboseChoiceField(fields.ChoiceField):
     default_error_messages = {
         "invalid_choice": _("Value '%(value)s' is not a valid choice.")
@@ -90,20 +85,6 @@ class MultipleCharFilter(filters.MultipleChoiceFilter):
         qs = qs.filter(qq)
 
         return qs.distinct() if self.distinct else qs
-
-
-class SearchField(forms.CharField):
-    def to_python(self, value):
-        if not value:
-            return []
-        if not isinstance(value, (str)):
-            raise forms.ValidationError(self.error_messages["invalid_str"], code="invalid_str")
-
-        return parse_search_string(str(value))
-
-
-class SearchFilter(filters.CharFilter):
-    field_class = SearchField
 
 
 class CustomDjangoFilterBackend(filters.DjangoFilterBackend):

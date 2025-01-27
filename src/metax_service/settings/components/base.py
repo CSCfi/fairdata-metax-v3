@@ -326,6 +326,8 @@ STORAGE_SERVICE_FILE_STORAGES = {
 # User groups that can see all projects in storage service
 PROJECT_STORAGE_SERVICE_USER_GROUPS = {"ida", "pas"}
 
+# Watson search
+WATSON_BACKEND = "apps.common.search.CommonSearchBackend"
 
 # Profiling
 ENABLE_DEBUG_TOOLBAR = env.bool("ENABLE_DEBUG_TOOLBAR", True)

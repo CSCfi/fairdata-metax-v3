@@ -31,6 +31,7 @@
         - [profiling](src/apps/common/profiling.md)
         - [renderers](src/apps/common/renderers.md)
         - [responses](src/apps/common/responses.md)
+        - [search](src/apps/common/search.md)
         - serializers
             - [fields](src/apps/common/serializers/fields.md)
             - [serializers](src/apps/common/serializers/serializers.md)

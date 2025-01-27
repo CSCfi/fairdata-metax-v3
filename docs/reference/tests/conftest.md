@@ -204,6 +204,18 @@
 
 ### :::tests.conftest.change_pi_url
 
+## insert_pid_callback
+
+### :::tests.conftest.insert_pid_callback
+
+## request_doi_callback
+
+### :::tests.conftest.request_doi_callback
+
+## get_doi_callback
+
+### :::tests.conftest.get_doi_callback
+
 ## mock_pid_ms
 
 ### :::tests.conftest.mock_pid_ms

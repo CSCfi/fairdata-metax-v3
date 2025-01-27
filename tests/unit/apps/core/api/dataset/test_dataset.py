@@ -88,6 +88,21 @@ def test_search_pid(
     assert res.data["count"] == 1
 
 
+
+def test_search_phrase(
+    admin_client, dataset_a_json, dataset_b_json, data_catalog, reference_data
+):
+    dataset_a_json["title"] = {"en": "Testidatasetti X has a title x y"}
+    dataset_b_json["title"] = {"en": "Testidatasetti Y has a title x y"}
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    res = admin_client.post("/v3/datasets", dataset_b_json, content_type="application/json")
+    assert res.status_code == 201
+    res = admin_client.get("/v3/datasets?search=testidatasetti x has")
+    assert res.data["count"] == 2
+    res = admin_client.get('/v3/datasets?search="testidatasetti x has"')
+    assert res.data["count"] == 1
+
 def test_aggregation_and_filters(
     admin_client, dataset_a_json, dataset_b_json, dataset_c_json, data_catalog, reference_data
 ):

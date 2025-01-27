@@ -84,6 +84,26 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_update_dataset_with_doi
 
+## test_update_dataset_with_doi_from_v2
+
+### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_update_dataset_with_doi_from_v2
+
+## test_create_dataset_with_doi_pid_ms_error
+
+### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_create_dataset_with_doi_pid_ms_error
+
+## test_create_dataset_with_urn_pid_ms_error
+
+### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_create_dataset_with_urn_pid_ms_error
+
+## test_create_dataset_with_urn_pid_ms_returns_empty
+
+### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_create_dataset_with_urn_pid_ms_returns_empty
+
+## test_create_dataset_with_urn_pid_ms_returns_empty
+
+### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_create_dataset_with_urn_pid_ms_returns_empty
+
 ## test_update_dataset_with_doi_dummy_client
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_update_dataset_with_doi_dummy_client

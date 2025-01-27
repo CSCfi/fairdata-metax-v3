@@ -9,23 +9,23 @@ Metax is fully compatible with DCAT 3 data-model, but has some minor variations 
 
 This comparison is comparing DCAT concepts to equivalent Metax database Models. V3 classes have Django application name in front of them.
 
-| DCAT 3 class   | V3 equivalent           |
-|----------------|-------------------------|
-| Catalog        | core.DataCatalog        |
-| CatalogRecord  | core.CatalogRecord      |
-| Checksum       | N/A                     |
-| Concept        | refdata.AbstractConcept |
-| DataService    | file.DataStorage        |
-| Dataset        | core.Dataset            |
-| Dataset Series | N/A                     |
-| Distribution   | N/A                     |
-| Location       | core.Spatial            |
-| N/A            | file.Directory          |
-| N/A            | file.File               |
-| Organization   | actor.Organization      |
-| Period of Time | core.Temporal           |
-| Person         | actor.MetaxUser         |
-| Role           | core.DatasetActor       |
+| DCAT 3 class   | V3 equivalent                     |
+|----------------|-----------------------------------|
+| Catalog        | core.DataCatalog                  |
+| CatalogRecord  | core.CatalogRecord                |
+| Checksum       | N/A                               |
+| Concept        | refdata.AbstractConcept           |
+| DataService    | files.FileStorage.storage_service |
+| Dataset        | core.Dataset                      |
+| Dataset Series | N/A                               |
+| Distribution   | N/A                               |
+| Location       | core.Spatial                      |
+| N/A            | files.Directory                   |
+| N/A            | files.File                        |
+| Organization   | actor.Organization                |
+| Period of Time | core.Temporal                     |
+| Person         | actor.MetaxUser                   |
+| Role           | core.DatasetActor                 |
 
 ## Properties
 
@@ -33,14 +33,13 @@ This comparison is comparing DCAT concepts to equivalent Metax database Models. 
 
 | DCAT 3 property | V3 equivalent         |
 |-----------------|-----------------------|
-| access rights   | access_rights         |
+| access rights   | N/A                   |
 | catalog record  | records               |
 | creator         | system_creator        |
 | dataset         | records               |
-| homepage        | homepage              |
 | homepage        | publisher.homepage    |
 | language        | language              |
-| license         | access_rights.license |
+| license         | N/A                   |
 | publisher       | publisher             |
 | resource        | N/A                   |
 | themes          | dataset/theme         |
@@ -48,13 +47,12 @@ This comparison is comparing DCAT concepts to equivalent Metax database Models. 
 
 ### Catalog Record
 
-| DCAT 3 property | V3 equivalent            |
-|-----------------|--------------------------|
-| conforms to     | N/A                      |
-| listing_date    | created                  |
-| primary topic   | dataset.field_of_science |
-| title           | dataset.title            |
-| update          | modified                 |
+| DCAT 3 property   | V3 equivalent            |
+|-------------------|--------------------------|
+| conforms to       | N/A                      |
+| listing date      | created                  |
+| title             | dataset.title            |
+| modification date | modified                 |
 
 ### Dataset
 
