@@ -1,15 +1,15 @@
 - [User Guide](user-guide/index.md)
     - [Differences between V1-V2 and V3](user-guide/migration.md)
     - user-guide/*
-- [Contributing](developer-guide/index.md)
-    - [V1-V2 Adapter](developer-guide/adapter.md)
-    - [Caching](developer-guide/caching.md)
-    - [Contributing](developer-guide/contributing/index.md)
-        - developer-guide/contributing/*
-    - [Dependencies](developer-guide/dependencies/index.md)
-        - developer-guide/dependencies/*
-    - [Installation](developer-guide/install/index.md)
-        - developer-guide/install/*
+- [Contributing](contributing/index.md)
+    - [Contributions Policy](contributing/policy.md)
+    - [Project Structure](contributing/project-structure/index.md)
+    - [Reference](reference/)
+    - [Dependencies](contributing/dependencies.md)
+    - [Token Based Authentication](contributing/token-authentication.md)
+    - [Caching](contributing/caching.md)
+    - [Testing and Documentation](contributing/testing-and-documentation.md)
+    - [Useful External Documentation](contributing/external-docs.md)
 - [Swagger](/v3/swagger/)
 - [Source Code on GitHub](https://github.com/CSCfi/fairdata-metax-v3)
 

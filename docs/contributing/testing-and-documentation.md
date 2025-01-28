@@ -1,12 +1,23 @@
-# Writing Documentation
+# Testing and Documentation
 
-## MKDocs and configuration structure
+## Testing
 
-### MKDocs
+The test coverage goal for new code in Metax development is 80 %. This is enforced with SonarQube code-analysis tool, which is integrated into internal CI/CD pipelines. New unit tests should be written for any new functionalities. Write clear tests that cover successful and unsuccessful use cases. Test status codes and error messages and make sure they are understandable and give information on what actually happened.
+
+## Documentation
+
+
+### Docstrings
+
+Write [Google-styled docstrings](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html) for your classes and functions. Add any written classes, functions and tests to MkDocs with [the reference-generating script](#generating-source-code-reference-files).
+
+### MKDocs and configuration structure
+
+#### MKDocs
 
 MKDocs library is used for writing user- and developer documentation. MkDocs config is located at repository root level in file `mkdocs.yml`
 
-### Literal-nav
+#### Literate-nav
 
 `docs/SUMMARY.md` is the main navigation file, that uses [literate-nav](https://oprypin.github.io/mkdocs-literate-nav/) extensions for building the navigation tree.
 
@@ -14,28 +25,29 @@ MKDocs library is used for writing user- and developer documentation. MkDocs con
 
     `SUMMARY.md` does not work properly if there are spaces after navigation item definition
 
-### Mkdocstrings
+#### Mkdocstrings
 
 [mkdocstrings](https://mkdocstrings.github.io/) extension is used for automated docstring documentation in the Reference
 
-### Mkdocs Material
+#### Mkdocs Material
 
 [Mkdocs Material](https://squidfunk.github.io/mkdocs-material/) gives many useful [widgets and elements](https://squidfunk.github.io/mkdocs-material/reference/) that can be used as part of documentation.
 
-## Generating source code reference files
+### Generating source code reference files
 
-To update the source code reference files in `docs/reference/`, remove the existing reference files and run the generation script:
+To update the source code reference files in `docs/reference/`, run the generation script:
 
 ```bash
 python generate_reference.py
 ```
 
 The script also supports additional arguments:
+
 * `--delete-obsolete` or `-d`: Delete obsolete reference files automatically.
 * `--git-files-only` or `-g`: Ignore changes not staged in `git`.
 
 
-## Running Mkdocs development server
+### Running Mkdocs development server
 
 MkDocs development server is hot-reload enabled documentation generator, that instantly shows changes made to .md files in browser. You can start the development server from repository root folder with command:
 

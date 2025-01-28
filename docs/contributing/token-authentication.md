@@ -23,9 +23,11 @@ You can now use this token in requests by adding the following header
 Authorization: Bearer <token>
 ```
 
-### Hijacking another user to generate bearer token
+### Impersonating another user to generate bearer token
 
-You can hijack another user to generate a bearer token for them, this is useful when you want to test authorization of non-admin users. Go to admin-panel and open "Users" table under "Users" header. On the right side of any users, you can click the HIJACK button, it will direct you to non-existing page, but you can now go to /auth/tokens and generate new token for the user. On the bottom of the webpage you can release the hijack and return to your previous user. 
+You can impersonate another user to generate a bearer token for them. This is useful when you want to test authorization of non-admin users. 
+
+Go to admin-panel and open "Metax users" table under the "Users" header in the sidebar. On the right side of any user, you can click the `Impersonate` button, and it will direct you to the front page, where you are now logged in as the user of your choice. You can now go to /auth/tokens and generate new token for the user. On the bottom of the webpage you can `Stop impersonating` and return to your previous user. 
 
 ## DRF Tokens
 
@@ -57,7 +59,7 @@ While the env-var is true, all users will get a DRF-token on save operation. Thi
 You can send your user and password on post request to /v3/drf-token-auth/ endpoint. It will return your token.
 
 ```
-# POST /drf-token-auth
+# POST /v3/drf-token-auth/
 {"username":"username","password":"password"}
 ```
 

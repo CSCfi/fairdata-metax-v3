@@ -2,7 +2,7 @@
 
 Metax-service uses Poetry for managing Python dependencies securely. Poetry generates very strict requirements.txt files, while enabling easy update of minor security and bug patches from pip with `pyproject.toml` defined version constraints. Generated requirements.txt is guaranteed to lock all dependencies and sub-dependencies. Poetry file `poetry.lock` stores hashes of all dependencies, if the integrity of the dependency-tree ever needs to be verified. 
 
-For full documentation of Poetry, visit the [official documentation](https://python-poetry.org/docs/)
+For full documentation of Poetry, visit the [official documentation](https://python-poetry.org/docs/).
 
 ## Installing Poetry
 
