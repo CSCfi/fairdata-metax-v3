@@ -135,6 +135,7 @@ class DatasetFilter(filters.FilterSet):
     )
     preservation__state = filters.MultipleChoiceFilter(
         choices=Preservation.PreservationState.choices,
+        method="filter_preservation__state",
         label="preservation_state",
         field_name="preservation__state",
     )
@@ -279,6 +280,18 @@ class DatasetFilter(filters.FilterSet):
                 | Q(data_catalog__isnull=True)
             )
         return queryset.filter(data_catalog__publishing_channels__contains=[value])
+
+    def filter_preservation__state(self, queryset, name, value):
+        states = value
+
+        state_query = Q(preservation__state__in=states)
+
+        # If dataset's preservation entry does not exist, it's considered
+        # to have the default value -1 (NONE)
+        if str(Preservation.PreservationState.NONE) in states:
+            return queryset.filter(state_query | Q(preservation__isnull=True))
+
+        return queryset.filter(state_query)
 
     def _filter_list(self, queryset: QuerySet, value: List[List[str]], filter_param: str):
         result = queryset
