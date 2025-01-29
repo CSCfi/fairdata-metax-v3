@@ -29,6 +29,7 @@ from apps.core.serializers.dataset_actor_serializers.organization_serializer imp
     DatasetOrganizationSerializer,
 )
 from apps.files.helpers import get_file_metadata_serializer
+from apps.files.serializers.file_serializer import FileSerializer
 from apps.refdata.models import License
 from apps.refdata.serializers import BaseRefdataSerializer
 
@@ -85,6 +86,7 @@ context = {"view": DummyView()}
 fields = {}
 fields.update(get_refdata_fields(DatasetSerializer(context=context), path="Dataset"))
 fields.update(get_refdata_fields(DataCatalogModelSerializer(context=context), path="DataCatalog"))
+fields.update(get_refdata_fields(FileSerializer(context=context), path="File"))
 # File.dataset_metadata is a SerializerMethodField so it doesn't get handled automatically
 fields.update(
     get_refdata_fields(

@@ -61,6 +61,7 @@ The following table includes reference data types and the fields that use them. 
 | [/v3/reference-data/access-types](/v3/reference-data/access-types) | Dataset.access_rights.access_type |
 | [/v3/reference-data/event-outcomes](/v3/reference-data/event-outcomes) | Dataset.provenance[].event_outcome |
 | [/v3/reference-data/fields-of-science](/v3/reference-data/fields-of-science) | Dataset.field_of_science[] |
+| [/v3/reference-data/file-format-versions](/v3/reference-data/file-format-versions) | File.characteristics.file_format_version |
 | [/v3/reference-data/file-types](/v3/reference-data/file-types) | Dataset.fileset.file_actions[].dataset_metadata.file_type<br>Dataset.remote_resources[].file_type<br>File.dataset_metadata.file_type |
 | [/v3/reference-data/funder-types](/v3/reference-data/funder-types) | Dataset.projects[].funding[].funder.funder_type |
 | [/v3/reference-data/identifier-types](/v3/reference-data/identifier-types) | Dataset.other_identifiers[].identifier_type |
