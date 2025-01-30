@@ -1,9 +1,9 @@
 import json
+import re
+import uuid
 from datetime import datetime
 from importlib import reload
-import re
 from unittest import mock
-import uuid
 
 import pytest
 from deepdiff.serialization import json_loads
@@ -481,6 +481,36 @@ def test_update_dataset_with_doi_from_v2(
     assert call.path == f"/v1/pid/doi/{doi}"
     assert call.method == "PUT"
     assert DeepDiff(payload, original) == {}
+
+
+# Create draft from a published DOI dataset, update the draft
+# Assert that updating creating and updating the draft does not trigger any pidms calls
+@override_settings(PID_MS_CLIENT_INSTANCE="apps.core.services.pid_ms_client._PIDMSClient")
+def test_update_draft_with_doi(
+    settings,
+    requests_mock,
+    admin_client,
+    dataset_maximal_json,
+    pid_update_payload,
+    data_catalog,
+    reference_data,
+):
+    dataset = dataset_maximal_json
+    dataset["generate_pid_on_publish"] = "DOI"
+    dataset["state"] = "published"
+    dataset.pop("persistent_identifier", None)
+    res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
+    assert res.status_code == 201
+    ds_id = res.json()["id"]
+    assert requests_mock.call_count == 1
+
+    # Create and update draft
+    res = admin_client.post(f"/v3/datasets/{ds_id}/create-draft", dataset, content_type="application/json")
+    assert res.status_code == 201
+    draft_id= res.json()["id"]
+    res = admin_client.patch(f"/v3/datasets/{draft_id}", {"title": {"en": "draftia muutan"}}, content_type="application/json")
+    assert res.status_code == 200
+    assert requests_mock.call_count == 1
 
 
 # Try to create a dataset with DOI, but it fails in PID MS

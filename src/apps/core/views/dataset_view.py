@@ -735,7 +735,11 @@ class DatasetViewSet(CommonModelViewSet):
             # Setting catalog of a draft needs permission to create datasets in the catalog
             self._check_allow_create_datasets_in_catalog(catalog)
         dataset: Dataset = serializer.save()
-        if dataset.pid_generated_by_fairdata and dataset.generate_pid_on_publish == "DOI":
+        if (
+            dataset.state == Dataset.StateChoices.PUBLISHED
+            and dataset.pid_generated_by_fairdata
+            and dataset.generate_pid_on_publish == "DOI"
+        ):
             PIDMSClient().update_doi_dataset(dataset.id, dataset.persistent_identifier)
         dataset.signal_update()
 
