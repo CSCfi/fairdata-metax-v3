@@ -273,7 +273,6 @@ Temporal coverage objects now use dates instead of datetime values.
 |-------------------------|-------------------|
 | start_date [datetime]   | start_date [date] |
 | end_date [datetime]     | end_date [date]   |
-| temporal_coverage [str] | :question:        |
 
 #### Entity relations
 
@@ -686,10 +685,3 @@ fileset associated with a dataset:
 - viewing `/v3/directories` with `dataset=<id>`
 
 Dataset-specific directory metadata is only visible when browsing directories.
-
-[^1]: -
-[^2]: Is solved in authorization implementation
-[^3]: Is solved in versioning implementation. Django-simple-versioning is used as implementation base.
-[^4]: Is solved in the PublishingChannels implementation
-[^5]: PAS will have its own data-catalog in V3
-[^6]: django-model-utils third-party library SoftDeletableModel provides is_removed field, it can be customized, but it is unclear how much to just use removed timestamp without the bool field.
