@@ -113,9 +113,6 @@ def test_files_get_dataset_files_anonymous_nonpublic(client, dataset):
     assert res.data["count"] == 0
 
 
-@pytest.mark.xfail(
-    reason="DatasetAccessPolicy.scope_queryset does not work correctly for anonymous users"
-)
 def test_files_get_dataset_files_anonymous_published(client, dataset):
     dataset.publish()
     res = client.get(

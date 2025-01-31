@@ -48,9 +48,6 @@ def test_directory_permissions_dataset_anon_nonpublic(client, dataset_with_files
     assert res.status_code == 403
 
 
-@pytest.mark.xfail(
-    reason="DatasetAccessPolicy.scope_queryset does not work correctly for anonymous users"
-)
 def test_directory_permissions_dataset_anon_published(client, dataset_with_files):
     dataset_with_files.publish()
     res = client.get(
