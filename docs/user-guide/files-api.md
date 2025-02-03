@@ -1,11 +1,11 @@
 # Files API
 
-The files API `/v3/files` supports creating file metadata objects that can then be associated with datasets. Write operations to the API generally restricted to specific services. For example, freezing files in Fairdata IDA creates new Metax file metadata entries for the frozen files.
+The files API `/v3/files` supports creating file metadata objects that can then be associated with datasets. Write operations to the API are generally restricted to specific services. For example, freezing files in Fairdata IDA creates new Metax file metadata entries for the frozen files.
 
-For end users, browsing files in Metax and associating them to a dataset may require extra permissions,
+For end users, browsing files in Metax and associating them to a dataset requires extra permissions,
 like belonging to the IDA project the file is in.
 
-For more information about IDA and how to become a user see https://www.fairdata.fi/en/ida/.
+For more information about IDA and how to become a user see [https://www.fairdata.fi/en/ida/](https://www.fairdata.fi/en/ida/).
 
 ## Concepts
 
@@ -41,7 +41,7 @@ Below is a list of currently supported services.
 
 ## Browsing files in Metax
 
-Files are accessed with the `/v3/files` endpoint. There is also a separate read-only endpoint `/v3/directories` that allows browsing files of a file storage in the format of a directory hierarchy.
+Authenticated users can access files with the `/v3/files` endpoint. There is also a separate read-only endpoint `/v3/directories` that allows browsing files of a file storage in the format of a directory hierarchy.
 
 For example, to browse frozen IDA files:
 
@@ -117,7 +117,8 @@ might look like.
         "checksum": "md5:bd0f1dff407071e5db8eb57dde4847a3",
         "frozen": "2022-11-12T13:20:00+02:00",
         "modified": "2022-11-12T12:34:00+02:00",
-        "removed": null
+        "user": "fd_test_fairdata_user",
+        "pas_process_running": "false"
       }
     ]
   }
@@ -197,37 +198,45 @@ is enabled, the response code will be
 
 Bolded fields are required when creating a file.
 
-| Field                                 | key                      | value                          | read only |
-|---------------------------------------|--------------------------|--------------------------------|-----------|
-| Metax identifier                      | id                       | uuid                           | x         |
-| Storage service                       | **storage_service**      | str                            |           |
-| CSC project identifier                | **csc_project\***        | str                            |           |
-| File identifier in external service   | **storage_identifier\*** | str                            |           |
-| File path                             | **pathname**             | str, e.g. /data/file.txt       |           |
-| File name (determined from path)      | filename                 | str, e.g. file.txt             | x         |
-| Freeze date in external service       | frozen                   | datetime                       |           |
-| When file was removed from service    | removed                  | datetime (null if not removed) | x         |
-| Modification date in external service | **modified**             | datetime                       |           |
-| File size in bytes                    | **size**                 | int                            |           |
-| Checksum                              | **checksum**             | str, e.g. md5:ffa123f...       |           |
-| Is PAS compatible                     | is_pas_compatible        | bool or null                   |           |
-| Dataset-specific metadata             | dataset_metadata**\*\*** | object                         | x         |
-| User                                  | user                     | str                            |           |
+| Field                                 | key                           | value                          | read only |
+|---------------------------------------|-------------------------------|--------------------------------|-----------|
+| Metax identifier                      | id                            | uuid                           | x         |
+| Storage service                       | **storage_service**           | str                            |           |
+| CSC project identifier                | **csc_project\***             | str                            |           |
+| File identifier in external service   | **storage_identifier\***      | str                            |           |
+| File path                             | **pathname**                  | str, e.g. /data/file.txt       |           |
+| File name (determined from path)      | filename                      | str, e.g. file.txt             | x         |
+| Freeze date in external service       | frozen                        | datetime                       |           |
+| When file was removed from service    | removed                       | datetime (null if not removed) | x         |
+| Modification date in external service | **modified**                  | datetime                       |           |
+| File size in bytes                    | **size**                      | int                            |           |
+| Checksum                              | **checksum**                  | str, e.g. md5:ffa123f...       |           |
+| Is PAS compatible                     | is_pas_compatible             | bool or null                   |           |
+| Dataset-specific metadata             | dataset_metadata**\*\***      | object                         | x         |
+| User                                  | user                          | str                            |           |
+| Is PAS process running                | pas_process_running**\*\*\*** | bool                           |           |
 
 **\*** Required depending on storage service.
 
 **\*\*** Only available when viewing files of a dataset.
 
+**\*\*\*** Only PAS user can update this field. Default: False.
+
 ### Directory object fields
 
-| Field                                 | key                    | value                                   |
-|---------------------------------------|------------------------|-----------------------------------------|
-| Earliest file modification date       | created                | datetime                                |
-| Most recent modification date of file | modified               | datetime                                |
-| Storage service                       | storage_service        | str                                     |
-| CSC project identifier                | csc_project            | str                                     |
-| Directory name                        | name                   | str, e.g. subdir                        |
-| Directory path                        | pathname               | str ending with `/`, e.g. /data/subdir/ |
-| Dataset-specific metadata             | dataset_metadata**\*** | object                                  |
+| Field                                  | key                            | value                                   |
+|----------------------------------------|--------------------------------|-----------------------------------------|
+| Earliest file modification date        | created                        | datetime                                |
+| Most recent modification date of file  | modified                       | datetime                                |
+| Storage service                        | storage_service                | str                                     |
+| CSC project identifier                 | csc_project                    | str                                     |
+| Directory name                         | name                           | str, e.g. subdir                        |
+| Directory path                         | pathname                       | str ending with `/`, e.g. /data/subdir/ |
+| Dataset-specific metadata              | dataset_metadata**\***         | object                                  |
+| Total file count incl. subdirectories  | file_count                     | int                                     |
+| Number of files in some public dataset | published_file_count**\*\***   | int                                     |
+| Total byte size incl. subdirectories   | size                           | int                                     |
 
 **\*** Only available when viewing directories of a dataset.
+
+**\*\*** Only available when using `count_published` query parameter.
