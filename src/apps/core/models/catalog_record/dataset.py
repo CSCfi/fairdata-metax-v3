@@ -16,7 +16,7 @@ from watson.search import skip_index_update
 
 from apps.common.copier import ModelCopier
 from apps.common.exceptions import TopLevelValidationError
-from apps.common.helpers import datetime_to_date
+from apps.common.helpers import datetime_to_date, normalize_doi
 from apps.common.history import SnapshotHistoricalRecords
 from apps.common.models import AbstractBaseModel
 from apps.common.tasks import run_task
@@ -908,11 +908,15 @@ class Dataset(V2DatasetMixin, CatalogRecord):
                 )
 
             if not getattr(self, "_saving_legacy", False):
+                checked_pids = {self.persistent_identifier}
+                if normalized_doi := normalize_doi(self.persistent_identifier):
+                    checked_pids.add(normalized_doi)
+
                 if (
                     Dataset.all_objects.exclude(id=self.id)
                     .filter(
                         data_catalog__is_external=False,
-                        persistent_identifier=self.persistent_identifier,
+                        persistent_identifier__in=checked_pids,
                     )
                     .exists()
                 ):

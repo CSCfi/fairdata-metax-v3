@@ -1,4 +1,4 @@
-from apps.common.helpers import merge_sets
+from apps.common.helpers import merge_sets, normalize_doi
 
 
 def test_merge_sets():
@@ -46,3 +46,12 @@ def test_merge_sets_3():
     )
     joined = sorted(sorted(v) for v in joined)
     assert joined == [[0], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 15, 100, 120]]
+
+
+def test_normalize_doi():
+    assert normalize_doi("10.1000/123") == "doi:10.1000/123"
+    assert normalize_doi("doi:10.1000/123") == "doi:10.1000/123"
+    assert normalize_doi("http://doi.org/10.1000/123") == "doi:10.1000/123"
+    assert normalize_doi("https://doi.org/10.1000/123") == "doi:10.1000/123"
+    assert normalize_doi("https://notadoi.org/10.1000/123") is None
+    assert normalize_doi("12.345/67") is None

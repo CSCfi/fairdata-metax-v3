@@ -453,3 +453,13 @@ def merge_sets(sets: List[Iterable[Hashable]]) -> List[set]:
 def pickle_deepcopy(value):
     """Deep copy value using pickle. Faster than copy.deepcopy()."""
     return pickle.loads(pickle.dumps(value, protocol=pickle.HIGHEST_PROTOCOL))
+
+
+doi_re = re.compile(r"(https://doi.org/|http://doi.org/|doi:)?(?P<identifier>10\..*)")
+
+
+def normalize_doi(identifier: str) -> Optional[str]:
+    """If identifier looks like it could be a DOI, return it in "doi:..." format."""
+    if match := doi_re.match(identifier):
+        return f"doi:{match.group('identifier')}"
+    return None

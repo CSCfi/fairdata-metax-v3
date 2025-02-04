@@ -332,8 +332,8 @@ class NullableCharField(serializers.CharField):
         return super().run_validation(data)
 
 
-class PrivateEmailValue:
-    """Value container for email addresses.
+class PrivateValue:
+    """Value container for private values.
 
     Can be cached. Intentionally not JSON serializable by default
     to reduce chance of accidentally leaking values. Needs
@@ -351,7 +351,21 @@ class PrivateEmailValue:
         return super().__eq__(value)
 
     def __str__(self) -> str:
+        return "<PrivateValue>"
+
+
+class PrivateEmailValue(PrivateValue):
+    """Value container for email addresses."""
+
+    def __str__(self) -> str:
         return "<PrivateEmailValue>"
+
+
+class PrivateUsernameValue(PrivateValue):
+    """Value container for usernames."""
+
+    def __str__(self) -> str:
+        return "<PrivateUsernameValue>"
 
 
 def handle_private_emails(value: dict, show_emails, ignore_fields=set()):

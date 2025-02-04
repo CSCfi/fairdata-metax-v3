@@ -128,3 +128,7 @@
 
 ### :::src.apps.common.helpers.pickle_deepcopy
 
+## normalize_doi
+
+### :::src.apps.common.helpers.normalize_doi
+

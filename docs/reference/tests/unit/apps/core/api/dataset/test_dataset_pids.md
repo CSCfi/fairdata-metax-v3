@@ -52,6 +52,10 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_create_dataset_with_existing_pid_in_ida_catalog
 
+## test_create_dataset_with_same_doi_in_ida_catalog
+
+### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_create_dataset_with_same_doi_in_ida_catalog
+
 ## test_create_dataset_with_existing_soft_deleted_pid
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset_pids.test_create_dataset_with_existing_soft_deleted_pid

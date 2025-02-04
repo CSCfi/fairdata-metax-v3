@@ -12,3 +12,7 @@
 
 ### :::tests.unit.apps.common.test_helpers.test_merge_sets_3
 
+## test_normalize_doi
+
+### :::tests.unit.apps.common.test_helpers.test_normalize_doi
+
