@@ -12,22 +12,6 @@
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_update_dataset_with_project
 
-## test_filter_pid
-
-### :::tests.unit.apps.core.api.dataset.test_dataset.test_filter_pid
-
-## test_search_pid
-
-### :::tests.unit.apps.core.api.dataset.test_dataset.test_search_pid
-
-## test_search_phrase
-
-### :::tests.unit.apps.core.api.dataset.test_dataset.test_search_phrase
-
-## test_aggregation_and_filters
-
-### :::tests.unit.apps.core.api.dataset.test_dataset.test_aggregation_and_filters
-
 ## test_create_dataset_invalid_catalog
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_create_dataset_invalid_catalog
@@ -43,18 +27,6 @@
 ## test_get_removed_dataset
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_get_removed_dataset
-
-## test_list_datasets_with_ordering
-
-### :::tests.unit.apps.core.api.dataset.test_dataset.test_list_datasets_with_ordering
-
-## test_list_datasets_with_if_modified_since_header
-
-### :::tests.unit.apps.core.api.dataset.test_dataset.test_list_datasets_with_if_modified_since_header
-
-## test_list_datasets_with_bad_if_modified_since_header
-
-### :::tests.unit.apps.core.api.dataset.test_dataset.test_list_datasets_with_bad_if_modified_since_header
 
 ## test_list_datasets_with_default_pagination
 
@@ -95,10 +67,6 @@
 ## test_patch_metadata_owner_not_allowed
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_patch_metadata_owner_not_allowed
-
-## test_owned_dataset
-
-### :::tests.unit.apps.core.api.dataset.test_dataset.test_owned_dataset
 
 ## test_create_dataset_with_actor
 
@@ -151,30 +119,6 @@
 ## test_flush_draft
 
 ### :::tests.unit.apps.core.api.dataset.test_dataset.test_flush_draft
-
-## ida_dataset
-
-### :::tests.unit.apps.core.api.dataset.test_dataset.ida_dataset
-
-## ida_dataset_other
-
-### :::tests.unit.apps.core.api.dataset.test_dataset.ida_dataset_other
-
-## pas_dataset
-
-### :::tests.unit.apps.core.api.dataset.test_dataset.pas_dataset
-
-## test_filter_by_storage_service
-
-### :::tests.unit.apps.core.api.dataset.test_dataset.test_filter_by_storage_service
-
-## test_filter_by_csc_project
-
-### :::tests.unit.apps.core.api.dataset.test_dataset.test_filter_by_csc_project
-
-## test_filter_by_has_files
-
-### :::tests.unit.apps.core.api.dataset.test_dataset.test_filter_by_has_files
 
 ## test_empty_description
 

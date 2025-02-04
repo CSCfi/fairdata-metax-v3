@@ -203,6 +203,7 @@
                         - [test_dataset_catalogs](tests/unit/apps/core/api/dataset/test_dataset_catalogs.md)
                         - [test_dataset_contact](tests/unit/apps/core/api/dataset/test_dataset_contact.md)
                         - [test_dataset_drafts](tests/unit/apps/core/api/dataset/test_dataset_drafts.md)
+                        - [test_dataset_filters](tests/unit/apps/core/api/dataset/test_dataset_filters.md)
                         - [test_dataset_indexing](tests/unit/apps/core/api/dataset/test_dataset_indexing.md)
                         - [test_dataset_metrics](tests/unit/apps/core/api/dataset/test_dataset_metrics.md)
                         - [test_dataset_permissions](tests/unit/apps/core/api/dataset/test_dataset_permissions.md)

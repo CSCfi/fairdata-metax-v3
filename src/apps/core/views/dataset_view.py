@@ -211,11 +211,21 @@ class DatasetFilter(filters.FilterSet):
         )
 
     def filter_organization(self, queryset, name, value):
-        return self._filter_list(
-            queryset=queryset,
-            value=value,
-            filter_param="actors__organization__pref_label__values__icontains",
-        )
+        result = queryset
+        for group in value:
+            union = reduce(
+                operator.or_,
+                (
+                    (
+                        Q(actors__organization__pref_label__values__icontains=x)
+                        | Q(actors__organization__parent__pref_label__values__icontains=x)
+                        | Q(actors__organization__parent__parent__pref_label__values__icontains=x)
+                    )
+                    for x in group
+                ),
+            )
+            result = result.filter(union)
+        return result.distinct()
 
     def filter_keyword(self, queryset, name, value):
         return self._filter_list(queryset, value, filter_param="keyword__icontains")
