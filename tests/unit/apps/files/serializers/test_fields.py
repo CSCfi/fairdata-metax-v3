@@ -95,3 +95,14 @@ def test_wktfield_invalid_wkt():
     with pytest.raises(serializers.ValidationError) as excinfo:
         field.to_internal_value("POINT(1")
     assert "Invalid WKT:" in excinfo.value.detail[0]
+
+
+def test_wktfield_invalid_wkt_migrating():
+    class WKTSerializer(serializers.Serializer):
+        value = WKTField()
+
+    serializer = WKTSerializer(data={"value": "POINT(1"})
+    assert not serializer.is_valid()
+
+    serializer = WKTSerializer(data={"value": "POINT(1"}, context={"migrating": True})
+    assert serializer.is_valid()

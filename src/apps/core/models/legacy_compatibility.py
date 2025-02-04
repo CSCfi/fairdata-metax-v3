@@ -115,6 +115,12 @@ class LegacyCompatibility:
             is_deprecated = self.legacy_dataset.dataset_json.get("deprecated")
             is_removed = self.legacy_dataset.dataset_json.get("removed")
             return removed_value == 0 or is_deprecated or is_removed
+        elif path == "root['research_dataset']['preferred_identifier']":
+            pid = self.legacy_dataset.legacy_research_dataset.get("preferred_identifier")
+            return (
+                pid.startswith("draft:")
+                and self.legacy_dataset.dataset_json.get("state") == "draft"
+            )
         if type(removed_value) is str:
             return removed_value.strip() == ""
         elif removed_value in [None, []]:
@@ -145,8 +151,15 @@ class LegacyCompatibility:
             return True  # Allow stripping whitespace
 
         if path == "root['research_dataset']['total_files_byte_size']":
-            # Deprecated V2 dataset file size sometimes includes removed files and sometimes not
-            if self.legacy_dataset.dataset.deprecated and old == 0 and new > 0:
+            # Deprecated and removed V2 dataset file sizes sometimes
+            # include removed files and sometimes not
+            deprecated = self.legacy_dataset.dataset.deprecated
+            removed = self.legacy_dataset.dataset.removed
+            if (deprecated or removed) and (old == 0 or new == 0):
+                return True
+
+            # Special case where V2 value is inaccurate
+            if str(self.legacy_dataset.id) == "ac5eced9-151f-43ad-b3c4-384fde66c70e":
                 return True
 
     def get_migration_errors_from_diff(self, diff) -> dict:
@@ -215,7 +228,10 @@ class LegacyCompatibility:
                 value = value.strip()
                 if wkt_re.match(path):
                     # Normalize wkt
-                    value = shapely.wkt.dumps(shapely.wkt.loads(value), rounding_precision=4)
+                    try:
+                        value = shapely.wkt.dumps(shapely.wkt.loads(value), rounding_precision=4)
+                    except shapely.GEOSException:
+                        pass  # Preserve invalid wkt data when migrating
                 elif path.endswith(".alt"):
                     # Normalize altitude values
                     value = self.normalize_float_str(value)
@@ -306,7 +322,7 @@ class LegacyCompatibility:
         v3_file_metadata_count = 0
         v3_directory_metadata_count = 0
         if fileset := getattr(self.legacy_dataset.dataset, "file_set", None):
-            v3_file_count = fileset.total_files_count
+            v3_file_count = fileset.files(manager="all_objects").count()
             v3_file_metadata_count = fileset.file_metadata.count()
             v3_directory_metadata_count = fileset.directory_metadata.count()
 

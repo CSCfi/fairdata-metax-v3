@@ -1,5 +1,5 @@
-import re
 import csv
+import re
 from typing import List
 
 from watson.backends import RE_POSTGRES_ESCAPE_CHARS, PostgresSearchBackend, escape_query

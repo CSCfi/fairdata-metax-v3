@@ -16,9 +16,9 @@
 
 ### :::tests.unit.apps.core.adapters.test_legacy_converter.test_invalid_spatial_as_wkt
 
-## test_invalid_spatial_multiple_errors
+## test_invalid_spatial_alt_error
 
-### :::tests.unit.apps.core.adapters.test_legacy_converter.test_invalid_spatial_multiple_errors
+### :::tests.unit.apps.core.adapters.test_legacy_converter.test_invalid_spatial_alt_error
 
 ## test_fix_url
 

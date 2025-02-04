@@ -66,6 +66,18 @@ pytestmark = [pytest.mark.adapter]
                 ],
             },
         ),
+        (  # Dataset with files removed but byte size not updated
+            "dataset-ida-files-qvain-deprecated.json",
+            "files-ida-removed.json",
+            {
+                "values_changed": {
+                    "root['research_dataset']['total_files_byte_size']": {
+                        "new_value": 0,
+                        "old_value": 595968,
+                    },
+                },
+            },
+        ),
     ],
 )
 @pytest.mark.django_db
@@ -98,6 +110,25 @@ def test_v2_to_v3_dataset_conversion(
     diff = LegacyCompatibility(v2_dataset).get_compatibility_diff()
 
     assert diff == expected_diff
+
+
+@pytest.fixture
+def ida_json():
+    test_data_path = os.path.dirname(os.path.abspath(__file__)) + "/testdata/"
+    test_file_path = "dataset-ida-files-qvain-created.json"
+    with open(test_data_path + test_file_path) as json_file:
+        return json.load(json_file)
+
+
+@pytest.fixture
+def ida_file_legacy_ids():
+    test_data_path = os.path.dirname(os.path.abspath(__file__)) + "/testdata/"
+    test_file_path = "files-ida.json"
+    with open(test_data_path + test_file_path) as json_file:
+        file_data = json.load(json_file)
+        for f in file_data:
+            File.create_from_legacy(f)
+        return [f["id"] for f in file_data]
 
 
 @pytest.fixture
@@ -256,3 +287,19 @@ def test_v2_to_v3_dataset_conversion_invalid_license(harvested_json, license_ref
         dataset.dataset.access_rights.license.first().reference.url
         == "http://uri.suomi.fi/codelist/fairdata/license/code/other"
     )
+
+
+@pytest.mark.django_db
+def test_v2_to_v3_special_case_dataset(
+    data_catalog, ida_json, ida_file_legacy_ids, license_reference_data
+):
+    """Wrong file size in this dataset should not show as an error."""
+    ida_json["identifier"] = "ac5eced9-151f-43ad-b3c4-384fde66c70e"
+    ida_json["research_dataset"]["total_files_byte_size"] = 123456  # wrong
+    ida_json.pop("contract")
+    v2_dataset = LegacyDataset(
+        id=ida_json["identifier"], dataset_json=ida_json, legacy_file_ids=ida_file_legacy_ids
+    )
+    v2_dataset.save()
+    v2_dataset.update_from_legacy()
+    assert v2_dataset.migration_errors is None

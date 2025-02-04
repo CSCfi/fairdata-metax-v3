@@ -4,6 +4,7 @@ import re
 from base64 import b64decode
 from datetime import timedelta
 from io import StringIO
+import requests
 from unittest.mock import patch
 
 import pytest
@@ -129,6 +130,40 @@ def test_migrate_command_identifier(mock_response_single, reference_data, legacy
     dataset = Dataset.objects.get(id="c955e904-e3dd-4d7e-99f1-3fed446f96d1")
     assert str(dataset.permissions_id) == "4efd0669-33d4-4feb-93fb-5372d0f93a92"
     assert [user.username for user in dataset.permissions.editors.all()] == ["editor_user"]
+
+
+def test_migrate_command_identifier_notfound(
+    mock_response_single_notfound, reference_data, legacy_files
+):
+    out = StringIO()
+    err = StringIO()
+    with pytest.raises(requests.HTTPError):
+        call_command(
+            "migrate_v2_datasets",
+            stdout=out,
+            stderr=err,
+            use_env=True,
+            identifiers=["c955e904-e3dd-4d7e-99f1-3fed446f96d1"],
+        )
+
+
+def test_migrate_command_identifier_notfound_allow_fail(
+    mock_response_single_notfound, reference_data, legacy_files
+):
+    out = StringIO()
+    err = StringIO()
+    call_command(
+        "migrate_v2_datasets",
+        stdout=out,
+        stderr=err,
+        use_env=True,
+        identifiers=["c955e904-e3dd-4d7e-99f1-3fed446f96d1"],
+        allow_fail=True,
+    )
+    output = out.getvalue()
+    errors = err.getvalue()
+    assert "1 datasets failed" in output
+    assert "404 Client Error" in errors
 
 
 def test_migrate_command_identifier_missing_files(mock_response_single, reference_data):

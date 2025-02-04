@@ -5,8 +5,8 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import UserCreationForm
 from django.utils.translation import gettext as _
 
-from apps.users.models import MetaxUser
 from apps.users.forms import OptionalPasswordUserCreationForm
+from apps.users.models import MetaxUser
 
 
 class MetaxUserAdmin(BaseUserAdmin):

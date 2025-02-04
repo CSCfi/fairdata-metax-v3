@@ -79,6 +79,24 @@ def mock_response_single_invalid(requests_mock):
 
 
 @pytest.fixture
+def mock_response_single_notfound(requests_mock):
+    data = get_mock_data("legacy_single_response.json")
+    data["research_dataset"]["creator"] = "porkkana"
+    requests_mock.get(
+        url="https://metax-v2-test/rest/v2/datasets/c955e904-e3dd-4d7e-99f1-3fed446f96d1",
+        status_code=404,
+    )
+    requests_mock.get(
+        url="https://metax-v2-test/rest/v2/datasets/c955e904-e3dd-4d7e-99f1-3fed446f96d1/files",
+        status_code=404,
+    )
+    requests_mock.get(
+        url="https://metax-v2-test/rest/v2/datasets/c955e904-e3dd-4d7e-99f1-3fed446f96d1/files?id_list=true",
+        status_code=404,
+    )
+
+
+@pytest.fixture
 def mock_response_api_version_3(requests_mock):
     data = get_mock_data("legacy_single_response.json")
     data["api_meta"]["version"] = 3

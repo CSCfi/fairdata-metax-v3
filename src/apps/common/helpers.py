@@ -371,13 +371,19 @@ def ensure_dict(dct) -> dict:
 
 
 def remove_wkt_point_duplicates(point: str, wkt_list: list) -> list:
-    """Remove points from `wkt_list` that are equal or very similar to `point`."""
+    """Remove points from `wkt_list` that are equal or very similar to `point`.
+
+    Keeps invalid wkt data intact.
+    """
     output = []
     p1 = shapely.wkt.loads(point)
     for p2_wkt in wkt_list:
-        p2 = shapely.wkt.loads(p2_wkt)
-        if p2.geom_type == "Point" and p1.distance(p2) < 0.0001:
-            continue
+        try:
+            p2 = shapely.wkt.loads(p2_wkt)
+            if p2.geom_type == "Point" and p1.distance(p2) < 0.0001:
+                continue
+        except shapely.errors.GEOSException:
+            pass
         output.append(p2_wkt)
     return output
 

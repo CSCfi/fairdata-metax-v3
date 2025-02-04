@@ -58,20 +58,20 @@ def test_invalid_spatial_as_wkt(converter):
     spatial = {
         "geographic_name": "Alt is a number",
         "alt": "100.123",
-        "as_wkt": ["ei tää oo wkt"],
+        "as_wkt": ["ei tää oo wkt"],  # Invalid wkt is preserved when migrating
     }
     converter.convert_spatial(spatial)
-    assert spatial["_invalid"]["fields"] == ["as_wkt"]
+    assert spatial["as_wkt"] == ["ei tää oo wkt"]
 
 
-def test_invalid_spatial_multiple_errors(converter):
+def test_invalid_spatial_alt_error(converter):
     spatial = {
         "geographic_name": "Alt is not a number",
         "alt": "100 metriä",
         "as_wkt": ["ei tää oo wkt"],
     }
     converter.convert_spatial(spatial)
-    assert set(spatial["_invalid"]["fields"]) == {"alt", "as_wkt"}
+    assert set(spatial["_invalid"]["fields"]) == {"alt"}
 
 
 def test_fix_url(converter):

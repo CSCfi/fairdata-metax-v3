@@ -291,7 +291,10 @@ class WKTField(serializers.CharField):
         try:
             return shapely.wkt.loads(data).wkt
         except shapely.errors.GEOSException as error:
-            raise serializers.ValidationError(_("Invalid WKT: {}").format(str(error)))
+            if self.context.get("migrating"):
+                return data  # Preserve invalid wkt data when migrating
+            else:
+                raise serializers.ValidationError(_("Invalid WKT: {}").format(str(error)))
 
 
 class MultiLanguageField(serializers.HStoreField):

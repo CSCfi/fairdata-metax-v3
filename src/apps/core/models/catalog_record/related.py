@@ -224,7 +224,7 @@ class FileSet(AbstractBaseModel):
 
     @cached_property
     def total_files_aggregates(self) -> dict:
-        return self.files(manager="all_objects").aggregate(
+        return self.files(manager="available_objects").aggregate(
             total_files_count=Count("*"), total_files_size=Coalesce(Sum("size"), 0)
         )
 

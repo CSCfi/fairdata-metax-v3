@@ -5,6 +5,7 @@ from argparse import ArgumentParser
 from dataclasses import dataclass
 from typing import Callable, Dict, List, Optional, Union
 
+import requests
 from cachalot.api import cachalot_disabled
 from django.core.management.base import BaseCommand
 from django.db.models import Q
@@ -78,6 +79,7 @@ class Command(BaseCommand):
         super().__init__(*args, **kwargs)
         self.failed_datasets = []
         self.dataset_cache = {}
+        self.dataset_fetch_errors = 0
         self.dataset_files_fetch_errors = 0
 
     def add_arguments(self, parser: ArgumentParser):
@@ -434,12 +436,19 @@ class Command(BaseCommand):
 
         if identifiers:
             for identifier in identifiers:
-                dataset_json = self.client.fetch_dataset(
-                    identifier, params=self.common_dataset_fetch_params
-                )
-                data = self.dataset_json_to_data(dataset_json)
-                self.add_dataset_files_callable(data)
-                self.migrate_dataset(data)
+                try:
+                    dataset_json = self.client.fetch_dataset(
+                        identifier, params=self.common_dataset_fetch_params
+                    )
+                    data = self.dataset_json_to_data(dataset_json)
+                    self.add_dataset_files_callable(data)
+                    self.migrate_dataset(data)
+                except requests.HTTPError as err:
+                    self.dataset_fetch_errors += 1
+                    if self.allow_fail:
+                        self.stderr.write(str(err))
+                    else:
+                        raise
 
         if migrate_all:
             params = {**self.common_dataset_fetch_params, "limit": limit}
@@ -468,7 +477,12 @@ class Command(BaseCommand):
                     self.migrate_from_json_list(batch, request_files=True)
 
     def print_summary(self):
-        not_ok = self.updated - self.ok_after_update + self.dataset_files_fetch_errors
+        not_ok = (
+            self.updated
+            - self.ok_after_update
+            + self.dataset_fetch_errors
+            + self.dataset_files_fetch_errors
+        )
         self.stdout.write(f"Processed {self.migrated} datasets")
         self.stdout.write(f"- {self.ok_after_update} datasets updated succesfully")
         self.stdout.write(f"- {not_ok} datasets failed")

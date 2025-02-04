@@ -287,18 +287,9 @@ class LegacyDatasetConverter:
             self.mark_invalid(spatial, error="Invalid number", fields=["alt"])
 
         if spatial.get("as_wkt"):
-            # Remove invalid entries from as_wkt
             as_wkt = spatial.get("as_wkt", [])
-            valid_wkt = []
-            for wkt in as_wkt:
-                if self.is_valid_wkt(wkt):
-                    valid_wkt.append(wkt)
-
-            if len(valid_wkt) != len(as_wkt):
-                self.mark_invalid(spatial, error="Invalid WKT", fields=["as_wkt"])
-
             if (
-                len(valid_wkt) == 1
+                len(as_wkt) == 1
                 and location
                 and (
                     location_wkt := (
@@ -308,9 +299,9 @@ class LegacyDatasetConverter:
                     )
                 )
             ):
-                valid_wkt = remove_wkt_point_duplicates(location_wkt, valid_wkt)
+                as_wkt = remove_wkt_point_duplicates(location_wkt, as_wkt)
 
-            obj["custom_wkt"] = valid_wkt or None
+            obj["custom_wkt"] = as_wkt or None
 
         return obj
 
@@ -566,7 +557,9 @@ class LegacyDatasetConverter:
                 self.convert_actor(actor)
                 for actor in ensure_list(provenance.get("was_associated_with"))
             ],
-            "used_entity": [self.convert_entity(entity) for entity in provenance.get("used_entity", [])],
+            "used_entity": [
+                self.convert_entity(entity) for entity in provenance.get("used_entity", [])
+            ],
         }
 
     def convert_entity(self, entity: dict) -> dict:
