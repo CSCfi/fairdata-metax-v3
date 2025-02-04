@@ -68,7 +68,3 @@
 
 ### :::src.apps.core.views.dataset_aggregation._get_organizations_by_lang
 
-## _get_root_level_orgs
-
-### :::src.apps.core.views.dataset_aggregation._get_root_level_orgs
-

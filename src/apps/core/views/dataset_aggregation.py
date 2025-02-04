@@ -1,6 +1,7 @@
 import logging
 
 from django.db.models import Count, F, Func, Q
+from django.db.models.functions import Coalesce
 
 from apps.actors.models import Organization
 from apps.core.models import (
@@ -154,7 +155,7 @@ def _aggregate_organizations(dataset_ids):
     Organization can appear multiple times in different roles per dataset.
     """
 
-    return _get_organizations(dataset_ids=dataset_ids, get_root_orgs=False)
+    return _get_organizations(dataset_ids=dataset_ids, get_root_orgs=True)
 
 
 def _aggregate_creator(dataset_ids):
@@ -236,9 +237,15 @@ def _get_organizations(dataset_ids, filters={}, get_root_orgs=False):
     orgs = Organization.all_objects.filter(
         **filters, actor_organizations__datasetactor__dataset__in=dataset_ids
     )
-
     if get_root_orgs:
-        orgs = _get_root_level_orgs(orgs)
+        # Get topmost label in up to three organization levels
+        orgs = orgs.annotate(
+            aggregation_label=Coalesce(
+                F("parent__parent__pref_label"), F("parent__pref_label"), F("pref_label")
+            )
+        )
+    else:
+        orgs = orgs.annotate(aggregation_label=F("pref_label"))
 
     orgs_fi = sorted(
         _get_organizations_by_lang(orgs=orgs, lang="fi"),
@@ -260,7 +267,14 @@ def _get_organizations_by_lang(orgs, lang):
             dataset=F("actor_organizations__datasetactor__dataset"),
         )
         .values(
-            translated=F(f"pref_label__{lang}"),
+            # Get translation by lang, or try other languages if the primary choice isn't found
+            translated=Coalesce(
+                f"aggregation_label__{lang}",
+                "aggregation_label__en",
+                "aggregation_label__fi",
+                "aggregation_label__sv",
+                "aggregation_label__und",
+            ),
         )
         .filter(translated__isnull=False)
         .order_by("translated")
@@ -271,17 +285,3 @@ def _get_organizations_by_lang(orgs, lang):
     return [
         {"value": {lang: org["translated"]}, "count": org["count"]} for org in lang_filtered_orgs
     ]
-
-
-def _get_root_level_orgs(orgs):
-    """Get root level of the orgs"""
-    root_level_orgs = orgs.filter(parent__isnull=True)
-    orgs_with_parent = orgs.filter(parent__isnull=False)
-
-    while len(orgs_with_parent):
-        parent_ids = list(orgs_with_parent.values_list("parent", flat=True))
-        sub_level_orgs = Organization.available_objects.filter(id__in=parent_ids)
-        root_level_orgs = root_level_orgs | sub_level_orgs
-        orgs_with_parent = sub_level_orgs.filter(parent__isnull=False)
-
-    return root_level_orgs
