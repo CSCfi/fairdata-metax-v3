@@ -110,7 +110,6 @@ def test_get_removed_dataset(admin_client, dataset_a_json, data_catalog, referen
     assert_nested_subdict(dataset_a_json, res5.data, ignore=["generate_pid_on_publish"])
 
 
-
 def test_list_datasets_with_default_pagination(admin_client, dataset_a, dataset_b):
     res = admin_client.get(reverse("dataset-list"))
     assert res.status_code == 200
@@ -232,7 +231,6 @@ def test_patch_metadata_owner_not_allowed(
         content_type="application/json",
     )
     assert res.status_code == 400
-
 
 
 def test_create_dataset_with_actor(dataset_c, data_catalog, reference_data):
@@ -508,9 +506,6 @@ def test_flush_draft(user_client, dataset_a_json, data_catalog, reference_data):
     res = user_client.delete(f"/v3/datasets/{id}?flush=true")
     assert res.status_code == 204
     assert not Dataset.available_objects.filter(id=id).exists()
-
-
-
 
 
 def test_empty_description(admin_client, dataset_a_json, data_catalog, reference_data):
@@ -791,3 +786,19 @@ def test_remove_rights(admin_client, dataset_a_json, data_catalog, reference_dat
     )
     assert res.status_code == 200
     assert "access_rights" not in res.data
+
+
+def test_omit_owner_user_when_no_edit_access(
+    user_client, user_client_2, dataset_a_json, data_catalog, reference_data
+):
+    """Dataset metadata_owner.user should be hidden when user does not have edit access."""
+    res = user_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    _id = res.data["id"]
+
+    res = user_client.get(f"/v3/datasets/{_id}", content_type="application/json")
+    assert res.data["metadata_owner"]["user"] == "test_user"
+
+    # Request dataset as another user
+    res = user_client_2.get(f"/v3/datasets/{_id}", content_type="application/json")
+    assert "user" not in res.data["metadata_owner"]

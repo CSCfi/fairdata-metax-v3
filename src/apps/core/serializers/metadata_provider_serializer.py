@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from apps.common.serializers import AbstractDatasetModelSerializer
+from apps.common.serializers.fields import PrivateUsernameValue
 from apps.common.serializers.serializers import StrictSerializer
 from apps.core.models import MetadataProvider
 from apps.core.permissions import DatasetAccessPolicy
@@ -14,16 +15,16 @@ logger = logging.getLogger(__name__)
 
 
 class UsernameField(serializers.CharField):
-    """CharField that returns username when serializing a user.
+    """CharField that returns non-JSON-serializable username.
 
-    Normally a SlugRelatedField could be used instead but
-    this way doesn't require the user to already exist.
+    To allow JSON serialization, replace the PrivateUsernameValue
+    object with its .value.
     """
 
     def to_representation(self, value):
         if isinstance(value, MetaxUser):
-            return value.username
-        return value
+            return PrivateUsernameValue(value.username)
+        return PrivateUsernameValue(value)
 
 
 class MetadataProviderModelSerializer(AbstractDatasetModelSerializer):
