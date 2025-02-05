@@ -518,7 +518,7 @@ class DatasetViewSet(CommonModelViewSet):
         prefetch_related_objects(cached_datasets, *partial_prefetches)
 
     def list(self, request, *args, **kwargs):
-        """List datasets. Modified for cache use."""
+        """List datasets."""
         queryset = self.filter_queryset(self.get_queryset())
 
         # Defer prefetching until after pagination is done
