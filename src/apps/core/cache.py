@@ -17,6 +17,7 @@ class DatasetSerializerCache(SerializerCacheBase):
         "infrastructure",
         "keyword",
         "language",
+        "metadata_owner",
         "persistent_identifier",
         "projects",
         "provenance",

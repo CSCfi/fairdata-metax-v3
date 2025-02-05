@@ -861,6 +861,7 @@ def tweaked_settings(settings):
     settings.ENABLE_SSO_AUTH = False
     settings.METRICS_REPORT_URL = "https://example.com/metrics/reports/datasets.json"
     settings.ENABLE_BACKGROUND_TASKS = False
+    settings.PID_MS_CLIENT_INSTANCE = "apps.core.services.pid_ms_client._DummyPIDMSClient"
 
 
 @pytest.fixture

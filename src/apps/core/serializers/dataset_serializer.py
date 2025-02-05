@@ -239,16 +239,6 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
         else:
             ret.pop("pid_generated_by_fairdata", None)
 
-    def handle_owner_user(self, instance: Dataset, ret: dict):
-        """Show dataset owner user if request user has editing permission."""
-        has_edit_permission = instance.has_permission_to_edit(self.context["request"].user)
-        metadata_owner = ret.get("metadata_owner")
-        if metadata_owner and "user" in metadata_owner:
-            if has_edit_permission:
-                metadata_owner["user"] = metadata_owner["user"].value
-            else:
-                metadata_owner.pop("user")
-
     def to_representation(self, instance: Dataset):
         instance.ensure_prefetch()
         request = self.context["request"]
@@ -285,7 +275,6 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
             ret = {k: v for k, v in ret.items() if k in fields}
 
         self.omit_pid_fields(instance, ret)
-        self.handle_owner_user(instance, ret)
 
         if has_emails:
             # Handle email values. Copies dicts and lists to avoid accidentally modifying
