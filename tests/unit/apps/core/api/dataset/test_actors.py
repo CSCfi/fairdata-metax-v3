@@ -323,12 +323,12 @@ def test_create_multilevel_org_repeated_name(patch_dataset):
     baseorg = {
         "pref_label": {"en": "org"},
     }
-    org = {**baseorg, "parent": {**baseorg, "parent": {**baseorg, "parent": {**baseorg}}}}
+    org = {**baseorg, "parent": {**baseorg, "parent": {**baseorg}}}
     data = patch_dataset({"actors": [{"organization": org}]})
     flat = flatten(data["actors"][0]["organization"])
-    assert len(flat) == 4
-    assert len({o["id"] for o in flat}) == 4  # all orgs have different id
-    assert sum(1 for o in flat if o["pref_label"] == baseorg["pref_label"]) == 4
+    assert len(flat) == 3
+    assert len({o["id"] for o in flat}) == 3  # all orgs have different id
+    assert sum(1 for o in flat if o["pref_label"] == baseorg["pref_label"]) == 3
 
 
 def test_create_multiple_child_orgs(patch_dataset):
@@ -1122,3 +1122,34 @@ def test_create_actor_email_private(patch_dataset, admin_client):
     res = anon_client.get(f"/v3/datasets/{data['id']}", content_type="application/json")
     assert "email" not in res.data["actors"][0]["person"]
     assert "email" not in res.data["actors"][0]["organization"]
+
+
+def test_organization_depth_limit(
+    admin_client, data_catalog, data_catalog_harvested, reference_data
+):
+    # Test adding organization with 3 levels
+    org = {
+        "pref_label": {"en": "level3"},
+        "parent": {"pref_label": {"en": "level2"}, "parent": {"pref_label": {"en": "level1"}}},
+    }
+    dataset = {"title": {"en": "test"}, "actors": [{"roles": ["creator"], "organization": org}]}
+    res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
+    assert res.status_code == 201
+
+    # Add 4th level to organization
+    org = {
+        "pref_label": {"en": "level4"},
+        "parent": org,
+    }
+    dataset = {"title": {"en": "test"}, "actors": [{"roles": ["creator"], "organization": org}]}
+    res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
+    assert res.status_code == 400
+    assert res.json() == {
+        "actors": [
+            {
+                "organization": {
+                    "parent": "Having more than 3 organization levels is not supported."
+                }
+            }
+        ]
+    }

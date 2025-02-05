@@ -104,6 +104,9 @@ Actors, persons and organizations each have an `id` value that can be used when 
 Actor, person and organization objects are not shared across datasets
 (except for reference data) and will have different `id` values in different datasets even.
 
+An organization may have a parent organization specified in the `parent` field. Up to three organization
+levels are supported, so the parent may also have a parent.
+
 Reference data organizations are listed in `/v3/organizations`. When updating a dataset,
 reference data organizations are identified by `url` or `id`.
 Using `url` is preferred as it will be the same across different Metax instances.

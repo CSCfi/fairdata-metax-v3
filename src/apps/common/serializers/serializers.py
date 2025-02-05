@@ -771,8 +771,8 @@ class RecursiveSerializer(serializers.Serializer):
     Note: Does not currently support `many=True`.
     """
 
-    def __init__(self):
-        super().__init__(required=False, allow_null=True)
+    def __init__(self, help_text=None):
+        super().__init__(required=False, allow_null=True, help_text=help_text)
         self.serializer = None
 
     @contextmanager

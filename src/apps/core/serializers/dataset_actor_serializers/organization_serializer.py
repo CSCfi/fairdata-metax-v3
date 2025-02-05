@@ -24,7 +24,9 @@ class DatasetOrganizationSerializer(DatasetMemberSerializer):
     """Dataset member organization serializer."""
 
     id = UUIDOrTagField(required=False)
-    parent = RecursiveSerializer()
+    parent = RecursiveSerializer(
+        help_text=("Parent organization. Up to three organization levels are supported.")
+    )
     homepage = HomePageSerializer(required=False, allow_null=True)
 
     default_error_messages = {
@@ -54,6 +56,16 @@ class DatasetOrganizationSerializer(DatasetMemberSerializer):
         list_serializer_class = CommonListSerializer
 
     def to_internal_value(self, data):
+        level = 0
+        org = data
+        while org:
+            level += 1
+            if level > 3:
+                raise serializers.ValidationError(
+                    {"parent": "Having more than 3 organization levels is not supported."}
+                )
+            org = org.get("parent")
+
         data.pop("in_scheme", None)  # ignore in_scheme
         return super().to_internal_value(data)
 
