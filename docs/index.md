@@ -7,7 +7,7 @@ Metax itself does not have a graphical UI, but provides an API to both Service U
 ### About Metax API
 
 [User Guide](user-guide/)  
-[Contributing](developer-guide/)  
+[Contributing](contributing/)  
 [Swagger](/v3/swagger/)  
 [Source Code on GitHub](https://github.com/CSCfi/fairdata-metax-v3)
 

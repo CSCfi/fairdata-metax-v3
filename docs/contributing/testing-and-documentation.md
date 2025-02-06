@@ -2,54 +2,45 @@
 
 ## Testing
 
-The test coverage goal for new code in Metax development is 80 %. This is enforced with SonarQube code-analysis tool, which is integrated into internal CI/CD pipelines. New unit tests should be written for any new functionalities. Write clear tests that cover successful and unsuccessful use cases. Test status codes and error messages and make sure they are understandable and give information on what actually happened.
+The minimum test coverage for new code in Metax development is 80 %. 
+This is enforced with the SonarQube code analysis tool which
+is integrated into internal CI/CD pipelines. 
+New unit tests should be written for any new functionalities. 
+Write clear tests that cover successful and unsuccessful use cases. 
+Test status codes and error messages and make sure they are 
+understandable and give information on what actually happened.
 
 ## Documentation
 
+Metax V3 has a manually written user guide and automatically generated Swagger documentation. 
+The Swagger documentation is generated from Django Rest Framework views 
+and the related serializers. 
+Docstrings of view actions are used as endpoint descriptions in Swagger.
+Workflows that need more than one request should be documented in the user guide. 
 
 ### Docstrings
 
 Write [Google-styled docstrings](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html) for your classes and functions. Add any written classes, functions and tests to MkDocs with [the reference-generating script](#generating-source-code-reference-files).
 
-### MKDocs and configuration structure
+## Setting up MKDocs and important files
 
-#### MKDocs
+MkDocs and all the extensions will be installed by running `poetry install`. There are several extensions at your disposal:
 
-MKDocs library is used for writing user- and developer documentation. MkDocs config is located at repository root level in file `mkdocs.yml`
+- [mkdocstrings](https://mkdocstrings.github.io/): extension is used for automated docstring documentation.
+- [literate-nav](https://oprypin.github.io/mkdocs-literate-nav/): used for generationg left-hand side navigation tree.
+- [Mkdocs Material](https://squidfunk.github.io/mkdocs-material/): gives many useful widgets and elements that can be used as part of documentation. 
 
-#### Literate-nav
+Here is the list of the important files of documentation:
 
-`docs/SUMMARY.md` is the main navigation file, that uses [literate-nav](https://oprypin.github.io/mkdocs-literate-nav/) extensions for building the navigation tree.
-
-!!! warning
-
-    `SUMMARY.md` does not work properly if there are spaces after navigation item definition
-
-#### Mkdocstrings
-
-[mkdocstrings](https://mkdocstrings.github.io/) extension is used for automated docstring documentation in the Reference
-
-#### Mkdocs Material
-
-[Mkdocs Material](https://squidfunk.github.io/mkdocs-material/) gives many useful [widgets and elements](https://squidfunk.github.io/mkdocs-material/reference/) that can be used as part of documentation.
-
-### Generating source code reference files
-
-To update the source code reference files in `docs/reference/`, run the generation script:
-
-```bash
-python generate_reference.py
-```
-
-The script also supports additional arguments:
-
-* `--delete-obsolete` or `-d`: Delete obsolete reference files automatically.
-* `--git-files-only` or `-g`: Ignore changes not staged in `git`.
-
+- `mkdocs.yml`: Mkdocs configuration file. Can be found at repository root level.
+- `docs/SUMMARY.md`: main file for left-hand side navigation tree. Check literate-nav extension fro more information.
+- `docs/user-guide`: Main branch for [user guide](../../user-guide/) section of the documentation.
+- `docs/contributing`: Main branch for [contributing](../) section of the documentation.
 
 ### Running Mkdocs development server
 
-MkDocs development server is hot-reload enabled documentation generator, that instantly shows changes made to .md files in browser. You can start the development server from repository root folder with command:
+MkDocs development server generates documentation and instantly shows changes made to .md files in the browser. 
+You can start the development server from the repository root folder with command:
 
 ```bash
 # port can be defined freely

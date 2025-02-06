@@ -4,7 +4,6 @@
 - [Contributing](contributing/index.md)
     - [Contributions Policy](contributing/policy.md)
     - [Project Structure](contributing/project-structure/index.md)
-    - [Reference](reference/)
     - [Dependencies](contributing/dependencies.md)
     - [Token Based Authentication](contributing/token-authentication.md)
     - [Caching](contributing/caching.md)
