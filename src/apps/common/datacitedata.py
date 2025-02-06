@@ -24,9 +24,10 @@ class Datacitedata:
 
     # Identify identifier type by prefix
     identifier_prefix_to_type = {
-        "https://doi.org/": "DOI",
-        "http://doi.org/": "DOI",
-        "doi:": "DOI",
+        "https://doi.org/10.": "DOI",
+        "http://doi.org/10.": "DOI",
+        "doi:10.": "DOI",
+        "10.": "DOI",
         "urn:": "URN",
         "http://": "URL",
         "https://": "URL",
@@ -57,7 +58,7 @@ class Datacitedata:
     }
 
     # Identifier types listed here are normalized to use common prefix
-    identifier_type_output_prefix = {"DOI": "https://doi.org/"}
+    identifier_type_output_prefix = {"DOI": "10."}
 
     @property
     def language_order(self):

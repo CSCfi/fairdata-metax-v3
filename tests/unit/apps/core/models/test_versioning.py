@@ -87,7 +87,7 @@ def test_other_versions(dataset):
     dataset.publish()
     first = dataset
     second = Dataset.create_new_version(first)
-    second.persistent_identifier = "doi:5678"
+    second.persistent_identifier = "doi:10.5678/9"
     second.publish()
     third = Dataset.create_new_version(second)
     assert first.dataset_versions == second.dataset_versions == third.dataset_versions

@@ -295,7 +295,7 @@
   "relation": [
     {
       "entity": {
-        "entity_identifier": "doi:something"
+        "entity_identifier": "doi:10.1234/something"
       },
       "relation_type": {
         "url": "http://purl.org/spar/cito/cites"

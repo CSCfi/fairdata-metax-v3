@@ -573,7 +573,7 @@ def test_many_actors(admin_client, dataset_a_json, data_catalog, reference_data)
 
 def test_dataset_search_entry(admin_client, dataset_a_json, data_catalog, reference_data):
     """Check that search entry contains correct values from dataset."""
-    dataset_a_json["other_identifiers"] = [{"notation": "doi:other_identifier"}]
+    dataset_a_json["other_identifiers"] = [{"notation": "doi:10.1337/other_identifier"}]
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 201
     dataset_id = res.data["id"]
@@ -584,7 +584,7 @@ def test_dataset_search_entry(admin_client, dataset_a_json, data_catalog, refere
     assert "test subjects (persons)" in entry.title  # theme
     assert "Test dataset desc" in entry.description  # description
     assert "keyword another_keyword" in entry.description  # keywords
-    assert "doi:other_identifier" in entry.content  # entity.notation
+    assert "doi:10.1337/other_identifier" in entry.content  # entity.notation
 
 
 def test_create_dataset_with_extra_fields(

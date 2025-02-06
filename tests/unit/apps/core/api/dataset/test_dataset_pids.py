@@ -443,7 +443,7 @@ def test_update_dataset_with_doi(
     original = pid_update_payload
     original["data"]["attributes"]["url"] = f"https://{settings.ETSIN_URL}/dataset/{ds_id}"
     original["data"]["attributes"]["identifiers"].append(
-        {"identifier": f"https://doi.org/{doi}", "identifierType": "DOI"}
+        {"identifier": doi, "identifierType": "DOI"}
     )
     assert DeepDiff(payload, original) == {}
 
@@ -493,7 +493,7 @@ def test_update_dataset_with_doi_from_v2(
     original = pid_update_payload
     original["data"]["attributes"]["url"] = f"https://{settings.ETSIN_URL}/dataset/{ds_id}"
     original["data"]["attributes"]["identifiers"].append(
-        {"identifier": f"https://doi.org/{doi}", "identifierType": "DOI"}
+        {"identifier": doi, "identifierType": "DOI"}
     )
     assert call.path == f"/v1/pid/doi/{doi}"
     assert call.method == "PUT"

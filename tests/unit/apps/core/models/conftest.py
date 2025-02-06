@@ -126,7 +126,7 @@ def dataset() -> Dataset:
         "fi": "Otsikko 2",
         "sv": "Titel 2",
     }
-    persistent_id = "doi:1234"
+    persistent_id = "doi:10.1234/567"
     catalog = factories.DataCatalogFactory(dataset_versioning_enabled=True)
     dataset = factories.DatasetFactory(
         title=title,

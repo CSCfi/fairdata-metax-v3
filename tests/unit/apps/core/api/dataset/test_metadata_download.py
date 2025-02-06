@@ -26,8 +26,8 @@ def doi_dataset(admin_client, dataset_maximal_json, data_catalog, reference_data
     assert res.status_code == 201
 
     # DOI generation not supported yet, create identifier manually
-    Dataset.all_objects.filter(id=res.data["id"]).update(persistent_identifier="doi:some_doi")
-    res.data["persistent_identifier"] = "doi:some_doi"
+    Dataset.all_objects.filter(id=res.data["id"]).update(persistent_identifier="doi:10.1234/some_doi")
+    res.data["persistent_identifier"] = "doi:10.1234/some_doi"
     return res.data
 
 
@@ -86,7 +86,7 @@ def test_dataset_metadata_download_datacite(admin_client, doi_dataset):
 
     # persistent_identifier
     assert ns_select(root, "//identifier/concat(@identifierType, ':', text())") == [
-        "DOI:https://doi.org/some_doi"
+        "DOI:10.1234/some_doi"
     ]
 
     # publisher
@@ -183,7 +183,7 @@ def test_dataset_metadata_download_datacite(admin_client, doi_dataset):
     parts = "@relationType, ':', @relatedIdentifierType, ':', text()"
     assert ns_select(root, f"//relatedIdentifier/concat({parts})") == [
         "IsIdenticalTo:URL:https://www.example.com",
-        "Cites:DOI:https://doi.org/something",
+        "Cites:DOI:10.1234/something",
     ]
 
     # dates
@@ -284,7 +284,7 @@ def test_dataset_metadata_download_datacite_unknown_other_identifier(admin_clien
     parts = "@relationType, ':', @relatedIdentifierType, ':', text()"
     assert ns_select(root, f"//relatedIdentifier/concat({parts})") == [
         "IsIdenticalTo:URL:jeejee",  # assume URL as default type
-        "Cites:DOI:https://doi.org/something",
+        "Cites:DOI:10.1234/something",
     ]
 
 

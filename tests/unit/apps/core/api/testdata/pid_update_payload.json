@@ -86,7 +86,7 @@
           "relationType": "IsIdenticalTo"
         },
         {
-          "relatedIdentifier": "https://doi.org/something",
+          "relatedIdentifier": "10.1234/something",
           "relatedIdentifierType": "DOI",
           "relationType": "Cites"
         }
