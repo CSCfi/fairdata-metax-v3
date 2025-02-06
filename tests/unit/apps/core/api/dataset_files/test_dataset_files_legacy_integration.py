@@ -157,7 +157,17 @@ def test_dataset_files_legacy_sync_metadata(
                         "url": "http://uri.suomi.fi/codelist/fairdata/use_category/code/source"
                     },
                 },
-            }
+            },
+            {
+                "pathname": "/dir2/",
+                "dataset_metadata": {
+                    "title": "Directory2 title",
+                    "description": "Directory2 description",
+                    "use_category": {
+                        "url": "http://uri.suomi.fi/codelist/fairdata/use_category/code/source"
+                    },
+                },
+            },
         ],
     }
     urls = data_urls(dataset)
@@ -170,6 +180,9 @@ def test_dataset_files_legacy_sync_metadata(
     assert mock.call_count == 1
     request_data = mock.request_history[0].json()
     assert sorted(request_data["file_ids"]) == sorted([file.legacy_id for file in files.values()])
+    request_data["user_metadata"]["directories"] = sorted(
+        request_data["user_metadata"]["directories"], key=lambda d: d["directory_path"]
+    )
     assert request_data["user_metadata"] == {
         "files": [
             {
@@ -192,7 +205,15 @@ def test_dataset_files_legacy_sync_metadata(
                 "use_category": {
                     "identifier": "http://uri.suomi.fi/codelist/fairdata/use_category/code/source"
                 },
-            }
+            },
+            {
+                "directory_path": "/dir2",
+                "title": "Directory2 title",
+                "description": "Directory2 description",
+                "use_category": {
+                    "identifier": "http://uri.suomi.fi/codelist/fairdata/use_category/code/source"
+                },
+            },
         ],
     }
 

@@ -67,9 +67,12 @@ class FileSetDirectoryMetadata(models.Model):
     use_category = models.ForeignKey(UseCategory, null=True, on_delete=models.SET_NULL)
 
     def to_legacy(self):
+        path = self.pathname
+        if path != "/" and path.endswith("/"):
+            path = path[:-1] # Remove trailing slash for V2
         return omit_empty(
             {
-                "directory_path": self.pathname,
+                "directory_path": path,
                 "title": self.title,
                 "description": self.description,
                 "use_category": refdata_to_legacy(self.use_category),
