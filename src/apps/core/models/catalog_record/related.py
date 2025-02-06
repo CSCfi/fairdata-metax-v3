@@ -388,7 +388,7 @@ class FileSet(AbstractBaseModel):
                 if old_file.pathname != file.pathname:
                     msg = (
                         f"File {file.pathname} ({file.storage_identifier}) already "
-                        "exists in PAS storage with a different path {old_file.pathname}"
+                        f"exists in PAS storage with a different path {old_file.pathname}"
                     )
                     raise ValidationError({"detail": msg})
                 file_mapping[file.id] = old_file
