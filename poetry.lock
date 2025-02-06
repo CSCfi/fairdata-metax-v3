@@ -765,18 +765,17 @@ xml-validation = ["lxml (>=4,<6)"]
 
 [[package]]
 name = "datacite"
-version = "1.2.0"
+version = "1.1.4"
 description = "\"A Python client for DataCite MDS and REST APIs.\""
 optional = false
 python-versions = "*"
 files = [
-    {file = "datacite-1.2.0-py2.py3-none-any.whl", hash = "sha256:be2731b189ddc558a42efcd402268f03edbc206fe1030c80147c1c48cc7552a7"},
-    {file = "datacite-1.2.0.tar.gz", hash = "sha256:e506dc6ce62bd930d6980b32c07c3186f3dfc8d327cd2f817b8423e4f9dd171d"},
+    {file = "datacite-1.1.4-py2.py3-none-any.whl", hash = "sha256:139ce49b0d995ee346bffaf3d884a4ed0674696372a7079c7e3a092d82953156"},
+    {file = "datacite-1.1.4.tar.gz", hash = "sha256:1850edcca821d8ac58b441f09780f9ce6f93df832b6da9039d3bb9c0226e3b5d"},
 ]
 
 [package.dependencies]
 idutils = ">=1.0.0"
-importlib-metadata = ">=6.11.0"
 jsonschema = ">=3.0.0"
 lxml = ">=4.5.2"
 requests = ">=2.12.2"
@@ -1016,18 +1015,17 @@ testing = ["blessed (>=1.19.1,<2.0.0)", "boto3 (>=1.24.92,<2.0.0)", "croniter (>
 
 [[package]]
 name = "django-rest-knox"
-version = "4.2.0"
+version = "5.0.2"
 description = "Authentication for django rest framework"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.8"
 files = [
-    {file = "django-rest-knox-4.2.0.tar.gz", hash = "sha256:4595f1dc23d6e41af7939e5f2d8fdaf6ade0a74a656218e7b56683db5566fcc9"},
-    {file = "django_rest_knox-4.2.0-py3-none-any.whl", hash = "sha256:62b8e374a44cd4e9617eaefe27c915b301bf224fa6550633d3013d3f9f415113"},
+    {file = "django_rest_knox-5.0.2-py3-none-any.whl", hash = "sha256:694da5d0ad6eb3edbfd7cdc8d69c089fc074e6b0e548e00ff2750bf2fdfadb6f"},
+    {file = "django_rest_knox-5.0.2.tar.gz", hash = "sha256:f283622bcf5d28a6a0203845c065d06c7432efa54399ae32070c61ac03af2d6f"},
 ]
 
 [package.dependencies]
-cryptography = "*"
-django = ">=3.2"
+django = ">=4.2"
 djangorestframework = "*"
 
 [[package]]
@@ -3751,4 +3749,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8.10"
-content-hash = "fa1b87b80884920a25821e6f7b7261a3da8de551bb51908827667a4a39e2d760"
+content-hash = "b4ff9299141c332c4d35fb7bd9cd352087abe4a9b37c5f4acd7c0c692bd0b4af"
