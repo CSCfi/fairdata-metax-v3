@@ -5,25 +5,19 @@ Metax V3 Rest-API has number of changes from previous versions (v1-v2) and is in
 This page introduces the main differences between the versions, but the most up-to-date information about the specific 
 API version can always be found in the [Swagger documentation](/v3/swagger/).
 
-<!-- prettier-ignore -->
-!!! INFO
-    **Following markers are used to clarify changes:**
-
-    :clock: known change from V1-V2 (and what it is), not yet implemented
-
-    :question: change unknown, because of unknown third party library conventions or limitations
-
 ## Authentication and authorization
 
 Unlike Metax V1-V2, V3 does not use basic authentication headers. Instead, a bearer token is provided to users and integration customers. More details in [End User Access](./end-user-access.md).
 
 ## Dataset
 
-Also named CatalogRecord in V1-V2. Main differences are: removal of the research_dataset nested object, and more descriptive field names.
+Main differences are: removal of the research_dataset nested object, and more descriptive field names.
+
+In Metax V3 fields of catalog_record (the object's root of the response in V2) and research_dataset are merged in to the same level in the response, under "dataset".
 
 For more information, see the [new Dataset API user guide](./datasets-api.md).
 
-A good starting point for converting a dataset payload to the V3 format is the `/v3/datasets/convert_from_legacy` helper endpoint. It accepts V1/V2 dataset JSON and converts it into V3 style dataset JSON. If errors are detected in the
+A good starting point for converting a dataset payload to the V3 format is the `POST /v3/datasets/convert_from_legacy` helper endpoint. It accepts V1/V2 dataset JSON and converts it into V3 style dataset JSON. If errors are detected in the
 resulting JSON, they are included in `"errors"` object in the response. The endpoint does not do any permission
 checks or validate that the dataset JSON has all the data needed for publishing.
 
@@ -47,30 +41,30 @@ There's a few changes made for the datasets endpoints. Bulk actions are removed.
 
 Endpoints to manage datasets' editor permissions are not implemented to v3 yet but will be replaced with similar system as in Metax v2. Metax V2 editor permissions continue to work as before.
 
-| type   | v2 endpoint                                         | v3 endpoint             | notes                                    |
-|--------|-----------------------------------------------------|-------------------------|------------------------------------------|
-| PUT    | /datasets[list]                                     | **Not used in V3**      | Update of a list of datasets.            |
-| PATCH  | /datasets[list]                                     | **Not used in V3**      | Partial update of a list of datasets.    |
-| DELETE | /datasets                                           | **Not used in V3**      | Delete of a list of datasets             |
-| POST   | /datasets/identifiers                               | **Not used in V3**      | A list of all dataset identifiers        |
-| POST   | /datasets/unique_preferred_identifiers              | **Not used in V3**      | A list of unique dataset preferred ids   |
-| POST   | /datasets/list                                      | **Not used in V3**      | Fetch a set of datasets using ids        |
-| GET    | /datasets/{pid}/files                               |                         | see [Files](#files) for more information |
-| POST   | /datasets/{pid}/files                               |                         | see [Files](#files) for more information |
-| GET    | /datasets/{pid}/files/{file_pid}                    |                         | see [Files](#files) for more information |
-| PUT    | /datasets/{pid}/files/user_metadata                 |                         | see [Files](#files) for more information |
-| PATCH  | /datasets/{pid}/files/user_metadata                 |                         | see [Files](#files) for more information |
-| GET    | /datasets/{CRID}/editor_permissions/users           | **Not implemented yet** | list editor permissions                  |
-| POST   | /datasets/{CRID}/editor_permissions/users           | **Not implemented yet** | create editor permissions                |
-| GET    | /datasets/{CRID}/editor_permissions/users/{USER_ID} | **Not implemented yet** | return single permission                 |
-| PATCH  | /datasets/{CRID}/editor_permissions/users/{USER_ID} | **Not implemented yet** | update permission                        |
-| DELETE | /datasets/{CRID}/editor_permissions/users/{USER_ID} | **Not implemented yet** | remove permission                        |
+| type   | v2 endpoint                                         | v3 endpoint                        | notes                                    |
+|--------|-----------------------------------------------------|------------------------------------|------------------------------------------|
+| PUT    | /datasets[list]                                     | **Not used in V3**                 | Update of a list of datasets.            |
+| PATCH  | /datasets[list]                                     | **Not used in V3**                 | Partial update of a list of datasets.    |
+| DELETE | /datasets                                           | **Not used in V3**                 | Delete of a list of datasets             |
+| POST   | /datasets/identifiers                               | **Not used in V3**                 | A list of all dataset identifiers        |
+| POST   | /datasets/unique_preferred_identifiers              | **Not used in V3**                 | A list of unique dataset preferred ids   |
+| POST   | /datasets/list                                      | **Not used in V3**                 | Fetch a set of datasets using ids        |
+| GET    | /datasets/{pid}/files                               |                                    | see [Files](#files) for more information |
+| POST   | /datasets/{pid}/files                               |                                    | see [Files](#files) for more information |
+| GET    | /datasets/{pid}/files/{file_pid}                    |                                    | see [Files](#files) for more information |
+| PUT    | /datasets/{pid}/files/user_metadata                 |                                    | see [Files](#files) for more information |
+| PATCH  | /datasets/{pid}/files/user_metadata                 |                                    | see [Files](#files) for more information |
+| GET    | /datasets/{CRID}/editor_permissions/users           | /datasets/{id}/permissions/editors | list editor permissions                  |
+| POST   | /datasets/{CRID}/editor_permissions/users           | /datasets/{id}/permissions/editors | create editor permissions                |
+| GET    | /datasets/{CRID}/editor_permissions/users/{USER_ID} | /datasets/{id}/permissions/editors/{user_name} | return single permission                 |
+| PATCH  | /datasets/{CRID}/editor_permissions/users/{USER_ID} | **Not used in V3**                 |                                          |
+| DELETE | /datasets/{CRID}/editor_permissions/users/{USER_ID} | /datasets/{id}/permissions/editors/{user_name}            | remove permission from single user                        |
 
 ### Field names
 
 | V1-V2 field name                             | V3 field name                                | Notes                                                                                                           |
 |----------------------------------------------|----------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
-| data_catalog [object]                        | data_catalog [str]                           | This is a URN-type identifier.                                                                                  |
+| data_catalog [object]                        | data_catalog [str]                           | This is a URN-type identifier. use `?expand_catalog=true` to get detailed catalog with dataset response                                                                                 |
 | dataset_version_set [list]                   | dataset_versions [list]                      |                                                                                                                 |
 | date_created [datetime]                      | created [datetime]                           |                                                                                                                 |
 | date_cumulation_started [datetime]           | cumulation_started [datetime]                |                                                                                                                 |
@@ -84,14 +78,17 @@ Endpoints to manage datasets' editor permissions are not implemented to v3 yet b
 | metadata_provider_org [str]                  | **not used in V3**                           | Metadata provider can now be found under `metadata_owner.organization`.                                         |
 | metadata_provider_user [str]                 | metadata_owner.user [str]                    |                                                                                                                 |
 | N/A                                          | [fileset](#dataset-files) [object]           | See [Dataset Files](#dataset-files) for more information on `fileset`.                                          |
-| preservation_dataset_origin_version [object] | preservation.dataset_origin_version [object] | :clock: not yet implemented :clock:                                                                             |
-| preservation_dataset_version [object]        | preservation.dataset_version [object]        | :clock: not yet implemented :clock:                                                                             |
-| preservation_description [str]               | preservation.description [str]               |                                                                                                                 |
-| preservation_identifier [str]                | preservation.id [uuid]                       |                                                                                                                 |
-| preservation_reason_description [str]        | preservation.reason_description [str]        |                                                                                                                 |
-| preservation_state [int]                     | preservation.state [int]                     |                                                                                                                 |
-| preservation_state_modified [datetime]       | preservation.state_modified [datetime]       | :clock: not yet implemented :clock:                                                                             |
-| previous_dataset_version [object]            | **not used in V3**                           | Version information can now be found under `dataset_versions`.                                                  |
+| N/A                                          | preservation.contract [str]                  | Contract identifier                        |
+| preservation_dataset_origin_version [object] | preservation.dataset_origin_version [object] |                                            |
+| preservation_dataset_version [object]        | preservation.dataset_version [object]        |                                            |
+| preservation_description [str]               | preservation.description [str]               |                                            |
+| preservation_identifier [str]                | preservation.id [uuid]                       |                                            |
+| preservation_reason_description [str]        | preservation.reason_description [str]        |                                            |
+| preservation_state [int]                     | preservation.state [int]                     |                                            |
+| preservation_state_modified [datetime]       | preservation.state_modified [datetime]       |                                            |
+| N/A                                          | preservation.pas_package_created [boolean]   | Is preservation package created            |
+| N/A                                          | preservation.pas_process_running [boolean]   | Is preservation process currently running  |
+| previous_dataset_version [object]            | **not used in V3**                           | Version information can now be found under `dataset_versions`.         |
 | removed [bool]                               | removed [datetime]                           | `removed` [bool] and `date_removed` [datetime] have been combined into one `removed` [datetime] field.          |
 | research_dataset [object]                    | **not used in V3**                           | All metadata under `research_dataset` has been moved directly under dataset. See fields below.                  |
 | research_dataset.access_rights [object]      | access_rights [object]                       |                                                                                                                 |
@@ -101,7 +98,7 @@ Endpoints to manage datasets' editor permissions are not implemented to v3 yet b
 | research_dataset.curator [list]              | [actors](#actors) [list]                     | See [Actors-section](#actors) for information on specifying actor roles in V3.                                  |
 | research_dataset.description [dict]          | description [dict]                           |                                                                                                                 |
 | research_dataset.field_of_science [list]     | field_of_science [list]                      |                                                                                                                 |
-| research_dataset.is_output_of [list]         | projects [list]                              |                                                                                                                 |
+| research_dataset.is_output_of [list]         | projects [list]                              |  See [Projects](#projects) for more information on Projects |
 | research_dataset.issued [date]               | issued [datetime]                            |                                                                                                                 |
 | research_dataset.keyword [list]              | keyword [list]                               |                                                                                                                 |
 | research_dataset.language [list]             | language [list]                              |                                                                                                                 |
@@ -250,6 +247,97 @@ The fields for `organization` are:
         ---8<--- "tests/unit/docs/examples/test_data/v2/actors-v2.json"
         ```
 
+#### Entity relations
+
+| V1-V2 field              | V3 field                       |
+|--------------------------|--------------------------------|
+| entity.identifier [dict] | entity.entity_identifier [str] |
+
+#### Projects
+
+New Projects model supports Multiple funding items per project. This gives opportunity to describe continuous funding in more detail than before. Naming of the fields is also considerably different, so straight mapping between Metax v2's `is_output_of` field is artificial.
+
+New project introduces three new models: Project, Funding and Funder. These models are respectively nested as follows Project -> [Funding] -> Funder.
+
+##### Project Model
+
+Describes a project where the dataset was made.
+
+| Field                                              | Description                                                              | 
+|----------------------------------------------------|--------------------------------------------------------------------------|
+| title [dict]                                       | Multilanguage field. Name of the project                                 |
+| project_identifier [str]                           | External project identifier                                              |
+| participating_organizations: [List]                | List of [Organizations](#actors) that participated in the project        |
+| funding: [List]                                    | List of [Funds](#funding-model) that project has been granted            |
+
+ 
+
+##### Funding Model
+
+Describes funding that the project was granted.
+
+ 
+
+| Field                                              | Description                                                              |
+|----------------------------------------------------|--------------------------------------------------------------------------|
+| funder: [Funder]                                   | Funder organization. See [Funder](#funder-model).                        |
+| funding_identifier [str]                           | Identifier given by the funder organization                              |
+  
+
+##### Funder Model
+
+Describes a funder that granted the fund.
+
+Funder must have either `organization` or `funder_type`.
+
+List of possible `funder_type` can be found in [the funder type reference data listing](https://metax.fairdata.fi/v3/reference-data/funder-types).
+ 
+| Field                                              | Description                                                              |
+|----------------------------------------------------|--------------------------------------------------------------------------|
+| organization [Organization]                        | Funder organization. See [Organization](#actors)                         |
+| funder_type: [object]                              | Funder Type reference
+
+ 
+#### Provenance
+
+Biggest change in provenance field is that it is its own object in database. Provenance fields are also their own objects and as such have their own id fields when created, as does provenance itself.
+
+!!! example "Provenance JSON differences between V2 and V3"
+
+    === "V3"
+
+        ``` json
+        ---8<--- "tests/unit/docs/examples/test_data/dataset_api/provenance.json"
+        ```
+
+    === "V2"
+
+        ``` json
+        ---8<--- "tests/unit/docs/examples/test_data/v2/provenance-v2.json"
+        ```
+
+
+#### Remote resources
+
+Remote resources have gained support for title and description in multiple languages. Some
+other fields have been removed or simplified:
+
+| V1-V2 field                         | V3 field                   | Notes              |
+|-------------------------------------|----------------------------|--------------------|
+| access_url [object]                 | access_url [url]           |                    |
+| checksum [object]                   | checksum [algorithm:value] | e.g. "sha256:f00f" |
+| description [dict]                  | description [dict]         |                    |
+| download_url [object]               | download_url [url]         |                    |
+| title [dict]                        | title [dict]               |                    |
+| identifier [str]                    | **Not used in V3**         |                    |
+| modified [date]                     | **Not used in V3**         |                    |
+| byte_size [int]                     | **Not used in V3**         |                    |
+| license [list]                      | **Not used in V3**         |                    |
+| resource_type [object]              | **Not used in V3**         |                    |
+| has_object_characteristics [object] | **Not used in V3**         |                    |
+
+
+
 #### Spatial coverage
 
 In Metax V2 `as_wkt` was filled in from reference data if it was empty.
@@ -274,49 +362,6 @@ Temporal coverage objects now use dates instead of datetime values.
 | start_date [datetime]   | start_date [date] |
 | end_date [datetime]     | end_date [date]   |
 
-#### Entity relations
-
-| V1-V2 field              | V3 field                       |
-|--------------------------|--------------------------------|
-| entity.identifier [dict] | entity.entity_identifier [str] |
-
-
-#### Provenance
-
-Biggest change in provenance field is that it is its own object in database. Provenance fields are also their own objects and as such have their own id fields when created, as does provenance itself.
-
-!!! example "Provenance JSON differences between V2 and V3"
-
-    === "V3"
-
-        ``` json
-        ---8<--- "tests/unit/docs/examples/test_data/dataset_api/provenance.json"
-        ```
-
-    === "V2"
-
-        ``` json
-        ---8<--- "tests/unit/docs/examples/test_data/v2/provenance-v2.json"
-        ```
-
-#### Remote resources
-
-Remote resources have gained support for title and description in multiple languages. Some
-other fields have been removed or simplified:
-
-| V1-V2 field                         | V3 field                   | Notes              |
-|-------------------------------------|----------------------------|--------------------|
-| access_url [object]                 | access_url [url]           |                    |
-| checksum [object]                   | checksum [algorithm:value] | e.g. "sha256:f00f" |
-| description [dict]                  | description [dict]         |                    |
-| download_url [object]               | download_url [url]         |                    |
-| title [dict]                        | title [dict]               |                    |
-| identifier [str]                    | **Not used in V3**         |                    |
-| modified [date]                     | **Not used in V3**         |                    |
-| byte_size [int]                     | **Not used in V3**         |                    |
-| license [list]                      | **Not used in V3**         |                    |
-| resource_type [object]              | **Not used in V3**         |                    |
-| has_object_characteristics [object] | **Not used in V3**         |                    |
 
 
 ### Query parameters
