@@ -2,9 +2,11 @@ from io import StringIO
 
 import pytest
 from django.core.management import call_command
+from rest_framework.exceptions import ValidationError
 
 from apps.files.factories import create_v2_file_data
 from apps.files.models import File
+from apps.refdata.models import FileFormatVersion
 
 pytestmark = [
     pytest.mark.django_db,
@@ -14,8 +16,8 @@ pytestmark = [
 ]
 
 
-def fake_files_endpoint(projects):
-    files = create_v2_file_data(projects)
+def fake_files_endpoint(projects, overrides=None):
+    files = create_v2_file_data(projects, overrides)
 
     def callback(request, context):
         query = request.qs
@@ -69,6 +71,56 @@ def mock_endpoint_files(requests_mock):
     )
 
 
+@pytest.fixture
+def mock_endpoint_files_characteristics(requests_mock):
+    return requests_mock.get(
+        url="https://metax-v2-test/rest/v2/files",
+        json=fake_files_endpoint(
+            {
+                "ida:project_x": [
+                    "/data/file1",
+                    "/data/file2",
+                    "/data/file3",
+                ],
+            },
+            overrides={
+                "file_characteristics": {
+                    "encoding": "UTF-8",
+                    "file_format": "application/pdf",
+                    "format_version": "1.2",
+                    "csv_delimiter": "|",
+                    "csv_has_header": True,
+                    "csv_quoting_char": "\\",
+                    "csv_record_separator": "LF",
+                },
+                "file_characteristics_extension": {"some_data": "ok"},
+            },
+        ),
+    )
+
+
+@pytest.fixture
+def mock_endpoint_files_characteristics_invalid_format(requests_mock):
+    return requests_mock.get(
+        url="https://metax-v2-test/rest/v2/files",
+        json=fake_files_endpoint(
+            {
+                "ida:project_x": [
+                    "/data/file1",
+                    "/data/file2",
+                    "/data/file3",
+                ],
+            },
+            overrides={
+                "file_characteristics": {
+                    "file_format": "application/peedeeäf",
+                    "format_version": "1.2234",
+                }
+            },
+        ),
+    )
+
+
 def test_migrate_command(mock_response, mock_endpoint_files):
     out = StringIO()
     err = StringIO()
@@ -89,6 +141,62 @@ def test_migrate_command(mock_response, mock_endpoint_files):
     ]
     assert len(err.readlines()) == 0
     assert mock_endpoint_files.call_count == 2  # not removed + removed
+
+
+def test_migrate_command_characteristics(mock_response, mock_endpoint_files_characteristics):
+    out = StringIO()
+    err = StringIO()
+    call_command("migrate_v2_files", stdout=out, stderr=err, use_env=True)
+    f = File.all_objects.first()
+    assert (
+        f.characteristics.file_format_version.url
+        == "http://uri.suomi.fi/codelist/fairdata/file_format_version/code/application_pdf_1.2"
+    )
+    assert f.characteristics_extension == {"some_data": "ok"}
+    assert f.characteristics.encoding == "UTF-8"
+    assert f.characteristics.csv_has_header == True
+    assert f.characteristics.csv_delimiter == "|"
+    assert f.characteristics.csv_quoting_char == "\\"
+    assert f.characteristics.csv_record_separator == "LF"
+    file_id = f.id
+    characteristics_id = f.characteristics.id
+
+    # Change record separator, migration should revert it
+    f.characteristics.csv_record_separator = "CR"
+    f.characteristics.save()
+
+    call_command("migrate_v2_files", stdout=out, stderr=err, use_env=True)
+    f = File.all_objects.get(id=file_id)
+    assert f.characteristics.csv_record_separator == "LF"
+    assert f.characteristics.id == characteristics_id
+
+    # Change file format version, migration should revert it
+    f.characteristics.file_format_version = FileFormatVersion.objects.get(file_format="text/csv")
+    f.characteristics.save()
+
+    call_command("migrate_v2_files", stdout=out, stderr=err, use_env=True)
+    f = File.all_objects.get(id=file_id)
+    assert (
+        f.characteristics.file_format_version.url
+        == "http://uri.suomi.fi/codelist/fairdata/file_format_version/code/application_pdf_1.2"
+    )
+    assert f.characteristics.id == characteristics_id
+
+
+def test_migrate_command_characteristics_invalid_format(
+    mock_response, mock_endpoint_files_characteristics_invalid_format
+):
+    out = StringIO()
+    err = StringIO()
+    call_command("migrate_v2_files", stdout=out, stderr=err, use_env=True, allow_fail=True)
+    assert (
+        "File legacy_id=1 format version not found file_format='application/peedeeäf'"
+        in err.getvalue()
+    )
+    assert "processed=3, created=3, updated=0, errors=3" in out.getvalue()
+
+    with pytest.raises(ValidationError):
+        call_command("migrate_v2_files", stdout=out, stderr=err, use_env=True, allow_fail=False)
 
 
 def test_migrate_command_modified_since(mock_response, mock_endpoint_files):

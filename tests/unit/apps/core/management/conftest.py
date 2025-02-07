@@ -40,6 +40,11 @@ def mock_response(requests_mock):
         json={"results": []},
         complete_qs=False,
     )
+    requests_mock.get(
+        url=re.compile(r"https://metax-v2-test/rest/v2/datasets/.*/files"),
+        json=[],
+    )
+
 
 
 @pytest.fixture

@@ -7,6 +7,7 @@ from cachalot.api import cachalot_disabled
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
+from rest_framework.exceptions import ValidationError
 
 from apps.files.serializers.legacy_files_serializer import (
     FileMigrationCounts,
@@ -54,13 +55,13 @@ class Command(BaseCommand):
     migrated = 0
     ok_after_update = 0
     migration_limit = 0
-    compatibility_errors = 0
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.metax_instance = None
         self.metax_user = None
         self.metax_password = None
+        self.file_errors = 0
 
     def add_arguments(self, parser: ArgumentParser):
         MigrationV2Client.add_arguments(parser)
@@ -129,8 +130,9 @@ class Command(BaseCommand):
         created = self.created
         updated = self.updated
         processed = self.migrated
+        errors = self.file_errors
         fps = processed / (timezone.now() - self.started).total_seconds()
-        self.stdout.write(f"{processed=}, {created=:}, {updated=} ({fps:.1f}/s)")
+        self.stdout.write(f"{processed=}, {created=:}, {updated=}, {errors=} ({fps:.1f}/s)")
 
     def offset_files(self, files: List[dict], offset: int):
         if not offset:
@@ -139,6 +141,10 @@ class Command(BaseCommand):
             file["id"] += offset
             file["identifier"] = f'{offset}-{file["identifier"]}'
             file["project_identifier"] = f'{offset}-{file["project_identifier"]}'
+
+    def handle_file_error(self, msg):
+        self.stderr.write(str(msg))
+        self.file_errors += 1
 
     def migrate_files(self, files: List[dict]):
         """Create or update list of legacy file dicts."""
@@ -153,7 +159,12 @@ class Command(BaseCommand):
             self.migrated += counts.created + counts.updated + counts.unchanged
             self.print_status_line()
 
-        serializer = LegacyFilesSerializer(data=files)
+        file_error_handler = None
+        if self.allow_fail:
+            file_error_handler = self.handle_file_error
+        serializer = LegacyFilesSerializer(
+            data=files, context={"handle_fileformat_error": file_error_handler}
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save(batch_callback=callback)
 

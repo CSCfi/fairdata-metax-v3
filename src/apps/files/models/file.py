@@ -75,7 +75,12 @@ class File(SystemCreatorBaseModel, CustomSoftDeletableModel):
     )
 
     @classmethod
-    def values_from_legacy(cls, legacy_file: dict, storage: FileStorage):
+    def values_from_legacy(
+        cls,
+        legacy_file: dict,
+        storage: FileStorage,
+        characteristics: Optional[FileCharacteristics],
+    ):
         removed = None
         path, filename = legacy_file["file_path"].rsplit("/", 1)
         directory_path = f"{path}/"
@@ -94,20 +99,27 @@ class File(SystemCreatorBaseModel, CustomSoftDeletableModel):
             storage=storage,
             legacy_id=legacy_file.get("id"),
             is_pas_compatible=legacy_file.get("pas_compatible"),
+            characteristics=characteristics,
+            characteristics_extension=legacy_file.get("file_characteristics_extension"),
         )
 
     @classmethod
-    def create_from_legacy(cls, legacy_file: dict, storage: Optional[FileStorage] = None):
+    def create_from_legacy(
+        cls,
+        legacy_file: dict,
+        storage: Optional[FileStorage] = None,
+        characteristics: Optional[FileCharacteristics] = None,
+    ):
         if not storage:
             storage = FileStorage.get_or_create_from_legacy(legacy_file)
-        return File.all_objects.create(**cls.values_from_legacy(legacy_file, storage))
+        return File.all_objects.create(**cls.values_from_legacy(legacy_file, storage, characteristics))
 
     def to_legacy_sync(self):
         """Convert file to format compatible with legacy /files/sync_from_v3"""
 
         v2_checksum = convert_checksum_v3_to_v2(self.checksum)
 
-        return {
+        val = {
             "id": self.legacy_id,
             "identifier": self.storage_identifier,
             "file_path": self.pathname,
@@ -128,7 +140,13 @@ class File(SystemCreatorBaseModel, CustomSoftDeletableModel):
             "checksum_checked": self.modified,
             "checksum_algorithm": v2_checksum.get("algorithm"),
             "checksum_value": v2_checksum.get("checksum_value"),
+            "file_characteristics_extension": self.characteristics_extension,
+            "file_characteristics": None,
         }
+        if self.characteristics:
+            val["file_characteristics"] = self.characteristics.to_legacy()
+
+        return val
 
     @property
     def pathname(self) -> str:

@@ -1,3 +1,4 @@
+import copy
 from typing import Dict, List
 from uuid import UUID, uuid4
 
@@ -145,7 +146,7 @@ def create_project_with_files(*args, csc_project=None, storage_service=None, **k
     }
 
 
-def create_v2_file_data(projects: Dict[str, List[str]]) -> List[dict]:
+def create_v2_file_data(projects: Dict[str, List[str]], overrides=None) -> List[dict]:
     """Create V2 file list payload for testing migration logic.
 
     Example:
@@ -185,6 +186,8 @@ def create_v2_file_data(projects: Dict[str, List[str]]) -> List[dict]:
         "user_created": "someuser@cscuserid",
         "id": 0,
     }
+    if overrides:
+        template.update(copy.deepcopy(overrides))
 
     files = []
     num = 0

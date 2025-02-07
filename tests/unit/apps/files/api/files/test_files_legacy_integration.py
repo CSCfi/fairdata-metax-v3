@@ -8,7 +8,11 @@ from tests.utils.utils import assert_same_datetime
 
 from apps.files.models.file import File
 
-pytestmark = [pytest.mark.django_db, pytest.mark.adapter]
+pytestmark = [
+    pytest.mark.django_db,
+    pytest.mark.adapter,
+    pytest.mark.usefixtures("reference_data"),
+]
 
 
 class V2SyncMock:
@@ -55,6 +59,17 @@ def get_file_json(name):
         "frozen": "2022-11-12T11:20:01Z",
         "modified": "2022-11-12T10:34:00Z",
         "user": "fd_user",
+        "characteristics_extension": {"value1": 1, "value2": 2},
+        "characteristics": {
+            "encoding": "UTF-8",
+            "file_format_version": {
+                "url": "http://uri.suomi.fi/codelist/fairdata/file_format_version/code/text_csv"
+            },
+            "csv_has_header": False,
+            "csv_delimiter": ",",
+            "csv_quoting_char": "\\",
+            "csv_record_separator": "CRLF",
+        },
     }
 
 
@@ -78,10 +93,23 @@ def get_file_output_json(name, removed=None):
         "checksum_checked": "2022-11-12T10:34:00Z",
         "checksum_algorithm": "MD5",
         "checksum_value": "bd0f1dff407071e5db8eb57dde4847a3",
+        "file_characteristics_extension": {"value1": 1, "value2": 2},
+        "file_characteristics": {
+            "encoding": "UTF-8",
+            "file_format": "text/csv",
+            "format_version": "",
+            "csv_has_header": False,
+            "csv_delimiter": ",",
+            "csv_quoting_char": "\\",
+            "csv_record_separator": "CRLF",
+        },
     }
 
 
-def test_sync_create_file(admin_client, mock_v2_files_integration):
+def test_sync_create_file(
+    admin_client,
+    mock_v2_files_integration,
+):
     file = get_file_json(name="testfile1.txt")
     res = admin_client.post("/v3/files", file, content_type="application/json")
     assert res.status_code == 201

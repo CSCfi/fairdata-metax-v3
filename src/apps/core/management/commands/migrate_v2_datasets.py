@@ -487,13 +487,13 @@ class Command(BaseCommand):
         self.stdout.write(f"- {self.ok_after_update} datasets updated succesfully")
         self.stdout.write(f"- {not_ok} datasets failed")
 
-    def dataset_may_have_files(self, dataset_json: dict):
-        byte_size = None
+    def dataset_may_have_files(self, dataset_json: dict) -> bool:
+        has_byte_size = None
         try:
-            byte_size = dataset_json["research_dataset"].get("total_files_byte_size")
+            has_byte_size = "total_files_byte_size" in dataset_json["research_dataset"]
         except Exception:
             pass
-        return bool(byte_size or dataset_json.get("deprecated"))
+        return bool(has_byte_size or dataset_json.get("deprecated"))
 
     def add_dataset_files_callable(self, data: MigrationData):
         """Fetch dataset files lazily when needed using callable."""

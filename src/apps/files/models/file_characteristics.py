@@ -61,3 +61,22 @@ class FileCharacteristics(SystemCreatorBaseModel):
 
     class Meta:
         ordering = ["id"]
+
+    def to_legacy(self):
+        val = {}
+        if fmt := self.file_format_version:
+            val["file_format"] = fmt.file_format
+            val["format_version"] = fmt.format_version
+        if self.encoding:
+            val["encoding"] = self.encoding
+        if self.csv_record_separator:
+            val["csv_record_separator"] = self.csv_record_separator
+        if self.csv_has_header is not None:
+            val["csv_has_header"] = self.csv_has_header
+        if self.csv_quoting_char:
+            val["csv_quoting_char"] = self.csv_quoting_char
+        if self.csv_delimiter:
+            val["csv_delimiter"] = self.csv_delimiter
+        if self.csv_record_separator:
+            val["csv_record_separator"] = self.csv_record_separator
+        return val
