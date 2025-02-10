@@ -522,6 +522,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
 
         # Copy dataset and related files
         pas_version = self.create_copy(
+            dataset_versions=None,
             file_set=None,
             preservation=self.preservation.copier.copy(self.preservation),
             data_catalog=pas_catalog,

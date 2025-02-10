@@ -1,7 +1,6 @@
 import pytest
 from tests.utils import assert_nested_subdict, matchers
 
-from apps.core.factories import ContractFactory, PreservationFactory
 from apps.core.models.catalog_record.dataset import Dataset
 
 pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
@@ -357,6 +356,7 @@ def test_create_dataset_preservation_version(
     assert data["preservation"]["dataset_origin_version"]["id"] == origin_id
     assert data["preservation"]["dataset_origin_version"]["preservation_state"] == -1
     assert data["other_identifiers"][0]["notation"] == origin_pid
+    assert len(data["dataset_versions"]) == 1
 
     # Check original version has new dataset relations but is otherwise unchanged
     res = pas_client.get(f"/v3/datasets/{origin_id}", content_type="application/json")
@@ -368,6 +368,7 @@ def test_create_dataset_preservation_version(
     assert data["preservation"]["dataset_version"]["id"] == preserved_id
     assert data["preservation"]["dataset_version"]["preservation_state"] == 0
     assert data["other_identifiers"][0]["notation"] == preserved_pid
+    assert len(data["dataset_versions"]) == 1
 
 
 def test_create_dataset_preservation_version_no_preservation(
