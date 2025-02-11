@@ -391,7 +391,10 @@ class Dataset(V2DatasetMixin, CatalogRecord):
 
     @property
     def has_files(self):
-        return hasattr(self, "file_set") and self.file_set.files.exists()
+        return (
+            hasattr(self, "file_set")
+            and self.file_set.files(manager="all_objects").exists()
+        )
 
     @property
     def has_published_files(self):

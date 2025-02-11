@@ -220,6 +220,7 @@ class LegacyFilesSerializer(serializers.ListSerializer):
         if not files:
             return total_counts
 
+        removed_files = []
         for file_batch in batched(files, 10000):
             legacy_v3_values = {  # Mapping of {legacy_id: v3 dict} for v2 files
                 file["legacy_id"]: file for file in file_batch
@@ -227,6 +228,10 @@ class LegacyFilesSerializer(serializers.ListSerializer):
             create, update = self.determine_file_operations(legacy_v3_values)
             upserts: List[File] = [*create, *update]
             chacteristics = [file.characteristics for file in upserts if file.characteristics]
+            for file in upserts:
+                if file.removed:
+                    removed_files.append(file.id)
+
             FileCharacteristics.objects.bulk_create(
                 chacteristics,
                 batch_size=10000,
@@ -253,6 +258,12 @@ class LegacyFilesSerializer(serializers.ListSerializer):
             total_counts.created += len(create)
             total_counts.updated += len(update)
             total_counts.unchanged += len(file_batch) - len(create) - len(update)
+
+        from apps.core.models import FileSet
+
+        deprecated_filesets = FileSet.objects.filter(files__in=removed_files).distinct()
+        for fileset in deprecated_filesets:
+            fileset.deprecate_dataset()
         return total_counts
 
     def save(

@@ -4,6 +4,7 @@ import pytest
 from django.core.management import call_command
 from rest_framework.exceptions import ValidationError
 
+from apps.core import factories
 from apps.files.factories import create_v2_file_data
 from apps.files.models import File
 from apps.refdata.models import FileFormatVersion
@@ -94,6 +95,22 @@ def mock_endpoint_files_characteristics(requests_mock):
                     "csv_record_separator": "LF",
                 },
                 "file_characteristics_extension": {"some_data": "ok"},
+            },
+        ),
+    )
+
+
+@pytest.fixture
+def mock_endpoint_files_removed(requests_mock):
+    return requests_mock.get(
+        url="https://metax-v2-test/rest/v2/files",
+        json=fake_files_endpoint(
+            {
+                "ida:project_x": [
+                    "/data/file1",
+                    "/data/file2",
+                    "-/data/file3",  # file3 is removed
+                ],
             },
         ),
     )
@@ -348,6 +365,39 @@ def test_migrate_projects(mock_endpoint_files):
         ("ida", "project_x", "/data/file2", False),
         ("ida", "project_x", "/data/file3", False),
     ]
+
+
+def test_migrate_deprecation(mock_response, mock_endpoint_files_removed):
+    out = StringIO()
+    err = StringIO()
+    call_command("migrate_v2_files", stdout=out, stderr=err, use_env=True)
+
+    # File3 is migrated as removed, unremove it so we can add it to a dataset
+    assert File.all_objects.filter(filename="file3").update(removed=None) == 1
+    files = File.all_objects.filter(storage__csc_project="project_x")
+    assert files.count() == 3
+
+    dataset = factories.PublishedDatasetFactory()
+    fs = factories.FileSetFactory(dataset=dataset)
+    fs.files.set(files)
+
+    draft_dataset = factories.DatasetFactory()
+    draft_fs = factories.FileSetFactory(dataset=draft_dataset)
+    draft_fs.files.set(files)
+
+    # Migrate files again, file3 should be removed and the published dataset should be deprecated
+    call_command("migrate_v2_files", stdout=out, stderr=err, use_env=True)
+    assert File.all_objects.get(filename="file3").removed is not None
+
+    dataset.refresh_from_db()
+    assert dataset.deprecated is not None
+    assert fs.files.count() == 2
+    assert fs.files(manager="all_objects").count() == 3
+
+    draft_dataset.refresh_from_db()
+    assert draft_dataset.deprecated is None
+    assert draft_fs.files.count() == 2
+    assert draft_fs.files(manager="all_objects").count() == 3
 
 
 def test_migrate_file_offset(mock_response, mock_endpoint_files):
