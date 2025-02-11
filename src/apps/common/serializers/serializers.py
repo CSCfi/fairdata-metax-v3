@@ -744,13 +744,6 @@ class AbstractDatasetPropertyModelSerializer(CommonModelSerializer):
     class Meta:
         fields = ("id", "url", "title")
 
-    def to_representation(self, instance):
-        if isinstance(instance.title, str):
-            instance.title = json.loads(instance.title)
-        representation = super().to_representation(instance)
-
-        return representation
-
     def to_internal_value(self, data):
         internal_value = super().to_internal_value(data)
         if "id" in data:

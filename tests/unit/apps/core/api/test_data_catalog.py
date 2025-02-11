@@ -317,3 +317,34 @@ def test_try_invalid_publishing_channel_in_datacatalog(
     )
     assert res1.status_code == 400
     assert '"foo" is not a valid choice.' in str(res1.json()["publishing_channels"])
+
+
+def test_create_soft_deleted_datacatalog_again(
+    admin_client, datacatalog_a_json, reference_data, data_catalog_list_url
+):
+    res1 = admin_client.post(
+        data_catalog_list_url,
+        {**datacatalog_a_json, "dataset_groups_create": ["somegroup", "othergroup"]},
+        content_type="application/json",
+    )
+    assert res1.status_code == 201
+    _id = res1.data["id"]
+    res1 = admin_client.delete(
+        f"{reverse('datacatalog-detail', args=[_id])}", content_type="application/json"
+    )
+    assert res1.status_code == 204
+
+    # Recreate catalog, check that it gets updated values and is no longer removed
+    res2 = admin_client.post(
+        data_catalog_list_url,
+        {
+            **datacatalog_a_json,
+            "title": {"en": "Recreated catalog"},
+            "dataset_groups_create": ["newgroup"],
+        },
+        content_type="application/json",
+    )
+    assert res2.status_code == 201
+    assert "removed" not in res2.data
+    assert res2.data["title"] == {"en": "Recreated catalog"}
+    assert res2.data["dataset_groups_create"] == ["newgroup"]

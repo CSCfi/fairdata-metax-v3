@@ -68,3 +68,11 @@ class DataCatalogView(CommonModelViewSet):
     queryset = DataCatalog.objects.all()
     filterset_class = DataCatalogFilter
     access_policy = DataCatalogAccessPolicy
+
+    def perform_create(self, serializer):
+        if _id := serializer.validated_data.get("id"):
+            # Replace existing soft deleted catalog
+            if DataCatalog.all_objects.filter(id=_id, removed__isnull=False).exists():
+                serializer.instance = DataCatalog(id=_id)
+                return super().perform_update(serializer)
+        return super().perform_create(serializer)
