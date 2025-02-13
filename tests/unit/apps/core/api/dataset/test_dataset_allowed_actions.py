@@ -7,6 +7,7 @@ from django.utils.timezone import now
 from apps.common.helpers import datetime_to_date
 from apps.core.models.access_rights import AccessTypeChoices
 from apps.core.models.catalog_record.dataset import Dataset
+from apps.core.models.data_catalog import DataCatalog
 
 logger = logging.getLogger(__name__)
 
@@ -223,4 +224,12 @@ def test_unavailable_embargo_dataset_allowed_actions_anonymous(
     assert get_dataset_actions(client, unavailable_embargo_dataset) == {
         "download": False,
         "update": False,
+    }
+
+
+def test_catalog_allow_download_false_allowed_actions(admin_client, open_dataset):
+    DataCatalog.objects.filter(id="urn:nbn:fi:att:data-catalog").update(allow_download=False)
+    assert get_dataset_actions(admin_client, open_dataset) == {
+        "download": True,
+        "update": True,
     }

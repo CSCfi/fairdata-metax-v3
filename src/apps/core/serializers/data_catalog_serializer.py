@@ -55,6 +55,7 @@ class DataCatalogModelSerializer(CommonNestedModelSerializer):
             "harvested",
             "dataset_groups_create",
             "dataset_groups_admin",
+            "allow_download",
             "allow_remote_resources",
             "storage_services",
             "publishing_channels",

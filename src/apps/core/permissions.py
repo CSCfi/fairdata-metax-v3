@@ -91,6 +91,10 @@ class DatasetAccessPolicy(BaseAccessPolicy):
 
     def is_download_allowed(self, request, view, action) -> bool:
         dataset = view.get_object()
+        catalog = dataset.data_catalog
+        if not (catalog and catalog.allow_download):
+            return False
+
         if access_rights := dataset.access_rights:
             return access_rights.is_data_available(request, dataset)
         return False

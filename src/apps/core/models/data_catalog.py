@@ -94,6 +94,9 @@ class DataCatalog(AbstractBaseModel):
         related_name="catalogs_admin_datasets",
         blank=True,
     )
+    allow_download = models.BooleanField(
+        default=False, help_text="Allow downloading files of datasets in catalog."
+    )
     allow_remote_resources = models.BooleanField(
         default=True, help_text="True when datasets in catalog can have remote resources."
     )

@@ -227,6 +227,7 @@ def data_catalog(fairdata_users_group, service_group, pas_group, ida_group) -> D
         allow_remote_resources=True,
         storage_services=["ida", "pas"],
         allowed_pid_types=["URN", "DOI"],
+        allow_download=True,
     )
     catalog.dataset_groups_create.set([fairdata_users_group, service_group])
     catalog.dataset_groups_admin.set([pas_group, ida_group])
