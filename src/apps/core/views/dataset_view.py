@@ -119,6 +119,7 @@ class DatasetFilter(filters.FilterSet):
         label="metadata owner organization",
     )
     metadata_owner__user = filters.CharFilter(
+        field_name="metadata_owner__user__username",
         max_length=512,
         lookup_expr="icontains",
         label="metadata owner user",
