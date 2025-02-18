@@ -3,9 +3,10 @@ import os
 from metax_service.settings.components.base import DATABASES, LOGGING
 
 LOGGING["handlers"]["file"] = {
-    "level": "ERROR",
+    "level": "INFO",
     "class": "logging.FileHandler",
     "filename": os.environ.get("DJANGO_ERROR_LOG_FILENAME"),
+    "formatter": "verbose",
 }
 LOGGING["root"]["handlers"] = ["console", "file"]
 

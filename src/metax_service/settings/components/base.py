@@ -10,6 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
+import logging
+import time
 import json
 import os
 import sys
@@ -188,12 +190,21 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/dev/ref/settings/#logging
 # See https://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.
+class DateTimeZFormatter(logging.Formatter):
+    """Log formatter with datetime with milliseconds and Z timezone."""
+
+    default_time_format = "%Y-%m-%d %H:%M:%S"
+    default_msec_format = "%s.%03dZ"
+    converter = time.gmtime
+
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
         "verbose": {
-            "format": "%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s"
+            "class": "metax_service.settings.components.base.DateTimeZFormatter",
+            "format": "%(asctime)s p%(process)d %(name)s %(levelname)s: %(message)s",
         },
         "simple": {
             "format": "{levelname} {asctime} {module} {message}",
