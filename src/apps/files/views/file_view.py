@@ -113,10 +113,18 @@ class BaseFileViewSet(CommonModelViewSet):
     filterset_class = FileFilterSet
     http_method_names = ["get"]
     queryset = File.available_objects.prefetch_related(
-        "storage", "characteristics", "pas_compatible_file", "non_pas_compatible_file"
+        "storage",
+        "characteristics",
+        "characteristics__file_format_version",
+        "pas_compatible_file",
+        "non_pas_compatible_file",
     )
     queryset_include_removed = File.all_objects.prefetch_related(
-        "storage", "characteristics", "pas_compatible_file", "non_pas_compatible_file"
+        "storage",
+        "characteristics",
+        "characteristics__file_format_version",
+        "pas_compatible_file",
+        "non_pas_compatible_file",
     )
     access_policy: FilesAccessPolicy = FilesAccessPolicy
 

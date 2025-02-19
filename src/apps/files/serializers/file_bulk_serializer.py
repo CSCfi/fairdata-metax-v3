@@ -524,7 +524,13 @@ class FileBulkSerializer(serializers.ListSerializer):
             update_fields=fields_to_update,
         )
         # Related objects need to be fetched again from DB after save
-        prefetch_related_objects(files, "storage", "characteristics")
+        prefetch_related_objects(
+            files,
+            "storage",
+            "characteristics",
+            "characteristics__file_format_version",
+            "non_pas_compatible_file",
+        )
 
         # Cleanup any orphaned characteristics
         FileCharacteristics.objects.filter(file__isnull=True).delete()
