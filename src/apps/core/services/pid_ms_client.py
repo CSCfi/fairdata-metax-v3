@@ -45,16 +45,16 @@ class _PIDMSClient:
             "type": "URN",
             "persist": 0,
         }
+        url = f"https://{settings.PID_MS_BASEURL}/v1/pid"
         try:
-            response = requests.post(
-                f"https://{settings.PID_MS_BASEURL}/v1/pid", json=payload, headers=self.headers
-            )
+            response = requests.post(url, json=payload, headers=self.headers)
             response.raise_for_status()
             if not response.text:
-                raise Exception(f"PID MS returned: {response.text}")
+                raise Exception(f"PID MS returned: {response.status_code} {response.text}")
+            _logger.info(f"Created URN for dataset {dataset_id}: {response.text}")
             return response.text
         except Exception as e:
-            _logger.error(f"Exception in PIDMSClient: {e}")
+            _logger.error(f"Exception in PIDMSClient: {e}, request: POST {url}, payload={payload}")
             raise ServiceUnavailableError
 
     def create_doi(self, dataset_id):
@@ -63,16 +63,16 @@ class _PIDMSClient:
         payload = Datacitedata().get_datacite_json(dataset_id)
         payload["data"]["attributes"]["event"] = "publish"
         payload["data"]["attributes"]["url"] = f"https://{self.etsin_url}/dataset/{dataset_id}"
+        url = f"https://{settings.PID_MS_BASEURL}/v1/pid/doi"
         try:
-            response = requests.post(
-                f"https://{settings.PID_MS_BASEURL}/v1/pid/doi", json=payload, headers=self.headers
-            )
+            response = requests.post(url, json=payload, headers=self.headers)
             response.raise_for_status()
             if not response.text:
-                raise Exception(f"PID MS returned: {response.text}")
+                raise Exception(f"PID MS returned empty identifier for dataset {dataset_id}")
+            _logger.info(f"Created DOI for dataset {dataset_id}: {response.text}")
             return response.text
         except Exception as e:
-            _logger.error(f"Exception in PIDMSClient: {e}")
+            _logger.error(f"Exception in PIDMSClient: {e}, request: POST {url}, payload={payload}")
             raise ServiceUnavailableError
 
     def update_doi_dataset(self, dataset_id, doi):
@@ -84,23 +84,26 @@ class _PIDMSClient:
 
         payload = Datacitedata().get_datacite_json(dataset_id)
         payload["data"]["attributes"]["url"] = f"https://{self.etsin_url}/dataset/{dataset_id}"
+        url = f"https://{settings.PID_MS_BASEURL}/v1/pid/doi/{doi}"
         try:
             response = requests.put(
-                f"https://{settings.PID_MS_BASEURL}/v1/pid/doi/{doi}",
+                url,
                 json=payload,
                 headers=self.headers,
             )
             response.raise_for_status()
+            _logger.info(f"Updated DOI dataset {dataset_id}: {response.text}")
             return response.text
         except Exception as e:
-            _logger.error(f"Exception in PIDMSClient: {e}")
+            _logger.error(f"Exception in PIDMSClient: {e}, request: PUT {url}, payload={payload}")
             raise ServiceUnavailableError
 
     def check_if_doi_exists(self, dataset_id, doi):
         dataset_url = f"https://{self.etsin_url}/dataset/{dataset_id}"
+        url = f"https://{settings.PID_MS_BASEURL}/get/v1/pid/{doi}"
         try:
             response = requests.get(
-                f"https://{settings.PID_MS_BASEURL}/get/v1/pid/{doi}",
+                url=url,
                 headers=self.headers,
             )
             if response.status_code == status.HTTP_404_NOT_FOUND:
@@ -114,7 +117,7 @@ class _PIDMSClient:
                 )
             return True
         except Exception as e:
-            _logger.error(f"Exception in PIDMSClient: {e}")
+            _logger.error(f"Exception in PIDMSClient: {e}, request: GET {url}")
             raise ServiceUnavailableError
 
     def insert_pid(self, dataset_id, pid):

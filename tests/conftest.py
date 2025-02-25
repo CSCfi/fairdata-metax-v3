@@ -863,6 +863,7 @@ def tweaked_settings(settings):
     settings.METRICS_REPORT_URL = "https://example.com/metrics/reports/datasets.json"
     settings.ENABLE_BACKGROUND_TASKS = False
     settings.PID_MS_CLIENT_INSTANCE = "apps.core.services.pid_ms_client._DummyPIDMSClient"
+    settings.ETSIN_URL = "etsin-test"
 
 
 @pytest.fixture
