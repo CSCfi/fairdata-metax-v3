@@ -524,7 +524,9 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         pas_version = self.create_copy(
             dataset_versions=None,
             file_set=None,
-            preservation=self.preservation.copier.copy(self.preservation),
+            preservation=self.preservation.copier.copy(
+                self.preservation, new_values={"preservation_identifier": None}
+            ),
             data_catalog=pas_catalog,
             generate_pid_on_publish=GeneratedPIDType.DOI,
         )
@@ -1048,6 +1050,9 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             self.published_revision += 1
             self.draft_revision = 0
             self.validate_published()
+            if self.preservation and self.preservation.preservation_identifier is None:
+                self.preservation.preservation_identifier = self.persistent_identifier
+                self.preservation.save()
 
         self.set_update_reason(f"{self.state}-{self.published_revision}.{self.draft_revision}")
         super().save(*args, **kwargs)

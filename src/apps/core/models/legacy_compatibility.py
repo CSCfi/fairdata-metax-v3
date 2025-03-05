@@ -39,6 +39,7 @@ class LegacyCompatibility:
             "root['research_dataset']['modified']",
             "root['research_dataset']['issued']",
             "root['metadata_owner_org']",  # Missing value filled from metadata_provider_org
+            "root['preservation_identifier']",
             regex("root['research_dataset']['language'][\\d+]['title']"),
             regex("root['research_dataset']['spatial'][\\d+]['as_wkt']"),
             # Allow adding default "notspecified" license

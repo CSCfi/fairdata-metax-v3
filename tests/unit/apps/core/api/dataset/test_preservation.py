@@ -33,7 +33,51 @@ def test_create_dataset_preservation(admin_client, preservation_dataset_json):
         "/v3/datasets", preservation_dataset_json, content_type="application/json"
     )
     assert resp.status_code == 201
-    assert_nested_subdict(preservation_dataset_json["preservation"], resp.json()["preservation"])
+    data = resp.json()
+    assert_nested_subdict(preservation_dataset_json["preservation"], data["preservation"])
+    assert data["preservation"]["preservation_identifier"] == data["persistent_identifier"]
+
+
+@pytest.mark.usefixtures("data_catalog", "reference_data")
+def test_create_dataset_preservation_nondefault_preservation_identifier(
+    admin_client, preservation_dataset_json
+):
+    preservation_dataset_json["preservation"]["preservation_identifier"] = "explicitly-set-value"
+    resp = admin_client.post(
+        "/v3/datasets", preservation_dataset_json, content_type="application/json"
+    )
+    assert resp.status_code == 201
+    assert resp.data["preservation"]["preservation_identifier"] == "explicitly-set-value"
+
+
+@pytest.mark.usefixtures("data_catalog", "reference_data")
+def test_create_dataset_preservation_clear_preservation_identifier(
+    admin_client, preservation_dataset_json
+):
+    preservation_dataset_json["preservation"]["preservation_identifier"] = "explicitly-set-value"
+    resp = admin_client.post(
+        "/v3/datasets", preservation_dataset_json, content_type="application/json"
+    )
+    assert resp.status_code == 201
+    dataset_id = resp.data["id"]
+    pid = resp.data["persistent_identifier"]
+    assert resp.data["preservation"]["preservation_identifier"] == "explicitly-set-value"
+
+    # Clear preservation identifier -> reverts to pid
+    resp = admin_client.patch(
+        f"/v3/datasets/{dataset_id}/preservation",
+        {"preservation_identifier": None},
+        content_type="application/json",
+    )
+    assert resp.status_code == 200
+    assert resp.data["preservation_identifier"] == pid
+
+    # Ensure the updated preservation value is saved
+    resp = admin_client.get(
+        f"/v3/datasets/{dataset_id}/preservation",
+        content_type="application/json",
+    )
+    assert resp.data["preservation_identifier"] == pid
 
 
 @pytest.mark.usefixtures("data_catalog", "reference_data")
@@ -294,6 +338,7 @@ def test_patch_dataset_nonexisting_preservation(
         "state": -1,
         "pas_package_created": False,
         "pas_process_running": False,
+        "preservation_identifier": dataset["persistent_identifier"],
     }
     dataset_signal_handlers.assert_call_counts(created=0, updated=1)
 
@@ -350,6 +395,8 @@ def test_create_dataset_preservation_version(
     data = res.json()
     preserved_id = data["id"]
     preserved_pid = data["persistent_identifier"]
+    preserved_preservation_identifier = data["preservation"]["preservation_identifier"]
+    assert preserved_preservation_identifier == preserved_pid
     assert data["data_catalog"] == "urn:nbn:fi:att:data-catalog-pas"
     assert data["fileset"]["storage_service"] == "pas"
     assert data["fileset"]["csc_project"] == "project"
@@ -367,6 +414,10 @@ def test_create_dataset_preservation_version(
     assert data["fileset"]["csc_project"] == "project"
     assert data["preservation"]["dataset_version"]["id"] == preserved_id
     assert data["preservation"]["dataset_version"]["preservation_state"] == 0
+
+    original_preservation_identifier = data["preservation"]["preservation_identifier"]
+    assert original_preservation_identifier == data["persistent_identifier"]
+    assert original_preservation_identifier != preserved_preservation_identifier
     assert data["other_identifiers"][0]["notation"] == preserved_pid
     assert len(data["dataset_versions"]) == 1
 
