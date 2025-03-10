@@ -10,14 +10,6 @@ from apps.files import factories
 from apps.files.models import File
 
 
-@pytest.fixture(autouse=True)
-def v2_integration_settings(settings):
-    settings.METAX_V2_HOST = "https://metax-v2-test"
-    settings.METAX_V2_USER = "metax-v3-user"
-    settings.METAX_V2_PASSWORD = "metax-v3-password"
-    return settings
-
-
 def get_mock_data(filename="legacy_metax_response.json"):
     filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
     with open(filepath) as json_file:
@@ -44,7 +36,6 @@ def mock_response(requests_mock):
         url=re.compile(r"https://metax-v2-test/rest/v2/datasets/.*/files"),
         json=[],
     )
-
 
 
 @pytest.fixture

@@ -60,6 +60,17 @@ class V2SyncStatus(models.Model):
             raise ValueError("V2SyncStatus: Expected object id to match dataset.id.")
         return super().save(*args, **kwargs)
 
+    @classmethod
+    def prefetch_datasets(cls, statuses: Iterable):
+        """Prefetch related datasets for an iterable of statuses."""
+        datasets = []
+        for status in statuses:
+            try:
+                datasets.append(status.dataset)
+            except Dataset.DoesNotExist:
+                pass
+        prefetch_related_objects(datasets, *Dataset.common_prefetch_fields)
+
     class Meta:
         verbose_name_plural = "V2 sync statuses"
         ordering = ["-sync_started"]

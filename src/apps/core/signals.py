@@ -60,7 +60,9 @@ def should_sync(dataset: Dataset, action: SyncAction) -> bool:
     return not later_sync_exists
 
 
-def sync_dataset_to_v2(dataset: Dataset, action: SyncAction):
+def sync_dataset_to_v2(dataset: Dataset, action: SyncAction, force_update=False):
+    if not settings.METAX_V2_INTEGRATION_ENABLED:
+        raise ValueError("V2 integration is not enabled")
     client = MetaxV2Client()
     with transaction.atomic():
         # Lock syncing dataset to prevent multiple syncs to the same dataset at the same time.
@@ -78,7 +80,9 @@ def sync_dataset_to_v2(dataset: Dataset, action: SyncAction):
         status.save(using="extra_connection")
         try:
             if action == SyncAction.CREATE or action == SyncAction.UPDATE:
-                created = action == SyncAction.CREATE
+                # Argument force_update sets created=False so we always check if
+                # dataset is already in V2 before trying to create it
+                created = action == SyncAction.CREATE and not force_update
                 client.update_dataset(dataset, created=created)
                 status.sync_files_started = timezone.now()
                 status.save()

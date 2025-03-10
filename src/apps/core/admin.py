@@ -1,6 +1,7 @@
 import logging
 
-from django.contrib import admin
+from django.conf import settings
+from django.contrib import admin, messages
 from django.db import models
 from django.utils import timezone
 from django_json_widget.widgets import JSONEditorWidget
@@ -9,6 +10,8 @@ from simple_history.admin import SimpleHistoryAdmin
 from apps.common.admin import AbstractDatasetPropertyBaseAdmin
 
 # Register your models here.
+from apps.common.profiling import count_queries
+from apps.common.tasks import run_task
 from apps.core.models import (
     AccessRights,
     CatalogHomePage,
@@ -34,7 +37,8 @@ from apps.core.models import (
     Temporal,
     Theme,
 )
-from apps.core.models.sync import V2SyncStatus
+from apps.core.models.sync import SyncAction, V2SyncStatus
+from apps.core.signals import sync_dataset_to_v2
 
 logger = logging.getLogger(__name__)
 
@@ -156,6 +160,25 @@ class DatasetAdmin(AbstractDatasetPropertyBaseAdmin, SimpleHistoryAdmin):
     list_select_related = ("access_rights", "data_catalog", "metadata_owner")
     search_fields = ["title__values", "keyword"]
     inlines = [V2SyncStatusInline]
+    actions = ["sync_to_v2"]
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if not settings.METAX_V2_INTEGRATION_ENABLED:
+            actions.pop("sync_to_v2")
+        return actions
+
+    @admin.action(description="Sync datasets to V2")
+    def sync_to_v2(self, request, queryset):
+        datasets = Dataset.objects.filter(id__in=[item.id for item in queryset])
+        datasets.prefetch_related(*Dataset.common_prefetch_fields)
+        for dataset in datasets:
+            run_task(sync_dataset_to_v2, dataset=dataset, action=SyncAction.UPDATE)
+            self.message_user(
+                request,
+                f"{len(datasets)} datasets set to sync to V2",
+                messages.SUCCESS,
+            )
 
     def save_model(self, request, obj: Dataset, form, change):
         created = obj._state.adding
@@ -300,8 +323,40 @@ class V2SyncStatusAdmin(admin.ModelAdmin):
     )
     list_display = (
         "dataset_id",
+        "action",
         "sync_started",
         "sync_stopped",
         "duration",
         "status",
     )
+    list_filter = ("sync_stopped",)
+    actions = ["sync_to_v2"]
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if not settings.METAX_V2_INTEGRATION_ENABLED:
+            actions.pop("sync_to_v2")
+        return actions
+
+    @admin.action(description="Sync to V2")
+    def sync_to_v2(self, request, queryset):
+        V2SyncStatus.prefetch_datasets(queryset)
+        for status in queryset:
+            dataset: Dataset
+            try:
+                dataset = status.dataset
+            except Dataset.DoesNotExist:
+                if status.action == SyncAction.DELETE or status.action == SyncAction.FLUSH:
+                    dataset = Dataset(id=status.dataset_id)
+                else:
+                    self.message_user(
+                        request,
+                        f"Dataset {status.dataset_id} not found",
+                        messages.ERROR,
+                    )
+            run_task(sync_dataset_to_v2, dataset=dataset, action=status.action)
+        self.message_user(
+            request,
+            f"{len(queryset)} datasets set to sync to V2",
+            messages.SUCCESS,
+        )
