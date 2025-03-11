@@ -22,6 +22,7 @@ from pathlib import Path
 import factory.random
 from django.utils.translation import gettext_lazy as _
 from environs import Env
+from watchman import constants as watchman_constants
 
 env = Env()
 
@@ -46,6 +47,8 @@ MEDIA_ROOT = join(ROOT_DIR, "media")
 
 # watchman storage setting
 WATCHMAN_STORAGE_PATH = "django-watchman/"
+
+WATCHMAN_CHECKS = watchman_constants.DEFAULT_CHECKS + ("apps.core.checks.check_v2_sync",)
 
 # look for static assets here
 STATICFILES_DIRS = [
@@ -209,6 +212,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
+
 
 # LOGGING
 # ------------------------------------------------------------------------------
