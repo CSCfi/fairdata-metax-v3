@@ -63,3 +63,13 @@ class V2SyncStatus(models.Model):
     class Meta:
         verbose_name_plural = "V2 sync statuses"
         ordering = ["-sync_started"]
+
+
+class LastSuccessfulV2Sync(models.Model):
+    """Timestamp of last successful dataset synchronization to V2."""
+
+    id = models.UUIDField(primary_key=True, editable=False)  # dataset.id
+    record_modified = models.DateTimeField(null=True, blank=True)  # dataset.record_modified
+
+    class Meta:
+        ordering = ["-record_modified"]

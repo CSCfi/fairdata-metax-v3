@@ -3,6 +3,7 @@ import re
 
 import pytest
 from django.conf import settings as django_settings
+from unittest.mock import patch
 
 from apps.core.models.catalog_record.dataset import Dataset
 from apps.core.models.sync import V2SyncStatus
@@ -302,3 +303,90 @@ def test_dataset_v2_integration_status(
     assert status.sync_started is not None
     assert status.sync_stopped is not None
     assert status.error is None
+
+
+@pytest.fixture
+def mock_tasks():
+    """Make run_task to collect tasks in list instead of running them directlyF."""
+    tasks = []
+
+    def impl(fn, *args, **kwargs):
+        tasks.append(lambda: fn(*args, **kwargs))
+
+    with patch("apps.core.signals.run_task", impl):
+        yield tasks
+
+
+@pytest.mark.usefixtures("data_catalog", "reference_data")
+def test_dataset_v2_integration_tasks_in_order(
+    admin_client,
+    dataset_a_json,
+    mock_v2_integration,
+    requests_mock,
+    mock_tasks,
+    v2_integration_settings,
+):
+    """Test running sync-to-V2 tasks in order."""
+    # Create and patch dataset, should trigger two sync tasks
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    res = admin_client.patch(
+        f"/v3/datasets/{res.data['id']}",
+        {"title": {"en": "new title"}},
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert len(mock_tasks) == 2
+
+    # Sync create
+    mock_tasks[0]()
+    assert requests_mock.call_count == 1
+    assert requests_mock.request_history[0].method == "POST"
+
+    # Sync update
+    mock_tasks[1]()
+    assert requests_mock.call_count == 3
+    assert requests_mock.request_history[1].method == "GET"
+    assert requests_mock.request_history[2].method == "PUT"
+    assert requests_mock.request_history[2].json()["research_dataset"]["title"] == {
+        "en": "new title"
+    }
+
+
+@pytest.mark.usefixtures("data_catalog", "reference_data")
+def test_dataset_v2_integration_tasks_out_of_order(
+    admin_client,
+    dataset_a_json,
+    mock_v2_integration,
+    requests_mock,
+    mock_tasks,
+    v2_integration_settings,
+):
+    """Test running sync-to-V2 tasks in reverse order."""
+    # Return 404 from GET /v3/datasest/<id>
+    matcher = re.compile(v2_integration_settings.METAX_V2_HOST)
+    requests_mock.register_uri("GET", matcher, status_code=404),
+
+    # Create and patch dataset, should trigger two sync tasks
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    res = admin_client.patch(
+        f"/v3/datasets/{res.data['id']}",
+        {"title": {"en": "new title"}},
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert len(mock_tasks) == 2
+
+    # Sync update before create
+    mock_tasks[1]()
+    assert requests_mock.call_count == 2
+    assert requests_mock.request_history[0].method == "GET"
+    assert requests_mock.request_history[1].method == "POST"
+    assert requests_mock.request_history[1].json()["research_dataset"]["title"] == {
+        "en": "new title"
+    }
+
+    # Sync create, should not make new requests because a later version has already been synced
+    mock_tasks[0]()
+    assert requests_mock.call_count == 2

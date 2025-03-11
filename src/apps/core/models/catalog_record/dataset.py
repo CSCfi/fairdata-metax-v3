@@ -140,7 +140,6 @@ class Dataset(V2DatasetMixin, CatalogRecord):
     cumulation_started = models.DateTimeField(null=True, blank=True)
     cumulation_ended = models.DateTimeField(null=True, blank=True)
     last_cumulative_addition = models.DateTimeField(null=True, blank=True)
-
     generate_pid_on_publish = models.CharField(
         max_length=4,
         choices=GeneratedPIDType.choices,
@@ -657,6 +656,10 @@ class Dataset(V2DatasetMixin, CatalogRecord):
 
         if self.access_rights:
             self.access_rights.delete(*args, **kwargs)
+
+        # Set modification timestamp so pre_delete signal
+        # handlers have it up-to-date.
+        self.record_modified = timezone.now()
 
         _deleted = super().delete(*args, **kwargs)
         if "soft" in kwargs and kwargs["soft"] is True:

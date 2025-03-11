@@ -12,7 +12,7 @@ from apps.common.locks import lock_sync_dataset
 from apps.common.tasks import run_task
 from apps.core.models import Dataset, FileSet
 from apps.core.models.contract import Contract
-from apps.core.models.sync import SyncAction, V2SyncStatus
+from apps.core.models.sync import LastSuccessfulV2Sync, SyncAction, V2SyncStatus
 from apps.core.services import MetaxV2Client
 from apps.files.models import File
 from apps.files.signals import pre_files_deleted
@@ -49,6 +49,17 @@ def handle_files_deleted(sender, queryset, **kwargs):
         fileset.deprecate_dataset()
 
 
+def should_sync(dataset: Dataset, action: SyncAction) -> bool:
+    if action == SyncAction.DELETE or action == SyncAction.FLUSH:
+        return True
+
+    # Skip sync if a later version has already been synced
+    later_sync_exists = LastSuccessfulV2Sync.objects.filter(
+        id=dataset.id, record_modified__gt=dataset.record_modified
+    ).exists()
+    return not later_sync_exists
+
+
 def sync_dataset_to_v2(dataset: Dataset, action: SyncAction):
     client = MetaxV2Client()
     with transaction.atomic():
@@ -56,6 +67,9 @@ def sync_dataset_to_v2(dataset: Dataset, action: SyncAction):
         lock_sync_dataset(id=dataset.id)
         if dataset.draft_of:
             lock_sync_dataset(id=dataset.draft_of_id)
+
+        if not should_sync(dataset, action):
+            return
 
         # Use extra_connection for status so it works independently of request transaction
         status = V2SyncStatus(
@@ -85,6 +99,10 @@ def sync_dataset_to_v2(dataset: Dataset, action: SyncAction):
         finally:
             status.sync_stopped = timezone.now()
             status.save()
+            if not status.error:
+                LastSuccessfulV2Sync(
+                    id=dataset.id, record_modified=dataset.record_modified or status.sync_started
+                ).save()
 
 
 @receiver(post_delete, sender=Dataset)
