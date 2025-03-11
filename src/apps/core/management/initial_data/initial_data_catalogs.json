@@ -303,7 +303,8 @@
     "allow_remote_resources": false,
     "storage_services": ["ida"],
     "allowed_pid_types": ["URN", "DOI"],
-    "publishing_channels": ["etsin", "ttv"]
+    "publishing_channels": ["etsin", "ttv"],
+    "allow_download": true
   },
   {
     "id": "urn:nbn:fi:att:data-catalog-kielipankki",
