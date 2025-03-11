@@ -9,12 +9,14 @@ from apps.core.models import DataCatalog
 
 logger = logging.getLogger(__name__)
 
-pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.datacatalog]
+pytestmark = [
+    pytest.mark.django_db,
+    pytest.mark.datacatalog,
+    pytest.mark.usefixtures("language_reference_data"),
+]
 
 
-def test_create_datacatalog(
-    admin_client, datacatalog_a_json, reference_data, data_catalog_list_url
-):
+def test_create_datacatalog(admin_client, datacatalog_a_json, data_catalog_list_url):
     res = admin_client.post(
         data_catalog_list_url, datacatalog_a_json, content_type="application/json"
     )
@@ -22,9 +24,7 @@ def test_create_datacatalog(
     assert res.status_code == 201
 
 
-def test_create_minimal_datacatalog(
-    admin_client, datacatalog_d_json, reference_data, data_catalog_list_url
-):
+def test_create_minimal_datacatalog(admin_client, datacatalog_d_json, data_catalog_list_url):
     res = admin_client.post(
         data_catalog_list_url, datacatalog_d_json, content_type="application/json"
     )
@@ -32,9 +32,7 @@ def test_create_minimal_datacatalog(
     assert res.status_code == 201
 
 
-def test_create_datacatalog_twice(
-    admin_client, datacatalog_a_json, reference_data, data_catalog_list_url
-):
+def test_create_datacatalog_twice(admin_client, datacatalog_a_json, data_catalog_list_url):
     res1 = admin_client.post(
         data_catalog_list_url, datacatalog_a_json, content_type="application/json"
     )
@@ -46,7 +44,7 @@ def test_create_datacatalog_twice(
 
 
 def test_change_datacatalog(
-    admin_client, datacatalog_c_json, datacatalog_put_json, reference_data, data_catalog_list_url
+    admin_client, datacatalog_c_json, datacatalog_put_json, data_catalog_list_url
 ):
     _now = datetime.datetime.now()
 
@@ -65,7 +63,7 @@ def test_change_datacatalog(
 
 
 def test_change_datacatalog_id(
-    admin_client, datacatalog_c_json, datacatalog_put_json, reference_data, data_catalog_list_url
+    admin_client, datacatalog_c_json, datacatalog_put_json, data_catalog_list_url
 ):
     res1 = admin_client.post(
         data_catalog_list_url, datacatalog_c_json, content_type="application/json"
@@ -80,7 +78,7 @@ def test_change_datacatalog_id(
 
 
 def test_change_datacatalog_to_minimal(
-    admin_client, datacatalog_a_json, datacatalog_d_json, reference_data, data_catalog_list_url
+    admin_client, datacatalog_a_json, datacatalog_d_json, data_catalog_list_url
 ):
     _now = datetime.datetime.now()
     res1 = admin_client.post(
@@ -95,7 +93,7 @@ def test_change_datacatalog_to_minimal(
 
 
 def test_change_datacatalog_from_minimal(
-    admin_client, datacatalog_a_json, datacatalog_d_json, reference_data, data_catalog_list_url
+    admin_client, datacatalog_a_json, datacatalog_d_json, data_catalog_list_url
 ):
     res1 = admin_client.post(
         data_catalog_list_url, datacatalog_d_json, content_type="application/json"
@@ -110,9 +108,7 @@ def test_change_datacatalog_from_minimal(
     assert response.data.get("language")[0].get("url") == "http://lexvo.org/id/iso639-3/fin"
 
 
-def test_create_datacatalog_error(
-    admin_client, datacatalog_error_json, reference_data, data_catalog_list_url
-):
+def test_create_datacatalog_error(admin_client, datacatalog_error_json, data_catalog_list_url):
     res = admin_client.post(
         data_catalog_list_url, datacatalog_error_json, content_type="application/json"
     )
@@ -227,7 +223,7 @@ def test_delete_datacatalog_by_id(admin_client, post_datacatalog_payloads_a_b_c)
     assert response.status_code == 404
 
 
-def test_put_datacatalog(admin_client, datacatalog_a_json, reference_data, data_catalog_list_url):
+def test_put_datacatalog(admin_client, datacatalog_a_json, data_catalog_list_url):
     res1 = admin_client.post(
         data_catalog_list_url, datacatalog_a_json, content_type="application/json"
     )
@@ -251,9 +247,7 @@ def test_put_datacatalog(admin_client, datacatalog_a_json, reference_data, data_
     assert put_json == {key: value for key, value in res2.json().items() if value}
 
 
-def test_patch_datacatalog(
-    admin_client, datacatalog_a_json, reference_data, data_catalog_list_url
-):
+def test_patch_datacatalog(admin_client, datacatalog_a_json, data_catalog_list_url):
     res1 = admin_client.post(
         data_catalog_list_url, datacatalog_a_json, content_type="application/json"
     )
@@ -275,7 +269,7 @@ def test_patch_datacatalog(
 
 
 def test_add_publishing_channel_to_datacatalog(
-    admin_client, datacatalog_a_json, reference_data, data_catalog_list_url
+    admin_client, datacatalog_a_json, data_catalog_list_url
 ):
     res1 = admin_client.post(
         data_catalog_list_url, datacatalog_a_json, content_type="application/json"
@@ -298,7 +292,7 @@ def test_add_publishing_channel_to_datacatalog(
 
 
 def test_create_datacatalog_with_multiple_publishing_channels(
-    admin_client, datacatalog_a_json, reference_data, data_catalog_list_url
+    admin_client, datacatalog_a_json, data_catalog_list_url
 ):
     datacatalog_a_json["publishing_channels"] = ["etsin", "ttv"]
     res1 = admin_client.post(
@@ -309,7 +303,7 @@ def test_create_datacatalog_with_multiple_publishing_channels(
 
 
 def test_try_invalid_publishing_channel_in_datacatalog(
-    admin_client, datacatalog_a_json, reference_data, data_catalog_list_url
+    admin_client, datacatalog_a_json, data_catalog_list_url
 ):
     datacatalog_a_json["publishing_channels"] = ["foo"]
     res1 = admin_client.post(
@@ -320,7 +314,7 @@ def test_try_invalid_publishing_channel_in_datacatalog(
 
 
 def test_create_soft_deleted_datacatalog_again(
-    admin_client, datacatalog_a_json, reference_data, data_catalog_list_url
+    admin_client, datacatalog_a_json, data_catalog_list_url
 ):
     res1 = admin_client.post(
         data_catalog_list_url,

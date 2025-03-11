@@ -29,7 +29,7 @@ def test_fileset_preservation_copy(dataset_with_files, use_category_reference_da
         file_id=f.id,
         title="File title",
         description="File description",
-        use_category=use_category_reference_data,
+        use_category=use_category_reference_data[0],
     )
 
     FileSetDirectoryMetadata.objects.create(

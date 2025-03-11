@@ -4,7 +4,7 @@ from rest_framework.reverse import reverse
 
 from apps.core.models.catalog_record.dataset import Dataset
 
-pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.dataset, pytest.mark.adapter]
+pytestmark = [pytest.mark.django_db, pytest.mark.dataset, pytest.mark.adapter]
 
 
 def create_editor_json(user_id, modified=None, removed=False):

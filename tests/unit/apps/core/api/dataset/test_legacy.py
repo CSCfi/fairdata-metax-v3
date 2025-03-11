@@ -11,7 +11,7 @@ from apps.core.models import LegacyDataset
 from apps.core.models.catalog_record.dataset import Dataset
 from apps.core.models.data_catalog import DataCatalog
 
-pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.dataset, pytest.mark.adapter]
+pytestmark = [pytest.mark.django_db, pytest.mark.dataset, pytest.mark.adapter]
 
 
 def test_create_legacy_dataset(legacy_dataset_a):
