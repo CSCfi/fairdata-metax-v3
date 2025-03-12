@@ -8,15 +8,13 @@
 import logging
 import operator
 from datetime import datetime, timezone
-from enum import Enum
 from functools import reduce
 from typing import List
 
-import pytz
 from django.conf import settings
 from django.core.cache import caches
 from django.db import transaction
-from django.db.models import OuterRef, Prefetch, Q, QuerySet, Value, prefetch_related_objects
+from django.db.models import Q, QuerySet, Value, prefetch_related_objects
 from django.http import Http404
 from django.utils.decorators import method_decorator
 from django.utils.http import parse_http_date
@@ -35,7 +33,6 @@ from watson import search
 
 from apps.common.filters import MultipleCharFilter, VerboseChoiceFilter
 from apps.common.helpers import ensure_dict, omit_empty
-from apps.common.profiling import count_queries
 from apps.common.serializers.serializers import (
     FieldsQueryParamsSerializer,
     FlushQueryParamsSerializer,
@@ -44,7 +41,6 @@ from apps.common.serializers.serializers import (
 from apps.common.views import CommonModelViewSet
 from apps.core.cache import DatasetSerializerCache
 from apps.core.models.catalog_record import Dataset, FileSet
-from apps.core.models.catalog_record.dataset import DatasetVersions
 from apps.core.models.data_catalog import DataCatalog
 from apps.core.models.legacy_converter import LegacyDatasetConverter
 from apps.core.models.preservation import Preservation
@@ -72,7 +68,6 @@ from apps.files.models import File
 from apps.files.serializers import DirectorySerializer
 from apps.files.views.directory_view import DirectoryCommonQueryParams, DirectoryViewSet
 from apps.files.views.file_view import BaseFileViewSet, FileCommonFilterset
-from apps.users.models import MetaxUser
 
 from .dataset_aggregation import aggregate_queryset
 
@@ -553,6 +548,15 @@ class DatasetViewSet(CommonModelViewSet):
             return response.Response(serialized_data)
         else:
             return self.get_paginated_response(serialized_data)
+
+    def get_object(self):
+        if self.request.method not in ("GET", "OPTIONS"):
+            # Lock dataset row for the duration of the transaction
+            lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+            Dataset.lock_for_update(id=self.kwargs[lookup_url_kwarg])
+
+        obj: Dataset = super().get_object()
+        return obj
 
     def _get_object_with_deferred_prefetch(self):
         """Get object without triggering prefetch."""

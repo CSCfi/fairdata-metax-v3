@@ -1,7 +1,7 @@
-import pytest
 from datetime import timedelta
 from uuid import UUID
 
+import pytest
 from django.utils import timezone
 
 from apps.core.checks import check_v2_sync

@@ -3,6 +3,8 @@ from unittest.mock import ANY
 
 import pytest
 from django.contrib.auth.models import Group
+from django.db import connections, transaction, utils
+from psycopg.errors import LockNotAvailable
 from rest_framework.reverse import reverse
 from tests.utils import assert_nested_subdict, matchers
 from watson.models import SearchEntry
@@ -802,3 +804,26 @@ def test_omit_owner_user_when_no_edit_access(
     # Request dataset as another user
     res = user_client_2.get(f"/v3/datasets/{_id}", content_type="application/json")
     assert "user" not in res.data["metadata_owner"]
+
+
+@pytest.mark.django_db(databases=("default", "extra_connection"), transaction=True)
+def test_dataset_select_for_update(admin_client):
+    """Dataset update should lock the row for updating."""
+    dataset = factories.PublishedDatasetFactory()
+    with transaction.atomic():
+        # Getting lock should fail because the update has locked the dataset
+        with pytest.raises(utils.OperationalError) as ec:
+            res = admin_client.patch(
+                f"/v3/datasets/{dataset.id}", {}, content_type="application/json"
+            )
+            assert res.status_code == 200
+            with transaction.atomic(using="extra_connection"):
+                Dataset.objects.using("extra_connection").select_for_update(nowait=True).get(
+                    id=dataset.id
+                )
+        assert isinstance(ec.value.__cause__, LockNotAvailable)
+
+
+    with transaction.atomic(using="extra_connection"):
+        # Transaction done, lock should be available now
+        Dataset.objects.using("extra_connection").select_for_update(nowait=True).get(id=dataset.id)

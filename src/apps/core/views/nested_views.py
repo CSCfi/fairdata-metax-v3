@@ -57,10 +57,14 @@ class DatasetNestedViewSet(CommonModelViewSet):
             return instance
         try:
             dataset_qs = Dataset.available_objects.filter(id=self.kwargs["dataset_pk"])
+
+            # Lock dataset row for the duration of the transaction
+            if self.request.method not in ("GET", "OPTIONS"):
+                Dataset.lock_for_update(id=self.kwargs["dataset_pk"])
             dataset_qs = DatasetAccessPolicy().scope_queryset(self.request, dataset_qs)
         except DjangoValidationError:  # E.g. invalid UUID
             dataset_qs = Dataset.objects.none()
-        self._dataset_instance = get_object_or_404(dataset_qs)
+        self._dataset_instance: Dataset = get_object_or_404(dataset_qs)
         return self._dataset_instance
 
 

@@ -1,7 +1,9 @@
 import logging
 from typing import Optional
+from uuid import UUID
 
 from django.contrib.postgres.fields import ArrayField, HStoreField
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import MinLengthValidator
 from django.db import models
 from django.db.models import prefetch_related_objects
@@ -1072,3 +1074,16 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         if created:
             return dataset_created.send(sender=self.__class__, instance=self)
         return dataset_updated.send(sender=self.__class__, instance=self)
+
+    @classmethod
+    def lock_for_update(cls, id: UUID):
+        """Locks dataset row for update until end of transaction.
+
+        Blocks until lock is acquired. If no matching dataset is found, does nothing.
+        """
+        try:
+            # Ideally we'd call select_for_update in the same query where we fetch the dataset
+            # instance but postgres does not support it for queries that use `.distinct()`.
+            Dataset.all_objects.select_for_update(of=("self",)).filter(id=id).values("id").first()
+        except DjangoValidationError:
+            pass  # Invalid UUID

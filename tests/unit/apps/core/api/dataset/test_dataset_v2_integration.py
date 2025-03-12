@@ -1,9 +1,9 @@
 import logging
 import re
+from unittest.mock import patch
 
 import pytest
 from django.conf import settings as django_settings
-from unittest.mock import patch
 
 from apps.core.models.catalog_record.dataset import Dataset
 from apps.core.models.sync import V2SyncStatus
