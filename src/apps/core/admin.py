@@ -2,6 +2,7 @@ import logging
 
 from django.contrib import admin
 from django.db import models
+from django.utils import timezone
 from django_json_widget.widgets import JSONEditorWidget
 from simple_history.admin import SimpleHistoryAdmin
 
@@ -33,6 +34,7 @@ from apps.core.models import (
     Temporal,
     Theme,
 )
+from apps.core.models.sync import V2SyncStatus
 
 logger = logging.getLogger(__name__)
 
@@ -112,6 +114,18 @@ class RestrictionGrounds(CoreRefDataAdminMixin, admin.ModelAdmin):
     pass
 
 
+class V2SyncStatusInline(admin.StackedInline):
+    model = V2SyncStatus
+    readonly_fields = (
+        "sync_started",
+        "sync_files_started",
+        "sync_stopped",
+        "duration",
+        "action",
+        "error",
+    )
+
+
 @admin.register(Dataset)
 class DatasetAdmin(AbstractDatasetPropertyBaseAdmin, SimpleHistoryAdmin):
     list_display = (
@@ -141,6 +155,7 @@ class DatasetAdmin(AbstractDatasetPropertyBaseAdmin, SimpleHistoryAdmin):
     )
     list_select_related = ("access_rights", "data_catalog", "metadata_owner")
     search_fields = ["title__values", "keyword"]
+    inlines = [V2SyncStatusInline]
 
     def save_model(self, request, obj: Dataset, form, change):
         created = obj._state.adding
@@ -270,3 +285,23 @@ class EntityRelationAdmin(AbstractDatasetPropertyBaseAdmin):
 @admin.register(FileSet)
 class FileSetAdmin(AbstractDatasetPropertyBaseAdmin):
     pass
+
+
+@admin.register(V2SyncStatus)
+class V2SyncStatusAdmin(admin.ModelAdmin):
+    readonly_fields = (
+        "dataset",
+        "sync_started",
+        "sync_files_started",
+        "sync_stopped",
+        "duration",
+        "action",
+        "error",
+    )
+    list_display = (
+        "dataset_id",
+        "sync_started",
+        "sync_stopped",
+        "duration",
+        "status",
+    )

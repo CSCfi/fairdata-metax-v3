@@ -9,10 +9,14 @@ from tests.unit.apps.core.api.conftest import load_test_json
 from apps.core import factories
 from apps.core.models.catalog_record.related import FileSet
 from apps.core.models.file_metadata import FileSetFileMetadata
+from apps.core.models.sync import V2SyncStatus
 from apps.files.models import File
 from apps.refdata.models import UseCategory
 
-pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
+pytestmark = [
+    pytest.mark.django_db(databases=("default", "extra_connection")),
+    pytest.mark.dataset,
+]
 
 
 def callback(request, context):
@@ -22,7 +26,7 @@ def callback(request, context):
 
 def fail_callback(request, context):
     context.status_code = 400
-    return {}
+    return {"detail": "some fail reason"}
 
 
 @pytest.fixture
@@ -86,6 +90,8 @@ def test_dataset_files_legacy_sync(
     assert request_data["user_metadata"] == {"files": [], "directories": []}
 
 
+# Run as transactional test so "default" can see commits from "extra connection"
+@pytest.mark.django_db(databases=("default", "extra_connection"), transaction=True)
 def test_dataset_files_legacy_sync_fail(
     admin_client, synced_files, data_urls, mock_v2_dataset_files_integration_fail
 ):
@@ -98,11 +104,21 @@ def test_dataset_files_legacy_sync_fail(
     res = admin_client.patch(
         urls["dataset"], {"fileset": actions}, content_type="application/json"
     )
-    assert res.status_code == 409  # Failed due to 400 from v2
+    assert res.status_code == 200  # Update in V3 succeeds even when V2 sync fails
     mock = mock_v2_dataset_files_integration_fail["sync_mock"]
     assert mock.call_count == 1  # V2 files_from_v3 should be called once
 
+    status = V2SyncStatus.objects.get(id=res.data["id"])
+    assert status.status == "fail"
+    assert status.sync_started is not None
+    assert status.sync_files_started is not None
+    assert status.sync_stopped is not None
+    assert "status 400:" in status.error
+    assert "some fail reason" in status.error
 
+
+# Run as transactional test so "default" can see commits from "extra connection"
+@pytest.mark.django_db(databases=("default", "extra_connection"), transaction=True)
 def test_dataset_files_legacy_sync_missing_legacy_id(
     admin_client, deep_file_tree, data_urls, mock_v2_dataset_files_integration
 ):
@@ -115,9 +131,18 @@ def test_dataset_files_legacy_sync_missing_legacy_id(
     res = admin_client.patch(
         urls["dataset"], {"fileset": actions}, content_type="application/json"
     )
-    assert res.status_code == 409  # Sync fails due to missing legacy_ids
+    assert res.status_code == 200  # Sync fails due to missing legacy_ids
     mock = mock_v2_dataset_files_integration["sync_mock"]
     assert not mock.called  # V2 files_from_v3 should not be called
+
+    status = V2SyncStatus.objects.get(id=res.data["id"])
+    assert status.status == "fail"
+    assert status.sync_started is not None
+    assert status.sync_files_started is not None
+    assert status.sync_stopped is not None
+    # No request to V2 was made so error should not contain response
+    assert "status 400:" not in status.error
+    assert "some fail reason" not in status.error
 
 
 def test_dataset_files_legacy_sync_metadata(

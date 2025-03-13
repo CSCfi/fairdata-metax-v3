@@ -10,11 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
-import logging
-import time
 import json
+import logging
 import os
 import sys
+import time
 from datetime import timedelta
 from os.path import join
 from pathlib import Path
@@ -161,8 +161,33 @@ DATABASES = {
         "PASSWORD": os.environ.get("POSTGRES_PASS"),
         "HOST": os.getenv("POSTGRES_HOST", default="localhost"),
         "PORT": os.getenv("POSTGRES_PORT", default="5432"),
-    }
+        "CONN_MAX_AGE": 30,
+        "ATOMIC_REQUESTS": True,
+    },
 }
+
+# Extra connection to the default database. Useful when you want to log some
+# information that should remain in the database even if the current
+# transaction for the "default" connection fails.
+#
+# Note: Cachalot does not know the dbs are the same so writes by "extra_connection"
+# won't normally invalidate cache for "default". The simplest fix for this is to add the
+# tables "extra_connection" will update to CACHALOT_UNCACHABLE_TABLES.
+#
+# The extra connection also has some implications for tests:
+# - Tests using other than the default connection need declare all used databases,
+#   e.g. @pytest.mark.django_db(databases=["default", "extra_connection"])
+# - Normally each test database connection is in a separate transaction for the
+#   entire test and cannot see changes the other connection has made.
+#   Disable this by setting @pytest.mark.django_db(..., transaction=True).
+DATABASES["extra_connection"] = {
+    **DATABASES["default"],
+    "ATOMIC_REQUESTS": False,
+    "TEST": {
+        "MIRROR": "default",
+    },
+}
+
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
 
@@ -207,6 +232,7 @@ LOGGING = {
             "format": "%(asctime)s p%(process)d %(name)s %(levelname)s: %(message)s",
         },
         "simple": {
+            "class": "metax_service.settings.components.base.DateTimeZFormatter",
             "format": "{levelname} {asctime} {module} {message}",
             "style": "{",
         },

@@ -5,10 +5,15 @@ import pytest
 from django.conf import settings as django_settings
 
 from apps.core.models.catalog_record.dataset import Dataset
+from apps.core.models.sync import V2SyncStatus
+from apps.core.services.metax_v2_client import MetaxV2Client
 
 logger = logging.getLogger(__name__)
 
-pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
+pytestmark = [
+    pytest.mark.django_db(databases=("default", "extra_connection")),
+    pytest.mark.dataset,
+]
 
 
 @pytest.mark.usefixtures("data_catalog", "reference_data")
@@ -237,6 +242,8 @@ def test_create_legacy_draft_dataset_v2_integration(
     assert mock_v2_integration["post"].call_count == 0  # No new datasets created
 
 
+# Run as transactional test so "default" can see commits from "extra connection"
+@pytest.mark.django_db(databases=("default", "extra_connection"), transaction=True)
 @pytest.mark.usefixtures("data_catalog", "reference_data")
 def test_create_dataset_v2_integration_fail(
     admin_client, dataset_a_json, mock_v2_integration, requests_mock, v2_integration_settings
@@ -245,5 +252,53 @@ def test_create_dataset_v2_integration_fail(
     matcher = re.compile(v2_integration_settings.METAX_V2_HOST)
     requests_mock.register_uri("POST", matcher, status_code=400)
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
-    assert res.status_code == 409
+    assert res.status_code == 201
+    assert Dataset.all_objects.count() == 1
+
+    status = V2SyncStatus.objects.get(id=res.data["id"])
+    assert status.status == "fail"
+    assert status.sync_started is not None
+    assert status.sync_files_started is None  # fail before file sync started
+    assert status.sync_stopped is not None
+    assert "status 400:" in status.error
+
+
+# Run as transactional test so "default" can see commits from "extra connection"
+@pytest.mark.django_db(databases=("default", "extra_connection"), transaction=True)
+@pytest.mark.usefixtures("data_catalog", "reference_data")
+def test_dataset_v2_integration_status(
+    admin_client,
+    dataset_a_json,
+    mock_v2_integration,
+    requests_mock,
+    v2_integration_settings,
+    monkeypatch,
+):
+    # Patch update_dataset so we can capture the sync status while sync is running
+    incomplete_status = None
+    orig_update_dataset = MetaxV2Client.update_dataset
+
+    def patched(*args, **kwargs):
+        nonlocal incomplete_status
+        incomplete_status = V2SyncStatus.objects.first()
+        orig_update_dataset(*args, **kwargs)
+
+    monkeypatch.setattr(MetaxV2Client, "update_dataset", patched)
+
     assert Dataset.all_objects.count() == 0
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    assert requests_mock.call_count == 1
+
+    # Check that status showed as incomplete when update was ongoing
+    assert incomplete_status.status == "incomplete"
+    assert incomplete_status.sync_stopped is None
+    assert incomplete_status.error is None
+
+    # Check that status shows as success after sync is done
+    status = V2SyncStatus.objects.get(id=res.data["id"])
+    assert status.status == "success"
+    assert status.sync_started == incomplete_status.sync_started
+    assert status.sync_started is not None
+    assert status.sync_stopped is not None
+    assert status.error is None

@@ -67,8 +67,6 @@ SILKY_DYNAMIC_PROFILING = [
     {"module": "apps.core.views.dataset_view", "function": "DatasetViewSet.list"}
 ]
 
-DATABASES["default"]["ATOMIC_REQUESTS"] = True
-
 PID_MS_CLIENT_INSTANCE = "apps.core.services.pid_ms_client._DummyPIDMSClient"
 
 # Print emails in console instead of sending

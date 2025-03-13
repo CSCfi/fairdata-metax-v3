@@ -1,15 +1,12 @@
-import re
-
 import pytest
 from django.db.models import F
-from django.utils.dateparse import parse_datetime
 from tests.utils import matchers
 from tests.utils.utils import assert_same_datetime
 
 from apps.files.models.file import File
 
 pytestmark = [
-    pytest.mark.django_db,
+    pytest.mark.django_db(databases=("default", "extra_connection")),
     pytest.mark.adapter,
     pytest.mark.usefixtures("reference_data"),
 ]

@@ -603,6 +603,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             "legacydataset",
             "preservation",
             "draft_revision",
+            "sync_status",
         ]
 
         # Ignore PID from draft if it starts with "draft:"

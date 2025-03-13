@@ -4,10 +4,10 @@ import re
 from base64 import b64decode
 from datetime import timedelta
 from io import StringIO
-import requests
 from unittest.mock import patch
 
 import pytest
+import requests
 from django.core.management import call_command
 from django.db.models import F, Value
 from django.db.models.functions import Concat

@@ -179,6 +179,7 @@ def test_dataset_copied_fields():
         "dataset.actors.organization.children",
         "dataset.projects.funding.funder.organization.children",
         "dataset.next_draft",
+        "dataset.sync_status",
     }
 
 

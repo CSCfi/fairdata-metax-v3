@@ -22,6 +22,10 @@ logger = logging.getLogger(__name__)
 class LegacyUpdateFailed(exceptions.APIException):
     status_code = status.HTTP_409_CONFLICT
 
+    def __init__(self, detail=None, code=None, response=None):
+        super().__init__(detail, code)
+        self.response = response
+
 
 class MetaxV2Client:
     """Client for updating datasets in V2."""
@@ -53,10 +57,12 @@ class MetaxV2Client:
             logger.info(f"Dataset {instance.id} not found from Metax v2: {res}")
             return
         logger.error(
-            f"Sync {instance.id} to V2 failed: {res.status_code=}:\n"
+            f"Sync delete {instance.id} to V2 failed: {res.status_code=}:\n"
             f"  {res.content=}, \n  {res.headers=}"
         )
-        raise LegacyUpdateFailed(f"Failed to delete dataset ({instance.id}) from Metax V2")
+        raise LegacyUpdateFailed(
+            f"Failed to delete dataset ({instance.id}) from Metax V2", response=res
+        )
 
     def _patch_api_meta(self, dataset: "Dataset") -> requests.Response:
         """Patch dataset api_meta to version 3."""
@@ -159,7 +165,9 @@ class MetaxV2Client:
                 f"Sync dataset {identifier} to V2 failed: {res.status_code=}:\n"
                 f"  {res.content=}, \n  {res.headers=}"
             )
-            raise LegacyUpdateFailed(f"Failed to sync dataset ({identifier}) to Metax V2")
+            raise LegacyUpdateFailed(
+                f"Failed to sync dataset ({identifier}) to Metax V2", response=res
+            )
 
     def update_dataset_files(self, dataset: "Dataset", created=False):
         identifier = dataset.id
@@ -209,7 +217,9 @@ class MetaxV2Client:
                 f"Sync dataset {identifier} files to V2 failed: {res.status_code=}:"
                 f"\n  {res.content=}, \n  {res.headers=}"
             )
-            raise LegacyUpdateFailed(f"Failed to sync dataset {identifier} files to Metax V2")
+            raise LegacyUpdateFailed(
+                f"Failed to sync dataset {identifier} files to Metax V2", response=res
+            )
 
     def sync_contracts(self, contracts: List[Contract]):
         if not settings.METAX_V2_INTEGRATION_ENABLED:
@@ -232,7 +242,7 @@ class MetaxV2Client:
             logger.error(
                 f"Syncing contracts to V2 failed: {res.status_code=}:\n  {res.content=}, \n  {res.headers=}"
             )
-            raise LegacyUpdateFailed("Failed to sync contracts to Metax V2")
+            raise LegacyUpdateFailed("Failed to sync contracts to Metax V2", response=res)
 
         # Fill in missing legacy_ids from response data
         contracts_with_new_legacy_ids = []

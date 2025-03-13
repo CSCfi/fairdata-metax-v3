@@ -10,8 +10,6 @@ LOGGING["handlers"]["file"] = {
 }
 LOGGING["root"]["handlers"] = ["console", "file"]
 
-DATABASES["default"]["CONN_MAX_AGE"] = 30
-DATABASES["default"]["ATOMIC_REQUESTS"] = True
 
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True

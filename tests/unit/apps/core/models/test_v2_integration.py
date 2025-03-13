@@ -3,10 +3,14 @@ import re
 
 import pytest
 
-pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
+pytestmark = [
+    pytest.mark.django_db(databases=("default", "extra_connection")),
+    pytest.mark.dataset,
+]
 
 from tests.utils import matchers
 
+from apps.core.models.sync import SyncAction, V2SyncStatus
 from apps.core.services.metax_v2_client import LegacyUpdateFailed
 from apps.core.signals import dataset_created, dataset_updated
 
@@ -65,6 +69,10 @@ def test_v2_integration_hard_delete_dataset(mock_v2_integration, dataset_with_fo
     assert (
         call.url == f"https://metax-v2-test/rest/v2/datasets/{dataset_id}?removed=true&hard=true"
     )
+    assert (
+        V2SyncStatus.objects.using("extra_connection").get(id=dataset_id).action
+        == SyncAction.FLUSH
+    )
 
 
 @pytest.mark.adapter
@@ -75,6 +83,10 @@ def test_v2_integration_soft_delete_dataset(mock_v2_integration, dataset_with_fo
     call = mock_v2_integration["delete"].request_history[0]
     assert call.method == "DELETE"
     assert call.url == f"https://metax-v2-test/rest/v2/datasets/{dataset_id}?removed=true"
+    assert (
+        V2SyncStatus.objects.using("extra_connection").get(id=dataset_id).action
+        == SyncAction.DELETE
+    )
 
 
 @pytest.mark.adapter
@@ -122,15 +134,14 @@ def test_v2_integration_delete_dataset_log_error(
     delete_mock = requests_mock.delete(mock_v2_integration["delete"]._url, status_code=500)
 
     dataset_id = dataset_with_foreign_keys.id
-    with pytest.raises(LegacyUpdateFailed):
-        dataset_with_foreign_keys.delete(soft=True)
-        assert delete_mock.call_count == 1
-        call = delete_mock.request_history[0]
-        assert call.method == "DELETE"
-        assert call.url == f"https://metax-v2-test/rest/v2/datasets/{dataset_id}?removed=true"
-        assert caplog.messages == [
-            matchers.StringContaining(f"Failed to delete dataset {dataset_id} from Metax V2")
-        ]
+    dataset_with_foreign_keys.delete(soft=True)
+    assert delete_mock.call_count == 1
+    call = delete_mock.request_history[0]
+    assert call.method == "DELETE"
+    assert call.url == f"https://metax-v2-test/rest/v2/datasets/{dataset_id}?removed=true"
+    assert caplog.messages == [
+        matchers.StringContaining(f"Sync delete {dataset_id} to V2 failed:")
+    ]
 
 
 @pytest.mark.adapter
@@ -163,5 +174,6 @@ def test_v2_integration_create_dataset_fail(
 ):
     matcher = re.compile(v2_integration_settings.METAX_V2_HOST)
     requests_mock.register_uri("POST", matcher, status_code=400)
-    with pytest.raises(LegacyUpdateFailed):
-        dataset_created.send(sender=None, instance=dataset_with_foreign_keys)
+    dataset_created.send(sender=None, instance=dataset_with_foreign_keys)
+    status = dataset_with_foreign_keys.sync_status
+    assert status.error is not None
