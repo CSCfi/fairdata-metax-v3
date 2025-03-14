@@ -195,13 +195,13 @@ def test_query_datasets_preservation_state(admin_client, preservation_dataset):
     Query datasets that have the given preservation state
     """
     # One dataset with state 0
-    resp = admin_client.get("/v3/datasets", {"preservation__state": ["10", "0"]})
+    resp = admin_client.get("/v3/datasets", {"preservation__state": "10,0"})
     assert resp.status_code == 200
     assert resp.json()["count"] == 1
     assert resp.json()["results"][0]["id"] == preservation_dataset["id"]
 
     # No datasets with these preservation states
-    resp = admin_client.get("/v3/datasets", {"preservation__state": ["10", "20"]})
+    resp = admin_client.get("/v3/datasets", {"preservation__state": "10,20"})
     assert resp.status_code == 200
     assert resp.json()["count"] == 0
 

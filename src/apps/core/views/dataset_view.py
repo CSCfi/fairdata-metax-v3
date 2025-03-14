@@ -25,7 +25,7 @@ from drf_yasg.openapi import TYPE_STRING, Parameter, Response, Schema
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import exceptions, response, serializers, status
 from rest_framework.decorators import action
-from rest_framework.exceptions import NotAuthenticated
+from rest_framework.exceptions import NotAuthenticated, ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.renderers import JSONRenderer
 from rest_framework.reverse import reverse
@@ -76,13 +76,34 @@ serialized_datasets_cache = caches["serialized_datasets"]
 
 
 class DatasetFilter(filters.FilterSet):
-    title = filters.CharFilter(
-        field_name="title__values",
+    access_rights__access_type__pref_label = MultipleCharFilter(
+        method="filter_access_type",
+        label="access_type",
+    )
+
+    actors__organization__pref_label = MultipleCharFilter(
+        method="filter_organization",
+        label="organization name",
+    )
+
+    actors__person__name = MultipleCharFilter(
         max_length=512,
         lookup_expr="icontains",
-        label="title",
+        label="person name",
     )
-    data_catalog__id = filters.CharFilter(
+
+    actors__role = MultipleCharFilter(
+        field_name="actors__roles",
+        max_length=512,
+        lookup_expr="icontains",
+        label="actor role",
+        conjoined=True,
+        widget=CSVWidget,
+    )
+
+    actors__roles__creator = MultipleCharFilter(method="filter_creator", max_length=255)
+
+    data_catalog__id = MultipleCharFilter(
         field_name="data_catalog__id",
         lookup_expr="icontains",
         label="data-catalog identifier",
@@ -95,78 +116,12 @@ class DatasetFilter(filters.FilterSet):
         lookup_expr="icontains",
         label="data-catalog title",
     )
-    actors__person__name = MultipleCharFilter(
-        max_length=512,
-        lookup_expr="icontains",
-        label="person name",
-    )
-    actors__role = MultipleCharFilter(
-        field_name="actors__roles",
-        max_length=512,
-        lookup_expr="icontains",
-        label="actor role",
-        conjoined=True,
-        widget=CSVWidget,
-    )
-    metadata_owner__organization = filters.CharFilter(
-        max_length=512,
-        lookup_expr="icontains",
-        label="metadata owner organization",
-    )
-    metadata_owner__user = filters.CharFilter(
-        field_name="metadata_owner__user__username",
-        max_length=512,
-        lookup_expr="icontains",
-        label="metadata owner user",
-    )
-    persistent_identifier = filters.CharFilter(
-        max_length=255,
-        lookup_expr="exact",
-        label="persistent identifier",
-    )
-    preservation__contract = filters.CharFilter(
-        max_length=512,
-        label="preservation contract",
-        field_name="preservation__contract",
-    )
-    preservation__state = filters.MultipleChoiceFilter(
-        choices=Preservation.PreservationState.choices,
-        method="filter_preservation__state",
-        label="preservation_state",
-        field_name="preservation__state",
-    )
-    publishing_channels = VerboseChoiceFilter(
-        choices=[("etsin", "etsin"), ("ttv", "ttv"), ("all", "all")],
-        method="filter_publishing_channels",
-        help_text="Filter datasets based on the publishing channels of the dataset's catalog. The default value is 'etsin'.",
-    )
-    state = filters.ChoiceFilter(
-        choices=Dataset.StateChoices.choices,
-        label="state",
-    )
 
-    access_rights__access_type__pref_label = MultipleCharFilter(
-        method="filter_access_type",
-        label="access_type",
-    )
-
-    actors__organization__pref_label = MultipleCharFilter(
-        method="filter_organization",
-        label="organization name",
-    )
-
-    actors__roles__creator = MultipleCharFilter(method="filter_creator", max_length=255)
+    deprecated = filters.BooleanFilter(lookup_expr="isnull", exclude=True)
 
     field_of_science__pref_label = MultipleCharFilter(
         method="filter_field_of_science",
         label="field of science",
-    )
-
-    keyword = MultipleCharFilter(method="filter_keyword", label="keyword")
-
-    infrastructure__pref_label = MultipleCharFilter(
-        method="filter_infrastructure",
-        label="infrastructure",
     )
 
     file_type = MultipleCharFilter(
@@ -174,12 +129,26 @@ class DatasetFilter(filters.FilterSet):
         label="file_type",
     )
 
-    projects__title = MultipleCharFilter(
-        method="filter_project",
-        label="projects",
+    infrastructure__pref_label = MultipleCharFilter(
+        method="filter_infrastructure",
+        label="infrastructure",
     )
 
-    deprecated = filters.BooleanFilter(lookup_expr="isnull", exclude=True)
+    keyword = MultipleCharFilter(method="filter_keyword", label="keyword")
+
+    metadata_owner__organization = filters.CharFilter(
+        max_length=512,
+        lookup_expr="icontains",
+        label="metadata owner organization",
+    )
+
+    metadata_owner__user = filters.CharFilter(
+        field_name="metadata_owner__user__username",
+        max_length=512,
+        lookup_expr="icontains",
+        label="metadata owner user",
+    )
+
     ordering = DefaultValueOrdering(
         fields=(
             ("created", "created"),
@@ -190,7 +159,48 @@ class DatasetFilter(filters.FilterSet):
         default="-modified",
     )
 
+    persistent_identifier = filters.CharFilter(
+        max_length=255,
+        lookup_expr="exact",
+        label="persistent identifier",
+    )
+
+    preservation__contract = filters.CharFilter(
+        max_length=512,
+        label="preservation contract",
+        field_name="preservation__contract",
+    )
+
+    preservation__state = MultipleCharFilter(
+        method="filter_preservation__state",
+        label="preservation_state",
+        field_name="preservation__state",
+    )
+
+    projects__title = MultipleCharFilter(
+        method="filter_project",
+        label="projects",
+    )
+
+    publishing_channels = VerboseChoiceFilter(
+        choices=[("etsin", "etsin"), ("ttv", "ttv"), ("all", "all")],
+        method="filter_publishing_channels",
+        help_text="Filter datasets based on the publishing channels of the dataset's catalog. The default value is 'etsin'.",
+    )
+
     search = filters.CharFilter(method="search_dataset")
+
+    state = filters.ChoiceFilter(
+        choices=Dataset.StateChoices.choices,
+        label="state",
+    )
+
+    title = filters.CharFilter(
+        field_name="title__values",
+        max_length=512,
+        lookup_expr="icontains",
+        label="title",
+    )
 
     def search_dataset(self, queryset, name, value):
         if value is None or value == "":
@@ -288,16 +298,33 @@ class DatasetFilter(filters.FilterSet):
         return queryset.filter(data_catalog__publishing_channels__contains=[value])
 
     def filter_preservation__state(self, queryset, name, value):
-        states = value
+        result = queryset
+        for states in value:
+            invalid_states = [
+                state for state in states
+                if not state.lstrip("-").isdigit()
+                or int(state) not in Preservation.PreservationState
+            ]
 
-        state_query = Q(preservation__state__in=states)
+            if invalid_states:
+                raise ValidationError({
+                    "preservation": {
+                        "state": (
+                            f"The following states are not valid: "
+                            f"{', '.join(invalid_states)}"
+                        )
+                    }
+                })
 
-        # If dataset's preservation entry does not exist, it's considered
-        # to have the default value -1 (NONE)
-        if str(Preservation.PreservationState.NONE) in states:
-            return queryset.filter(state_query | Q(preservation__isnull=True))
+            state_query = Q(preservation__state__in=states)
 
-        return queryset.filter(state_query)
+            # If dataset's preservation entry does not exist, it's considered
+            # to have the default value -1 (NONE)
+            if str(Preservation.PreservationState.NONE) in states:
+                result = result.filter(state_query | Q(preservation__isnull=True))
+            else:
+                result = result.filter(state_query)
+        return result.distinct()
 
     def _filter_list(self, queryset: QuerySet, value: List[List[str]], filter_param: str):
         result = queryset
