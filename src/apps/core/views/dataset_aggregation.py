@@ -62,51 +62,14 @@ def _wrap_into_aggregation_object(query_parameter, hits):
     return {"query_parameter": query_parameter, "hits": hits}
 
 
-def _aggregate_ref_data(dataset_ids, model, field_name, dataset_access, languages):
-    if languages is None:
-        return _aggregate_ref_data_by_field_name(
-            dataset_ids=dataset_ids,
-            model=model,
-            field_name=field_name,
-            dataset_access=dataset_access,
-        )
-
-    items_by_lang = [
-        _aggregate_ref_data_by_lang(
-            dataset_ids=dataset_ids,
-            model=model,
-            field_name=field_name,
-            dataset_access=dataset_access,
-            lang=lang,
-        )
-        for lang in languages
-    ]
-    return [item for items in items_by_lang for item in items]
-
-
-def _aggregate_ref_data_by_field_name(dataset_ids, model, field_name, dataset_access):
+def _aggregate_ref_data(dataset_ids, model, field_name, dataset_access, limit=20):
     filter_args = {f"{dataset_access}__in": dataset_ids}
-
-    items_und = (
-        model.available_objects.filter(**filter_args)
-        .values(value=F(f"{field_name}"), count=Count("*"))
-        .order_by("-count")[:20]
-    )
-
-    return [{"value": item["value"], "count": item["count"]} for item in items_und]
-
-
-def _aggregate_ref_data_by_lang(dataset_ids, model, field_name, dataset_access, lang):
-    filter_args = {f"{dataset_access}__in": dataset_ids}
-
     items = (
         model.available_objects.filter(**filter_args)
-        .values(value=F(f"{field_name}__{lang}"), count=Count("*"))
-        .filter(value__isnull=False, count__gt=0)
-        .order_by("-count")[:20]
+        .values(value=F(f"{field_name}"), count=Count("*"))
+        .order_by("-count")[:limit]
     )
-
-    return [{"value": {f"{lang}": item["value"]}, "count": item["count"]} for item in items]
+    return [{"value": item["value"], "count": item["count"]} for item in items]
 
 
 def _aggregate_data_catalog(dataset_ids):
@@ -115,7 +78,7 @@ def _aggregate_data_catalog(dataset_ids):
         model=DataCatalog,
         field_name="title",
         dataset_access="datasets",
-        languages=None,
+        limit=100,
     )
 
 
@@ -125,7 +88,6 @@ def _aggregate_access_type(dataset_ids):
         model=AccessType,
         field_name="pref_label",
         dataset_access="access_rights__dataset",
-        languages=["fi", "en"],
     )
 
 
@@ -135,7 +97,6 @@ def _aggregate_field_of_science(dataset_ids):
         model=FieldOfScience,
         field_name="pref_label",
         dataset_access="datasets",
-        languages=["fi", "en"],
     )
 
 
@@ -145,7 +106,6 @@ def _aggregate_infrastructure(dataset_ids):
         model=ResearchInfra,
         field_name="pref_label",
         dataset_access="datasets",
-        languages=["fi", "en"],
     )
 
 
@@ -155,7 +115,7 @@ def _aggregate_organizations(dataset_ids):
     Organization can appear multiple times in different roles per dataset.
     """
 
-    return _get_organizations(dataset_ids=dataset_ids, get_root_orgs=True)
+    return _get_organizations(dataset_ids=dataset_ids)
 
 
 def _aggregate_creator(dataset_ids):
@@ -169,17 +129,13 @@ def _aggregate_creator(dataset_ids):
             Q(roles__icontains="creator") & Q(person__isnull=False),
             dataset__in=dataset_ids,
         )
-        .annotate(_dataset=F("dataset"))
         .values(translated=F("person__name"))
-        .order_by("translated")
-        .annotate(count=Count("_dataset", distinct=True))
-        .filter(count__gt=0, translated__isnull=False)
-    )
-    persons = sorted(persons, key=lambda p: p["translated"])[:40]
+        .annotate(count=Count("dataset", distinct=True))
+        .order_by("-count")
+    )[:40]
     persons = [
         {"value": {"und": person["translated"]}, "count": person["count"]} for person in persons
     ]
-
     creators = orgs + persons
     return sorted(creators, key=lambda c: -c["count"])[:40]
 
@@ -203,24 +159,20 @@ def _aggregate_file_type(dataset_ids):
         model=FileType,
         field_name="pref_label",
         dataset_access="filesetfilemetadata__file_set__dataset",
-        languages=["fi", "en"],
     )
 
 
 def _aggregate_project(dataset_ids):
     projects_en = _get_project_by_language(dataset_ids, "en")[:40]
     projects_fi = _get_project_by_language(dataset_ids, "fi")[:40]
-    projects_und = _get_project_by_language(dataset_ids, "und")[:40]
-
-    return projects_fi + projects_en + projects_und
+    return projects_fi + projects_en
 
 
 def _get_project_by_language(dataset_ids, language):
     projects = (
         DatasetProject.available_objects.values(
-            pref_label=F(f"title__{language}"),
+            pref_label=Coalesce(f"title__{language}", "title__und"),
         )
-        .order_by()
         .distinct()
         .annotate(count=Count("dataset", filter=Q(dataset__id__in=dataset_ids), distinct=True))
         .filter(count__gt=0, pref_label__isnull=False)
@@ -233,19 +185,17 @@ def _get_project_by_language(dataset_ids, language):
     ]
 
 
-def _get_organizations(dataset_ids, filters={}, get_root_orgs=False):
+def _get_organizations(dataset_ids, filters={}):
     orgs = Organization.all_objects.filter(
         **filters, actor_organizations__datasetactor__dataset__in=dataset_ids
     )
-    if get_root_orgs:
-        # Get topmost label in up to three organization levels
-        orgs = orgs.annotate(
-            aggregation_label=Coalesce(
-                F("parent__parent__pref_label"), F("parent__pref_label"), F("pref_label")
-            )
+
+    # Get topmost label in up to three organization levels
+    orgs = orgs.annotate(
+        aggregation_label=Coalesce(
+            F("parent__parent__pref_label"), F("parent__pref_label"), F("pref_label")
         )
-    else:
-        orgs = orgs.annotate(aggregation_label=F("pref_label"))
+    )
 
     orgs_fi = sorted(
         _get_organizations_by_lang(orgs=orgs, lang="fi"),
