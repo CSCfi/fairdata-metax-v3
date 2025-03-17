@@ -39,6 +39,21 @@ class _PIDMSClient:
         self.etsin_url = settings.ETSIN_URL
         self.headers = {"apikey": settings.PID_MS_APIKEY}
 
+    def _validate_response_status(self, response: requests.Response):
+        """Raise errors for unexpected status codes."""
+        response.raise_for_status()
+        if response.status_code < 100:
+            raise requests.HTTPError(
+                f"Invalid status code {response.status_code} in response: {response.text}"
+            )
+
+    def _validate_pid(self, dataset_id, prefix: str, identifier: str):
+        """Raise error if identifier from PID MS does not match expected prefix."""
+        if not identifier.startswith(prefix):
+            raise Exception(
+                f"PID MS returned invalid {identifier=} for {dataset_id=}, expected {prefix=}"
+            )
+
     def create_urn(self, dataset_id):
         payload = {
             "url": f"https://{self.etsin_url}/dataset/{dataset_id}",
@@ -48,9 +63,8 @@ class _PIDMSClient:
         url = f"https://{settings.PID_MS_BASEURL}/v1/pid"
         try:
             response = requests.post(url, json=payload, headers=self.headers)
-            response.raise_for_status()
-            if not response.text:
-                raise Exception(f"PID MS returned: {response.status_code} {response.text}")
+            self._validate_response_status(response)
+            self._validate_pid(dataset_id, prefix="urn:", identifier=response.text)
             _logger.info(f"Created URN for dataset {dataset_id}: {response.text}")
             return response.text
         except Exception as e:
@@ -66,9 +80,8 @@ class _PIDMSClient:
         url = f"https://{settings.PID_MS_BASEURL}/v1/pid/doi"
         try:
             response = requests.post(url, json=payload, headers=self.headers)
-            response.raise_for_status()
-            if not response.text:
-                raise Exception(f"PID MS returned empty identifier for dataset {dataset_id}")
+            self._validate_response_status(response)
+            self._validate_pid(dataset_id, prefix=settings.PID_MS_DOI_PREFIX, identifier=response.text)
             _logger.info(f"Created DOI for dataset {dataset_id}: {response.text}")
             return response.text
         except Exception as e:
@@ -91,7 +104,7 @@ class _PIDMSClient:
                 json=payload,
                 headers=self.headers,
             )
-            response.raise_for_status()
+            self._validate_response_status(response)
             _logger.info(f"Updated DOI dataset {dataset_id}: {response.text}")
             return response.text
         except Exception as e:
@@ -109,8 +122,7 @@ class _PIDMSClient:
             if response.status_code == status.HTTP_404_NOT_FOUND:
                 return False
 
-            response.raise_for_status()
-
+            self._validate_response_status(response)
             if response.text != dataset_url:
                 raise Exception(
                     f"Dataset url ({dataset_url}) doesn't match in PID MS: {response.text}"
@@ -130,7 +142,7 @@ class _PIDMSClient:
                 json=payload,
                 headers=self.headers,
             )
-            response.raise_for_status()
+            self._validate_response_status(response)
             return response.text
         except Exception as e:
             _logger.error(f"Exception in PIDMSClient: {e}")

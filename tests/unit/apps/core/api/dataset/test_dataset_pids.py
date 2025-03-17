@@ -2,13 +2,10 @@ import json
 import re
 import uuid
 from datetime import datetime
-from importlib import reload
 from unittest import mock
 
 import pytest
-from deepdiff.serialization import json_loads
 from django.test import override_settings
-from tests.unit.apps.core.api.dataset.conftest import dataset
 
 from apps.core.models import Dataset
 from apps.core.services.pid_ms_client import PIDMSClient, ServiceUnavailableError
@@ -100,8 +97,9 @@ def test_create_dataset_with_URN(admin_client, dataset_a_json, data_catalog, ref
 # Try to add remote_resources
 # Check that dataset update results into an error
 # Check that remote resources are not added
-@override_settings(PID_MS_CLIENT_INSTANCE="apps.core.services.pid_ms_client._PIDMSClient")
-def test_create_dataset_with_doi(admin_client, dataset_maximal_json, data_catalog, reference_data):
+def test_create_dataset_with_doi(
+    admin_client, dataset_maximal_json, data_catalog, reference_data, mock_pid_ms
+):
     dataset = dataset_maximal_json
     dataset["generate_pid_on_publish"] = "DOI"
     dataset["state"] = "published"
@@ -130,7 +128,6 @@ def test_create_dataset_with_doi(admin_client, dataset_maximal_json, data_catalo
 
 
 @override_settings(PID_MS_CLIENT_INSTANCE="apps.core.services.pid_ms_client._PIDMSClient")
-@pytest.mark.noautomock
 def test_create_dataset_with_doi_fail(
     admin_client, dataset_maximal_json, data_catalog, reference_data
 ):
@@ -175,11 +172,9 @@ def patch_mock_create_urn_fail():
 # Try to create a dataset, but PID MS fails
 # Check that error message is correct
 # Check that dataset is not created
-@override_settings(PID_MS_CLIENT_INSTANCE="apps.core.services.pid_ms_client._PIDMSClient")
-@pytest.mark.noautomock
 @pytest.mark.django_db
 def test_create_dataset_with_failed_PID(
-    admin_client, dataset_a_json, data_catalog, reference_data
+    admin_client, dataset_a_json, data_catalog, reference_data, mock_pid_ms_fail
 ):
     old_count = Dataset.available_objects.all().count()
     dataset = dataset_a_json
@@ -197,7 +192,9 @@ def test_create_dataset_with_failed_PID(
 # Check that it does not have a pid
 # Publish the new version
 # Check that it has a PID
-def test_new_version_has_no_pid(admin_client, dataset_a_json, data_catalog, reference_data):
+def test_new_version_has_no_pid(
+    admin_client, dataset_a_json, data_catalog, reference_data, mock_pid_ms
+):
     dataset = dataset_a_json
     dataset["generate_pid_on_publish"] = "URN"
     dataset.pop("persistent_identifier", None)
@@ -415,7 +412,6 @@ def test_pid_type_removed(admin_client, dataset_a_json, data_catalog, reference_
 
 # Create a dataset with generate_pid_on_publish=DOI
 # Update that dataset
-@override_settings(PID_MS_CLIENT_INSTANCE="apps.core.services.pid_ms_client._PIDMSClient")
 def test_update_dataset_with_doi(
     settings,
     requests_mock,
@@ -424,6 +420,7 @@ def test_update_dataset_with_doi(
     pid_update_payload,
     data_catalog,
     reference_data,
+    mock_pid_ms,
 ):
     from deepdiff import DeepDiff
 
@@ -461,13 +458,16 @@ def test_update_dataset_with_doi_from_v2(
     pid_update_payload,
     data_catalog,
     reference_data,
+    mock_pid_ms,
 ):
     from deepdiff import DeepDiff
 
     # Create legacy dataset
     pid = f"doi:10.23729/{str(uuid.uuid4())}"
     legacy_dataset_a_json["dataset_json"]["research_dataset"]["preferred_identifier"] = pid
-    legacy_dataset_a_json["dataset_json"]["data_catalog"] = {"identifier": "urn:nbn:fi:att:data-catalog-ida"}
+    legacy_dataset_a_json["dataset_json"]["data_catalog"] = {
+        "identifier": "urn:nbn:fi:att:data-catalog-ida"
+    }
     res = admin_client.post(
         "/v3/migrated-datasets", legacy_dataset_a_json, content_type="application/json"
     )
@@ -502,7 +502,6 @@ def test_update_dataset_with_doi_from_v2(
 
 # Create draft from a published DOI dataset, update the draft
 # Assert that updating creating and updating the draft does not trigger any pidms calls
-@override_settings(PID_MS_CLIENT_INSTANCE="apps.core.services.pid_ms_client._PIDMSClient")
 def test_update_draft_with_doi(
     settings,
     requests_mock,
@@ -511,6 +510,7 @@ def test_update_draft_with_doi(
     pid_update_payload,
     data_catalog,
     reference_data,
+    mock_pid_ms,
 ):
     dataset = dataset_maximal_json
     dataset["generate_pid_on_publish"] = "DOI"
@@ -522,17 +522,22 @@ def test_update_draft_with_doi(
     assert requests_mock.call_count == 1
 
     # Create and update draft
-    res = admin_client.post(f"/v3/datasets/{ds_id}/create-draft", dataset, content_type="application/json")
+    res = admin_client.post(
+        f"/v3/datasets/{ds_id}/create-draft", dataset, content_type="application/json"
+    )
     assert res.status_code == 201
-    draft_id= res.json()["id"]
-    res = admin_client.patch(f"/v3/datasets/{draft_id}", {"title": {"en": "draftia muutan"}}, content_type="application/json")
+    draft_id = res.json()["id"]
+    res = admin_client.patch(
+        f"/v3/datasets/{draft_id}",
+        {"title": {"en": "draftia muutan"}},
+        content_type="application/json",
+    )
     assert res.status_code == 200
     assert requests_mock.call_count == 1
 
 
 # Try to create a dataset with DOI, but it fails in PID MS
 # Assert that error is correct
-@override_settings(PID_MS_CLIENT_INSTANCE="apps.core.services.pid_ms_client._PIDMSClient")
 def test_create_dataset_with_doi_pid_ms_error(
     settings,
     requests_mock,
@@ -541,6 +546,7 @@ def test_create_dataset_with_doi_pid_ms_error(
     pid_update_payload,
     data_catalog,
     reference_data,
+    mock_pid_ms
 ):
     matcher = re.compile(f"https://{settings.PID_MS_BASEURL}/v1/pid/doi")
     requests_mock.register_uri("POST", matcher, status_code=400)
@@ -553,12 +559,14 @@ def test_create_dataset_with_doi_pid_ms_error(
     dataset.pop("persistent_identifier", None)
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
     assert res.status_code == 503
-    assert res.json()["detail"] == "Error when creating persistent identifier. Please try again later."
+    assert (
+        res.json()["detail"]
+        == "Error when creating persistent identifier. Please try again later."
+    )
 
 
 # Try to create a dataset with URN, but it fails in PID MS
 # Assert that error is correct
-@override_settings(PID_MS_CLIENT_INSTANCE="apps.core.services.pid_ms_client._PIDMSClient")
 def test_create_dataset_with_urn_pid_ms_error(
     settings,
     requests_mock,
@@ -567,10 +575,8 @@ def test_create_dataset_with_urn_pid_ms_error(
     pid_update_payload,
     data_catalog,
     reference_data,
+    mock_pid_ms_fail,
 ):
-    matcher = re.compile(f"https://{settings.PID_MS_BASEURL}/v1/pid")
-    requests_mock.register_uri("POST", matcher, status_code=400)
-
     # Try to create a dataset with URN
 
     dataset = dataset_maximal_json
@@ -579,12 +585,14 @@ def test_create_dataset_with_urn_pid_ms_error(
     dataset.pop("persistent_identifier", None)
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
     assert res.status_code == 503
-    assert res.json()["detail"] == "Error when creating persistent identifier. Please try again later."
+    assert (
+        res.json()["detail"]
+        == "Error when creating persistent identifier. Please try again later."
+    )
 
 
 # Try to create a dataset with DOI, but PID MS returns empty string
 # Assert that error is correct
-@override_settings(PID_MS_CLIENT_INSTANCE="apps.core.services.pid_ms_client._PIDMSClient")
 def test_create_dataset_with_urn_pid_ms_returns_empty(
     settings,
     requests_mock,
@@ -593,6 +601,7 @@ def test_create_dataset_with_urn_pid_ms_returns_empty(
     pid_update_payload,
     data_catalog,
     reference_data,
+    mock_pid_ms,
 ):
     matcher = re.compile(f"https://{settings.PID_MS_BASEURL}/v1/pid/doi")
     requests_mock.register_uri("POST", matcher, text="", status_code=200)
@@ -605,12 +614,14 @@ def test_create_dataset_with_urn_pid_ms_returns_empty(
     dataset.pop("persistent_identifier", None)
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
     assert res.status_code == 503
-    assert res.json()["detail"] == "Error when creating persistent identifier. Please try again later."
+    assert (
+        res.json()["detail"]
+        == "Error when creating persistent identifier. Please try again later."
+    )
 
 
 # Try to create a dataset with URN, but PID MS returns empty string
 # Assert that error is correct
-@override_settings(PID_MS_CLIENT_INSTANCE="apps.core.services.pid_ms_client._PIDMSClient")
 def test_create_dataset_with_urn_pid_ms_returns_empty(
     settings,
     requests_mock,
@@ -619,6 +630,7 @@ def test_create_dataset_with_urn_pid_ms_returns_empty(
     pid_update_payload,
     data_catalog,
     reference_data,
+    mock_pid_ms,
 ):
     matcher = re.compile(f"https://{settings.PID_MS_BASEURL}/v1/pid")
     requests_mock.register_uri("POST", matcher, text="", status_code=200)
@@ -631,9 +643,10 @@ def test_create_dataset_with_urn_pid_ms_returns_empty(
     dataset.pop("persistent_identifier", None)
     res = admin_client.post("/v3/datasets", dataset, content_type="application/json")
     assert res.status_code == 503
-    assert res.json()["detail"] == "Error when creating persistent identifier. Please try again later."
-
-
+    assert (
+        res.json()["detail"]
+        == "Error when creating persistent identifier. Please try again later."
+    )
 
 
 # Using dummy pid client

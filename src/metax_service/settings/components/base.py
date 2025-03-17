@@ -421,6 +421,7 @@ PID_MS_CLIENT_INSTANCE = env.str(
 )
 PID_MS_BASEURL = env.str("PID_MS_BASEURL", None)
 PID_MS_APIKEY = env.str("PID_MS_APIKEY", None)
+PID_MS_DOI_PREFIX = env.str("PID_MS_DOI_PREFIX", "10.23729/") # Expected DOI prefix from PIDMS
 ETSIN_URL = env.str("ETSIN_URL", None)
 
 # Common global query parameters shared by most endpoints but not documented in swagger
