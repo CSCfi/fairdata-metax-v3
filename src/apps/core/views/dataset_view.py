@@ -10,6 +10,7 @@ import operator
 from datetime import datetime, timezone
 from functools import reduce
 from typing import List
+from uuid import UUID
 
 from django.conf import settings
 from django.core.cache import caches
@@ -32,7 +33,7 @@ from rest_framework.reverse import reverse
 from watson import search
 
 from apps.common.filters import MultipleCharFilter, VerboseChoiceFilter
-from apps.common.helpers import ensure_dict, omit_empty
+from apps.common.helpers import ensure_dict, omit_empty, is_valid_uuid
 from apps.common.serializers.serializers import (
     FieldsQueryParamsSerializer,
     FlushQueryParamsSerializer,
@@ -129,6 +130,12 @@ class DatasetFilter(filters.FilterSet):
         label="file_type",
     )
 
+    id = MultipleCharFilter(
+        label="id",
+        field_name="id",
+        method="filter_id",
+    )
+
     infrastructure__pref_label = MultipleCharFilter(
         method="filter_infrastructure",
         label="infrastructure",
@@ -172,7 +179,7 @@ class DatasetFilter(filters.FilterSet):
     )
 
     preservation__state = MultipleCharFilter(
-        method="filter_preservation__state",
+        method="filter_preservation_state",
         label="preservation_state",
         field_name="preservation__state",
     )
@@ -297,7 +304,7 @@ class DatasetFilter(filters.FilterSet):
             )
         return queryset.filter(data_catalog__publishing_channels__contains=[value])
 
-    def filter_preservation__state(self, queryset, name, value):
+    def filter_preservation_state(self, queryset, name, value):
         result = queryset
         for states in value:
             invalid_states = [
@@ -324,6 +331,19 @@ class DatasetFilter(filters.FilterSet):
                 result = result.filter(state_query | Q(preservation__isnull=True))
             else:
                 result = result.filter(state_query)
+        return result.distinct()
+    
+    def filter_id(self, queryset, name, value):
+        if value is None or value == "":
+            return queryset
+        result = queryset
+        for ids in value:
+            failing_ids = [id for id in ids if not is_valid_uuid(id)]
+            if failing_ids:
+                raise exceptions.ValidationError({
+                    "id": f"Dataset identifiers must be valid UUIDs. Invalid IDs: {failing_ids}"
+                })
+            result = result.filter(id__in=ids)
         return result.distinct()
 
     def _filter_list(self, queryset: QuerySet, value: List[List[str]], filter_param: str):
@@ -352,7 +372,6 @@ class DatasetFilter(filters.FilterSet):
         if not self.form.cleaned_data["publishing_channels"]:
             self.form.cleaned_data["publishing_channels"] = "etsin"
         return super().filter_queryset(queryset)
-
 
 @method_decorator(
     name="create",
