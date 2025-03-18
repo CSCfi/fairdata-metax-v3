@@ -4,7 +4,7 @@ from typing import Iterable, Optional
 
 from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.db import connection, models
-from django.db.models import Count, Q, Sum
+from django.db.models import Count, Q, Sum, prefetch_related_objects
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -448,6 +448,13 @@ class FileSet(AbstractBaseModel):
                 new_files.append(file)
                 file_mapping[old_id] = file
                 files.append(file)
+
+        # Set 'pas_compatible_file/non_pas_compatible_file' mappings to point
+        # toward copies
+        prefetch_related_objects(new_files, "pas_compatible_file")
+        for file_ in new_files:
+            if old_pas_file := file_.pas_compatible_file:
+                file_.pas_compatible_file = file_mapping[old_pas_file.id]
 
         # Create new copies of files and file characteristics
         FileCharacteristics.objects.bulk_create(new_file_characteristics)

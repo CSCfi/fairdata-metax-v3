@@ -146,6 +146,35 @@ def test_fileset_preservation_copy_missing_pas_compatible_file(
     assert expected_error in str(exc.value.detail["detail"])
 
 
+def test_fileset_preservation_copy_pas_compatible_link(dataset_with_files):
+    orig: FileSet = dataset_with_files.file_set
+    dataset = factories.DatasetFactory()
+
+    # Create PAS <-> non PAS compatible file relation
+    pas_file = orig.files.first()
+    non_pas_file = orig.files.last()
+
+    non_pas_file.pas_compatible_file = pas_file
+    non_pas_file.save()
+
+    orig.create_preservation_copy(dataset)
+
+    # Ensure the files in the new preservation dataset have the same names
+    # but different identifiers
+    new_file_set: FileSet = dataset.file_set
+
+    copy_pas_file = new_file_set.files.get(checksum=pas_file.checksum)
+    copy_non_pas_file = new_file_set.files.get(checksum=non_pas_file.checksum)
+
+    assert copy_pas_file.filename == pas_file.filename
+    assert copy_non_pas_file.filename == non_pas_file.filename
+
+    assert copy_non_pas_file.pas_compatible_file.id == copy_pas_file.id
+
+    assert copy_pas_file.id != pas_file.id
+    assert copy_non_pas_file.id != non_pas_file.id
+
+
 def test_fileset_preservation_copy_conflict(dataset_with_files):
     orig: FileSet = dataset_with_files.file_set
     dataset = factories.DatasetFactory()
