@@ -1,4 +1,5 @@
 import logging
+import uuid
 from unittest.mock import ANY
 
 import pytest
@@ -807,7 +808,7 @@ def test_omit_owner_user_when_no_edit_access(
 
 
 @pytest.mark.django_db(databases=("default", "extra_connection"), transaction=True)
-def test_dataset_select_for_update(admin_client):
+def test_dataset_lock_for_update(admin_client):
     """Dataset update should lock the row for updating."""
     dataset = factories.PublishedDatasetFactory()
     with transaction.atomic():
@@ -823,7 +824,12 @@ def test_dataset_select_for_update(admin_client):
                 )
         assert isinstance(ec.value.__cause__, LockNotAvailable)
 
-
     with transaction.atomic(using="extra_connection"):
         # Transaction done, lock should be available now
         Dataset.objects.using("extra_connection").select_for_update(nowait=True).get(id=dataset.id)
+
+
+@pytest.mark.django_db(databases=("default", "extra_connection"), transaction=True)
+def test_dataset_lock_for_update_outside_transaction():
+    """Dataset.lock_for_update should not do anything when not in transaction."""
+    Dataset.lock_for_update(uuid.uuid4()) # Would throw error if select_for_update was called

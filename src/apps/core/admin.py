@@ -156,6 +156,7 @@ class DatasetAdmin(AbstractDatasetPropertyBaseAdmin, SimpleHistoryAdmin):
         "last_modified_by",
         "access_rights",
         "draft_of",
+        "permissions",
     )
     list_select_related = ("access_rights", "data_catalog", "metadata_owner")
     search_fields = ["title__values", "keyword"]

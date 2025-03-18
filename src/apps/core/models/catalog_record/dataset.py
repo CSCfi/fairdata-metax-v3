@@ -5,7 +5,7 @@ from uuid import UUID
 from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import MinLengthValidator
-from django.db import models
+from django.db import models, transaction
 from django.db.models import prefetch_related_objects
 from django.db.models.signals import post_delete
 from django.utils import timezone
@@ -1080,7 +1080,12 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         """Locks dataset row for update until end of transaction.
 
         Blocks until lock is acquired. If no matching dataset is found, does nothing.
+
+        If not in transaction, does nothing.
         """
+        if transaction.get_autocommit():
+            return # Not in transaction
+
         try:
             # Ideally we'd call select_for_update in the same query where we fetch the dataset
             # instance but postgres does not support it for queries that use `.distinct()`.
