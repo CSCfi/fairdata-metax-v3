@@ -106,6 +106,46 @@ def test_fileset_preservation_copy_reuse_existing(dataset_with_files):
     orig.create_preservation_copy(dataset)
 
 
+@pytest.mark.parametrize(
+    "expected_error,file_to_remove",
+    [
+        # Remove 'pas_compatible_file' from dataset
+        (
+            "The PAS compatible file ",
+            "pas_compatible_file",
+        ),
+        # Remove 'non_pas_compatible_file' from dataset
+        (
+            "The non-PAS compatible file ",
+            "non_pas_compatible_file"
+        )
+    ]
+)
+def test_fileset_preservation_copy_missing_pas_compatible_file(
+        dataset_with_files, expected_error, file_to_remove):
+    orig: FileSet = dataset_with_files.file_set
+    dataset = factories.DatasetFactory()
+
+    # Create PAS <-> non PAS compatible file relation
+    pas_file = orig.files.first()
+    non_pas_file = orig.files.last()
+
+    non_pas_file.pas_compatible_file = pas_file
+    non_pas_file.save()
+
+    # Remove either of the two files from dataset before trying to copy it
+    if file_to_remove == "pas_compatible_file":
+        orig.files.remove(pas_file)
+    elif file_to_remove == "non_pas_compatible_file":
+        orig.files.remove(non_pas_file)
+
+    # Dataset must have both files from every pair. If not, error will be raised.
+    with pytest.raises(ValidationError) as exc:
+        orig.create_preservation_copy(dataset)
+
+    assert expected_error in str(exc.value.detail["detail"])
+
+
 def test_fileset_preservation_copy_conflict(dataset_with_files):
     orig: FileSet = dataset_with_files.file_set
     dataset = factories.DatasetFactory()

@@ -350,6 +350,41 @@ class FileSet(AbstractBaseModel):
             ).exclude(pathname__in=dataset_pathnames)
             unused_directory_metadata.delete()
 
+    def validate_pas_compatible_files(self):
+        """
+        Validate that the dataset contains both files if any `pas_compatible_file`
+        or `non_pas_compatible_file` is included in the file set
+        """
+        file = (
+            self.files.filter(pas_compatible_file__isnull=False)
+            .exclude(pas_compatible_file__file_sets=self)
+            .first()
+        )
+        if file:
+            pas_file = file.pas_compatible_file
+            msg = (
+                f"The PAS compatible file {pas_file.pathname} "
+                f"({pas_file.storage_identifier}) linked to "
+                f"{file.pathname} ({file.storage_identifier}) is not "
+                f"included in this dataset."
+            )
+            raise ValidationError({"detail": msg})
+
+        file = (
+            self.files.filter(non_pas_compatible_file__isnull=False)
+            .exclude(non_pas_compatible_file__file_sets=self)
+            .first()
+        )
+        if file:
+            non_pas_file = file.non_pas_compatible_file
+            msg = (
+                f"The non-PAS compatible file {non_pas_file.pathname} "
+                f"({non_pas_file.storage_identifier}) linked to "
+                f"{file.pathname} ({file.storage_identifier}) is not "
+                f"included in this dataset."
+            )
+            raise ValidationError({"detail": msg})
+
     def save(self, *args, **kwargs):
         # Verify that dataset is allowed to have files in the storage_service.
         # When _updating is set, dataset is responsible for the check.
@@ -362,6 +397,9 @@ class FileSet(AbstractBaseModel):
     def create_preservation_copy(self, preservation_dataset: Dataset) -> Self:
         if self.storage.storage_service == "pas":
             raise ValidationError({"detail": "Files are already in PAS storage"})
+
+        # Validate that every file pair exists in the dataset
+        self.validate_pas_compatible_files()
 
         # Make sure there is no file metadata data pointing to nonexistent files
         self.remove_unused_file_metadata()
