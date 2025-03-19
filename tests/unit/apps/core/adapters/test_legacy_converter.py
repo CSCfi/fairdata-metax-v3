@@ -7,7 +7,7 @@ from apps.core.factories import LocationFactory
 from apps.core.models import Theme
 from apps.core.models.legacy_converter import LegacyDatasetConverter
 
-pytestmark = [pytest.mark.adapter]
+pytestmark = [pytest.mark.django_db, pytest.mark.adapter]
 
 
 @pytest.fixture

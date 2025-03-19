@@ -5,6 +5,8 @@ from django.db import IntegrityError
 
 from apps.actors.factories import OrganizationFactory
 
+pytestmark = [pytest.mark.django_db]
+
 
 def test_create_missing_organization_url():
     with pytest.raises(IntegrityError):

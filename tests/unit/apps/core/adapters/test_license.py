@@ -8,6 +8,8 @@ from apps.refdata.models import License
 
 logger = logging.getLogger(__name__)
 
+pytestmark = [pytest.mark.django_db]
+
 
 def test_create_dataset_license_without_url_and_custom_url():
     """Should return Validation error."""

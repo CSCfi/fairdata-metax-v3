@@ -14,6 +14,9 @@ logger = logging.getLogger(__name__)
 test_data_path = os.path.dirname(os.path.abspath(__file__)) + "/../api/testdata/"
 
 
+pytestmark = [pytest.mark.django_db]
+
+
 def load_test_json(filename) -> Dict:
     with open(test_data_path + filename) as json_file:
         data = json.load(json_file)

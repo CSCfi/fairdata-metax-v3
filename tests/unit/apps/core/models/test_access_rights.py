@@ -3,12 +3,12 @@ import pytest
 from apps.core import factories
 
 
-def test_create_access_rights_with_license_and_access_type(
-    access_rights,
-):
+@pytest.mark.django_db
+def test_create_access_rights_with_license_and_access_type(access_rights):
     assert access_rights.id is not None
 
 
+@pytest.mark.django_db
 def test_access_rights_with_restriction_grounds():
     restriction_grounds = [
         factories.RestrictionGroundsFactory(

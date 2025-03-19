@@ -1,6 +1,9 @@
 import pytest
 
 
+pytestmark = [pytest.mark.django_db]
+
+
 def test_create_data_catalog_with_foreign_keys(data_catalog):
     assert data_catalog.id is not None
 

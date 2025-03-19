@@ -4,7 +4,7 @@ import pytest
 
 from apps.core.models import Dataset, LegacyDataset
 
-pytestmark = [pytest.mark.adapter]
+pytestmark = [pytest.mark.django_db, pytest.mark.adapter]
 
 
 def test_legacy_dataset_api_version():

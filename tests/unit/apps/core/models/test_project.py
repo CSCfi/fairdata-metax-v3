@@ -3,6 +3,8 @@ from rest_framework import serializers
 
 from apps.core.serializers import ProjectModelSerializer
 
+pytestmark = [pytest.mark.django_db]
+
 
 @pytest.fixture
 def project_json():

@@ -196,21 +196,10 @@ def pytest_collection_modifyitems(items):
     django.setup()
     factory.random.reseed_random(settings.FACTORY_BOY_RANDOM_SEED)
 
-    # Add django_db markers based on path and name
+    # Add markers based on path and name
     for item in items:
-        # Don't override existing django_db markers
-        if any(marker.name == "django_db" for marker in item.iter_markers()):
-            continue
-
-        if "create" in item.nodeid or "delete" in item.nodeid:
-            # adds django_db marker on any test with 'create' or 'delete' on its name
-            item.add_marker(pytest.mark.django_db)
-        if "behave" in item.nodeid:
-            item.add_marker(pytest.mark.behave)
-            item.add_marker(pytest.mark.django_db)
         if "unit" in item.nodeid:
             item.add_marker("unit")
-            item.add_marker(pytest.mark.django_db)
 
     # When some tests contain @pytest.mark.only, run only those tests.
     only = [item for item in items if item.get_closest_marker("only")]

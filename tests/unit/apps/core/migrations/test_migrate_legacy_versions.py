@@ -1,5 +1,7 @@
 from uuid import UUID
 
+import pytest
+
 from apps.core import factories
 from apps.core.models import Dataset, DatasetVersions, LegacyDataset
 from apps.core.models.legacy_versions import migrate_dataset_versions
@@ -18,6 +20,7 @@ def create_legacy_dataset(id, version_ids, draft_of=None, next_draft=None):
     return factories.DatasetFactory(id=id)
 
 
+@pytest.mark.django_db
 def test_migrate_legacy_dataset_versions():
     id_1 = UUID(int=1)
     id_2 = UUID(int=2)
@@ -40,6 +43,7 @@ def test_migrate_legacy_dataset_versions():
     assert DatasetVersions.objects.count() == 1
 
 
+@pytest.mark.django_db
 def test_migrate_legacy_dataset_versions_create_new():
     id_1 = UUID(int=1)
     id_2 = UUID(int=2)
@@ -54,6 +58,7 @@ def test_migrate_legacy_dataset_versions_create_new():
     assert DatasetVersions.objects.count() == 1
 
 
+@pytest.mark.django_db
 def test_migrate_legacy_dataset_versions_create_disjoint():
     id_1 = UUID(int=1)
     id_2 = UUID(int=2)
@@ -68,6 +73,7 @@ def test_migrate_legacy_dataset_versions_create_disjoint():
     assert DatasetVersions.objects.count() == 2
 
 
+@pytest.mark.django_db
 def test_migrate_legacy_dataset_versions_draft_of():
     id_1 = UUID(int=1)
     id_2 = UUID(int=2)
@@ -81,6 +87,7 @@ def test_migrate_legacy_dataset_versions_draft_of():
     assert orig.dataset_versions == draft.dataset_versions
 
 
+@pytest.mark.django_db
 def test_migrate_legacy_dataset_versions_next_draft():
     id_1 = UUID(int=1)
     id_2 = UUID(int=2)

@@ -21,6 +21,7 @@ def hello(name):
     return f"Hello {name}"
 
 
+@pytest.mark.django_db
 @override_settings(
     ENABLE_BACKGROUND_TASKS=True,
 )
@@ -36,6 +37,7 @@ def test_tasks(admin_client, enable_tasks):
     assert task["success"] == True
 
 
+@pytest.mark.django_db
 def test_tasks_nonadmin(ida_client):
     res = ida_client.get("/v3/tasks", content_type="application/json")
     assert res.status_code == 403

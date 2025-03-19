@@ -7,6 +7,8 @@ from apps.core import factories
 from apps.core.models.legacy import LegacyDataset
 from apps.core.services import MetaxV2Client
 
+pytestmark = [pytest.mark.django_db]
+
 
 def test_update_api_meta(mock_v2_integration, caplog):
     logging.disable(logging.NOTSET)

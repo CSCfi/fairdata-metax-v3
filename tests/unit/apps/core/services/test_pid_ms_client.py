@@ -1,7 +1,10 @@
+import pytest
+
 from apps.core.factories import DatasetFactory
 from apps.core.services.pid_ms_client import _PIDMSClient as PIDMSClient
 
 
+@pytest.mark.django_db
 def test_create_urn(requests_mock):
     dataset = DatasetFactory()
     assert PIDMSClient().create_urn(dataset.id).startswith("urn:")
@@ -15,6 +18,7 @@ def test_create_urn(requests_mock):
     }
 
 
+@pytest.mark.django_db
 def test_create_doi(admin_client, requests_mock):
     dataset = DatasetFactory()
     assert PIDMSClient().create_doi(dataset.id).startswith("10.")

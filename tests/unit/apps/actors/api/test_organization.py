@@ -5,6 +5,8 @@ from rest_framework.test import APIClient
 from apps.actors.factories import OrganizationFactory
 from apps.actors.models import Organization
 
+pytestmark = [pytest.mark.django_db]
+
 
 @pytest.fixture
 def organization_tree():

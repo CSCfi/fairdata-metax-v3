@@ -12,6 +12,8 @@ from rest_framework.test import APIRequestFactory
 from apps.users.authentication import SSOAuthentication
 from apps.users.models import MetaxUser
 
+pytestmark = [pytest.mark.django_db]
+
 
 @pytest.fixture
 def make_sso_auth_request(enable_sso):

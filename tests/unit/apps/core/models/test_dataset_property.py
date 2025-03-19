@@ -1,12 +1,15 @@
 import pytest
 
-pytestmark = pytest.mark.parametrize(
-    "dataset_property",
-    [
-        "catalog_homepage",
-        "data_catalog",
-    ],
-)
+pytestmark = [
+    pytest.mark.django_db,
+    pytest.mark.parametrize(
+        "dataset_property",
+        [
+            "catalog_homepage",
+            "data_catalog",
+        ],
+    ),
+]
 
 
 @pytest.mark.parametrize(

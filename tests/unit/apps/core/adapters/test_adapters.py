@@ -217,6 +217,7 @@ def test_v2_to_v3_dataset_conversion_ignore_invalid_email(harvested_json, licens
     }
 
 
+@pytest.mark.django_db
 def test_get_version_identifiers():
     dataset = factories.DatasetFactory()
     dataset2 = factories.DatasetFactory()

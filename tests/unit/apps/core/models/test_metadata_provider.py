@@ -4,6 +4,8 @@ import pytest
 
 from apps.core.models.catalog_record import MetadataProvider
 
+pytestmark = [pytest.mark.django_db]
+
 
 def test_create_metadata_provider_with_user(metadata_provider, user):
     metadata_provider.user = user

@@ -2,11 +2,14 @@ import logging
 import time
 from collections import Counter
 
+import pytest
+
 from apps.common.profiling import count_queries, log_duration
 from apps.core import factories
 from apps.core.models import Dataset, Provenance, Spatial
 
 
+@pytest.mark.django_db
 def test_count_queries():
     with count_queries() as counts:
         spatial = Spatial.objects.create(geographic_name="paikka")
@@ -23,6 +26,7 @@ def test_count_queries():
     }
 
 
+@pytest.mark.django_db
 def test_count_queries_log(caplog):
     logging.disable(logging.NOTSET)
     factories.DatasetFactory()

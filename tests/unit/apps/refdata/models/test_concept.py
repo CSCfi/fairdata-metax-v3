@@ -5,15 +5,18 @@ from django.db import IntegrityError
 
 from apps.refdata.models import FieldOfScience, Language, Location, Theme
 
-pytestmark = pytest.mark.parametrize(
-    "model",
-    [
-        FieldOfScience,
-        Language,
-        Location,
-        Theme,
-    ],
-)
+pytestmark = [
+    pytest.mark.django_db,
+    pytest.mark.parametrize(
+        "model",
+        [
+            FieldOfScience,
+            Language,
+            Location,
+            Theme,
+        ],
+    ),
+]
 
 extra_field_values = {"as_wkt": None}
 
