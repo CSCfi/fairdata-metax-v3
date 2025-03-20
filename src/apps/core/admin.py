@@ -37,6 +37,7 @@ from apps.core.models import (
     Temporal,
     Theme,
 )
+from apps.core.models.preservation import Preservation
 from apps.core.models.sync import SyncAction, V2SyncStatus
 from apps.core.signals import sync_dataset_to_v2
 
@@ -151,6 +152,7 @@ class DatasetAdmin(AbstractDatasetPropertyBaseAdmin, SimpleHistoryAdmin):
     )
     autocomplete_fields = ["language", "theme", "field_of_science"]
     readonly_fields = (
+        "preservation",
         "dataset_versions",
         "other_identifiers",
         "last_modified_by",
@@ -218,6 +220,14 @@ class DatasetActorAdmin(admin.ModelAdmin):
             return str(obj.organization)
         else:
             return "none"
+
+
+@admin.register(Preservation)
+class PreservationAdmin(admin.ModelAdmin):
+    list_display = ("id", "dataset", "state", "pas_process_running")
+    list_filter = ("state", "pas_process_running")
+    search_fields = ("dataset__id",)
+    readonly_fields = ("dataset",)
 
 
 @admin.register(Temporal)
