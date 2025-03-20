@@ -169,7 +169,7 @@ class DatasetAdmin(AbstractDatasetPropertyBaseAdmin, SimpleHistoryAdmin):
             actions.pop("sync_to_v2")
         return actions
 
-    @admin.action(description="Sync datasets to V2")
+    @admin.action(description="Sync datasets to V2", permissions=["change"])
     def sync_to_v2(self, request, queryset):
         datasets = Dataset.objects.filter(id__in=[item.id for item in queryset])
         datasets.prefetch_related(*Dataset.common_prefetch_fields)
@@ -339,7 +339,7 @@ class V2SyncStatusAdmin(admin.ModelAdmin):
             actions.pop("sync_to_v2")
         return actions
 
-    @admin.action(description="Sync to V2")
+    @admin.action(description="Sync to V2", permissions=["change"])
     def sync_to_v2(self, request, queryset):
         V2SyncStatus.prefetch_datasets(queryset)
         for status in queryset:
