@@ -34,6 +34,13 @@ from apps.users.factories import MetaxUserFactory
 from apps.users.models import MetaxUser
 
 
+def pytest_addoption(parser):
+    parser.addoption(
+        "--log-queries", action="store_const", const=True,
+        help="Log SQL queries during tests"
+    )
+
+
 @dataclass
 class DatasetSignalHandlers:
     created: Mock = field(default_factory=lambda: Mock(spec=[]))
@@ -57,6 +64,40 @@ def dataset_signal_handlers() -> DatasetSignalHandlers:
     receiver(dataset_created, weak=True)(handlers.created)
     receiver(dataset_updated, weak=True)(handlers.updated)
     return handlers
+
+
+@pytest.fixture(autouse=True)
+def capture_queries(request, tweaked_settings, settings):
+    """
+    Capture and log queries if `--log-queries` pytest flag is set
+    """
+    from django.db import connection
+    if request.config.getoption("--log-queries"):
+        settings.DEBUG = True  # DEBUG required for any logging to happen
+
+        # Wait until every other fixture has finished initializing;
+        # this way we can discard setup related SQL queries we don't actually
+        # need
+        for fixture_name in request.fixturenames:
+            if fixture_name == "capture_queries":
+                continue
+            request.getfixturevalue(fixture_name)
+
+        # Store the current query index so we skip the fixture setup
+        # related queries we don't need
+        query_index = len(connection.queries)
+
+        yield
+
+        queries = connection.queries[query_index:]
+
+        print("BEGIN queries")
+        for query in queries:
+            print(query)
+        print("END queries")
+        print(f"{len(queries)} QUERIES executed during test")
+    else:
+        yield
 
 
 @pytest.fixture
