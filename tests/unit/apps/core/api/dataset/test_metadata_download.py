@@ -26,7 +26,9 @@ def doi_dataset(admin_client, dataset_maximal_json, data_catalog, reference_data
     assert res.status_code == 201
 
     # DOI generation not supported yet, create identifier manually
-    Dataset.all_objects.filter(id=res.data["id"]).update(persistent_identifier="doi:10.1234/some_doi")
+    Dataset.all_objects.filter(id=res.data["id"]).update(
+        persistent_identifier="doi:10.1234/some_doi"
+    )
     res.data["persistent_identifier"] = "doi:10.1234/some_doi"
     return res.data
 
@@ -294,3 +296,20 @@ def test_dataset_metadata_download_fairdata_datacite_invalid_wkt(admin_client):
     dataset.spatial.set([SpatialFactory(custom_wkt=["not wkt"])])
     res = admin_client.get(f"/v3/datasets/{dataset.id}/metadata-download?format=fairdata_datacite")
     assert res.status_code == 200
+
+
+def test_dataset_metadata_download_fairdata_datacite_coords_validation(admin_client):
+    """Datacite XML should skip invalid WKT"""
+    dataset = DatasetFactory(title={"en": "Test draft"})
+
+    dataset.spatial.set([SpatialFactory(custom_wkt=["POINT(181 0)"])])
+    res = admin_client.get(f"/v3/datasets/{dataset.id}/metadata-download?format=fairdata_datacite")
+    assert res.status_code == 200
+    root = etree.XML(res.content)
+    assert len(ns_select(root, "//geoLocationPoint")) == 0
+
+    dataset.spatial.set([SpatialFactory(custom_wkt=["POINT(180 0)"])])
+    res = admin_client.get(f"/v3/datasets/{dataset.id}/metadata-download?format=fairdata_datacite")
+    assert res.status_code == 200
+    root = etree.XML(res.content)
+    assert len(ns_select(root, "//geoLocationPoint")) == 1

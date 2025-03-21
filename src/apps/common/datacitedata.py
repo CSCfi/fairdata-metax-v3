@@ -11,6 +11,10 @@ from apps.core.models import Dataset, DatasetActor
 logger = logging.getLogger(__file__)
 
 
+class InvalidCoordinates(ValueError):
+    """Invalid latitude or longitude."""
+
+
 class Datacitedata:
 
     language = None  # 2-character language code
@@ -197,15 +201,26 @@ class Datacitedata:
             geometries = [geometry]
         return geometries
 
+    def _coords_to_datacite(self, x, y):
+        if not (-180 <= x <= 180):
+            raise InvalidCoordinates(f"Longitude {x} is not in range [-180, 180].")
+        if not (-90 <= y <= 90):
+            raise InvalidCoordinates(f"Latitude {y} is not in range [-90, 90].")
+        return {
+            "pointLongitude": str(x),
+            "pointLatitude": str(y),
+        }
+
     def get_geometries_point(self, geometries: shapely.Geometry) -> Optional[dict]:
         """Return up to one point from flattened geometries."""
         for geometry in geometries:
             # DataCite supports only one point per location
             if geometry.geom_type == "Point":
-                return {
-                    "pointLongitude": str(geometry.x),
-                    "pointLatitude": str(geometry.y),
-                }
+                try:
+                    return self._coords_to_datacite(geometry.x, geometry.y)
+                except InvalidCoordinates as e:
+                    logger.warning(f"Skipping invalid point: {e}")
+                    continue
         return None
 
     def get_geometries_polygons(self, geometries: shapely.Geometry) -> list:
@@ -214,14 +229,17 @@ class Datacitedata:
         for geometry in geometries:
             # DataCite supports only polygon exterior, no holes
             if geometry.geom_type == "Polygon":
-                polygons.append(
-                    {
-                        "polygonPoints": [
-                            {"pointLongitude": str(x), "pointLatitude": str(y)}
-                            for x, y in geometry.exterior.coords
-                        ]
-                    }
-                )
+                try:
+                    polygons.append(
+                        {
+                            "polygonPoints": [
+                                self._coords_to_datacite(x, y) for x, y in geometry.exterior.coords
+                            ]
+                        }
+                    )
+                except InvalidCoordinates as e:
+                    logger.warning(f"Skipping polygon with invalid point: {e}")
+                    continue
         return polygons
 
     def get_wkt_data(self, wkt_list: list) -> dict:
