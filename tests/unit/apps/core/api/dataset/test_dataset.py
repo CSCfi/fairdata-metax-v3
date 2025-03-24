@@ -571,15 +571,23 @@ def test_many_actors(admin_client, dataset_a_json, data_catalog, reference_data)
 
 def test_dataset_search_entry(admin_client, dataset_a_json, data_catalog, reference_data):
     """Check that search entry contains correct values from dataset."""
+    dataset_a_json["actors"][0]["person"] = {"name": "person_name"}
+    dataset_a_json["actors"][0]["organization"] = {
+        "pref_label": {"en": "sub_org"},
+        "parent": {"pref_label": {"en": "organization_name", "fi": "organizaation_nimi"}},
+    }
     dataset_a_json["other_identifiers"] = [{"notation": "doi:10.1337/other_identifier"}]
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
-    assert res.status_code == 201
+    assert res.status_code == 201, res.data
     dataset_id = res.data["id"]
 
     entry = SearchEntry.objects.get(object_id=dataset_id)
     assert res.data["persistent_identifier"] in entry.title  # pid
     assert "Test dataset" in entry.title  # title
     assert "test subjects (persons)" in entry.title  # theme
+    for name in ["person_name", "organization_name", "organizaation_nimi", "sub_org"]:
+        assert name in entry.title
+        assert name in entry.description
     assert "Test dataset desc" in entry.description  # description
     assert "keyword another_keyword" in entry.description  # keywords
     assert "doi:10.1337/other_identifier" in entry.content  # entity.notation
@@ -832,4 +840,4 @@ def test_dataset_lock_for_update(admin_client):
 @pytest.mark.django_db(databases=("default", "extra_connection"), transaction=True)
 def test_dataset_lock_for_update_outside_transaction():
     """Dataset.lock_for_update should not do anything when not in transaction."""
-    Dataset.lock_for_update(uuid.uuid4()) # Would throw error if select_for_update was called
+    Dataset.lock_for_update(uuid.uuid4())  # Would throw error if select_for_update was called

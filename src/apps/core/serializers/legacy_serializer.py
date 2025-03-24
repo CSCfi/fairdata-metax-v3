@@ -3,6 +3,7 @@ import logging
 
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
+from watson.search import skip_index_update
 
 from apps.common.helpers import process_nested
 from apps.common.serializers import CommonNestedModelSerializer
@@ -218,9 +219,13 @@ class LegacyDatasetUpdateSerializer(CommonNestedModelSerializer):
     def create(self, validated_data):
         validated_data["_saving_legacy"] = True
         state = validated_data.pop("state", None)  # Always initialize dataset as draft
-        instance: Dataset = super().create(validated_data=validated_data)
+        instance: Dataset
         if state == Dataset.StateChoices.PUBLISHED:
+            with skip_index_update():  # Don't add draft to search index if publish fails
+                instance = super().create(validated_data=validated_data)
             instance.publish()  # Relations have been assigned, try to publish
+        else:
+            instance = super().create(validated_data=validated_data)
         return instance
 
     def update(self, instance, validated_data):

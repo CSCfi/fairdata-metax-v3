@@ -161,7 +161,7 @@ class DatasetAdmin(AbstractDatasetPropertyBaseAdmin, SimpleHistoryAdmin):
         "permissions",
     )
     list_select_related = ("access_rights", "data_catalog", "metadata_owner")
-    search_fields = ["title__values", "keyword"]
+    search_fields = ["id", "persistent_identifier", "title__values", "keyword"]
     inlines = [V2SyncStatusInline]
     actions = ["sync_to_v2"]
 
