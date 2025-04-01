@@ -13,6 +13,11 @@ from apps.common.models import AbstractBaseModel
 from apps.core.models.concepts import AccessType, DatasetLicense, RestrictionGrounds
 
 
+class REMSApprovalType(models.TextChoices):
+    AUTOMATIC = "automatic"
+    MANUAL = "manual"
+
+
 class AccessTypeChoices(models.TextChoices):
     OPEN = "http://uri.suomi.fi/codelist/fairdata/access_type/code/open"
     LOGIN = "http://uri.suomi.fi/codelist/fairdata/access_type/code/login"
@@ -60,6 +65,7 @@ class AccessRights(AbstractBaseModel):
     description = HStoreField(
         help_text='example: {"en":"description", "fi":"kuvaus"}', null=True, blank=True
     )
+    rems_approval_type = models.TextField(choices=REMSApprovalType.choices, null=True, blank=True)
     history = SnapshotHistoricalRecords(m2m_fields=(license,))
 
     class Meta(AbstractBaseModel.Meta):

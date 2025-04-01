@@ -6,6 +6,7 @@
 # :license: MIT
 import logging
 
+from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
@@ -122,6 +123,12 @@ class AccessRightsModelSerializer(CommonNestedModelSerializer):
     access_type = AccessType.get_serializer_field(required=True)
     restriction_grounds = RestrictionGrounds.get_serializer_field(required=False, many=True)
 
+    def get_fields(self):
+        fields = super().get_fields()
+        if not settings.REMS_ENABLED:
+            fields.pop("rems_approval_type", None)
+        return fields
+
     class Meta:
         model = AccessRights
         fields = (
@@ -131,6 +138,7 @@ class AccessRightsModelSerializer(CommonNestedModelSerializer):
             "access_type",
             "restriction_grounds",
             "available",
+            "rems_approval_type",
         )
 
 

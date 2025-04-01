@@ -21,7 +21,8 @@ pytestmark = [
 
 
 @pytest.fixture
-def mock_rems(requests_mock):
+def mock_rems(requests_mock, settings):
+    settings.REMS_ENABLED = True
     rems = MockREMS()
     rems.register_endpoints(requests_mock)
     management.call_command("create_initial_rems_entities")
