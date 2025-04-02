@@ -221,20 +221,16 @@ def test_files_list_include_removed(admin_client, file_tree_a):
 def test_files_retrieve_include_removed(admin_client, file_tree_a):
     file_tree_a["files"]["/dir/c.txt"].delete(soft=True)
     file_id = file_tree_a["files"]["/dir/c.txt"].id
-    params = {
-        **file_tree_a["params"],
-        "include_removed": False,
-    }
     res = admin_client.get(
         f"/v3/files/{file_id}",
-        params,
+        {"include_removed": False},
         content_type="application/json",
     )
     assert res.status_code == 404
 
     res = admin_client.get(
         f"/v3/files/{file_id}",
-        {**params, "include_removed": True},
+        {"include_removed": True},
         content_type="application/json",
     )
     assert res.status_code == 200
@@ -244,7 +240,7 @@ def test_files_retrieve_include_removed(admin_client, file_tree_a):
     file_b_id = file_tree_a["files"]["/dir/b.txt"].id
     res = admin_client.get(
         f"/v3/files/{file_b_id}",
-        {**params, "include_removed": True},
+        {"include_removed": True},
         content_type="application/json",
     )
     assert res.status_code == 200

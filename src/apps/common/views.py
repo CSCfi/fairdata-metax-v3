@@ -1,4 +1,5 @@
 from functools import cached_property
+from typing import List
 
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
@@ -98,6 +99,8 @@ class QueryParamsMixin(viewsets.ViewSet):
 
     query_params = {}
 
+    filter_actions = ["list"]  # View actions that support parameters from filterset_class
+
     def initial(self, request, *args, **kwargs):
         """Initialization before method handler is called."""
         self.validate_query_params()
@@ -142,8 +145,9 @@ class QueryParamsMixin(viewsets.ViewSet):
         # Add query parameters from filterset to supported_params.
         # NOTE: This currently assumes that there are no new filters
         # added dynamically during filterset instantiation.
-        if filterset_class := getattr(self, "filterset_class", None):
-            supported_params.update(filterset_class.base_filters)
+        if self.action in self.filter_actions:
+            if filterset_class := getattr(self, "filterset_class", None):
+                supported_params.update(filterset_class.base_filters)
 
         # List views use pagination, add pagination params to supported_params
         if not self.detail:

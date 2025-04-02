@@ -54,9 +54,9 @@ def test_delete_files_by_project_id(admin_client, file_set, flush, all_objects_c
     assert file_set.total_files_count == 3
     url = f'{reverse("file-list")}?flush={flush}&csc_project={file_set.csc_project}'
     res = admin_client.delete(url)
+    assert res.status_code == 200
     assert File.available_objects.all().count() == 0
     assert File.all_objects.all().count() == all_objects_count
-    assert res.status_code == 200
 
 
 @pytest.mark.parametrize(

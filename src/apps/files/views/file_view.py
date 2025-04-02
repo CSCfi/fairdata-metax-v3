@@ -111,6 +111,7 @@ class BaseFileViewSet(CommonModelViewSet):
 
     serializer_class = FileSerializer
     filterset_class = FileFilterSet
+    filter_actions = ["list", "destroy_list"]
     http_method_names = ["get"]
     queryset = File.available_objects.prefetch_related(
         "storage",

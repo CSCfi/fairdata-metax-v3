@@ -628,6 +628,17 @@ def test_get_dataset_include_nulls(admin_client, dataset_a_json, data_catalog, r
     assert res.data["deprecated"] == None
 
 
+def test_get_dataset_invalid_query_param(
+    admin_client, dataset_a_json, data_catalog, reference_data
+):
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    dataset_id = res.data["id"]
+    # Filtering by title not available for retrieving dataset by id
+    res = admin_client.get(f"/v3/datasets/{dataset_id}?title=x", content_type="application/json")
+    assert res.status_code == 400
+
+
 def test_missing_required_fields(
     admin_client, data_catalog, data_catalog_harvested, reference_data
 ):
