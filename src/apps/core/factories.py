@@ -38,9 +38,7 @@ class PreservationFactory(factory.django.DjangoModelFactory):
         model = models.Preservation
 
     contract = factory.SubFactory(ContractFactory)
-    state = factory.Iterator(
-        iter(models.Preservation.PreservationState.choices), getter=lambda value: value[0]
-    )
+    state = factory.Faker("random_int", min=-1, max=140)
     description = factory.Sequence(lambda n: {"en": f"description-for-preservation-entry-{n}"})
     reason_description = factory.Sequence(
         lambda n: f"reason-description-for-preservation-entry-{n}"

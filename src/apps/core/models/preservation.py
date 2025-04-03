@@ -46,7 +46,6 @@ class Preservation(AbstractBaseModel):
         IN_DISSEMINATION = 140
 
     state = models.IntegerField(
-        choices=PreservationState.choices,
         default=PreservationState.NONE,
         help_text=_("Record state in DPRES."),
     )
