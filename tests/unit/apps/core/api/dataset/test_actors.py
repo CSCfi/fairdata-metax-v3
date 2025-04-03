@@ -1117,11 +1117,11 @@ def test_create_actor_email_private(patch_dataset, admin_client):
     assert "email" in res.data["actors"][0]["person"]
     assert "email" in res.data["actors"][0]["organization"]
 
-    # Email should not be visible for anonymous user
+    # Email should be hidden for anonymous user
     anon_client = Client()
     res = anon_client.get(f"/v3/datasets/{data['id']}", content_type="application/json")
-    assert "email" not in res.data["actors"][0]["person"]
-    assert "email" not in res.data["actors"][0]["organization"]
+    assert res.data["actors"][0]["person"]["email"] == "<hidden>"
+    assert res.data["actors"][0]["organization"]["email"] == "<hidden>"
 
 
 def test_organization_depth_limit(

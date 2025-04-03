@@ -95,7 +95,6 @@ def test_handle_private_emails():
     handle_private_emails(data_hide, show_emails=False)
     assert data_hide == {
         "field": "value",
-        "more": [
-            {},
-        ],
+        "emal": "<hidden>",
+        "more": [{"here": "<hidden>"}],
     }

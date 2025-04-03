@@ -381,7 +381,7 @@ def handle_private_emails(value: dict, show_emails, ignore_fields=set()):
                 ret = recurse(value[k])
                 if ret is not None:
                     if ret is omit:
-                        del value[k]
+                        value[k] = "<hidden>"
                     else:
                         value[k] = ret
             return None
@@ -397,7 +397,7 @@ def handle_private_emails(value: dict, show_emails, ignore_fields=set()):
             ret = recurse(value[k])
             if ret is not None:
                 if ret is omit:
-                    del value[k]
+                    value[k] = "<hidden>"
                 else:
                     value[k] = ret
 
