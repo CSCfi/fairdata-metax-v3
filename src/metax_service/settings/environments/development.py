@@ -20,6 +20,7 @@ ALLOWED_HOSTS = ALLOWED_HOSTS + [
 
 SHELL_PLUS_IMPORTS = [
     "from django.db import connection",
+    "from apps.rems.rems_service import REMSService, REMSSession",
 ]
 SHELL_PLUS_SUBCLASSES_IMPORT = [serializers.Serializer]
 

@@ -23,6 +23,7 @@ base_settings = [
     "components/users.py",
     "components/cache.py",
     "components/tasks.py",
+    "components/rems.py",
     "environments/{0}.py".format(ENV),
 ]
 # Include settings:

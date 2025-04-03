@@ -22,6 +22,7 @@ def test_user_create_form():
     assert user.username == "hello"
     assert user.check_password("someval1dPASsword")
 
+
 def test_user_create_form_mismatching_password():
     form = OptionalPasswordUserCreationForm(
         data={

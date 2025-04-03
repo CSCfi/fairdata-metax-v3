@@ -936,6 +936,10 @@ def tweaked_settings(settings):
     settings.PID_MS_BASEURL = "pidmsbaseurl"
     settings.PID_MS_DOI_PREFIX = "10.23729/"
     settings.ETSIN_URL = "etsin-test"
+    settings.REMS_BASE_URL = "https://rems"
+    settings.REMS_USER_ID = "owner"
+    settings.REMS_API_KEY = "42"
+    settings.REMS_ORGANIZATION_ID = "csc"
 
 
 @pytest.fixture
