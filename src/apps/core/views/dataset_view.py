@@ -384,6 +384,7 @@ class DatasetFilter(filters.FilterSet):
     ),
 )
 class DatasetViewSet(CommonModelViewSet):
+    filter_actions = ["list", "aggregates"]
     query_serializers = [
         {"class": LatestVersionQueryParamsSerializer, "actions": ["list", "aggregates"]},
         {
