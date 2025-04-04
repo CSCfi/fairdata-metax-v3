@@ -1,7 +1,6 @@
 import pytest
 from django.conf import settings
 
-from apps.core import factories
 from apps.core.models.catalog_record.dataset import Dataset, REMSStatus
 from apps.rems.models import REMSCatalogueItem
 
