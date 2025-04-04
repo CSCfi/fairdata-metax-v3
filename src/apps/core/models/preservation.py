@@ -72,6 +72,7 @@ class Preservation(AbstractBaseModel):
     dataset_version = models.OneToOneField(
         "self",
         on_delete=models.DO_NOTHING,
+        blank=True,
         null=True,
         related_name="dataset_origin_version",
         help_text=_("Link between the dataset stored in DPRES and the originating dataset"),
