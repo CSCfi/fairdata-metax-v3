@@ -510,6 +510,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             pid_generated_by_fairdata=False,
             draft_of=None,
             api_version=3,
+            rems_publish_error=None,
         )
         new_values.update(kwargs)
         copy = self.copier.copy(self, new_values=new_values)

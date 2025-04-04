@@ -2,10 +2,13 @@ from datetime import timedelta
 from uuid import UUID
 
 import pytest
+from django.conf import settings
 from django.utils import timezone
 
-from apps.core.checks import check_v2_sync
+from apps.core import factories
+from apps.core.checks import check_rems_publish, check_v2_sync
 from apps.core.models.sync import SyncAction, V2SyncStatus
+from apps.rems.models import REMSCatalogueItem
 
 
 @pytest.mark.django_db
@@ -49,3 +52,22 @@ def test_check_v2_sync_fail():
         action=SyncAction.UPDATE,
     )
     assert check_v2_sync() == {"sync_to_v2": {"ok": False, "fails": {"create": 1, "update": 1}}}
+
+
+@pytest.mark.django_db
+def test_check_rems_publish(mock_rems):
+    dataset = factories.REMSDatasetFactory()
+    dataset.signal_update()
+    assert dataset.rems_publish_error is None
+    assert REMSCatalogueItem.objects.count() == 1
+    assert check_rems_publish() == {"rems_publish": {"ok": True}}
+
+
+@pytest.mark.django_db
+def test_check_rems_publish_fail(mock_rems, requests_mock):
+    requests_mock.post(f"{settings.REMS_BASE_URL}/api/catalogue-items/create", status_code=400)
+    dataset = factories.REMSDatasetFactory()
+    dataset.signal_update()
+    assert dataset.rems_publish_error is not None
+    assert REMSCatalogueItem.objects.count() == 0
+    assert check_rems_publish() == {"rems_publish": {"ok": False, "fails": 1}}
