@@ -121,6 +121,27 @@ def test_aggregation_and_filters(
             assert res.data["count"] == count
 
 
+def test_aggregation_query_params(user_client):
+    factories.PublishedDatasetFactory(title={"en": "apples"}, keyword=["fruit"])
+    factories.PublishedDatasetFactory(title={"en": "bananas"}, keyword=["fruit"])
+
+    # No params, includes all published datasets
+    res = user_client.get("/v3/datasets/aggregates")
+    assert res.status_code == 200
+    assert res.data["keyword"]["hits"] == [{"value": {"und": "fruit"}, "count": 2}]
+
+    # Includes only results matching dataset filtering query params
+    res = user_client.get("/v3/datasets/aggregates?title=apple")
+    assert res.status_code == 200
+    assert res.data["keyword"]["hits"] == [{"value": {"und": "fruit"}, "count": 1}]
+
+
+def test_aggregation_query_params_invalid(user_client):
+    res = user_client.get("/v3/datasets/aggregates?schtitle=apple")
+    assert res.status_code == 400
+    assert res.json() == {"schtitle": "Unknown query parameter"}
+
+
 def test_list_datasets_with_ordering(
     admin_client, dataset_a_json, dataset_b_json, data_catalog, reference_data
 ):
@@ -314,6 +335,7 @@ def test_filter_by_organization_name(admin_client, dataset_a, data_catalog, refe
     )
     assert [d["id"] for d in res.data] == [str(dataset.id)]
 
+
 def test_filter_by_id(admin_client, dataset_a, dataset_b, dataset_c):
     dataset_id = str(Dataset.objects.first().id)
 
@@ -326,13 +348,10 @@ def test_filter_by_id(admin_client, dataset_a, dataset_b, dataset_c):
 
 
 def test_filter_by_invalid_id(admin_client):
-    res = admin_client.get(
-        "/v3/datasets?id=123&pagination=false", content_type="application/json"
-    )
+    res = admin_client.get("/v3/datasets?id=123&pagination=false", content_type="application/json")
     assert res.status_code == 400
-    assert res.json() == {
-        "id": "Dataset identifiers must be valid UUIDs. Invalid IDs: ['123']"
-        }
+    assert res.json() == {"id": "Dataset identifiers must be valid UUIDs. Invalid IDs: ['123']"}
+
 
 def test_filter_by_multiple_ids(admin_client, dataset_a, dataset_b, dataset_c):
     ids = sorted([str(d.id) for d in Dataset.objects.all()[:2]])
