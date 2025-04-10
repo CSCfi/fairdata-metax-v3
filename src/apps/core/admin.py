@@ -3,14 +3,13 @@ import logging
 from django.conf import settings
 from django.contrib import admin, messages
 from django.db import models
-from django.utils import timezone
+from django.db.models.functions import Cast, Substr
 from django_json_widget.widgets import JSONEditorWidget
 from simple_history.admin import SimpleHistoryAdmin
 
 from apps.common.admin import AbstractDatasetPropertyBaseAdmin
 
 # Register your models here.
-from apps.common.profiling import count_queries
 from apps.common.tasks import run_task
 from apps.core.models import (
     AccessRights,
@@ -37,9 +36,12 @@ from apps.core.models import (
     Temporal,
     Theme,
 )
+from apps.core.models.access_rights import AccessTypeChoices
+from apps.core.models.catalog_record.dataset import REMSStatus
 from apps.core.models.preservation import Preservation
 from apps.core.models.sync import SyncAction, V2SyncStatus
-from apps.core.signals import sync_dataset_to_v2
+from apps.core.signals import sync_dataset_to_rems, sync_dataset_to_v2
+from apps.rems.models import REMSCatalogueItem
 
 logger = logging.getLogger(__name__)
 
@@ -131,6 +133,40 @@ class V2SyncStatusInline(admin.StackedInline):
     )
 
 
+class REMSStatusFilter(admin.SimpleListFilter):
+    title = "REMS state"
+    parameter_name = "rems_status"
+
+    def lookups(self, request, model_admin):
+        return REMSStatus.choices
+
+    def queryset(self, request, queryset):
+        rems_datasets = queryset.filter(
+            state="published",
+            access_rights__access_type__url__in=[
+                AccessTypeChoices.PERMIT,
+                AccessTypeChoices.RESTRICTED,
+            ],
+            access_rights__rems_approval_type__isnull=False,
+        )
+
+        value = self.value()
+        if value == REMSStatus.NOT_REMS:
+            return queryset.exclude(id__in=rems_datasets)
+        if value == REMSStatus.ERROR:
+            return rems_datasets.filter(rems_publish_error__isnull=False)
+
+        in_rems_ids = REMSCatalogueItem.objects.filter(key__startswith="dataset-").values_list(
+            Cast(Substr("key", len("dataset-") + 1), output_field=models.UUIDField()), flat=True
+        )
+        if value == REMSStatus.PUBLISHED:
+            return rems_datasets.filter(rems_publish_error__isnull=True).filter(id__in=in_rems_ids)
+        if value == REMSStatus.NOT_PUBLISHED:
+            return rems_datasets.filter(rems_publish_error__isnull=True).exclude(
+                id__in=in_rems_ids
+            )
+
+
 @admin.register(Dataset)
 class DatasetAdmin(AbstractDatasetPropertyBaseAdmin, SimpleHistoryAdmin):
     list_display = (
@@ -148,6 +184,7 @@ class DatasetAdmin(AbstractDatasetPropertyBaseAdmin, SimpleHistoryAdmin):
         "issued",
         "deprecated",
         "state",
+        REMSStatusFilter,
         "data_catalog",
     )
     autocomplete_fields = ["language", "theme", "field_of_science"]
@@ -159,16 +196,25 @@ class DatasetAdmin(AbstractDatasetPropertyBaseAdmin, SimpleHistoryAdmin):
         "access_rights",
         "draft_of",
         "permissions",
+        "rems_status",
     )
     list_select_related = ("access_rights", "data_catalog", "metadata_owner")
     search_fields = ["id", "persistent_identifier", "title__values", "keyword"]
     inlines = [V2SyncStatusInline]
-    actions = ["sync_to_v2"]
+    actions = ["sync_to_v2", "publish_to_rems"]
+
+    def get_fields(self, request, obj=...):
+        fields = super().get_fields(request, obj)
+        if not settings.REMS_ENABLED:
+            fields = [f for f in fields if f != "rems_status"]
+        return fields
 
     def get_actions(self, request):
         actions = super().get_actions(request)
         if not settings.METAX_V2_INTEGRATION_ENABLED:
             actions.pop("sync_to_v2")
+        if not settings.REMS_ENABLED:
+            actions.pop("publish_to_rems")
         return actions
 
     @admin.action(description="Sync datasets to V2", permissions=["change"])
@@ -182,6 +228,26 @@ class DatasetAdmin(AbstractDatasetPropertyBaseAdmin, SimpleHistoryAdmin):
                 f"{len(datasets)} datasets set to sync to V2",
                 messages.SUCCESS,
             )
+
+    @admin.action(description="Publish to REMS", permissions=["change"])
+    def publish_to_rems(self, request, queryset):
+        datasets = Dataset.objects.filter(id__in=[item.id for item in queryset])
+        not_rems = 0
+        success = 0
+        errors = 0
+        for dataset in datasets:
+            sync = sync_dataset_to_rems(dataset)
+            if sync is None:
+                not_rems += 1
+            elif sync:
+                success += 1
+            else:
+                errors += 1
+        self.message_user(
+            request,
+            f"Publish to REMS: {success=} {errors=} {not_rems=}",
+            messages.SUCCESS,
+        )
 
     def save_model(self, request, obj: Dataset, form, change):
         created = obj._state.adding
