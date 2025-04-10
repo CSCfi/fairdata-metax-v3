@@ -85,3 +85,47 @@ def test_rems_applications(mock_rems, user_client):
     assert len(res.data) == 1
     assert res.data[0]["application/applicant"]["userid"] == user_client._user.fairdata_username
     assert res.data[0]["application/resources"][0]["resource/ext-id"] == str(dataset.id)
+
+    # Auto-approve is enabled, there should be an entitlement
+    res = user_client.get(
+        f"/v3/datasets/{dataset.id}/rems-entitlements", content_type="application/json"
+    )
+    assert res.status_code == 200
+    assert len(res.data) == 1
+    assert res.data[0]["resource"] == str(dataset.id)
+    assert res.data[0]["user"]["userid"] == user_client._user.fairdata_username
+
+
+def test_dataset_rems_application_status(settings, mock_rems, admin_client, user_client):
+    dataset = factories.REMSDatasetFactory()
+    service = REMSService()
+
+    # REMS disabled, so allowed_actions does not have REMS fields
+    settings.REMS_ENABLED = False
+    data = user_client.get(f"/v3/datasets/{dataset.id}?include_allowed_actions=true").json()
+    assert data["allowed_actions"].get("rems_status") is None
+    assert dataset.get_user_rems_application_status(user_client._user) == "disabled"
+
+    # Admin does not have fairdata_username so is not a REMS user
+    settings.REMS_ENABLED = True
+    data = admin_client.get(f"/v3/datasets/{dataset.id}?include_allowed_actions=true").json()
+    assert data["allowed_actions"]["rems_status"] == "not_rems_user"
+
+    # Dataset not enabled for REMS or not published to REMS yet
+    data = user_client.get(f"/v3/datasets/{dataset.id}?include_allowed_actions=true").json()
+    assert data["allowed_actions"]["rems_status"] == "not_in_rems"
+
+    # Dataset in REMS, user has not made an application yet
+    service.publish_dataset(dataset)
+    data = user_client.get(f"/v3/datasets/{dataset.id}?include_allowed_actions=true").json()
+    assert data["allowed_actions"]["rems_status"] == "no_application"
+
+    # Application created and submitted with auto-approve workflow
+    service.create_application_for_dataset(user_client._user, dataset)
+    data = user_client.get(f"/v3/datasets/{dataset.id}?include_allowed_actions=true").json()
+    assert data["allowed_actions"]["rems_status"] == "approved"
+
+    # Application approved but no entitlement found -> needs new application
+    mock_rems.entities["entitlement"].clear() # Remove all entitlements
+    data = user_client.get(f"/v3/datasets/{dataset.id}?include_allowed_actions=true").json()
+    assert data["allowed_actions"]["rems_status"] == "no_application"

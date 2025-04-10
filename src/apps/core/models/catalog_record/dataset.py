@@ -54,6 +54,19 @@ class REMSStatus(models.TextChoices):
     ERROR = "error", "Publish to REMS failed"
 
 
+class REMSApplicationStatus(models.TextChoices):
+    """Dataset REMS status."""
+
+    DISABLED = "disabled", "REMS disabled"
+    NOT_REMS_USER = "not_rems_user", "REMS disabled for user"
+    NOT_IN_REMS = "not_in_rems", "Dataset not published in REMS"
+    NO_APPLICATION = "no_application", "No active applications"
+    DRAFT = "draft", "Application incomplete"
+    SUBMITTED = "submitted", "Application submitted"
+    APPROVED = "approved", "REMS application approved"
+    REJECTED = "rejected", "REMS application rejected"
+
+
 class DatasetVersions(AbstractBaseModel):
     """A collection of dataset's versions."""
 
@@ -356,6 +369,48 @@ class Dataset(V2DatasetMixin, CatalogRecord):
     def has_permission_to_see_drafts(self, user: MetaxUser):
         return self.has_permission_to_edit(user)
 
+    def has_rems_entitlement(self, user: MetaxUser) -> bool:
+        if not settings.REMS_ENABLED:
+            return False
+        if not getattr(user, "fairdata_username", None):
+            return False
+        return len(REMSService().get_user_entitlements_for_dataset(user=user, dataset=self)) > 0
+
+    def get_user_rems_application_status(self, user: MetaxUser):
+        if not settings.REMS_ENABLED:
+            return REMSApplicationStatus.DISABLED
+        if not getattr(user, "fairdata_username", None):
+            return REMSApplicationStatus.NOT_REMS_USER
+        if self.rems_status != REMSStatus.PUBLISHED:
+            return REMSApplicationStatus.NOT_IN_REMS
+
+        # entitlement: the right of a user to access a resource
+        service = REMSService()
+        if self.has_rems_entitlement(user):
+            return REMSApplicationStatus.APPROVED
+
+        applications = service.get_user_applications_for_dataset(user=user, dataset=self)
+        if len(applications) == 0:
+            return REMSApplicationStatus.NO_APPLICATION
+
+        latest = sorted(applications, key=lambda a: a["application/created"], reverse=True)[0]
+        state = latest["application/state"]
+        if state in {"application.state/draft", "application.state/returned"}:
+            # draft: application created but not submitted yet
+            # returned: handler requests changes to the submitted application.
+            return REMSApplicationStatus.DRAFT
+        if state == "application.state/submitted":
+            # submitted: application waiting for approval
+            return REMSApplicationStatus.SUBMITTED
+        if state in {"application.state/rejected", "application.state/revoked"}:
+            # rejected: application rejected
+            # revoked: access rights revoked due to misuse, users have been added to the blacklist
+            return REMSApplicationStatus.REJECTED
+
+        # Remaining states are "closed" and "approved"
+        # closed: application closed as obsolete
+        # approved: application approved but user has no entitlement, maybe approval expired?
+        return REMSApplicationStatus.NO_APPLICATION
 
     @staticmethod
     def _historicals_to_instances(historicals):

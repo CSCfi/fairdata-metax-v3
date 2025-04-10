@@ -193,6 +193,11 @@ def test_rems_service_create_application_with_autoapprove(mock_rems, user):
     assert len(applications) == 1
     assert applications[0]["application/state"] == "application.state/approved"
 
+    # Check entitlement has been created
+    entitlements = service.get_user_entitlements_for_dataset(user, dataset)
+    assert len(entitlements) == 1
+    assert entitlements[0]["resource"] == str(dataset.id)
+
 
 def test_rems_service_create_appication_dataset_not_published_to_rems(mock_rems, user):
     dataset = factories.REMSDatasetFactory(access_rights__rems_approval_type="automatic")

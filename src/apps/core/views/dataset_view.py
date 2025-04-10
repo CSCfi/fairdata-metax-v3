@@ -865,6 +865,14 @@ class DatasetViewSet(CommonModelViewSet):
         data = service.create_application_for_dataset(request.user, dataset)
         return response.Response(data, status=status.HTTP_200_OK)
 
+    @action(methods=["get"], detail=True, url_path="rems-entitlements")
+    def list_rems_entitlements(self, request, pk=None):
+        """List dataset REMS entitlements for logged in user."""
+        dataset = self.get_object()
+        self.check_rems_request(request, dataset)
+        service = REMSService()
+        data = service.get_user_entitlements_for_dataset(request.user, dataset)
+        return response.Response(data, status=status.HTTP_200_OK)
 
 
 class DatasetDirectoryViewSet(DirectoryViewSet):

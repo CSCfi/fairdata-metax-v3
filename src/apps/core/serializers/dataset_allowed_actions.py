@@ -29,6 +29,13 @@ class DatasetAllowedActionsSerializer(serializers.Serializer):
 
     update = serializers.SerializerMethodField()
     download = serializers.SerializerMethodField()
+    rems_status = serializers.SerializerMethodField()
+
+    def get_fields(self):
+        fields = super().get_fields()
+        if not settings.REMS_ENABLED:
+            fields.pop("rems_status", None)
+        return fields
 
     @property
     def access_policy(self):
@@ -46,6 +53,9 @@ class DatasetAllowedActionsSerializer(serializers.Serializer):
         return self.access_policy().query_object_permission(
             user=self.context["request"].user, object=obj, action="<op:download>"
         )
+
+    def get_rems_status(self, obj: Dataset):
+        return obj.get_user_rems_application_status(user=self.context["request"].user)
 
 
 class DatasetAllowedActionsQueryParamsSerializer(serializers.Serializer):

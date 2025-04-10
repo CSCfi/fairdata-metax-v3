@@ -223,6 +223,7 @@ class MockREMS:
         }
         return data
 
+
     def handle_create(self, entity_type: EntityType):
         """Create new entity."""
 
@@ -480,15 +481,45 @@ class MockREMS:
         handlers = application["application/workflow"]["workflow.dynamic/handlers"]
         for handler in handlers:
             if handler["userid"] == "approver-bot":
-                now = timezone.now()
-                application["application/modified"] = now.isoformat()
-                application["application/state"] = self.ApplicationState.APPROVED
+                self.approve_application(application, handler)
                 break
+
+    def approve_application(self, application, approver) -> dict:
+        now = timezone.now()
+        userid = application["application/applicant"]["userid"]
+        application["application/modified"] = now.isoformat()
+        application["application/state"] = self.ApplicationState.APPROVED
+
+        # Create entitlement
+        self.id_counters[EntityType.ENTITLEMENT] += 1
+        entitlement_id = self.id_counters[EntityType.ENTITLEMENT]
+        entitlements = self.entities[EntityType.ENTITLEMENT].setdefault(userid, {})
+        entitlements[entitlement_id] = {
+            "resource": application["application/resources"][0]["resource/ext-id"],
+            "user": self.entities[EntityType.USER][userid],
+            "application-id": application["application/id"],
+            "start": now.isoformat(),
+            "end": None,
+            "mail": approver.get("email"),
+        }
+        return entitlements[entitlement_id]
 
     def handle_list_my_applications(self, request, context):
         userid = request.headers["X-REMS-USER-ID"]
         applications = self.entities[EntityType.APPLICATION]
         return [a for a in applications.values() if a["application/applicant"]["userid"] == userid]
+
+    def handle_list_entitlements(self, request, context):
+        userid = request.headers["X-REMS-USER-ID"]
+        if userid != settings.REMS_USER_ID:
+            raise NotImplementedError("Only supported for owner user")
+
+        # Require both resource and user for now in query
+        resource_ext_id = request.qs["resource"][0]
+        query_user = request.qs["user"][0]
+
+        user_entitlements = self.entities[EntityType.ENTITLEMENT].get(query_user, {})
+        return [e for e in user_entitlements.values() if e["resource"] == resource_ext_id]
 
     def get_base_url(self, entity_type: EntityType):
         return f"{settings.REMS_BASE_URL}/api/{entity_type}s"
@@ -496,6 +527,9 @@ class MockREMS:
     def register_endpoints(self, mocker: Mocker):
         """Register endpoints to a Mocker instance (e.g. requests_mock pytest fixture)."""
         for entity_type in EntityType:
+            if entity_type == EntityType.ENTITLEMENT:  # Entitlements can only be lisetd
+                continue
+
             base = self.get_base_url(entity_type)
             mocker.post(f"{base}/create", json=self.handle_create(entity_type=entity_type))
             # REMS users don't have the same list/get endpoints as the other entities have
@@ -528,10 +562,15 @@ class MockREMS:
                 json=self.handle_disable(entity_type=entity_type),
             )
 
-        # Application endpoints
+        # Application-specific endpoints
         base = f"{settings.REMS_BASE_URL}/api/applications"
         mocker.post(f"{base}/accept-licenses", json=self.handle_application_accept_licenses)
         mocker.post(f"{base}/submit", json=self.handle_application_submit)
         mocker.get(
             f"{settings.REMS_BASE_URL}/api/my-applications", json=self.handle_list_my_applications
+        )
+
+        # Entitlement-specific endpoints
+        mocker.get(
+            f"{settings.REMS_BASE_URL}/api/entitlements", json=self.handle_list_entitlements
         )

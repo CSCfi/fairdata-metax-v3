@@ -490,3 +490,10 @@ class REMSService:
             if len(resources) == 1 and resources[0]["resource/ext-id"] == str(dataset.id):
                 applications.append(application)
         return applications
+
+    def get_user_entitlements_for_dataset(self, user: MetaxUser, dataset: "Dataset") -> List[dict]:
+        self.check_user(user)
+        resp = self.session.get(
+            f"/api/entitlements?resource={dataset.id}&user={user.fairdata_username}"
+        )
+        return resp.json()
