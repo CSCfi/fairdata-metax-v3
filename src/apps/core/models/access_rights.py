@@ -5,6 +5,7 @@ from datetime import date
 from django.contrib.postgres.fields import HStoreField
 from django.db import models
 from django.utils import timezone
+from rest_framework.exceptions import ValidationError
 
 from apps.common.copier import ModelCopier
 from apps.common.helpers import datetime_to_date
@@ -110,3 +111,10 @@ class AccessRights(AbstractBaseModel):
         elif access_type == AccessTypeChoices.PERMIT:
             return False  # TODO: REMS
         return False  # access type is "restricted" or missing
+
+    def save(self, *args, **kwargs):
+        if self.rems_approval_type == REMSApprovalType.MANUAL:
+            raise ValidationError(
+                {"rems_approval_type": f"{REMSApprovalType.MANUAL} is not implemented yet"}
+            )
+        return super().save(*args, **kwargs)

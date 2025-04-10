@@ -6,6 +6,7 @@ from django.db import connection
 
 class LockType(Enum):
     sync_dataset = 1
+    rems_publish = 2
 
 
 def advisory_lock(type: LockType, key: int, block=True) -> bool:
@@ -39,3 +40,9 @@ def lock_sync_dataset(id: uuid.UUID, block=True):
     """Acquire lock for dataset syncing until end of transaction."""
     key = get_key_from_uuid(id)
     return advisory_lock(type=LockType.sync_dataset, key=key, block=block)
+
+
+def lock_rems_publish(id: uuid.UUID, block=True):
+    """Acquire lock for dataset syncing to REMS until end of transaction."""
+    key = get_key_from_uuid(id)
+    return advisory_lock(type=LockType.rems_publish, key=key, block=block)

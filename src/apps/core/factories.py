@@ -4,6 +4,7 @@ import factory.fuzzy
 from django.utils import timezone
 
 from apps.actors.factories import OrganizationFactory, PersonFactory
+from apps.core.models.access_rights import AccessTypeChoices, REMSApprovalType
 from apps.files.factories import FileStorageFactory
 from apps.refdata import models as refdata
 from apps.users.factories import MetaxUserFactory
@@ -330,6 +331,7 @@ class DataCatalogFactory(factory.django.DjangoModelFactory):
     allow_remote_resources = True
     storage_services = ["ida", "pas", "test"]
     publishing_channels = ["etsin", "ttv"]
+    rems_enabled = True
 
     @factory.post_generation
     def languages(self, create, extracted, **kwargs):
@@ -403,6 +405,19 @@ class PublishedDatasetFactory(DatasetFactory):
         if not extracted:
             self.state = "published"
             self.save()
+
+
+class REMSDatasetFactory(PublishedDatasetFactory):
+    class Meta:
+        model = models.Dataset
+        django_get_or_create = ("title",)
+        skip_postgeneration_save = True
+
+    access_rights = factory.SubFactory(
+        AccessRightsFactory,
+        access_type=factory.SubFactory(AccessTypeFactory, url=AccessTypeChoices.PERMIT),
+        rems_approval_type=REMSApprovalType.AUTOMATIC,
+    )
 
 
 class FileSetFactory(factory.django.DjangoModelFactory):

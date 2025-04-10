@@ -1,11 +1,15 @@
 import logging
+import traceback
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, List, Optional
 
 import requests
 from django.conf import settings
+from django.db import models, transaction
+from django.utils import timezone
 from requests.exceptions import HTTPError
 
+from apps.common.locks import lock_rems_publish
 from apps.rems.models import (
     EntityType,
     REMSCatalogueItem,
@@ -210,7 +214,7 @@ class REMSService:
 
     def create_license(self, title: dict, url: str):
         """Create REMS license."""
-        key = f"reference-{url}" # Assumes license is reference data
+        key = f"reference-{url}"  # Assumes license is reference data
         entity_data = None
         entity = REMSLicense.objects.filter(key=key).first()
         if entity:
@@ -255,10 +259,8 @@ class REMSService:
             ids.append(lic.rems_id)
         return ids
 
-    def create_resource(self, identifier: str, licenses: List[REMSEntity]):
+    def create_resource(self, key: str, identifier: str, licenses: List[REMSEntity]):
         """Create or update REMS resource."""
-        key = f"dataset-{identifier}"
-
         entity_data = None
         entity = REMSResource.objects.filter(key=key).first()
         if entity:
@@ -375,26 +377,59 @@ class REMSService:
             }
         return localizations
 
-    def create_dataset(self, dataset: "Dataset"):
+    def get_dataset(self, dataset: "Dataset") -> Optional[REMSCatalogueItem]:
+        dataset_key = self.get_dataset_key(dataset)
+        return REMSCatalogueItem.objects.filter(key=dataset_key).first()
+
+    def get_dataset_key(self, dataset: "Dataset") -> str:
+        return f"dataset-{dataset.id}"
+
+    @transaction.atomic
+    def publish_dataset(self, dataset: "Dataset") -> Optional[REMSCatalogueItem]:
         """Create or update catalogue item from a Metax dataset."""
+        lock_rems_publish(id=dataset.id)
+
         if dataset.state != "published":
             raise ValueError("Dataset needs to be published to enable REMS.")
 
         if not dataset.data_catalog.rems_enabled:
             raise ValueError("Catalog is not enabled for REMS.")
 
-        workflow = REMSWorkflow.objects.get(key="automatic")
+        try:
+            if dataset.rems_publish_error:
+                dataset.rems_publish_error = None
+                models.Model.save(dataset, update_fields=["rems_publish_error"])
+            logging.info(f"Syncing dataset {dataset.id} ({dataset.persistent_identifier}) to REMS")
 
-        licenses = [
-            self.create_license_from_dataset_license(dl)
-            for dl in dataset.access_rights.license.all()
-        ]
+            # Only automatic approval supported for now
+            workflow = REMSWorkflow.objects.get(key="automatic")
 
-        dataset_key = f"dataset-{dataset.id}"
-        resource = self.create_resource(identifier=dataset_key, licenses=licenses)
-        return self.create_catalogue_item(
-            key=dataset_key,
-            resource=resource,
-            workflow=workflow,
-            localizations=self.get_dataset_localizations(dataset),
-        )
+            licenses = [
+                self.create_license_from_dataset_license(dl)
+                for dl in dataset.access_rights.license.all()
+            ]
+
+            dataset_key = self.get_dataset_key(dataset)
+            resource = self.create_resource(
+                key=dataset_key, identifier=str(dataset.id), licenses=licenses
+            )
+            return self.create_catalogue_item(
+                key=dataset_key,
+                resource=resource,
+                workflow=workflow,
+                localizations=self.get_dataset_localizations(dataset),
+            )
+
+        except Exception as e:
+            # If REMS sync fails, store error
+            timestamp = timezone.now().isoformat(timespec="milliseconds")
+            msg = f"REMS sync failed for dataset {dataset.id} {timestamp}\n\n"
+            resp = getattr(e, "response", None)
+            if resp is not None:
+                msg = f"Response status {resp.status_code}:\n {resp.text}\n\n"
+
+            msg += "".join(traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__))
+            logger.error(f"Dataset {dataset.id} REMS sync failed: {e}")
+            dataset.rems_publish_error = msg
+            models.Model.save(dataset, update_fields=["rems_publish_error"])
+            return None

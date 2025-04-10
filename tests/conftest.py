@@ -20,6 +20,7 @@ import factory.random
 import pytest
 from django.conf import settings
 from django.contrib.auth.models import Group
+from django.core import management
 from django.core.cache import caches
 from django.dispatch import receiver
 from django.test.client import Client
@@ -30,14 +31,14 @@ from apps.core.models.contract import Contract
 from apps.core.models.data_catalog import DataCatalog
 from apps.core.signals import dataset_created, dataset_updated
 from apps.files import factories as files_factories
+from apps.rems.mocks import MockREMS
 from apps.users.factories import MetaxUserFactory
 from apps.users.models import MetaxUser
 
 
 def pytest_addoption(parser):
     parser.addoption(
-        "--log-queries", action="store_const", const=True,
-        help="Log SQL queries during tests"
+        "--log-queries", action="store_const", const=True, help="Log SQL queries during tests"
     )
 
 
@@ -72,6 +73,7 @@ def capture_queries(request, tweaked_settings, settings):
     Capture and log queries if `--log-queries` pytest flag is set
     """
     from django.db import connection
+
     if request.config.getoption("--log-queries"):
         settings.DEBUG = True  # DEBUG required for any logging to happen
 
@@ -264,6 +266,7 @@ def data_catalog(fairdata_users_group, service_group, pas_group, ida_group) -> D
         storage_services=["ida", "pas"],
         allowed_pid_types=["URN", "DOI"],
         allow_download=True,
+        rems_enabled=True,
     )
     catalog.dataset_groups_create.set([fairdata_users_group, service_group])
     catalog.dataset_groups_admin.set([pas_group, ida_group])
@@ -969,6 +972,19 @@ def mock_v2_integration(requests_mock, v2_integration_settings):
         "put": requests_mock.register_uri("PUT", matcher, status_code=200),
         "patch": requests_mock.register_uri("PATCH", matcher, status_code=200),
     }
+
+
+@pytest.fixture
+def mock_rems(requests_mock, settings) -> MockREMS:
+    settings.REMS_ENABLED = True
+    rems = MockREMS()
+    rems.register_endpoints(requests_mock)
+    management.call_command("create_initial_rems_entities")
+
+    # Clear request history
+    rems.clear_calls()
+    requests_mock.reset_mock()
+    return rems
 
 
 mock_store = {}

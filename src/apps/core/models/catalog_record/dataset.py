@@ -2,6 +2,7 @@ import logging
 from typing import Optional
 from uuid import UUID
 
+from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import MinLengthValidator
@@ -36,11 +37,21 @@ from apps.core.models.mixins import V2DatasetMixin
 from apps.core.models.preservation import Preservation
 from apps.core.services.pid_ms_client import PIDMSClient, ServiceUnavailableError
 from apps.files.models import File
+from apps.rems.rems_service import REMSService
 from apps.users.models import MetaxUser
 
 from .meta import CatalogRecord, OtherIdentifier
 
 logger = logging.getLogger(__name__)
+
+
+class REMSStatus(models.TextChoices):
+    """Dataset REMS status."""
+
+    NOT_REMS = "not_rems", "Not REMS dataset"
+    PUBLISHED = "published", "Published to REMS"
+    NOT_PUBLISHED = "not_published", "Not published to REMS"
+    ERROR = "error", "Publish to REMS failed"
 
 
 class DatasetVersions(AbstractBaseModel):
@@ -168,7 +179,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
     )
     history = SnapshotHistoricalRecords(
         m2m_fields=(language, theme, field_of_science, infrastructure, other_identifiers),
-        excluded_fields=["permissions"],
+        excluded_fields=["permissions", "rems_publish_error"],
     )
 
     class CumulativeState(models.IntegerChoices):
@@ -191,6 +202,8 @@ class Dataset(V2DatasetMixin, CatalogRecord):
     draft_of = models.OneToOneField(
         "self", related_name="next_draft", on_delete=models.CASCADE, null=True, blank=True
     )
+
+    rems_publish_error = models.TextField(null=True, blank=True)
 
     is_prefetched = False  # Should be set to True when using prefetch_related
 
@@ -392,10 +405,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
 
     @property
     def has_files(self):
-        return (
-            hasattr(self, "file_set")
-            and self.file_set.files(manager="all_objects").exists()
-        )
+        return hasattr(self, "file_set") and self.file_set.files(manager="all_objects").exists()
 
     @property
     def has_published_files(self):
@@ -422,6 +432,35 @@ class Dataset(V2DatasetMixin, CatalogRecord):
     def allow_removing_files(self) -> bool:
         """Return true if files can be removed from dataset."""
         return not self.has_published_files
+
+    @property
+    def is_rems_dataset(self) -> bool:
+        return (
+            self.state == "published"
+            and self.data_catalog.rems_enabled
+            and self.access_rights.access_type.url
+            in {AccessTypeChoices.PERMIT, AccessTypeChoices.RESTRICTED}
+            and self.access_rights.rems_approval_type is not None
+        )
+
+    @property
+    def rems_id(self) -> Optional[int]:
+        if catalogue_item := REMSService().get_dataset(self):
+            return catalogue_item.rems_id
+        return None
+
+    @property
+    def rems_status(self) -> Optional[str]:
+        if not settings.REMS_ENABLED:
+            return None
+
+        if self.rems_publish_error:
+            return REMSStatus.ERROR
+        if not self.is_rems_dataset:
+            return REMSStatus.NOT_REMS
+        if self.rems_id:
+            return REMSStatus.PUBLISHED
+        return REMSStatus.NOT_PUBLISHED
 
     def get_revision(self, name: str = None, publication_number: int = None):
         revision = None
@@ -1084,7 +1123,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         If not in transaction, does nothing.
         """
         if transaction.get_autocommit():
-            return # Not in transaction
+            return  # Not in transaction
 
         try:
             # Ideally we'd call select_for_update in the same query where we fetch the dataset

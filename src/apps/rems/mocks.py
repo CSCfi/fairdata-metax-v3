@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Dict, List
+from typing import Dict, List, Type
 
 from django.conf import settings
 from requests_mock.mocker import Mocker
@@ -26,7 +26,7 @@ class MockREMS:
     When creating an entity, stores input data mostly unchanged in self.entities.
     """
 
-    entity_models: List[REMSEntity] = [
+    entity_models: List[Type[REMSEntity]] = [
         REMSCatalogueItem,
         REMSForm,
         REMSLicense,
@@ -38,13 +38,18 @@ class MockREMS:
 
     def __init__(self):
         self.calls = []  # Used for tracking called endpoints in format "endpoint/entity_type"
-        self.entities: Dict[dict] = {}  # Entities by entity_type and rems_id
-        self.id_counters = {}  # Counters for autoincrementing id by entity type
-        for model in self.entity_models:
-            self.entities[model.entity_type] = {}
+        self.entities: Dict[str, dict]  # Entities by entity_type and rems_id
+        self.id_counters: Dict[str, int]  # Counters for autoincrementing id by entity type
+        self.clear_entities()
         self.reset_counters()
 
+    def clear_entities(self):
+        self.entities = {}
+        for model in self.entity_models:
+            self.entities[model.entity_type] = {}
+
     def reset_counters(self):
+        self.id_counters = {}  # Counters for autoincrementing id by entity type
         for model in self.entity_models:
             if model.entity_type not in {EntityType.USER, EntityType.ORGANIZATION}:
                 self.id_counters[model.entity_type] = 0
@@ -225,10 +230,13 @@ class MockREMS:
 
         return _handler
 
+    def get_base_url(self, model: REMSEntity):
+        return f"{settings.REMS_BASE_URL}/api/{model.entity_type}s"
+
     def register_endpoints(self, mocker: Mocker):
         """Register endpoints to a Mocker instance (e.g. requests_mock pytest fixture)."""
         for model in self.entity_models:
-            base = f"{settings.REMS_BASE_URL}/api/{model.entity_type}s"
+            base = self.get_base_url(model)
             mocker.post(f"{base}/create", json=self.handle_create(entity_type=model.entity_type))
             # REMS users don't have the same list/get endpoints as the other entities have
             if model.entity_type != EntityType.USER:

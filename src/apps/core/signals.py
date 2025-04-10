@@ -1,5 +1,6 @@
 import logging
 import traceback
+from typing import Optional
 
 from cachalot.signals import post_invalidation
 from django.conf import settings
@@ -16,6 +17,7 @@ from apps.core.models.sync import LastSuccessfulV2Sync, SyncAction, V2SyncStatus
 from apps.core.services import MetaxV2Client
 from apps.files.models import File
 from apps.files.signals import pre_files_deleted
+from apps.rems.rems_service import REMSService
 
 logger = logging.getLogger(__name__)
 
@@ -109,6 +111,14 @@ def sync_dataset_to_v2(dataset: Dataset, action: SyncAction, force_update=False)
                 ).save()
 
 
+def sync_dataset_to_rems(dataset: Dataset) -> Optional[bool]:
+    if not settings.REMS_ENABLED or not dataset.is_rems_dataset:
+        return None
+    if REMSService().publish_dataset(dataset):
+        return True
+    return False
+
+
 @receiver(post_delete, sender=Dataset)
 def delete_dataset_from_v2(sender, instance: Dataset, soft=False, **kwargs):
     """Sync Metax V2 when deleting dataset from v3"""
@@ -121,12 +131,14 @@ def delete_dataset_from_v2(sender, instance: Dataset, soft=False, **kwargs):
 def handle_dataset_updated(sender, instance: Dataset, **kwargs):
     if settings.METAX_V2_INTEGRATION_ENABLED:
         run_task(sync_dataset_to_v2, dataset=instance, action=SyncAction.UPDATE)
+    sync_dataset_to_rems(instance)
 
 
 @receiver(dataset_created)
 def handle_dataset_created(sender, instance: Dataset, **kwargs):
     if settings.METAX_V2_INTEGRATION_ENABLED:
         run_task(sync_dataset_to_v2, dataset=instance, action=SyncAction.CREATE)
+    sync_dataset_to_rems(instance)
 
 
 @receiver(pre_delete, sender=Dataset)
@@ -135,6 +147,7 @@ def handle_dataset_pre_delete(sender, instance: Dataset, **kwargs):
         fileset := getattr(instance, "file_set", None)
     ):
         run_task(fileset.update_published, exclude_self=True)
+    # TODO: Archive dataset in REMS
 
 
 @receiver(sync_contract)

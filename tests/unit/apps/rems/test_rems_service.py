@@ -1,10 +1,8 @@
 import pytest
 from django.conf import settings
-from django.core import management
 
 from apps.core import factories
 from apps.refdata.models import License
-from apps.rems.mocks import MockREMS
 from apps.rems.models import (
     REMSCatalogueItem,
     REMSLicense,
@@ -20,29 +18,16 @@ pytestmark = [
 ]
 
 
-@pytest.fixture
-def mock_rems(requests_mock, settings):
-    settings.REMS_ENABLED = True
-    rems = MockREMS()
-    rems.register_endpoints(requests_mock)
-    management.call_command("create_initial_rems_entities")
-
-    # Clear request history
-    rems.clear_calls()
-    requests_mock.reset_mock()
-    return rems
-
-
 def test_initial_rems_entities(mock_rems):
     assert REMSWorkflow.objects.get(key="automatic").rems_id == 1
     assert REMSUser.objects.get(key="approver-bot").rems_id == "approver-bot"
     assert REMSOrganization.objects.get(key="csc").rems_id == "csc"
 
 
-def test_rems_service_create_dataset(mock_rems):
+def test_rems_service_publish_dataset(mock_rems):
     catalog = factories.DataCatalogFactory(rems_enabled=True)
     dataset = factories.PublishedDatasetFactory(data_catalog=catalog)
-    REMSService().create_dataset(dataset)
+    REMSService().publish_dataset(dataset)
 
     assert REMSLicense.objects.count() == 1
     lic = mock_rems.entities["license"][1]
@@ -59,22 +44,23 @@ def test_rems_service_create_dataset(mock_rems):
     }
 
     assert REMSResource.objects.count() == 1
+    assert len(mock_rems.entities["resource"]) == 1
     resource = mock_rems.entities["resource"][1]
-    assert resource["resid"] == f"dataset-{dataset.id}"
+    assert resource["resid"] == str(dataset.id)
 
     assert REMSCatalogueItem.objects.count() == 1
     item = mock_rems.entities["catalogue-item"][1]
-    assert item["resid"] == f"dataset-{dataset.id}"
+    assert item["resid"] == str(dataset.id)
     assert item["resource-id"] == resource["id"]
 
 
-def test_rems_service_create_dataset_twice(mock_rems):
+def test_rems_service_publish_dataset_twice(mock_rems):
     catalog = factories.DataCatalogFactory(rems_enabled=True)
     dataset = factories.PublishedDatasetFactory(data_catalog=catalog)
-    REMSService().create_dataset(dataset)
+    REMSService().publish_dataset(dataset)
     assert mock_rems.calls == ["create/license", "create/resource", "create/catalogue-item"]
     mock_rems.clear_calls()
-    REMSService().create_dataset(dataset)
+    REMSService().publish_dataset(dataset)
     assert mock_rems.calls == ["get/license", "get/resource", "get/catalogue-item"]
     assert mock_rems.entities["catalogue-item"][1]["localizations"]["en"] == {
         "title": dataset.title["en"],
@@ -85,12 +71,12 @@ def test_rems_service_create_dataset_twice(mock_rems):
 def test_rems_service_update_dataset_title(mock_rems):
     catalog = factories.DataCatalogFactory(rems_enabled=True)
     dataset = factories.PublishedDatasetFactory(data_catalog=catalog)
-    REMSService().create_dataset(dataset)
+    REMSService().publish_dataset(dataset)
     mock_rems.clear_calls()
 
     dataset.title = {"en": "new title", "fi": "uus title"}
     dataset.save()
-    REMSService().create_dataset(dataset)
+    REMSService().publish_dataset(dataset)
     assert mock_rems.calls == [
         "get/license",
         "get/resource",
@@ -104,7 +90,7 @@ def test_rems_service_update_dataset_title(mock_rems):
 def test_rems_service_update_dataset_license(mock_rems, license_reference_data):
     catalog = factories.DataCatalogFactory(rems_enabled=True)
     dataset = factories.PublishedDatasetFactory(data_catalog=catalog)
-    REMSService().create_dataset(dataset)
+    REMSService().publish_dataset(dataset)
 
     mock_rems.clear_calls()
     lic = dataset.access_rights.license.first()
@@ -114,7 +100,7 @@ def test_rems_service_update_dataset_license(mock_rems, license_reference_data):
     lic.save()
 
     # License changed -> new resource -> new catalog item
-    REMSService().create_dataset(dataset)
+    REMSService().publish_dataset(dataset)
     assert mock_rems.calls == [
         "create/license",
         "get/resource",
