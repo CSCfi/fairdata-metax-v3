@@ -10,7 +10,6 @@ import operator
 from datetime import datetime, timezone
 from functools import reduce
 from typing import List
-from uuid import UUID
 
 from django.conf import settings
 from django.core.cache import caches
@@ -69,6 +68,7 @@ from apps.files.models import File
 from apps.files.serializers import DirectorySerializer
 from apps.files.views.directory_view import DirectoryCommonQueryParams, DirectoryViewSet
 from apps.files.views.file_view import BaseFileViewSet, FileCommonFilterset
+from apps.rems.rems_service import REMSService
 
 from .dataset_aggregation import aggregate_queryset
 
@@ -308,20 +308,23 @@ class DatasetFilter(filters.FilterSet):
         result = queryset
         for states in value:
             invalid_states = [
-                state for state in states
+                state
+                for state in states
                 if not state.lstrip("-").isdigit()
                 or int(state) not in Preservation.PreservationState
             ]
 
             if invalid_states:
-                raise ValidationError({
-                    "preservation": {
-                        "state": (
-                            f"The following states are not valid: "
-                            f"{', '.join(invalid_states)}"
-                        )
+                raise ValidationError(
+                    {
+                        "preservation": {
+                            "state": (
+                                f"The following states are not valid: "
+                                f"{', '.join(invalid_states)}"
+                            )
+                        }
                     }
-                })
+                )
 
             state_query = Q(preservation__state__in=states)
 
@@ -332,7 +335,7 @@ class DatasetFilter(filters.FilterSet):
             else:
                 result = result.filter(state_query)
         return result.distinct()
-    
+
     def filter_id(self, queryset, name, value):
         if value is None or value == "":
             return queryset
@@ -340,9 +343,9 @@ class DatasetFilter(filters.FilterSet):
         for ids in value:
             failing_ids = [id for id in ids if not is_valid_uuid(id)]
             if failing_ids:
-                raise exceptions.ValidationError({
-                    "id": f"Dataset identifiers must be valid UUIDs. Invalid IDs: {failing_ids}"
-                })
+                raise exceptions.ValidationError(
+                    {"id": f"Dataset identifiers must be valid UUIDs. Invalid IDs: {failing_ids}"}
+                )
             result = result.filter(id__in=ids)
         return result.distinct()
 
@@ -372,6 +375,7 @@ class DatasetFilter(filters.FilterSet):
         if not self.form.cleaned_data["publishing_channels"]:
             self.form.cleaned_data["publishing_channels"] = "etsin"
         return super().filter_queryset(queryset)
+
 
 @method_decorator(
     name="create",
@@ -420,7 +424,7 @@ class DatasetViewSet(CommonModelViewSet):
         },
         {
             "class": FieldsQueryParamsSerializer,
-            "actions": ["list"],
+            "actions": ["list", "retrieve"],
         },
     ]
     access_policy = DatasetAccessPolicy
@@ -832,6 +836,35 @@ class DatasetViewSet(CommonModelViewSet):
             )
 
         return url_map
+
+    def check_rems_request(self, request, dataset: Dataset):
+        if not settings.REMS_ENABLED:
+            raise exceptions.MethodNotAllowed(method=request.method, detail="REMS is not enabled")
+        if not getattr(request.user, "fairdata_username", None):
+            raise exceptions.PermissionDenied(
+                detail="You need to be logged in as a Fairdata user."
+            )
+        if not dataset.is_rems_dataset:
+            raise exceptions.ValidationError(detail="Dataset is not enabled for REMS.")
+
+    @action(methods=["get"], detail=True, url_path="rems-applications")
+    def list_rems_applications(self, request, pk=None):
+        """Get list of dataset REMS applications by logged in user."""
+        dataset = self.get_object()
+        self.check_rems_request(request, dataset)
+        service = REMSService()
+        data = service.get_user_applications_for_dataset(request.user, dataset)
+        return response.Response(data, status=status.HTTP_200_OK)
+
+    @list_rems_applications.mapping.post
+    def create_rems_application(self, request, pk=None):
+        """Create dataset REMS application for logged in user."""
+        dataset = self.get_object()
+        self.check_rems_request(request, dataset)
+        service = REMSService()
+        data = service.create_application_for_dataset(request.user, dataset)
+        return response.Response(data, status=status.HTTP_200_OK)
+
 
 
 class DatasetDirectoryViewSet(DirectoryViewSet):

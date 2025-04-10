@@ -356,6 +356,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
     def has_permission_to_see_drafts(self, user: MetaxUser):
         return self.has_permission_to_edit(user)
 
+
     @staticmethod
     def _historicals_to_instances(historicals):
         return [historical.instance for historical in historicals if historical.instance]

@@ -13,6 +13,12 @@ class EntityType(models.TextChoices):
     LICENSE = "license"
     RESOURCE = "resource"
     CATALOGUE_ITEM = "catalogue-item"
+    APPLICATION = "application"
+    ENTITLEMENT = "entitlement"
+
+
+# Entities that don't have Django models in Metax
+unmanaged_entities = {EntityType.APPLICATION, EntityType.ENTITLEMENT}
 
 
 class REMSEntity(AbstractBaseModel):

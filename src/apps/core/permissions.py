@@ -34,8 +34,8 @@ class DatasetAccessPolicy(BaseAccessPolicy):
         },
         {
             # Note that there is no actual "download" action in the viewset
-            "action": ["<op:download>"],
             "principal": "*",
+            "action": ["<op:download>"],
             "effect": "allow",
             "condition": "is_download_allowed",
         },
@@ -52,6 +52,11 @@ class DatasetAccessPolicy(BaseAccessPolicy):
         },
         {
             "action": ["create"],
+            "principal": "authenticated",
+            "effect": "allow",  # Catalog permission checked in viewset perform_create
+        },
+        {
+            "action": ["create_rems_application"],
             "principal": "authenticated",
             "effect": "allow",  # Catalog permission checked in viewset perform_create
         },

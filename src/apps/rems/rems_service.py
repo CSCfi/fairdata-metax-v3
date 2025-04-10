@@ -21,6 +21,7 @@ from apps.rems.models import (
     REMSUser,
     REMSWorkflow,
 )
+from apps.users.models import MetaxUser
 
 if TYPE_CHECKING:
     from apps.core.models import Dataset, DatasetLicense
@@ -207,7 +208,7 @@ class REMSService:
         if forms:
             data["forms"] = [{"form/id": form.rems_id for form in forms}]
 
-        # TODO: Implement updating workflow
+        # TODO: Implement updating workflow (handlers, title)
         workflow = self.session.post("/api/workflows/create", json=data).json()
         entity = REMSWorkflow.objects.create(key=key, rems_id=workflow["id"])
         return entity
@@ -395,6 +396,9 @@ class REMSService:
         if not dataset.data_catalog.rems_enabled:
             raise ValueError("Catalog is not enabled for REMS.")
 
+        if not dataset.is_rems_dataset:
+            raise ValueError("Dataset is not enabled for REMS.")
+
         try:
             if dataset.rems_publish_error:
                 dataset.rems_publish_error = None
@@ -433,3 +437,56 @@ class REMSService:
             dataset.rems_publish_error = msg
             models.Model.save(dataset, update_fields=["rems_publish_error"])
             return None
+
+    def check_user(self, user: MetaxUser):
+        """Check that user is a valid user for REMS."""
+        if not user.fairdata_username:
+            raise ValueError("User should be a Fairdata user")
+
+    def create_application_for_dataset(self, user: MetaxUser, dataset: "Dataset") -> dict:
+        self.check_user(user)
+
+        item = REMSCatalogueItem.objects.filter(key=self.get_dataset_key(dataset)).first()
+        if not item:
+            raise ValueError("Dataset has not been published to REMS.")
+
+        # Ensure user exists in REMS
+        self.create_user(
+            userid=user.fairdata_username, name=user.get_full_name(), email=user.email
+        )
+
+        # Create application for single dataset
+        data = {"catalogue-item-ids": [item.rems_id]}
+        with self.session.as_user(user.fairdata_username):
+            # Create application, get the created application data
+            _id = self.session.post("/api/applications/create", json=data).json()["application-id"]
+            application = self.session.get(f"/api/applications/{_id}").json()
+
+            # Accept licenses
+            # TODO: Require license ids to be listed explicitly
+            # in call instead of approving all automatically. Also check
+            # that the licenses actually exist in the application because REMS
+            # allows accepting licenses that are not in the application and might not even exist.
+            licenses = [lic["license/id"] for lic in application["application/licenses"]]
+            data = {"application-id": _id, "accepted-licenses": licenses}
+            self.session.post("/api/applications/accept-licenses", json=data)
+
+            # On failed submit, may return 200 with success=false e.g.
+            # {"success":false,"errors":[{"type":"t.actions.errors/licenses-not-accepted"}]}
+            data = {"application-id": _id}
+            resp = self.session.post("/api/applications/submit", json=data)
+            return resp.json()
+
+    def get_user_applications_for_dataset(self, user: MetaxUser, dataset: "Dataset") -> List[dict]:
+        self.check_user(user)
+
+        with self.session.as_user(user.fairdata_username):
+            resp = self.session.get(f"/api/my-applications?query=resource:{dataset.id}")
+
+        # Get only applications with correct resource id and no other resources
+        applications = []
+        for application in resp.json():
+            resources = application["application/resources"]
+            if len(resources) == 1 and resources[0]["resource/ext-id"] == str(dataset.id):
+                applications.append(application)
+        return applications

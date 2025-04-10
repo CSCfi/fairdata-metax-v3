@@ -1,0 +1,205 @@
+{
+  "application/workflow": {
+    "workflow/id": 24,
+    "workflow/type": "workflow/decider",
+    "workflow.dynamic/handlers": [
+      {
+        "userid": "approver-bot",
+        "name": "Approver Bot",
+        "email": null
+      },
+      {
+        "userid": "handler",
+        "name": "Hannah Handler",
+        "email": "handler@example.com"
+      }
+    ]
+  },
+  "application/external-id": "2025/17",
+  "application/first-submitted": "2025-03-05T14:43:35.064Z",
+  "application/blacklist": [],
+  "application/id": 28,
+  "application/applicant": {
+    "userid": "elsa",
+    "name": "Elsa Roleless",
+    "email": "elsa@example.com"
+  },
+  "application/todo": "new-application",
+  "application/members": [],
+  "application/resources": [
+    {
+      "catalogue-item/end": null,
+      "catalogue-item/expired": false,
+      "catalogue-item/enabled": true,
+      "resource/id": 23,
+      "catalogue-item/title": {
+        "fi": "Joku aineisto 3",
+        "en": "Some dataset 3"
+      },
+      "catalogue-item/infourl": {},
+      "resource/ext-id": "urn:nbn:fi:jotain",
+      "catalogue-item/start": "2025-03-05T14:42:02.792Z",
+      "catalogue-item/archived": false,
+      "catalogue-item/id": 29
+    }
+  ],
+  "application/accepted-licenses": {
+    "elsa": [
+      8
+    ]
+  },
+  "application/forms": [
+    {
+      "form/id": 49,
+      "form/title": "REMSTest",
+      "form/internal-name": "REMSTest",
+      "form/external-title": {
+        "fi": "Rems kokeilu",
+        "en": "Rems test"
+      },
+      "form/fields": [
+        {
+          "field/private": false,
+          "field/title": {
+            "fi": "testikenttä",
+            "en": "test field"
+          },
+          "field/visible": true,
+          "field/type": "text",
+          "field/value": "jeejee toimiihan tämä",
+          "field/id": "testi1",
+          "field/optional": false
+        }
+      ]
+    }
+  ],
+  "application/invited-members": [],
+  "application/description": "",
+  "application/generated-external-id": "2025/17",
+  "application/permissions": [
+    "application.command/invite-member",
+    "application.command/request-review",
+    "see-everything",
+    "application.command/redact-attachments",
+    "application.command/invite-reviewer",
+    "application.command/change-applicant",
+    "application.command/add-licenses",
+    "application.command/remove-member",
+    "application.command/request-decision",
+    "application.command/uninvite-member",
+    "application.command/remark",
+    "application.command/add-member",
+    "application.command/return",
+    "application.command/assign-external-id",
+    "application.command/close",
+    "application.command/change-resources"
+  ],
+  "application/last-activity": "2025-03-05T14:43:35.064Z",
+  "application/events": [
+    {
+      "application/external-id": "2025/17",
+      "event/actor-attributes": {
+        "userid": "elsa",
+        "name": "Elsa Roleless",
+        "email": "elsa@example.com"
+      },
+      "application/id": 28,
+      "event/time": "2025-03-05T14:42:35.126Z",
+      "workflow/type": "workflow/decider",
+      "application/resources": [
+        {
+          "resource/ext-id": "urn:nbn:fi:jotain",
+          "catalogue-item/id": 29
+        }
+      ],
+      "application/forms": [
+        {
+          "form/id": 49
+        }
+      ],
+      "event/visibility": "visibility/public",
+      "workflow/id": 24,
+      "event/actor": "elsa",
+      "event/type": "application.event/created",
+      "event/id": 114,
+      "application/licenses": [
+        {
+          "license/id": 8
+        }
+      ]
+    },
+    {
+      "event/id": 115,
+      "event/type": "application.event/licenses-accepted",
+      "event/time": "2025-03-05T14:42:43.203Z",
+      "event/actor": "elsa",
+      "application/id": 28,
+      "event/actor-attributes": {
+        "userid": "elsa",
+        "name": "Elsa Roleless",
+        "email": "elsa@example.com"
+      },
+      "application/accepted-licenses": [
+        8
+      ],
+      "event/visibility": "visibility/public"
+    },
+    {
+      "event/actor-attributes": {
+        "userid": "elsa",
+        "name": "Elsa Roleless",
+        "email": "elsa@example.com"
+      },
+      "application/id": 28,
+      "event/time": "2025-03-05T14:43:35.039Z",
+      "application/field-values": [
+        {
+          "value": "jeejee toimiihan tämä",
+          "field": "testi1",
+          "form": 49
+        }
+      ],
+      "event/visibility": "visibility/public",
+      "event/actor": "elsa",
+      "event/type": "application.event/draft-saved",
+      "event/id": 116,
+      "application/duo-codes": []
+    },
+    {
+      "event/id": 117,
+      "event/type": "application.event/submitted",
+      "event/time": "2025-03-05T14:43:35.064Z",
+      "event/actor": "elsa",
+      "application/id": 28,
+      "event/actor-attributes": {
+        "userid": "elsa",
+        "name": "Elsa Roleless",
+        "email": "elsa@example.com"
+      },
+      "event/visibility": "visibility/public"
+    }
+  ],
+  "application/roles": [
+    "handler"
+  ],
+  "application/attachments": [],
+  "application/licenses": [
+    {
+      "license/text": {
+        "en": "License text in English. License text in English. License text in English. License text in English. License text in English. License text in English. License text in English. License text in English. License text in English. License text in English. ",
+        "fi": "Suomenkielinen lisenssiteksti. Suomenkielinen lisenssiteksti. Suomenkielinen lisenssiteksti. Suomenkielinen lisenssiteksti. Suomenkielinen lisenssiteksti. Suomenkielinen lisenssiteksti. Suomenkielinen lisenssiteksti. Suomenkielinen lisenssiteksti. Suomenkielinen lisenssiteksti. Suomenkielinen lisenssiteksti. "
+      },
+      "license/type": "text",
+      "license/title": {
+        "en": "General Terms of Use",
+        "fi": "Yleiset käyttöehdot"
+      },
+      "license/id": 8,
+      "license/enabled": true,
+      "license/archived": false
+    }
+  ],
+  "application/created": "2025-03-05T14:42:35.126Z",
+  "application/state": "application.state/submitted",
+  "application/modified": "2025-03-05T14:43:35.039Z"
+}

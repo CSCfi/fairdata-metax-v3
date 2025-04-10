@@ -1,8 +1,10 @@
 import pytest
 from django.conf import settings
 
+from apps.core import factories
 from apps.core.models.catalog_record.dataset import Dataset, REMSStatus
 from apps.rems.models import REMSCatalogueItem
+from apps.rems.rems_service import REMSService
 
 pytestmark = [pytest.mark.django_db]
 
@@ -62,3 +64,24 @@ def test_publish_rems_dataset_error(
     assert "this failed" in dataset.rems_publish_error
     assert dataset.rems_status == REMSStatus.ERROR
     assert dataset.rems_id is None
+
+
+def test_rems_applications(mock_rems, user_client):
+    dataset = factories.REMSDatasetFactory()
+    REMSService().publish_dataset(dataset)
+
+    # Create application
+    res = user_client.post(
+        f"/v3/datasets/{dataset.id}/rems-applications", content_type="application/json"
+    )
+    assert res.status_code == 200
+    assert res.json() == {"success": True}
+
+    # Check application has been created for current user
+    res = user_client.get(
+        f"/v3/datasets/{dataset.id}/rems-applications", content_type="application/json"
+    )
+    assert res.status_code == 200
+    assert len(res.data) == 1
+    assert res.data[0]["application/applicant"]["userid"] == user_client._user.fairdata_username
+    assert res.data[0]["application/resources"][0]["resource/ext-id"] == str(dataset.id)
