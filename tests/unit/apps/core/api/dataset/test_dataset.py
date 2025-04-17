@@ -852,3 +852,53 @@ def test_dataset_lock_for_update(admin_client):
 def test_dataset_lock_for_update_outside_transaction():
     """Dataset.lock_for_update should not do anything when not in transaction."""
     Dataset.lock_for_update(uuid.uuid4())  # Would throw error if select_for_update was called
+
+
+@pytest.mark.usefixtures("data_catalog", "reference_data")
+def test_dataset_license_update(admin_client, dataset_a_json):
+    lic_url = "http://uri.suomi.fi/codelist/fairdata/license/code/other"
+    lic1_json = {"url": lic_url, "description": {"fi": "lisenssi1"}}
+    lic2_json = {"url": lic_url, "description": {"fi": "lisenssi2"}}
+    lic3_json = {"url": lic_url, "description": {"fi": "lisenssi3"}}
+    dataset_a_json["access_rights"]["license"] = [lic1_json]
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201, res.data
+    dataset = Dataset.objects.get(id=res.data["id"])
+    (lic1,) = dataset.access_rights.license.all()
+    assert lic1.description == lic1_json["description"]
+
+    # Add licenses 2 and 3. License 1 should keep its existing data including id.
+    patch = {
+        "access_rights": {
+            **dataset_a_json["access_rights"],
+            "license": [lic1_json, lic2_json, lic3_json],
+        }
+    }
+    res = admin_client.patch(
+        f"/v3/datasets/{res.data['id']}", patch, content_type="application/json"
+    )
+    assert res.status_code == 200
+    new_lic1, lic2, lic3 = dataset.access_rights.license.all()
+    assert new_lic1.id == lic1.id
+    assert new_lic1.description == lic1_json["description"]
+    assert lic2.description == lic2_json["description"]
+    assert lic3.description == lic3_json["description"]
+
+    # Omit license 2. Old lic2 will be updated with license 3 data, but id remains.
+    patch = {
+        "access_rights": {
+            **dataset_a_json["access_rights"],
+            "license": [lic1_json, lic3_json],
+        }
+    }
+    res = admin_client.patch(
+        f"/v3/datasets/{res.data['id']}", patch, content_type="application/json"
+    )
+    assert res.status_code == 200
+    new_lic1, new_lic2 = dataset.access_rights.license.all()
+    assert new_lic1.id == lic1.id
+    assert new_lic1.description == lic1_json["description"]
+    assert new_lic2.id == lic2.id
+    assert new_lic2.description == lic3_json["description"]
+    lic3.refresh_from_db()
+    assert lic3.removed

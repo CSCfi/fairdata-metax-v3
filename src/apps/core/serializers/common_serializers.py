@@ -18,7 +18,7 @@ from apps.common.serializers import (
     CommonNestedModelSerializer,
 )
 from apps.common.serializers.fields import MediaTypeField, RemoteResourceChecksumField
-from apps.common.serializers.serializers import CommonModelSerializer
+from apps.common.serializers.serializers import CommonModelSerializer, UpdatingListSerializer
 from apps.core.helpers import get_metax_identifiers_by_pid
 from apps.core.models import AccessRights, CatalogHomePage, DatasetPublisher, OtherIdentifier
 from apps.core.models.catalog_record import EntityRelation, RemoteResource, Temporal
@@ -54,7 +54,7 @@ class DatasetPublisherModelSerializer(CommonNestedModelSerializer):
 
 
 class LicenseModelSerializer(CommonModelSerializer):
-    """Custom serializer for License that does not require pref_label
+    """Custom serializer for DatasetLicense that does not require pref_label
 
     Conforms use case where AccessRights object can be created with only url-field in license
 
@@ -79,7 +79,7 @@ class LicenseModelSerializer(CommonModelSerializer):
         ]
 
         ref_name = "DatasetLicense"
-        list_serializer_class = CommonListSerializer
+        list_serializer_class = UpdatingListSerializer
 
     def create(self, validated_data):
         reference: License

@@ -8,7 +8,7 @@ import copy
 import json
 import logging
 from contextlib import contextmanager
-from typing import Any, Dict, List, Mapping, Optional, Type
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Type
 from uuid import UUID
 
 from django.core.exceptions import FieldDoesNotExist
@@ -148,7 +148,19 @@ class CommonListSerializer(serializers.ListSerializer):
 
         return instances
 
-    def update(self, instance, validated_data):
+    def _delete_instances(self, instances: Iterable[models.Model]):
+        """Delete instances, use lazy deleting if enabled."""
+        if not instances:
+            return
+        if self.child.lazy:  # Delete at end of deserialization
+            lazy_saver = LazyInstanceSaver.get_from_context(self.context)
+            for item in instances:
+                lazy_saver.add_delete(item)
+        else:  # Delete immediately
+            for item in instances:
+                item.delete()
+
+    def update(self, instance: Iterable[models.Model], validated_data):
         # Map the instance objects by their unique identifiers
         instance_mapping = {obj.id: obj for obj in instance}
         updated_instances = []
@@ -176,18 +188,49 @@ class CommonListSerializer(serializers.ListSerializer):
             raise ValidationError(errors)
 
         # Delete instances that were not included in the update
-        lazy_saver = None
-        if self.child.lazy:  # Delete at end of deserialization
-            lazy_saver = LazyInstanceSaver.get_from_context(self.context)
+        updated_ids = {str(item_data.get("id", None)) for item_data in validated_data}
+        self._delete_instances([item for item in instance if str(item.id) not in updated_ids])
+        return updated_instances
 
-        updated_items = {str(item_data.get("id", None)) for item_data in validated_data}
-        for item in instance:
-            if str(item.id) not in updated_items:
-                if lazy_saver:
-                    lazy_saver.add_delete(item)
-                else:
-                    item.delete()
 
+class UpdatingListSerializer(CommonListSerializer):
+    """CommonListSerializer that updates existing instances based on list position.
+
+    Updating values instead of creating new objects and deleting the old ones
+    makes ids more stable. The downside is that deleting an item
+    will cause the item to be updated with values from the next item.
+
+    For example, updating [item1, item2] with [values1, values2, values3] will
+    update values of item1 and item2 and create item3.
+    Any values not set by the serializer will remain, so omitting values2 would mean
+    item2 is updated with values3 but has e.g. the original creation timestamp.
+    """
+
+    def update(self, instance: Iterable[models.Model], validated_data):
+        instances = [obj for obj in instance]
+
+        # Perform updates or create new instances
+        item_serializer = self.child
+        errors = []  # Collect errors to match serializer validation reporting error style
+        updated_instances = []
+        for idx, item_data in enumerate(validated_data):
+            if idx < len(instances):
+                item_serializer.instance = instances[idx]  # Update existing
+            else:
+                item_serializer.instance = None  # Create a new instance
+            try:
+                item_serializer._validated_data = item_data
+                item_serializer._errors = []  # data was already validated by parent serializer
+                updated_instances.append(item_serializer.save())
+                errors.append({})
+            except serializers.ValidationError as exc:
+                errors.append(exc.detail)
+
+        if any(errors):
+            raise ValidationError(errors)
+
+        # Delete instances that were not included in the update
+        self._delete_instances(instances[len(updated_instances) :])
         return updated_instances
 
 
