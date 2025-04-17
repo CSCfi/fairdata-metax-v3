@@ -1,7 +1,7 @@
 import logging
 import traceback
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Iterable, List, Optional
 
 import requests
 from django.conf import settings
@@ -9,6 +9,7 @@ from django.db import models, transaction
 from django.utils import timezone
 from requests.exceptions import HTTPError
 
+from apps.common.helpers import single_translation
 from apps.common.locks import lock_rems_publish
 from apps.rems.models import (
     EntityType,
@@ -28,6 +29,12 @@ if TYPE_CHECKING:
 
 
 logger = logging.getLogger(__name__)
+
+
+class LicenseType(models.TextChoices):
+    link = "link"  # textcontent is an URL pointing to the license
+    text = "text"  # textcontent is an license text
+    attachment = "attachment"  # license has file attachment (not implemented in Metaxx)
 
 
 class REMSError(HTTPError):
@@ -213,9 +220,27 @@ class REMSService:
         entity = REMSWorkflow.objects.create(key=key, rems_id=workflow["id"])
         return entity
 
-    def create_license(self, title: dict, url: str):
+    def get_license_type(
+        self, url: Optional[str] = None, description: Optional[dict] = None
+    ) -> LicenseType:
+        """Return license type based on input data."""
+        if url and not description:
+            return LicenseType.link
+        if description and not url:
+            return LicenseType.text
+        raise ValueError("Expected exactly one of 'url' or 'description' to be set")
+
+    def create_license(
+        self,
+        key: str,
+        title: dict,
+        url: Optional[str] = None,
+        description: Optional[dict] = None,
+        custom_license_dataset: Optional["Dataset"] = None,
+    ):
         """Create REMS license."""
-        key = f"reference-{url}"  # Assumes license is reference data
+        license_type = self.get_license_type(url=url, description=description)
+
         entity_data = None
         entity = REMSLicense.objects.filter(key=key).first()
         if entity:
@@ -226,18 +251,23 @@ class REMSService:
                 "localizations": value["localizations"],
             }
 
-        # License types:
-        # - link: textcontent is an URL pointing to the license
-        # - text: textcontent is the license text
-        # - attachment: has file attachment
         data = {
-            "licensetype": "link",
+            "licensetype": license_type,
             "organization": self.get_default_organization_data(),
-            "localizations": {  # check: are both fi and en required?
-                "en": {"title": title.get("en") or title.get("fi"), "textcontent": url},
-                "fi": {"title": title.get("fi") or title.get("en"), "textcontent": url},
-            },
         }
+
+        if license_type == LicenseType.link:
+            title_languages = list(title.keys())
+            data["localizations"] = {
+                lang: {"title": title[lang], "textcontent": url} for lang in title_languages
+            }
+        elif license_type == LicenseType.text:
+            description_languages = list(description.keys())
+            data["localizations"] = {
+                lang: {"title": single_translation(title, lang), "textcontent": description[lang]}
+                for lang in description_languages
+            }
+
         if data == entity_data:
             return entity
 
@@ -245,12 +275,45 @@ class REMSService:
             self.archive_changed_entity(entity)
 
         lic = self.session.post("/api/licenses/create", json=data).json()
-        entity = REMSLicense.objects.create(key=key, rems_id=lic["id"])
+        entity = REMSLicense.objects.create(
+            key=key, rems_id=lic["id"], custom_license_dataset=custom_license_dataset
+        )
         return entity
 
-    def create_license_from_dataset_license(self, license: "DatasetLicense"):
-        # TODO: Support custom licenses
-        return self.create_license(url=license.reference.url, title=license.reference.pref_label)
+    def create_license_from_dataset_license(self, dataset: "Dataset", license: "DatasetLicense"):
+        is_reference_license = True
+        custom_license_dataset = None
+        description = None
+        title = license.reference.pref_label
+        url = license.reference.url
+        if license.title or license.description or license.custom_url:
+            is_reference_license = False
+
+        if license.title:
+            title = license.title
+
+        if license.custom_url:  # User custom url instead of reference url
+            url = license.custom_url
+
+        if license.description:  # Use description instead of url
+            url = None
+            description = license.description
+
+        if is_reference_license:
+            # Use common key for identical reference licenses
+            key = f"reference-license-{url}"
+        else:
+            # License has custom data, use per-dataset licenses
+            key = f"dataset-{dataset.id}-license-{license.id}"
+            custom_license_dataset = dataset
+
+        return self.create_license(
+            key=key,
+            url=url or None,
+            description=description or None,
+            title=title,
+            custom_license_dataset=custom_license_dataset,
+        )
 
     def get_license_ids(self, licenses: List[REMSEntity]):
         ids = []
@@ -385,8 +448,22 @@ class REMSService:
     def get_dataset_key(self, dataset: "Dataset") -> str:
         return f"dataset-{dataset.id}"
 
+    def archive_unused_custom_licenses(
+        self, dataset: "Dataset", used_licenses: Iterable[REMSLicense]
+    ):
+        """Archive custom REMS licenses that are no longer used in the dataset."""
+        unused_licenses = dataset.custom_rems_licenses(manager="all_objects").exclude(
+            rems_id__in=[l.rems_id for l in used_licenses]
+        )
+        for lic in unused_licenses:
+            if not lic.removed:
+                self.archive_changed_entity(lic)
+        dataset.custom_rems_licenses(manager="all_objects").remove(*unused_licenses)
+
     @transaction.atomic
-    def publish_dataset(self, dataset: "Dataset") -> Optional[REMSCatalogueItem]:
+    def publish_dataset(
+        self, dataset: "Dataset", raise_errors=False
+    ) -> Optional[REMSCatalogueItem]:
         """Create or update catalogue item from a Metax dataset."""
         lock_rems_publish(id=dataset.id)
 
@@ -409,9 +486,10 @@ class REMSService:
             workflow = REMSWorkflow.objects.get(key="automatic")
 
             licenses = [
-                self.create_license_from_dataset_license(dl)
+                self.create_license_from_dataset_license(dataset, license=dl)
                 for dl in dataset.access_rights.license.all()
             ]
+            self.archive_unused_custom_licenses(dataset, licenses)
 
             dataset_key = self.get_dataset_key(dataset)
             resource = self.create_resource(
@@ -425,6 +503,8 @@ class REMSService:
             )
 
         except Exception as e:
+            if raise_errors:
+                raise
             # If REMS sync fails, store error
             timestamp = timezone.now().isoformat(timespec="milliseconds")
             msg = f"REMS sync failed for dataset {dataset.id} {timestamp}\n\n"

@@ -116,6 +116,13 @@ class REMSLicense(REMSEntity):
     """
 
     entity_type = EntityType.LICENSE
+    custom_license_dataset = models.ForeignKey(
+        "core.Dataset",
+        related_name="custom_rems_licenses",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
 
 
 class REMSResource(REMSEntity):

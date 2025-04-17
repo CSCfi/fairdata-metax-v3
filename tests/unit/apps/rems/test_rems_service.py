@@ -205,3 +205,111 @@ def test_rems_service_create_appication_dataset_not_published_to_rems(mock_rems,
     with pytest.raises(ValueError) as ec:
         service.create_application_for_dataset(user, dataset)
     assert str(ec.value) == "Dataset has not been published to REMS."
+
+
+def test_rems_service_publish_dataset_custom_license_link(mock_rems):
+    dataset = factories.REMSDatasetFactory()
+    lic = factories.DatasetLicenseFactory(
+        title={"en": "License name", "fi": "Lisenssin nimi"}, custom_url="https://license.url"
+    )
+    dataset.access_rights.license.set([lic])
+    REMSService().publish_dataset(dataset, raise_errors=True)
+
+    assert REMSLicense.objects.count() == 1
+    lic = mock_rems.entities["license"][1]
+    assert lic["licensetype"] == "link"
+    assert lic["localizations"] == {
+        "en": {
+            "title": "License name",
+            "textcontent": "https://license.url",
+        },
+        "fi": {
+            "title": "Lisenssin nimi",
+            "textcontent": "https://license.url",
+        },
+    }
+
+
+def test_rems_service_publish_dataset_custom_license_text(mock_rems):
+    dataset = factories.REMSDatasetFactory()
+    lic = factories.DatasetLicenseFactory(
+        title={"en": "License name", "fi": "Lisenssin nimi"},
+        description={"en": "License text", "fi": "Lisenssin teksti"},
+    )
+    dataset.access_rights.license.set([lic])
+    REMSService().publish_dataset(dataset, raise_errors=True)
+
+    assert REMSLicense.objects.count() == 1
+    lic = mock_rems.entities["license"][1]
+    assert lic["licensetype"] == "text"
+    assert lic["localizations"] == {
+        "en": {
+            "title": "License name",
+            "textcontent": "License text",
+        },
+        "fi": {
+            "title": "Lisenssin nimi",
+            "textcontent": "Lisenssin teksti",
+        },
+    }
+
+
+def test_rems_service_publish_dataset_custom_license_update(mock_rems):
+    dataset = factories.REMSDatasetFactory()
+    lic = factories.DatasetLicenseFactory(
+        title={"en": "License name"}, description={"en": "License text"}
+    )
+    dataset.access_rights.license.set([lic])
+    REMSService().publish_dataset(dataset, raise_errors=True)
+    assert dataset.custom_rems_licenses.count() == 1
+
+    lic.description = {"en": "New license text"}
+    lic.save()
+    REMSService().publish_dataset(dataset, raise_errors=True)
+    assert dataset.custom_rems_licenses.count() == 1
+
+    assert REMSLicense.all_objects.count() == 2  # Old license soft deleted
+    assert REMSLicense.objects.count() == 1
+    lic = mock_rems.entities["license"][2]
+    assert lic["licensetype"] == "text"
+    assert lic["localizations"] == {
+        "en": {
+            "title": "License name",
+            "textcontent": "New license text",
+        }
+    }
+
+
+def test_rems_service_publish_dataset_custom_license_remove(mock_rems):
+    """Removing custom license from dataset should deprecate it."""
+    dataset = factories.REMSDatasetFactory()
+    ref_lic = factories.DatasetLicenseFactory(
+        reference__url="http://uri.suomi.fi/codelist/fairdata/license/code/CC0-1.0"
+    )
+    ref_lic2 = factories.DatasetLicenseFactory()
+    custom_lic = factories.DatasetLicenseFactory(
+        title={"en": "License name"}, description={"en": "License text"}
+    )
+    custom_lic_2 = factories.DatasetLicenseFactory(
+        title={"en": "Other license name"}, description={"en": "Other license text"}
+    )
+    dataset.access_rights.license.set([ref_lic, custom_lic, ref_lic2, custom_lic_2])
+    REMSService().publish_dataset(dataset, raise_errors=True)
+    assert dataset.custom_rems_licenses.count() == 2
+
+    dataset.access_rights.license.set([ref_lic, custom_lic])
+    REMSService().publish_dataset(dataset, raise_errors=True)
+    assert dataset.custom_rems_licenses(manager="all_objects").count() == 1
+    lic_data = mock_rems.entities["license"][dataset.custom_rems_licenses.first().rems_id]
+    assert lic_data["localizations"]["en"]["textcontent"] == "License text"
+
+    assert REMSLicense.all_objects.count() == 4
+    assert REMSLicense.objects.count() == 3
+
+
+def test_rems_service_get_license_type_errors():
+    service = REMSService()
+    with pytest.raises(ValueError):
+        service.get_license_type(url=None, description=None)
+    with pytest.raises(ValueError):
+        service.get_license_type(url="https://www.example.com", description={"en": "License text"})

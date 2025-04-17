@@ -173,6 +173,7 @@ def test_dataset_copied_fields():
     # are intentionally omitted when creating a copy.
     assert omit == {
         "dataset.projects.participating_organizations.children",
+        "dataset.custom_rems_licenses",
         "dataset.legacydataset",
         "dataset.metrics",
         "dataset.provenance.is_associated_with.organization.children",
