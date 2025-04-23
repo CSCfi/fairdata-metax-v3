@@ -315,6 +315,13 @@ class REMSService:
             custom_license_dataset=custom_license_dataset,
         )
 
+    def create_license_from_data_access_terms(self, dataset: "Dataset", terms: dict):
+        key = f"dataset-{dataset.id}-access-terms"
+        title = {"en": "Terms for data access", "fi": "Käyttöluvan ehdot"}
+        return self.create_license(
+            key=key, title=title, description=terms, custom_license_dataset=dataset
+        )
+
     def get_license_ids(self, licenses: List[REMSEntity]):
         ids = []
         for lic in licenses:
@@ -485,10 +492,15 @@ class REMSService:
             # Only automatic approval supported for now
             workflow = REMSWorkflow.objects.get(key="automatic")
 
-            licenses = [
-                self.create_license_from_dataset_license(dataset, license=dl)
-                for dl in dataset.access_rights.license.all()
-            ]
+            licenses = []
+            if terms := dataset.access_rights.data_access_terms:
+                licenses.append(self.create_license_from_data_access_terms(dataset, terms))
+            licenses.extend(
+                [
+                    self.create_license_from_dataset_license(dataset, license=dl)
+                    for dl in dataset.access_rights.license.all()
+                ]
+            )
             self.archive_unused_custom_licenses(dataset, licenses)
 
             dataset_key = self.get_dataset_key(dataset)

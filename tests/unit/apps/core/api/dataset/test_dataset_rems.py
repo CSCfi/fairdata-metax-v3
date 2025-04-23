@@ -3,7 +3,7 @@ from django.conf import settings
 
 from apps.core import factories
 from apps.core.models.catalog_record.dataset import Dataset, REMSStatus
-from apps.rems.models import REMSCatalogueItem
+from apps.rems.models import REMSCatalogueItem, REMSLicense
 from apps.rems.rems_service import REMSService
 
 pytestmark = [pytest.mark.django_db]
@@ -77,6 +77,17 @@ def test_rems_dataset_data_access_fields(
     assert "data_access_application_instructions" in access_rights
     assert "data_access_terms" in access_rights
     assert "data_access_reviewer_instructions" not in access_rights
+
+    # Terms should be converted into a license in created REMS resource
+    assert len(mock_rems.entities["resource"]) == 1
+    terms_license = mock_rems.entities["resource"][1]["licenses"][0]
+    assert terms_license["localizations"] == {
+        "en": {"title": "Terms for data access", "textcontent": "Terms here"},
+        "fi": {"title": "Käyttöluvan ehdot", "textcontent": "Käyttöehdot tähän"},
+    }
+
+    license_entity = REMSLicense.objects.get(key=f"dataset-{dataset.id}-access-terms")
+    assert license_entity.custom_license_dataset == dataset
 
 
 def test_publish_rems_dataset_error(
