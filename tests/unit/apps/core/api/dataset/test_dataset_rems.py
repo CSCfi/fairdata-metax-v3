@@ -49,6 +49,36 @@ def test_publish_rems_dataset(
     assert dataset.rems_id == item.rems_id
 
 
+def test_rems_dataset_data_access_fields(
+    mock_rems, admin_client, user_client, rems_dataset_json, data_catalog, reference_data
+):
+    access_rights = rems_dataset_json["access_rights"]
+    access_rights["data_access_application_instructions"] = {"en": "This is how you apply"}
+    access_rights["data_access_terms"] = {"en": "Terms here", "fi": "Käyttöehdot tähän"}
+    access_rights["data_access_reviewer_instructions"] = {"en": "plz review"}
+
+    res = admin_client.post("/v3/datasets", rems_dataset_json, content_type="application/json")
+    assert res.status_code == 201
+    dataset = Dataset.objects.get(id=res.data["id"])
+    assert dataset.rems_publish_error is None
+    assert dataset.rems_status == REMSStatus.PUBLISHED
+
+    # Creator should see all fields
+    access_rights = res.data["access_rights"]
+    assert access_rights["rems_approval_type"] == "automatic"
+    assert access_rights["data_access_application_instructions"] == {"en": "This is how you apply"}
+    assert access_rights["data_access_terms"] == {"en": "Terms here", "fi": "Käyttöehdot tähän"}
+    assert access_rights["data_access_reviewer_instructions"] == {"en": "plz review"}
+
+    # Non-editor user should not see the reviewer instructions
+    res = user_client.get(f"/v3/datasets/{dataset.id}", content_type="application/json")
+    access_rights = res.data["access_rights"]
+    assert "rems_approval_type" in access_rights
+    assert "data_access_application_instructions" in access_rights
+    assert "data_access_terms" in access_rights
+    assert "data_access_reviewer_instructions" not in access_rights
+
+
 def test_publish_rems_dataset_error(
     mock_rems, admin_client, rems_dataset_json, data_catalog, reference_data, requests_mock
 ):
@@ -126,6 +156,6 @@ def test_dataset_rems_application_status(settings, mock_rems, admin_client, user
     assert data["allowed_actions"]["rems_status"] == "approved"
 
     # Application approved but no entitlement found -> needs new application
-    mock_rems.entities["entitlement"].clear() # Remove all entitlements
+    mock_rems.entities["entitlement"].clear()  # Remove all entitlements
     data = user_client.get(f"/v3/datasets/{dataset.id}?include_allowed_actions=true").json()
     assert data["allowed_actions"]["rems_status"] == "no_application"

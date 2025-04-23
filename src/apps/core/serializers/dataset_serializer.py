@@ -249,6 +249,19 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
             else:
                 metadata_owner.pop("user")
 
+    def handle_access_rights_private_fields(self, instance: Dataset, ret: dict):
+        access_rights = ret.get("access_rights")
+        if not access_rights:
+            return
+
+        field = "data_access_reviewer_instructions"
+        if access_rights.get(field):
+            has_edit_permission = instance.has_permission_to_edit(self.context["request"].user)
+            if has_edit_permission:
+                access_rights[field] = access_rights[field].value
+            else:
+                access_rights.pop(field)
+
     def to_representation(self, instance: Dataset):
         instance.ensure_prefetch()
         request = self.context["request"]
@@ -286,6 +299,7 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
 
         self.omit_pid_fields(instance, ret)
         self.handle_owner_user(instance, ret)
+        self.handle_access_rights_private_fields(instance, ret)
 
         if has_emails:
             # Handle email values. Copies dicts and lists to avoid accidentally modifying

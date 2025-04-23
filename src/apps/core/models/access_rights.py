@@ -67,6 +67,21 @@ class AccessRights(AbstractBaseModel):
         help_text='example: {"en":"description", "fi":"kuvaus"}', null=True, blank=True
     )
     rems_approval_type = models.TextField(choices=REMSApprovalType.choices, null=True, blank=True)
+    data_access_application_instructions = HStoreField(
+        help_text="Instructions for applying for access to the data.",
+        null=True,
+        blank=True,
+    )
+    data_access_terms = HStoreField(
+        help_text="Terms a user needs to approve before getting access to the data.",
+        null=True,
+        blank=True,
+    )
+    data_access_reviewer_instructions = HStoreField(
+        help_text="Instructions for data access reviewers. Not shown to applicants.",
+        null=True,
+        blank=True,
+    )
     history = SnapshotHistoricalRecords(m2m_fields=(license,))
 
     class Meta(AbstractBaseModel.Meta):

@@ -17,7 +17,12 @@ from apps.common.serializers import (
     CommonListSerializer,
     CommonNestedModelSerializer,
 )
-from apps.common.serializers.fields import MediaTypeField, RemoteResourceChecksumField
+from apps.common.serializers.fields import (
+    MediaTypeField,
+    MultiLanguageField,
+    PrivateValue,
+    RemoteResourceChecksumField,
+)
 from apps.common.serializers.serializers import CommonModelSerializer, UpdatingListSerializer
 from apps.core.helpers import get_metax_identifiers_by_pid
 from apps.core.models import AccessRights, CatalogHomePage, DatasetPublisher, OtherIdentifier
@@ -118,10 +123,28 @@ class LicenseModelSerializer(CommonModelSerializer):
         return {**rep, **serialized_ref}
 
 
+class PrivateMultiLanguageValue(PrivateValue):
+    """Value container for non-public multilanguage values."""
+
+    def __str__(self) -> str:
+        return "<PrivateMultiLanguageValue>"
+
+
+class PrivateMultiLanguageField(MultiLanguageField):
+    """MultiLanguageField that returns non-JSON-serializable value.
+
+    To allow JSON serialization, replace the object with its .value.
+    """
+
+    def to_representation(self, value):
+        return PrivateMultiLanguageValue(value)
+
+
 class AccessRightsModelSerializer(CommonNestedModelSerializer):
     license = LicenseModelSerializer(required=False, many=True)
     access_type = AccessType.get_serializer_field(required=True)
     restriction_grounds = RestrictionGrounds.get_serializer_field(required=False, many=True)
+    data_access_reviewer_instructions = PrivateMultiLanguageField(required=False)
 
     def get_fields(self):
         fields = super().get_fields()
@@ -139,6 +162,9 @@ class AccessRightsModelSerializer(CommonNestedModelSerializer):
             "restriction_grounds",
             "available",
             "rems_approval_type",
+            "data_access_application_instructions",
+            "data_access_terms",
+            "data_access_reviewer_instructions",
         )
 
 
