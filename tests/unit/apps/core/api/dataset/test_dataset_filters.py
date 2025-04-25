@@ -361,3 +361,60 @@ def test_filter_by_multiple_ids(admin_client, dataset_a, dataset_b, dataset_c):
     assert res.status_code == 200
     assert len(res.data) == 2
     assert sorted([d["id"] for d in res.data]) == ids
+
+
+def test_filter_by_metadata_owner_organization(admin_client, data_catalog, reference_data):
+    """Test filtering datasets by metadata owner organization."""
+    # Create datasets with different metadata owner organizations
+    dataset1 = factories.DatasetFactory(metadata_owner__organization="org1")
+    dataset2 = factories.DatasetFactory(metadata_owner__organization="org2")
+    
+    # Test single organization filter
+    res = admin_client.get(
+        "/v3/datasets?metadata_owner__organization=org1&pagination=false",
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert {d["id"] for d in res.data} == {str(dataset1.id)}
+
+    # Test multiple organizations in one group (OR condition)
+    res = admin_client.get(
+        "/v3/datasets?metadata_owner__organization=org1,org2&pagination=false",
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert {d["id"] for d in res.data} == {str(dataset1.id), str(dataset2.id)}
+
+    # Test no match for non-exact organization name
+    res = admin_client.get(
+        "/v3/datasets?metadata_owner__organization=org&pagination=false",
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert len(res.data) == 0
+
+    # Test case sensitive match (should not match)
+    res = admin_client.get(
+        "/v3/datasets?metadata_owner__organization=ORG1&pagination=false",
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert len(res.data) == 0
+
+
+def test_filter_by_metadata_owner_organization_multiple_groups(
+    admin_client, data_catalog, reference_data
+):
+    """Test filtering datasets by metadata owner organization with multiple filter groups."""
+    # Create datasets with different metadata owner organizations
+    dataset1 = factories.DatasetFactory(metadata_owner__organization="org1")
+    factories.DatasetFactory(metadata_owner__organization="org2")
+    factories.DatasetFactory(metadata_owner__organization="org3")
+    
+    # Test multiple filter groups (AND condition between groups)
+    res = admin_client.get(
+        "/v3/datasets?metadata_owner__organization=org1,org2&metadata_owner__organization=org1,org3&pagination=false",
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert {d["id"] for d in res.data} == {str(dataset1.id)}

@@ -143,9 +143,9 @@ class DatasetFilter(filters.FilterSet):
 
     keyword = MultipleCharFilter(method="filter_keyword", label="keyword")
 
-    metadata_owner__organization = filters.CharFilter(
+    metadata_owner__organization = MultipleCharFilter(
+        method="filter_metadata_owner_organization",
         max_length=512,
-        lookup_expr="icontains",
         label="metadata owner organization",
     )
 
@@ -347,6 +347,13 @@ class DatasetFilter(filters.FilterSet):
                     {"id": f"Dataset identifiers must be valid UUIDs. Invalid IDs: {failing_ids}"}
                 )
             result = result.filter(id__in=ids)
+        return result.distinct()
+    
+    def filter_metadata_owner_organization(self, queryset, name, value):
+        result = queryset
+        for groups in value:
+            union = reduce(operator.or_, (Q(metadata_owner__organization__exact=x) for x in groups))
+            result = result.filter(union)
         return result.distinct()
 
     def _filter_list(self, queryset: QuerySet, value: List[List[str]], filter_param: str):
