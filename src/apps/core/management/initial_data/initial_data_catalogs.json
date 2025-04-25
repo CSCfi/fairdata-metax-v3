@@ -14,8 +14,8 @@
     "is_external": true,
     "publisher": {
       "name": {
-        "en": "Testing",
-        "fi": "Testi"
+        "en": "Åbo Testing",
+        "fi": "Åbo Testi"
       },
       "homepage": [
         {
@@ -52,8 +52,8 @@
     "is_external": true,
     "publisher": {
       "name": {
-        "en": "Testing",
-        "fi": "Testi"
+        "en": "Acris Testing",
+        "fi": "Acris Testi"
       },
       "homepage": [
         {
@@ -134,8 +134,8 @@
     "is_external": true,
     "publisher": {
       "name": {
-        "en": "Testing",
-        "fi": "Testi"
+        "en": "E2E Testing",
+        "fi": "E2E Testi"
       },
       "homepage": [
         {
@@ -193,7 +193,7 @@
     "publishing_channels": ["etsin", "ttv"]
   },
   {
-    "id": "urn:nbn:fi:att:data-catalog-fsd",
+    "id": "urn:nbn:fi:att:data-catalog-harvest-fsd",
     "title": {
       "en": "Data catalog for testing FSD integration",
       "fi": "Testi katalogi FSD-integraatiolle"
@@ -206,8 +206,8 @@
     "is_external": true,
     "publisher": {
       "name": {
-        "en": "Testing",
-        "fi": "Testi"
+        "en": "FSD Testing",
+        "fi": "FSD Testi"
       },
       "homepage": [
         {
@@ -229,6 +229,42 @@
     "publishing_channels": ["etsin", "ttv"]
   },
   {
+    "id": "urn:nbn:fi:att:data-catalog-harvest-kielipankki",
+    "title": {
+      "en": "Data catalog for testing Kielipankki integration",
+      "fi": "Testi katalogi Kielipankki-integraatiolle"
+    },
+    "language": [
+      {
+        "url": "http://lexvo.org/id/iso639-3/fin"
+      }
+    ],
+    "is_external": true,
+    "publisher": {
+      "name": {
+        "en": "Kielipankki Testing",
+        "fi": "Kielipankki Testi"
+      },
+      "homepage": [
+        {
+          "title": {
+            "en": "Publisher organization website",
+            "fi": "Julkaisijaorganisaation kotisivu"
+          },
+          "url": "http://www.testi.fi/"
+        }
+      ]
+    },
+    "description": {
+      "en": "Test data catalog used in Kielipankki integration",
+      "fi": "Testi katalogi Kielipankki-integraatiolle"
+    },
+    "dataset_versioning_enabled": false,
+    "dataset_groups_create": ["kielipankki"],
+    "dataset_groups_admin": ["kielipankki"],
+    "publishing_channels": ["etsin", "ttv"]
+  },
+  {
     "id": "urn:nbn:fi:att:data-catalog-hy",
     "title": {
       "en": "University of Helsinki data catalog",
@@ -243,8 +279,8 @@
     "is_external": true,
     "publisher": {
       "name": {
-        "en": "Testing",
-        "fi": "Testi"
+        "en": "HY Testing",
+        "fi": "HY Testi"
       },
       "homepage": [
         {
@@ -274,8 +310,8 @@
     },
     "publisher": {
       "name": {
-        "en": "Testing",
-        "fi": "Testi"
+        "en": "IDA Testing",
+        "fi": "IDA Testi"
       },
       "homepage": [
         {
@@ -307,40 +343,187 @@
     "allow_download": true
   },
   {
-    "id": "urn:nbn:fi:att:data-catalog-kielipankki",
-    "title": {
-      "en": "Data catalog for testing Kielipankki integration",
-      "fi": "Testi katalogi Kielipankki-integraatiolle"
+    "id": "urn:nbn:fi:att:data-catalog-justus",
+    "title":
+    {
+      "en": "JUSTUS catalog",
+      "fi": "JUSTUS katalogi"
     },
+    "description":
+    {
+      "en": "Contains datasets exported from JUSTUS - Publication Information Reporting Service to Fairdata",
+      "fi": "Sisältää tutkimusaineistoja, jotka on viety JUSTUS – julkaisutietojen tallennuspalvelusta Fairdataan"
+    },
+    "language":
+    [
+      {
+        "url": "http://lexvo.org/id/iso639-3/fin"
+      },
+      {
+        "url": "http://lexvo.org/id/iso639-3/eng"
+      }
+    ],
+    "is_external": true,
+    "publisher":
+    {
+      "name":
+      {
+        "en": "JUSTUS - Publication Information Reporting Service",
+        "fi": "JUSTUS – julkaisutietojen tallennuspalvelu",
+        "sv": "JUSTUS-service"
+      },
+      "homepage":
+      [
+        {
+          "title":
+          {
+            "en": "JUSTUS - Publication Information Reporting Service",
+            "fi": "JUSTUS – julkaisutietojen tallennuspalvelu",
+            "sv": "JUSTUS-service"
+          },
+          "url": "https://www.justus.csc.fi/"
+        }
+      ]
+    },
+    "dataset_versioning_enabled": false,
+    "dataset_groups_create":
+    [
+      "justus"
+    ],
+    "dataset_groups_admin":
+    [
+      "justus"
+    ],
+    "allow_remote_resources": true,
+    "rems_enabled": false,
+    "storage_services":
+    [],
+    "publishing_channels":
+    [
+      "etsin",
+      "ttv"
+    ],
+    "allowed_pid_types":
+    [
+      "external"
+    ]
+  },
+  {
+    "id": "urn:nbn:fi:att:data-catalog-jyu",
+    "description": {
+      "en": "Contains datasets that have been exported from Jyväskylä University Digital Repository to Fairdata",
+      "fi": "Sisältää tutkimusaineistoja, jotka on viety Jyväskylän yliopiston julkaisuarkistosta Fairdataan"
+    },
+    "publisher": {
+      "name": {
+        "en": "University of Jyväskylä, Finland",
+        "fi": "Jyväskylän Yliopisto"
+      },
+      "homepage": [
+        {
+          "url": "https://www.jyx.jyu.fi/",
+          "title": {
+            "en": "JYX",
+            "fi": "JYX"
+          }
+        }
+      ]
+    },
+    "logo": "jyu_keskitetty_kaksikielinen.png",
     "language": [
+      {
+        "url": "http://lexvo.org/id/iso639-3/fin"
+      },
+      {
+        "url": "http://lexvo.org/id/iso639-3/eng"
+      }
+    ],
+    "title": {
+      "en": "JYU catalog",
+      "fi": "JYU katalogi"
+    },
+    "dataset_versioning_enabled": false,
+    "is_external": true,
+    "dataset_groups_create": [
+      "jyu"
+    ],
+    "dataset_groups_admin": [
+      "jyu"
+    ],
+    "allow_download": false,
+    "allow_remote_resources": true,
+    "storage_services": [],
+    "publishing_channels": [
+      "etsin",
+      "ttv"
+    ],
+    "allowed_pid_types": [
+      "external"
+    ],
+    "rems_enabled": false
+  },
+  {
+    "id": "urn:nbn:fi:att:data-catalog-oulu",
+    "title":
+    {
+      "en": "Data catalog for testing University of Oulu's CRIS integration",
+      "fi": "Katalogi Oulun yliopiston Metax-integraation testaamiseen"
+    },
+    "description":
+    {
+      "en": "Datasets stored in University of Oulu's CRIS",
+      "fi": "Sisältää aineistoja Oulun yliopiston CRIS-palvelusta"
+    },
+    "is_external": true,
+    "publisher":
+    {
+      "name":
+      {
+        "en": "University of Oulu"
+      },
+      "homepage":
+      [
+        {
+          "url": "https://www.oulu.fi/fi",
+          "title":
+          {
+            "en": "University of Oulu",
+            "fi": "Oulun yliopisto"
+          }
+        }
+      ]
+    },
+    "language":
+    [
+      {
+        "url": "http://lexvo.org/id/iso639-3/eng"
+      },
       {
         "url": "http://lexvo.org/id/iso639-3/fin"
       }
     ],
-    "is_external": true,
-    "publisher": {
-      "name": {
-        "en": "Testing",
-        "fi": "Testi"
-      },
-      "homepage": [
-        {
-          "title": {
-            "en": "Publisher organization website",
-            "fi": "Julkaisijaorganisaation kotisivu"
-          },
-          "url": "http://www.testi.fi/"
-        }
-      ]
-    },
-    "description": {
-      "en": "Test data catalog used in Kielipankki integration",
-      "fi": "Testi katalogi Kielipankki-integraatiolle"
-    },
     "dataset_versioning_enabled": false,
-    "dataset_groups_create": ["kielipankki"],
-    "dataset_groups_admin": ["kielipankki"],
-    "publishing_channels": ["etsin", "ttv"]
+    "dataset_groups_create":
+    [
+      "oulu"
+    ],
+    "dataset_groups_admin":
+    [
+      "oulu"
+    ],
+    "allow_remote_resources": true,
+    "rems_enabled": false,
+    "storage_services":
+    [],
+    "publishing_channels":
+    [
+      "etsin",
+      "ttv"
+    ],
+    "allowed_pid_types":
+    [
+      "external"
+    ]
   },
   {
     "id": "urn:nbn:fi:att:data-catalog-pas",
@@ -389,6 +572,119 @@
     "publishing_channels": ["etsin","ttv"]
   },
   {
+    "id": "urn:nbn:fi:att:data-catalog-reportronic",
+    "title": {
+      "en": "Reportronic catalog",
+      "fi": "Reportronic katalogi"
+    },
+    "description": {
+      "en": "Contains datasets that have been exported from Reportronic service to Fairdata",
+      "fi": "Sisältää tutkimusaineistoja, jotka on viety Reportronic-palvelusta Fairdataan"
+    },
+    "publisher": {
+      "name": {
+        "en": "Reportronic",
+        "fi": "Reportronic"
+      },
+      "homepage": [
+        {
+          "url": "https://www.reportronic.fi/",
+          "title": {
+            "fi": "Työajanseuranta ja hankehallinta | Reportronic"
+          }
+        }
+      ]
+    },
+    "language": [
+      {
+        "url": "http://lexvo.org/id/iso639-3/fin"
+      },
+      {
+        "url": "http://lexvo.org/id/iso639-3/eng"
+      }
+    ],
+    "dataset_versioning_enabled": false,
+    "is_external": true,
+    "dataset_groups_create": [
+      "reportronic"
+    ],
+    "dataset_groups_admin": [
+      "reportronic"
+    ],
+    "allow_download": false,
+    "allow_remote_resources": true,
+    "storage_services": [],
+    "publishing_channels": [
+      "ttv"
+    ],
+    "allowed_pid_types": [
+      "external"
+    ],
+    "rems_enabled": false
+  },
+  {
+    "id": "urn:nbn:fi:att:data-catalog-sd",
+    "title":
+    {
+      "en": "CSC SD services datasets",
+      "fi": "CSC:n Arkaluonteisen datan palveluiden aineistokatalogi"
+    },
+    "description":
+    {
+      "en": "Datasets stored in CSC SD services",
+      "fi": "Sisältää aineistoja CSC:n SD-palvelusta"
+    },
+    "is_external": true,
+    "publisher":
+    {
+      "name":
+      {
+        "en": "CSC Sensitive Data Services for Research"
+      },
+      "homepage":
+      [
+        {
+          "url": "https://research.csc.fi/sensitive-data-services-for-research",
+          "title":
+          {
+            "en": "Sensitive Data Services for Research - Services for Research - CSC Company Site"
+          }
+        }
+      ]
+    },
+    "language":
+    [
+      {
+        "url": "http://lexvo.org/id/iso639-3/eng"
+      },
+      {
+        "url": "http://lexvo.org/id/iso639-3/fin"
+      }
+    ],
+    "dataset_versioning_enabled": false,
+    "dataset_groups_create":
+    [
+      "sd"
+    ],
+    "dataset_groups_admin":
+    [
+      "sd"
+    ],
+    "allow_remote_resources": true,
+    "rems_enabled": false,
+    "storage_services":
+    [],
+    "publishing_channels":
+    [
+      "etsin",
+      "ttv"
+    ],
+    "allowed_pid_types":
+    [
+      "external"
+    ]
+  },
+  {
     "id": "urn:nbn:fi:att:data-catalog-tuni",
     "title": {
       "en": "Data catalog for testing TUNI integration",
@@ -402,8 +698,8 @@
     "is_external": true,
     "publisher": {
       "name": {
-        "en": "Testing",
-        "fi": "Testi"
+        "en": "TUNI Testing",
+        "fi": "TUNI Testi"
       },
       "homepage": [
         {
