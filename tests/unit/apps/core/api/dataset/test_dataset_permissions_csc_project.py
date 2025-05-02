@@ -126,6 +126,7 @@ def test_dataset_permissions_sso_projects(admin_client, sso_projects):
         f"/v3/datasets/{dataset.id}/permissions", content_type="application/json"
     )
     assert res.status_code == 200
+    assert res.data["csc_project"] == "test_project"
     assert res.data["csc_project_members"] == [
         matchers.DictContaining({"username": "test_user"}),
         matchers.DictContaining({"username": "test_user2"}),

@@ -84,14 +84,14 @@ def test_dataset_permissions_add_editors(admin_client, user, dataset_a, sso_user
             "fairdata_username": "test_user",
             "first_name": "Teppo",
             "last_name": "Testaaja",
-            "email": "<hidden>",
+            "email": "teppo@example.com",
         },
         {
             "username": "test_user2",
             "fairdata_username": "test_user2",
             "first_name": "Matti",
             "last_name": "Mestaaja",
-            "email": "<hidden>",
+            "email": "matti@example.com",
         },
     ]
 

@@ -185,13 +185,17 @@ class DatasetPermissionsUserModelSerializer(CommonModelSerializer):
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
-        handle_private_emails(ret, show_emails=False)
+        show_emails = False
+        if dataset := self.context.get("dataset"):
+            show_emails = dataset.has_permission_to_edit(self.context["request"].user)
+        handle_private_emails(ret, show_emails=show_emails)
         return ret
 
 
 class DatasetPermissionsSerializer(CommonModelSerializer):
     creators = DatasetPermissionsUserModelSerializer(many=True, read_only=True)
     editors = DatasetPermissionsUserModelSerializer(many=True, read_only=True)
+    csc_project = serializers.CharField(read_only=True)
     csc_project_members = DatasetPermissionsUserModelSerializer(many=True, read_only=True)
 
     def create(self, validated_data):
@@ -202,4 +206,4 @@ class DatasetPermissionsSerializer(CommonModelSerializer):
 
     class Meta:
         model = DatasetPermissions
-        fields = ["id", "creators", "editors", "csc_project_members"]
+        fields = ["id", "creators", "editors", "csc_project", "csc_project_members"]

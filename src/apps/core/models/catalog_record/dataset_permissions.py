@@ -1,6 +1,6 @@
 import logging
 import uuid
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from django.db import models
 
@@ -56,9 +56,15 @@ class DatasetPermissions(AbstractBaseModel):
         return users
 
     @property
-    def csc_project_members(self) -> list:
+    def csc_project(self) -> Optional[str]:
         dataset = self.get_context_dataset()
         file_set: FileSet = getattr(dataset, "file_set", None)
-        if file_set and (csc_project := file_set.storage.csc_project):
+        if file_set:
+            return file_set.storage.csc_project
+        return None
+
+    @property
+    def csc_project_members(self) -> list:
+        if csc_project := self.csc_project:
             return self._get_csc_project_members(csc_project)
         return []
