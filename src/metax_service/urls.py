@@ -40,7 +40,7 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    path("", IndexView.as_view()),
+    path("", IndexView.as_view(), name="index"),
     re_path(
         r"^v3/swagger(?P<format>\.json|\.yaml)$",
         schema_view.without_ui(cache_timeout=0),

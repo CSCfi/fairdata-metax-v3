@@ -1,21 +1,125 @@
 {% extends "rest_framework/api.html" %}
+{% load static %}
+
+{% block bodyclass %}frontpage{% endblock %}
 
 {% block breadcrumbs %}
-{# Margin is needed to avoid hiding content under the fixed navbar #}
-<style>
-  .nav-spacer {
-    margin-top: 80px;
-  }
-</style>
-<div class="nav-spacer"></div>
 {% endblock %}
 
 {% block content %}
-<h1>
-  Metax
-</h1>
-<p>
-  <a href="/v3/">API Root</a><br>
-  <a href="{% url 'schema-swagger-ui' %}">Swagger Documentation</a>
-</p>
+<!-- CONTENT -->
+<div class="content">
+  <div class="landing-container">
+    <div class="flex-container">
+      <!-- CONTENT: TITLE AND DESCRIPTION -->
+      <div class="description-box">
+        <h1 class="metax-title">Metax</h1>
+        <h2 class="brief">Metadata Repository for Research Data</h2>
+        <p>
+          Metax is a metadata storage for Finnish research data. It is a part of
+          Fairdata Services and acts as a metadata repository for all research
+          data stored in Fairdata Services. In addition to using Qvain Tool to
+          create datasets, Metax also offers an API (Metax
+          REST API) to create and update the dataset metadata.
+        </p>
+        <a href="/v3/docs/">Metax API Documentation</a>
+      </div>
+
+      <!-- CONTENT: GRAPH -->
+      <div>
+        <!-- DATA SOURCE IDA | REMOTE -->
+        <div class="graph-box-container">
+          <div class="graph-box">
+            <div class="graph-box-content">
+              <div class="graph-box-title-area">
+                <div class="graph-box-title">IDA</div>
+                <div class="graph-img-wrapper">
+                  <img
+                    src="{% static 'images/ida.png' %}"
+                    alt="Fairdata IDA icon"
+                  />
+                </div>
+                <div class="graph-img-wrapper">
+                  <img
+                    src="{% static 'images/mesh.png' %}"
+                    alt="Remote resource icon"
+                  />
+                </div>
+              </div>
+              <div class="graph-box-text">
+                Data stored in IDA or outside of Fairdata.
+              </div>
+            </div>
+          </div>
+          <div class="side-by-side-graph">
+            <div>&darr;</div>
+            <div>&darr;</div>
+          </div>
+        </div>
+        <!-- METAX API | QVAIN -->
+        <div class="side-by-side-graph">
+          <!-- METAX API -->
+          <div class="graph-box-container">
+            <div class="graph-box blue">
+              <div class="graph-box-content">
+                <div class="graph-box-title-area">
+                  <div class="graph-box-title">Metax API</div>
+                  <div class="graph-img-wrapper">
+                    <img src="{% static 'images/metax.svg' %}" alt="Fairdata Metax icon" />
+                  </div>
+                </div>
+                <div class="graph-box-text">
+                  Use Metax API to create and update your datasets.
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- QVAIN -->
+          <div class="graph-box-container">
+            <div class="graph-box">
+
+              <div class="graph-box-content">
+                <div class="graph-box-title-area">
+                  <div class="graph-box-title">Qvain</div>
+                  <div class="graph-img-wrapper">
+                    <img
+                      src="{% static 'images/qvain.png' %}"
+                      alt="Fairdata Qvain icon"
+                    />
+                  </div>
+                </div>
+                <div class="graph-box-text">
+                  Datasets can be created and updated also with Qvain.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="side-by-side-graph">
+          <div>&darr;</div>
+          <div>&darr;</div>
+        </div>
+        <!-- ETSIN -->
+        <div class="graph-box-container">
+          <div class="graph-box">
+            <div class="graph-box-content">
+              <div class="graph-box-title-area">
+                <div class="graph-box-title">Etsin</div>
+                <div class="graph-img-wrapper">
+                  <img
+                    src="{% static 'images/etsin.png' %}"
+                    alt="Fairdata Etsin icon"
+                  />
+                </div>
+              </div>
+              <div class="graph-box-text">
+                Datasets are discoverable and downloadable in Etsin.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

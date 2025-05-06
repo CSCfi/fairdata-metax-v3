@@ -1,0 +1,16 @@
+{% extends "rest_framework/base.html" %}
+{% load users %}
+{% load static %}
+
+{% block style %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'styles.css' %}" />
+{% endblock %}
+
+{% block userlinks %}
+  {% if user.is_authenticated %}
+    {% user_menu user %}
+  {% else %}
+    {% sso_login request %}
+  {% endif %}
+{% endblock %}

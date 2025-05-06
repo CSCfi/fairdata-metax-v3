@@ -15,7 +15,7 @@ def sso_login(request):
 
     login_url = reverse("login")
     snippet = """
-    <li>
+    <li class="nav-button">
         <a href="{href}?next={next}">Login</a>
     </li>
     """
@@ -31,7 +31,7 @@ def user_menu(context, user):
     # Note: <button> is used here instead of <a> to allow using POST method,
     # and the button is styled in the api.html template look like a link.
     snippet = """
-    <li class="dropdown">
+    <li class="dropdown nav-button">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown">
             {user}
             <b class="caret"></b>

@@ -1,32 +1,107 @@
 {% extends "rest_framework/base.html" %}
+{% load static %}
 {% load i18n %}
 {% load rest_framework %}
 
 {% block title %}{% if name %}{{ name }} – {% endif %}Fairdata Metax{% endblock %}
 
 {% block navbar %}
-<div class="navbar navbar-static-top {% block bootstrap_navbar_variant %}navbar-inverse{% endblock %}"
-role="navigation" aria-label="{% trans "navbar" %}">
-  <div class="container">
-    <div class="navbar-header">
-      {% block branding %}
-      <a class='navbar-brand' rel="nofollow" href='/v3/'>
-        Fairdata Metax
-      </a>
-      {% endblock %}
-    </div>
-
-    <ul class="nav navbar-nav">
-      <li class="nav-item">
-        <a class="nav-link" href="/v3/docs/">Documentation</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="/v3/swagger/">Swagger</a>
-      </li>
-    </ul>
-    <ul class="nav navbar-nav navbar-right">
+<div class="metax-header">
+  <div class="container nav-bar">
+    <a href="{% url 'index' %}">
+      <div class="logo-container">
+        <img
+          class="logo"
+          alt="Fairdata Metax logo"
+          src="{% static 'images/metax_300px.png' %}"
+        />
+      </div>
+    </a>
+    <nav class="nav-container">
+      <a href="{% url 'index' %}" class="nav-link">Home</a>
+      <a href="{% url 'api-root' %}" class="nav-link">Browse API</a>
+      <a href="/v3/docs/" class="nav-link">Documentation</a>
+    </nav>
+    <nav class="right-nav-container">
+      <a href="https://www.fairdata.fi/en/metax/" class="nav-button">Help</a>
       {% block userlinks %}{% endblock %}
-    </ul>
+    </nav>
   </div>
 </div>
+{% endblock %}
+
+{% block script %}
+  {# original base.html does not have a good place for a footer so put it in the script block #}
+  {% block footer %}
+  <!-- FOOTER -->
+  <footer class="fd-footer">
+    <div class="container">
+      <div class="row no-gutters wrap">
+        <div class="padded-flex col col-lg-4 col-md-12 col-sm-12 col-12">
+          <a href="https://www.fairdata.fi/en/fairdata-services/">
+            <img class="banner" src="{% static 'images/Supporting_EOSC.jpg'%}" />
+          </a>
+          <span>Fairdata</span>
+          <p>
+            The Fairdata services are offered by the
+            <strong>Ministry of Education and Culture</strong> and produced by
+            <strong>CSC – IT Center for Science Ltd.</strong>
+          </p>
+        </div>
+        <div class="col padding-right col-lg-2 col-md-3 col-sm-6">
+          <span>Information</span>
+          <p>
+            <a href="https://www.fairdata.fi/en/terms-and-policies/"
+              >Terms and Policies</a
+            >
+          </p>
+          <p>
+            <a href="https://www.fairdata.fi/en/contracts-and-privacy/"
+              >Contracts and Privacy</a
+            >
+          </p>
+        </div>
+        <div class="col padding-right col-lg-2 col-md-3 col-sm-6 col-6">
+          <span>Accessibility</span>
+          <p>
+            <a href="https://www.fairdata.fi/en/accessibility"
+              >Accessibility Statement</a
+            >
+          </p>
+        </div>
+        <div class="col col-lg-2 col-md-3 col-sm-6 col-6">
+          <span>contact</span>
+          <p><a href="mailto:servicedesk@csc.fi">servicedesk@csc.fi</a></p>
+        </div>
+        <div class="col col-lg-2 col-md-3 col-sm-6 col-6">
+          <span>Follow</span>
+          <p>
+            <a
+              href="https://bsky.app/profile/fairdata.fi"
+              rel="noopener"
+              target="_blank"
+              title="Follow us on Bluesky"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 568 501"
+                width="20px"
+                style="margin-right: 4px; vertical-align: middle"
+              >
+                <path
+                  fill="#1185FE"
+                  d="M123.121 33.664C188.241 82.553 258.281 181.68 284 234.873c25.719-53.192 95.759-152.32 160.879-201.21C491.866-1.611 568-28.906 568 57.947c0 17.346-9.945 145.713-15.778 166.555-20.275 72.453-94.155 90.933-159.875 79.748C507.222 323.8 536.444 388.56 473.333 453.32c-119.86 122.992-172.272-30.859-185.702-70.281-2.462-7.227-3.614-10.608-3.631-7.733-.017-2.875-1.169.506-3.631 7.733-13.43 39.422-65.842 193.273-185.702 70.281-63.111-64.76-33.89-129.52 80.986-149.071-65.72 11.185-139.6-7.295-159.875-79.748C9.945 203.659 0 75.291 0 57.946 0-28.906 76.135-1.612 123.121 33.664Z"
+                ></path>
+              </svg>
+              @fairdata.fi
+            </a>
+          </p>
+          <p><a href="https://www.fairdata.fi/en/news/">What's new</a></p>
+        </div>
+      </div>
+    </div>
+  </footer>
+  {% endblock %}
+  {{ block.super }}
 {% endblock %}
