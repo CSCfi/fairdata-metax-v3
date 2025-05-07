@@ -194,6 +194,9 @@ class File(SystemCreatorBaseModel, CustomSoftDeletableModel):
             if pas_running
         }
 
+    def __str__(self):
+        return f"File ({self.id}) {self.filename}"
+
     class Meta:
         indexes = [
             models.Index(fields=("directory_path", "storage")),

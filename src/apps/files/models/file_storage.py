@@ -272,6 +272,9 @@ class FileStorage(ProxyBasePolymorphicModel, AbstractBaseModel):
             if error_msg:
                 raise ValidationError({field: error_msg.format(location=storage_service)})
 
+    def __str__(self):
+        return f"{self.__class__.__name__} {self.storage_service}:{self.csc_project}"
+
     def __repr__(self):
         relevant_fields = {
             "storage_service",

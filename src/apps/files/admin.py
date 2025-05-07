@@ -24,6 +24,8 @@ from apps.files.models import (
 @admin.register(File)
 class FileAdmin(AbstractDatasetPropertyBaseAdmin):
     list_display = ("filename", "pathname", "csc_project", "storage")
+    search_fields = ["id", "filename", "directory_path", "storage_identifier"]
+    autocomplete_fields = ["pas_compatible_file"]
 
     def get_name(self, obj):
         return obj.author.name
