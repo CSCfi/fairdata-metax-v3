@@ -212,9 +212,9 @@ class DatasetAdmin(AbstractDatasetPropertyBaseAdmin, SimpleHistoryAdmin):
     def get_actions(self, request):
         actions = super().get_actions(request)
         if not settings.METAX_V2_INTEGRATION_ENABLED:
-            actions.pop("sync_to_v2")
+            actions.pop("sync_to_v2", None)
         if not settings.REMS_ENABLED:
-            actions.pop("publish_to_rems")
+            actions.pop("publish_to_rems", None)
         return actions
 
     @admin.action(description="Sync datasets to V2", permissions=["change"])
@@ -412,7 +412,7 @@ class V2SyncStatusAdmin(admin.ModelAdmin):
     def get_actions(self, request):
         actions = super().get_actions(request)
         if not settings.METAX_V2_INTEGRATION_ENABLED:
-            actions.pop("sync_to_v2")
+            actions.pop("sync_to_v2", None)
         return actions
 
     @admin.action(description="Sync to V2", permissions=["change"])
