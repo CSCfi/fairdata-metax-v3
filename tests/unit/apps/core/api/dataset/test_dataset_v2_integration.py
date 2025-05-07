@@ -390,3 +390,79 @@ def test_dataset_v2_integration_tasks_out_of_order(
     # Sync create, should not make new requests because a later version has already been synced
     mock_tasks[0]()
     assert requests_mock.call_count == 2
+
+
+@pytest.mark.usefixtures("data_catalog", "reference_data")
+def test_create_dataset_v2_integration_patch_actors(
+    admin_client, dataset_a_json, mock_v2_integration, requests_mock, v2_integration_settings
+):
+    """Ensure patching dataset updates actors in V2."""
+    assert Dataset.all_objects.count() == 0
+    dataset_a_json["provenance"] = [
+        {
+            "title": {"en": "Collection"},
+            "is_associated_with": [
+                {
+                    "person": {"name": "prov person"},
+                    "organization": {"pref_label": {"en": "prov org"}},
+                }
+            ],
+        },
+    ]
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    assert Dataset.all_objects.count() == 1
+    assert requests_mock.call_count == 1
+    research_dataset = mock_v2_integration["post"].request_history[0].json()["research_dataset"]
+    assert research_dataset["creator"] == [
+        {
+            "@type": "Organization",
+            "name": {
+                "en": "test org",
+            },
+        },
+    ]
+
+    # Update dataset actors
+    res = admin_client.patch(
+        f"/v3/datasets/{res.data['id']}",
+        {
+            "actors": [
+                {
+                    "person": {"name": "test person"},
+                    "organization": {"pref_label": {"en": "test org"}},
+                    "roles": ["creator", "publisher"],
+                }
+            ],
+            "provenance": [
+                {
+                    "title": {"en": "New collection"},
+                    "is_associated_with": [
+                        {
+                            "person": {"name": "prov person with new name"},
+                            "organization": {"pref_label": {"en": "prov org"}},
+                        }
+                    ],
+                },
+            ],
+        },
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert requests_mock.call_count == 3
+
+    # Check the payload contains updated actors and provenance
+    research_dataset = mock_v2_integration["put"].request_history[0].json()["research_dataset"]
+    assert research_dataset["creator"] == [
+        {
+            "name": "test person",
+            "@type": "Person",
+            "member_of": {"@type": "Organization", "name": {"en": "test org"}},
+        }
+    ]
+    research_dataset = mock_v2_integration["put"].request_history[0].json()["research_dataset"]
+    assert research_dataset["provenance"][0]["title"]["en"] == "New collection"
+    assert (
+        research_dataset["provenance"][0]["was_associated_with"][0]["name"]
+        == "prov person with new name"
+    )

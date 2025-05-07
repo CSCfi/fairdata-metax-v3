@@ -519,6 +519,12 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
 
         dataset: Dataset = super().update(instance, validated_data=validated_data)
         instance._updating = False
+
+        # Remove old data from prefetched objects cache
+        # to ensure stale data is not used in V2 integration.
+        if prefetch_cache := getattr(dataset, "_prefetched_objects_cache", None):
+            dataset.is_prefetched = False
+            prefetch_cache.clear()
         return dataset
 
     def create(self, validated_data):
