@@ -150,6 +150,7 @@ def user(fairdata_users_group):
         last_name="Testaaja",
         email="teppo@example.com",
         is_hidden=False,
+        organization="test_organization",
     )
     user.groups.set([fairdata_users_group])
     user.set_password("teppo")

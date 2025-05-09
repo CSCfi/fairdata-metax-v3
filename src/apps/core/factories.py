@@ -348,6 +348,7 @@ class MetadataProviderFactory(factory.django.DjangoModelFactory):
 
     user = factory.SubFactory(MetaxUserFactory)
     system_creator = factory.SubFactory(MetaxUserFactory)
+    organization = factory.Sequence(lambda n: f"organization-{n}")
 
 
 class CatalogRecordFactory(factory.django.DjangoModelFactory):

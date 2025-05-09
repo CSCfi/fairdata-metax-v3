@@ -37,6 +37,12 @@ class LicenseType(models.TextChoices):
     attachment = "attachment"  # license has file attachment (not implemented in Metaxx)
 
 
+class REMSOperation(models.TextChoices):
+    create = "create"  # create new entity (archive old if any)
+    edit = "edit"  # update existing entity (allowed only for some fields)
+    keep = "keep"  # use old entity as-is
+
+
 class REMSError(HTTPError):
     pass
 
@@ -196,14 +202,44 @@ class REMSService:
     def get_default_organization_data(self):
         return {"organization/id": self.organization}
 
+    def get_workflow_operation(self, new: dict, entity: REMSWorkflow) -> REMSOperation:
+        """Determine what needs to be to catalogue item to get it match the new values."""
+        if not entity:
+            return REMSOperation.create  # Create new entity
+
+        old_value = self.get_entity_data(entity)
+        entity_data = {
+            "type": "workflow/default",
+            "organization": {"organization/id": old_value["organization"]["organization/id"]},
+            "handlers": [handler["userid"] for handler in old_value["handlers"]],
+            "title": old_value["title"],
+            "forms": old_value.get("forms"),
+        }
+
+        if (
+            new["type"] != entity_data["type"]
+            or new["organization"] != entity_data["organization"]
+            or new.get("forms") != entity_data["forms"]
+        ):
+            return REMSOperation.create  # Create new item, archive old
+        if entity_data["title"] != new["title"] or set(entity_data["handlers"]) != set(
+            new["handlers"]
+        ):
+            return REMSOperation.edit  # Update title and handlers
+        return REMSOperation.keep  # No changes, use existing item
+
     def create_workflow(
         self,
         key: str,
         title: str,
         handlers: List[str],
         forms: List[REMSForm] = [],
-    ) -> REMSEntity:
-        """Create REMS workflow."""
+        metax_organization: Optional[
+            str
+        ] = None,  # Organization id in Metax, not the REMS organization
+    ) -> REMSWorkflow:
+        """Create or update REMS workflow."""
+        entity = REMSWorkflow.objects.filter(key=key).first()
         data = {
             # "anonymize-handling": True, # enable to hide who handled application
             # Default workflow: Handlers can approve/deny applications by themselves.
@@ -215,9 +251,26 @@ class REMSService:
         if forms:
             data["forms"] = [{"form/id": form.rems_id for form in forms}]
 
-        # TODO: Implement updating workflow (handlers, title)
+        op = self.get_workflow_operation(new=data, entity=entity)
+        if op == REMSOperation.keep:
+            return entity  # Reuse existing workflow
+
+        if op == REMSOperation.edit:
+            # Some workflow values can be edited, mainly title and handlers
+            data["id"] = entity.rems_id
+            data.pop("type", None)
+            data.pop("organization", None)
+            self.session.put("/api/workflows/edit", json=data)
+            entity.refresh_from_db()
+            return entity
+
+        # Create new workflow
+        if entity:
+            self.archive_changed_entity(entity)
         workflow = self.session.post("/api/workflows/create", json=data).json()
-        entity = REMSWorkflow.objects.create(key=key, rems_id=workflow["id"])
+        entity = REMSWorkflow.objects.create(
+            key=key, rems_id=workflow["id"], metax_organization=metax_organization
+        )
         return entity
 
     def get_license_type(
@@ -322,7 +375,7 @@ class REMSService:
             key=key, title=title, description=terms, custom_license_dataset=dataset
         )
 
-    def get_license_ids(self, licenses: List[REMSEntity]):
+    def get_license_ids(self, licenses: List[REMSLicense]):
         ids = []
         for lic in licenses:
             if lic.entity_type != EntityType.LICENSE:
@@ -330,7 +383,7 @@ class REMSService:
             ids.append(lic.rems_id)
         return ids
 
-    def create_resource(self, key: str, identifier: str, licenses: List[REMSEntity]):
+    def create_resource(self, key: str, identifier: str, licenses: List[REMSLicense]):
         """Create or update REMS resource."""
         entity_data = None
         entity = REMSResource.objects.filter(key=key).first()
@@ -360,10 +413,10 @@ class REMSService:
         )
         return entity
 
-    def get_catalogue_item_operation(self, new: dict, entity: REMSEntity):
+    def get_catalogue_item_operation(self, new: dict, entity: REMSCatalogueItem) -> REMSOperation:
         """Determine what needs to be to catalogue item to get it match the new values."""
         if not entity:
-            return "create"  # Create new entity
+            return REMSOperation.create  # Create new entity
 
         old_value = self.get_entity_data(entity)
 
@@ -379,10 +432,10 @@ class REMSService:
             or new["wfid"] != old_value["wfid"]
             or new.get("form") != old_value.get("form")
         ):
-            return "create"  # Create new item, archive old
+            return REMSOperation.create  # Create new item, archive old
         if new["localizations"] != old_value["localizations"]:
-            return "edit"  # Update localizations
-        return "keep"  # No changes, use existing item
+            return REMSOperation.edit  # Update localizations
+        return REMSOperation.keep  # No changes, use existing item
 
     def create_catalogue_item(
         self,
@@ -404,10 +457,10 @@ class REMSService:
             data["form"] = form.rems_id
 
         op = self.get_catalogue_item_operation(data, item)
-        if op == "keep":
+        if op == REMSOperation.keep:
             return item  # No changes, keep existing entity
 
-        if op == "edit":
+        if op == REMSOperation.edit:
             # Edits an existing catalogue item.
             # Localizations can be modified even if applications exist
             data.pop("resid")
@@ -467,6 +520,21 @@ class REMSService:
                 self.archive_changed_entity(lic)
         dataset.custom_rems_licenses(manager="all_objects").remove(*unused_licenses)
 
+    def create_automatic_workflow(self, metax_organization: str) -> REMSWorkflow:
+        organization_users = MetaxUser.objects.get_organization_admins(
+            metax_organization
+        )
+        handlers = []
+        for user in organization_users:
+            handlers.append(self.create_user(userid=user.username, name=user.get_full_name(), email=user.email).rems_id)
+
+        return self.create_workflow(
+            key=f"automatic-{metax_organization}",
+            title=f"Fairdata Automatic ({metax_organization})",
+            handlers=["approver-bot", "rejecter-bot", *sorted(handlers)],
+            metax_organization=metax_organization,
+        )
+
     @transaction.atomic
     def publish_dataset(
         self, dataset: "Dataset", raise_errors=False
@@ -490,7 +558,9 @@ class REMSService:
             logging.info(f"Syncing dataset {dataset.id} ({dataset.persistent_identifier}) to REMS")
 
             # Only automatic approval supported for now
-            workflow = REMSWorkflow.objects.get(key="automatic")
+            workflow = self.create_automatic_workflow(
+                dataset.metadata_owner.organization
+            )  # TODO: Use dataset.metadata_owner.admin_organization once it's ready
 
             licenses = []
             if terms := dataset.access_rights.data_access_terms:

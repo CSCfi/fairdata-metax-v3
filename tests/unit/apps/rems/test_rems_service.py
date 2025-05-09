@@ -12,6 +12,7 @@ from apps.rems.models import (
     REMSWorkflow,
 )
 from apps.rems.rems_service import REMSError, REMSService
+from apps.users.models import MetaxUserManager
 
 pytestmark = [
     pytest.mark.django_db,
@@ -19,15 +20,25 @@ pytestmark = [
 
 
 def test_initial_rems_entities(mock_rems):
-    assert REMSWorkflow.objects.get(key="automatic").rems_id == 1
     assert REMSUser.objects.get(key="approver-bot").rems_id == "approver-bot"
+    assert REMSUser.objects.get(key="rejecter-bot").rems_id == "rejecter-bot"
     assert REMSOrganization.objects.get(key="csc").rems_id == "csc"
 
 
-def test_rems_service_publish_dataset(mock_rems):
+def test_rems_service_publish_dataset(mock_rems, user, monkeypatch):
+    """Test publishing dataset to REMS."""
+    # Fake user as organization admin
+    monkeypatch.setattr(
+        MetaxUserManager,
+        "get_organization_admins",
+        lambda self, organization: self.filter(username=user.username),
+    )
+
     catalog = factories.DataCatalogFactory(rems_enabled=True)
-    dataset = factories.REMSDatasetFactory(data_catalog=catalog)
-    REMSService().publish_dataset(dataset)
+    dataset = factories.REMSDatasetFactory(
+        data_catalog=catalog, metadata_owner__organization=user.organization
+    )
+    REMSService().publish_dataset(dataset, raise_errors=True)
 
     assert REMSLicense.objects.count() == 1
     lic = mock_rems.entities["license"][1]
@@ -53,15 +64,28 @@ def test_rems_service_publish_dataset(mock_rems):
     assert item["resid"] == str(dataset.id)
     assert item["resource-id"] == resource["id"]
 
+    assert REMSWorkflow.objects.count() == 1
+    workflow = mock_rems.entities["workflow"][1]
+    assert set(u["userid"] for u in workflow["handlers"]) == {
+        "approver-bot",
+        "rejecter-bot",
+        "test_user",
+    }
+
 
 def test_rems_service_publish_dataset_twice(mock_rems):
     catalog = factories.DataCatalogFactory(rems_enabled=True)
     dataset = factories.REMSDatasetFactory(data_catalog=catalog)
     REMSService().publish_dataset(dataset)
-    assert mock_rems.calls == ["create/license", "create/resource", "create/catalogue-item"]
+    assert mock_rems.calls == [
+        "create/workflow",
+        "create/license",
+        "create/resource",
+        "create/catalogue-item",
+    ]
     mock_rems.clear_calls()
-    REMSService().publish_dataset(dataset)
-    assert mock_rems.calls == ["get/license", "get/resource", "get/catalogue-item"]
+    REMSService().publish_dataset(dataset, raise_errors=True)
+    assert mock_rems.calls == ["get/workflow", "get/license", "get/resource", "get/catalogue-item"]
     assert mock_rems.entities["catalogue-item"][1]["localizations"]["en"] == {
         "title": dataset.title["en"],
         "infourl": f"https://{settings.ETSIN_URL}/dataset/{dataset.id}",
@@ -86,6 +110,7 @@ def test_rems_service_update_dataset_title(mock_rems):
     dataset.save()
     REMSService().publish_dataset(dataset)
     assert mock_rems.calls == [
+        "get/workflow",
         "get/license",
         "get/resource",
         "get/catalogue-item",
@@ -110,6 +135,7 @@ def test_rems_service_update_dataset_license(mock_rems, license_reference_data):
     # License changed -> new resource -> new catalog item
     REMSService().publish_dataset(dataset)
     assert mock_rems.calls == [
+        "get/workflow",
         "create/license",
         "get/resource",
         "disable/resource",

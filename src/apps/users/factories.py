@@ -13,4 +13,5 @@ class MetaxUserFactory(factory.django.DjangoModelFactory):
 
     email = factory.Sequence(lambda n: f"email@{n}.com")
     username = factory.Sequence(lambda n: f"test-user-{n}")
+    fairdata_username = factory.LazyAttribute(lambda o: o.username)
     id = factory.Faker("uuid4")

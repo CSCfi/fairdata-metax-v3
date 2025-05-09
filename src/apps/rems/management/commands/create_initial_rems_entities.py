@@ -11,6 +11,11 @@ class Command(BaseCommand):
         # See https://github.com/CSCfi/rems/blob/master/docs/bots.md
         return self.service.create_user(userid="approver-bot", name="Approver Bot", email=None)
 
+    def create_rejecter_bot(self) -> REMSEntity:
+        """Create user that denies applications for blacklisted users automatically."""
+        # See https://github.com/CSCfi/rems/blob/master/docs/bots.md
+        return self.service.create_user(userid="rejecter-bot", name="Rejecter Bot", email=None)
+
     def handle(self, *args, **options):
         self.service = REMSService()
         self.service.create_organization(
@@ -22,8 +27,4 @@ class Command(BaseCommand):
             },
         )
         self.create_approver_bot()
-        self.service.create_workflow(
-            key="automatic",
-            title="Fairdata Automatic",
-            handlers=["approver-bot"],
-        )
+        self.create_rejecter_bot()

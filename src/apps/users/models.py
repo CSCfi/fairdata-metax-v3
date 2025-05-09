@@ -1,16 +1,29 @@
 import uuid
 
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, UserManager
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
-from apps.common.models import CustomSoftDeletableModel
+from apps.common.models import CustomSoftDeletableManager, CustomSoftDeletableModel
+
+
+class MetaxUserManager(UserManager):
+    def get_organization_admins(self, organization: str) -> models.QuerySet:
+        return self.none()  # TODO: Organization admins not implemented yet
+
+
+class SoftDeletableMetaxUserManager(MetaxUserManager, CustomSoftDeletableManager):
+    pass
 
 
 class MetaxUser(AbstractUser, CustomSoftDeletableModel):
     """Basic Metax User."""
+
+    objects = SoftDeletableMetaxUserManager()
+    available_objects = SoftDeletableMetaxUserManager()
+    all_objects = MetaxUserManager()
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     # if True, don't display User details

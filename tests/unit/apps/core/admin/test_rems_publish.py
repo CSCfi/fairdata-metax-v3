@@ -17,6 +17,8 @@ def test_admin_dataset_list_publish_to_rems(admin_client, mock_rems):
     data = {"action": "publish_to_rems", "_selected_action": [dataset.id]}
     response = admin_client.post(change_url, data, follow=True)
     assert response.status_code == 200
+    dataset.refresh_from_db()
+    assert dataset.rems_publish_error is None
     assert dataset.rems_status == REMSStatus.PUBLISHED
 
 
