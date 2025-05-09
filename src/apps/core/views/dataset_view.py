@@ -907,7 +907,9 @@ class DatasetDirectoryViewSet(DirectoryViewSet):
             storage = file_set.storage
             params["storage_id"] = storage.id
         except FileSet.DoesNotExist:
-            raise exceptions.NotFound()
+            raise exceptions.NotFound(
+                "No fileset has been set for this dataset."
+            )
         self.query_params.update(params)
 
     @swagger_auto_schema(responses={200: DirectorySerializer})
