@@ -4,6 +4,8 @@ from typing import List
 
 from watson.backends import RE_POSTGRES_ESCAPE_CHARS, PostgresSearchBackend, escape_query
 
+re_space = re.compile("\s+")
+
 
 def parse_search_string(string: str) -> List[str]:
     """Split search string while keeping doubly quoted parts together."""
@@ -11,7 +13,7 @@ def parse_search_string(string: str) -> List[str]:
     reader = csv.reader([string], delimiter=" ", quotechar='"', escapechar="\\")
     parts = next(reader)
     # Replace remaining spaces with the 'followed by' operator <->
-    return [part.replace(" ", "<->") for part in parts if part]
+    return [re_space.sub("<->", part) for part in parts if part]
 
 
 class CommonSearchBackend(PostgresSearchBackend):
