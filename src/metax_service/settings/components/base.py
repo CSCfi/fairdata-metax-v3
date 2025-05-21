@@ -456,3 +456,6 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # Metrics
 METRICS_REPORT_URL = env.str("METRICS_REPORT_URL", None)
+
+# Allow running load_test_data
+ALLOW_LOAD_TEST_DATA = env.bool("ALLOW_LOAD_TEST_DATA", False)

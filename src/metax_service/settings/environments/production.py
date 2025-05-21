@@ -21,3 +21,5 @@ ENABLE_DEBUG_TOOLBAR = False
 ENABLE_SILK_PROFILER = False
 
 PID_MS_CLIENT_INSTANCE = "apps.core.services.pid_ms_client._PIDMSClient"
+
+ALLOW_LOAD_TEST_DATA = False

@@ -15,8 +15,8 @@ logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        if settings.ENV == "production":
-            logger.warn("This command can only be used in non-production environments")
+        if not settings.ALLOW_LOAD_TEST_DATA:
+            logger.warn("ALLOW_LOAD_TEST_DATA was False. Not executing the command.")
             return
 
         language = factories.LanguageFactory()
