@@ -54,5 +54,6 @@ def sso_session_teppo(sso_format_datetime):
         "redirect_url": "https://qvain.fd-dev.csc.fi",
         "services": {
             "IDA": {"projects": ["fd_teppo3_project"]},
+            "QVAIN": {"admin_organizations": ["csc.fi"]},
         },
     }

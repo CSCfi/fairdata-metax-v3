@@ -151,6 +151,7 @@ def user(fairdata_users_group):
         email="teppo@example.com",
         is_hidden=False,
         organization="test_organization",
+        admin_organizations=["admin.org"],
     )
     user.groups.set([fairdata_users_group])
     user.set_password("teppo")
@@ -167,6 +168,7 @@ def user2(fairdata_users_group):
         last_name="Mestaaja",
         email="matti@example.com",
         is_hidden=False,
+        admin_organizations=[],
     )
     _group, _ = Group.objects.get_or_create(name="fairdata_users")
     user.groups.set([fairdata_users_group])

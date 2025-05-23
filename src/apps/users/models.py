@@ -36,6 +36,7 @@ class MetaxUser(AbstractUser, CustomSoftDeletableModel):
         help_text=_("When user data was synchronized from an external service."),
     )
     organization = models.CharField(max_length=512, blank=True, null=True)
+    admin_organizations = ArrayField(models.CharField(max_length=512), default=list, blank=True)
 
     def undelete(self):
         self.removed = None

@@ -43,6 +43,7 @@ def test_sso_authentication_ok(make_sso_auth_request, sso_session_teppo):
     user, error = make_sso_auth_request(sso_session_teppo)
     assert user.username == "fd_teppo3"
     assert user.csc_projects == ["fd_teppo3_project"]
+    assert user.admin_organizations == ["csc.fi"]
     assert error == None
 
 

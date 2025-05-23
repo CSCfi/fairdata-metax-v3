@@ -30,6 +30,7 @@ class MetaxUserAdmin(BaseUserAdmin):
                         "csc_projects",
                         "synced",
                         "organization",
+                        "admin_organizations",
                     )
                 },
             ),
