@@ -1,3 +1,4 @@
+import uuid
 import pytest
 from django.conf import settings
 
@@ -11,7 +12,8 @@ from apps.rems.models import (
     REMSUser,
     REMSWorkflow,
 )
-from apps.rems.rems_service import REMSError, REMSService
+from apps.rems.rems_service import REMSService
+from apps.rems.rems_session import REMSError
 from apps.users.models import MetaxUserManager
 
 pytestmark = [
@@ -66,7 +68,7 @@ def test_rems_service_publish_dataset(mock_rems, user, monkeypatch):
 
     assert REMSWorkflow.objects.count() == 1
     workflow = mock_rems.entities["workflow"][1]
-    assert set(u["userid"] for u in workflow["handlers"]) == {
+    assert set(u["userid"] for u in workflow["workflow"]["handlers"]) == {
         "approver-bot",
         "rejecter-bot",
         "test_user",
@@ -77,15 +79,15 @@ def test_rems_service_publish_dataset_twice(mock_rems):
     catalog = factories.DataCatalogFactory(rems_enabled=True)
     dataset = factories.REMSDatasetFactory(data_catalog=catalog)
     REMSService().publish_dataset(dataset)
-    assert mock_rems.calls == [
-        "create/workflow",
-        "create/license",
-        "create/resource",
-        "create/catalogue-item",
+    assert mock_rems.call_list == [
+        "create/workflow->1",
+        "create/license->1",
+        "create/resource->1",
+        "create/catalogue-item->1",
     ]
     mock_rems.clear_calls()
     REMSService().publish_dataset(dataset, raise_errors=True)
-    assert mock_rems.calls == ["get/workflow", "get/license", "get/resource", "get/catalogue-item"]
+    assert mock_rems.call_list == ["get/workflow:1", "get/license:1", "get/resource:1", "get/catalogue-item:1"]
     assert mock_rems.entities["catalogue-item"][1]["localizations"]["en"] == {
         "title": dataset.title["en"],
         "infourl": f"https://{settings.ETSIN_URL}/dataset/{dataset.id}",
@@ -109,12 +111,12 @@ def test_rems_service_update_dataset_title(mock_rems):
     dataset.title = {"en": "new title", "fi": "uus title"}
     dataset.save()
     REMSService().publish_dataset(dataset)
-    assert mock_rems.calls == [
-        "get/workflow",
-        "get/license",
-        "get/resource",
-        "get/catalogue-item",
-        "edit/catalogue-item",
+    assert mock_rems.call_list == [
+        "get/workflow:1",
+        "get/license:1",
+        "get/resource:1",
+        "get/catalogue-item:1",
+        "edit/catalogue-item:1",
     ]
     assert mock_rems.entities["catalogue-item"][1]["localizations"]["en"]["title"] == "new title"
     assert mock_rems.entities["catalogue-item"][1]["archived"] == False
@@ -122,7 +124,7 @@ def test_rems_service_update_dataset_title(mock_rems):
 
 def test_rems_service_update_dataset_license(mock_rems, license_reference_data):
     catalog = factories.DataCatalogFactory(rems_enabled=True)
-    dataset = factories.REMSDatasetFactory(data_catalog=catalog)
+    dataset = factories.REMSDatasetFactory(data_catalog=catalog, id=uuid.UUID(int=7))
     REMSService().publish_dataset(dataset)
 
     mock_rems.clear_calls()
@@ -133,18 +135,19 @@ def test_rems_service_update_dataset_license(mock_rems, license_reference_data):
     lic.save()
 
     # License changed -> new resource -> new catalog item
-    REMSService().publish_dataset(dataset)
-    assert mock_rems.calls == [
-        "get/workflow",
-        "create/license",
-        "get/resource",
-        "disable/resource",
-        "archive/resource",
-        "create/resource",
-        "get/catalogue-item",
-        "disable/catalogue-item",
-        "archive/catalogue-item",
-        "create/catalogue-item",
+    REMSService().publish_dataset(dataset, raise_errors=True)
+    assert mock_rems.call_list == [
+        "get/workflow:1",
+        "create/license->2",
+        "get/resource:1",
+        "get/resource:1",
+        "list/catalogue-item?resource=00000000-0000-0000-0000-000000000007&archived=false",
+        "disable/catalogue-item:1",
+        "archive/catalogue-item:1",
+        "disable/resource:1",
+        "archive/resource:1",
+        "create/resource->2",
+        "create/catalogue-item->2",
     ]
     # New entity should have new resource with new license
     assert (
@@ -167,6 +170,49 @@ def test_rems_service_update_dataset_license(mock_rems, license_reference_data):
         == mock_rems.entities["resource"][1]["id"]
     )
     assert mock_rems.entities["catalogue-item"][1]["archived"] == True
+
+
+def test_rems_service_update_dataset_terms(mock_rems, license_reference_data):
+    catalog = factories.DataCatalogFactory(rems_enabled=True)
+    dataset = factories.REMSDatasetFactory(data_catalog=catalog, id=uuid.UUID(int=7))
+    dataset.access_rights.license.set([])
+    dataset.access_rights.data_access_terms = {"en": "Old terms"}
+    dataset.access_rights.save()
+    REMSService().publish_dataset(dataset, raise_errors=True)
+
+    mock_rems.clear_calls()
+    dataset.access_rights.data_access_terms = {"en": "New terms"}
+    dataset.access_rights.save()
+    REMSService().publish_dataset(dataset, raise_errors=True)
+
+    # The license created from data_access_terms needs to be updated.
+    # License dependencies (catalogue item and resource) need to be archived first
+    # before the license can be archived
+    assert mock_rems.call_list == [
+        "get/workflow:1",
+        "get/license:1",
+        "list/resource?resid=00000000-0000-0000-0000-000000000007&archived=false",
+        "get/resource:1",
+        "list/catalogue-item?resource=00000000-0000-0000-0000-000000000007&archived=false",
+        "disable/catalogue-item:1",  # Archive old catalogue item
+        "archive/catalogue-item:1",
+        "disable/resource:1",
+        "archive/resource:1",  # Archive old resource
+        "disable/license:1",
+        "archive/license:1",  # Archive old license
+        "create/license->2",  # Create new license, resource and catalogue item
+        "create/resource->2",
+        "create/catalogue-item->2",
+    ]
+    # New entity should have new resource with new license
+    assert (
+        mock_rems.entities["resource"][1]["licenses"][0]["localizations"]["en"]["textcontent"]
+        == "Old terms"
+    )
+    assert (
+        mock_rems.entities["resource"][2]["licenses"][0]["localizations"]["en"]["textcontent"]
+        == "New terms"
+    )
 
 
 def test_rems_service_as_user(requests_mock, mock_rems):
@@ -204,7 +250,8 @@ def test_rems_service_success_false(mock_rems):
     with pytest.raises(REMSError) as ec:
         service.session.post("/api/organizations/create", json=data)
     assert ec.value.response.status_code == 200  # Response failed successfully?
-    assert "REMS request was unsuccessful" in str(ec.value)
+    assert "REMS request" in str(ec.value)
+    assert "was unsuccessful" in str(ec.value)
 
 
 def test_rems_service_create_application_with_autoapprove(mock_rems, user):

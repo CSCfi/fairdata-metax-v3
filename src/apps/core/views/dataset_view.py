@@ -348,7 +348,7 @@ class DatasetFilter(filters.FilterSet):
                 )
             result = result.filter(id__in=ids)
         return result.distinct()
-    
+
     def filter_metadata_owner_organization(self, queryset, name, value):
         result = queryset
         for groups in value:
@@ -881,6 +881,15 @@ class DatasetViewSet(CommonModelViewSet):
         data = service.get_user_entitlements_for_dataset(request.user, dataset)
         return response.Response(data, status=status.HTTP_200_OK)
 
+    @action(methods=["get"], detail=True, url_path="rems-application-data")
+    def get_rems_application_data(self, request, pk=None):
+        """Get the licenses and forms needed by REMS applications for the dataset."""
+        dataset = self.get_object()
+        self.check_rems_request(request, dataset)
+        service = REMSService()
+        data = service.get_application_data_for_dataset(dataset)
+        return response.Response(data, status=status.HTTP_200_OK)
+
 
 class DatasetDirectoryViewSet(DirectoryViewSet):
     """API for browsing directories of a dataset."""
@@ -907,9 +916,7 @@ class DatasetDirectoryViewSet(DirectoryViewSet):
             storage = file_set.storage
             params["storage_id"] = storage.id
         except FileSet.DoesNotExist:
-            raise exceptions.NotFound(
-                "No fileset has been set for this dataset."
-            )
+            raise exceptions.NotFound("No fileset has been set for this dataset.")
         self.query_params.update(params)
 
     @swagger_auto_schema(responses={200: DirectorySerializer})

@@ -3,7 +3,8 @@ from django.template.defaulttags import CsrfTokenNode
 from django.urls import reverse
 from django.utils.html import escape, format_html
 from django.utils.safestring import mark_safe
-from users.authentication import SSOAuthentication
+
+from apps.users.authentication import SSOAuthentication
 
 register = template.Library()
 

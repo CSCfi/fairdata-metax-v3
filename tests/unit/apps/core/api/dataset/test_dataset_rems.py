@@ -3,6 +3,7 @@ from django.conf import settings
 
 from apps.core import factories
 from apps.core.models.catalog_record.dataset import Dataset, REMSStatus
+from apps.refdata.models import License
 from apps.rems.models import REMSCatalogueItem, REMSLicense
 from apps.rems.rems_service import REMSService
 
@@ -170,3 +171,74 @@ def test_dataset_rems_application_status(settings, mock_rems, admin_client, user
     mock_rems.entities["entitlement"].clear()  # Remove all entitlements
     data = user_client.get(f"/v3/datasets/{dataset.id}?include_allowed_actions=true").json()
     assert data["allowed_actions"]["rems_status"] == "no_application"
+
+
+def test_dataset_rems_application_data(
+    settings, mock_rems, admin_client, user_client, license_reference_data
+):
+    dataset = factories.REMSDatasetFactory(
+        access_rights__data_access_terms={"en": "Terms here", "fi": "Ehdot tässä"}
+    )
+    ref_lic = factories.DatasetLicenseFactory(
+        reference=License.objects.get(
+            url="http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0"
+        )
+    )
+    custom_lic = factories.DatasetLicenseFactory(
+        title={"en": "License name", "fi": "Lisenssin nimi"}, custom_url="https://license.url"
+    )
+    dataset.access_rights.license.set([ref_lic, custom_lic])
+    service = REMSService()
+    service.publish_dataset(dataset)
+
+    data = user_client.get(f"/v3/datasets/{dataset.id}/rems-application-data").json()
+    assert data == {
+        "licenses": [
+            {
+                "id": 1,
+                "licensetype": "text",
+                "localizations": {
+                    "en": {
+                        "textcontent": "Terms here",
+                        "title": "Terms for data access",
+                    },
+                    "fi": {
+                        "textcontent": "Ehdot tässä",
+                        "title": "Käyttöluvan ehdot",
+                    },
+                },
+                "is_data_access_terms": True,
+            },
+            {
+                "id": 2,
+                "licensetype": "link",
+                "localizations": {
+                    "en": {
+                        "textcontent": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0",
+                        "title": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+                    },
+                    "fi": {
+                        "textcontent": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0",
+                        "title": "Creative Commons Nimeä 4.0 Kansainvälinen (CC BY 4.0)",
+                    },
+                },
+                "is_data_access_terms": False,
+            },
+            {
+                "id": 3,
+                "licensetype": "link",
+                "localizations": {
+                    "en": {
+                        "textcontent": "https://license.url",
+                        "title": "License name",
+                    },
+                    "fi": {
+                        "textcontent": "https://license.url",
+                        "title": "Lisenssin nimi",
+                    },
+                },
+                "is_data_access_terms": False,
+            },
+        ],
+        "forms": [],
+    }

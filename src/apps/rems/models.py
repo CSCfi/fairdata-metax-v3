@@ -126,6 +126,9 @@ class REMSLicense(REMSEntity):
         null=True,
         blank=True,
     )
+    is_data_access_terms = models.BooleanField(
+        default=False, help_text="True when license is generated from data_access_terms."
+    )
 
 
 class REMSResource(REMSEntity):

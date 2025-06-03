@@ -1,11 +1,12 @@
 import logging
 import re
 from dataclasses import dataclass
-from typing import Dict, List, Set, Type, Union
+from typing import Dict, List, Optional, Set, Type, Union
 
 from django.conf import settings
 from django.utils import timezone
 from requests_mock.mocker import Mocker
+from requests_mock.request import _RequestObjectProxy as Request
 
 from apps.rems.models import (
     EntityType,
@@ -20,6 +21,26 @@ from apps.rems.models import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class Call:
+    action: str
+    entity_type: EntityType
+    request: Request
+    rems_id: Optional[Union[str, int]] = None  # Requested id
+    created_id: Optional[Union[str, int]] = None  # Id of created entity
+
+    def __str__(self):
+        """Return call data in compact string format useful for tests."""
+        val = f"{self.action}/{self.entity_type}"
+        if self.rems_id:  # Action on specific existing entity
+            val += f":{self.rems_id}"
+        if self.request.query:  # Query string
+            val += f"?{self.request.query}"
+        if self.created_id:  # Action produced entity with id
+            val += f"->{self.created_id}"
+        return val
 
 
 class MockREMS:
@@ -65,8 +86,18 @@ class MockREMS:
             if entity_type not in {EntityType.USER, EntityType.ORGANIZATION}:
                 self.id_counters[entity_type] = 0
 
+    def add_call(self, **kwargs) -> Call:
+        call = Call(**kwargs)
+        self.calls.append(call)
+        return call
+
     def clear_calls(self):
         self.calls.clear()
+
+    @property
+    def call_list(self) -> List[str]:
+        """Return call list in string format."""
+        return [str(call) for call in self.calls]
 
     def get_request_path_rems_id(self, entity_type, request):
         match = re.match(
@@ -143,9 +174,9 @@ class MockREMS:
                 "workflow/id": workflow["id"],
                 "workflow/type": workflow["type"],
                 # handlers are in workflow.dynamic/handlers even if workflow is not dynamic
-                "workflow.dynamic/handlers": workflow["handlers"],
+                "workflow.dynamic/handlers": workflow["workflow"]["handlers"],
             },
-            license_ids=set(lic["id"] for lic in workflow.get("licenses", [])),
+            license_ids=set(lic["id"] for lic in workflow["workflow"].get("licenses", [])),
         )
 
     def create_application_license_data(self, license_ids: Set[int]) -> List[dict]:
@@ -223,12 +254,11 @@ class MockREMS:
         }
         return data
 
-
     def handle_create(self, entity_type: EntityType):
         """Create new entity."""
 
         def _handler(request, context):
-            self.calls.append(f"create/{entity_type}")
+            call = self.add_call(action="create", entity_type=entity_type, request=request)
 
             output = {"success": True}
             data = request.json()
@@ -236,6 +266,7 @@ class MockREMS:
             data.setdefault("enabled", True)
 
             # REMS id handling
+            _id: Union[int, str]
             if entity_type == EntityType.USER:
                 _id = data["userid"]  # User creation does not return userid
             elif entity_type == EntityType.ORGANIZATION:
@@ -254,13 +285,21 @@ class MockREMS:
                 _id = self.id_counters[entity_type]
                 data["id"] = _id
                 output["id"] = _id
+            call.created_id = _id  # We now have the id, add it to the call data
 
             if entity_type == EntityType.WORKFLOW:
-                data.setdefault("type", "workflow/decider")
-                # REMS replaces userids with user values
-                data["handlers"] = [
-                    self.entities[EntityType.USER][user_id] for user_id in data["handlers"]
-                ]
+                data["workflow"] = {
+                    "type": data.get("type", "workflow/default"),
+                    "handlers": [
+                        # REMS replaces userids with user values
+                        self.entities[EntityType.USER][user_id]
+                        for user_id in data["handlers"]
+                    ],
+                    "forms": [
+                        self.entities[EntityType.FORM][form_id]
+                        for form_id in data.get("forms", [])
+                    ],
+                }
                 # REMS replaces license ids with license values
                 data["licenses"] = [
                     self.entities[EntityType.LICENSE][lic_id]
@@ -293,12 +332,22 @@ class MockREMS:
 
         return _handler
 
+    def get_query_param(self, request, param: str) -> Optional[str]:
+        if val := request.qs.get(param):
+            return val[0]  # Return only first value for param
+        return None
+
     def handle_list(self, entity_type: EntityType):
         """List all existing entitities."""
 
         def _handler(request, context):
-            self.calls.append(f"list/{entity_type}")
-            data = self.entities[entity_type]
+            self.add_call(action="list", entity_type=entity_type, request=request)
+            data = list(self.entities[entity_type].values())
+            if entity_type == EntityType.CATALOGUE_ITEM:
+                if resid := self.get_query_param(request, "resource"):  # External resource id
+                    data = [item for item in data if item["resid"] == resid]
+            if not self.get_query_param(request, "archived") == "true":
+                data = [item for item in data if not item["archived"]]
             return data
 
         return _handler
@@ -307,8 +356,8 @@ class MockREMS:
         """Get existing entity."""
 
         def _handler(request, context):
-            self.calls.append(f"get/{entity_type}")
             rems_id = self.get_request_path_rems_id(entity_type, request)
+            self.add_call(action="get", entity_type=entity_type, request=request, rems_id=rems_id)
             data = self.entities[entity_type].get(rems_id)
             if not data:
                 context.status_code = 404
@@ -332,7 +381,7 @@ class MockREMS:
             rems_id = request.json()[
                 "id" if entity_type != EntityType.ORGANIZATION else REMSOrganization.rems_id_field
             ]
-            self.calls.append(f"edit/{entity_type}")
+            self.add_call(action="edit", entity_type=entity_type, request=request, rems_id=rems_id)
 
             data = self.entities[entity_type].get(rems_id)
             if not data:
@@ -350,6 +399,51 @@ class MockREMS:
 
         return _handler
 
+    def get_resource_dependencies(self, rems_id: int) -> dict:
+        catalogue_items = {}
+        for item in self.entities[EntityType.CATALOGUE_ITEM].values():
+            if item["archived"]:
+                continue
+            if item["resource-id"] == rems_id:
+                catalogue_items[item["id"]] = {
+                    "catalogue-item/id": item["id"],
+                    "localizations": item["localizations"],
+                }
+        if catalogue_items:
+            return {"catalogue-items": catalogue_items}
+        return {}
+
+    def get_license_dependencies(self, rems_id: int) -> dict:
+        """Get catalogue item and resource dependencies of license."""
+        resources = {}
+        catalogue_items = {}
+        for resource in self.entities[EntityType.RESOURCE].values():
+            if resource["archived"]:
+                continue
+            if any(lic["id"] == rems_id for lic in resource["licenses"]):
+                resources[resource["id"]] = {
+                    "resource/id": resource["id"],
+                    "resid": resource["resid"],
+                }
+                catalogue_items.update(
+                    self.get_resource_dependencies(resource["id"]).get("catalogue-items", {})
+                )
+
+        deps = {}
+        if resources:
+            deps["resources"] = resources
+        if catalogue_items:
+            deps["catalogue-items"] = catalogue_items
+        return deps
+
+    def in_use_error(self, dependencies: dict) -> dict:
+        return {
+            "success": False,
+            "type": "t.administration.errors/in-use-by",
+            # Convert dicts of entity data to lists of entity data
+            **{dep_type: list(v.values()) for dep_type, v in dependencies.items()},
+        }
+
     def handle_archive(self, entity_type: EntityType):
         """Archive/unarchive existing entity."""
 
@@ -358,7 +452,16 @@ class MockREMS:
                 raise NotImplementedError()
 
             rems_id = request.json()["id"]
-            self.calls.append(f"archive/{entity_type}")
+            self.add_call(
+                action="archive", entity_type=entity_type, request=request, rems_id=rems_id
+            )
+
+            if entity_type == EntityType.LICENSE:
+                if deps := self.get_license_dependencies(rems_id):
+                    return self.in_use_error(deps)
+            elif entity_type == EntityType.RESOURCE:
+                if deps := self.get_resource_dependencies(rems_id):
+                    return self.in_use_error(deps)
 
             data = self.entities[entity_type].get(rems_id)
             if not data:
@@ -386,7 +489,9 @@ class MockREMS:
                 raise NotImplementedError()
 
             rems_id = request.json()["id"]
-            self.calls.append(f"disable/{entity_type}")
+            self.add_call(
+                action="disable", entity_type=entity_type, request=request, rems_id=rems_id
+            )
 
             data = self.entities[entity_type].get(rems_id)
             if not data:

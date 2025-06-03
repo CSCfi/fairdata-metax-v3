@@ -1,0 +1,103 @@
+{
+  "id": 8,
+  "organization": {
+    "organization/id": "nbn",
+    "organization/short-name": {
+      "fi": "NBN",
+      "en": "NBN"
+    },
+    "organization/name": {
+      "fi": "NBN",
+      "en": "NBN"
+    }
+  },
+  "title": "With workflow form",
+  "workflow": {
+    "type": "workflow/default",
+    "handlers": [
+      {
+        "userid": "developer",
+        "name": "Developer",
+        "email": "developer@example.com"
+      },
+      {
+        "userid": "handler",
+        "name": "Hannah Handler",
+        "email": "handler@example.com"
+      },
+      {
+        "userid": "rejecter-bot",
+        "name": "Rejecter Bot",
+        "email": null
+      }
+    ],
+    "licenses": [
+      {
+        "licensetype": "link",
+        "organization": {
+          "organization/id": "nbn",
+          "organization/name": {
+            "fi": "NBN",
+            "en": "NBN"
+          },
+          "organization/short-name": {
+            "fi": "NBN",
+            "en": "NBN"
+          }
+        },
+        "enabled": true,
+        "archived": false,
+        "localizations": {
+          "en": {
+            "textcontent": "https://creativecommons.org/licenses/by/4.0/legalcode",
+            "title": "CC Attribution 4.0"
+          },
+          "fi": {
+            "textcontent": "https://creativecommons.org/licenses/by/4.0/legalcode.fi",
+            "title": "CC Nimeä 4.0"
+          }
+        },
+        "license/id": 7
+      },
+      {
+        "licensetype": "text",
+        "organization": {
+          "organization/id": "nbn",
+          "organization/name": {
+            "fi": "NBN",
+            "en": "NBN"
+          },
+          "organization/short-name": {
+            "fi": "NBN",
+            "en": "NBN"
+          }
+        },
+        "enabled": true,
+        "archived": false,
+        "localizations": {
+          "en": {
+            "textcontent": "License text in English. License text in English.",
+            "title": "General Terms of Use"
+          },
+          "fi": {
+            "textcontent": "Suomenkielinen lisenssiteksti. Suomenkielinen lisenssiteksti.",
+            "title": "Yleiset käyttöehdot"
+          }
+        },
+        "license/id": 8
+      }
+    ],
+    "forms": [
+      {
+        "form/id": 1,
+        "form/internal-name": "Workflow form",
+        "form/external-title": {
+          "fi": "Työvuon lomake",
+          "en": "Workflow form"
+        }
+      }
+    ]
+  },
+  "enabled": true,
+  "archived": false
+}

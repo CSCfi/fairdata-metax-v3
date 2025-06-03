@@ -1,13 +1,11 @@
 import logging
 import traceback
-from contextlib import contextmanager
 from typing import TYPE_CHECKING, Iterable, List, Optional
+from dataclasses import dataclass
 
-import requests
 from django.conf import settings
 from django.db import models, transaction
 from django.utils import timezone
-from requests.exceptions import HTTPError
 
 from apps.common.helpers import single_translation
 from apps.common.locks import lock_rems_publish
@@ -22,6 +20,7 @@ from apps.rems.models import (
     REMSUser,
     REMSWorkflow,
 )
+from apps.rems.rems_session import REMSSession
 from apps.users.models import MetaxUser
 
 if TYPE_CHECKING:
@@ -43,89 +42,24 @@ class REMSOperation(models.TextChoices):
     keep = "keep"  # use old entity as-is
 
 
-class REMSError(HTTPError):
-    pass
+@dataclass
+class LicenseData:
+    """License data for end users."""
+
+    id: int
+    licensetype: LicenseType
+    localizations: dict
+    is_data_access_terms: bool
+    # Organization is omitted here since it's the Metax REMS manager organization, and
+    # not relevant for users.
 
 
-class REMSSession(requests.Session):
-    """REMS wrapper for requests.Session.
+@dataclass
+class ApplicationData:
+    """Data needed for submitting an application for end Fusers."""
 
-    Modifies requests in the following way:
-    - url is appended to REMS_BASE_URL
-    - REMS headers are set automatically
-    - raises error if request returns an error or is unsuccessful
-    - when allow_notfound=True, a 404 response will not raise an error
-    - as_user context manager allows making requests as another user
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.base_url = settings.REMS_BASE_URL
-        self.rems_user_id = settings.REMS_USER_ID
-        self.rems_api_key = settings.REMS_API_KEY
-
-    def get_headers(self):
-        return {
-            "x-rems-user-id": self.rems_user_id,
-            "x-rems-api-key": self.rems_api_key,
-            "accept": "application/json",
-            "content-type": "application/json",
-        }
-
-    def request(
-        self, method: str, url: str, allow_notfound=False, *args, **kwargs
-    ) -> requests.Response:
-        if not url.startswith("/"):
-            raise ValueError("URL should start with '/'")
-        url = f"{self.base_url}{url}"
-
-        # Update the default headers with headers from kwargs
-        headers = self.get_headers()
-        if extra_headers := kwargs.get("headers"):
-            headers.update(extra_headers)
-        kwargs["headers"] = headers
-
-        resp = super().request(method, url, *args, **kwargs)
-        try:
-            if resp.status_code == 404 and allow_notfound:
-                return resp
-            resp.raise_for_status()
-        except HTTPError as e:
-            logging.error(f"REMS error {str(e)}: {resp.text}")
-            raise REMSError(*e.args, request=e.request, response=e.response)
-        except Exception as e:
-            logging.error(f"Making REMS request failed: {str(e)}")
-            raise
-
-        # Some errors may return a 200 response with success=False
-        data = resp.json()
-        if "success" in data and not data["success"]:
-            logging.error(f"REMS error: {resp.text}")
-            raise REMSError(
-                f"REMS request was unsuccessful, status_code={resp.status_code=}: {resp.text}",
-                request=resp.request,
-                response=resp,
-            )
-        return resp
-
-    @contextmanager
-    def as_user(self, user_id: str):
-        """Make requests as a specific user instead of the REMS owner user.
-
-        The request will have the same permissions as the user would.
-
-        Example:
-            # Get own applications of user
-            session = REMSSession()
-            with session.as_user("teppo"):
-                applications = session.get("/api/my-applications").json()
-        """
-        original_user_id = self.rems_user_id
-        try:
-            self.rems_user_id = user_id
-            yield
-        finally:
-            self.rems_user_id = original_user_id
+    licenses: List[LicenseData]
+    forms: List[dict]
 
 
 class REMSService:
@@ -143,15 +77,24 @@ class REMSService:
         resp = self.session.get(f"/api/{entity.entity_type}s/{entity.rems_id}")
         return resp.json()
 
-    def archive_changed_entity(self, entity: REMSEntity):
-        """Archive changed entity in REMS and soft delete it in Metax."""
+    def archive_entity(self, entity: REMSEntity):
+        """Archive entity in REMS and soft delete it in Metax."""
         entity_type = entity.entity_type
         if entity.entity_type == EntityType.USER:
             raise ValueError(f"Not supported for {entity_type=}")
 
-        logger.info(
-            f"REMS {entity_type} {entity.key=} changed, archiving old version {entity.rems_id=}"
-        )
+        logger.info(f"Archiving REMS entity {entity}")
+        if entity.entity_type == EntityType.RESOURCE:
+            # All linked catalogue items need to be archived before archiving resource.
+            logger.info("Archiving related REMS catalogue items")
+            resid = self.get_entity_data(entity)["resid"]
+            self.archive_catalogue_items_by_resid(resid)
+        elif entity.entity_type == EntityType.LICENSE:
+            # TODO: Figure out what to do if a reference license changes
+            if dataset := getattr(entity, "custom_license_dataset", None):
+                # Linked catalogue item needs to be archived before archiving license.
+                logger.info("Archiving related REMS resources")
+                self.archive_resources_by_resid(str(dataset.id))
 
         # Disabling hides an item from applicants.
         # Archiving also hides it in the administration view.
@@ -163,7 +106,34 @@ class REMSService:
             f"/api/{entity_type}s/archived",
             json={entity.rems_id_field: entity.rems_id, "archived": True},
         )
-        entity.delete(soft=True)
+        if not entity._state.adding:  # Don't try to delete temporary entities
+            entity.delete(soft=True)
+
+    def archive_catalogue_items_by_resid(self, resid):
+        """Archive catalogue items by resid."""
+        # The resource parameter for this query is the resid value, not the internal REMS id.
+        item_data = self.session.get(
+            "/api/catalogue-items", params={"resource": resid, "archived": "false"}
+        ).json()
+        for val in item_data:
+            item = REMSCatalogueItem.objects.filter(rems_id=val["id"]).first()
+            if not item:
+                # Temporary entities, not saved to DB
+                item = REMSCatalogueItem(rems_id=val["id"])
+            self.archive_entity(item)
+
+    def archive_resources_by_resid(self, resid: str):
+        """Archive resources and linked catalogue items by resid."""
+        # Linked catalogue item needs to be archived before archiving resource.
+        item_data = self.session.get(
+            "/api/resources", params={"resid": resid, "archived": "false"}
+        ).json()
+        for val in item_data:
+            resource = REMSResource.objects.filter(rems_id=val["id"]).first()
+            if not resource:
+                # Temporary entities, not saved to DB
+                resource = REMSResource(rems_id=val["id"])
+            self.archive_entity(resource)
 
     def create_user(self, userid: str, name: str, email: Optional[str]) -> REMSEntity:
         """Create or update user."""
@@ -209,17 +179,17 @@ class REMSService:
 
         old_value = self.get_entity_data(entity)
         entity_data = {
-            "type": "workflow/default",
+            "type": old_value["workflow"]["type"],
             "organization": {"organization/id": old_value["organization"]["organization/id"]},
-            "handlers": [handler["userid"] for handler in old_value["handlers"]],
+            "handlers": [handler["userid"] for handler in old_value["workflow"]["handlers"]],
             "title": old_value["title"],
-            "forms": old_value.get("forms"),
+            "forms": old_value["workflow"].get("forms", []),
         }
 
         if (
             new["type"] != entity_data["type"]
             or new["organization"] != entity_data["organization"]
-            or new.get("forms") != entity_data["forms"]
+            or new.get("forms", []) != entity_data["forms"]
         ):
             return REMSOperation.create  # Create new item, archive old
         if entity_data["title"] != new["title"] or set(entity_data["handlers"]) != set(
@@ -266,7 +236,7 @@ class REMSService:
 
         # Create new workflow
         if entity:
-            self.archive_changed_entity(entity)
+            self.archive_entity(entity)
         workflow = self.session.post("/api/workflows/create", json=data).json()
         entity = REMSWorkflow.objects.create(
             key=key, rems_id=workflow["id"], metax_organization=metax_organization
@@ -290,6 +260,7 @@ class REMSService:
         url: Optional[str] = None,
         description: Optional[dict] = None,
         custom_license_dataset: Optional["Dataset"] = None,
+        is_data_access_terms: bool = False,
     ):
         """Create REMS license."""
         license_type = self.get_license_type(url=url, description=description)
@@ -325,11 +296,14 @@ class REMSService:
             return entity
 
         if entity:
-            self.archive_changed_entity(entity)
+            self.archive_entity(entity)
 
         lic = self.session.post("/api/licenses/create", json=data).json()
         entity = REMSLicense.objects.create(
-            key=key, rems_id=lic["id"], custom_license_dataset=custom_license_dataset
+            key=key,
+            rems_id=lic["id"],
+            custom_license_dataset=custom_license_dataset,
+            is_data_access_terms=is_data_access_terms,
         )
         return entity
 
@@ -372,7 +346,11 @@ class REMSService:
         key = f"dataset-{dataset.id}-access-terms"
         title = {"en": "Terms for data access", "fi": "Käyttöluvan ehdot"}
         return self.create_license(
-            key=key, title=title, description=terms, custom_license_dataset=dataset
+            key=key,
+            title=title,
+            description=terms,
+            custom_license_dataset=dataset,
+            is_data_access_terms=True,
         )
 
     def get_license_ids(self, licenses: List[REMSLicense]):
@@ -383,7 +361,9 @@ class REMSService:
             ids.append(lic.rems_id)
         return ids
 
-    def create_resource(self, key: str, identifier: str, licenses: List[REMSLicense]):
+    def create_resource(
+        self, key: str, identifier: str, licenses: List[REMSLicense]
+    ) -> REMSResource:
         """Create or update REMS resource."""
         entity_data = None
         entity = REMSResource.objects.filter(key=key).first()
@@ -404,7 +384,7 @@ class REMSService:
             return entity
 
         if entity:
-            self.archive_changed_entity(entity)
+            self.archive_entity(entity)
 
         resource = self.session.post("/api/resources/create", json=data).json()
         entity = REMSResource.objects.create(
@@ -474,7 +454,7 @@ class REMSService:
             return item
 
         if item:
-            self.archive_changed_entity(item)
+            self.archive_entity(item)
 
         # New catalogue item needs to be created
         resp_item = self.session.post("/api/catalogue-items/create", json=data).json()
@@ -517,16 +497,18 @@ class REMSService:
         )
         for lic in unused_licenses:
             if not lic.removed:
-                self.archive_changed_entity(lic)
+                self.archive_entity(lic)
         dataset.custom_rems_licenses(manager="all_objects").remove(*unused_licenses)
 
     def create_automatic_workflow(self, metax_organization: str) -> REMSWorkflow:
-        organization_users = MetaxUser.objects.get_organization_admins(
-            metax_organization
-        )
+        organization_users = MetaxUser.objects.get_organization_admins(metax_organization)
         handlers = []
         for user in organization_users:
-            handlers.append(self.create_user(userid=user.username, name=user.get_full_name(), email=user.email).rems_id)
+            handlers.append(
+                self.create_user(
+                    userid=user.username, name=user.get_full_name(), email=user.email
+                ).rems_id
+            )
 
         return self.create_workflow(
             key=f"automatic-{metax_organization}",
@@ -534,6 +516,13 @@ class REMSService:
             handlers=["approver-bot", "rejecter-bot", *sorted(handlers)],
             metax_organization=metax_organization,
         )
+
+    def create_dataset_workflow(self, dataset: "Dataset") -> REMSWorkflow:
+        """Get or create REMS workflow for dataset."""
+        # Only automatic approval supported for now
+        return self.create_automatic_workflow(
+            dataset.metadata_owner.organization
+        )  # TODO: Use dataset.metadata_owner.admin_organization once it's ready
 
     @transaction.atomic
     def publish_dataset(
@@ -557,10 +546,7 @@ class REMSService:
                 models.Model.save(dataset, update_fields=["rems_publish_error"])
             logging.info(f"Syncing dataset {dataset.id} ({dataset.persistent_identifier}) to REMS")
 
-            # Only automatic approval supported for now
-            workflow = self.create_automatic_workflow(
-                dataset.metadata_owner.organization
-            )  # TODO: Use dataset.metadata_owner.admin_organization once it's ready
+            workflow = self.create_dataset_workflow(dataset)
 
             licenses = []
             if terms := dataset.access_rights.data_access_terms:
@@ -595,7 +581,7 @@ class REMSService:
                 msg = f"Response status {resp.status_code}:\n {resp.text}\n\n"
 
             msg += "".join(traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__))
-            logger.error(f"Dataset {dataset.id} REMS sync failed: {e}")
+            logger.error(f"Dataset {dataset.id} REMS sync failed: {msg}")
             dataset.rems_publish_error = msg
             models.Model.save(dataset, update_fields=["rems_publish_error"])
             return None
@@ -659,3 +645,40 @@ class REMSService:
             f"/api/entitlements?resource={dataset.id}&user={user.fairdata_username}"
         )
         return resp.json()
+
+    def get_application_data_for_dataset(self, dataset: "Dataset") -> ApplicationData:
+        """Get data needed for submitting a valid application.
+
+        Normally REMS users cannot see the required forms and licenses for a catalogue item
+        directly. This function provides a way to preview what an application would require
+        without actually creating an application.
+
+        Implemented
+        - Licenses from resource
+
+        Not implemented
+        - Licenses from workflow
+        - Form (from workflow, catalogue item)
+        """
+        dataset_key = self.get_dataset_key(dataset)
+        resource = REMSResource.objects.get(key=dataset_key)
+        # TODO: Check resource is enabled?
+        resource_data = self.get_entity_data(resource)
+        licenses_data = resource_data.get("licenses")
+        terms_rems_ids = set(  # REMS identifiers of data_access_terms licenses
+            REMSLicense.objects.filter(
+                rems_id__in=[lic["id"] for lic in licenses_data], is_data_access_terms=True
+            ).values_list("rems_id", flat=True)
+        )
+        licenses = []
+        for lic_data in licenses_data:
+            licenses.append(
+                LicenseData(
+                    id=lic_data["id"],
+                    licensetype=lic_data["licensetype"],
+                    localizations=lic_data["localizations"],
+                    is_data_access_terms=lic_data["id"] in terms_rems_ids,
+                )
+            )
+        forms = []  # not implemented yet
+        return ApplicationData(licenses=licenses, forms=forms)
