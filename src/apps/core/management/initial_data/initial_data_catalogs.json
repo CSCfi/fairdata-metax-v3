@@ -335,7 +335,7 @@
     "dataset_versioning_enabled": true,
     "is_external": false,
     "dataset_groups_create": ["fairdata_users", "ida"],
-    "dataset_groups_admin": ["ida"],
+    "dataset_groups_admin": ["ida", "pas"],
     "allow_remote_resources": false,
     "storage_services": ["ida"],
     "allowed_pid_types": ["URN", "DOI"],
