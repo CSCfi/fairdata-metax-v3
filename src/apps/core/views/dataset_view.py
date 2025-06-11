@@ -68,7 +68,7 @@ from apps.files.models import File
 from apps.files.serializers import DirectorySerializer
 from apps.files.views.directory_view import DirectoryCommonQueryParams, DirectoryViewSet
 from apps.files.views.file_view import BaseFileViewSet, FileCommonFilterset
-from apps.rems.rems_service import REMSService
+from apps.rems.rems_service import ApplicationDataSerializer, REMSService
 
 from .dataset_aggregation import aggregate_queryset
 
@@ -352,7 +352,9 @@ class DatasetFilter(filters.FilterSet):
     def filter_metadata_owner_organization(self, queryset, name, value):
         result = queryset
         for groups in value:
-            union = reduce(operator.or_, (Q(metadata_owner__organization__exact=x) for x in groups))
+            union = reduce(
+                operator.or_, (Q(metadata_owner__organization__exact=x) for x in groups)
+            )
             result = result.filter(union)
         return result.distinct()
 
@@ -869,7 +871,11 @@ class DatasetViewSet(CommonModelViewSet):
         dataset = self.get_object()
         self.check_rems_request(request, dataset)
         service = REMSService()
-        data = service.create_application_for_dataset(request.user, dataset)
+        serializer = ApplicationDataSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = service.create_application_for_dataset(
+            request.user, dataset, accept_licenses=serializer.validated_data["accept_licenses"]
+        )
         return response.Response(data, status=status.HTTP_200_OK)
 
     @action(methods=["get"], detail=True, url_path="rems-entitlements")

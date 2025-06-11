@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import logging
 import traceback
 from typing import TYPE_CHECKING, Iterable, List, Optional
@@ -6,6 +7,7 @@ from dataclasses import dataclass
 from django.conf import settings
 from django.db import models, transaction
 from django.utils import timezone
+from rest_framework import serializers
 
 from apps.common.helpers import single_translation
 from apps.common.locks import lock_rems_publish
@@ -28,6 +30,10 @@ if TYPE_CHECKING:
 
 
 logger = logging.getLogger(__name__)
+
+
+class ApplicationDataSerializer(serializers.Serializer):
+    accept_licenses = serializers.ListField(child=serializers.IntegerField())
 
 
 class LicenseType(models.TextChoices):
@@ -591,7 +597,35 @@ class REMSService:
         if not user.fairdata_username:
             raise ValueError("User should be a Fairdata user")
 
-    def create_application_for_dataset(self, user: MetaxUser, dataset: "Dataset") -> dict:
+    def validate_accepted_licenses(self, application: dict, accept_licenses: List[int]):
+        all_licenses = set([lic["license/id"] for lic in application["application/licenses"]])
+        if missing_licenses := all_licenses - set(accept_licenses):
+            raise ValueError(
+                f"All licenses need to be accepted. Missing: {sorted(missing_licenses)}"
+            )
+
+        if extra_licenses := set(accept_licenses) - all_licenses:
+            raise ValueError(
+                f"The following licenses are not available for the application: {sorted(extra_licenses)}"
+            )
+
+    def accept_licenses(self, application_id: int, licenses: List[int]):
+        """Accept licenses for application.
+
+        Expects the licenses list to contain all licenses required by the application.
+        """
+        application = self.session.get(f"/api/applications/{application_id}").json()
+
+        # Accept licenses
+        self.validate_accepted_licenses(application, licenses)
+
+        data = {"application-id": application_id, "accepted-licenses": licenses}
+        self.session.post("/api/applications/accept-licenses", json=data)
+
+    def create_application_for_dataset(
+        self, user: MetaxUser, dataset: "Dataset", accept_licenses: List[int]
+    ) -> dict:
+        """Create a REMS application for dataset."""
         self.check_user(user)
 
         item = REMSCatalogueItem.objects.filter(key=self.get_dataset_key(dataset)).first()
@@ -607,21 +641,14 @@ class REMSService:
         data = {"catalogue-item-ids": [item.rems_id]}
         with self.session.as_user(user.fairdata_username):
             # Create application, get the created application data
-            _id = self.session.post("/api/applications/create", json=data).json()["application-id"]
-            application = self.session.get(f"/api/applications/{_id}").json()
-
-            # Accept licenses
-            # TODO: Require license ids to be listed explicitly
-            # in call instead of approving all automatically. Also check
-            # that the licenses actually exist in the application because REMS
-            # allows accepting licenses that are not in the application and might not even exist.
-            licenses = [lic["license/id"] for lic in application["application/licenses"]]
-            data = {"application-id": _id, "accepted-licenses": licenses}
-            self.session.post("/api/applications/accept-licenses", json=data)
+            application_id = self.session.post("/api/applications/create", json=data).json()[
+                "application-id"
+            ]
+            self.accept_licenses(application_id=application_id, licenses=accept_licenses)
 
             # On failed submit, may return 200 with success=false e.g.
             # {"success":false,"errors":[{"type":"t.actions.errors/licenses-not-accepted"}]}
-            data = {"application-id": _id}
+            data = {"application-id": application_id}
             resp = self.session.post("/api/applications/submit", json=data)
             return resp.json()
 
@@ -645,6 +672,13 @@ class REMSService:
             f"/api/entitlements?resource={dataset.id}&user={user.fairdata_username}"
         )
         return resp.json()
+
+    def get_dataset_rems_license_ids(self, dataset: "Dataset") -> List[int]:
+        """Get REMS license ids for dataset resource."""
+        dataset_key = self.get_dataset_key(dataset)
+        resource = REMSResource.objects.get(key=dataset_key)
+        resource_data = self.get_entity_data(resource)
+        return [lic["id"] for lic in resource_data["licenses"]]
 
     def get_application_data_for_dataset(self, dataset: "Dataset") -> ApplicationData:
         """Get data needed for submitting a valid application.

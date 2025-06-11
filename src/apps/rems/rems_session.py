@@ -1,3 +1,4 @@
+import json
 import logging
 from contextlib import contextmanager
 
@@ -64,7 +65,12 @@ class REMSSession(requests.Session):
             raise
 
         # Some errors may return a 200 response with success=False
-        data = resp.json()
+        try:
+            data = resp.json()
+        except Exception as e:
+            logging.error(f"Failed to decode JSON from REMS response: {e!r}")
+            raise e
+
         if "success" in data and not data["success"]:
             logging.error(f"REMS error: {resp.text}")
             request_info = f"{resp.request.method} {url}"

@@ -87,7 +87,12 @@ def test_rems_service_publish_dataset_twice(mock_rems):
     ]
     mock_rems.clear_calls()
     REMSService().publish_dataset(dataset, raise_errors=True)
-    assert mock_rems.call_list == ["get/workflow:1", "get/license:1", "get/resource:1", "get/catalogue-item:1"]
+    assert mock_rems.call_list == [
+        "get/workflow:1",
+        "get/license:1",
+        "get/resource:1",
+        "get/catalogue-item:1",
+    ]
     assert mock_rems.entities["catalogue-item"][1]["localizations"]["en"] == {
         "title": dataset.title["en"],
         "infourl": f"https://{settings.ETSIN_URL}/dataset/{dataset.id}",
@@ -261,7 +266,9 @@ def test_rems_service_create_application_with_autoapprove(mock_rems, user):
     )
     service = REMSService()
     service.publish_dataset(dataset)
-    service.create_application_for_dataset(user, dataset)
+    service.create_application_for_dataset(
+        user, dataset, service.get_dataset_rems_license_ids(dataset)
+    )
     applications = service.get_user_applications_for_dataset(user, dataset)
     assert len(applications) == 1
     assert applications[0]["application/state"] == "application.state/approved"
@@ -272,12 +279,30 @@ def test_rems_service_create_application_with_autoapprove(mock_rems, user):
     assert entitlements[0]["resource"] == str(dataset.id)
 
 
-def test_rems_service_create_appication_dataset_not_published_to_rems(mock_rems, user):
+def test_rems_service_create_application_dataset_not_published_to_rems(mock_rems, user):
     dataset = factories.REMSDatasetFactory(access_rights__rems_approval_type="automatic")
     service = REMSService()
     with pytest.raises(ValueError) as ec:
-        service.create_application_for_dataset(user, dataset)
+        service.create_application_for_dataset(user, dataset, [])
     assert str(ec.value) == "Dataset has not been published to REMS."
+
+
+def test_rems_service_create_application_missing_license(mock_rems, user):
+    dataset = factories.REMSDatasetFactory(access_rights__rems_approval_type="automatic")
+    service = REMSService()
+    service.publish_dataset(dataset)
+    with pytest.raises(ValueError) as ec:
+        service.create_application_for_dataset(user, dataset, accept_licenses=[])
+    assert str(ec.value) == "All licenses need to be accepted. Missing: [1]"
+
+
+def test_rems_service_create_application_extra_license(mock_rems, user):
+    dataset = factories.REMSDatasetFactory(access_rights__rems_approval_type="automatic")
+    service = REMSService()
+    service.publish_dataset(dataset)
+    with pytest.raises(ValueError) as ec:
+        service.create_application_for_dataset(user, dataset, accept_licenses=[1, 12345])
+    assert str(ec.value) == "The following licenses are not available for the application: [12345]"
 
 
 def test_rems_service_publish_dataset_custom_license_link(mock_rems):

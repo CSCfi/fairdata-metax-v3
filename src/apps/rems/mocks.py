@@ -346,7 +346,7 @@ class MockREMS:
             if entity_type == EntityType.CATALOGUE_ITEM:
                 if resid := self.get_query_param(request, "resource"):  # External resource id
                     data = [item for item in data if item["resid"] == resid]
-            if not self.get_query_param(request, "archived") == "true":
+            if self.get_query_param(request, "archived") != "true":
                 data = [item for item in data if not item["archived"]]
             return data
 

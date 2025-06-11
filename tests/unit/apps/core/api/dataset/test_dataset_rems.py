@@ -110,13 +110,16 @@ def test_publish_rems_dataset_error(
 
 def test_rems_applications(mock_rems, user_client):
     dataset = factories.REMSDatasetFactory()
-    REMSService().publish_dataset(dataset)
+    service = REMSService()
+    service.publish_dataset(dataset)
 
     # Create application
     res = user_client.post(
-        f"/v3/datasets/{dataset.id}/rems-applications", content_type="application/json"
+        f"/v3/datasets/{dataset.id}/rems-applications",
+        {"accept_licenses": service.get_dataset_rems_license_ids(dataset)},
+        content_type="application/json",
     )
-    assert res.status_code == 200
+    assert res.status_code == 200, res.data
     assert res.json() == {"success": True}
 
     # Check application has been created for current user
@@ -163,7 +166,8 @@ def test_dataset_rems_application_status(settings, mock_rems, admin_client, user
     assert data["allowed_actions"]["rems_status"] == "no_application"
 
     # Application created and submitted with auto-approve workflow
-    service.create_application_for_dataset(user_client._user, dataset)
+    license_ids = [l.id for l in service.get_application_data_for_dataset(dataset).licenses]
+    service.create_application_for_dataset(user_client._user, dataset, accept_licenses=license_ids)
     data = user_client.get(f"/v3/datasets/{dataset.id}?include_allowed_actions=true").json()
     assert data["allowed_actions"]["rems_status"] == "approved"
 
