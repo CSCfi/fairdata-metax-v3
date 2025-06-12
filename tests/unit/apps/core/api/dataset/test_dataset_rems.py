@@ -113,6 +113,12 @@ def test_rems_applications(mock_rems, user_client):
     service = REMSService()
     service.publish_dataset(dataset)
 
+    # User without permission shouldn't be allowed to download data
+    res = user_client.get(
+        f"/v3/datasets/{dataset.id}?include_allowed_actions=true", content_type="application/json"
+    )
+    assert res.data["allowed_actions"]["download"] == False
+
     # Create application
     res = user_client.post(
         f"/v3/datasets/{dataset.id}/rems-applications",
@@ -139,6 +145,12 @@ def test_rems_applications(mock_rems, user_client):
     assert len(res.data) == 1
     assert res.data[0]["resource"] == str(dataset.id)
     assert res.data[0]["user"]["userid"] == user_client._user.fairdata_username
+
+    # Data should be available now that an entitlement exists
+    res = user_client.get(
+        f"/v3/datasets/{dataset.id}?include_allowed_actions=true", content_type="application/json"
+    )
+    assert res.data["allowed_actions"]["download"] == True
 
 
 def test_dataset_rems_application_status(settings, mock_rems, admin_client, user_client):

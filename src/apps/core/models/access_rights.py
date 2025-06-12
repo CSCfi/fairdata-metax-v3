@@ -1,7 +1,9 @@
 import json
 import uuid
 from datetime import date
+from typing import TYPE_CHECKING
 
+from django.conf import settings
 from django.contrib.postgres.fields import HStoreField
 from django.db import models
 from django.utils import timezone
@@ -12,6 +14,10 @@ from apps.common.helpers import datetime_to_date
 from apps.common.history import SnapshotHistoricalRecords
 from apps.common.models import AbstractBaseModel
 from apps.core.models.concepts import AccessType, DatasetLicense, RestrictionGrounds
+from apps.rems.rems_service import REMSService
+
+if TYPE_CHECKING:
+    from apps.core.models import Dataset
 
 
 class REMSApprovalType(models.TextChoices):
@@ -103,7 +109,17 @@ class AccessRights(AbstractBaseModel):
             return False  # Restrict indefinitely
         return date >= self.available
 
-    def is_data_available(self, request, dataset):
+    def _user_has_rems_entitlement(self, user, dataset: "Dataset") -> bool:
+        """Check if user has an active REMS entitlement to the dataset."""
+        if not settings.REMS_ENABLED:
+            return False
+        if not dataset.is_rems_dataset:
+            return False
+        if not getattr(user, "fairdata_username", None):
+            return False
+        return bool(REMSService().get_user_entitlements_for_dataset(user, dataset))
+
+    def is_data_available(self, request, dataset: "Dataset"):
         """Check if dataset data should be available to request user.
 
         Returns:
@@ -123,9 +139,10 @@ class AccessRights(AbstractBaseModel):
             return request.user.is_authenticated
         elif access_type == AccessTypeChoices.EMBARGO:
             return self._embargo_passed(datetime_to_date(timezone.now()))
-        elif access_type == AccessTypeChoices.PERMIT:
-            return False  # TODO: REMS
-        return False  # access type is "restricted" or missing
+        elif access_type in {AccessTypeChoices.PERMIT, AccessTypeChoices.RESTRICTED}:
+            # Access controlled by REMS. User needs to have at least one active entitlement
+            return self._user_has_rems_entitlement(request.user, dataset)
+        return False  # unknown or missing access type
 
     def save(self, *args, **kwargs):
         if self.rems_approval_type == REMSApprovalType.MANUAL:

@@ -594,7 +594,7 @@ class REMSService:
 
     def check_user(self, user: MetaxUser):
         """Check that user is a valid user for REMS."""
-        if not user.fairdata_username:
+        if not getattr(user, 'fairdata_username', None):
             raise ValueError("User should be a Fairdata user")
 
     def validate_accepted_licenses(self, application: dict, accept_licenses: List[int]):
@@ -667,6 +667,7 @@ class REMSService:
         return applications
 
     def get_user_entitlements_for_dataset(self, user: MetaxUser, dataset: "Dataset") -> List[dict]:
+        """Get active REMS entitlements to a dataset for user."""
         self.check_user(user)
         resp = self.session.get(
             f"/api/entitlements?resource={dataset.id}&user={user.fairdata_username}"

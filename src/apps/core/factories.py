@@ -332,6 +332,7 @@ class DataCatalogFactory(factory.django.DjangoModelFactory):
     storage_services = ["ida", "pas", "test"]
     publishing_channels = ["etsin", "ttv"]
     rems_enabled = True
+    allow_download = True
 
     @factory.post_generation
     def languages(self, create, extracted, **kwargs):
