@@ -1,3 +1,4 @@
+import copy
 import logging
 import re
 from dataclasses import dataclass
@@ -346,8 +347,12 @@ class MockREMS:
             if entity_type == EntityType.CATALOGUE_ITEM:
                 if resid := self.get_query_param(request, "resource"):  # External resource id
                     data = [item for item in data if item["resid"] == resid]
+            elif entity_type == EntityType.APPLICATION:
+                data = [self.filter_application_list_fields(item) for item in data]
+
             if self.get_query_param(request, "archived") != "true":
                 data = [item for item in data if not item["archived"]]
+
             return data
 
         return _handler
@@ -609,10 +614,22 @@ class MockREMS:
         }
         return entitlements[entitlement_id]
 
+    def filter_application_list_fields(self, application):
+        """Application lists don't include forms or licenses."""
+        return {
+            field: value
+            for field, value in application.items()
+            if field not in {"application/forms", "application/licenses"}
+        }
+
     def handle_list_my_applications(self, request, context):
         userid = request.headers["X-REMS-USER-ID"]
-        applications = self.entities[EntityType.APPLICATION]
-        return [a for a in applications.values() if a["application/applicant"]["userid"] == userid]
+        applications = self.entities[EntityType.APPLICATION].values()
+        return [
+            self.filter_application_list_fields(a)
+            for a in applications
+            if a["application/applicant"]["userid"] == userid
+        ]
 
     def handle_list_entitlements(self, request, context):
         userid = request.headers["X-REMS-USER-ID"]

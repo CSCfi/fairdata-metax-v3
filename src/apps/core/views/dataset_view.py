@@ -68,7 +68,8 @@ from apps.files.models import File
 from apps.files.serializers import DirectorySerializer
 from apps.files.views.directory_view import DirectoryCommonQueryParams, DirectoryViewSet
 from apps.files.views.file_view import BaseFileViewSet, FileCommonFilterset
-from apps.rems.rems_service import ApplicationDataSerializer, REMSService
+from apps.rems.serializers import ApplicationBaseSerializer, ApplicationDataSerializer
+from apps.rems.rems_service import REMSService
 
 from .dataset_aggregation import aggregate_queryset
 
@@ -878,6 +879,19 @@ class DatasetViewSet(CommonModelViewSet):
         )
         return response.Response(data, status=status.HTTP_200_OK)
 
+    @action(methods=["get"], detail=True, url_path="rems-applications/(?P<application_id>[0-9]+)")
+    def get_rems_application(self, request, pk: str, application_id: int):
+        """Get dataset REMS application by id for logged in user."""
+        dataset = self.get_object()
+        self.check_rems_request(request, dataset)
+        service = REMSService()
+        application = service.get_user_application_for_dataset(
+            request.user, dataset, application_id=application_id
+        )
+        if not application:
+            raise Http404("Application not found for dataset")
+        return response.Response(application, status=status.HTTP_200_OK)
+
     @action(methods=["get"], detail=True, url_path="rems-entitlements")
     def list_rems_entitlements(self, request, pk=None):
         """List dataset REMS entitlements for logged in user."""
@@ -887,13 +901,15 @@ class DatasetViewSet(CommonModelViewSet):
         data = service.get_user_entitlements_for_dataset(request.user, dataset)
         return response.Response(data, status=status.HTTP_200_OK)
 
-    @action(methods=["get"], detail=True, url_path="rems-application-data")
-    def get_rems_application_data(self, request, pk=None):
+    @swagger_auto_schema(responses={200: ApplicationBaseSerializer()})
+    @action(methods=["get"], detail=True, url_path="rems-application-base")
+    def get_rems_application_base(self, request, pk=None):
         """Get the licenses and forms needed by REMS applications for the dataset."""
         dataset = self.get_object()
         self.check_rems_request(request, dataset)
         service = REMSService()
-        data = service.get_application_data_for_dataset(dataset)
+        application_base = service.get_application_base_for_dataset(dataset)
+        data = ApplicationBaseSerializer(instance=application_base).data
         return response.Response(data, status=status.HTTP_200_OK)
 
 

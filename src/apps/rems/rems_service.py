@@ -2,13 +2,14 @@ from dataclasses import dataclass
 import logging
 import traceback
 from typing import TYPE_CHECKING, Iterable, List, Optional
-from dataclasses import dataclass
+
 
 from django.conf import settings
 from django.db import models, transaction
 from django.utils import timezone
 from rest_framework import serializers
 
+from apps.rems.types import ApplicationBase, ApplicationLicenseData, LicenseType
 from apps.common.helpers import single_translation
 from apps.common.locks import lock_rems_publish
 from apps.rems.models import (
@@ -32,40 +33,10 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class ApplicationDataSerializer(serializers.Serializer):
-    accept_licenses = serializers.ListField(child=serializers.IntegerField())
-
-
-class LicenseType(models.TextChoices):
-    link = "link"  # textcontent is an URL pointing to the license
-    text = "text"  # textcontent is an license text
-    attachment = "attachment"  # license has file attachment (not implemented in Metaxx)
-
-
 class REMSOperation(models.TextChoices):
     create = "create"  # create new entity (archive old if any)
     edit = "edit"  # update existing entity (allowed only for some fields)
     keep = "keep"  # use old entity as-is
-
-
-@dataclass
-class LicenseData:
-    """License data for end users."""
-
-    id: int
-    licensetype: LicenseType
-    localizations: dict
-    is_data_access_terms: bool
-    # Organization is omitted here since it's the Metax REMS manager organization, and
-    # not relevant for users.
-
-
-@dataclass
-class ApplicationData:
-    """Data needed for submitting an application for end Fusers."""
-
-    licenses: List[LicenseData]
-    forms: List[dict]
 
 
 class REMSService:
@@ -650,7 +621,9 @@ class REMSService:
             # {"success":false,"errors":[{"type":"t.actions.errors/licenses-not-accepted"}]}
             data = {"application-id": application_id}
             resp = self.session.post("/api/applications/submit", json=data)
-            return resp.json()
+            data = resp.json()
+            data["application-id"] = application_id
+            return data
 
     def get_user_applications_for_dataset(self, user: MetaxUser, dataset: "Dataset") -> List[dict]:
         self.check_user(user)
@@ -665,6 +638,32 @@ class REMSService:
             if len(resources) == 1 and resources[0]["resource/ext-id"] == str(dataset.id):
                 applications.append(application)
         return applications
+
+    def get_user_application_for_dataset(
+        self, user: MetaxUser, dataset: "Dataset", application_id: int
+    ) -> Optional[dict]:
+        self.check_user(user)
+
+        with self.session.as_user(user.fairdata_username):
+            resp = self.session.get(f"/api/applications/{application_id}")
+
+        application = resp.json()
+        resources = application.get("application/resources", [])
+        if len(resources) != 1 or resources[0]["resource/ext-id"] != str(dataset.id):
+            return None # Support only applications where the dataset is the only resource
+
+        # Add is_data_access_terms to application license data
+        terms_rems_ids = set(  # REMS identifiers of data_access_terms licenses
+            REMSLicense.objects.filter(
+                rems_id__in=[
+                    lic["license/id"] for lic in application.get("application/licenses", [])
+                ],
+                is_data_access_terms=True,
+            ).values_list("rems_id", flat=True)
+        )
+        for license in application["application/licenses"]:
+            license["is_data_access_terms"] = license["license/id"] in terms_rems_ids
+        return application
 
     def get_user_entitlements_for_dataset(self, user: MetaxUser, dataset: "Dataset") -> List[dict]:
         """Get active REMS entitlements to a dataset for user."""
@@ -681,7 +680,7 @@ class REMSService:
         resource_data = self.get_entity_data(resource)
         return [lic["id"] for lic in resource_data["licenses"]]
 
-    def get_application_data_for_dataset(self, dataset: "Dataset") -> ApplicationData:
+    def get_application_base_for_dataset(self, dataset: "Dataset") -> ApplicationBase:
         """Get data needed for submitting a valid application.
 
         Normally REMS users cannot see the required forms and licenses for a catalogue item
@@ -708,12 +707,9 @@ class REMSService:
         licenses = []
         for lic_data in licenses_data:
             licenses.append(
-                LicenseData(
-                    id=lic_data["id"],
-                    licensetype=lic_data["licensetype"],
-                    localizations=lic_data["localizations"],
-                    is_data_access_terms=lic_data["id"] in terms_rems_ids,
+                ApplicationLicenseData.from_rems_license_data(
+                    lic_data, is_data_access_terms=lic_data["id"] in terms_rems_ids
                 )
             )
         forms = []  # not implemented yet
-        return ApplicationData(licenses=licenses, forms=forms)
+        return ApplicationBase(licenses=licenses, forms=forms)

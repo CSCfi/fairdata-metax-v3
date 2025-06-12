@@ -901,7 +901,7 @@ def user_client(user):
 
 
 @pytest.fixture
-def user_client_2(user2):
+def user2_client(user2):
     client = Client()
     client.force_login(user2)
     client._user = user2

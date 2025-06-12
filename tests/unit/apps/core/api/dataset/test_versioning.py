@@ -193,7 +193,7 @@ def test_creating_new_version_with_existing_version_draft(
 
 
 def test_version_draft_permissions(
-    admin_client, user_client, user_client_2, dataset_a_json, data_catalog, reference_data
+    admin_client, user_client, user2_client, dataset_a_json, data_catalog, reference_data
 ):
     # user1 creates a dataset
     res1 = user_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
@@ -213,7 +213,7 @@ def test_version_draft_permissions(
     assert len(res.data["dataset_versions"]) == 2
 
     # ensure user2 cannot see the second version draft in dataset_versions
-    res = user_client_2.get(f"/v3/datasets/{ds1_id}")
+    res = user2_client.get(f"/v3/datasets/{ds1_id}")
     assert res.status_code == 200
     assert len(res.data["dataset_versions"]) == 1
 
@@ -223,7 +223,7 @@ def test_version_draft_permissions(
     assert res.data["version"] == 2
 
     # ensure user2 can see it now
-    res = user_client_2.get(f"/v3/datasets/{ds1_id}")
+    res = user2_client.get(f"/v3/datasets/{ds1_id}")
     assert res.status_code == 200
     assert len(res.data["dataset_versions"]) == 2
 
@@ -240,7 +240,7 @@ def test_version_draft_permissions(
     assert "next_draft" in res.data["dataset_versions"][1].keys()
 
     # ensure user2 cannot see this information
-    res = user_client_2.get(f"/v3/datasets/{ds1_id}?include_nulls=true")
+    res = user2_client.get(f"/v3/datasets/{ds1_id}?include_nulls=true")
     assert res.status_code == 200
     assert len(res.data["dataset_versions"]) == 2
     assert "next_draft" not in res.data["dataset_versions"][1].keys()
@@ -256,7 +256,7 @@ def test_version_draft_permissions(
     # ensure correct amount of versions is shown to both users (2 published, 2 drafts)
     assert len(res4.data["dataset_versions"]) == 4
 
-    res = user_client_2.get(f"/v3/datasets/{ds1_id}")
+    res = user2_client.get(f"/v3/datasets/{ds1_id}")
     assert res.status_code == 200
     assert len(res.data["dataset_versions"]) == 2
 

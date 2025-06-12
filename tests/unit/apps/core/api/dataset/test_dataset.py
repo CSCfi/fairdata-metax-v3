@@ -811,7 +811,7 @@ def test_remove_rights(admin_client, dataset_a_json, data_catalog, reference_dat
 
 
 def test_omit_owner_user_when_no_edit_access(
-    user_client, user_client_2, dataset_a_json, data_catalog, reference_data
+    user_client, user2_client, dataset_a_json, data_catalog, reference_data
 ):
     """Dataset metadata_owner.user should be hidden when user does not have edit access."""
     res = user_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
@@ -822,7 +822,7 @@ def test_omit_owner_user_when_no_edit_access(
     assert res.data["metadata_owner"]["user"] == "test_user"
 
     # Request dataset as another user
-    res = user_client_2.get(f"/v3/datasets/{_id}", content_type="application/json")
+    res = user2_client.get(f"/v3/datasets/{_id}", content_type="application/json")
     assert "user" not in res.data["metadata_owner"]
 
 

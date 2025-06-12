@@ -126,16 +126,15 @@ def test_rems_applications(mock_rems, user_client):
         content_type="application/json",
     )
     assert res.status_code == 200, res.data
-    assert res.json() == {"success": True}
+    assert res.json() == {"success": True, "application-id": 1}
 
     # Check application has been created for current user
     res = user_client.get(
-        f"/v3/datasets/{dataset.id}/rems-applications", content_type="application/json"
+        f"/v3/datasets/{dataset.id}/rems-applications/1", content_type="application/json"
     )
     assert res.status_code == 200
-    assert len(res.data) == 1
-    assert res.data[0]["application/applicant"]["userid"] == user_client._user.fairdata_username
-    assert res.data[0]["application/resources"][0]["resource/ext-id"] == str(dataset.id)
+    assert res.data["application/applicant"]["userid"] == user_client._user.fairdata_username
+    assert res.data["application/resources"][0]["resource/ext-id"] == str(dataset.id)
 
     # Auto-approve is enabled, there should be an entitlement
     res = user_client.get(
@@ -178,7 +177,7 @@ def test_dataset_rems_application_status(settings, mock_rems, admin_client, user
     assert data["allowed_actions"]["rems_status"] == "no_application"
 
     # Application created and submitted with auto-approve workflow
-    license_ids = [l.id for l in service.get_application_data_for_dataset(dataset).licenses]
+    license_ids = [l.id for l in service.get_application_base_for_dataset(dataset).licenses]
     service.create_application_for_dataset(user_client._user, dataset, accept_licenses=license_ids)
     data = user_client.get(f"/v3/datasets/{dataset.id}?include_allowed_actions=true").json()
     assert data["allowed_actions"]["rems_status"] == "approved"
@@ -189,7 +188,7 @@ def test_dataset_rems_application_status(settings, mock_rems, admin_client, user
     assert data["allowed_actions"]["rems_status"] == "no_application"
 
 
-def test_dataset_rems_application_data(
+def test_dataset_rems_application_base(
     settings, mock_rems, admin_client, user_client, license_reference_data
 ):
     dataset = factories.REMSDatasetFactory(
@@ -207,54 +206,73 @@ def test_dataset_rems_application_data(
     service = REMSService()
     service.publish_dataset(dataset)
 
-    data = user_client.get(f"/v3/datasets/{dataset.id}/rems-application-data").json()
+    data = user_client.get(f"/v3/datasets/{dataset.id}/rems-application-base").json()
     assert data == {
-        "licenses": [
+        "application/licenses": [
             {
-                "id": 1,
-                "licensetype": "text",
-                "localizations": {
-                    "en": {
-                        "textcontent": "Terms here",
-                        "title": "Terms for data access",
-                    },
-                    "fi": {
-                        "textcontent": "Ehdot tässä",
-                        "title": "Käyttöluvan ehdot",
-                    },
-                },
                 "is_data_access_terms": True,
+                "license/id": 1,
+                "license/link": None,
+                "license/text": {"en": "Terms here", "fi": "Ehdot tässä"},
+                "license/title": {"en": "Terms for data access", "fi": "Käyttöluvan ehdot"},
+                "license/type": "text",
             },
             {
-                "id": 2,
-                "licensetype": "link",
-                "localizations": {
-                    "en": {
-                        "textcontent": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0",
-                        "title": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
-                    },
-                    "fi": {
-                        "textcontent": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0",
-                        "title": "Creative Commons Nimeä 4.0 Kansainvälinen (CC BY 4.0)",
-                    },
-                },
                 "is_data_access_terms": False,
+                "license/id": 2,
+                "license/link": {
+                    "en": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0",
+                    "fi": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0",
+                },
+                "license/text": None,
+                "license/title": {
+                    "en": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+                    "fi": "Creative Commons Nimeä 4.0 Kansainvälinen (CC BY 4.0)",
+                },
+                "license/type": "link",
             },
             {
-                "id": 3,
-                "licensetype": "link",
-                "localizations": {
-                    "en": {
-                        "textcontent": "https://license.url",
-                        "title": "License name",
-                    },
-                    "fi": {
-                        "textcontent": "https://license.url",
-                        "title": "Lisenssin nimi",
-                    },
-                },
                 "is_data_access_terms": False,
+                "license/id": 3,
+                "license/link": {"en": "https://license.url", "fi": "https://license.url"},
+                "license/text": None,
+                "license/title": {"en": "License name", "fi": "Lisenssin nimi"},
+                "license/type": "link",
             },
-        ],
-        "forms": [],
+        ]
     }
+
+
+def test_list_rems_applications(mock_rems, user_client, user2_client):
+    dataset = factories.REMSDatasetFactory()
+    service = REMSService()
+    service.publish_dataset(dataset)
+
+    # Create applications for current user
+    for idx in [1, 2, 3]:
+        res = user_client.post(
+            f"/v3/datasets/{dataset.id}/rems-applications",
+            {"accept_licenses": service.get_dataset_rems_license_ids(dataset)},
+            content_type="application/json",
+        )
+        assert res.status_code == 200, res.data
+        assert res.json() == {"success": True, "application-id": idx}
+
+    # Create application for user2
+    res = user2_client.post(
+        f"/v3/datasets/{dataset.id}/rems-applications",
+        {"accept_licenses": service.get_dataset_rems_license_ids(dataset)},
+        content_type="application/json",
+    )
+    assert res.status_code == 200, res.data
+    assert res.json() == {"success": True, "application-id": 4}
+
+    # The rems-applications endpoint should only list applications for current user
+    res = user_client.get(
+        f"/v3/datasets/{dataset.id}/rems-applications", content_type="application/json"
+    )
+    assert res.status_code == 200
+    assert len(res.data) == 3
+    assert res.data[0]["application/id"] == 1
+    assert res.data[1]["application/id"] == 2
+    assert res.data[2]["application/id"] == 3
