@@ -74,3 +74,4 @@ PID_MS_CLIENT_INSTANCE = "apps.core.services.pid_ms_client._DummyPIDMSClient"
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 ALLOW_LOAD_TEST_DATA = True
+ALLOW_LOAD_PAS_TEST_DATA = False

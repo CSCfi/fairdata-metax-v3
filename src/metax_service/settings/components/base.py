@@ -459,3 +459,6 @@ METRICS_REPORT_URL = env.str("METRICS_REPORT_URL", None)
 
 # Allow running load_test_data
 ALLOW_LOAD_TEST_DATA = env.bool("ALLOW_LOAD_TEST_DATA", False)
+
+# Allow running load_pas_test_data
+ALLOW_LOAD_PAS_TEST_DATA = env.bool("ALLOW_LOAD_PAS_TEST_DATA", False)

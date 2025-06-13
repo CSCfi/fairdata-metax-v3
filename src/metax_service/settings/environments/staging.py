@@ -5,3 +5,4 @@ DEBUG = True
 PID_MS_CLIENT_INSTANCE = "apps.core.services.pid_ms_client._PIDMSClient"
 
 ALLOW_LOAD_TEST_DATA = True
+ALLOW_LOAD_PAS_TEST_DATA = False

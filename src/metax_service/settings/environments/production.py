@@ -23,3 +23,4 @@ ENABLE_SILK_PROFILER = False
 PID_MS_CLIENT_INSTANCE = "apps.core.services.pid_ms_client._PIDMSClient"
 
 ALLOW_LOAD_TEST_DATA = False
+ALLOW_LOAD_PAS_TEST_DATA = False
