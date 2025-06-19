@@ -145,10 +145,18 @@ class DirectoryViewSet(QueryParamsMixin, AccessViewSetMixin, viewsets.ViewSet):
         )
         exclude_args = dict()
         if dataset := params["dataset"]:
-            if params["exclude_dataset"]:
-                exclude_args["file_sets__dataset"] = dataset
-            elif not params["include_all"]:
-                filter_args["file_sets__dataset"] = dataset
+            from apps.core.models import FileSet
+
+            if fileset := FileSet.objects.filter(dataset=dataset).first():
+                if params["exclude_dataset"]:
+                    exclude_args["file_sets"] = fileset
+                elif not params["include_all"]:
+                    filter_args["file_sets"] = fileset
+            else:
+                if not params["exclude_dataset"] and not params["include_all"]:
+                    # Dataset has no fileset so cannot have any files
+                    return File.available_objects.none()
+
         filter_args = {key: value for (key, value) in filter_args.items() if value is not None}
 
         return File.available_objects.filter(**filter_args).exclude(**exclude_args)
