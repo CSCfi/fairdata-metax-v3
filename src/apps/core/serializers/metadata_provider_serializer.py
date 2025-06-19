@@ -42,7 +42,14 @@ class MetadataProviderModelSerializer(AbstractDatasetModelSerializer):
 
     class Meta:
         model = MetadataProvider
-        fields = ("id", "user", "organization")
+        fields = ("id", "user", "organization", "admin_organization")
+
+    def to_internal_value(self, data):
+        """Remove admin_organization from validated_data if it's not in input data."""
+        internal_value = super().to_internal_value(data)
+        if "admin_organization" not in data:
+            internal_value.pop("admin_organization", None)
+        return internal_value
 
     def is_custom_value_allowed(self):
         """End-users should not be allowed to use custom values."""
@@ -67,12 +74,22 @@ class MetadataProviderModelSerializer(AbstractDatasetModelSerializer):
             ctx_data = {
                 "user": self.instance.user.username,
                 "organization": self.instance.organization,
+                "admin_organization": (
+                    self.instance.admin_organization
+                    if getattr(self.instance, "admin_organization")
+                    else self.instance.organization
+                ),
             }
         else:
             user = self.context["request"].user
             ctx_data = {
                 "user": user.username,
                 "organization": user.organization or user.username,
+                "admin_organization": (
+                    user.admin_organization
+                    if getattr(user, "admin_organization", None)
+                    else user.organization
+                ),
             }
 
         if not data:
@@ -97,10 +114,28 @@ class MetadataProviderModelSerializer(AbstractDatasetModelSerializer):
         """Reuse existing metadata provider when possible."""
         user, created = get_user_model().objects.get_or_create(username=validated_data["user"])
         organization = validated_data["organization"]
-        provider = MetadataProvider.objects.filter(user=user, organization=organization).first()
+
+        if "admin_organization" in validated_data:
+            admin_organization = validated_data["admin_organization"]
+        elif self.instance:
+            admin_organization = self.instance.admin_organization
+        else:
+            admin_organization = organization
+
+        if admin_organization:
+            provider = MetadataProvider.objects.filter(
+                user=user, organization=organization, admin_organization=admin_organization
+            ).first()
+        else:
+            provider = MetadataProvider.objects.filter(
+                user=user, organization=organization, admin_organization__isnull=True
+            ).first()
         if provider:
             return provider
-        return MetadataProvider.objects.create(user=user, organization=organization)
+
+        return MetadataProvider.objects.create(
+            user=user, organization=organization, admin_organization=admin_organization
+        )
 
     def create(self, validated_data):
         return self.get_or_create_provider(validated_data)

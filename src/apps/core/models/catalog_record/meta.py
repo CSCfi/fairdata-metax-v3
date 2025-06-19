@@ -27,6 +27,7 @@ class MetadataProvider(AbstractBaseModel):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     organization = models.CharField(max_length=512)
+    admin_organization = models.CharField(max_length=512, null=True, blank=True)
 
     def __str__(self):
         return self.user.username or self.organization

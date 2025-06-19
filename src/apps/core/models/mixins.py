@@ -572,6 +572,11 @@ class V2DatasetMixin:
             else:
                 doc["metadata_provider_org"] = "None"
                 doc["metadata_owner_org"] = "None"
+            if (
+                self.metadata_owner.admin_organization
+                and self.metadata_owner.admin_organization == self.metadata_owner.organization
+            ):
+                logger.warning("admin_organization is not used in V2. ")
 
         if self.data_catalog:
             doc["data_catalog"] = {"identifier": self.data_catalog.id}

@@ -729,7 +729,7 @@ class LegacyDatasetConverter:
         org = self.dataset_json.get("metadata_provider_org") or self.dataset_json.get(
             "metadata_owner_org"
         )
-        return {"user": user, "organization": org}
+        return {"user": user, "organization": org, "admin_organization": org}
 
     # Function from Metax V2
     def is_metax_generated_urn_identifier(self, identifier: str) -> bool:

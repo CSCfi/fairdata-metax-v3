@@ -902,3 +902,79 @@ def test_dataset_license_update(admin_client, dataset_a_json):
     assert new_lic2.description == lic3_json["description"]
     lic3.refresh_from_db()
     assert lic3.removed
+
+
+def test_metadata_owner_admin_organization_default_behavior(
+    admin_client, dataset_a_json, data_catalog, reference_data
+):
+    """Test the default behavior of admin_organization when not explicitly provided."""
+
+    # Test case 1: No admin_organization provided, no existing instance
+    # Should use organization as admin_organization
+    dataset_a_json["metadata_owner"] = {
+        "user": "test_user",
+        "organization": "test_org",
+    }
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    assert res.data["metadata_owner"]["admin_organization"] == "test_org"
+    dataset_id = res.data["id"]
+
+    # Test case 2: No admin_organization in update, existing instance has none
+    # Should keep previous organization as admin_organization
+    new_owner = {
+        "user": "test_user",
+        "organization": "new_org",
+    }
+    res = admin_client.patch(
+        f"/v3/datasets/{dataset_id}",
+        {"metadata_owner": new_owner},
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert res.data["metadata_owner"]["admin_organization"] == "test_org"
+
+    # Test case 3: admin_organization in update, existing instance has one
+    # Should change admin_organization
+    new_owner_with_admin = {
+        "user": "test_user",
+        "organization": "org2",
+        "admin_organization": "admin_org",
+    }
+    res = admin_client.patch(
+        f"/v3/datasets/{dataset_id}",
+        {"metadata_owner": new_owner_with_admin},
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert res.data["metadata_owner"]["admin_organization"] == "admin_org"
+
+    # Now update without specifying admin_organization
+    # Should keep previous admin_organization
+    new_owner_without_admin = {
+        "user": "test_user",
+        "organization": "org3",
+    }
+    res = admin_client.patch(
+        f"/v3/datasets/{dataset_id}",
+        {"metadata_owner": new_owner_without_admin},
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert res.data["metadata_owner"]["admin_organization"] == "admin_org"
+
+    # Test case 4: admin_organization is set to null
+    # Should set admin_organization to null
+    new_owner_with_null_admin = {
+        "user": "test_user",
+        "organization": "org4",
+        "admin_organization": None,
+    }
+    res = admin_client.patch(
+        f"/v3/datasets/{dataset_id}?include_nulls=true",
+        {"metadata_owner": new_owner_with_null_admin},
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert res.data["metadata_owner"]["admin_organization"] is None
+
