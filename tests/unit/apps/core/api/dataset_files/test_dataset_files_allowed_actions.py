@@ -312,6 +312,27 @@ def test_merge_file_addition_to_closed_dataset(do_action, admin_client, deep_fil
     assert res.json()["fileset"] == "Merging changes would add files, which is not allowed."
 
 
+def test_merge_file_addition_to_empty_dataset(do_action, admin_client, deep_file_tree):
+    res = do_action(state="draft_of", has_files=False)
+    assert res.status_code == 200
+
+    res = admin_client.patch(
+        f"/v3/datasets/{res.data['id']}",
+        {
+            "fileset": {**deep_file_tree["params"], "directory_actions": [{"pathname": "/"}]},
+        },
+        content_type="application/json",
+    )
+    assert res.status_code == 200, res.data
+
+    # Adding files by merging draft is allowed
+    # when the published dataset does not have any files yet
+    res = admin_client.post(
+        f"/v3/datasets/{res.data['id']}/publish", content_type="application/json"
+    )
+    assert res.status_code == 200, res.data
+
+
 def test_merge_file_removal(do_action, admin_client, deep_file_tree):
     res = do_action(
         state="draft_of",

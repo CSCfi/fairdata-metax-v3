@@ -666,6 +666,9 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         dft = self.next_draft
         no_files = File.objects.none()
         self_files = (getattr(self, "file_set", None) and self.file_set.files.all()) or no_files
+        if not self_files.exists():
+            return # Published dataset has no files yet, so adding files is allowed
+
         dft_files = (getattr(dft, "file_set", None) and dft.file_set.files.all()) or no_files
         files_removed = self_files.difference(dft_files).exists()
         if files_removed:
