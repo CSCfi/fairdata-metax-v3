@@ -69,7 +69,7 @@ class FileSetDirectoryMetadata(models.Model):
     def to_legacy(self):
         path = self.pathname
         if path != "/" and path.endswith("/"):
-            path = path[:-1] # Remove trailing slash for V2
+            path = path[:-1]  # Remove trailing slash for V2
         return omit_empty(
             {
                 "directory_path": path,

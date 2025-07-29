@@ -112,7 +112,9 @@ class File(SystemCreatorBaseModel, CustomSoftDeletableModel):
     ):
         if not storage:
             storage = FileStorage.get_or_create_from_legacy(legacy_file)
-        return File.all_objects.create(**cls.values_from_legacy(legacy_file, storage, characteristics))
+        return File.all_objects.create(
+            **cls.values_from_legacy(legacy_file, storage, characteristics)
+        )
 
     def to_legacy_sync(self):
         """Convert file to format compatible with legacy /files/sync_from_v3"""

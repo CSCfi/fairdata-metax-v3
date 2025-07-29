@@ -26,6 +26,7 @@ from apps.common.serializers.fields import (
     NoopField,
     handle_private_emails,
 )
+from apps.core.models.access_rights import AccessTypeChoices
 from apps.core.helpers import clean_pid
 from apps.core.models import DataCatalog, Dataset
 from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
@@ -538,6 +539,25 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
             new_pid=validated_data.get("persistent_identifier"),
             new_data_catalog=validated_data.get("data_catalog"),
         )
+
+        if validated_data.get("access_rights", False):
+            is_ida_catalog = (
+                validated_data.get("data_catalog")
+                and ("ida" in validated_data.get("data_catalog").storage_services
+                or "pas" in validated_data.get("data_catalog").storage_services)
+            )
+            is_open_access = (
+                validated_data["access_rights"]["access_type"].url == AccessTypeChoices.OPEN
+            )
+
+            if (
+                is_ida_catalog
+                and validated_data.get("access_rights", {}).get("show_data_metadata") is None
+            ):
+                if not is_open_access:
+                    validated_data["access_rights"]["show_data_metadata"] = False
+                else:
+                    validated_data["access_rights"]["show_data_metadata"] = True
 
         # Always initialize dataset as draft. This allows assigning
         # reverse and many-to-many relations to the newly created

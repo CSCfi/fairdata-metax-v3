@@ -81,7 +81,9 @@ class _PIDMSClient:
         try:
             response = requests.post(url, json=payload, headers=self.headers)
             self._validate_response_status(response)
-            self._validate_pid(dataset_id, prefix=settings.PID_MS_DOI_PREFIX, identifier=response.text)
+            self._validate_pid(
+                dataset_id, prefix=settings.PID_MS_DOI_PREFIX, identifier=response.text
+            )
             _logger.info(f"Created DOI for dataset {dataset_id}: {response.text}")
             return response.text
         except Exception as e:
