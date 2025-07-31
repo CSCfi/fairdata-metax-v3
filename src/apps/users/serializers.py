@@ -61,6 +61,7 @@ class AuthenticatedUserInfoSerializer(UserInfoSerializer):
         fields = (
             "username",
             "organization",
+            "admin_organizations",
             "csc_projects",
             "groups",
             "metax_csrf_token",
