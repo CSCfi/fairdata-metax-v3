@@ -28,8 +28,8 @@ def test_get_wkt_data_point(wkt, is_ok):
     "wkt, is_ok",
     [
         ["POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))", True],
-        ["POLYGON ((30 10, 40 40, 20 40, 1234 20, 30 10))", False], # Invalid longitude
-        ["POLYGON ((30 10, 40 40, 20 40, 10 20))", False], # Loop not closed
+        ["POLYGON ((30 10, 40 40, 20 40, 1234 20, 30 10))", False],  # Invalid longitude
+        ["POLYGON ((30 10, 40 40, 20 40, 10 20))", False],  # Loop not closed
     ],
 )
 def test_get_wkt_data_polygon(wkt, is_ok):

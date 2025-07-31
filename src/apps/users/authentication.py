@@ -153,7 +153,9 @@ class SSOAuthentication(authentication.SessionAuthentication):
 
             csc_projects = sso_session.get("services", {}).get("IDA", {}).get("projects", [])
             user.csc_projects = csc_projects
-            user.admin_organizations = sso_session.get("services", {}).get("QVAIN", {}).get("admin_organizations", [])
+            user.admin_organizations = (
+                sso_session.get("services", {}).get("QVAIN", {}).get("admin_organizations", [])
+            )
 
             user.synced = initiated
             user.save()

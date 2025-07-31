@@ -565,7 +565,7 @@ class REMSService:
 
     def check_user(self, user: MetaxUser):
         """Check that user is a valid user for REMS."""
-        if not getattr(user, 'fairdata_username', None):
+        if not getattr(user, "fairdata_username", None):
             raise ValueError("User should be a Fairdata user")
 
     def validate_accepted_licenses(self, application: dict, accept_licenses: List[int]):
@@ -650,7 +650,7 @@ class REMSService:
         application = resp.json()
         resources = application.get("application/resources", [])
         if len(resources) != 1 or resources[0]["resource/ext-id"] != str(dataset.id):
-            return None # Support only applications where the dataset is the only resource
+            return None  # Support only applications where the dataset is the only resource
 
         # Add is_data_access_terms to application license data
         terms_rems_ids = set(  # REMS identifiers of data_access_terms licenses

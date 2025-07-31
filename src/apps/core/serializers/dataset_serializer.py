@@ -541,23 +541,22 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
         )
 
         if validated_data.get("access_rights", False):
-            is_ida_catalog = (
-                validated_data.get("data_catalog")
-                and ("ida" in validated_data.get("data_catalog").storage_services
-                or "pas" in validated_data.get("data_catalog").storage_services)
+            is_in_internal_storage_service = validated_data.get("data_catalog") and (
+                "ida" in validated_data.get("data_catalog").storage_services
+                or "pas" in validated_data.get("data_catalog").storage_services
             )
             is_open_access = (
                 validated_data["access_rights"]["access_type"].url == AccessTypeChoices.OPEN
             )
 
             if (
-                is_ida_catalog
-                and validated_data.get("access_rights", {}).get("show_data_metadata") is None
+                is_in_internal_storage_service
+                and validated_data.get("access_rights", {}).get("show_file_metadata") is None
             ):
                 if not is_open_access:
-                    validated_data["access_rights"]["show_data_metadata"] = False
+                    validated_data["access_rights"]["show_file_metadata"] = False
                 else:
-                    validated_data["access_rights"]["show_data_metadata"] = True
+                    validated_data["access_rights"]["show_file_metadata"] = True
 
         # Always initialize dataset as draft. This allows assigning
         # reverse and many-to-many relations to the newly created

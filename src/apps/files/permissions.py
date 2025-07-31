@@ -10,17 +10,32 @@ class BaseFilesAccessPolicy(BaseAccessPolicy):
     ]
 
     @classmethod
-    def can_view_dataset(cls, request, dataset_id):
+    def can_view_dataset_file_metadata(cls, request, dataset_id):
         # Allow viewing dataset files if user can view dataset
         from apps.core.models import Dataset
         from apps.core.permissions import DatasetAccessPolicy
 
         datasets = Dataset.available_objects.all()
-        return (
+        dataset = (
             DatasetAccessPolicy.scope_queryset(request, queryset=datasets)
             .filter(id=dataset_id)
-            .exists()
+            .first()
         )
+        if dataset is None:
+            return False
+
+        access_rights = dataset.access_rights
+
+        if access_rights and access_rights.show_file_metadata:
+            return True
+
+        if dataset.has_permission_to_edit(request.user):
+            return True
+
+        if access_rights:
+            return access_rights.is_data_available(request, dataset)
+
+        return False
 
 
 class FilesAccessPolicy(BaseFilesAccessPolicy):
@@ -75,7 +90,7 @@ class FilesAccessPolicy(BaseFilesAccessPolicy):
         elif request.user.groups.filter(name__in=service_groups).exists():
             return queryset
         elif dataset_id:
-            if cls.can_view_dataset(request, dataset_id):
+            if cls.can_view_dataset_file_metadata(request, dataset_id):
                 return queryset
             else:
                 return queryset.none()
@@ -138,7 +153,7 @@ class DirectoriesAccessPolicy(BaseFilesAccessPolicy):
     def can_view_directory(self, request, view, action):
         params = view.query_params
         if dataset_id := params["dataset"]:
-            return self.can_view_dataset(request, dataset_id)
+            return self.can_view_dataset_file_metadata(request, dataset_id)
         else:
             csc_projects = getattr(request.user, "csc_projects", [])
             return params["csc_project"] in csc_projects

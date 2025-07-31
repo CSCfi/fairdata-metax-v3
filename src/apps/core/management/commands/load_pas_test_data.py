@@ -31,9 +31,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         if not settings.ALLOW_LOAD_PAS_TEST_DATA:
-            logger.warning(
-                "ALLOW_LOAD_PAS_TEST_DATA was False. Not executing the command."
-            )
+            logger.warning("ALLOW_LOAD_PAS_TEST_DATA was False. Not executing the command.")
             return
 
         dataset = options["dataset_name"]
@@ -55,9 +53,7 @@ class Command(BaseCommand):
             return
         except json.JSONDecodeError:
             self.stderr.write(
-                self.style.ERROR(
-                    f"Error: Could not decode JSON from '{json_file_path}'."
-                )
+                self.style.ERROR(f"Error: Could not decode JSON from '{json_file_path}'.")
             )
             return
 
@@ -128,16 +124,12 @@ class Command(BaseCommand):
         sync_contract.send(sender=Contract, instance=pas_contract)
 
         if created:
-            logger.info(
-                f"Created new demo contract: {contract_title} ({contract_id_full})"
-            )
+            logger.info(f"Created new demo contract: {contract_title} ({contract_id_full})")
             self.stdout.write(
                 self.style.SUCCESS(f"Successfully created contract: {contract_title}")
             )
         else:
-            logger.info(
-                f"Updated existing demo contract: {contract_title} ({contract_id_full})"
-            )
+            logger.info(f"Updated existing demo contract: {contract_title} ({contract_id_full})")
             self.stdout.write(
                 self.style.SUCCESS(
                     f"Contract '{contract_title}' already existed. Ensured it is up to date."

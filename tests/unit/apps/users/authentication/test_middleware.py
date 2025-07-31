@@ -5,6 +5,7 @@ import pytest
 
 from apps.users.middleware import SameOriginCookiesMiddleware
 
+
 @pytest.mark.django_db
 def test_same_origin_cookies_middleware(user, client, settings):
     settings.SSO_SESSION_COOKIE = "sso_cookie"

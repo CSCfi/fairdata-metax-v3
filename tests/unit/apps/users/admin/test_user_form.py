@@ -33,6 +33,7 @@ def test_user_create_form_mismatching_password():
     )
     assert not form.is_valid()
 
+
 def test_user_create_form_no_password():
     form = OptionalPasswordUserCreationForm(
         data={
@@ -44,4 +45,3 @@ def test_user_create_form_no_password():
     assert form.is_valid()
     user = form.save()
     assert user.check_password("") is False
-

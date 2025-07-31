@@ -33,9 +33,7 @@ class LoadPasTestData(TestCase):
             demo_user_2_contract = Contract.objects.get(
                 id="urn:uuid:b9ba17f1-67dc-400f-b7d9-1982540210db"
             )
-            self.assertEqual(demo_user_2_contract.title, {
-                "und": "Fairdata Demo User 2 agreement"
-            })
+            self.assertEqual(demo_user_2_contract.title, {"und": "Fairdata Demo User 2 agreement"})
             self.assertEqual(demo_user_2_contract.contact.first().name, "fddps_demo_user_2")
 
         except Contract.DoesNotExist:

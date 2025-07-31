@@ -89,8 +89,8 @@ class AccessRights(AbstractBaseModel):
         blank=True,
     )
     history = SnapshotHistoricalRecords(m2m_fields=(license,))
-    show_data_metadata = models.BooleanField(
-        help_text="IDA-catalog only. Show/hide data metadata (file- and folder names, "
+    show_file_metadata = models.BooleanField(
+        help_text="IDA-catalog only. Show/hide file metadata (file- and folder names, "
         "and other metadata, but not file amounts and sizes).",
         default=None,
         null=True,

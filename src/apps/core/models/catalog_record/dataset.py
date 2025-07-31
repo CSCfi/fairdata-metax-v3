@@ -619,9 +619,6 @@ class Dataset(V2DatasetMixin, CatalogRecord):
 
         # Copy dataset and related files
         pas_version = self.create_copy(
-            access_rights=self.access_rights.copier.copy(
-                self.access_rights, new_values={"show_data_metadata": None}
-            ),
             dataset_versions=None,
             file_set=None,
             preservation=self.preservation.copier.copy(
@@ -670,7 +667,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         no_files = File.objects.none()
         self_files = (getattr(self, "file_set", None) and self.file_set.files.all()) or no_files
         if not self_files.exists():
-            return # Published dataset has no files yet, so adding files is allowed
+            return  # Published dataset has no files yet, so adding files is allowed
 
         dft_files = (getattr(dft, "file_set", None) and dft.file_set.files.all()) or no_files
         files_removed = self_files.difference(dft_files).exists()
@@ -1058,29 +1055,6 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             )
             raise TopLevelValidationError({"fileset": {"storage_service": err_msg}})
 
-    def validate_show_data_metadata(self):
-        is_ida_catalog = "ida" in self.data_catalog.storage_services or "pas" in self.data_catalog.storage_services
-        is_open_access = self.access_rights.access_type.url == AccessTypeChoices.OPEN
-
-        if not is_ida_catalog:
-            raise TopLevelValidationError(
-                {
-                    "access_rights": {
-                        "show_data_metadata": "Data metadata visibility "
-                        "can only be set for datasets in IDA-catalog."
-                    }
-                }
-            )
-        if is_open_access and self.access_rights.show_data_metadata == False:
-            raise TopLevelValidationError(
-                {
-                    "access_rights": {
-                        "show_data_metadata": "Cannot restrict data metadata visibility "
-                        "of open datasets."
-                    }
-                }
-            )
-
     def _validate_pid_type(self):
         """Check that requested PID generation is allowed by the catalog."""
         pid_type = self.generate_pid_on_publish
@@ -1127,9 +1101,6 @@ class Dataset(V2DatasetMixin, CatalogRecord):
 
         if fileset := getattr(self, "file_set", None):
             self.validate_allow_storage_service(fileset.storage_service)
-
-        if self.access_rights and self.access_rights.show_data_metadata is not None:
-            self.validate_show_data_metadata()
 
     def ensure_prefetch(self):
         """Ensure related fields have been prefetched."""

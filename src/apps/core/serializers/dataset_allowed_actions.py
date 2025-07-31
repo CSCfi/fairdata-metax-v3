@@ -30,6 +30,7 @@ class DatasetAllowedActionsSerializer(serializers.Serializer):
     update = serializers.SerializerMethodField()
     download = serializers.SerializerMethodField()
     rems_status = serializers.SerializerMethodField()
+    file_metadata = serializers.SerializerMethodField()
 
     def get_fields(self):
         fields = super().get_fields()
@@ -56,6 +57,13 @@ class DatasetAllowedActionsSerializer(serializers.Serializer):
 
     def get_rems_status(self, obj: Dataset):
         return obj.get_user_rems_application_status(user=self.context["request"].user)
+
+    def get_file_metadata(self, obj: Dataset):
+        from apps.files.permissions import FilesAccessPolicy
+
+        return FilesAccessPolicy.can_view_dataset_file_metadata(
+            request=self.context["request"], dataset_id=obj.id
+        )
 
 
 class DatasetAllowedActionsQueryParamsSerializer(serializers.Serializer):

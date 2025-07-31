@@ -2,7 +2,6 @@
 
 import pytest
 from tests.utils import assert_nested_subdict
-
 from apps.core import factories
 
 pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
@@ -106,3 +105,46 @@ def test_dataset_file_set_no_files(admin_client, dataset_with_files, data_urls):
         },
     )
     assert res.data.get("fileset") is None
+
+
+def test_dataset_files_with_file_metadata_hidden(
+    admin_client, user_client, client, dataset_with_files_metadata_requires_login, data_urls
+):
+    url = data_urls(dataset_with_files_metadata_requires_login)["files"]
+    res = admin_client.get(url)
+    assert res.status_code == 200
+    assert_nested_subdict(
+        {
+            "results": [
+                {"pathname": "/dir1/file.csv"},
+                {"pathname": "/dir2/a.txt"},
+                {"pathname": "/dir2/b.txt"},
+                {"pathname": "/dir2/subdir/file1.txt"},
+            ]
+        },
+        res.data,
+        check_list_length=True,
+    )
+
+    res = user_client.get(url)
+    assert res.status_code == 200
+    assert_nested_subdict(
+        {
+            "results": [
+                {"pathname": "/dir1/file.csv"},
+                {"pathname": "/dir2/a.txt"},
+                {"pathname": "/dir2/b.txt"},
+                {"pathname": "/dir2/subdir/file1.txt"},
+            ]
+        },
+        res.data,
+        check_list_length=True,
+    )
+
+    res = client.get(url)
+    assert res.status_code == 200
+    assert_nested_subdict(
+        {"results": []},
+        res.data,
+        check_list_length=True,
+    )

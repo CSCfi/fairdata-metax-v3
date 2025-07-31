@@ -546,7 +546,7 @@ def test_create_dataset_with_doi_pid_ms_error(
     pid_update_payload,
     data_catalog,
     reference_data,
-    mock_pid_ms
+    mock_pid_ms,
 ):
     matcher = re.compile(f"https://{settings.PID_MS_BASEURL}/v1/pid/doi")
     requests_mock.register_uri("POST", matcher, status_code=400)

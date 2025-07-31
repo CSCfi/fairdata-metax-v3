@@ -9,7 +9,7 @@ from knox.models import AuthToken
 from rest_framework.reverse import reverse
 
 from apps.core import factories
-from apps.core.models import Dataset
+from apps.core.models import Dataset, AccessType
 from apps.files.factories import create_project_with_files
 
 
@@ -71,8 +71,15 @@ def deep_file_tree() -> dict:
 
 
 @pytest.fixture
-def dataset_with_files(data_catalog, file_tree):
-    dataset = factories.DatasetFactory(data_catalog=data_catalog, persistent_identifier="somepid")
+def dataset_with_files(data_catalog, file_tree, access_type_reference_data):
+    dataset = factories.DatasetFactory(
+        data_catalog=data_catalog,
+        persistent_identifier="somepid",
+        access_rights__access_type=AccessType.objects.get(
+            url="http://uri.suomi.fi/codelist/fairdata/access_type/code/open"
+        ),
+    )
+    dataset.access_rights.restriction_grounds.clear()
     factories.DatasetActorFactory(roles=["creator", "publisher"], dataset=dataset)
     storage = next(iter(file_tree["files"].values())).storage
     file_set = factories.FileSetFactory(dataset=dataset, storage=storage)
@@ -85,6 +92,24 @@ def dataset_with_files(data_catalog, file_tree):
         ]
     )
     return dataset
+
+
+@pytest.fixture
+def dataset_with_files_metadata_requires_login(dataset_with_files, access_type_reference_data):
+    dataset_with_files.access_rights = factories.AccessRightsFactory(
+        show_file_metadata=False,
+        access_type=AccessType.objects.get(
+            url="http://uri.suomi.fi/codelist/fairdata/access_type/code/login"
+        ),
+        restriction_grounds=[
+            factories.RestrictionGroundsFactory(
+                url="http://uri.suomi.fi/codelist/fairdata/restriction_grounds/code/test"
+            )
+        ],
+    )
+    dataset_with_files.access_rights.save()
+    dataset_with_files.publish()
+    return dataset_with_files
 
 
 @dataclass

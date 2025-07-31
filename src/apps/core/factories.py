@@ -298,7 +298,7 @@ class AccessRightsFactory(factory.django.DjangoModelFactory):
     def license(self, create, extracted, **kwargs):
         if not create:
             return
-        if extracted:
+        if extracted is not None:
             for license in extracted:
                 self.license.add(license)
         else:
@@ -308,7 +308,7 @@ class AccessRightsFactory(factory.django.DjangoModelFactory):
     def restriction_grounds(self, create, extracted, **kwargs):
         if not create:
             return
-        if extracted:
+        if extracted is not None:
             for restriction_grounds in extracted:
                 self.restriction_grounds.add(restriction_grounds)
         else:

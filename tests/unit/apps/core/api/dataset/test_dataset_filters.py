@@ -368,7 +368,7 @@ def test_filter_by_metadata_owner_organization(admin_client, data_catalog, refer
     # Create datasets with different metadata owner organizations
     dataset1 = factories.DatasetFactory(metadata_owner__organization="org1")
     dataset2 = factories.DatasetFactory(metadata_owner__organization="org2")
-    
+
     # Test single organization filter
     res = admin_client.get(
         "/v3/datasets?metadata_owner__organization=org1&pagination=false",
@@ -410,7 +410,7 @@ def test_filter_by_metadata_owner_organization_multiple_groups(
     dataset1 = factories.DatasetFactory(metadata_owner__organization="org1")
     factories.DatasetFactory(metadata_owner__organization="org2")
     factories.DatasetFactory(metadata_owner__organization="org3")
-    
+
     # Test multiple filter groups (AND condition between groups)
     res = admin_client.get(
         "/v3/datasets?metadata_owner__organization=org1,org2&metadata_owner__organization=org1,org3&pagination=false",

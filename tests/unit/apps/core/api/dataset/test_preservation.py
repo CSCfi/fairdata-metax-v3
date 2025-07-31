@@ -154,9 +154,7 @@ def test_update_dataset_preservation_state(
 
 
 @pytest.mark.usefixtures("data_catalog", "reference_data")
-def test_update_dataset_preservation_state_unknown_state(
-    admin_client, preservation_dataset
-):
+def test_update_dataset_preservation_state_unknown_state(admin_client, preservation_dataset):
     resp = admin_client.patch(
         f"/v3/datasets/{preservation_dataset['id']}/preservation",
         {"state": 262},
@@ -165,10 +163,9 @@ def test_update_dataset_preservation_state_unknown_state(
     assert resp.status_code == 200
     assert resp.json()["state"] == 262
 
+
 @pytest.mark.usefixtures("data_catalog", "reference_data")
-def test_update_dataset_preservation_invalid_state(
-    admin_client, preservation_dataset
-):
+def test_update_dataset_preservation_invalid_state(admin_client, preservation_dataset):
     resp = admin_client.patch(
         f"/v3/datasets/{preservation_dataset['id']}/preservation",
         {"state": "invalid"},
@@ -176,6 +173,7 @@ def test_update_dataset_preservation_invalid_state(
     )
     assert resp.status_code == 400
     assert resp.json()["state"] == ["A valid integer is required."]
+
 
 @pytest.mark.usefixtures("data_catalog", "reference_data")
 def test_update_dataset_preservation_state_remove_contract_error(

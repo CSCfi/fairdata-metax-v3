@@ -165,7 +165,7 @@ class AccessRightsModelSerializer(CommonNestedModelSerializer):
             "data_access_application_instructions",
             "data_access_terms",
             "data_access_reviewer_instructions",
-            "show_data_metadata",
+            "show_file_metadata",
         )
 
 

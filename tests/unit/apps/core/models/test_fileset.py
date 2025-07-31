@@ -115,14 +115,12 @@ def test_fileset_preservation_copy_reuse_existing(dataset_with_files):
             "pas_compatible_file",
         ),
         # Remove 'non_pas_compatible_file' from dataset
-        (
-            "The non-PAS compatible file ",
-            "non_pas_compatible_file"
-        )
-    ]
+        ("The non-PAS compatible file ", "non_pas_compatible_file"),
+    ],
 )
 def test_fileset_preservation_copy_missing_pas_compatible_file(
-        dataset_with_files, expected_error, file_to_remove):
+    dataset_with_files, expected_error, file_to_remove
+):
     orig: FileSet = dataset_with_files.file_set
     dataset = factories.DatasetFactory()
 

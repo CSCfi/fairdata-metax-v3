@@ -3,6 +3,7 @@ import pytest
 from apps.core import factories
 from apps.files import factories as filefactories
 from apps.users.models import MetaxUser
+from apps.core.models import AccessType
 
 pytestmark = [pytest.mark.django_db, pytest.mark.file]
 
@@ -26,8 +27,14 @@ def project_client(client, project_user):
 
 
 @pytest.fixture
-def dataset(file_tree_a):
-    dataset = factories.DatasetFactory(persistent_identifier="somepid")
+def dataset(file_tree_a, access_type_reference_data):
+    dataset = factories.DatasetFactory(
+        persistent_identifier="somepid",
+        access_rights__access_type=AccessType.objects.get(
+            url="http://uri.suomi.fi/codelist/fairdata/access_type/code/open"
+        ),
+    )
+    dataset.access_rights.restriction_grounds.clear()
     dataset.actors.add(factories.DatasetActorFactory(roles=["creator", "publisher"]))
     factories.FileSetFactory(
         dataset=dataset,

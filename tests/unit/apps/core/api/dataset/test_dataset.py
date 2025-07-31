@@ -427,7 +427,7 @@ def test_dataset_restricted(admin_client, dataset_a_json, reference_data, data_c
     res_data = res.json()
     assert res.status_code == 201
     assert_nested_subdict(dataset_a_json, res_data, ignore=["generate_pid_on_publish"])
-    assert res_data["access_rights"]["show_data_metadata"] is False
+    assert res_data["access_rights"]["show_file_metadata"] is False
 
 
 def test_create_dataset_require_data_catalog(
@@ -906,6 +906,90 @@ def test_dataset_license_update(admin_client, dataset_a_json):
     assert lic3.removed
 
 
+def test_show_file_metadata_for_open_access_ida_catalog(
+    admin_client, dataset_a_json, reference_data, data_catalog
+):
+    dataset_a_json["access_rights"]["access_type"] = {
+        "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open"
+    }
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    res_data = res.json()
+    assert res_data["access_rights"]["show_file_metadata"] == True
+
+
+def test_show_file_metadata_for_restricted_access_ida_catalog(
+    admin_client, dataset_a_json, reference_data, data_catalog
+):
+    dataset_a_json["access_rights"]["access_type"] = {
+        "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/restricted"
+    }
+    dataset_a_json["access_rights"]["restriction_grounds"] = [
+        {"url": "http://uri.suomi.fi/codelist/fairdata/restriction_grounds/code/research"}
+    ]
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    res_data = res.json()
+    assert res_data["access_rights"]["show_file_metadata"] == False
+
+
+def test_show_file_metadata_for_open_access_external_catalog(
+    admin_client, dataset_a_json, reference_data, data_catalog_att
+):
+    dataset_a_json["data_catalog"] = "urn:nbn:fi:att:data-catalog-att"
+    dataset_a_json["access_rights"]["access_type"] = {
+        "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open"
+    }
+    print(dataset_a_json["access_rights"])
+    res = admin_client.post(
+        "/v3/datasets?include_nulls=true", dataset_a_json, content_type="application/json"
+    )
+    assert res.status_code == 201
+    res_data = res.json()
+    assert res_data["access_rights"]["show_file_metadata"] == None
+
+
+def test_show_file_metadata_with_user_defined_value(
+    admin_client, dataset_a_json, reference_data, data_catalog
+):
+    # try to restrict open dataset
+    dataset_a_json["access_rights"]["show_file_metadata"] = "false"
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    assert res.data["access_rights"]["show_file_metadata"] == False
+
+
+def test_show_file_metadata_with_wrong_catalog(
+    admin_client, dataset_a_json, reference_data, data_catalog_att
+):
+    dataset_a_json["data_catalog"] = "urn:nbn:fi:att:data-catalog-att"
+    dataset_a_json["access_rights"]["show_file_metadata"] = "false"
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+
+
+def test_show_file_metadata_with_user_defined_default_value(
+    admin_client, dataset_a_json, reference_data, data_catalog
+):
+    # open metadata of open dataset
+    dataset_a_json["access_rights"]["show_file_metadata"] = "true"
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    assert res.data["access_rights"]["show_file_metadata"] == True
+
+    # restrict restricted dataset
+    dataset_a_json["access_rights"]["access_type"] = {
+        "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/restricted"
+    }
+    dataset_a_json["access_rights"]["restriction_grounds"] = [
+        {"url": "http://uri.suomi.fi/codelist/fairdata/restriction_grounds/code/research"}
+    ]
+    dataset_a_json["access_rights"]["show_file_metadata"] = "false"
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    assert res.data["access_rights"]["show_file_metadata"] == False
+
+
 def test_metadata_owner_admin_organization_default_behavior(
     admin_client, dataset_a_json, data_catalog, reference_data
 ):
@@ -979,104 +1063,3 @@ def test_metadata_owner_admin_organization_default_behavior(
     )
     assert res.status_code == 200
     assert res.data["metadata_owner"]["admin_organization"] is None
-
-
-def test_show_data_metadata_for_open_access_ida_catalog(
-    admin_client, dataset_a_json, reference_data, data_catalog
-):
-    dataset_a_json["access_rights"]["access_type"] = {
-        "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open"
-    }
-    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
-    assert res.status_code == 201
-    res_data = res.json()
-    assert res_data["access_rights"]["show_data_metadata"] == True
-
-
-def test_show_data_metadata_for_restricted_access_ida_catalog(
-    admin_client, dataset_a_json, reference_data, data_catalog
-):
-    dataset_a_json["access_rights"]["access_type"] = {
-        "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/restricted"
-    }
-    dataset_a_json["access_rights"]["restriction_grounds"] = [
-        {"url": "http://uri.suomi.fi/codelist/fairdata/restriction_grounds/code/research"}
-    ]
-    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
-    assert res.status_code == 201
-    res_data = res.json()
-    assert res_data["access_rights"]["show_data_metadata"] == False
-
-
-def test_show_data_metadata_for_open_access_external_catalog(
-    admin_client, dataset_a_json, reference_data, data_catalog_att
-):
-    dataset_a_json["data_catalog"] = "urn:nbn:fi:att:data-catalog-att"
-    dataset_a_json["access_rights"]["access_type"] = {
-        "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open"
-    }
-    print(dataset_a_json["access_rights"])
-    res = admin_client.post(
-        "/v3/datasets?include_nulls=true", dataset_a_json, content_type="application/json"
-    )
-    assert res.status_code == 201
-    res_data = res.json()
-    assert res_data["access_rights"]["show_data_metadata"] == None
-
-
-def test_show_data_metadata_with_user_defined_value(
-    admin_client, dataset_a_json, reference_data, data_catalog
-):
-    # try to restrict open dataset
-    dataset_a_json["access_rights"]["show_data_metadata"] = "false"
-    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
-    assert res.status_code == 400
-    assert "Cannot restrict data metadata visibility of open datasets." in str(
-        res.data["access_rights"]
-    )
-
-    # override restricted dataset to show metadata
-    dataset_a_json["access_rights"]["access_type"] = {
-        "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/restricted"
-    }
-    dataset_a_json["access_rights"]["restriction_grounds"] = [
-        {"url": "http://uri.suomi.fi/codelist/fairdata/restriction_grounds/code/research"}
-    ]
-    dataset_a_json["access_rights"]["show_data_metadata"] = "true"
-    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
-    assert res.status_code == 201
-    assert res.data["access_rights"]["show_data_metadata"] == True
-
-
-def test_show_data_metadata_with_wrong_catalog(
-    admin_client, dataset_a_json, reference_data, data_catalog_att
-):
-    dataset_a_json["data_catalog"] = "urn:nbn:fi:att:data-catalog-att"
-    dataset_a_json["access_rights"]["show_data_metadata"] = "false"
-    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
-    assert res.status_code == 400
-    assert "Data metadata visibility can only be set for datasets in IDA-catalog." in str(
-        res.data["access_rights"]
-    )
-
-
-def test_show_data_metadata_with_user_defined_default_value(
-    admin_client, dataset_a_json, reference_data, data_catalog
-):
-    # open metadata of open dataset
-    dataset_a_json["access_rights"]["show_data_metadata"] = "true"
-    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
-    assert res.status_code == 201
-    assert res.data["access_rights"]["show_data_metadata"] == True
-
-    # restrict restricted dataset
-    dataset_a_json["access_rights"]["access_type"] = {
-        "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/restricted"
-    }
-    dataset_a_json["access_rights"]["restriction_grounds"] = [
-        {"url": "http://uri.suomi.fi/codelist/fairdata/restriction_grounds/code/research"}
-    ]
-    dataset_a_json["access_rights"]["show_data_metadata"] = "false"
-    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
-    assert res.status_code == 201
-    assert res.data["access_rights"]["show_data_metadata"] == False

@@ -102,6 +102,7 @@ def test_open_dataset_allowed_actions_admin(admin_client, open_dataset):
     assert get_dataset_actions(admin_client, open_dataset) == {
         "download": True,
         "update": True,
+        "file_metadata": True,
     }
 
 
@@ -109,6 +110,7 @@ def test_open_dataset_allowed_actions_creator(client, end_users, open_dataset):
     assert get_dataset_actions(client, open_dataset, user=end_users[0].user) == {
         "download": True,
         "update": True,
+        "file_metadata": True,
     }
 
 
@@ -116,6 +118,7 @@ def test_open_dataset_allowed_actions_noncreator(client, end_users, open_dataset
     assert get_dataset_actions(client, open_dataset, user=end_users[1].user) == {
         "download": True,
         "update": False,
+        "file_metadata": True,
     }
 
 
@@ -123,6 +126,7 @@ def test_open_dataset_allowed_actions_anonymous(client, open_dataset):
     assert get_dataset_actions(client, open_dataset) == {
         "download": True,
         "update": False,
+        "file_metadata": True,
     }
 
 
@@ -130,6 +134,7 @@ def test_draft_dataset_allowed_actions_admin(admin_client, end_users, draft_data
     assert get_dataset_actions(admin_client, draft_dataset) == {
         "download": True,
         "update": True,
+        "file_metadata": True,
     }
 
 
@@ -137,6 +142,7 @@ def test_draft_dataset_allowed_actions_creator(client, end_users, draft_dataset)
     assert get_dataset_actions(client, draft_dataset, user=end_users[0].user) == {
         "download": False,
         "update": True,
+        "file_metadata": True,
     }
 
 
@@ -155,6 +161,7 @@ def test_restricted_dataset_allowed_actions_admin(admin_client, restricted_datas
     assert get_dataset_actions(admin_client, restricted_dataset) == {
         "download": True,
         "update": True,
+        "file_metadata": True,
     }
 
 
@@ -162,6 +169,7 @@ def test_restricted_dataset_allowed_actions_creator(client, end_users, restricte
     assert get_dataset_actions(client, restricted_dataset, user=end_users[0].user) == {
         "download": False,
         "update": True,
+        "file_metadata": True,
     }
 
 
@@ -169,6 +177,7 @@ def test_restricted_dataset_allowed_actions_anonymous(client, restricted_dataset
     assert get_dataset_actions(client, restricted_dataset) == {
         "download": False,
         "update": False,
+        "file_metadata": False,
     }
 
 
@@ -176,6 +185,7 @@ def test_login_dataset_allowed_actions_creator(client, end_users, login_dataset)
     assert get_dataset_actions(client, login_dataset, user=end_users[0].user) == {
         "download": True,
         "update": True,
+        "file_metadata": True,
     }
 
 
@@ -183,6 +193,7 @@ def test_login_dataset_allowed_actions_noncreator(client, end_users, login_datas
     assert get_dataset_actions(client, login_dataset, user=end_users[2].user) == {
         "download": True,
         "update": False,
+        "file_metadata": True,
     }
 
 
@@ -190,6 +201,7 @@ def test_login_dataset_allowed_actions_anonymous(client, login_dataset):
     assert get_dataset_actions(client, login_dataset) == {
         "download": False,
         "update": False,
+        "file_metadata": False,
     }
 
 
@@ -199,6 +211,7 @@ def test_available_embargo_dataset_allowed_actions_creator(
     assert get_dataset_actions(client, available_embargo_dataset, user=end_users[0].user) == {
         "download": True,
         "update": True,
+        "file_metadata": True,
     }
 
 
@@ -206,6 +219,7 @@ def test_available_embargo_dataset_allowed_actions_anonymous(client, available_e
     assert get_dataset_actions(client, available_embargo_dataset) == {
         "download": True,
         "update": False,
+        "file_metadata": True,
     }
 
 
@@ -215,6 +229,7 @@ def test_unavailable_embargo_dataset_allowed_actions_creator(
     assert get_dataset_actions(client, unavailable_embargo_dataset, user=end_users[0].user) == {
         "download": False,
         "update": True,
+        "file_metadata": True,
     }
 
 
@@ -224,12 +239,32 @@ def test_unavailable_embargo_dataset_allowed_actions_anonymous(
     assert get_dataset_actions(client, unavailable_embargo_dataset) == {
         "download": False,
         "update": False,
+        "file_metadata": False,
     }
 
 
-def test_catalog_allow_download_false_allowed_actions(admin_client, open_dataset):
-    DataCatalog.objects.filter(id="urn:nbn:fi:att:data-catalog").update(allow_download=False)
+def test_catalog_allow_download_false_allowed_actions_admin(admin_client, open_dataset):
+    DataCatalog.objects.filter(id="urn:nbn:fi:att:data-catalog-ida").update(allow_download=False)
     assert get_dataset_actions(admin_client, open_dataset) == {
         "download": True,
         "update": True,
+        "file_metadata": True,
+    }
+
+
+def test_catalog_allow_download_false_allowed_actions_creator(client, end_users, open_dataset):
+    DataCatalog.objects.filter(id="urn:nbn:fi:att:data-catalog-ida").update(allow_download=False)
+    assert get_dataset_actions(client, open_dataset, user=end_users[0].user) == {
+        "download": False,
+        "update": True,
+        "file_metadata": True,
+    }
+
+
+def test_catalog_allow_download_false_allowed_actions_anonymous(client, open_dataset):
+    DataCatalog.objects.filter(id="urn:nbn:fi:att:data-catalog-ida").update(allow_download=False)
+    assert get_dataset_actions(client, open_dataset) == {
+        "download": False,
+        "update": False,
+        "file_metadata": True,
     }
