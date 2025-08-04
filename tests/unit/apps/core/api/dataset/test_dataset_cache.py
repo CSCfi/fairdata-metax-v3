@@ -126,3 +126,46 @@ def test_get_dataset_in_cache_modified(dataset_cache, admin_client, dataset_a_js
     assert res.status_code == 200
     assert res.data["title"] == {"en": "original title"}
     assert dataset_cache.get(dataset_id)["title"] == {"en": "original title"}
+
+
+@pytest.mark.usefixtures("data_catalog", "reference_data")
+def test_cache_update_files_on_draft_merge(dataset_cache, admin_client, dataset_a_json, file_tree):
+    """When files are added in draft merge, the cached dataset should have the new files."""
+    dataset_a_json["title"] = {"en": "Old title"}
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201, res.data
+
+    # Create draft and add files
+    dataset_id = res.data["id"]
+    res = admin_client.post(
+        f"/v3/datasets/{dataset_id}/create-draft", content_type="application/json"
+    )
+    assert res.status_code == 201, res.data
+
+    draft_id = res.data["id"]
+    res = admin_client.patch(
+        f"/v3/datasets/{draft_id}",
+        {
+            "title": {"en": "Updated title"},
+            "fileset": {
+                "storage_service": file_tree["storage"].storage_service,
+                "csc_project": file_tree["storage"].csc_project,
+                "directory_actions": [{"pathname": "/"}],
+            },
+        },
+        content_type="application/json",
+    )
+    assert res.status_code == 200, res.data
+
+    # Cache for the published dataset should still show the original values
+    cached_item = dataset_cache.get(dataset_id)
+    assert cached_item["title"] == {"en": "Old title"}
+    assert cached_item.get("fileset") is None
+
+    # Draft is merged, cache for the dataset should have new values
+    res = admin_client.post(f"/v3/datasets/{draft_id}/publish", content_type="application/json")
+    assert res.status_code == 200, res.data
+
+    cached_item = dataset_cache.get(dataset_id)
+    assert cached_item["title"] == {"en": "Updated title"}
+    assert cached_item["fileset"]["total_files_count"] == 8

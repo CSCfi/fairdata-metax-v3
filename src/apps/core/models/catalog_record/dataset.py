@@ -748,6 +748,10 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         self.save()
         self.next_draft = None  # Remove cached related object
         dft.delete(soft=False)
+
+        # Prefetch again after save
+        self.is_prefetched = False
+        self.refresh_from_db()
         self.create_snapshot()
 
     def delete(self, *args, **kwargs):
