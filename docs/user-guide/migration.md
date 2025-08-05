@@ -184,6 +184,8 @@ Access rights object is composed of two main sub-objects:
 * license
 * access_type
 
+In Metax V3 there is a new field `show_file_metadata`. This field controls whether the viewer has rights to see the file metadata when they don't have download access. Migrated datasets will use field's default value. By default field's value is false. Dataset with access type of `Open` is set to `true` for clarity reasons.
+
 !!! info
 
     License object needs either url or custom_url filled. Url must be part of [suomi.fi license collection](http://uri.suomi.fi/codelist/fairdata/license/"). Custom url is reserved for licenses not part of the collection.

@@ -20,6 +20,7 @@
       "pref_label": {
         "fi": "Avoin"
       }
-    }
+    },
+    "show_file_metadata": true
   }
 }

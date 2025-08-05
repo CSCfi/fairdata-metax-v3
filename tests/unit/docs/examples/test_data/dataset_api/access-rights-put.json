@@ -11,6 +11,7 @@
     },
     "description": {
       "fi": "kuvaus"
-    }
+    },
+    "show_file_metadata": true
   }
 }

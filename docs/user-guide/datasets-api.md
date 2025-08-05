@@ -60,6 +60,7 @@ The available access rights fields are:
 | Restriction Grounds | restriction_grounds    | list of reference data from `/v3/reference-data/restriction-grounds` |
 | Available date      | available              | date when data is available for download                             |
 | License             | license                | list of objects                                                      |
+| Show File Details   | show_file_metadata     | boolean                                                              |
 
 License is special kind of reference data object, as it can have additional metadata properties
 that are writable by the user:
@@ -79,6 +80,15 @@ If the dataset has a license that is not in the reference data, choose the best 
     ``` json
     ---8<--- "tests/unit/docs/examples/test_data/dataset_api/access_rights.json"
     ```
+
+The `show_file_metadata` field controls whether users can view file metadata when they don't have download access. This setting only applies to datasets stored in Fairdata services (IDA or PAS). 
+
+**Important notes:**
+
+- Datasets with `access_type` set to `Open` ignore this field entirely
+- For `Open` datasets, the value is automatically set to `true` for clarity
+- The default value is `false` for other access types
+
 
 ### Data Catalog
 
