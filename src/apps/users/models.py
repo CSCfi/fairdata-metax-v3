@@ -5,13 +5,15 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
+from model_utils import FieldTracker
 
 from apps.common.models import CustomSoftDeletableManager, CustomSoftDeletableModel
 
 
 class MetaxUserManager(UserManager):
     def get_organization_admins(self, organization: str) -> models.QuerySet:
-        return self.none()  # TODO: Organization admins not implemented yet
+        """List all admin users of given organization."""
+        return self.filter(admin_organizations__contains=[organization])
 
 
 class SoftDeletableMetaxUserManager(MetaxUserManager, CustomSoftDeletableManager):
@@ -37,6 +39,9 @@ class MetaxUser(AbstractUser, CustomSoftDeletableModel):
     )
     organization = models.CharField(max_length=512, blank=True, null=True)
     admin_organizations = ArrayField(models.CharField(max_length=512), default=list, blank=True)
+
+    # Track changes to values in admin_organizations
+    tracker = FieldTracker(fields=["admin_organizations"])
 
     def undelete(self):
         self.removed = None

@@ -14,11 +14,8 @@ from apps.rems.models import (
 )
 from apps.rems.rems_service import REMSService
 from apps.rems.rems_session import REMSError
-from apps.users.models import MetaxUserManager
 
-pytestmark = [
-    pytest.mark.django_db,
-]
+pytestmark = [pytest.mark.django_db]
 
 
 def test_initial_rems_entities(mock_rems):
@@ -27,14 +24,10 @@ def test_initial_rems_entities(mock_rems):
     assert REMSOrganization.objects.get(key="csc").rems_id == "csc"
 
 
-def test_rems_service_publish_dataset(mock_rems, user, monkeypatch):
+def test_rems_service_publish_dataset(mock_rems, user):
     """Test publishing dataset to REMS."""
-    # Fake user as organization admin
-    monkeypatch.setattr(
-        MetaxUserManager,
-        "get_organization_admins",
-        lambda self, organization: self.filter(username=user.username),
-    )
+    user.admin_organizations = ["test_organization"]
+    user.save()
 
     catalog = factories.DataCatalogFactory(rems_enabled=True)
     dataset = factories.REMSDatasetFactory(

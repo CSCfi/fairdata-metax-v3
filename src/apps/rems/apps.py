@@ -4,3 +4,7 @@ from django.apps import AppConfig
 class REMSConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "apps.rems"
+
+    def ready(self):
+        from apps.rems import signals
+

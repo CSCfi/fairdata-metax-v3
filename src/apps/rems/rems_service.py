@@ -497,9 +497,16 @@ class REMSService:
     def create_dataset_workflow(self, dataset: "Dataset") -> REMSWorkflow:
         """Get or create REMS workflow for dataset."""
         # Only automatic approval supported for now
-        return self.create_automatic_workflow(
-            dataset.metadata_owner.organization
-        )  # TODO: Use dataset.metadata_owner.admin_organization once it's ready
+        return self.create_automatic_workflow(dataset.metadata_owner.organization)
+
+    def update_organization_workflows(self, metax_organization: str) -> List[REMSWorkflow]:
+        """Update REMS workflows for Metax organization."""
+        # Only automatic approval supported for now
+        if REMSWorkflow.objects.filter(key=f"automatic-{metax_organization}").exists():
+            return [self.create_automatic_workflow(metax_organization)]
+        return []
+
+
 
     @transaction.atomic
     def publish_dataset(
