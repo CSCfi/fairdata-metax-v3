@@ -6,7 +6,6 @@ from apps.rems.rems_service import REMSService
 pytestmark = [pytest.mark.django_db]
 
 
-@pytest.mark.only
 def test_rems_add_organization_admin(mock_rems, user):
     """Test adding organization admin as REMS workflow handler."""
     catalog = factories.DataCatalogFactory(rems_enabled=True)
@@ -30,7 +29,6 @@ def test_rems_add_organization_admin(mock_rems, user):
     ]
 
 
-@pytest.mark.only
 def test_rems_remove_organization_admin(mock_rems, user):
     """Test removing organization admin from REMS workflow handlers."""
     user.admin_organizations = ["test_organization"]
