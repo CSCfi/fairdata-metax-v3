@@ -12,18 +12,19 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=MetaxUser)
 def handle_user_updated(*args, instance: MetaxUser, created: bool, **kwargs):
-    """When user admin_organizations change, update REMS workflows for related organizations."""
+    """When user dac_organizations change, update REMS workflows for related organizations."""
     if not settings.REMS_ENABLED:
         return
 
-    has_changed = instance.tracker.has_changed("admin_organizations")
+    has_changed = instance.tracker.has_changed("dac_organizations")
     if not (created or has_changed):
         return
 
     # Collect both old (may have been removed) and new (may have been added) organizations
-    old_orgs = set(instance.tracker.changed().get("admin_organizations", []))
-    orgs = sorted(old_orgs | set(instance.admin_organizations))
+    old_orgs = set(instance.tracker.changed().get("dac_organizations", []))
+    orgs = sorted(old_orgs | set(instance.dac_organizations))
 
     for org in orgs:
-        for workflow in REMSService().update_organization_workflows(org):
+        workflows = REMSService().update_organization_workflows(org)
+        for workflow in workflows:
             logger.info(f"Updated REMS workflow {workflow.key} (rems_id={workflow.rems_id})")

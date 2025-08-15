@@ -478,7 +478,7 @@ class REMSService:
         dataset.custom_rems_licenses(manager="all_objects").remove(*unused_licenses)
 
     def create_automatic_workflow(self, metax_organization: str) -> REMSWorkflow:
-        organization_users = MetaxUser.objects.get_organization_admins(metax_organization)
+        organization_users = MetaxUser.objects.get_organization_dac(metax_organization)
         handlers = []
         for user in organization_users:
             handlers.append(

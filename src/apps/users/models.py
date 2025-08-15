@@ -15,6 +15,10 @@ class MetaxUserManager(UserManager):
         """List all admin users of given organization."""
         return self.filter(admin_organizations__contains=[organization])
 
+    def get_organization_dac(self, organization: str) -> models.QuerySet:
+        """List all Data Access Committee users of given organization."""
+        return self.filter(dac_organizations__contains=[organization])
+
 
 class SoftDeletableMetaxUserManager(MetaxUserManager, CustomSoftDeletableManager):
     pass
@@ -40,8 +44,17 @@ class MetaxUser(AbstractUser, CustomSoftDeletableModel):
     organization = models.CharField(max_length=512, blank=True, null=True)
     admin_organizations = ArrayField(models.CharField(max_length=512), default=list, blank=True)
 
-    # Track changes to values in admin_organizations
-    tracker = FieldTracker(fields=["admin_organizations"])
+    # Getting DAC membership from SSO session is not implemented yet,
+    # so this field can only be tested by setting the value manually.
+    dac_organizations = ArrayField(
+        models.CharField(max_length=512),
+        default=list,
+        blank=True,
+        help_text="Organizations where the user is a member of the Data Access Committee.",
+    )
+
+    # Track changes to values in dac_organizations
+    tracker = FieldTracker(fields=["dac_organizations"])
 
     def undelete(self):
         self.removed = None

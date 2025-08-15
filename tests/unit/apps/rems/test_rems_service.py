@@ -26,7 +26,7 @@ def test_initial_rems_entities(mock_rems):
 
 def test_rems_service_publish_dataset(mock_rems, user):
     """Test publishing dataset to REMS."""
-    user.admin_organizations = ["test_organization"]
+    user.dac_organizations = ["test_organization"]
     user.save()
 
     catalog = factories.DataCatalogFactory(rems_enabled=True)
