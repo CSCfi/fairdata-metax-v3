@@ -338,6 +338,22 @@ class MockREMS:
             return val[0]  # Return only first value for param
         return None
 
+    def user_is_applicant(self, request, application: dict) -> bool:
+        user_id = request.headers["X-REMS-USER-ID"]
+        return application["application/applicant"]["userid"] == user_id
+
+    def user_is_handler(self, request, application: dict) -> bool:
+        user_id = request.headers["X-REMS-USER-ID"]
+        return any(
+            handler["userid"] == user_id
+            for handler in application["application/workflow"]["workflow.dynamic/handlers"]
+        )
+
+    def user_can_see_application(self, request, application: dict):
+        return self.user_is_applicant(request, application) or self.user_is_handler(
+            request, application
+        )
+
     def handle_list(self, entity_type: EntityType):
         """List all existing entitities."""
 
@@ -348,7 +364,10 @@ class MockREMS:
                 if resid := self.get_query_param(request, "resource"):  # External resource id
                     data = [item for item in data if item["resid"] == resid]
             elif entity_type == EntityType.APPLICATION:
+
+                data = [item for item in data if self.user_can_see_application(request, item)]
                 data = [self.filter_application_list_fields(item) for item in data]
+                return data
 
             if self.get_query_param(request, "archived") != "true":
                 data = [item for item in data if not item["archived"]]
@@ -364,6 +383,10 @@ class MockREMS:
             rems_id = self.get_request_path_rems_id(entity_type, request)
             self.add_call(action="get", entity_type=entity_type, request=request, rems_id=rems_id)
             data = self.entities[entity_type].get(rems_id)
+            if data and entity_type == EntityType.APPLICATION and not self.user_can_see_application(
+                request, application=data
+            ):
+                data = None
             if not data:
                 context.status_code = 404
                 context.reason = f"{entity_type} {rems_id} not found"
@@ -623,12 +646,30 @@ class MockREMS:
         }
 
     def handle_list_my_applications(self, request, context):
-        userid = request.headers["X-REMS-USER-ID"]
         applications = self.entities[EntityType.APPLICATION].values()
         return [
             self.filter_application_list_fields(a)
             for a in applications
-            if a["application/applicant"]["userid"] == userid
+            if self.user_is_applicant(request, application=a)
+        ]
+
+    def handle_list_applications_todo(self, request, context):
+        applications = self.entities[EntityType.APPLICATION].values()
+        return [
+            self.filter_application_list_fields(a)
+            for a in applications
+            if self.user_is_handler(request, application=a)
+            and a["application/state"] == self.ApplicationState.SUBMITTED
+        ]
+
+    def handle_list_applications_handled(self, request, context):
+        applications = self.entities[EntityType.APPLICATION].values()
+        return [
+            self.filter_application_list_fields(a)
+            for a in applications
+            if self.user_is_handler(request, application=a)
+            and a["application/state"] != self.ApplicationState.SUBMITTED
+            and a["application/state"] != self.ApplicationState.DRAFT
         ]
 
     def handle_list_entitlements(self, request, context):
@@ -690,6 +731,12 @@ class MockREMS:
         mocker.post(f"{base}/submit", json=self.handle_application_submit)
         mocker.get(
             f"{settings.REMS_BASE_URL}/api/my-applications", json=self.handle_list_my_applications
+        )
+        mocker.get(
+            f"{settings.REMS_BASE_URL}/api/applications/todo", json=self.handle_list_applications_todo
+        )
+        mocker.get(
+            f"{settings.REMS_BASE_URL}/api/applications/handled", json=self.handle_list_applications_handled
         )
 
         # Entitlement-specific endpoints

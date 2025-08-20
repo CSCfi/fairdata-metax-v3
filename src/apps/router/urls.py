@@ -7,6 +7,7 @@ from apps.core import views as core_views
 from apps.files.views import DirectoryViewSet, FileCharacteristicsViewSet, FileViewSet
 from apps.refdata.models import reference_data_models
 from apps.refdata.views import get_viewset_for_model
+from apps.rems.views import REMSApplicationsViewSet
 from apps.users.views import UserViewSet
 
 from .router import CommonRouter
@@ -38,21 +39,24 @@ router.register(
     core_views.DatasetPermissionsEditorsViewSet,
     basename="dataset-permissions-editors",
 )
-
-# router.register(r"dataset-actors", DatasetActorViewSet, basename="dataset-actor")
 router.register(r"migrated-datasets", core_views.LegacyDatasetViewSet, basename="migrated-dataset")
+# Nested routes
+dataset_router = routers.NestedSimpleRouter(router, r"datasets", lookup="dataset")
+router.register(r"tasks", core_views.TaskViewSet, basename="task")
+
 # files app
 router.register(r"files", FileViewSet, basename="file")
 router.register(r"directories", DirectoryViewSet, basename="directory")
+
 # Refdata app
 for model in reference_data_models:
     router.register(
         f"reference-data/{model.get_model_url()}",
         get_viewset_for_model(model),
     )
-# Nested routes
-dataset_router = routers.NestedSimpleRouter(router, r"datasets", lookup="dataset")
-router.register(r"tasks", core_views.TaskViewSet, basename="task")
+
+# REMS app
+router.register(r"rems/applications", REMSApplicationsViewSet, basename="rems-applications")
 
 # Users list
 if settings.ENABLE_USERS_VIEW:

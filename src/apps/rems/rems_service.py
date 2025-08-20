@@ -506,8 +506,6 @@ class REMSService:
             return [self.create_automatic_workflow(metax_organization)]
         return []
 
-
-
     @transaction.atomic
     def publish_dataset(
         self, dataset: "Dataset", raise_errors=False
@@ -646,20 +644,26 @@ class REMSService:
                 applications.append(application)
         return applications
 
-    def get_user_application_for_dataset(
-        self, user: MetaxUser, dataset: "Dataset", application_id: int
-    ) -> Optional[dict]:
+    def get_user_applications(self, user: MetaxUser):
         self.check_user(user)
-
         with self.session.as_user(user.fairdata_username):
-            resp = self.session.get(f"/api/applications/{application_id}")
+            resp = self.session.get("/api/applications")
+            return resp.json()
 
-        application = resp.json()
-        resources = application.get("application/resources", [])
-        if len(resources) != 1 or resources[0]["resource/ext-id"] != str(dataset.id):
-            return None  # Support only applications where the dataset is the only resource
+    def get_user_applications_todo(self, user: MetaxUser):
+        self.check_user(user)
+        with self.session.as_user(user.fairdata_username):
+            resp = self.session.get("/api/applications/todo")
+            return resp.json()
 
-        # Add is_data_access_terms to application license data
+    def get_user_applications_handled(self, user: MetaxUser):
+        self.check_user(user)
+        with self.session.as_user(user.fairdata_username):
+            resp = self.session.get("/api/applications/handled")
+            return resp.json()
+
+    def _add_data_access_terms_field(self, application: dict):
+        """Add is_data_access_terms boolean to REMS application data."""
         terms_rems_ids = set(  # REMS identifiers of data_access_terms licenses
             REMSLicense.objects.filter(
                 rems_id__in=[
@@ -670,6 +674,24 @@ class REMSService:
         )
         for license in application["application/licenses"]:
             license["is_data_access_terms"] = license["license/id"] in terms_rems_ids
+
+    def get_user_application(self, user: MetaxUser, application_id: int) -> Optional[dict]:
+        self.check_user(user)
+        with self.session.as_user(user.fairdata_username):
+            resp = self.session.get(f"/api/applications/{application_id}")
+
+        application = resp.json()
+        self._add_data_access_terms_field(application)
+        return application
+
+    def get_user_application_for_dataset(
+        self, user: MetaxUser, dataset: "Dataset", application_id: int
+    ) -> Optional[dict]:
+        application = self.get_user_application(user, application_id=application_id)
+        resources = application.get("application/resources", [])
+        if len(resources) != 1 or resources[0]["resource/ext-id"] != str(dataset.id):
+            return None  # Support only applications where the dataset is the only resource
+
         return application
 
     def get_user_entitlements_for_dataset(self, user: MetaxUser, dataset: "Dataset") -> List[dict]:

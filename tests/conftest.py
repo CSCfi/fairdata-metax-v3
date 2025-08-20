@@ -911,7 +911,6 @@ def requests_client():
 @pytest.fixture
 def user_client(user):
     client = Client()
-    client._user = user
     client.force_login(user)
     client._user = user
     return client
