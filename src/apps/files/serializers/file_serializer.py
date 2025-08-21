@@ -5,7 +5,7 @@
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
 import logging
-from typing import Optional
+from typing import Iterable, Optional
 
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
@@ -108,6 +108,18 @@ class FileSerializer(CreateOnlyFieldsMixin, CommonNestedModelSerializer):
     pas_process_running = serializers.BooleanField(required=False)
 
     non_pas_compatible_file = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    only_fields: Optional[Iterable] = None
+
+    def __init__(self, *args, only_fields=None, **kwargs):
+        self.only_fields = only_fields  # Allow restricting which fields are used
+        super().__init__(*args, **kwargs)
+
+    def get_fields(self):
+        fields = super().get_fields()
+        if self.only_fields is not None:
+            fields = {name: fields[name] for name in self.only_fields}
+        return fields
 
     def get_dataset_metadata(self, obj):
         if "file_metadata" in self.context:

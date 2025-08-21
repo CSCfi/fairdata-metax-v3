@@ -24,6 +24,7 @@ from apps.common.exceptions import ResourceLocked
 from apps.common.filters import VerboseChoiceFilter
 from apps.common.helpers import cachalot_toggle, get_filter_openapi_parameters
 from apps.common.serializers import DeleteListReturnValueSerializer, FlushQueryParamsSerializer
+from apps.common.serializers.fields import CommaSeparatedListField
 from apps.common.serializers.serializers import IncludeRemovedQueryParamsSerializer
 from apps.common.views import CommonModelViewSet
 from apps.files.helpers import get_file_metadata_model
@@ -102,6 +103,14 @@ class FilesDatasetsQueryParamsSerializer(serializers.Serializer):
     storage_service = StorageServiceField(default=None)
 
 
+class FileFieldsQueryParamsSerializer(serializers.Serializer):
+    fields = CommaSeparatedListField(
+        default=None,
+        child=serializers.ChoiceField(choices=sorted(FileSerializer().get_fields().keys())),
+        help_text=_("Return only specific file fields."),
+    )
+
+
 class FilesDatasetsBodySerializer(serializers.ListSerializer):
     child = serializers.CharField()
 
@@ -134,7 +143,11 @@ class BaseFileViewSet(CommonModelViewSet):
         {
             "class": IncludeRemovedQueryParamsSerializer,
             "actions": ["list", "retrieve"],
-        }
+        },
+        {
+            "class": FileFieldsQueryParamsSerializer,
+            "actions": ["list"],
+        },
     ]
 
     def get_queryset(self):
@@ -158,6 +171,8 @@ class BaseFileViewSet(CommonModelViewSet):
         """Modified get_serializer that passes instance to get_serializer_context."""
         serializer_class = self.get_serializer_class()
         kwargs.setdefault("context", self.get_serializer_context(instance))
+        if fields := self.query_params.get("fields"):
+            kwargs["only_fields"] = fields  # Allow listing only specific fields
         return serializer_class(instance, *args, **kwargs)
 
     def get_dataset_id(self):

@@ -265,6 +265,29 @@ def test_files_list_invalid_storage_service(admin_client, file_tree_a):
     )
 
 
+def test_files_list_fields(admin_client, file_tree_a):
+    params = {
+        **file_tree_a["params"],
+        "pagination": False,
+        "fields": "id,pathname,storage_service,csc_project",
+    }
+    res = admin_client.get("/v3/files", params, content_type="application/json")
+    assert res.status_code == 200
+    fields = sorted(res.data[0].keys())
+    assert fields == ["csc_project", "id", "pathname", "storage_service"]
+
+
+def test_files_list_fields_invalid(admin_client, file_tree_a):
+    params = {
+        **file_tree_a["params"],
+        "pagination": False,
+        "fields": "id,höpö,csc_project",
+    }
+    res = admin_client.get("/v3/files", params, content_type="application/json")
+    assert res.status_code == 400
+    assert res.json()["fields"] == {"1": ['"höpö" is not a valid choice.']}
+
+
 def test_files_get(admin_client, file_tree_a):
     res = admin_client.get(
         "/v3/files",

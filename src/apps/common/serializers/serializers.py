@@ -333,8 +333,6 @@ class FlushQueryParamsSerializer(serializers.Serializer):
 
 
 class FieldsQueryParamsSerializer(serializers.Serializer):
-    """Non-filter query parameters for deleting a list."""
-
     fields = CommaSeparatedListField(
         required=False, help_text=_("Filter specific fields of the dataset.")
     )
