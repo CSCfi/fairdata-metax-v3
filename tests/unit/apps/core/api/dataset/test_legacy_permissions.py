@@ -179,3 +179,43 @@ def test_ignore_previously_added_editor(
         content_type="application/json",
     )
     assert [user["username"] for user in res.data["editors"]] == ["editor_1"]
+
+
+def test_legacy_dataset_list_permissions(
+    user_client, user2_client, appsupport_client, client, legacy_dataset_a
+):
+    url = reverse("migrated-dataset-list")
+    res = user_client.get(url, content_type="application/json")
+    assert res.status_code == 200
+    assert len(res.data["results"]) == 1  # User has one migrated dataset
+
+    res = appsupport_client.get(url, content_type="application/json")
+    assert res.status_code == 200
+    assert len(res.data["results"]) == 1  # Appsupport user sees all migrated datasets
+
+    res = user2_client.get(url, content_type="application/json")
+    assert res.status_code == 200
+    assert len(res.data["results"]) == 0  # User has no migrated datasets
+
+    res = client.get(url, content_type="application/json")
+    assert res.status_code == 403  # User is not authenticated
+
+
+def test_legacy_dataset_retrieve_permissions(
+    user_client, user2_client, appsupport_client, client, legacy_dataset_a
+):
+    dataset_id = legacy_dataset_a.data["id"]
+    url = reverse("migrated-dataset-detail", args=[dataset_id])
+    res = user_client.get(url, content_type="application/json")
+    assert res.status_code == 200
+    assert res.data["id"] == dataset_id  # User sees their own migrated dataset
+
+    res = appsupport_client.get(url, content_type="application/json")
+    assert res.status_code == 200
+    assert res.data["id"] == dataset_id  # Appsupport user sees all migrated datasets
+
+    res = user2_client.get(url, content_type="application/json")
+    assert res.status_code == 404  # User no access to migrated dataset by other users
+
+    res = client.get(url, content_type="application/json")
+    assert res.status_code == 403  # User is not authenticated

@@ -170,9 +170,25 @@ def user2(fairdata_users_group):
         is_hidden=False,
         admin_organizations=[],
     )
-    _group, _ = Group.objects.get_or_create(name="fairdata_users")
     user.groups.set([fairdata_users_group])
     user.set_password("matti")
+    user.save()
+    return user
+
+
+@pytest.fixture
+def appsupport_user():
+    user, _created = MetaxUser.objects.get_or_create(
+        username="appsupport_user",
+        first_name="App",
+        last_name="Support",
+        email="appsupport@example.com",
+        is_hidden=False,
+        admin_organizations=[],
+    )
+    _group, _ = Group.objects.get_or_create(name="appsupport")
+    user.groups.set([_group])
+    user.set_password("appsupport")
     user.save()
     return user
 
@@ -906,6 +922,14 @@ def user2_client(user2):
     client = Client()
     client.force_login(user2)
     client._user = user2
+    return client
+
+
+@pytest.fixture
+def appsupport_client(appsupport_user):
+    client = Client()
+    client.force_login(appsupport_user)
+    client._user = appsupport_user
     return client
 
 

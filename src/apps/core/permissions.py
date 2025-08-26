@@ -193,19 +193,30 @@ class LegacyDatasetAccessPolicy(BaseAccessPolicy):
             "principal": "group:v2_migration",
             "effect": "allow",
         },
-    ] + BaseAccessPolicy.statements
+        {
+            # Only authenticated users can see legacy datasets
+            "action": ["list", "retrieve", "<safe_methods>"],
+            "principal": "authenticated",
+            "effect": "allow",
+        },
+    ] + BaseAccessPolicy.admin_statements
 
     @classmethod
     def scope_queryset(cls, request, queryset):
-        from .models import Dataset
-
+        groups = request.user.groups.all()
         if (q := super().scope_queryset(request, queryset)) is not None:
-            return q
-        elif request.user.groups.filter(name="v2_migration").exists():
+            return q  # Admin can see everything
+        elif groups.filter(Q(name="v2_migration") | Q(name="appsupport")).exists():
             return queryset.all()
 
-        # Only public datasets are visible for normal users
-        return queryset.filter(dataset_json__state=Dataset.StateChoices.PUBLISHED)
+        # Users can only see the legacy datasests they can edit.
+        return queryset.filter(
+            Q(dataset__metadata_owner__user=request.user)
+            | Q(dataset__system_creator=request.user)
+            | Q(dataset__permissions__editors=request.user)
+            | Q(dataset__file_set__storage__csc_project__in=request.user.csc_projects)
+            | Q(dataset__data_catalog__dataset_groups_admin__in=groups)
+        ).distinct()
 
 
 class DatasetNestedAccessPolicy(BaseAccessPolicy):
