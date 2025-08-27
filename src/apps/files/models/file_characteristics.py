@@ -61,6 +61,7 @@ class FileCharacteristics(SystemCreatorBaseModel):
 
     class Meta:
         ordering = ["id"]
+        verbose_name_plural = "file characteristics"
 
     def to_legacy(self):
         val = {}

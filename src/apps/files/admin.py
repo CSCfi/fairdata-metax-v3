@@ -2,7 +2,7 @@ from copy import copy
 
 from django.conf import settings
 from django.contrib import admin
-from django.db.models import TextField
+from django.db.models import TextField, F
 from django.forms import ModelForm, TextInput
 from django.utils.safestring import SafeString
 from polymorphic.admin import PolymorphicChildModelAdmin, PolymorphicParentModelAdmin
@@ -18,14 +18,28 @@ from apps.files.models import (
     FileStorage,
     IDAFileStorage,
     ProjectFileStorage,
+    FileCharacteristics,
 )
+
+
+@admin.register(FileCharacteristics)
+class FileCharacteristicsAdmin(admin.ModelAdmin):
+    list_display = ("id", "file_id")
+    search_fields = ["id", "file_id"]
+    readonly_fields = ["file_id"]
+
+    def file_id(self, instance):
+        return instance.file_id
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(file_id=F("file__id"))
 
 
 @admin.register(File)
 class FileAdmin(AbstractDatasetPropertyBaseAdmin):
     list_display = ("filename", "pathname", "csc_project", "storage")
     search_fields = ["id", "filename", "directory_path", "storage_identifier"]
-    autocomplete_fields = ["pas_compatible_file"]
+    autocomplete_fields = ["pas_compatible_file", "characteristics"]
 
     def get_name(self, obj):
         return obj.author.name
