@@ -46,21 +46,24 @@ logger = logging.getLogger(__name__)
 class FileCommonFilterset(filters.FilterSet):
     """File attribute specific filters for files."""
 
-    filename = filters.CharFilter(
-        lookup_expr="icontains",
-    )
+    filename = filters.CharFilter()
     pathname = filters.CharFilter(method="pathname_filter")
+
+    pathname__startswith = filters.CharFilter(method="pathname_startswith_filter")
 
     storage_identifier = filters.CharFilter()
 
     frozen__gt = filters.DateTimeFilter(field_name="frozen", lookup_expr="gt")
 
     def pathname_filter(self, queryset, name, value):
+        return queryset.alias(pathname=Concat("directory_path", "filename")).filter(pathname=value)
+
+    def pathname_startswith_filter(self, queryset, name, value):
         if value.endswith("/"):
             # Filtering by directory path, no need to include filename
-            return queryset.filter(directory_path__istartswith=value)
+            return queryset.filter(directory_path__startswith=value)
         return queryset.alias(pathname=Concat("directory_path", "filename")).filter(
-            pathname__istartswith=value
+            pathname__startswith=value
         )
 
     class Meta:

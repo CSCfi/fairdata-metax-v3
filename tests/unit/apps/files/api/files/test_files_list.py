@@ -219,7 +219,7 @@ def test_files_list_include_removed(admin_client, file_tree_a):
     # also non-removed files should be included
     res = admin_client.get(
         f"/v3/files",
-        {**params, "pathname": "/dir/", "include_removed": True},
+        {**params, "pathname__startswith": "/dir/", "include_removed": True},
         content_type="application/json",
     )
     assert len(res.json()) == 15
@@ -295,3 +295,48 @@ def test_files_get(admin_client, file_tree_a):
         content_type="application/json",
     )
     assert res.data["count"] == 16
+
+
+def test_files_filter_name(admin_client, file_tree_a):
+    """Test filtering files by name and path."""
+    res = admin_client.get(
+        "/v3/files",
+        {**file_tree_a["params"], "pathname": "/dir/sub1/file1.csv"},
+        content_type="application/json",
+    )
+    assert res.data["count"] == 1  # exact match
+
+    res = admin_client.get(
+        "/v3/files",
+        {**file_tree_a["params"], "pathname": "/dir/sub1/file"},
+        content_type="application/json",
+    )
+    assert res.data["count"] == 0  # pathname requires exact match
+
+    res = admin_client.get(
+        "/v3/files",
+        {**file_tree_a["params"], "pathname__startswith": "/dir/sub1/"},
+        content_type="application/json",
+    )
+    assert res.data["count"] == 3  # match by directory
+
+    res = admin_client.get(
+        "/v3/files",
+        {**file_tree_a["params"], "pathname__startswith": "/dir/sub1/file"},
+        content_type="application/json",
+    )
+    assert res.data["count"] == 3  # match by directory + partial filename
+
+    res = admin_client.get(
+        "/v3/files",
+        {**file_tree_a["params"], "filename": "file.csv"},
+        content_type="application/json",
+    )
+    assert res.data["count"] == 4  # exact match by filename
+
+    res = admin_client.get(
+        "/v3/files",
+        {**file_tree_a["params"], "filename": "file"},
+        content_type="application/json",
+    )
+    assert res.data["count"] == 0  # filename requires exact match
