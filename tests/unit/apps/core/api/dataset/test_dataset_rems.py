@@ -134,7 +134,7 @@ def test_rems_applications(mock_rems, user_client):
     )
     assert res.status_code == 200
     assert res.data["application/applicant"]["userid"] == user_client._user.fairdata_username
-    assert res.data["application/resources"][0]["resource/ext-id"] == str(dataset.id)
+    assert res.data["application/resources"][0]["resource/ext-id"] == f"metax-test:{dataset.id}"
 
     # Auto-approve is enabled, there should be an entitlement
     res = user_client.get(
@@ -142,7 +142,7 @@ def test_rems_applications(mock_rems, user_client):
     )
     assert res.status_code == 200
     assert len(res.data) == 1
-    assert res.data[0]["resource"] == str(dataset.id)
+    assert res.data[0]["resource"] == f"metax-test:{dataset.id}"
     assert res.data[0]["user"]["userid"] == user_client._user.fairdata_username
 
     # Data should be available now that an entitlement exists
@@ -243,7 +243,7 @@ def test_dataset_rems_application_base(
     }
 
 
-def test_list_rems_applications(mock_rems, user_client, user2_client):
+def test_list_dataset_rems_applications(mock_rems, user_client, user2_client):
     dataset = factories.REMSDatasetFactory()
     service = REMSService()
     service.publish_dataset(dataset)

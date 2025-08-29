@@ -52,11 +52,11 @@ def test_rems_service_publish_dataset(mock_rems, user):
     assert REMSResource.objects.count() == 1
     assert len(mock_rems.entities["resource"]) == 1
     resource = mock_rems.entities["resource"][1]
-    assert resource["resid"] == str(dataset.id)
+    assert resource["resid"] == f"metax-test:{dataset.id}"
 
     assert REMSCatalogueItem.objects.count() == 1
     item = mock_rems.entities["catalogue-item"][1]
-    assert item["resid"] == str(dataset.id)
+    assert item["resid"] == f"metax-test:{dataset.id}"
     assert item["resource-id"] == resource["id"]
 
     assert REMSWorkflow.objects.count() == 1
@@ -139,7 +139,7 @@ def test_rems_service_update_dataset_license(mock_rems, license_reference_data):
         "create/license->2",
         "get/resource:1",
         "get/resource:1",
-        "list/catalogue-item?resource=00000000-0000-0000-0000-000000000007&archived=false",
+        "list/catalogue-item?resource=metax-test%3a00000000-0000-0000-0000-000000000007&archived=false",
         "disable/catalogue-item:1",
         "archive/catalogue-item:1",
         "disable/resource:1",
@@ -189,9 +189,9 @@ def test_rems_service_update_dataset_terms(mock_rems, license_reference_data):
     assert mock_rems.call_list == [
         "get/workflow:1",
         "get/license:1",
-        "list/resource?resid=00000000-0000-0000-0000-000000000007&archived=false",
+        "list/resource?resid=metax-test%3a00000000-0000-0000-0000-000000000007&archived=false",
         "get/resource:1",
-        "list/catalogue-item?resource=00000000-0000-0000-0000-000000000007&archived=false",
+        "list/catalogue-item?resource=metax-test%3a00000000-0000-0000-0000-000000000007&archived=false",
         "disable/catalogue-item:1",  # Archive old catalogue item
         "archive/catalogue-item:1",
         "disable/resource:1",
@@ -269,7 +269,7 @@ def test_rems_service_create_application_with_autoapprove(mock_rems, user):
     # Check entitlement has been created
     entitlements = service.get_user_entitlements_for_dataset(user, dataset)
     assert len(entitlements) == 1
-    assert entitlements[0]["resource"] == str(dataset.id)
+    assert entitlements[0]["resource"] == f"metax-test:{dataset.id}"
 
 
 def test_rems_service_create_application_dataset_not_published_to_rems(mock_rems, user):

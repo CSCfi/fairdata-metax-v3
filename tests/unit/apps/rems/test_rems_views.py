@@ -62,7 +62,7 @@ def test_rems_applications_admin(mock_rems, admin_client):
     assert res.status_code == 403, res.dat
 
 
-def test_get_rems_applications(
+def test_list_rems_applications(
     mock_rems, user_client, user2_client, handler_client, rems_application
 ):
     """Only applicant and handlers can see an application."""

@@ -71,7 +71,8 @@ class REMSService:
             if dataset := getattr(entity, "custom_license_dataset", None):
                 # Linked catalogue item needs to be archived before archiving license.
                 logger.info("Archiving related REMS resources")
-                self.archive_resources_by_resid(str(dataset.id))
+                dataset_resource_id = self.get_dataset_resource_id(dataset)
+                self.archive_resources_by_resid(dataset_resource_id)
 
         # Disabling hides an item from applicants.
         # Archiving also hides it in the administration view.
@@ -463,7 +464,16 @@ class REMSService:
         return REMSCatalogueItem.objects.filter(key=dataset_key).first()
 
     def get_dataset_key(self, dataset: "Dataset") -> str:
+        """Get Metax internal key for REMS entities related to a dataset."""
         return f"dataset-{dataset.id}"
+
+    def get_dataset_resource_id(self, dataset: "Dataset"):
+        """Get REMS external resource identifier for dataset.
+
+        The prefix is used for identifying which resources are generated
+        by a specific Metax instance.
+        """
+        return f"{settings.REMS_RESOURCE_PREFIX}:{dataset.id}"
 
     def archive_unused_custom_licenses(
         self, dataset: "Dataset", used_licenses: Iterable[REMSLicense]
@@ -543,7 +553,9 @@ class REMSService:
 
             dataset_key = self.get_dataset_key(dataset)
             resource = self.create_resource(
-                key=dataset_key, identifier=str(dataset.id), licenses=licenses
+                key=dataset_key,
+                identifier=self.get_dataset_resource_id(dataset),
+                licenses=licenses,
             )
             return self.create_catalogue_item(
                 key=dataset_key,
@@ -630,17 +642,30 @@ class REMSService:
             data["application-id"] = application_id
             return data
 
+    def filter_applications(self, applications: List[dict]) -> List[dict]:
+        """Filter applications belonging to this Metax instance, determined by prefix."""
+        matching_applications = []
+        prefix = f"{settings.REMS_RESOURCE_PREFIX}:"
+        for application in applications:
+            resources = application.get("application/resources", [])
+            if len(resources) > 0 and all(
+                res["resource/ext-id"].startswith(prefix) for res in resources
+            ):
+                matching_applications.append(application)
+        return matching_applications
+
     def get_user_applications_for_dataset(self, user: MetaxUser, dataset: "Dataset") -> List[dict]:
         self.check_user(user)
 
+        dataset_resource_id = self.get_dataset_resource_id(dataset)
         with self.session.as_user(user.fairdata_username):
-            resp = self.session.get(f"/api/my-applications?query=resource:{dataset.id}")
+            resp = self.session.get(f'/api/my-applications?query=resource:"{dataset_resource_id}"')
 
         # Get only applications with correct resource id and no other resources
         applications = []
-        for application in resp.json():
+        for application in self.filter_applications(resp.json()):
             resources = application["application/resources"]
-            if len(resources) == 1 and resources[0]["resource/ext-id"] == str(dataset.id):
+            if len(resources) == 1 and resources[0]["resource/ext-id"] == dataset_resource_id:
                 applications.append(application)
         return applications
 
@@ -648,19 +673,19 @@ class REMSService:
         self.check_user(user)
         with self.session.as_user(user.fairdata_username):
             resp = self.session.get("/api/applications")
-            return resp.json()
+            return self.filter_applications(resp.json())
 
     def get_user_applications_todo(self, user: MetaxUser):
         self.check_user(user)
         with self.session.as_user(user.fairdata_username):
             resp = self.session.get("/api/applications/todo")
-            return resp.json()
+            return self.filter_applications(resp.json())
 
     def get_user_applications_handled(self, user: MetaxUser):
         self.check_user(user)
         with self.session.as_user(user.fairdata_username):
             resp = self.session.get("/api/applications/handled")
-            return resp.json()
+            return self.filter_applications(resp.json())
 
     def _add_data_access_terms_field(self, application: dict):
         """Add is_data_access_terms boolean to REMS application data."""
@@ -681,6 +706,8 @@ class REMSService:
             resp = self.session.get(f"/api/applications/{application_id}")
 
         application = resp.json()
+        if len(self.filter_applications([application])) != 1:
+            return None
         self._add_data_access_terms_field(application)
         return application
 
@@ -689,7 +716,8 @@ class REMSService:
     ) -> Optional[dict]:
         application = self.get_user_application(user, application_id=application_id)
         resources = application.get("application/resources", [])
-        if len(resources) != 1 or resources[0]["resource/ext-id"] != str(dataset.id):
+        dataset_resource_id = self.get_dataset_resource_id(dataset)
+        if len(resources) != 1 or resources[0]["resource/ext-id"] != dataset_resource_id:
             return None  # Support only applications where the dataset is the only resource
 
         return application
@@ -697,8 +725,9 @@ class REMSService:
     def get_user_entitlements_for_dataset(self, user: MetaxUser, dataset: "Dataset") -> List[dict]:
         """Get active REMS entitlements to a dataset for user."""
         self.check_user(user)
+        dataset_resource_id = self.get_dataset_resource_id(dataset)
         resp = self.session.get(
-            f"/api/entitlements?resource={dataset.id}&user={user.fairdata_username}"
+            f"/api/entitlements?resource={dataset_resource_id}&user={user.fairdata_username}"
         )
         return resp.json()
 

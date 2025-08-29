@@ -971,6 +971,7 @@ def tweaked_settings(settings):
     settings.REMS_USER_ID = "owner"
     settings.REMS_API_KEY = "42"
     settings.REMS_ORGANIZATION_ID = "csc"
+    settings.REMS_RESOURCE_PREFIX = "metax-test"
 
 
 @pytest.fixture
