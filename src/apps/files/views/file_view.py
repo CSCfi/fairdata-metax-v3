@@ -5,6 +5,7 @@
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
 import logging
+from typing import Set
 
 from django import forms
 from django.conf import settings
@@ -22,7 +23,11 @@ from rest_framework.response import Response
 
 from apps.common.exceptions import ResourceLocked
 from apps.common.filters import VerboseChoiceFilter
-from apps.common.helpers import cachalot_toggle, get_filter_openapi_parameters
+from apps.common.helpers import (
+    cachalot_toggle,
+    get_attr_or_item,
+    get_filter_openapi_parameters,
+)
 from apps.common.serializers import DeleteListReturnValueSerializer, FlushQueryParamsSerializer
 from apps.common.serializers.fields import CommaSeparatedListField
 from apps.common.serializers.serializers import IncludeRemovedQueryParamsSerializer
@@ -125,20 +130,8 @@ class BaseFileViewSet(CommonModelViewSet):
     filterset_class = FileFilterSet
     filter_actions = ["list", "destroy_list"]
     http_method_names = ["get"]
-    queryset = File.available_objects.prefetch_related(
-        "storage",
-        "characteristics",
-        "characteristics__file_format_version",
-        "pas_compatible_file",
-        "non_pas_compatible_file",
-    )
-    queryset_include_removed = File.all_objects.prefetch_related(
-        "storage",
-        "characteristics",
-        "characteristics__file_format_version",
-        "pas_compatible_file",
-        "non_pas_compatible_file",
-    )
+    queryset = File.available_objects
+    queryset_include_removed = File.all_objects
     access_policy: FilesAccessPolicy = FilesAccessPolicy
 
     # Query serializer info for query_params and swagger generation
@@ -153,17 +146,50 @@ class BaseFileViewSet(CommonModelViewSet):
         },
     ]
 
+    @classmethod
+    def get_fast_fields(cls) -> Set[str]:
+        """Return serializer fields supported when listing files using queryset.value()."""
+        # Determine which serializer fields map directly to a non-relation field of File
+        serializer_fields = set(FileSerializer().get_fields())
+        concrete_nonrelations = {f.name for f in File._meta.fields if not f.is_relation}
+        fast_fields = serializer_fields & concrete_nonrelations
+
+        # Storage fields and pathname are handled separately
+        fast_fields |= {"storage_service", "csc_project", "pathname"}
+        return fast_fields
+
     def get_queryset(self):
         queryset = self.queryset
         if self.query_params.get("include_removed"):
             queryset = self.queryset_include_removed
 
+        queryset = queryset.prefetch_related(
+            "storage",
+            "characteristics",
+            "characteristics__file_format_version",
+            "pas_compatible_file",
+            "non_pas_compatible_file",
+        )
+
+        if fields := self.query_params.get("fields"):
+            # When all requested fields are supported here, use queryset.values() to
+            # request only needed fields and avoid instantiating Django objects.
+            # FileSerializer supports both File objects and dicts in to_representation.
+            fast_fields = self.get_fast_fields()
+            if all(field in fast_fields for field in fields):
+                queryset.prefetch_related(None)
+                if "pathname" in fields:
+                    queryset = queryset.annotate(pathname=Concat("directory_path", "filename"))
+                if "csc_project" in fields:
+                    queryset = queryset.annotate(csc_project=F("storage__csc_project"))
+
+                # Ensure id and storage_service are always present since FileSerializer needs them
+                queryset = queryset.annotate(storage_service=F("storage__storage_service"))
+                queryset = queryset.values(*fields, "storage_service", "id")
+
         return self.access_policy.scope_queryset(
             self.request, queryset, dataset_id=self.get_dataset_id()
         )
-
-    def retrieve(self, request, *args, **kwargs):
-        return super().retrieve(request, *args, **kwargs)
 
     def list(self, request, *args, **kwargs):
         pagination_enabled = self.paginator.pagination_enabled(request)
@@ -193,19 +219,25 @@ class BaseFileViewSet(CommonModelViewSet):
         if self.request and self.request.method != "GET":
             return context
 
-        if dataset_id := self.get_dataset_id():
+        # Get dataset_metadata for files if dataset is set
+        dataset_id = self.get_dataset_id()
+        fields = self.query_params.get("fields")
+        if fields and "dataset_metadata" not in fields:
+            dataset_id = None  # Avoid querying for dataset_metadata when not needed
+        if dataset_id:
             # Convert single instance to list
             files = instance
             if not (isinstance(files, list) or isinstance(files, QuerySet)):
                 files = [files]
 
             # Get file metadata objects as dict by file id
+            file_ids = [get_attr_or_item(f, "id") for f in files]
             file_metadata = (
                 get_file_metadata_model()
                 .objects.filter(file_set__dataset_id=dataset_id)
                 .prefetch_related("file_type")
                 .distinct("file_id")
-                .in_bulk([f.id for f in files], field_name="file_id")
+                .in_bulk(file_ids, field_name="file_id")
             )
             context["file_metadata"] = file_metadata
         return context

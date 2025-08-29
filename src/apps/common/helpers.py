@@ -112,15 +112,19 @@ def process_nested(value, pre_handler=None, post_handler=None, path=""):
     return value
 
 
-def get_attr_or_item(obj, key):
-    """Return value for attribute. If not found, get item with key. Return None if not found."""
+def get_attr_or_item(obj, key, default=empty):
+    """Return value for attribute. If not found, get item with key.
+
+    Raises an error if no value is not found and no default is set.
+    """
     if hasattr(obj, key):
         return getattr(obj, key)
     try:
         return obj[key]
     except (KeyError, IndexError, TypeError):
-        pass
-    return None
+        if default is empty:
+            raise
+    return default
 
 
 @contextmanager

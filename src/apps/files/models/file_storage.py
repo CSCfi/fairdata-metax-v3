@@ -219,7 +219,9 @@ class FileStorage(ProxyBasePolymorphicModel, AbstractBaseModel):
     @classmethod
     def get_key(cls, object) -> tuple:
         """Uniquely identify a FileStorage instance based on its field values."""
-        return cls.key_type(*(get_attr_or_item(object, field) for field in cls.key_type._fields))
+        return cls.key_type(
+            *(get_attr_or_item(object, field, None) for field in cls.key_type._fields)
+        )
 
     @classmethod
     def remove_unsupported_extra_fields(cls, data: dict) -> dict:
@@ -263,7 +265,7 @@ class FileStorage(ProxyBasePolymorphicModel, AbstractBaseModel):
         for field in cls.all_extra_fields:
             required = field in proxy_cls.required_extra_fields
             forbidden = field not in proxy_cls.get_allowed_extra_fields()
-            value = get_attr_or_item(object, field)
+            value = get_attr_or_item(object, field, None)
             error_msg = None
             if required and value is None:
                 error_msg = _("Field is required for storage_service='{location}'.")
