@@ -204,6 +204,9 @@ class UpdatingListSerializer(CommonListSerializer):
     update values of item1 and item2 and create item3.
     Any values not set by the serializer will remain, so omitting values2 would mean
     item2 is updated with values3 but has e.g. the original creation timestamp.
+
+    To prevent accidental partial updates, child serializers should make sure all
+    optional fields have a default value, or that a partial update makes sense.
     """
 
     def update(self, instance: Iterable[models.Model], validated_data):

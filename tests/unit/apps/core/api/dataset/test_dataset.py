@@ -906,6 +906,39 @@ def test_dataset_license_update(admin_client, dataset_a_json):
     assert lic3.removed
 
 
+
+@pytest.mark.usefixtures("data_catalog", "reference_data")
+def test_dataset_license_update_replace_partial(admin_client, dataset_a_json):
+    """Updating dataset licenses with partial data should use defaults for missing data."""
+    cc_json = {
+        "url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0",
+        "title": {"en": "CC License title"},
+        "description": {"en": "CC license description"},
+    }
+    dataset_a_json["access_rights"]["license"] = [cc_json]
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201, res.data
+    assert (
+        res.data["access_rights"]["license"][0]["url"]
+        == "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0"
+    )
+    _id = res.data["id"]
+
+    # Updating dataset with license that has only custom_url should replace
+    # the missing fields with default values
+    other_json = {"custom_url": "https://example.com/license"}
+    access_rights = {**dataset_a_json["access_rights"], "license": [other_json]}
+    res = admin_client.patch(
+        f"/v3/datasets/{_id}", {"access_rights": access_rights}, content_type="application/json"
+    )
+    assert res.status_code == 200, res.data
+    lic = res.data["access_rights"]["license"][0]
+    assert "title" not in lic
+    assert "description" not in lic
+    assert lic["url"] == "http://uri.suomi.fi/codelist/fairdata/license/code/other"
+    assert lic["custom_url"] == "https://example.com/license"
+
+
 def test_show_file_metadata_for_open_access_ida_catalog(
     admin_client, dataset_a_json, reference_data, data_catalog
 ):

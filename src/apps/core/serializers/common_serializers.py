@@ -65,10 +65,10 @@ class LicenseModelSerializer(CommonModelSerializer):
 
     """
 
-    title = serializers.JSONField(required=False, allow_null=True)
-    description = serializers.JSONField(required=False, allow_null=True)
-    url = serializers.URLField(required=False, allow_null=True)
-    pref_label = serializers.HStoreField(read_only=True)
+    title = MultiLanguageField(default=None, allow_null=True)
+    description = MultiLanguageField(default=None, allow_null=True)
+    url = serializers.URLField(default=None, allow_null=True)
+    pref_label = MultiLanguageField(read_only=True)
     in_scheme = serializers.URLField(max_length=255, read_only=True)
 
     class Meta:
@@ -105,7 +105,14 @@ class LicenseModelSerializer(CommonModelSerializer):
         return DatasetLicense.objects.create(**validated_data, reference=reference)
 
     def update(self, instance, validated_data):
+        custom_url = validated_data.get("custom_url")
         url = validated_data.pop("url", instance.reference.url)
+
+        if url is None and custom_url is None:
+            raise serializers.ValidationError(detail="License needs url or custom_url, got None")
+
+        if url is None:
+            url = "http://uri.suomi.fi/codelist/fairdata/license/code/other"
 
         if url != instance.reference.url:
             try:
