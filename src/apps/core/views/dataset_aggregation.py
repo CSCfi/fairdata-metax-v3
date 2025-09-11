@@ -187,7 +187,9 @@ def _get_project_by_language(dataset_ids, language):
 
 def _get_organizations(dataset_ids, filters={}):
     orgs = Organization.all_objects.filter(
-        **filters, actor_organizations__datasetactor__dataset__in=dataset_ids
+        **filters,
+        actor_organizations__datasetactor__dataset__in=dataset_ids,
+        actor_organizations__datasetactor__removed__isnull=True,
     )
 
     # Get topmost label in up to three organization levels

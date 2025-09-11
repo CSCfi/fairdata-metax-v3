@@ -3,6 +3,7 @@ import logging
 
 import pytest
 from django.utils.http import http_date
+from apps.core.models.catalog_record.related import DatasetActor
 from tests.utils import assert_nested_subdict
 
 from apps.core import factories
@@ -119,6 +120,44 @@ def test_aggregation_and_filters(
             print(f"{aggregate['query_parameter']}, {value}, {count}")
             res = admin_client.get(f"/v3/datasets?{aggregate['query_parameter']}={value}")
             assert res.data["count"] == count
+
+
+def test_aggregation_soft_deleted_actor(
+    admin_client, dataset_a_json, data_catalog, reference_data
+):
+    dataset_a_json["actors"] = [
+        {
+            "roles": ["creator", "publisher"],
+            "organization": {"pref_label": {"en": "Organization"}},
+        },
+        {"roles": ["creator"], "organization": {"pref_label": {"en": "OtherOrganization"}}},
+    ]
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    dataset_id = res.data["id"]
+    assert DatasetActor.all_objects.count() == 2
+
+    # DatasetActor uses soft delete when removing actor
+    actors_json = {
+        "actors": [
+            {
+                "roles": ["creator", "publisher"],
+                "organization": {"pref_label": {"en": "Organization"}},
+            }
+        ]
+    }
+    res = admin_client.patch(
+        f"/v3/datasets/{dataset_id}", actors_json, content_type="application/json"
+    )
+    assert res.status_code == 200, res.data
+    assert DatasetActor.all_objects.count() == 2
+    assert DatasetActor.available_objects.count() == 1
+
+    # Aggregates should not return soft deleted DatasetActor organizations
+    res = admin_client.get("/v3/datasets/aggregates")
+    assert res.status_code == 200
+    hits_en = [hit["value"]["en"] for hit in res.data["creator"]["hits"] if "en" in hit["value"]]
+    assert hits_en == ["Organization"]
 
 
 def test_aggregation_query_params(user_client):
