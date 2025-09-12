@@ -130,11 +130,10 @@ def test_get_rems_applications_todo_handled(
     assert res.status_code == 200
     assert len(res.data) == 0  # Only handlers can see 'todo' applications
 
-    # Approve the application (mocked since API endpoint for approval is not implemented yet)
+    # Approve the application.
     # 'Todo' applications should be moved to 'handled' after approval.
-    mock_rems.approve_application(
-        mock_rems.entities["application"][1], approver=mock_rems.entities["user"]["rems_handler"]
-    )
+    res = handler_client.post("/v3/rems/applications/1/approve")
+    assert res.status_code == 200
 
     res = handler_client.get("/v3/rems/applications/todo")
     assert res.status_code == 200
@@ -147,3 +146,37 @@ def test_get_rems_applications_todo_handled(
     res = user_client.get("/v3/rems/applications/handled")
     assert res.status_code == 200
     assert len(res.data) == 0  # Only handlers can see 'handled' applications
+
+
+def test_rems_applications_approve(
+    mock_rems, user_client, handler_client, manual_rems_application
+):
+    res = user_client.post("/v3/rems/applications/1/approve")
+    assert res.status_code == 403  # Only handler can approve
+
+    res = handler_client.post("/v3/rems/applications/1/approve")
+    assert res.status_code == 200
+
+    res = handler_client.get("/v3/rems/applications/1")
+    assert res.status_code == 200
+    assert res.data["application/state"] == "application.state/approved"
+    assert len(mock_rems.entities["entitlement"]) == 1
+
+    res = handler_client.post("/v3/rems/applications/1/approve")
+    assert res.status_code == 403  # Approving twice is forbidden
+
+
+def test_rems_applications_reject(mock_rems, user_client, handler_client, manual_rems_application):
+    res = user_client.post("/v3/rems/applications/1/reject")
+    assert res.status_code == 403  # Only handler can reject
+
+    res = handler_client.post("/v3/rems/applications/1/reject")
+    assert res.status_code == 200
+
+    res = handler_client.get("/v3/rems/applications/1")
+    assert res.status_code == 200
+    assert res.data["application/state"] == "application.state/rejected"
+    assert len(mock_rems.entities["entitlement"]) == 0
+
+    res = handler_client.post("/v3/rems/applications/1/reject")
+    assert res.status_code == 403  # Rejecting twice is forbidden

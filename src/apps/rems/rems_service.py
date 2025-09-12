@@ -1,15 +1,12 @@
-from dataclasses import dataclass
 import logging
 import traceback
 from typing import TYPE_CHECKING, Iterable, List, Optional
 
-
 from django.conf import settings
 from django.db import models, transaction
 from django.utils import timezone
-from rest_framework import serializers
+from rest_framework import exceptions
 
-from apps.rems.types import ApplicationBase, ApplicationLicenseData, LicenseType
 from apps.common.helpers import single_translation
 from apps.common.locks import lock_rems_publish
 from apps.rems.models import (
@@ -23,7 +20,8 @@ from apps.rems.models import (
     REMSUser,
     REMSWorkflow,
 )
-from apps.rems.rems_session import REMSSession
+from apps.rems.rems_session import REMSError, REMSSession
+from apps.rems.types import ApplicationBase, ApplicationLicenseData, LicenseType
 from apps.users.models import MetaxUser
 
 if TYPE_CHECKING:
@@ -519,6 +517,7 @@ class REMSService:
     def create_dataset_workflow(self, dataset: "Dataset") -> REMSWorkflow:
         """Get or create REMS workflow for dataset."""
         from apps.core.models.access_rights import REMSApprovalType
+
         if dataset.access_rights.rems_approval_type == REMSApprovalType.AUTOMATIC:
             return self.create_automatic_workflow(dataset.metadata_owner.organization)
         if dataset.access_rights.rems_approval_type == REMSApprovalType.MANUAL:
@@ -718,10 +717,19 @@ class REMSService:
         for license in application["application/licenses"]:
             license["is_data_access_terms"] = license["license/id"] in terms_rems_ids
 
-    def get_user_application(self, user: MetaxUser, application_id: int) -> Optional[dict]:
+    def get_user_application(
+        self, user: MetaxUser, application_id: int, allow_errors: Optional[List[int]] = None
+    ) -> Optional[dict]:
         self.check_user(user)
-        with self.session.as_user(user.fairdata_username):
-            resp = self.session.get(f"/api/applications/{application_id}")
+        try:
+            with self.session.as_user(user.fairdata_username):
+                resp = self.session.get(f"/api/applications/{application_id}")
+        except REMSError as err:
+            if err.response is None:
+                raise
+            if allow_errors and err.response.status_code in allow_errors:
+                return None  # Return None instead of raising error
+            raise
 
         application = resp.json()
         if len(self.filter_applications([application])) != 1:
@@ -789,3 +797,33 @@ class REMSService:
             )
         forms = []  # not implemented yet
         return ApplicationBase(licenses=licenses, forms=forms)
+
+    def approve_application(self, handler: MetaxUser, application_id: int):
+        # Ensure the REMS application exists for this user and is for this Metax instance
+        application = self.get_user_application(
+            user=handler, application_id=application_id, allow_errors=[403, 404]
+        )
+        if not application:
+            raise exceptions.NotFound("REMS application not found")
+
+        with self.session.as_user(handler.fairdata_username):
+            data = {
+                "application-id": application_id,
+            }
+            resp = self.session.post("/api/applications/approve", json=data)
+        return resp.json()
+
+    def reject_application(self, handler: MetaxUser, application_id: int):
+        # Ensure the REMS application exists for this user and is for this Metax instance
+        application = self.get_user_application(
+            user=handler, application_id=application_id, allow_errors=[403, 404]
+        )
+        if not application:
+            raise exceptions.NotFound("REMS application not found")
+
+        with self.session.as_user(handler.fairdata_username):
+            data = {
+                "application-id": application_id,
+            }
+            resp = self.session.post("/api/applications/reject", json=data)
+        return resp.json()

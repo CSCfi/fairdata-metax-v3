@@ -1,4 +1,3 @@
-import json
 import logging
 from contextlib import contextmanager
 
@@ -6,12 +5,31 @@ import requests
 from django.conf import settings
 from requests.exceptions import HTTPError
 
-
 logger = logging.getLogger(__name__)
 
 
 class REMSError(HTTPError):
-    pass
+    @property
+    def is_forbidden(self) -> bool:
+        """Helper for determining if REMS request failed due to being forbidden."""
+        if self.response is None:
+            return False
+        if self.response.status_code == 403:
+            return True
+
+        # Some cases return 200 with a "forbidden" error in the response json. For example,
+        # when the user can access an application but the requested command is not allowed.
+        if self.response.status_code == 200:
+            # Handle 200 response with {"success":false,"errors": {"type":"forbidden"}]}
+            try:
+                data = self.response.json()
+                if data["success"] == False:
+                    errors = data["errors"]
+                    if any(err.get("type") == "forbidden" for err in errors):
+                        return True
+            except Exception:
+                pass
+        return False
 
 
 class REMSSession(requests.Session):

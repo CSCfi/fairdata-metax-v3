@@ -1,8 +1,7 @@
-import copy
 import logging
 import re
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Set, Type, Union
+from typing import Dict, List, Optional, Set, Tuple, Type, Union
 
 from django.conf import settings
 from django.utils import timezone
@@ -244,7 +243,6 @@ class MockREMS:
             "application/workflow": workflow_data.workflow,  # workflow from catalogue item
             # Values that should be specific to current user, no logic implemented
             "application/permissions": [],  # what current user can do with the application
-            "application/roles": ["applicant"],  # application roles of current user
             # Fields with no logic implemented
             "application/external-id": generated_external_id,
             "application/todo": None,  # e.g. "waiting-for-review"
@@ -252,6 +250,8 @@ class MockREMS:
             "application/description": "",  # filled in when a form has application title field
             "application/attachments": [],  # filled in from attachment fields
             "application/forms": [],  # forms from both workflow and catalogue item
+            # Fields created dynamically on response
+            "application/roles": [], # roles the request user has in the application
         }
         return data
 
@@ -364,9 +364,11 @@ class MockREMS:
                 if resid := self.get_query_param(request, "resource"):  # External resource id
                     data = [item for item in data if item["resid"] == resid]
             elif entity_type == EntityType.APPLICATION:
-
                 data = [item for item in data if self.user_can_see_application(request, item)]
-                data = [self.filter_application_list_fields(item) for item in data]
+                data = [
+                    self.update_application_fields(request, application=item, in_list=True)
+                    for item in data
+                ]
                 return data
 
             if self.get_query_param(request, "archived") != "true":
@@ -383,10 +385,11 @@ class MockREMS:
             rems_id = self.get_request_path_rems_id(entity_type, request)
             self.add_call(action="get", entity_type=entity_type, request=request, rems_id=rems_id)
             data = self.entities[entity_type].get(rems_id)
-            if data and entity_type == EntityType.APPLICATION and not self.user_can_see_application(
-                request, application=data
-            ):
-                data = None
+            if data and entity_type == EntityType.APPLICATION:
+                if self.user_can_see_application(request, application=data):
+                    data = self.update_application_fields(request, application=data, in_list=False)
+                else:
+                    data = None
             if not data:
                 context.status_code = 404
                 context.reason = f"{entity_type} {rems_id} not found"
@@ -637,6 +640,11 @@ class MockREMS:
         }
         return entitlements[entitlement_id]
 
+    def reject_application(self, application) -> dict:
+        now = timezone.now()
+        application["application/modified"] = now.isoformat()
+        application["application/state"] = self.ApplicationState.REJECTED
+
     def filter_application_list_fields(self, application):
         """Application lists don't include forms or licenses."""
         return {
@@ -645,10 +653,25 @@ class MockREMS:
             if field not in {"application/forms", "application/licenses"}
         }
 
+    def add_user_application_fields(self, request, application: dict) -> dict:
+        roles = []
+        if self.user_is_applicant(request, application=application):
+            roles.append("applicant")
+        if self.user_is_handler(request, application=application):
+            roles.append("handler")
+        return {**application, "application/roles": roles}
+
+    def update_application_fields(self, request, application: dict, in_list=False) -> dict:
+        """Update request-specific fields of application dict."""
+        application = self.add_user_application_fields(request, application)
+        if in_list:
+            application = self.filter_application_list_fields(application)
+        return application
+
     def handle_list_my_applications(self, request, context):
         applications = self.entities[EntityType.APPLICATION].values()
         return [
-            self.filter_application_list_fields(a)
+            self.update_application_fields(request, application=a, in_list=True)
             for a in applications
             if self.user_is_applicant(request, application=a)
         ]
@@ -656,7 +679,7 @@ class MockREMS:
     def handle_list_applications_todo(self, request, context):
         applications = self.entities[EntityType.APPLICATION].values()
         return [
-            self.filter_application_list_fields(a)
+            self.update_application_fields(request, application=a, in_list=True)
             for a in applications
             if self.user_is_handler(request, application=a)
             and a["application/state"] == self.ApplicationState.SUBMITTED
@@ -665,12 +688,64 @@ class MockREMS:
     def handle_list_applications_handled(self, request, context):
         applications = self.entities[EntityType.APPLICATION].values()
         return [
-            self.filter_application_list_fields(a)
+            self.update_application_fields(request, application=a, in_list=True)
             for a in applications
             if self.user_is_handler(request, application=a)
             and a["application/state"] != self.ApplicationState.SUBMITTED
             and a["application/state"] != self.ApplicationState.DRAFT
         ]
+
+    def validate_application_command(
+        self, request, context, allowed_states: list
+    ) -> Tuple[Optional[dict], any]:
+        """Validate application command.
+
+        Parameters:
+            request: The incoming HTTP request containing JSON data with 'application-id'.
+            context: The response context object used to set HTTP status codes.
+            allowed_states: A list of valid application states for the command.
+
+        Returns:
+            tuple containing
+            - application (dict | None): Valid application for the command.
+            - error (any): Error response content if command is not valid.
+        """
+        rems_id = request.json()["application-id"]
+        application = self.entities[EntityType.APPLICATION][rems_id]
+        if not application:
+            context.status_code = 404
+            return None, f"Application {rems_id} not found"
+        if not self.user_can_see_application(request, application):
+            context.status_code = 403
+            return None, "Forbidden"
+        if (
+            not self.user_is_handler(request, application)
+            or application["application/state"] not in allowed_states
+        ):
+            # When user can see application, but has wrong role
+            # or application is in wrong state, return 200 with a forbidden error.
+            return None, {"success": False, "errors": [{"type": "forbidden"}]}
+        return application, None
+
+    def handle_approve_application(self, request, context):
+        application, error = self.validate_application_command(
+            request, context, allowed_states=[self.ApplicationState.SUBMITTED]
+        )
+        if error:
+            return error
+        userid = request.headers["X-REMS-USER-ID"]
+        handler = self.entities[EntityType.USER][userid]
+        self.approve_application(application, approver=handler)
+        return {"success": True}
+
+    def handle_reject_application(self, request, context):
+        application, error = self.validate_application_command(
+            request, context, allowed_states=[self.ApplicationState.SUBMITTED]
+        )
+        if error:
+            return error
+        self.reject_application(application)
+        return {"success": True}
 
     def handle_list_entitlements(self, request, context):
         userid = request.headers["X-REMS-USER-ID"]
@@ -733,10 +808,24 @@ class MockREMS:
             f"{settings.REMS_BASE_URL}/api/my-applications", json=self.handle_list_my_applications
         )
         mocker.get(
-            f"{settings.REMS_BASE_URL}/api/applications/todo", json=self.handle_list_applications_todo
+            f"{settings.REMS_BASE_URL}/api/applications/todo",
+            json=self.handle_list_applications_todo,
         )
         mocker.get(
-            f"{settings.REMS_BASE_URL}/api/applications/handled", json=self.handle_list_applications_handled
+            f"{settings.REMS_BASE_URL}/api/applications/handled",
+            json=self.handle_list_applications_handled,
+        )
+        mocker.get(
+            f"{settings.REMS_BASE_URL}/api/applications/handled",
+            json=self.handle_list_applications_handled,
+        )
+        mocker.post(
+            f"{settings.REMS_BASE_URL}/api/applications/approve",
+            json=self.handle_approve_application,
+        )
+        mocker.post(
+            f"{settings.REMS_BASE_URL}/api/applications/reject",
+            json=self.handle_reject_application,
         )
 
         # Entitlement-specific endpoints
