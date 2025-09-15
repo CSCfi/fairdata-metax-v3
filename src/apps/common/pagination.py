@@ -1,7 +1,5 @@
 from collections import OrderedDict
 
-import coreapi
-import coreschema
 from django.forms.fields import NullBooleanField
 from django.utils.encoding import force_str
 from django.utils.translation import gettext_lazy as _
@@ -51,22 +49,6 @@ class OffsetPagination(LimitOffsetPagination):
                 ]
             )
         )
-
-    def get_schema_fields(self, view):
-        fields = super().get_schema_fields(view)
-        fields.append(
-            coreapi.Field(
-                name=self.pagination_param,
-                required=False,
-                location="query",
-                schema=coreschema.Boolean(
-                    title="Pagination",
-                    description=force_str(self.pagination_description),
-                    default=True,
-                ),
-            ),
-        )
-        return fields
 
     def get_schema_operation_parameters(self, view):
         parameters = super().get_schema_operation_parameters(view)
