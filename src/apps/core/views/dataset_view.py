@@ -403,7 +403,7 @@ class DatasetViewSet(CommonModelViewSet):
         {"class": LatestVersionQueryParamsSerializer, "actions": ["list", "aggregates"]},
         {
             "class": ExpandCatalogQueryParamsSerializer,
-            "actions": ["list", "retrieve"],
+            "actions": ["list", "retrieve", "create", "update", "partial_update"],
         },
         {
             "class": DatasetRevisionsQueryParamsSerializer,
