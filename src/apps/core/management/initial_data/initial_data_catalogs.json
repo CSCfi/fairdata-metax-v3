@@ -337,6 +337,7 @@
     "dataset_groups_create": ["fairdata_users", "ida"],
     "dataset_groups_admin": ["ida", "pas"],
     "allow_remote_resources": false,
+    "rems_enabled": true,
     "storage_services": ["ida"],
     "allowed_pid_types": ["URN", "DOI"],
     "publishing_channels": ["etsin", "ttv"],
