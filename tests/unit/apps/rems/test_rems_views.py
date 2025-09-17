@@ -48,11 +48,32 @@ def automatic_rems_dataset(mock_rems, user):
 
 
 @pytest.fixture
-def rems_application(automatic_rems_dataset, user, handler):
+def manual_rems_dataset(mock_rems, user):
+    catalog = factories.DataCatalogFactory(rems_enabled=True)
+    dataset = factories.REMSDatasetFactory(
+        data_catalog=catalog,
+        access_rights__rems_approval_type="manual",
+        metadata_owner__user=user,
+        metadata_owner__organization="test_organization",
+    )
+    return dataset
+
+
+@pytest.fixture
+def automatic_rems_application(automatic_rems_dataset, user, handler):
     service = REMSService()
     service.publish_dataset(automatic_rems_dataset)
     service.create_application_for_dataset(
         user, automatic_rems_dataset, service.get_dataset_rems_license_ids(automatic_rems_dataset)
+    )
+
+
+@pytest.fixture
+def manual_rems_application(manual_rems_dataset, user, handler):
+    service = REMSService()
+    service.publish_dataset(manual_rems_dataset)
+    service.create_application_for_dataset(
+        user, manual_rems_dataset, service.get_dataset_rems_license_ids(manual_rems_dataset)
     )
 
 
@@ -63,7 +84,7 @@ def test_rems_applications_admin(mock_rems, admin_client):
 
 
 def test_list_rems_applications(
-    mock_rems, user_client, user2_client, handler_client, rems_application
+    mock_rems, user_client, user2_client, handler_client, automatic_rems_application
 ):
     """Only applicant and handlers can see an application."""
     res = user_client.get("/v3/rems/applications")
@@ -80,7 +101,7 @@ def test_list_rems_applications(
 
 
 def test_get_rems_application(
-    mock_rems, user_client, user2_client, handler_client, rems_application
+    mock_rems, user_client, user2_client, handler_client, automatic_rems_application
 ):
     """Only applicant and handlers can see an application."""
     res = user_client.get("/v3/rems/applications/1")
@@ -94,14 +115,9 @@ def test_get_rems_application(
 
 
 def test_get_rems_applications_todo_handled(
-    mock_rems, user, user_client, handler_client, rems_application
+    mock_rems, user, user_client, handler_client, manual_rems_application
 ):
     """Test 'todo' and 'handled' application views."""
-    # Manual approval workflow not supported yet, fake a 'not yet handled' application
-    mock_rems.entities["application"][1][
-        "application/state"
-    ] = mock_rems.ApplicationState.SUBMITTED
-
     res = handler_client.get("/v3/rems/applications/todo")
     assert res.status_code == 200
     assert len(res.data) == 1

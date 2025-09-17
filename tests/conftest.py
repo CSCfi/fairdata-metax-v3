@@ -972,6 +972,7 @@ def tweaked_settings(settings):
     settings.REMS_API_KEY = "42"
     settings.REMS_ORGANIZATION_ID = "csc"
     settings.REMS_RESOURCE_PREFIX = "metax-test"
+    settings.REMS_MANUAL_WORKFLOW = False
 
 
 @pytest.fixture
@@ -1005,6 +1006,7 @@ def mock_v2_integration(requests_mock, v2_integration_settings):
 @pytest.fixture
 def mock_rems(requests_mock, settings) -> MockREMS:
     settings.REMS_ENABLED = True
+    settings.REMS_MANUAL_WORKFLOW = True
     rems = MockREMS()
     rems.register_endpoints(requests_mock)
     management.call_command("create_initial_rems_entities")

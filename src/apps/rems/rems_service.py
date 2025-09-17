@@ -487,7 +487,7 @@ class REMSService:
                 self.archive_entity(lic)
         dataset.custom_rems_licenses(manager="all_objects").remove(*unused_licenses)
 
-    def create_automatic_workflow(self, metax_organization: str) -> REMSWorkflow:
+    def get_organization_handlers(self, metax_organization: str) -> List[str]:
         organization_users = MetaxUser.objects.get_organization_dac(metax_organization)
         handlers = []
         for user in organization_users:
@@ -496,25 +496,43 @@ class REMSService:
                     userid=user.username, name=user.get_full_name(), email=user.email
                 ).rems_id
             )
+        return sorted(handlers)
 
+    def create_automatic_workflow(self, metax_organization: str) -> REMSWorkflow:
+        handlers = self.get_organization_handlers(metax_organization)
         return self.create_workflow(
             key=f"automatic-{metax_organization}",
             title=f"Fairdata Automatic ({metax_organization})",
-            handlers=["approver-bot", "rejecter-bot", *sorted(handlers)],
+            handlers=["approver-bot", "rejecter-bot", *handlers],
+            metax_organization=metax_organization,
+        )
+
+    def create_manual_workflow(self, metax_organization: str) -> REMSWorkflow:
+        handlers = self.get_organization_handlers(metax_organization)
+        return self.create_workflow(
+            key=f"manual-{metax_organization}",
+            title=f"Fairdata Manual ({metax_organization})",
+            handlers=["rejecter-bot", *handlers],
             metax_organization=metax_organization,
         )
 
     def create_dataset_workflow(self, dataset: "Dataset") -> REMSWorkflow:
         """Get or create REMS workflow for dataset."""
-        # Only automatic approval supported for now
-        return self.create_automatic_workflow(dataset.metadata_owner.organization)
+        from apps.core.models.access_rights import REMSApprovalType
+        if dataset.access_rights.rems_approval_type == REMSApprovalType.AUTOMATIC:
+            return self.create_automatic_workflow(dataset.metadata_owner.organization)
+        if dataset.access_rights.rems_approval_type == REMSApprovalType.MANUAL:
+            return self.create_manual_workflow(dataset.metadata_owner.organization)
+        raise ValueError("Dataset is not enabled for REMS.")
 
     def update_organization_workflows(self, metax_organization: str) -> List[REMSWorkflow]:
         """Update REMS workflows for Metax organization."""
-        # Only automatic approval supported for now
+        updated_workflows = []
         if REMSWorkflow.objects.filter(key=f"automatic-{metax_organization}").exists():
-            return [self.create_automatic_workflow(metax_organization)]
-        return []
+            updated_workflows.append(self.create_automatic_workflow(metax_organization))
+        if REMSWorkflow.objects.filter(key=f"manual-{metax_organization}").exists():
+            updated_workflows.append(self.create_manual_workflow(metax_organization))
+        return updated_workflows
 
     @transaction.atomic
     def publish_dataset(

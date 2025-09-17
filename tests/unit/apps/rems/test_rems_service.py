@@ -265,11 +265,40 @@ def test_rems_service_create_application_with_autoapprove(mock_rems, user):
     applications = service.get_user_applications_for_dataset(user, dataset)
     assert len(applications) == 1
     assert applications[0]["application/state"] == "application.state/approved"
+    handlers = [
+        user["userid"]
+        for user in applications[0]["application/workflow"]["workflow.dynamic/handlers"]
+    ]
+    assert handlers == ["approver-bot", "rejecter-bot"]
 
     # Check entitlement has been created
     entitlements = service.get_user_entitlements_for_dataset(user, dataset)
     assert len(entitlements) == 1
     assert entitlements[0]["resource"] == f"metax-test:{dataset.id}"
+
+
+def test_rems_service_create_application_with_manual_approval(mock_rems, user):
+    catalog = factories.DataCatalogFactory(rems_enabled=True)
+    dataset = factories.REMSDatasetFactory(
+        data_catalog=catalog, access_rights__rems_approval_type="manual"
+    )
+    service = REMSService()
+    service.publish_dataset(dataset)
+    service.create_application_for_dataset(
+        user, dataset, service.get_dataset_rems_license_ids(dataset)
+    )
+    applications = service.get_user_applications_for_dataset(user, dataset)
+    assert len(applications) == 1
+    assert applications[0]["application/state"] == "application.state/submitted"
+    handlers = [
+        user["userid"]
+        for user in applications[0]["application/workflow"]["workflow.dynamic/handlers"]
+    ]
+    assert handlers == ["rejecter-bot"] # no approver-bot
+
+    # Check no entitlement has been created
+    entitlements = service.get_user_entitlements_for_dataset(user, dataset)
+    assert len(entitlements) == 0
 
 
 def test_rems_service_create_application_dataset_not_published_to_rems(mock_rems, user):

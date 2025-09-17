@@ -152,7 +152,7 @@ class AccessRights(AbstractBaseModel):
         return False  # unknown or missing access type
 
     def save(self, *args, **kwargs):
-        if self.rems_approval_type == REMSApprovalType.MANUAL:
+        if self.rems_approval_type == REMSApprovalType.MANUAL and not settings.REMS_MANUAL_WORKFLOW:
             raise ValidationError(
                 {"rems_approval_type": f"{REMSApprovalType.MANUAL} is not implemented yet"}
             )

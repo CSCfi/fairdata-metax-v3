@@ -25,6 +25,7 @@ def handle_user_updated(*args, instance: MetaxUser, created: bool, **kwargs):
     orgs = sorted(old_orgs | set(instance.dac_organizations))
 
     for org in orgs:
+        logger.info(f"Updating REMS workflows for organization {org}")
         workflows = REMSService().update_organization_workflows(org)
         for workflow in workflows:
             logger.info(f"Updated REMS workflow {workflow.key} (rems_id={workflow.rems_id})")
