@@ -14,7 +14,7 @@ from typing import List
 from django.conf import settings
 from django.core.cache import caches
 from django.db import transaction
-from django.db.models import Q, QuerySet, Value, prefetch_related_objects
+from django.db.models import Q, QuerySet, Value
 from django.http import Http404
 from django.utils.decorators import method_decorator
 from django.utils.http import parse_http_date
@@ -34,7 +34,6 @@ from watson import search
 from apps.common.filters import MultipleCharFilter, VerboseChoiceFilter
 from apps.common.helpers import ensure_dict, omit_empty, is_valid_uuid
 from apps.common.serializers.serializers import (
-    FieldsQueryParamsSerializer,
     FlushQueryParamsSerializer,
     IncludeRemovedQueryParamsSerializer,
 )
@@ -57,6 +56,7 @@ from apps.core.serializers.dataset_allowed_actions import (
 )
 from apps.core.serializers.dataset_metrics_serializer import DatasetMetricsQueryParamsSerializer
 from apps.core.serializers.dataset_serializer import (
+    DatasetFieldsQueryParamsSerializer,
     DatasetRevisionsQueryParamsSerializer,
     ExpandCatalogQueryParamsSerializer,
     LatestVersionQueryParamsSerializer,
@@ -433,7 +433,7 @@ class DatasetViewSet(CommonModelViewSet):
             "actions": ["destroy"],
         },
         {
-            "class": FieldsQueryParamsSerializer,
+            "class": DatasetFieldsQueryParamsSerializer,
             "actions": ["list", "retrieve"],
         },
     ]
@@ -550,30 +550,6 @@ class DatasetViewSet(CommonModelViewSet):
             )
         return super().get_serializer(*args, cache=serializer_cache, **kwargs)
 
-    def apply_partial_prefetch(
-        self, datasets: List[Dataset], serializer: DatasetSerializer, prefetches: list
-    ):
-        """Prefetch related objects with support for partial prefetch for cached datasets."""
-        values = {}
-        if cache := serializer.cache:
-            values = cache.values
-        uncached_datasets = [d for d in datasets if d.id not in values]
-        cached_datasets = [d for d in datasets if d.id in values]
-
-        # Do normal prefetch for datasets not in cache
-        prefetch_related_objects(uncached_datasets, *prefetches)
-
-        # For cached datasets, prefetch only uncached relations, e.g. draft_of, other_identifiers
-        cached_fields = set(serializer.get_cached_field_sources())
-        partial_prefetches = []  # Prefetches that are not in cached_fields
-        for prefetch in prefetches:
-            if type(prefetch) is str:
-                prefix = prefetch.split("__", 1)[0]
-                if prefix in cached_fields:
-                    continue
-            partial_prefetches.append(prefetch)
-        prefetch_related_objects(cached_datasets, *partial_prefetches)
-
     def list(self, request, *args, **kwargs):
         """List datasets."""
         queryset = self.filter_queryset(self.get_queryset())
@@ -599,7 +575,7 @@ class DatasetViewSet(CommonModelViewSet):
         cache = dataset_serializer.cache
         if cache and settings.DEBUG_DATASET_CACHE:
             logger.info(f"Datasets in cache: {len(cache.values)}/{len(datasets)}")
-        self.apply_partial_prefetch(datasets, list_serializer.child, prefetches)
+        dataset_serializer.apply_partial_prefetch(datasets, prefetches)
 
         serialized_data = list_serializer.data  # Run serialization
         if cache:
@@ -643,7 +619,7 @@ class DatasetViewSet(CommonModelViewSet):
         if (cache := serializer.cache) and settings.DEBUG_DATASET_CACHE:
             logger.info(f"Dataset in cache: {instance.id in cache.values}")
 
-        self.apply_partial_prefetch([instance], serializer, prefetches)
+        serializer.apply_partial_prefetch([instance], prefetches)
         return response.Response(serializer.data)
 
     @action(detail=True, methods=["post"], url_path="new-version")

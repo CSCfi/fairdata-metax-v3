@@ -1,7 +1,9 @@
 import pytest
 from django.utils import timezone
 
+from apps.common.profiling import count_queries
 from apps.core import factories
+from tests.utils import matchers
 
 pytestmark = [pytest.mark.django_db, pytest.mark.file]
 
@@ -83,6 +85,136 @@ def test_files_datasets(admin_client, file_tree_with_datasets):
             str(tree["dataset_c"].id),
         ]
     )
+
+
+def test_files_datasets_fields(admin_client, file_tree_with_datasets):
+    """Test listing dataset fields for files"""
+    tree = file_tree_with_datasets
+    tree["dataset_a"].title = {"en": "dataset a"}
+    tree["dataset_a"].persistent_identifier = "pid-a"
+    tree["dataset_a"].save()
+    tree["dataset_b"].title = {"en": "dataset b"}
+    tree["dataset_b"].persistent_identifier = "pid-b"
+    tree["dataset_b"].preservation = factories.PreservationFactory(pas_process_running=True)
+    tree["dataset_b"].save()
+
+    res = admin_client.post(
+        "/v3/files/datasets?fields=id,title,preservation,persistent_identifier",
+        [
+            tree["files"]["/dir/a.txt"].id,  # dataset a
+            tree["files"]["/dir/b.txt"].id,  # dataset b
+        ],
+        content_type="application/json",
+    )
+    assert res.status_code == 200, res.data
+
+    data = res.json()
+    assert len(data) == 2
+    assert data[0] == {
+        "id": str(tree["dataset_a"].id),
+        "persistent_identifier": "pid-a",
+        "title": {"en": "dataset a"},
+    }
+    assert data[1] == {
+        "id": str(tree["dataset_b"].id),
+        "persistent_identifier": "pid-b",
+        "title": {"en": "dataset b"},
+        "preservation": matchers.DictContaining({"pas_process_running": True}),
+    }
+
+
+def test_files_datasets_cache(admin_client, file_tree_with_datasets, dataset_cache):
+    """Test that /files/datasets uses dataset cache when used with ?fields."""
+    tree = file_tree_with_datasets
+    assert dataset_cache.get(tree["dataset_a"].id) is None
+    assert dataset_cache.get(tree["dataset_b"].id) is None
+
+    with count_queries() as counts:
+        res = admin_client.post(
+            "/v3/files/datasets?fields=id,access_rights",
+            [
+                tree["files"]["/dir/a.txt"].id,  # dataset a
+                tree["files"]["/dir/b.txt"].id,  # dataset b
+            ],
+            content_type="application/json",
+        )
+        assert res.status_code == 200, res.data
+        data1 = res.json()
+
+    # Datasets were not in cache yet AccessRight was queried
+    assert counts["SQLCompiler"]["AccessRights"] == 1
+
+    # Datasets are now in serializer cache
+    assert dataset_cache.get(tree["dataset_a"].id)
+    assert dataset_cache.get(tree["dataset_b"].id)
+
+    with count_queries() as counts2:
+        res = admin_client.post(
+            "/v3/files/datasets?fields=id,access_rights",
+            [
+                tree["files"]["/dir/a.txt"].id,  # dataset a
+                tree["files"]["/dir/b.txt"].id,  # dataset b
+            ],
+            content_type="application/json",
+        )
+        assert res.status_code == 200, res.data
+        data2 = res.json()
+
+    # Datasets were in cache, AccessRight is not queried
+    assert counts2["SQLCompiler"]["AccessRights"] == 0
+    assert data1 == data2
+
+
+def test_files_datasets_fields_include_nulls(admin_client, file_tree_with_datasets, dataset_cache):
+    """Dataset cache is not used when ?include_nulls=true."""
+    tree = file_tree_with_datasets
+    tree["dataset_a"].title = {"en": "dataset a"}
+    tree["dataset_a"].persistent_identifier = "pid-a"
+    tree["dataset_a"].save()
+
+    res = admin_client.post(
+        "/v3/files/datasets?fields=id,title,preservation,persistent_identifier&include_nulls=true",
+        [
+            tree["files"]["/dir/a.txt"].id,  # dataset a
+        ],
+        content_type="application/json",
+    )
+    assert res.status_code == 200, res.data
+    data = res.json()
+    assert data == [
+        {
+            "id": str(tree["dataset_a"].id),
+            "persistent_identifier": "pid-a",
+            "title": {"en": "dataset a"},
+            "preservation": None,
+        }
+    ]
+    assert dataset_cache.get(tree["dataset_a"].id) is None  # Don't cache when using include_nulls
+
+
+def test_files_datasets_fields_relations(admin_client, file_tree_with_datasets):
+    """Test listing dataset fields per file."""
+    tree = file_tree_with_datasets
+    res = admin_client.post(
+        "/v3/files/datasets?fields=id,title&relations=true",
+        [
+            tree["files"]["/dir/a.txt"].id,  # dataset a
+            tree["files"]["/dir/c.txt"].id,  # dataset a,b,c
+        ],
+        content_type="application/json",
+    )
+    assert res.status_code == 200, res.data
+    data = res.json()
+    assert data == {
+        str(tree["files"]["/dir/a.txt"].id): [
+            {"id": str(tree["dataset_a"].id), "title": tree["dataset_a"].title}
+        ],
+        str(tree["files"]["/dir/c.txt"].id): [
+            {"id": str(tree["dataset_a"].id), "title": tree["dataset_a"].title},
+            {"id": str(tree["dataset_b"].id), "title": tree["dataset_b"].title},
+            {"id": str(tree["dataset_c"].id), "title": tree["dataset_c"].title},
+        ],
+    }
 
 
 def test_files_datasets_for_service(admin_client, file_tree_with_datasets):

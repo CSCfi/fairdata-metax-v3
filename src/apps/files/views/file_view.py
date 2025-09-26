@@ -5,7 +5,8 @@
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
 import logging
-from typing import Set
+from typing import Dict, Iterable, List, Set, Union
+from uuid import UUID
 
 from django import forms
 from django.conf import settings
@@ -25,6 +26,7 @@ from apps.common.exceptions import ResourceLocked
 from apps.common.filters import VerboseChoiceFilter
 from apps.common.helpers import (
     cachalot_toggle,
+    deduplicate_list,
     get_attr_or_item,
     get_filter_openapi_parameters,
 )
@@ -32,6 +34,7 @@ from apps.common.serializers import DeleteListReturnValueSerializer, FlushQueryP
 from apps.common.serializers.fields import CommaSeparatedListField
 from apps.common.serializers.serializers import IncludeRemovedQueryParamsSerializer
 from apps.common.views import CommonModelViewSet
+from apps.core.serializers.dataset_serializer import DatasetFieldsQueryParamsSerializer
 from apps.files.helpers import get_file_metadata_model
 from apps.files.models.file import File
 from apps.files.permissions import FilesAccessPolicy
@@ -267,6 +270,10 @@ class FileViewSet(BaseFileViewSet):
             "actions": ["datasets"],
         },
         {
+            "class": DatasetFieldsQueryParamsSerializer,
+            "actions": ["datasets"],
+        },
+        {
             "class": FileBulkQuerySerializer,
             "actions": ["post_many", "patch_many", "put_many", "delete_many"],
         },
@@ -280,6 +287,53 @@ class FileViewSet(BaseFileViewSet):
             return FileDeleteListFilterSet
         else:
             return FileFilterSet
+
+    def _get_serialized_datasets_from_ids(
+        self, ids: Iterable[UUID], fields: List[str], by_id=False
+    ) -> Union[List[dict], Dict[UUID, dict]]:
+        """Return serialized datasets for given list of dataset ids.
+
+        When by_id is enabled, return dict of dataset id -> serialized dataset."""
+        from apps.core.serializers import DatasetSerializer
+        from apps.core.models import Dataset
+        from apps.core.cache import DatasetSerializerCache
+
+        # DatasetSerializer expects view and request in context,
+        # so we create dummy objects containing the required attributes.
+        class DummyView:
+            query_params = {"fields": fields}
+
+        class DummyRequest:
+            user = self.request.user
+
+        # Fetch datasets and reorder them to be in the same order as ids.
+        # Assumes all requested datasets exist.
+        id_list = list(ids)
+        datasets_by_id = Dataset.objects.filter(id__in=id_list).in_bulk()
+        datasets = [datasets_by_id[_id] for _id in id_list]
+
+        # Use dataset cache unless include_nulls is enabled (like how DatasetViewSet.list works)
+        serializer_cache = None
+        if not self.include_nulls:
+            serializer_cache = DatasetSerializerCache(initial_instances=datasets, autocommit=True)
+        list_serializer = DatasetSerializer(
+            instance=datasets,
+            context={
+                "view": DummyView(),
+                "request": DummyRequest(),
+                "include_nulls": self.include_nulls,
+            },
+            cache=serializer_cache,
+            many=True,
+        )
+        dataset_serializer = list_serializer.child
+        dataset_serializer.apply_partial_prefetch(
+            datasets, prefetches=Dataset.common_prefetch_fields
+        )
+        serialized_datasets = list_serializer.data
+        if by_id:  # Create (id, dict) tuples and convert them to mapping id->dict
+            return dict(zip(id_list, serialized_datasets))
+        return serialized_datasets
 
     @swagger_auto_schema(
         request_body=FilesDatasetsBodySerializer,
@@ -304,9 +358,14 @@ class FileViewSet(BaseFileViewSet):
         `storage_service`: List only files in specific storage service, and
         use `storage_identifier` as file identifier in both input and output.
 
+        `fields`: When set, instead of returning identifiers, return objects containing
+        specified dataset fields.
 
         POST is used instead of GET because of query parameter length limitations for GET requests.
         """
+        params = self.query_params
+        relations: bool = params["relations"]
+        fields = params.get("fields")
 
         body_serializer = FilesDatasetsBodySerializer(data=self.request.data)
         body_serializer.is_valid(raise_exception=True)
@@ -316,21 +375,20 @@ class FileViewSet(BaseFileViewSet):
         file_id_type = "id"
 
         # Allow limiting results to specific storage_service
-        params = self.query_params
         storage_filter = Q()
         if storage_service := params["storage_service"]:
             file_id_type = "storage_identifier"
             storage_filter = Q(storage__storage_service=storage_service)
 
         try:
-            if params["relations"]:
+            if relations:
                 # Return dict of file ids -> list of dataset ids
                 file_id_filter = Q(**{f"{file_id_type}__in": ids})
                 queryset = File.objects.filter(
                     file_id_filter, storage_filter, file_sets__isnull=False
                 ).values(key=F(file_id_type))
                 queryset = queryset.annotate(
-                    values=ArrayAgg(
+                    values=ArrayAgg(  # Values is a list of dataset ids for a file
                         "file_sets__dataset_id",
                         filter=Q(
                             file_sets__dataset__deprecated__isnull=True,
@@ -339,9 +397,25 @@ class FileViewSet(BaseFileViewSet):
                         default=Value(None),
                     )
                 )
-                return Response(
-                    {str(v["key"]): v["values"] for v in queryset if v["values"] is not None}
+
+                if not fields:
+                    return Response(
+                        {str(v["key"]): v["values"] for v in queryset if v["values"] is not None}
+                    )
+
+                # Fields requested, so we convert the lists of dataset ids to lists of dataset dicts
+                dataset_ids = deduplicate_list(_id for file in queryset for _id in file["values"])
+                serialized_datasets_by_id = self._get_serialized_datasets_from_ids(
+                    dataset_ids, fields, by_id=True
                 )
+                return Response(
+                    {
+                        str(v["key"]): [serialized_datasets_by_id[_id] for _id in v["values"]]
+                        for v in queryset
+                        if v["values"] is not None
+                    }
+                )
+
             else:
                 # Return list of dataset ids
                 file_id_filter = Q(**{f"files__{file_id_type}__in": ids})
@@ -356,6 +430,9 @@ class FileViewSet(BaseFileViewSet):
                     .values_list("dataset__id", flat=True)
                     .distinct()
                 )
+
+                if fields:
+                    return Response(self._get_serialized_datasets_from_ids(queryset, fields))
                 return Response(queryset)
 
         except DjangoValidationError as e:

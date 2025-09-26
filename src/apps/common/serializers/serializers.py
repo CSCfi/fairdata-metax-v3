@@ -22,7 +22,6 @@ from rest_framework.settings import api_settings
 from rest_framework.utils import html, model_meta
 
 from apps.common.serializers.fields import (
-    CommaSeparatedListField,
     MultiLanguageField,
     NullableCharField,
     PrivateEmailField,
@@ -332,12 +331,6 @@ class FlushQueryParamsSerializer(serializers.Serializer):
 
     flush = serializers.BooleanField(
         required=False, default=False, help_text=_("Completely remove object from database.")
-    )
-
-
-class FieldsQueryParamsSerializer(serializers.Serializer):
-    fields = CommaSeparatedListField(
-        required=False, help_text=_("Filter specific fields of the dataset.")
     )
 
 

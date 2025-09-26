@@ -12,6 +12,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.settings import api_settings
 from watson.search import skip_index_update
+from django.db.models import prefetch_related_objects
 
 from apps.cache.serializer_cache import SerializerCacheSerializer
 from apps.common.serializers import (
@@ -21,6 +22,7 @@ from apps.common.serializers import (
     OneOf,
 )
 from apps.common.serializers.fields import (
+    CommaSeparatedListField,
     ConstantField,
     ListValidChoicesField,
     NoopField,
@@ -208,11 +210,47 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
         "cumulative_state",
     }
 
+    def apply_partial_prefetch(self, datasets: List[Dataset], prefetches: list):
+        """Prefetch related objects with support for partial prefetch for cached datasets.
+
+        If any datasets are in the serialized datasets cache, only uncached relations
+        are prefetched for them. Other relations are assumed do be in the cache.
+        """
+        values = {}
+        if cache := self.cache:
+            values = cache.values
+        uncached_datasets = [d for d in datasets if d.id not in values]
+        cached_datasets = [d for d in datasets if d.id in values]
+
+        # Do normal prefetch for datasets not in cache
+        prefetch_related_objects(uncached_datasets, *prefetches)
+
+        # For cached datasets, prefetch only uncached relations, e.g. draft_of, other_identifiers
+        cached_fields = set(self.get_cached_field_sources())
+        partial_prefetches = []  # Prefetches that are not in cached_fields
+        for prefetch in prefetches:
+            if type(prefetch) is str:
+                prefix = prefetch.split("__", 1)[0]
+                if prefix in cached_fields:
+                    continue
+            partial_prefetches.append(prefetch)
+
+        prefetch_related_objects(cached_datasets, *partial_prefetches)
+
+        # Mark datasets as having been prefetched so
+        # dataset.ensure_prefetch() won't trigger another prefetch
+        for dataset in cached_datasets:
+            dataset.is_prefetched = True
+        for dataset in uncached_datasets:
+            dataset.is_prefetched = True
+
     def get_fields(self):
         fields = super().get_fields()
-        if not self.context["view"].query_params.get("include_allowed_actions"):
+        view = self.context.get("view")
+        query_params = getattr(view, "query_params", {})
+        if not query_params.get("include_allowed_actions"):
             fields.pop("allowed_actions", None)
-        if not self.context["view"].query_params.get("include_metrics"):
+        if not query_params.get("include_metrics"):
             fields.pop("metrics", None)
         return fields
 
@@ -606,4 +644,18 @@ class LatestVersionQueryParamsSerializer(serializers.Serializer):
     latest_versions = serializers.BooleanField(
         default=False,
         help_text=_("Return only latest datasets versions available for the requesting user."),
+    )
+
+
+class DatasetFieldsQueryParamsSerializer(serializers.Serializer):
+    fields = CommaSeparatedListField(
+        required=False,
+        child=serializers.ChoiceField(
+            choices=sorted(
+                list(DatasetSerializer().get_fields())
+                # Add fields that are not enavbled in get_fields by default
+                + ["allowed_actions", "metrics"]
+            )
+        ),
+        help_text=_("Filter specific fields of the dataset."),
     )

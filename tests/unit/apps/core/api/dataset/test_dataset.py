@@ -138,7 +138,16 @@ def test_list_datasets_fields_param(admin_client, dataset_a, dataset_b):
 def test_list_datasets_faulty_fields_param(admin_client, dataset_a, dataset_b):
     res = admin_client.get(reverse("dataset-list"), {"fields": "id,foo,bar,created"})
     assert res.status_code == 400
-    assert res.data == {"fields": "Fields not found in dataset: foo,bar"}
+    assert res.json() == {
+        "fields": {
+            "1": [
+                '"foo" is not a valid choice.',
+            ],
+            "2": [
+                '"bar" is not a valid choice.',
+            ],
+        }
+    }
 
 
 def test_list_datasets_with_invalid_query_param(admin_client, dataset_a):
@@ -904,7 +913,6 @@ def test_dataset_license_update(admin_client, dataset_a_json):
     assert new_lic2.description == lic3_json["description"]
     lic3.refresh_from_db()
     assert lic3.removed
-
 
 
 @pytest.mark.usefixtures("data_catalog", "reference_data")
