@@ -74,6 +74,23 @@ class REMSApplicationsViewSet(QueryParamsMixin, ViewSet):
             raise
         return Response(data=data)
 
+    @action(detail=True, url_path="close", methods=["post"])
+    def close(self, request, *args, **kwargs):
+        """Close a submitted or approved REMS application."""
+        self.check_rems_request(request)
+        application_id = self.parse_application_id(kwargs["pk"])
+
+        service = REMSService()
+        try:
+            data = service.close_application(request.user, application_id=application_id)
+        except REMSError as err:
+            if err.is_forbidden:
+                raise exceptions.PermissionDenied(
+                    detail="You are not allowed to perform this action"
+                )
+            raise
+        return Response(data=data)
+
     def list(self, request, *args, **kwargs):
         """List all REMS applications user can see."""
         self.check_rems_request(request)

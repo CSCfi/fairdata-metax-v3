@@ -645,6 +645,21 @@ class MockREMS:
         application["application/modified"] = now.isoformat()
         application["application/state"] = self.ApplicationState.REJECTED
 
+    def close_application(self, application) -> dict:
+        now = timezone.now()
+        application["application/modified"] = now.isoformat()
+        application["application/state"] = self.ApplicationState.CLOSED
+
+        # End all entitlements linked to the application
+        application_entitlements = [
+            entitlement
+            for user_entitlements in self.entities[EntityType.ENTITLEMENT].values()
+            for entitlement in user_entitlements.values()
+            if entitlement["application-id"] == application["application/id"]
+        ]
+        for entitlement in application_entitlements:
+            entitlement["end"] = now.isoformat()
+
     def filter_application_list_fields(self, application):
         """Application lists don't include forms or licenses."""
         return {
@@ -747,6 +762,17 @@ class MockREMS:
         self.reject_application(application)
         return {"success": True}
 
+    def handle_close_application(self, request, context):
+        application, error = self.validate_application_command(
+            request,
+            context,
+            allowed_states=[self.ApplicationState.SUBMITTED, self.ApplicationState.APPROVED],
+        )
+        if error:
+            return error
+        self.close_application(application)
+        return {"success": True}
+
     def handle_list_entitlements(self, request, context):
         userid = request.headers["X-REMS-USER-ID"]
         if userid != settings.REMS_USER_ID:
@@ -826,6 +852,10 @@ class MockREMS:
         mocker.post(
             f"{settings.REMS_BASE_URL}/api/applications/reject",
             json=self.handle_reject_application,
+        )
+        mocker.post(
+            f"{settings.REMS_BASE_URL}/api/applications/close",
+            json=self.handle_close_application,
         )
 
         # Entitlement-specific endpoints

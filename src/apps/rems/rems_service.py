@@ -544,7 +544,7 @@ class REMSService:
             raise ValueError("Dataset needs to be published to enable REMS.")
 
         if not dataset.data_catalog.rems_enabled:
-            raise ValueError("Catalog is not enabled for REMS.")
+            raise ValueError(f"Catalog {dataset.data_catalog.id} is not enabled for REMS.")
 
         if not dataset.is_rems_dataset:
             raise ValueError("Dataset is not enabled for REMS.")
@@ -799,6 +799,7 @@ class REMSService:
         return ApplicationBase(licenses=licenses, forms=forms)
 
     def approve_application(self, handler: MetaxUser, application_id: int):
+        """Approve REMS application."""
         # Ensure the REMS application exists for this user and is for this Metax instance
         application = self.get_user_application(
             user=handler, application_id=application_id, allow_errors=[403, 404]
@@ -814,6 +815,7 @@ class REMSService:
         return resp.json()
 
     def reject_application(self, handler: MetaxUser, application_id: int):
+        """Reject REMS application."""
         # Ensure the REMS application exists for this user and is for this Metax instance
         application = self.get_user_application(
             user=handler, application_id=application_id, allow_errors=[403, 404]
@@ -826,4 +828,24 @@ class REMSService:
                 "application-id": application_id,
             }
             resp = self.session.post("/api/applications/reject", json=data)
+        return resp.json()
+
+    def close_application(self, handler: MetaxUser, application_id: int):
+        """Close REMS application.
+
+        A submitted or approved application can be closed to mark it as no longer relevant.
+        Closing an approved application will also remove the associated entitlements.
+        """
+        # Ensure the REMS application exists for this user and is for this Metax instance
+        application = self.get_user_application(
+            user=handler, application_id=application_id, allow_errors=[403, 404]
+        )
+        if not application:
+            raise exceptions.NotFound("REMS application not found")
+
+        with self.session.as_user(handler.fairdata_username):
+            data = {
+                "application-id": application_id,
+            }
+            resp = self.session.post("/api/applications/close", json=data)
         return resp.json()

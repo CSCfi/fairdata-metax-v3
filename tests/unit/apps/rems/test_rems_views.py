@@ -160,7 +160,7 @@ def test_rems_applications_approve(
     res = handler_client.get("/v3/rems/applications/1")
     assert res.status_code == 200
     assert res.data["application/state"] == "application.state/approved"
-    assert len(mock_rems.entities["entitlement"]) == 1
+    assert len(mock_rems.entities["entitlement"]["test_user"]) == 1
 
     res = handler_client.post("/v3/rems/applications/1/approve")
     assert res.status_code == 403  # Approving twice is forbidden
@@ -180,3 +180,38 @@ def test_rems_applications_reject(mock_rems, user_client, handler_client, manual
 
     res = handler_client.post("/v3/rems/applications/1/reject")
     assert res.status_code == 403  # Rejecting twice is forbidden
+
+
+def test_rems_applications_close_submitted(
+    mock_rems, user_client, handler_client, manual_rems_application
+):
+    """Close application in 'submitted' state."""
+    res = user_client.post("/v3/rems/applications/1/close")
+    assert res.status_code == 403  # Only handler can close
+
+    res = handler_client.post("/v3/rems/applications/1/close")
+    assert res.status_code == 200
+
+    res = handler_client.get("/v3/rems/applications/1")
+    assert res.status_code == 200
+    assert res.data["application/state"] == "application.state/closed"
+    assert len(mock_rems.entities["entitlement"]) == 0
+
+
+def test_rems_applications_close_approved(
+    mock_rems, user_client, handler_client, automatic_rems_application
+):
+    """Close application in 'approved' state."""
+    res = user_client.post("/v3/rems/applications/1/close")
+    assert res.status_code == 403  # Only handler can close
+
+    res = handler_client.post("/v3/rems/applications/1/close")
+    assert res.status_code == 200
+
+    res = handler_client.get("/v3/rems/applications/1")
+    assert res.status_code == 200
+    assert res.data["application/state"] == "application.state/closed"
+
+    # Existing entitlement should be ended
+    assert len(mock_rems.entities["entitlement"]["test_user"]) == 1
+    assert mock_rems.entities["entitlement"]["test_user"][1]["end"] is not None
