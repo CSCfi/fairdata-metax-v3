@@ -146,7 +146,7 @@ class AccessRights(AbstractBaseModel):
             return request.user.is_authenticated
         elif access_type == AccessTypeChoices.EMBARGO:
             return self._embargo_passed(datetime_to_date(timezone.now()))
-        elif access_type in {AccessTypeChoices.PERMIT, AccessTypeChoices.RESTRICTED}:
+        elif access_type == AccessTypeChoices.PERMIT:
             # Access controlled by REMS. User needs to have at least one active entitlement
             return self._user_has_rems_entitlement(request.user, dataset)
         return False  # unknown or missing access type

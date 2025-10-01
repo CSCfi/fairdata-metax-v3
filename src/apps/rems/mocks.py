@@ -72,6 +72,7 @@ class MockREMS:
         self.calls = []  # Used for tracking called endpoints in format "endpoint/entity_type"
         self.entities: Dict[str, dict]  # Entities by entity_type and rems_id
         self.id_counters: Dict[str, int]  # Counters for autoincrementing id by entity type
+        self.event_counter = 0
         self.clear_entities()
         self.reset_counters()
 
@@ -79,6 +80,11 @@ class MockREMS:
         self.entities = {}
         for entity_type in EntityType:
             self.entities[entity_type] = {}
+        self.entities[EntityType.USER][settings.REMS_USER_ID] = {
+            "userid": settings.REMS_USER_ID,
+            "name": "Metax service",
+            "email": None,
+        }
 
     def reset_counters(self):
         self.id_counters = {}  # Counters for autoincrementing id by entity type
@@ -246,12 +252,13 @@ class MockREMS:
             # Fields with no logic implemented
             "application/external-id": generated_external_id,
             "application/todo": None,  # e.g. "waiting-for-review"
-            "application/events": [],  # all changes to application, who, what, when etc.
             "application/description": "",  # filled in when a form has application title field
             "application/attachments": [],  # filled in from attachment fields
             "application/forms": [],  # forms from both workflow and catalogue item
+            # Fields with partial implementation
+            "application/events": [],  # all changes to application, who, what, when etc.
             # Fields created dynamically on response
-            "application/roles": [], # roles the request user has in the application
+            "application/roles": [],  # roles the request user has in the application
         }
         return data
 
@@ -366,7 +373,7 @@ class MockREMS:
             elif entity_type == EntityType.APPLICATION:
                 data = [item for item in data if self.user_can_see_application(request, item)]
                 data = [
-                    self.update_application_fields(request, application=item, in_list=True)
+                    self.update_request_application_fields(request, application=item, in_list=True)
                     for item in data
                 ]
                 return data
@@ -387,7 +394,9 @@ class MockREMS:
             data = self.entities[entity_type].get(rems_id)
             if data and entity_type == EntityType.APPLICATION:
                 if self.user_can_see_application(request, application=data):
-                    data = self.update_application_fields(request, application=data, in_list=False)
+                    data = self.update_request_application_fields(
+                        request, application=data, in_list=False
+                    )
                 else:
                     data = None
             if not data:
@@ -620,6 +629,26 @@ class MockREMS:
                 self.approve_application(application, handler)
                 break
 
+    def add_application_event(self, application: dict, actor: dict, event: dict):
+        """Add event to application."""
+        now = timezone.now()
+        self.event_counter += 1
+        event_id = self.event_counter
+
+        application["application/modified"] = now.isoformat()
+        event = {
+            "event/actor": actor["userid"],
+            "event/actor-attributes": actor,
+            "application/id": application["application/id"],
+            "event/time": now.isoformat(),
+            "event/id": event_id,
+            **event,
+        }
+        # Ensure required fields exist in the event
+        assert "event/type" in event
+        assert "event/visibility" in event
+        application["application/events"].append(event)
+
     def approve_application(self, application, approver) -> dict:
         now = timezone.now()
         userid = application["application/applicant"]["userid"]
@@ -640,7 +669,7 @@ class MockREMS:
         }
         return entitlements[entitlement_id]
 
-    def reject_application(self, application) -> dict:
+    def reject_application(self, application: dict):
         now = timezone.now()
         application["application/modified"] = now.isoformat()
         application["application/state"] = self.ApplicationState.REJECTED
@@ -660,6 +689,19 @@ class MockREMS:
         for entitlement in application_entitlements:
             entitlement["end"] = now.isoformat()
 
+    def remark_application(
+        self, application: dict, handler: dict, comment: str, public: bool
+    ) -> dict:
+        event = {
+            "event/type": "application.event/remarked",
+            "application/comment": comment,
+        }
+        if public:
+            event["event/visibility"] = "visibility/public"
+        else:
+            event["event/visibility"] = "visibility/private"
+        self.add_application_event(application, handler, event)
+
     def filter_application_list_fields(self, application):
         """Application lists don't include forms or licenses."""
         return {
@@ -676,9 +718,17 @@ class MockREMS:
             roles.append("handler")
         return {**application, "application/roles": roles}
 
-    def update_application_fields(self, request, application: dict, in_list=False) -> dict:
+    def filter_user_application_events(self, request, application: dict) -> dict:
+        """Remove non-public events from application if user is not a handler."""
+        events = application["application/events"]
+        if not self.user_is_handler(request, application=application):
+            events = [e for e in events if e["event/visibility"] == "visibility/public"]
+        return {**application, "application/events": events}
+
+    def update_request_application_fields(self, request, application: dict, in_list=False) -> dict:
         """Update request-specific fields of application dict."""
         application = self.add_user_application_fields(request, application)
+        application = self.filter_user_application_events(request, application)
         if in_list:
             application = self.filter_application_list_fields(application)
         return application
@@ -686,7 +736,7 @@ class MockREMS:
     def handle_list_my_applications(self, request, context):
         applications = self.entities[EntityType.APPLICATION].values()
         return [
-            self.update_application_fields(request, application=a, in_list=True)
+            self.update_request_application_fields(request, application=a, in_list=True)
             for a in applications
             if self.user_is_applicant(request, application=a)
         ]
@@ -694,7 +744,7 @@ class MockREMS:
     def handle_list_applications_todo(self, request, context):
         applications = self.entities[EntityType.APPLICATION].values()
         return [
-            self.update_application_fields(request, application=a, in_list=True)
+            self.update_request_application_fields(request, application=a, in_list=True)
             for a in applications
             if self.user_is_handler(request, application=a)
             and a["application/state"] == self.ApplicationState.SUBMITTED
@@ -703,7 +753,7 @@ class MockREMS:
     def handle_list_applications_handled(self, request, context):
         applications = self.entities[EntityType.APPLICATION].values()
         return [
-            self.update_application_fields(request, application=a, in_list=True)
+            self.update_request_application_fields(request, application=a, in_list=True)
             for a in applications
             if self.user_is_handler(request, application=a)
             and a["application/state"] != self.ApplicationState.SUBMITTED
@@ -771,6 +821,26 @@ class MockREMS:
         if error:
             return error
         self.close_application(application)
+        return {"success": True}
+
+    def handle_remark_application(self, request, context):
+        application, error = self.validate_application_command(
+            request,
+            context,
+            allowed_states=[
+                self.ApplicationState.SUBMITTED,
+                self.ApplicationState.APPROVED,
+                self.ApplicationState.RETURNED,
+            ],
+        )
+        if error:
+            return error
+        userid = request.headers["X-REMS-USER-ID"]
+        handler = self.entities[EntityType.USER][userid]
+        data = request.json()
+        comment: str = data["comment"]  # required
+        public: bool = data["public"]  # required
+        self.remark_application(application, handler=handler, comment=comment, public=public)
         return {"success": True}
 
     def handle_list_entitlements(self, request, context):
@@ -856,6 +926,10 @@ class MockREMS:
         mocker.post(
             f"{settings.REMS_BASE_URL}/api/applications/close",
             json=self.handle_close_application,
+        )
+        mocker.post(
+            f"{settings.REMS_BASE_URL}/api/applications/remark",
+            json=self.handle_remark_application,
         )
 
         # Entitlement-specific endpoints

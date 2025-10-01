@@ -501,7 +501,7 @@ class REMSService:
         return self.create_workflow(
             key=f"automatic-{metax_organization}",
             title=f"Fairdata Automatic ({metax_organization})",
-            handlers=["approver-bot", "rejecter-bot", *handlers],
+            handlers=["approver-bot", "rejecter-bot", settings.REMS_USER_ID, *handlers],
             metax_organization=metax_organization,
         )
 
@@ -510,7 +510,7 @@ class REMSService:
         return self.create_workflow(
             key=f"manual-{metax_organization}",
             title=f"Fairdata Manual ({metax_organization})",
-            handlers=["rejecter-bot", *handlers],
+            handlers=["rejecter-bot", settings.REMS_USER_ID, *handlers],
             metax_organization=metax_organization,
         )
 
@@ -649,6 +649,7 @@ class REMSService:
             application_id = self.session.post("/api/applications/create", json=data).json()[
                 "application-id"
             ]
+            logger.info(f"Created REMS application {application_id} for dataset {dataset.id}")
             self.accept_licenses(application_id=application_id, licenses=accept_licenses)
 
             # On failed submit, may return 200 with success=false e.g.
@@ -657,7 +658,20 @@ class REMSService:
             resp = self.session.post("/api/applications/submit", json=data)
             data = resp.json()
             data["application-id"] = application_id
-            return data
+
+        # Add reviewer instructions to the application as a remark made by the Metax user
+        instructions = dataset.access_rights.data_access_reviewer_instructions
+        if instructions and len(instructions) == 1:
+            # When instructions have only one translation, use it directly.
+            # Otherwise dict representation is used.
+            instructions = next(iter(instructions.values()))
+        if instructions:
+            msg = f"Instructions for reviewers: {instructions}"
+            self.session.post(
+                "/api/applications/remark",
+                json={"application-id": application_id, "comment": msg, "public": False},
+            )
+        return data
 
     def filter_applications(self, applications: List[dict]) -> List[dict]:
         """Filter applications belonging to this Metax instance, determined by prefix."""

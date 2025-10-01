@@ -64,6 +64,7 @@ def test_rems_service_publish_dataset(mock_rems, user):
     assert set(u["userid"] for u in workflow["workflow"]["handlers"]) == {
         "approver-bot",
         "rejecter-bot",
+        "owner",
         "test_user",
     }
 
@@ -269,7 +270,7 @@ def test_rems_service_create_application_with_autoapprove(mock_rems, user):
         user["userid"]
         for user in applications[0]["application/workflow"]["workflow.dynamic/handlers"]
     ]
-    assert handlers == ["approver-bot", "rejecter-bot"]
+    assert handlers == ["approver-bot", "rejecter-bot", "owner"]
 
     # Check entitlement has been created
     entitlements = service.get_user_entitlements_for_dataset(user, dataset)
@@ -294,7 +295,7 @@ def test_rems_service_create_application_with_manual_approval(mock_rems, user):
         user["userid"]
         for user in applications[0]["application/workflow"]["workflow.dynamic/handlers"]
     ]
-    assert handlers == ["rejecter-bot"] # no approver-bot
+    assert handlers == ["rejecter-bot", "owner"] # no approver-bot
 
     # Check no entitlement has been created
     entitlements = service.get_user_entitlements_for_dataset(user, dataset)

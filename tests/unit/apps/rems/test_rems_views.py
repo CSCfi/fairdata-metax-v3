@@ -28,14 +28,6 @@ def handler(fairdata_users_group):
 
 
 @pytest.fixture
-def handler_client(handler):
-    client = Client()
-    client._user = handler
-    client.force_login(handler)
-    return client
-
-
-@pytest.fixture
 def automatic_rems_dataset(mock_rems, user):
     catalog = factories.DataCatalogFactory(rems_enabled=True)
     dataset = factories.REMSDatasetFactory(

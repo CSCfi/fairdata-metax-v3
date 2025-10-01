@@ -238,6 +238,33 @@ def pas_client():
     client._user = user
     return client
 
+@pytest.fixture
+def handler(fairdata_users_group):
+    """REMS handler user."""
+    user, _created = MetaxUser.objects.get_or_create(
+        username="rems_handler",
+        fairdata_username="rems_handler",
+        first_name="REMS",
+        last_name="Handler",
+        email="handler@example.com",
+        is_hidden=False,
+        admin_organizations=[],
+        dac_organizations=["test_organization"],
+    )
+    _group, _ = Group.objects.get_or_create(name="fairdata_users")
+    user.groups.set([fairdata_users_group])
+    user.save()
+    return user
+
+
+@pytest.fixture
+def handler_client(handler):
+    """REMS handler client."""
+    client = Client()
+    client._user = handler
+    client.force_login(handler)
+    return client
+
 
 @pytest.fixture
 def v2_migration_client():

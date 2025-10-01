@@ -15,7 +15,11 @@ def test_rems_add_organization_dac_member(mock_rems, user):
     service = REMSService()
     service.publish_dataset(dataset, raise_errors=True)
     assert len(mock_rems.entities["workflow"]) == 1
-    assert mock_rems.entities["workflow"][1]["handlers"] == ["approver-bot", "rejecter-bot"]
+    assert mock_rems.entities["workflow"][1]["handlers"] == [
+        "approver-bot",
+        "rejecter-bot",
+        "owner",
+    ]
 
     user.dac_organizations = ["test_organization"]
     user.save()
@@ -25,6 +29,7 @@ def test_rems_add_organization_dac_member(mock_rems, user):
     assert mock_rems.entities["workflow"][1]["handlers"] == [
         "approver-bot",
         "rejecter-bot",
+        "owner",
         "test_user",
     ]
 
@@ -44,6 +49,7 @@ def test_rems_remove_organization_dac_member(mock_rems, user):
     assert mock_rems.entities["workflow"][1]["handlers"] == [
         "approver-bot",
         "rejecter-bot",
+        "owner",
         "test_user",
     ]
 
@@ -52,7 +58,11 @@ def test_rems_remove_organization_dac_member(mock_rems, user):
 
     # User is no longer a DAC member of test_organization and is removed from handlers
     assert len(mock_rems.entities["workflow"]) == 1
-    assert mock_rems.entities["workflow"][1]["handlers"] == ["approver-bot", "rejecter-bot"]
+    assert mock_rems.entities["workflow"][1]["handlers"] == [
+        "approver-bot",
+        "rejecter-bot",
+        "owner",
+    ]
 
 
 def test_rems_add_organization_dac_member_manual_approval(mock_rems, user):
@@ -66,7 +76,7 @@ def test_rems_add_organization_dac_member_manual_approval(mock_rems, user):
     service = REMSService()
     service.publish_dataset(dataset, raise_errors=True)
     assert len(mock_rems.entities["workflow"]) == 1
-    assert mock_rems.entities["workflow"][1]["handlers"] == ["rejecter-bot"]
+    assert mock_rems.entities["workflow"][1]["handlers"] == ["rejecter-bot", "owner"]
 
     user.dac_organizations = ["test_organization"]
     user.save()
@@ -75,5 +85,6 @@ def test_rems_add_organization_dac_member_manual_approval(mock_rems, user):
     assert len(mock_rems.entities["workflow"]) == 1
     assert mock_rems.entities["workflow"][1]["handlers"] == [
         "rejecter-bot",
+        "owner",
         "test_user",
     ]

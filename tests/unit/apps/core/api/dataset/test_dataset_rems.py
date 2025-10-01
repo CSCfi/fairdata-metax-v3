@@ -152,6 +152,51 @@ def test_rems_applications(mock_rems, user_client):
     assert res.data["allowed_actions"]["download"] == True
 
 
+def test_rems_application_reviewer_instructions(mock_rems, user_client, handler_client):
+    dataset = factories.REMSDatasetFactory(
+        metadata_owner__organization="test_organization",
+        access_rights__data_access_reviewer_instructions={
+            "en": "Top secret instructions for reviewers"
+        },
+    )
+    service = REMSService()
+    service.publish_dataset(dataset, raise_errors=True)
+
+    # Create application
+    res = user_client.post(
+        f"/v3/datasets/{dataset.id}/rems-applications",
+        {"accept_licenses": service.get_dataset_rems_license_ids(dataset)},
+        content_type="application/json",
+    )
+    assert res.status_code == 200, res.data
+    assert res.json() == {"success": True, "application-id": 1}
+
+    res = user_client.get(
+        f"/v3/datasets/{dataset.id}/rems-applications/1", content_type="application/json"
+    )
+    assert res.status_code == 200, res.data
+    public_remarks = [
+        e
+        for e in res.json()["application/events"]
+        if e["event/type"] == "application.event/remarked"
+    ]
+    assert len(public_remarks) == 0
+
+    # Handler should see non-public remarks
+    res = handler_client.get("/v3/rems/applications/1", content_type="application/json")
+    assert res.status_code == 200, res.data
+    all_remarks = [
+        e
+        for e in res.json()["application/events"]
+        if e["event/type"] == "application.event/remarked"
+    ]
+    assert len(all_remarks) == 1
+    assert (
+        all_remarks[0]["application/comment"]
+        == "Instructions for reviewers: Top secret instructions for reviewers"
+    )
+
+
 def test_dataset_rems_application_status(settings, mock_rems, admin_client, user_client):
     dataset = factories.REMSDatasetFactory()
     service = REMSService()
