@@ -11,7 +11,7 @@ Metax itself does not have a graphical UI, but provides an API to both Service U
 [Swagger](/v3/swagger/)  
 [Source Code on GitHub](https://github.com/CSCfi/fairdata-metax-v3)
 
-Latest version of Metax API is V3. Documentation provided here is for Metax V3 API. Older API versions, [V1](/docs/v1/index.html) and [V2](/docs/v2/index.html), are still supported although it's *highly recommended* to use V3.
+Latest version of Metax API is V3. Documentation provided here is for Metax V3 API. Older API versions, [V1](/v1/) and [V2](/v2/), are still supported although it's *highly recommended* to use V3.
 
 ### Fairdata Services and Tools
 
