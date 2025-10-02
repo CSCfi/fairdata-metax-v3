@@ -6,8 +6,88 @@ from itertools import islice
 
 import pytest
 
-from apps.files import factories
+from apps.files import factories as file_factories
 from apps.files.models import File
+from apps.core import factories
+from apps.core.models import Dataset, MetadataProvider
+from apps.core.models.catalog_record.related import FileSet
+from apps.files.models import FileStorage
+from apps.users.models import MetaxUser
+
+
+@pytest.fixture
+def test_user():
+    """Create a test user."""
+    user = MetaxUser.objects.create_user(username="testuser", email="test@example.com")
+    user.save()
+    return user
+
+
+@pytest.fixture
+def metadata_provider(test_user):
+    """Create a metadata provider."""
+    metadata_provider = factories.MetadataProviderFactory(
+        user=test_user, organization="test-org", admin_organization="test-admin-org"
+    )
+    metadata_provider.save()
+    return metadata_provider
+
+
+@pytest.fixture
+def metadata_provider_old_admin(test_user):
+    """Create a metadata provider with old admin organization for populate_admin_orgs tests."""
+    metadata_provider = factories.MetadataProviderFactory(
+        user=test_user, organization="test-org", admin_organization="old-admin-org"
+    )
+    metadata_provider.save()
+    return metadata_provider
+
+
+@pytest.fixture
+def ida_storage():
+    """Create IDA file storage."""
+    file_storage = file_factories.FileStorageFactory(storage_service="ida", csc_project="2001479")
+    file_storage.save()
+    return file_storage
+
+
+@pytest.fixture
+def dataset(metadata_provider, ida_storage, data_catalog):
+    """Create a dataset with IDA storage."""
+    # Create dataset manually to ensure metadata_owner is used correctly
+    from apps.core.models import Dataset
+
+    dataset = factories.PublishedDatasetFactory(
+        metadata_owner=metadata_provider, title={"en": "Test Dataset"}, data_catalog=data_catalog
+    )
+    # Create file_set with the dataset
+    file_set = factories.FileSetFactory(dataset=dataset, storage=ida_storage)
+    # Create related DatasetMetrics record
+    factories.DatasetMetricsFactory(dataset=dataset)
+    return dataset
+
+
+@pytest.fixture
+def non_ida_storage():
+    """Create non-IDA file storage."""
+    file_storage = file_factories.FileStorageFactory(storage_service="pas", csc_project="2001479")
+    file_storage.save()
+    return file_storage
+
+
+@pytest.fixture
+def non_ida_dataset(metadata_provider, non_ida_storage):
+    """Create a non-IDA dataset."""
+    # Create dataset manually to ensure metadata_owner is used correctly
+    from apps.core.models import Dataset
+
+    dataset = factories.PublishedDatasetFactory(
+        metadata_owner=metadata_provider,
+        title={"en": "Non-IDA Dataset"},
+    )
+    # Create related DatasetMetrics record
+    factories.DatasetMetricsFactory(dataset=dataset)
+    return dataset
 
 
 def get_mock_data(filename="legacy_metax_response.json"):
