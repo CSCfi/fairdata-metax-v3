@@ -570,6 +570,13 @@ def test_dataset_expanded_catalog(admin_client, dataset_a_json, data_catalog, re
     assert isinstance(res3.data["data_catalog"], dict)
 
 
+def test_dataset_expanded_catalog_missing_catalog(admin_client, reference_data):
+    dataset = DatasetFactory(data_catalog=None)
+    res = admin_client.get(f"/v3/datasets/{dataset.id}?expand_catalog=true")
+    assert res.status_code == 200
+    assert "data_catalog" not in res.data
+
+
 def test_many_actors(admin_client, dataset_a_json, data_catalog, reference_data):
     org = {"organization": {"pref_label": {"en": "organization"}}}
     dataset_a_json["actors"] = [

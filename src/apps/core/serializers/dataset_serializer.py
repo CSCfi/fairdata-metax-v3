@@ -323,7 +323,7 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
             )
 
         view = self.context["view"]
-        if view.query_params.get("expand_catalog"):
+        if view.query_params.get("expand_catalog") and instance.data_catalog:
             ret["data_catalog"] = DataCatalogModelSerializer(
                 instance.data_catalog, context={"request": request}
             ).data
