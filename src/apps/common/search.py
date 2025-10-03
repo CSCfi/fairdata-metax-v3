@@ -4,7 +4,7 @@ from typing import List
 
 from watson.backends import RE_POSTGRES_ESCAPE_CHARS, PostgresSearchBackend, escape_query
 
-re_space = re.compile("\s+")
+re_space = re.compile(r"\s+")
 
 
 def parse_search_string(string: str) -> List[str]:

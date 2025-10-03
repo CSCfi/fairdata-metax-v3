@@ -151,7 +151,7 @@ class LegacyDatasetConverter:
         # Fix e.g. spaces inside urls
         url = quote_url(url)
         # Fix https://zenodo.org123 -> https://zenodo.org/records/123
-        url = re.sub("https://zenodo.org([\d]+)$", r"https://zenodo.org/records/\1", url)
+        url = re.sub(r"https://zenodo.org([\d]+)$", r"https://zenodo.org/records/\1", url)
 
         return url, url != old_url
 

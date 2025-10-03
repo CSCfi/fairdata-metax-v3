@@ -1,5 +1,4 @@
 import logging
-from sre_constants import SUCCESS
 
 import pytest
 

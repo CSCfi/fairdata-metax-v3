@@ -7,10 +7,9 @@ import requests
 from cachalot.api import cachalot_disabled
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from isodate import parse_datetime
 from rest_framework import serializers
 
-from apps.common.helpers import batched
+from apps.common.helpers import batched, datetime_fromisoformat
 from apps.files.models import File, FileStorage
 from apps.files.models.file_characteristics import FileCharacteristics
 from apps.refdata.models import FileFormatVersion
@@ -163,7 +162,7 @@ class LegacyFilesSerializer(serializers.ListSerializer):
                 if field == "removed" and old_value and new_value:
                     continue  # Ignore exact removal dates if both are removed
                 if field in self.date_diff_fields and old_value and new_value:
-                    if old_value == parse_datetime(new_value):
+                    if old_value == datetime_fromisoformat(new_value):
                         continue
                 return True
         return False

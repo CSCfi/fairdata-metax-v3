@@ -1,5 +1,5 @@
 import logging
-import traceback
+
 from typing import TYPE_CHECKING, Iterable, List, Optional
 
 from django.conf import settings
@@ -7,7 +7,7 @@ from django.db import models, transaction
 from django.utils import timezone
 from rest_framework import exceptions
 
-from apps.common.helpers import single_translation
+from apps.common.helpers import format_exception, single_translation
 from apps.common.locks import lock_rems_publish
 from apps.rems.models import (
     EntityType,
@@ -591,7 +591,7 @@ class REMSService:
             if resp is not None:
                 msg = f"Response status {resp.status_code}:\n {resp.text}\n\n"
 
-            msg += "".join(traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__))
+            msg += format_exception(e)
             logger.error(f"Dataset {dataset.id} REMS sync failed: {msg}")
             dataset.rems_publish_error = msg
             models.Model.save(dataset, update_fields=["rems_publish_error"])

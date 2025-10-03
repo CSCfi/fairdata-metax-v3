@@ -9,9 +9,8 @@ import requests
 from cachalot.api import cachalot_disabled
 from django.core.management.base import BaseCommand
 from django.db.models import Q
-from isodate import parse_datetime
 
-from apps.common.helpers import is_valid_uuid, parse_iso_dates_in_nested_dict
+from apps.common.helpers import datetime_fromisoformat, is_valid_uuid, parse_iso_dates_in_nested_dict
 from apps.core.models import LegacyDataset
 
 from ._v2_client import MigrationV2Client
@@ -187,7 +186,7 @@ class Command(BaseCommand):
         if legacy_dataset.migration_errors or not legacy_dataset.last_successful_migration:
             return "migration-errors"
 
-        modified = parse_datetime(
+        modified = datetime_fromisoformat(
             dataset_json.get("date_modified") or dataset_json.get("date_created")
         )
         if modified > legacy_dataset.last_successful_migration:

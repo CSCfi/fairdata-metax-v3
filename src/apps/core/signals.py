@@ -1,5 +1,4 @@
 import logging
-import traceback
 from typing import Optional
 
 from cachalot.signals import post_invalidation
@@ -9,6 +8,7 @@ from django.db.models.signals import m2m_changed, post_delete, pre_delete
 from django.dispatch import Signal, receiver
 from django.utils import timezone
 
+from apps.common.helpers import format_exception
 from apps.common.locks import lock_sync_dataset
 from apps.common.tasks import run_task
 from apps.core.models import Dataset, FileSet
@@ -99,9 +99,7 @@ def sync_dataset_to_v2(dataset: Dataset, action: SyncAction, force_update=False)
             if resp is not None:
                 status.error = f"Response status {resp.status_code}:\n {resp.text}\n\n"
 
-            status.error += "".join(
-                traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
-            )
+            status.error += format_exception(e)
         finally:
             status.sync_stopped = timezone.now()
             status.save()

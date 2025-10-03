@@ -15,7 +15,7 @@ readme = "README.md"
 packages = [{ include = "src" }]
 
 [tool.poetry.dependencies]
-python = "^3.8.10"
+python = ">=3.8.10,<4.0.0"
 Django = "<5.0"
 djangorestframework = "^3.15.2"
 django-model-utils = "^5.0.0"
@@ -60,6 +60,10 @@ bpython = "^0.24"
 setuptools = "^68.0.0"
 drf-nested-routers = "^0.95.0"
 ldap3 = "^2.9.1"
+numpy = [
+    { version = "1.24.0", markers = "python_version < '3.12'" },
+    { version = "2.3.0", markers = "python_version >= '3.12'" }
+]
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.12.0"

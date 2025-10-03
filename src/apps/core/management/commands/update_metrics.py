@@ -24,7 +24,7 @@ class Command(BaseCommand):
     def fake_metrics(self, identifiers: List[str]) -> int:
         """Generate random metrics values for datasets."""
         self.stdout.write("Generating fake metrics")
-        factory.random.reseed_random(timezone.now())
+        factory.random.reseed_random(seed=None)  # determine seed automatically
         existing_datasets = {
             str(d["id"]) for d in Dataset.objects.filter(id__in=identifiers).values("id")
         }
