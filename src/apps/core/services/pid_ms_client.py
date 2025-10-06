@@ -72,9 +72,7 @@ class _PIDMSClient:
             raise ServiceUnavailableError
 
     def create_doi(self, dataset_id):
-        from apps.common.datacitedata import Datacitedata
-
-        payload = Datacitedata().get_datacite_json(dataset_id)
+        payload = self.get_datacite_payload(dataset_id)
         payload["data"]["attributes"]["event"] = "publish"
         payload["data"]["attributes"]["url"] = f"https://{self.etsin_url}/dataset/{dataset_id}"
         url = f"https://{settings.PID_MS_BASEURL}/v1/pid/doi"
@@ -90,14 +88,20 @@ class _PIDMSClient:
             _logger.error(f"Exception in PIDMSClient: {e}, request: POST {url}, payload={payload}")
             raise ServiceUnavailableError
 
+    def get_datacite_payload(self, dataset_id):
+        from apps.core.models import Dataset
+        from apps.common.datacitedata import Datacitedata
+
+        dataset = Dataset.objects.get(id=dataset_id)
+        datacite_json = Datacitedata().get_datacite_json(dataset)
+        return {"data": {"type": "dois", "attributes": datacite_json}}
+
     def update_doi_dataset(self, dataset_id, doi):
         # DOI might not exist in PID MS if the dataset was created in Metax V2
         if not self.check_if_doi_exists(dataset_id, doi):
             self.insert_pid(dataset_id, doi)
 
-        from apps.common.datacitedata import Datacitedata
-
-        payload = Datacitedata().get_datacite_json(dataset_id)
+        payload = self.get_datacite_payload(dataset_id)
         payload["data"]["attributes"]["url"] = f"https://{self.etsin_url}/dataset/{dataset_id}"
         url = f"https://{settings.PID_MS_BASEURL}/v1/pid/doi/{doi}"
         try:

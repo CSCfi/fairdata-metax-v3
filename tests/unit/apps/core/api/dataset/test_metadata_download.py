@@ -313,3 +313,51 @@ def test_dataset_metadata_download_fairdata_datacite_coords_validation(admin_cli
     assert res.status_code == 200
     root = etree.XML(res.content)
     assert len(ns_select(root, "//geoLocationPoint")) == 1
+
+
+def test_dataset_metadata_download_datacite_doi_required(
+    admin_client, dataset_maximal_json, reference_data, data_catalog
+):
+    dataset_maximal_json["generate_pid_on_publish"] = "URN"
+    dataset_maximal_json["state"] = "published"
+    res = admin_client.post("/v3/datasets", dataset_maximal_json, content_type="application/json")
+    assert res.status_code == 201, res.data
+    dataset_id = res.data["id"]
+
+    res = admin_client.get(f"/v3/datasets/{dataset_id}/metadata-download?format=datacite")
+    assert res.status_code == 400
+    assert res.json() == {"persistent_identifier": "Dataset should have a DOI identifier."}
+
+
+def test_dataset_metadata_download_datacite_duplicate_creators(
+    admin_client, dataset_maximal_json, reference_data, data_catalog
+):
+    dataset_maximal_json["generate_pid_on_publish"] = "DOI"
+    dataset_maximal_json["state"] = "published"
+
+    # Add two different creator actors objects that look identical
+    dataset_maximal_json["actors"] = [
+        {
+            "id": "#1",  # Use different temporary ids to ensure two different actors are created
+            "organization": {
+                "pref_label": {"en": "Testiorganisaatio"},
+            },
+            "person": {"name": "Nimi Tähän"},
+            "roles": ["creator", "publisher"],
+        },
+        {
+            "id": "#2",
+            "organization": {
+                "pref_label": {"en": "Testiorganisaatio"},
+            },
+            "person": {"name": "Nimi Tähän"},
+            "roles": ["creator"],
+        },
+    ]
+    res = admin_client.post("/v3/datasets", dataset_maximal_json, content_type="application/json")
+    assert res.status_code == 201, res.data
+    dataset_id = res.data["id"]
+
+    # Duplicates have been removed successfully if validation in datacite download is successful.
+    res = admin_client.get(f"/v3/datasets/{dataset_id}/metadata-download?format=datacite")
+    assert res.status_code == 200, res.data

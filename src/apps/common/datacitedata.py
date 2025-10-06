@@ -15,6 +15,15 @@ class InvalidCoordinates(ValueError):
     """Invalid latitude or longitude."""
 
 
+def remove_duplicates(lst: list) -> list:
+    """Remove duplicate values from list."""
+    new_lst = []
+    for item in lst:
+        if not any(added == item for added in new_lst):
+            new_lst.append(item)
+    return new_lst
+
+
 class Datacitedata:
 
     language = None  # 2-character language code
@@ -436,10 +445,9 @@ class Datacitedata:
                 sizes.append(f"{size} bytes")
         return sizes
 
-    def get_datacite_json(self, dataset_id):
+    def get_datacite_json(self, dataset):
         """Create datacite json object."""
 
-        dataset = Dataset.objects.get(id=dataset_id)
         datacite_json = self.get_mandatory_fields(dataset)
 
         # Optional fields
@@ -454,6 +462,10 @@ class Datacitedata:
         datacite_json["rightsList"] = self.get_rights_list(dataset)
         datacite_json["sizes"] = self.get_sizes(dataset)
 
-        jsondata = {"data": {"type": "dois", "attributes": datacite_json}}
+        # Remove duplicates to prevent validation errors
+        for field in datacite_json:
+            value = datacite_json[field]
+            if isinstance(value, list):
+                datacite_json[field] = remove_duplicates(value)
 
-        return jsondata
+        return datacite_json

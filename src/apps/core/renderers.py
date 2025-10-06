@@ -1,17 +1,12 @@
 import logging
-from typing import Optional, Union
 
-import shapely
 from datacite import schema43
-from django.db.models import Sum
 from django.utils.translation import gettext as _
 from jsonschema import exceptions as jsonschema_exceptions
 from rest_framework import renderers, serializers
 
-from apps.actors.models import Organization, Person
 from apps.common.datacitedata import Datacitedata
-from apps.common.helpers import deduplicate_list
-from apps.core.models import Dataset, DatasetActor
+from apps.core.models import Dataset
 
 logger = logging.getLogger(__file__)
 
@@ -58,19 +53,7 @@ class DataciteXMLRenderer(renderers.BaseRenderer, Datacitedata):
 
     def get_datacite_json(self, dataset: Dataset):
         """Create datacite json object."""
-        datacite_json = self.get_mandatory_fields(dataset)
-
-        ## Optional fields
-        datacite_json["descriptions"] = self.get_descriptions(dataset)
-        if self.language:
-            datacite_json["language"] = self.language
-        datacite_json["contributors"] = self.get_contributors(dataset)
-        datacite_json["dates"] = self.get_dates(dataset)
-        datacite_json["relatedIdentifiers"] = self.get_related_identifiers(dataset)
-        datacite_json["subjects"] = self.get_subjects(dataset)
-        datacite_json["geoLocations"] = self.get_geolocations(dataset)
-        datacite_json["rightsList"] = self.get_rights_list(dataset)
-        datacite_json["sizes"] = self.get_sizes(dataset)
+        datacite_json = super().get_datacite_json(dataset)
 
         # TODO: The following optional fields are not implemented yet:
         # - formats
@@ -93,22 +76,36 @@ class DataciteXMLRenderer(renderers.BaseRenderer, Datacitedata):
         """
         Render `data` into JSON, returning a bytestring.
         """
-        if self.strict:
-            self.validate_dataset(data)
+        try:
+            if self.strict:
+                self.validate_dataset(data)
 
-        self.language = self.get_dataset_language(data)
-        datacite_json = self.get_datacite_json(data)
+            self.language = self.get_dataset_language(data)
+            datacite_json = self.get_datacite_json(data)
 
-        # Validate produced json
-        if self.strict:
-            try:
-                schema43.validator.validate(datacite_json)
-            except jsonschema_exceptions.ValidationError as error:
-                raise serializers.ValidationError({error.json_path: error.message})
+            # Validate produced json
+            if self.strict:
+                try:
+                    schema43.validator.validate(datacite_json)
+                except jsonschema_exceptions.ValidationError as error:
+                    raise serializers.ValidationError({error.json_path: error.message})
 
-        # Generate DataCite XML from dictionary.
-        doc = schema43.tostring(datacite_json)
-        return doc.encode()
+            # Generate DataCite XML from dictionary.
+            doc = schema43.tostring(datacite_json)
+            return doc.encode()
+        except serializers.ValidationError as err:
+            response = renderer_context["response"]
+            response.status_code = 400
+            response.headers["Content-Type"] = "application/json"
+            import json
+
+            if isinstance(err.detail, (list, dict)):
+                data = err.detail
+            else:
+                data = {"detail": err.detail}
+
+            response.data = data  # Set response.data
+            return json.dumps(data)
 
 
 class FairdataDataciteXMLRenderer(DataciteXMLRenderer):
