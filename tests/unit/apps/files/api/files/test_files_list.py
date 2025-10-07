@@ -66,12 +66,9 @@ def test_files_get_all(admin_client, file_tree_a, file_tree_b):
 
 
 def test_files_get_anonymous(client, file_tree_a):
-    """Anonymous user should not get any files without specifying dataset."""
-    res = client.get(
-        "/v3/files",
-        content_type="application/json",
-    )
-    assert res.data["count"] == 0
+    """Anonymous user should get a permission error without specifying dataset."""
+    res = client.get("/v3/files")
+    assert res.status_code == 403
 
 
 def test_files_get_project_user(project_client, file_tree_b):
@@ -340,3 +337,8 @@ def test_files_filter_name(admin_client, file_tree_a):
         content_type="application/json",
     )
     assert res.data["count"] == 0  # filename requires exact match
+
+
+def test_files_invalid_dataset_id(client):
+    res = client.get("/v3/files?dataset=123")
+    assert res.status_code == 400

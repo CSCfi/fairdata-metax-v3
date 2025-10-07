@@ -5,7 +5,7 @@
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
 import logging
-from typing import Dict, Iterable, List, Set, Union
+from typing import Dict, Iterable, List, Optional, Set, Union
 from uuid import UUID
 
 from django import forms
@@ -18,7 +18,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_filters import rest_framework as filters
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import serializers
+from rest_framework import serializers, exceptions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -29,6 +29,7 @@ from apps.common.helpers import (
     deduplicate_list,
     get_attr_or_item,
     get_filter_openapi_parameters,
+    is_valid_uuid,
 )
 from apps.common.serializers import DeleteListReturnValueSerializer, FlushQueryParamsSerializer
 from apps.common.serializers.fields import CommaSeparatedListField
@@ -194,10 +195,27 @@ class BaseFileViewSet(CommonModelViewSet):
             self.request, queryset, dataset_id=self.get_dataset_id()
         )
 
+    def enforce_authenticated_or_dataset_id(self):
+        """Raise error when user is not authenticated and dataset param is not set.
+
+        Unauthenticated users don't have csc_projects so they can only see
+        files of public datasets, and cannot access any files if dataset is not set.
+        """
+        if not (self.request.user.is_authenticated or self.get_dataset_id()):
+            raise exceptions.PermissionDenied(
+                detail="Authentication is required, "
+                "or you must specify a public dataset in the request."
+            )
+
     def list(self, request, *args, **kwargs):
+        self.enforce_authenticated_or_dataset_id()
         pagination_enabled = self.paginator.pagination_enabled(request)
         with cachalot_toggle(pagination_enabled):
             return super().list(request, *args, **kwargs)
+
+    def retrieve(self, request, *args, **kwargs):
+        self.enforce_authenticated_or_dataset_id()
+        return super().retrieve(request, *args, **kwargs)
 
     def get_serializer(self, instance=None, *args, **kwargs):
         """Modified get_serializer that passes instance to get_serializer_context."""
@@ -207,13 +225,15 @@ class BaseFileViewSet(CommonModelViewSet):
             kwargs["only_fields"] = fields  # Allow listing only specific fields
         return serializer_class(instance, *args, **kwargs)
 
-    def get_dataset_id(self):
+    def get_dataset_id(self) -> Optional[str]:
         """Get dataset id from kwargs (i.e. from url) or query parameters."""
         dataset_id = self.kwargs.get("dataset_id")
         if not dataset_id and self.request:
             dataset_id = forms.CharField(required=False).clean(
                 self.request.query_params.get("dataset")
             )
+        if dataset_id and not is_valid_uuid(dataset_id):
+            raise exceptions.ValidationError({"dataset": f"'{dataset_id}' is not a valid UUID."})
         return dataset_id
 
     def get_serializer_context(self, instance):

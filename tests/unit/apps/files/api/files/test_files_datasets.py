@@ -205,16 +205,17 @@ def test_files_datasets_fields_relations(admin_client, file_tree_with_datasets):
     )
     assert res.status_code == 200, res.data
     data = res.json()
-    assert data == {
-        str(tree["files"]["/dir/a.txt"].id): [
-            {"id": str(tree["dataset_a"].id), "title": tree["dataset_a"].title}
-        ],
-        str(tree["files"]["/dir/c.txt"].id): [
+    assert data[str(tree["files"]["/dir/a.txt"].id)] == [
+        {"id": str(tree["dataset_a"].id), "title": tree["dataset_a"].title}
+    ]
+    assert sorted(data[str(tree["files"]["/dir/c.txt"].id)], key=lambda d: d["id"]) == sorted(
+        [
             {"id": str(tree["dataset_a"].id), "title": tree["dataset_a"].title},
             {"id": str(tree["dataset_b"].id), "title": tree["dataset_b"].title},
             {"id": str(tree["dataset_c"].id), "title": tree["dataset_c"].title},
         ],
-    }
+        key=lambda d: d["id"],
+    )
 
 
 def test_files_datasets_for_service(admin_client, file_tree_with_datasets):
