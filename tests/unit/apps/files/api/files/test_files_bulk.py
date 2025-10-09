@@ -4,8 +4,10 @@ from typing import List
 import pytest
 from rest_framework.reverse import reverse
 from rest_framework.serializers import DateTimeField, RegexField
-from tests.utils import assert_nested_subdict
+from django.db import transaction
 
+from apps.common.locks import select_queryset_for_update
+from tests.utils import assert_nested_subdict
 from apps.files import factories
 from apps.files.models import File, FileCharacteristics, FileStorage
 from apps.files.serializers import FileSerializer
@@ -828,3 +830,32 @@ def test_files_upsert_update_storage_timestamp(ida_client, action_url):
     assert res.status_code == 200, res.data
     fs.refresh_from_db()
     assert fs.modified > modified
+
+
+@pytest.mark.django_db(databases=("default", "extra_connection"), transaction=True)
+def test_files_bulk_lock_file(pas_client, action_url):
+    file1, file2 = build_files_json(
+        [
+            {"size": 100, "exists": True},
+            {"size": 120, "exists": True},
+        ]
+    )
+
+    # Lock file1 in transaction using extra_connection
+    with transaction.atomic(using="extra_connection"):
+        select_queryset_for_update(File.objects.using("extra_connection").filter(id=file1["id"]))
+
+        # Bulk update involving the locked file should fail
+        res = pas_client.post(action_url("update"), [file1, file2], content_type="application/json")
+        assert res.status_code == 423, res.data
+        assert res.json() == {
+            "detail": "One or more files are locked for update by another request."
+        }
+
+        # The other file should not be locked
+        res = pas_client.post(action_url("update"), [file2], content_type="application/json")
+        assert res.status_code == 200, res.data
+
+    # After the extra_connection transaction ends, file1 is no longer locked
+    res = pas_client.post(action_url("update"), [file1], content_type="application/json")
+    assert res.status_code == 200, res.data

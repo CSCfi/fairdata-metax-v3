@@ -325,6 +325,9 @@ STORAGE_SERVICE_FILE_STORAGES = {
     "legacy-test-storage-1": "ProjectFileStorage",
 }
 
+# Time in seconds before File select for update times out
+FILE_LOCK_TIMEOUT = env.int("FILE_LOCK_TIMEOUT", 15)
+
 # User groups that can see all projects in storage service
 PROJECT_STORAGE_SERVICE_USER_GROUPS = {"ida", "pas"}
 

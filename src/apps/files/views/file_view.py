@@ -31,6 +31,7 @@ from apps.common.helpers import (
     get_filter_openapi_parameters,
     is_valid_uuid,
 )
+from apps.common.locks import select_queryset_for_update
 from apps.common.serializers import DeleteListReturnValueSerializer, FlushQueryParamsSerializer
 from apps.common.serializers.fields import CommaSeparatedListField
 from apps.common.serializers.serializers import IncludeRemovedQueryParamsSerializer
@@ -603,6 +604,17 @@ class FileViewSet(BaseFileViewSet):
                 )
         return Response(DeleteListReturnValueSerializer(instance={"count": count}).data, 200)
 
+    def _lock_file(self, file: File):
+        """Lock file for update."""
+        try:
+            select_queryset_for_update(
+                File.objects.filter(id=file.id).values("id"),
+                timeout=settings.FILE_LOCK_TIMEOUT,
+            )
+        except ResourceLocked as err:
+            err.detail = "The file is locked for update by another request."
+            raise
+
     def perform_create(self, serializer):
         super().perform_create(serializer)
         sync_files.send(
@@ -611,6 +623,7 @@ class FileViewSet(BaseFileViewSet):
         )
 
     def perform_update(self, serializer):
+        self._lock_file(serializer.instance)
         super().perform_update(serializer)
         sync_files.send(
             sender=File,
@@ -618,6 +631,7 @@ class FileViewSet(BaseFileViewSet):
         )
 
     def perform_destroy(self, instance):
+        self._lock_file(instance)
         pre_files_deleted.send(sender=File, queryset=File.objects.filter(id=instance.id))
         super().perform_destroy(instance)
         sync_files.send(

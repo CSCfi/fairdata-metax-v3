@@ -10,13 +10,16 @@ from dataclasses import asdict, dataclass
 from enum import Enum
 from typing import Dict, List, Optional
 
-from django.db.models import F, prefetch_related_objects
+from django.conf import settings
+from django.db.models import F, prefetch_related_objects, Value
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.settings import api_settings
 
+from apps.common.exceptions import ResourceLocked
 from apps.common.helpers import get_technical_metax_user
+from apps.common.locks import select_queryset_for_update
 from apps.common.serializers import StrictSerializer
 from apps.files.models.file import File, FileCharacteristics, FileStorage
 from apps.files.models.file_storage import FileStorage
@@ -143,7 +146,7 @@ class FileBulkSerializer(serializers.ListSerializer):
                     file["errors"].setdefault("id", _("Field not allowed for inserting files."))
         return files
 
-    def check_ids_exist(self, files: List[dict]) -> List[dict]:
+    def check_existing_files(self, files: List[dict]) -> List[dict]:
         """Check that all file ids point to existing files."""
         data_ids = [f["id"] for f in files if "id" in f]
         existing_ids = set(
@@ -236,14 +239,30 @@ class FileBulkSerializer(serializers.ListSerializer):
             )
         return self._is_pas_user
 
-    def check_file_locks(self, files: List[dict]) -> List[dict]:
+    def handle_file_locks(self, files: List[dict]) -> List[dict]:
         """Check that file updates are not prevented by locks."""
+        existing_files = [f for f in files if "id" in f]
+        existing_ids = [f["id"] for f in existing_files]
+
+        # Get update lock for files involved in current transaction
+        try:
+            select_queryset_for_update(
+                File.objects.filter(id__in=existing_ids)
+                .order_by()
+                .values_list(Value(1), flat=True),
+                timeout=settings.FILE_LOCK_TIMEOUT,
+            )
+        except ResourceLocked as err:
+            err.detail = "One or more files are locked for update by another request."
+            raise
+
+        # Other users are prevented from modifying files when pas_process_running is enabled
         if not self.is_pas_user:
             user = self.get_context_user()
-            existing_files = [f for f in files if "id" in f]
+
             file_lock_reasons = File.get_lock_reasons_for_queryset(
                 user=user,
-                queryset=File.all_objects.filter(id__in=[f["id"] for f in existing_files]),
+                queryset=File.all_objects.filter(id__in=existing_ids),
             )
             for f in existing_files:
                 if reason := file_lock_reasons.get(f["id"]):
@@ -348,7 +367,9 @@ class FileBulkSerializer(serializers.ListSerializer):
 
         allow_create = self.action in self.BULK_INSERT_ACTIONS
         files = FileStorage.objects.assign_to_file_data(
-            files, allow_create=allow_create, raise_exception=False
+            files,
+            allow_create=allow_create,
+            raise_exception=False,
         )
         return files
 
@@ -381,11 +402,11 @@ class FileBulkSerializer(serializers.ListSerializer):
 
         # Identifier checks
         files = self.check_id_field_allowed(files)
-        files = self.check_ids_exist(files)
+        files = self.check_existing_files(files)
 
         files = self.populate_id_from_external_identifier(files)
         files = self.check_duplicate_ids(files)
-        files = self.check_file_locks(files)
+        files = self.handle_file_locks(files)
         files = self.check_relations(files)
 
         # Checks for required and forbidden values
@@ -398,7 +419,6 @@ class FileBulkSerializer(serializers.ListSerializer):
         # FileStorage-specific checks
         files = FileStorage.check_required_file_fields(files, raise_exception=False)
         files = FileStorage.check_file_data_conflicts(files, raise_exception=False)
-
         return self.flush_file_errors(files)
 
     def update_file_instance(self, instance, file_data) -> Optional[File]:

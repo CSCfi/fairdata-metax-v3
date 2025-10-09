@@ -1,8 +1,11 @@
 import pytest
-from rest_framework.fields import DateTimeField, UUIDField
+from django.db import transaction
+from rest_framework.fields import UUIDField
 from tests.utils import assert_nested_subdict
 
+from apps.common.locks import select_queryset_for_update
 from apps.files import factories
+from apps.files.models import File
 
 pytestmark = [pytest.mark.django_db, pytest.mark.file]
 
@@ -115,7 +118,9 @@ def test_files_patch_pas_compatible_file_self(pas_client):
 @pytest.mark.parametrize(
     "client,should_work", [("admin_client", True), ("pas_client", True), ("ida_client", False)]
 )
-def test_files_create_and_update_locked(request, client, admin_client, should_work, ida_file_json):
+def test_files_create_and_update_locked_by_pas(
+    request, client, admin_client, should_work, ida_file_json
+):
     client = request.getfixturevalue(client)  # Select client fixture based on parameter
     ida_file_json["pas_process_running"] = True
     res = admin_client.post("/v3/files", ida_file_json, content_type="application/json")
@@ -163,3 +168,39 @@ def test_files_create_permissions_pas_compatible_file(request, client, should_wo
     else:
         assert res.status_code == 400
         assert "Only PAS service is allowed to set" in res.json()["pas_compatible_file"]
+
+
+@pytest.mark.django_db(databases=("default", "extra_connection"), transaction=True)
+def test_files_lock_for_update(admin_client):
+    file1 = factories.FileFactory()
+    file2 = factories.FileFactory()
+
+    # Lock file1 in transaction using extra_connection
+    with transaction.atomic(using="extra_connection"):
+        select_queryset_for_update(File.objects.using("extra_connection").filter(id=file1.id))
+
+        # File updates for the locked file should fail
+        res = admin_client.patch(
+            f"/v3/files/{file1.id}", {"size": 123}, content_type="application/json"
+        )
+        assert res.status_code == 423
+        assert res.json() == {"detail": "The file is locked for update by another request."}
+
+        res = admin_client.delete(f"/v3/files/{file1.id}", content_type="application/json")
+        assert res.status_code == 423
+        assert res.json() == {"detail": "The file is locked for update by another request."}
+
+        # The other file should not be locked
+        res = admin_client.patch(
+            f"/v3/files/{file2.id}", {"size": 123}, content_type="application/json"
+        )
+        assert res.status_code == 200
+
+    # After the extra_connection transaction ends, file1 is no longer locked
+    res = admin_client.patch(
+        f"/v3/files/{file1.id}", {"size": 123}, content_type="application/json"
+    )
+    assert res.status_code == 200
+
+    res = admin_client.delete(f"/v3/files/{file1.id}", content_type="application/json")
+    assert res.status_code == 204
