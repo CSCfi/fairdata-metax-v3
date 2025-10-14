@@ -373,6 +373,13 @@ class DatasetFactory(factory.django.DjangoModelFactory):
     system_creator = factory.SubFactory(MetaxUserFactory)
     metadata_owner = factory.SubFactory(MetadataProviderFactory)
 
+    @factory.post_generation
+    def temporal(self, create, extracted, **kwargs):
+        if not create:
+            return
+        if extracted:
+            self.temporal.set(extracted)
+
 
 class DatasetActorFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -509,3 +516,8 @@ class DatasetMetricsFactory(factory.django.DjangoModelFactory):
     views_events_views = factory.fuzzy.FuzzyInteger(1, 1000)
     views_maps_views = factory.fuzzy.FuzzyInteger(1, 1000)
     views_total_views = factory.fuzzy.FuzzyInteger(1, 1000)
+
+
+class TemporalFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.Temporal

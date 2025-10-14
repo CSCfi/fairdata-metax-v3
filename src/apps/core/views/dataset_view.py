@@ -193,6 +193,7 @@ class DatasetFilter(filters.FilterSet):
     publishing_channels = VerboseChoiceFilter(
         choices=[("etsin", "etsin"), ("ttv", "ttv"), ("all", "all")],
         method="filter_publishing_channels",
+        label="publishing channels\nFilter datasets based on the publishing channels of the dataset's catalog. The default value is 'etsin'.",
         help_text="Filter datasets based on the publishing channels of the dataset's catalog. The default value is 'etsin'.",
     )
 
@@ -203,12 +204,30 @@ class DatasetFilter(filters.FilterSet):
         label="state",
     )
 
+    temporal__end_date = filters.DateFilter(
+        method="temporal_search",
+        label="temporal end date\nFilter datasets based on their temporal information. 'temporal__end_date' can be used together with 'temporal__start_date' to filter datasets' which have temporal information that overlaps with given timerange. If only 'temporal__end_date' is given, all datasets are returned unless, the dataset's temporal's start_date is after the given 'temporal__end_date'",
+        help_text="Filter datasets based on their temporal information. 'temporal__end_date' can be used together with 'temporal__start_date' to filter datasets' which have temporal information that overlaps with given timerange. If only 'temporal__end_date' is given, all datasets are returned unless, the dataset's temporal's start_date is after the given 'temporal__end_date'",
+    )
+
+    temporal__start_date = filters.DateFilter(
+        method="temporal_search",
+        label="temporal start date\nFilter datasets based on their temporal information. 'temporal__start_date' can be used together with 'temporal__end_date' to filter datasets' which have temporal information that overlaps with given timerange. If only 'temporal__start_date' is given, all datasets are returned unless, the dataset's temporal's end_date is before the given 'temporal__start_date'",
+        help_text="Filter datasets based on their temporal information. 'temporal__start_date' can be used together with 'temporal__end_date' to filter datasets' which have temporal information that overlaps with given timerange. If only 'temporal__start_date' is given, all datasets are returned unless, the dataset's temporal's end_date is before the given 'temporal__start_date'",
+    )
+
     title = filters.CharFilter(
         field_name="title__values",
         max_length=512,
         lookup_expr="icontains",
         label="title",
     )
+
+    def temporal_search(self, queryset, name, value):
+        # DateFilter is used only for swagger and validating the query params.
+        # The actual filtering is dependent on both start_date and end_date
+        # so it is done in filter_queryset.
+        return queryset
 
     def search_dataset(self, queryset, name, value):
         if value is None or value == "":
@@ -384,7 +403,44 @@ class DatasetFilter(filters.FilterSet):
         # Use "etsin" as the default publishing channel filter value
         if not self.form.cleaned_data["publishing_channels"]:
             self.form.cleaned_data["publishing_channels"] = "etsin"
+        queryset = self.filter_temporals(queryset)
         return super().filter_queryset(queryset)
+
+    def filter_temporals(self, queryset):
+        query_params = self.form.cleaned_data
+        end_date = query_params["temporal__end_date"]
+        start_date = query_params["temporal__start_date"]
+
+        if end_date == None and start_date == None:
+            return queryset
+
+        if end_date == None:
+            queryset = queryset.filter(
+                Q(temporal__start_date__isnull=False, temporal__end_date__isnull=True)
+                | Q(temporal__end_date__gte=start_date)
+            ).distinct()
+            return queryset
+
+        if start_date == None:
+            queryset = queryset.filter(
+                Q(temporal__start_date__isnull=True, temporal__end_date__isnull=False)
+                | Q(temporal__start_date__lte=end_date)
+            ).distinct()
+            return queryset
+
+        if end_date < start_date:
+            raise ValidationError(
+                {
+                    "temporal__end_date": "temporal__end_date must not be before temporal__start_date"
+                }
+            )
+
+        queryset = queryset.filter(
+            Q(temporal__start_date__lte=end_date, temporal__end_date__gte=start_date)
+            | Q(temporal__start_date__isnull=True, temporal__end_date__gte=start_date)
+            | Q(temporal__end_date__isnull=True, temporal__start_date__lte=end_date)
+        ).distinct()
+        return queryset
 
 
 @method_decorator(
