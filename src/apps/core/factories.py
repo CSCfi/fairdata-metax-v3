@@ -496,6 +496,11 @@ class ProvenanceFactory(factory.django.DjangoModelFactory):
     title = factory.Dict({"en": factory.Sequence(lambda n: f"provenance-{n}")})
 
 
+class DatasetProjectFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.DatasetProject
+
+
 class DatasetMetricsFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.DatasetMetrics

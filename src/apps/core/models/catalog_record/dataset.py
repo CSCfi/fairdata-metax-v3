@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import List, Optional
 from uuid import UUID
 
 from django.conf import settings
@@ -19,11 +19,12 @@ from watson.search import skip_index_update
 
 from apps.common.copier import ModelCopier
 from apps.common.exceptions import TopLevelValidationError
-from apps.common.helpers import datetime_to_date, normalize_doi
+from apps.common.helpers import datetime_to_date, normalize_doi, single_translation
 from apps.common.history import SnapshotHistoricalRecords
 from apps.common.models import AbstractBaseModel
 from apps.common.tasks import run_task
 from apps.core.models.access_rights import AccessRights, AccessTypeChoices
+from apps.core.models.catalog_record.dataset_index import DatasetIndexEntry
 from apps.core.models.catalog_record.dataset_permissions import DatasetPermissions
 from apps.core.models.concepts import (
     FieldOfScience,
@@ -1177,6 +1178,10 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         if created:
             return dataset_created.send(sender=self.__class__, instance=self)
         return dataset_updated.send(sender=self.__class__, instance=self)
+
+    def update_index(self) -> List[DatasetIndexEntry]:
+        """Update facet index entries for dataset."""
+        return DatasetIndexEntry.objects.create_for_dataset(self)
 
     @classmethod
     def lock_for_update(cls, id: UUID):

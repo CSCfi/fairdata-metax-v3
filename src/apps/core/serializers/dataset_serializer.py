@@ -31,6 +31,7 @@ from apps.common.serializers.fields import (
 from apps.core.models.access_rights import AccessTypeChoices
 from apps.core.helpers import clean_pid
 from apps.core.models import DataCatalog, Dataset
+from apps.core.models.catalog_record.dataset_index import DatasetIndexEntry
 from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
 from apps.core.models.data_catalog import GeneratedPIDType
 from apps.core.serializers.common_serializers import (
@@ -270,7 +271,9 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
             # so use {} as "empty" value.
             if not self._validated_data.get("metadata_owner"):
                 self._validated_data["metadata_owner"] = {}
-        return super().save(**kwargs)
+        instance = super().save(**kwargs)
+        instance.update_index()
+        return instance
 
     def omit_pid_fields(self, instance: Dataset, ret: dict):
         if instance.persistent_identifier:
