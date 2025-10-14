@@ -201,8 +201,11 @@ class File(SystemCreatorBaseModel, CustomSoftDeletableModel):
 
     class Meta:
         indexes = [
-            models.Index(fields=("directory_path", "storage")),
-            models.Index(fields=("directory_path", "filename")),
+            models.Index(
+                fields=("storage", "directory_path"),
+                condition=models.Q(removed__isnull=True),
+                name="%(app_label)s_%(class)s_storage_directory",
+            ),
         ]
         ordering = ["directory_path", "filename"]
 
@@ -218,13 +221,13 @@ class File(SystemCreatorBaseModel, CustomSoftDeletableModel):
             ),
             # pathname should be unique for storage
             models.UniqueConstraint(
-                fields=["filename", "directory_path", "storage"],
+                fields=["storage", "directory_path", "filename"],
                 condition=models.Q(removed__isnull=True),
                 name="%(app_label)s_%(class)s_unique_file_path",
             ),
             # identifier should be unique for storage
             models.UniqueConstraint(
-                fields=["storage_identifier", "storage"],
+                fields=["storage", "storage_identifier"],
                 condition=models.Q(removed__isnull=True)
                 & models.Q(storage_identifier__isnull=False),
                 name="%(app_label)s_%(class)s_unique_identifier",
