@@ -143,14 +143,16 @@ class MetaxV2Client:
 
         found = False
         if not created:
-            response = requests.get(url=f"{self.host}/datasets/{identifier}", headers=self.headers)
+            response = requests.get(
+                url=f"{self.host}/datasets/{identifier}?removed", headers=self.headers
+            )
             found = response.status_code == 200
 
         res: requests.Response
         body = json.dumps(v2_dataset, cls=DjangoJSONEncoder)
         if found:
             res = requests.put(
-                url=f"{self.host}/datasets/{identifier}?migration_override",
+                url=f"{self.host}/datasets/{identifier}?migration_override&removed",
                 data=body,
                 headers=self.headers,
             )

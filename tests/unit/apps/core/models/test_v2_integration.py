@@ -34,12 +34,15 @@ def test_v2_integration_update_dataset(
     assert requests_mock.call_count == 2
     call = requests_mock.request_history[0]
     assert call.method == "GET"
-    assert call.url == f"https://metax-v2-test/rest/v2/datasets/{dataset_with_foreign_keys.id}"
+    assert (
+        call.url
+        == f"https://metax-v2-test/rest/v2/datasets/{dataset_with_foreign_keys.id}?removed"
+    )
     call = requests_mock.request_history[1]
     assert call.method == "PUT"
     assert (
         call.url
-        == f"https://metax-v2-test/rest/v2/datasets/{dataset_with_foreign_keys.id}?migration_override"
+        == f"https://metax-v2-test/rest/v2/datasets/{dataset_with_foreign_keys.id}?migration_override&removed"
     )
 
 
@@ -53,7 +56,10 @@ def test_v2_integration_update_dataset_notfound(
     assert requests_mock.call_count == 2
     call = requests_mock.request_history[0]
     assert call.method == "GET"
-    assert call.url == f"https://metax-v2-test/rest/v2/datasets/{dataset_with_foreign_keys.id}"
+    assert (
+        call.url
+        == f"https://metax-v2-test/rest/v2/datasets/{dataset_with_foreign_keys.id}?removed"
+    )
     call = requests_mock.request_history[1]
     assert call.method == "POST"
     assert call.url == "https://metax-v2-test/rest/v2/datasets?migration_override"
