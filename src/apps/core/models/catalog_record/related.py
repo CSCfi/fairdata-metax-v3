@@ -341,7 +341,7 @@ class FileSet(AbstractBaseModel):
         # remove metadata for directories not in FileSet
         storages = FileStorage.objects.filter(
             filesetdirectorymetadata__in=self.directory_metadata.all()
-        )
+        ).distinct()
         # only one storage project is expected but this works with multiple
         for storage in storages:
             dataset_pathnames = storage.get_directory_paths(file_set=self, include_removed=True)
