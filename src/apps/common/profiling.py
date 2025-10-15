@@ -1,9 +1,11 @@
 import logging
 from collections import Counter
-from contextlib import contextmanager
+from contextlib import ContextDecorator, contextmanager
+from datetime import datetime
 from inspect import currentframe, getframeinfo
 from os import path
 
+from django.db import connection
 from django.db.models.sql.compiler import SQLCompiler, SQLInsertCompiler, SQLUpdateCompiler
 from django.utils import timezone
 
@@ -60,6 +62,61 @@ def count_queries(log=False):
         SQLUpdateCompiler.execute_sql = update_exec
         if log:
             logger.info(f"{line}: {counters}")
+
+
+class log_queries(ContextDecorator):
+    """Context manager and decorator to log Django SQL queries.
+
+    Uses Django database instrumentation wrapper, which is installed
+    on a thread-local connection object.
+
+    Args:
+        slow_limit (float): Minimum execution time (in seconds) for a query to be logged.
+                            Queries faster than this threshold will not be logged.
+        show_params (bool): Whether to include query parameters in the log output.
+                            If True, parameters are shown (truncated if long); otherwise, omitted.
+        connection:         Django connection object.
+
+    Usage as context manager:
+        with log_queries(slow_limit=0.5):
+            # Django ORM queries here
+
+    Usage as decorator:
+        @log_queries(slow_limit=0.5)
+        def run_queries():
+            # Django ORM queries here
+    """
+
+    def __init__(self, slow_limit: float = 0, show_params=True, connection=connection):
+        self.slow_limit = slow_limit
+        self.show_params = show_params
+        self.connection = connection
+
+    def format_params(self, params):
+        if not self.show_params:
+            return ""
+        s = str(params)
+        if len(s) > 200:
+            s = f"{s[:150]} ... {s[-50:]}"
+        return f", params={s}"
+
+    def __enter__(self):
+        def exec(execute, sql, params, many, context):
+            start = datetime.now()
+            execute(sql, params, many, context)
+            elapsed = (datetime.now() - start).total_seconds()
+            if elapsed >= self.slow_limit:
+                many_str = "many " if many else ""
+                logger.info(
+                    f"Execute SQL {many_str}({elapsed:.3f}s): {sql}{self.format_params(params)}"
+                )
+
+        self.wrapper = self.connection.execute_wrapper(exec)
+        self.wrapper.__enter__()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.wrapper.__exit__(exc_type, exc_value, traceback)
 
 
 @contextmanager

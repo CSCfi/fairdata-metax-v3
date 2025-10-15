@@ -4,7 +4,7 @@ from collections import Counter
 
 import pytest
 
-from apps.common.profiling import count_queries, log_duration
+from apps.common.profiling import count_queries, log_duration, log_queries
 from apps.core import factories
 from apps.core.models import Dataset, Provenance, Spatial
 
@@ -40,3 +40,24 @@ def test_log_duration():
     with log_duration() as times:
         time.sleep(0.01)
     assert times["duration"] >= 0.01
+
+
+@pytest.mark.django_db
+def test_log_queries(caplog):
+    logging.disable(logging.NOTSET)
+    factories.DatasetFactory(title={"en": "Hello world"})
+    with log_queries():
+        assert Dataset.objects.filter(title__en="Hello world").count() == 1
+    assert len(caplog.messages) == 1
+    msg = caplog.messages[0]
+    assert "Execute SQL" in msg
+    assert "Hello world" in msg
+
+
+@pytest.mark.django_db
+def test_log_queries_slow_limit(caplog):
+    logging.disable(logging.NOTSET)
+    factories.DatasetFactory(title={"en": "Hello world"})
+    with log_queries(slow_limit=100):  # Query not logged if it takes <100 seconds
+        assert Dataset.objects.filter(title__en="Hello world").count() == 1
+    assert len(caplog.messages) == 0
