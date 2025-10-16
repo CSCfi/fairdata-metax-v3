@@ -65,6 +65,8 @@ def count_queries(log=False):
             logger.info(f"{line}: {counters}")
 
 
+queries_logger = logging.getLogger(f"{__name__}.queries")
+
 # Match SQL query strings where placeholder "%s, " is repeated a lot
 re_repeated_s = re.compile(r"(?:%s, ){9,}")
 
@@ -97,30 +99,45 @@ class log_queries(ContextDecorator):
     def __init__(
         self,
         slow_limit: float = 0,
+        slow_total_limit: float = 0,
         show_params=True,
         log_total=True,
         connection=connection,
         label="",
     ):
         self.slow_limit = slow_limit
+        self.slow_total_limit = slow_total_limit
         self.show_params = show_params
         self.connection = connection
         self.label = label
         self.log_total = log_total
         self.total_count = 0
         self.total_elapsed = 0
+        self.logged = False  # show total if some queries were logged
 
-    def format_params(self, params: str) -> str:
+    def query_has_sensitive_values(self, sql: str) -> bool:
+        """Omit SQL params if they might contain credentials."""
+        if "session_key" in sql:
+            return True
+        if "password" in sql:
+            return True
+        if "knox_authtoken" in sql:
+            return True
+        return False
+
+    def format_params(self, sql: str, params) -> str:
         if not self.show_params:
             return ""
+        if self.query_has_sensitive_values(sql):
+            params = "******"
         s = str(params)
         if len(s) > 200:
             s = f"{s[:150]} ... {s[-50:]}"
-        return f", params={s}"
+        return f"; params={s}"
 
     def format_query(self, query: str) -> str:
         """Truncate repeated %s in queries to make e.g. "... WHERE id IN (%s, %s, ...)" more readable."""
-        return re_repeated_s.sub("%s, %s, %s, %s, ..., %s, ", str(query))
+        return re_repeated_s.sub("%s, %s, %s, %s, ..., %s, ", query)
 
     def format_label(self):
         return f"{self.label} --- " if self.label else ""
@@ -134,16 +151,18 @@ class log_queries(ContextDecorator):
             except Exception as error:
                 elapsed = (datetime.now() - start).total_seconds()
                 errorname = error.__class__.__name__
-                logger.error(f"{label}{errorname} during query ({elapsed:.3f}s): {sql})")
+                self.logged = True
+                queries_logger.error(f"{label}{errorname} during query ({elapsed:.3f}s): {sql})")
                 raise
             elapsed = (datetime.now() - start).total_seconds()
             self.total_count += 1
             self.total_elapsed += elapsed
             if elapsed >= self.slow_limit:
                 many_str = "many " if many else ""
-                logger.info(
+                self.logged = True
+                queries_logger.info(
                     f"{label}Execute SQL {many_str}({elapsed:.3f}s): "
-                    f"{self.format_query(sql)}{self.format_params(params)}"
+                    f"{self.format_query(sql)}{self.format_params(sql, params)}"
                 )
 
         self.wrapper = self.connection.execute_wrapper(exec)
@@ -151,9 +170,9 @@ class log_queries(ContextDecorator):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        if self.log_total:
+        if self.log_total and (self.logged or (self.total_elapsed > self.slow_total_limit)):
             label = self.format_label()
-            logger.info(
+            queries_logger.info(
                 f"{label}Total SQL queries: {self.total_count} ({self.total_elapsed:.3f}s)"
             )
         self.wrapper.__exit__(exc_type, exc_value, traceback)

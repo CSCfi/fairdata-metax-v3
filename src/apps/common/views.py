@@ -202,8 +202,8 @@ class NonFilteringGetObjectMixin:
 class LogQueriesQueryParamsSerializer(serializers.Serializer):
     """Serializer for 'strict' query parameter."""
 
-    log_queries = serializers.BooleanField(default=False)
-    slow_query_limit = serializers.FloatField(default=0)
+    log_queries = serializers.BooleanField(required=False)
+    slow_query_limit = serializers.FloatField(required=False)
 
 
 class LogQueriesMixin(viewsets.ViewSet):
@@ -221,10 +221,26 @@ class LogQueriesMixin(viewsets.ViewSet):
         return serializer.validated_data
 
     def dispatch(self, request, *args, **kwargs):
-        if self.log_queries_params["log_queries"]:
+        log_queries_enabled = settings.LOG_QUERIES
+        slow_query_limit = settings.SLOW_QUERY_LIMIT
+        slow_total_queries_limit = settings.SLOW_TOTAL_QUERIES_LIMIT
+
+        # Override query logging settings using query params
+        params = self.log_queries_params
+        if "log_queries" in params:
+            log_queries_enabled = params["log_queries"]
+            slow_query_limit = 0
+            slow_total_queries_limit = 0  # always log totals
+        slow_query_limit = params.get("slow_query_limit", slow_query_limit)
+
+        if log_queries_enabled:
             # Run the view functions with query logging enabled
             label = f"{request.method} {request.get_full_path()}"
-            with log_queries(slow_limit=self.log_queries_params["slow_query_limit"], label=label):
+            with log_queries(
+                slow_limit=slow_query_limit,
+                slow_total_limit=slow_total_queries_limit,
+                label=label,
+            ):
                 return super().dispatch(request, *args, **kwargs)
         return super().dispatch(request, *args, **kwargs)
 

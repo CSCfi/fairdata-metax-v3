@@ -973,6 +973,7 @@ def tweaked_settings(settings):
     settings.REMS_ORGANIZATION_ID = "csc"
     settings.REMS_RESOURCE_PREFIX = "metax-test"
     settings.REMS_MANUAL_WORKFLOW = False
+    settings.LOG_QUERIES = False
 
 
 @pytest.fixture

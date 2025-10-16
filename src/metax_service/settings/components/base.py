@@ -257,9 +257,37 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "simple",
         },
+        "file": {
+            "class": "logging.NullHandler",  # Disabled in dev
+        },
+    },
+    "loggers": {
+        "apps.common.profiling.queries": {
+            # Queries also visible in dev console unless `"propagate": False` is set
+            "handlers": ["file"],
+        }
     },
     "root": {"level": os.environ.get("DJANGO_LOG_LEVEL", default="INFO"), "handlers": ["console"]},
 }
+
+
+# Log SQL queries?
+LOG_QUERIES = env.bool("LOG_QUERIES", False)
+# Set to log queries in a separate file. If not set, the default file logger is used.
+LOG_QUERIES_FILE = env.str("LOG_QUERIES_FILE", "")
+# Minimum duration in seconds for query to be logged
+SLOW_QUERY_LIMIT = env.float("SLOW_QUERY_LIMIT", 0)
+# If queries by request exceed total limit or a query was slow, log total queries for request
+SLOW_TOTAL_QUERIES_LIMIT = env.float("SLOW_TOTAL_QUERIES_LIMIT", 0)
+
+if LOG_QUERIES_FILE:
+    LOGGING["handlers"]["queries_file"] = {
+        "level": "INFO",
+        "class": "logging.FileHandler",
+        "filename": LOG_QUERIES_FILE,
+        "formatter": "verbose",
+    }
+    LOGGING["loggers"]["apps.common.profiling.queries"]["handlers"] = ["queries_file"]
 
 
 LANGUAGE_CODE = "en-us"

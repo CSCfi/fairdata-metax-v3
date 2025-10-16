@@ -9,8 +9,9 @@ from apps.common.profiling import count_queries, log_duration, log_queries
 from apps.core import factories
 from apps.core.models import Dataset, Provenance, Spatial
 
+pytestmark = [pytest.mark.django_db]
 
-@pytest.mark.django_db
+
 def test_count_queries():
     with count_queries() as counts:
         spatial = Spatial.objects.create(geographic_name="paikka")
@@ -27,7 +28,6 @@ def test_count_queries():
     }
 
 
-@pytest.mark.django_db
 def test_count_queries_log(caplog):
     logging.disable(logging.NOTSET)
     factories.DatasetFactory()
@@ -43,7 +43,6 @@ def test_log_duration():
     assert times["duration"] >= 0.01
 
 
-@pytest.mark.django_db
 def test_log_queries(caplog):
     logging.disable(logging.NOTSET)
     factories.DatasetFactory(title={"en": "Hello world"})
@@ -56,7 +55,6 @@ def test_log_queries(caplog):
     assert "Total SQL queries" in messages
 
 
-@pytest.mark.django_db
 def test_log_queries_slow_limit(caplog):
     logging.disable(logging.NOTSET)
     factories.DatasetFactory(title={"en": "Hello world"})
@@ -74,7 +72,6 @@ def test_log_queries_format_query():
     assert formatted == "SELECT x FROM y WHERE id IN (%s, %s, %s, %s, ..., %s, %s)"
 
 
-@pytest.mark.django_db
 def test_log_queries_query_param(admin_client, caplog):
     logging.disable(logging.NOTSET)
     dataset = factories.DatasetFactory(title={"en": "Hello world"})
@@ -87,7 +84,6 @@ def test_log_queries_query_param(admin_client, caplog):
     assert f"{path} --- Total SQL queries:" in messages
 
 
-@pytest.mark.django_db
 def test_log_queries_error(caplog):
     logging.disable(logging.NOTSET)
     with pytest.raises(utils.ProgrammingError):
@@ -98,3 +94,19 @@ def test_log_queries_error(caplog):
     messages = "\n".join(caplog.messages)
     assert "ProgrammingError during query" in messages
     assert "s): SELECT * FROM thistabledoesnotexist" in messages
+
+
+@pytest.mark.django_db
+def test_log_queries_sensitive_data(caplog):
+    logging.disable(logging.NOTSET)
+    with log_queries():
+        with connection.cursor() as c:
+            c.execute(
+                'SELECT "django_session"."session_key" FROM "django_session" '
+                'WHERE "django_session"."session_key" = %s',
+                ["somedjangosessionid"],
+            )
+
+    messages = "\n".join(caplog.messages)
+    assert "params=******" in messages
+    assert "somedjangosessionid" not in messages
