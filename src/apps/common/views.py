@@ -13,6 +13,7 @@ from rest_framework.viewsets import ViewSet
 
 from apps.common.exceptions import ResourceLocked
 from apps.common.permissions import BaseAccessPolicy
+from apps.common.profiling import log_queries
 
 
 class SystemCreatorViewSet(viewsets.ModelViewSet):
@@ -198,14 +199,49 @@ class NonFilteringGetObjectMixin:
         return obj
 
 
+class LogQueriesQueryParamsSerializer(serializers.Serializer):
+    """Serializer for 'strict' query parameter."""
+
+    log_queries = serializers.BooleanField(default=False)
+    slow_query_limit = serializers.FloatField(default=0)
+
+
+class LogQueriesMixin(viewsets.ViewSet):
+    """Support logging SQL queries made in the view.
+
+    - To enable query logging, set ?log_queries=true
+    - To set minimum duration in seconds for logging a query, use slow_query_limit
+    - Example: ?log_queries=true&slow_query_limit=1 logs queries that take more thna 1 second
+    """
+
+    @cached_property
+    def log_queries_params(self) -> dict:
+        serializer = LogQueriesQueryParamsSerializer(data=self.request.GET.dict())
+        serializer.is_valid(raise_exception=True)
+        return serializer.validated_data
+
+    def dispatch(self, request, *args, **kwargs):
+        if self.log_queries_params["log_queries"]:
+            # Run the view functions with query logging enabled
+            label = f"{request.method} {request.get_full_path()}"
+            with log_queries(slow_limit=self.log_queries_params["slow_query_limit"], label=label):
+                return super().dispatch(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs)
+
+
+class CommonViewSet(LogQueriesMixin, QueryParamsMixin, viewsets.ViewSet):
+    """ViewSet with common functionality."""
+
+
 class CommonModelViewSet(
+    LogQueriesMixin,
     AccessViewSetMixin,
     QueryParamsMixin,
     NonFilteringGetObjectMixin,
     PatchModelMixin,
     SystemCreatorViewSet,
 ):
-    """ViewSet with common functionality."""
+    """ModelViewSet with common functionality."""
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -224,7 +260,11 @@ class CommonModelViewSet(
 
 
 class CommonReadOnlyModelViewSet(
-    AccessViewSetMixin, QueryParamsMixin, NonFilteringGetObjectMixin, viewsets.ReadOnlyModelViewSet
+    LogQueriesMixin,
+    AccessViewSetMixin,
+    QueryParamsMixin,
+    NonFilteringGetObjectMixin,
+    viewsets.ReadOnlyModelViewSet,
 ):
     """ViewSet with common functionality for read only models."""
 

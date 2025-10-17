@@ -1,16 +1,14 @@
-from typing import Optional
 from django.conf import settings
-from rest_framework.viewsets import ViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import exceptions
 
-from apps.common.views import QueryParamsMixin
+from apps.common.views import CommonViewSet
 from apps.rems.rems_service import REMSService
 from apps.rems.rems_session import REMSError
 
 
-class REMSApplicationsViewSet(QueryParamsMixin, ViewSet):
+class REMSApplicationsViewSet(CommonViewSet):
     def check_rems_request(self, request):
         if not settings.REMS_ENABLED:
             raise exceptions.MethodNotAllowed(method=request.method, detail="REMS is not enabled")

@@ -2,6 +2,7 @@ import logging
 import time
 from collections import Counter
 
+from django.db import connection, utils
 import pytest
 
 from apps.common.profiling import count_queries, log_duration, log_queries
@@ -48,16 +49,52 @@ def test_log_queries(caplog):
     factories.DatasetFactory(title={"en": "Hello world"})
     with log_queries():
         assert Dataset.objects.filter(title__en="Hello world").count() == 1
-    assert len(caplog.messages) == 1
-    msg = caplog.messages[0]
-    assert "Execute SQL" in msg
-    assert "Hello world" in msg
+    assert len(caplog.messages) == 2
+    messages = "\n".join(caplog.messages)
+    assert "Execute SQL" in messages
+    assert "Hello world" in messages
+    assert "Total SQL queries" in messages
 
 
 @pytest.mark.django_db
 def test_log_queries_slow_limit(caplog):
     logging.disable(logging.NOTSET)
     factories.DatasetFactory(title={"en": "Hello world"})
-    with log_queries(slow_limit=100):  # Query not logged if it takes <100 seconds
+    with log_queries(slow_limit=100, log_total=False):  # Query not logged if it takes <100 seconds
         assert Dataset.objects.filter(title__en="Hello world").count() == 1
     assert len(caplog.messages) == 0
+
+
+def test_log_queries_format_query():
+    l = log_queries()
+    formatted = l.format_query(
+        "SELECT x FROM y WHERE id IN ("
+        "%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+    )
+    assert formatted == "SELECT x FROM y WHERE id IN (%s, %s, %s, %s, ..., %s, %s)"
+
+
+@pytest.mark.django_db
+def test_log_queries_query_param(admin_client, caplog):
+    logging.disable(logging.NOTSET)
+    dataset = factories.DatasetFactory(title={"en": "Hello world"})
+    path = f"/v3/datasets/{dataset.id}?log_queries=true&slow_query_limit=10"
+    res = admin_client.get(path)
+    assert res.status_code == 200
+
+    # Total query count and duration is logged at end of view
+    messages = "\n".join(caplog.messages)
+    assert f"{path} --- Total SQL queries:" in messages
+
+
+@pytest.mark.django_db
+def test_log_queries_error(caplog):
+    logging.disable(logging.NOTSET)
+    with pytest.raises(utils.ProgrammingError):
+        with log_queries():
+            with connection.cursor() as c:
+                c.execute("SELECT * FROM thistabledoesnotexist")
+
+    messages = "\n".join(caplog.messages)
+    assert "ProgrammingError during query" in messages
+    assert "s): SELECT * FROM thistabledoesnotexist" in messages

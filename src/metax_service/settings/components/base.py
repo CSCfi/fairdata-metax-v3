@@ -428,11 +428,14 @@ PID_MS_APIKEY = env.str("PID_MS_APIKEY", None)
 PID_MS_DOI_PREFIX = env.str("PID_MS_DOI_PREFIX", "10.23729/")  # Expected DOI prefix from PIDMS
 ETSIN_URL = env.str("ETSIN_URL", None)
 
-# Common global query parameters shared by most endpoints but not documented in swagger
+# Common global query parameters shared by most endpoints but not documented in swagger.
+# These are always allowed by QueryParamsMixin even with strict=true.
 COMMON_QUERY_PARAMS = {
     "format",  # DRF output format,  e.g.  ?format=json or ?format=api
     "strict",  # set ?strict=false to allow unknown query params without throwing error
     "include_nulls",  # set ?include_nulls=true include null values in responses
+    "log_queries",  # set ?log_queries=true to log all SQL queries
+    "slow_query_limit",  # minimum logged query duration (default 0 seconds) when log_queries=true
 }
 
 # Email configuration

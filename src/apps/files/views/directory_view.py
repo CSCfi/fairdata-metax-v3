@@ -15,7 +15,7 @@ from rest_framework.response import Response
 
 from apps.common.helpers import cachalot_toggle, get_attr_or_item
 from apps.common.serializers.fields import CommaSeparatedListField
-from apps.common.views import QueryParamsMixin
+from apps.common.views import CommonViewSet
 from apps.files.functions import SplitPart
 from apps.files.helpers import (
     get_directory_metadata_model,
@@ -123,7 +123,7 @@ class DirectoryQueryParams(DirectoryCommonQueryParams):
         return value
 
 
-class DirectoryViewSet(QueryParamsMixin, AccessViewSetMixin, viewsets.ViewSet):
+class DirectoryViewSet(CommonViewSet, AccessViewSetMixin, viewsets.ViewSet):
     """API for browsing directories of a storage project.
 
     Directories are transient and do not have a model of their own.
