@@ -5,6 +5,7 @@
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
 
+from typing import List
 from django.db.models import CharField, Count, F, Max, Min, Sum, Value
 from django.db.models.functions import Concat
 from drf_yasg.utils import swagger_auto_schema
@@ -238,19 +239,13 @@ class DirectoryViewSet(QueryParamsMixin, AccessViewSetMixin, viewsets.ViewSet):
                 size=Sum("size"),
                 created=Min("modified"),
                 modified=Max("modified"),
-                pathname=Concat(  # append directory name and slash to path
-                    Value(path),
-                    F("name"),
-                    Value("/"),
-                    output_field=CharField(),
-                ),
             )
             .order_by(*params["directory_ordering"], "name")
         )
         return dirs
 
     def paginate(self, params, subdirectories, files):
-        """Paginate direcories and files together."""
+        """Paginate directories and files together."""
         limit = params["limit"]
         offset = params["offset"]
 
@@ -292,15 +287,20 @@ class DirectoryViewSet(QueryParamsMixin, AccessViewSetMixin, viewsets.ViewSet):
                 data["previous"] = remove_query_param(uri, "offset")
         return data
 
-    def get_matching_subdirectories(self, params, directories):
+    def get_matching_subdirectories(self, params, directories) -> List[dict]:
         """Get subdirectories that match the filters."""
-        subdirs = directories.exclude(name="")  # exclude current dir
+        # When include_parent is enabled, get_parent_data has already evaluated
+        # the 'directories' queryset so it is more efficient to do the final
+        # filtering here in Python than to add more filtering to the queryset
+        # which would trigger a new query.
+        subdirs = [d for d in directories if d["name"] != ""]  # exclude current dir
         if name := params.get("name"):
-            subdirs = subdirs.filter(name__icontains=name)
+            lname = name.lower()  # case-insensitive match
+            subdirs = [d for d in subdirs if lname in d["name"].lower()]
         if params["published"] is True:
-            subdirs = subdirs.exclude(published_file_count=0)
+            subdirs = [d for d in subdirs if d["published_file_count"] > 0]
         elif params["published"] is False:
-            subdirs = subdirs.exclude(file_count=F("published_file_count"))
+            subdirs = [d for d in subdirs if d["file_count"] > d["published_file_count"]]
         return subdirs
 
     def get_parent_data(self, params, directories):
@@ -369,8 +369,12 @@ class DirectoryViewSet(QueryParamsMixin, AccessViewSetMixin, viewsets.ViewSet):
 
             # Evaluate all subdirectories into a list so they can be
             # counted and sliced in a single DB query.
-            matching_subdirs = list(self.get_matching_subdirectories(params, directories))
+            matching_subdirs = self.get_matching_subdirectories(params, directories)
             files = self.get_directory_files(params)
+
+            # Determining pathname here is faster than doing it in the aggregate query
+            for subdir in matching_subdirs:
+                subdir["pathname"] = f'{params["path"]}{subdir["name"]}/'
 
             pagination_data = {}
             if params.get("pagination"):

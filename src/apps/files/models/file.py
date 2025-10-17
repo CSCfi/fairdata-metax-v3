@@ -206,6 +206,13 @@ class File(SystemCreatorBaseModel, CustomSoftDeletableModel):
                 condition=models.Q(removed__isnull=True),
                 name="%(app_label)s_%(class)s_storage_directory",
             ),
+            models.Index(
+                fields=("storage", "directory_path"),
+                opclasses=["", "text_pattern_ops"],  # Support LIKE '/path/%' for non-C-locales
+                condition=models.Q(removed__isnull=True),
+                include=("size", "modified", "published"),
+                name="%(app_label)s_%(class)s_dir_aggregation",
+            ),
         ]
         ordering = ["directory_path", "filename"]
 
