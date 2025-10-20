@@ -23,12 +23,23 @@ def test_create_dataset_in_cache(dataset_cache, admin_client, dataset_a_json):
     assert cached_item.get("actors") == [
         {
             "id": matchers.Any(),
+            "organization": {
+                "homepage": None,
+                "email": None,
+                "id": matchers.Any(),
+                "pref_label": {"en": "test org"},
+                "external_identifier": None,
+                "in_scheme": None,
+                "parent": None,
+                "url": None,
+            },
             "person": {
+                "email": matchers.Any(),
                 "id": matchers.Any(),
                 "name": "teppo",
-                "email": matchers.Any(),
+                "external_identifier": None,
+                "homepage": None,
             },
-            "organization": {"id": matchers.Any(), "pref_label": {"en": "test org"}},
             "roles": ["creator", "publisher"],
         }
     ]
@@ -37,7 +48,9 @@ def test_create_dataset_in_cache(dataset_cache, admin_client, dataset_a_json):
     cached_email = cached_item["actors"][0]["person"]["email"]
     assert isinstance(cached_email, PrivateEmailValue)
     assert cached_email.value == "teppo@example.com"
-    assert cached_item.get("temporal") == dataset_a_json["temporal"]
+    assert cached_item.get("temporal") == [
+        {**dataset_a_json["temporal"][0], "temporal_coverage": None}
+    ]
 
 
 @pytest.mark.usefixtures("data_catalog", "reference_data")

@@ -33,7 +33,7 @@ class CachedFieldsOnlyDatasetSerializer(DatasetSerializer):
     def get_fields(self):
         fields = super().get_fields()
         cached_fields = self.cache.cached_fields
-        fields = {name: field for name, field in fields.items() if name in cached_fields}
+        fields = {name: fields[name] for name in cached_fields}
         return fields
 
 

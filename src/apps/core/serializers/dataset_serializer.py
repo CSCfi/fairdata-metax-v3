@@ -28,6 +28,7 @@ from apps.common.serializers.fields import (
     NoopField,
     handle_private_emails,
 )
+from apps.common.helpers import omit_none
 from apps.core.models.access_rights import AccessTypeChoices
 from apps.core.helpers import clean_pid
 from apps.core.models import DataCatalog, Dataset
@@ -305,6 +306,8 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
                 access_rights.pop(field)
 
     def to_representation(self, instance: Dataset):
+        include_nulls = self.context.pop("include_nulls", False)
+        self.context["include_nulls"] = True
         instance.ensure_prefetch()
         request = self.context["request"]
         ret = super().to_representation(instance)
@@ -380,6 +383,11 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
                     "version",
                 },
             )
+
+        if not include_nulls:
+            ret = omit_none(ret, recurse=True)
+
+        self.context["include_nulls"] = include_nulls
         return ret
 
     class Meta:

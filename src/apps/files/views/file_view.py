@@ -332,10 +332,7 @@ class FileViewSet(BaseFileViewSet):
         datasets_by_id = Dataset.objects.filter(id__in=id_list).in_bulk()
         datasets = [datasets_by_id[_id] for _id in id_list]
 
-        # Use dataset cache unless include_nulls is enabled (like how DatasetViewSet.list works)
-        serializer_cache = None
-        if not self.include_nulls:
-            serializer_cache = DatasetSerializerCache(initial_instances=datasets, autocommit=True)
+        serializer_cache = DatasetSerializerCache(datasets, autocommit=True)
         list_serializer = DatasetSerializer(
             instance=datasets,
             context={

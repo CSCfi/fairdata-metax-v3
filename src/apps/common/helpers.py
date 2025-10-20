@@ -323,9 +323,21 @@ def single_translation(value: dict, preferred_lang=None) -> Optional[str]:
     return next(iter(value.values()), None)
 
 
-def omit_none(value: dict) -> dict:
+def omit_none(value: dict, recurse=False) -> dict:
     """Return copy of dict with None values removed."""
-    return {key: val for key, val in value.items() if val is not None}
+    if not recurse:
+        return {key: val for key, val in value.items() if val is not None}
+
+    def _recurse(_value):
+        if isinstance(_value, dict):
+            return {
+                key: _val for key, val in _value.items() if (_val := _recurse(val)) is not None
+            }
+        elif isinstance(_value, list):
+            return [_val for val in _value if (_val := _recurse(val)) is not None]
+        return _value
+
+    return _recurse(value)
 
 
 def is_empty_string(value: str) -> str:
@@ -498,4 +510,5 @@ def datetime_fromisoformat(str) -> datetime:
     # Python < 3.11 needs to use external library because that version
     # of datetime.fromisoformat doesn't yet support the formats we use
     import isodate
+
     return isodate.parse_datetime(str)

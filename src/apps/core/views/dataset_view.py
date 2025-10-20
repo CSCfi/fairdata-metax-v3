@@ -593,17 +593,11 @@ class DatasetViewSet(CommonModelViewSet):
         qs = self.access_policy.scope_queryset(self.request, qs)
         return qs
 
-    def allow_cache(self) -> bool:
-        """Disallow caching when include_nulls=True."""
-        return not self.include_nulls
-
     def get_serializer(self, *args, cached_instances=[], cache_autocommit=True, **kwargs):
         serializer_cache = None
-        if self.allow_cache():
-            # Use cached fields for serialization of datasets in cached_instances
-            serializer_cache = DatasetSerializerCache(
-                cached_instances, autocommit=cache_autocommit
-            )
+        # Use cached fields for serialization of datasets in cached_instances
+        serializer_cache = DatasetSerializerCache(cached_instances, autocommit=cache_autocommit)
+
         return super().get_serializer(*args, cache=serializer_cache, **kwargs)
 
     def list(self, request, *args, **kwargs):
@@ -676,6 +670,7 @@ class DatasetViewSet(CommonModelViewSet):
             logger.info(f"Dataset in cache: {instance.id in cache.values}")
 
         serializer.apply_partial_prefetch([instance], prefetches)
+
         return response.Response(serializer.data)
 
     @action(detail=True, methods=["post"], url_path="new-version")

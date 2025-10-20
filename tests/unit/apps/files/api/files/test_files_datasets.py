@@ -165,33 +165,6 @@ def test_files_datasets_cache(admin_client, file_tree_with_datasets, dataset_cac
     assert data1 == data2
 
 
-def test_files_datasets_fields_include_nulls(admin_client, file_tree_with_datasets, dataset_cache):
-    """Dataset cache is not used when ?include_nulls=true."""
-    tree = file_tree_with_datasets
-    tree["dataset_a"].title = {"en": "dataset a"}
-    tree["dataset_a"].persistent_identifier = "pid-a"
-    tree["dataset_a"].save()
-
-    res = admin_client.post(
-        "/v3/files/datasets?fields=id,title,preservation,persistent_identifier&include_nulls=true",
-        [
-            tree["files"]["/dir/a.txt"].id,  # dataset a
-        ],
-        content_type="application/json",
-    )
-    assert res.status_code == 200, res.data
-    data = res.json()
-    assert data == [
-        {
-            "id": str(tree["dataset_a"].id),
-            "persistent_identifier": "pid-a",
-            "title": {"en": "dataset a"},
-            "preservation": None,
-        }
-    ]
-    assert dataset_cache.get(tree["dataset_a"].id) is None  # Don't cache when using include_nulls
-
-
 def test_files_datasets_fields_relations(admin_client, file_tree_with_datasets):
     """Test listing dataset fields per file."""
     tree = file_tree_with_datasets
