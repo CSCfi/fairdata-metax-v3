@@ -1168,8 +1168,18 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         super().save(*args, **kwargs)
         self.is_prefetched = False  # Prefetch again after save
 
-        if self.state == self.StateChoices.PUBLISHED and hasattr(self, "file_set"):
-            run_task(self.file_set.update_published)
+        # Update file publication state when dataset is published or files are added or removed
+        fileset = getattr(self, "file_set", None)
+        if self.state == self.StateChoices.PUBLISHED and fileset:
+            added = fileset.added_files_count
+            removed = fileset.removed_files_count
+            if (
+                added
+                or removed
+                or previous_state != self.StateChoices.PUBLISHED
+                or self.deprecated  # Ideally this would be done only once for a deprecated dataset
+            ):
+                run_task(self.file_set.update_published)
 
     def signal_update(self, created=False):
         """Send dataset_update or dataset_created signal."""
