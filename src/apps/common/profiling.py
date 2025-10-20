@@ -80,9 +80,12 @@ class log_queries(ContextDecorator):
     Args:
         slow_limit (float): Minimum execution time (in seconds) for a query to be logged.
                             Queries faster than this threshold will not be logged.
+        slow_total_limit (float): Log query totals if total limit is exceeded or
+                            at least one query was logged, and log_total is enabled.
         show_params (bool): Whether to include query parameters in the log output.
                             If True, parameters are shown (truncated if long); otherwise, omitted.
-        log_total (bool):   If True, log total SQL query count and duration.
+        log_total (bool):   If True, allow logging total SQL query count and duration.
+        analyze (bool):     Analyze logged SELECT queries. Analyzed queries are executed twice.
         connection:         Django connection object.
         label (str):        Extra label to use when logging.
 
@@ -102,6 +105,7 @@ class log_queries(ContextDecorator):
         slow_total_limit: float = 0,
         show_params=True,
         log_total=True,
+        analyze=False,
         connection=connection,
         label="",
     ):
@@ -111,6 +115,7 @@ class log_queries(ContextDecorator):
         self.connection = connection
         self.label = label
         self.log_total = log_total
+        self.analyze = analyze
         self.total_count = 0
         self.total_elapsed = 0
         self.logged = False  # show total if some queries were logged
@@ -142,8 +147,26 @@ class log_queries(ContextDecorator):
     def format_label(self):
         return f"{self.label} --- " if self.label else ""
 
+    def analyze_query(self, sql: str, params: list, many: bool, context: dict):
+        if not sql.startswith("SELECT "):
+            return # Don't analyze updates to avoid duplicating query effects
+        connection = context["connection"]
+        with connection.cursor() as c:
+            label = self.format_label()
+            sql = f"EXPLAIN ANALYZE {sql}"
+
+            # Using normal c.execute or c.executemany would retrigger our `exec`
+            # so use the underscored versions to avoid an infinite loop.
+            if many:
+                c._executemany(sql, params)
+            else:
+                c._execute(sql, params)
+
+            analysis = "\n".join(row[0] for row in c.fetchall())
+            queries_logger.info(f"{label}EXPLAIN ANALYZE:\n{analysis}")
+
     def __enter__(self):
-        def exec(execute, sql, params, many, context):
+        def exec(execute, sql: str, params: list, many: bool, context: dict):
             label = self.format_label()
             start = datetime.now()
             try:
@@ -164,6 +187,9 @@ class log_queries(ContextDecorator):
                     f"{label}Execute SQL {many_str}({elapsed:.3f}s): "
                     f"{self.format_query(sql)}{self.format_params(sql, params)}"
                 )
+                if self.analyze:
+                    self.analyze_query(sql, params, many, context)
+
 
         self.wrapper = self.connection.execute_wrapper(exec)
         self.wrapper.__enter__()

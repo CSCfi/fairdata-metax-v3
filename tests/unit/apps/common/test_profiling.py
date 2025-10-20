@@ -110,3 +110,25 @@ def test_log_queries_sensitive_data(caplog):
     messages = "\n".join(caplog.messages)
     assert "params=******" in messages
     assert "somedjangosessionid" not in messages
+
+
+@pytest.mark.django_db
+def test_log_queries_analyze(caplog):
+    logging.disable(logging.NOTSET)
+    with log_queries(analyze=True):
+        with connection.cursor() as c:
+            c.execute("SELECT 1")
+
+    messages = "\n".join(caplog.messages)
+    assert "EXPLAIN ANALYZE" in messages
+
+
+@pytest.mark.django_db
+def test_log_queries_analyze_update(caplog):
+    logging.disable(logging.NOTSET)
+    with log_queries(analyze=True):
+        with connection.cursor() as c:
+            c.execute("UPDATE files_file SET size=1024")
+
+    messages = "\n".join(caplog.messages)
+    assert "EXPLAIN ANALYZE" not in messages  # Updates are not analyzed
