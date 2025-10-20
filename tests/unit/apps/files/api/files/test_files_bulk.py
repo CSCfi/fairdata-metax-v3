@@ -795,3 +795,34 @@ def test_files_bulk_update_set_pas_compatible_file(ida_client, action_url):
     assert res.json()["failed"][0]["errors"] == {
         "pas_compatible_file": "Only PAS service is allowed to set value."
     }
+
+
+def test_files_delete_update_storage_timestamp(ida_client):
+    files = build_files_json(
+        [
+            {"exists": True},
+        ]
+    )
+    assert FileStorage.objects.count() == 1
+    fs = FileStorage.objects.first()
+    modified = fs.modified
+    res = ida_client.post("/v3/files/delete-many", files, content_type="application/json")
+    assert res.status_code == 200
+    fs.refresh_from_db()
+    assert fs.modified > modified
+
+
+def test_files_upsert_update_storage_timestamp(ida_client, action_url):
+    files = build_files_json(
+        [
+            {"size": 100, "exists": True},
+            {"size": 400, "exists": False, "id": None},
+        ]
+    )
+    assert FileStorage.objects.count() == 1
+    fs = FileStorage.objects.first()
+    modified = fs.modified
+    res = ida_client.post(action_url("upsert"), files, content_type="application/json")
+    assert res.status_code == 200, res.data
+    fs.refresh_from_db()
+    assert fs.modified > modified

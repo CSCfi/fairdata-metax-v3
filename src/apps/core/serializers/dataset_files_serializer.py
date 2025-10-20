@@ -621,7 +621,8 @@ class FileSetSerializer(StrictSerializer):
                 file_set.add_files_by_id(files_to_add)
 
         # file counts and dataset storage project may have changed, clear cached values
-        file_set.clear_cached_file_properties()
+        if file_set.added_files_count > 0 or file_set.removed_files_count > 0:
+            file_set.clear_cached_file_properties()
 
         # update dataset-specific metadata
         self.update_file_metadata(file_actions, file_set)

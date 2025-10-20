@@ -216,19 +216,46 @@ class FileSet(AbstractBaseModel):
     dataset = models.OneToOneField(Dataset, related_name="file_set", on_delete=models.CASCADE)
     files = models.ManyToManyField(File, related_name="file_sets")
 
+    # Cache total file count and size in the DB. Cached values are invalidated when
+    # when the cache timestamp does not match the storage modification timestamp.
+    cached_total_files_count = models.IntegerField(null=True, blank=True)
+    cached_total_files_size = models.BigIntegerField(null=True, blank=True)
+    cached_totals_timestamp = models.DateTimeField(null=True, blank=True)
+
     added_files_count: Optional[int] = None  # files added in request
 
     removed_files_count: Optional[int] = None  # files removed in request
 
     skip_files_m2m_changed = False  # enable to skip signal handler on file changes
 
-    @cached_property
+    @property
     def total_files_aggregates(self) -> dict:
-        return self.files(manager="available_objects").aggregate(
+        """Return total file count and size from cache, recalculate if needed."""
+        if self.cached_totals_timestamp == self.storage.modified:
+            return {
+                "total_files_count": self.cached_total_files_count,
+                "total_files_size": self.cached_total_files_size,
+            }
+
+        # Storage modification timestamp has changed, update aggregates
+        aggregates = self.files(manager="available_objects").aggregate(
             total_files_count=Count("*"), total_files_size=Coalesce(Sum("size"), 0)
         )
 
-    @cached_property
+        self.cached_total_files_count = aggregates["total_files_count"]
+        self.cached_total_files_size = aggregates["total_files_size"]
+        self.cached_totals_timestamp = self.storage.modified
+        models.Model.save(
+            self,
+            update_fields=[
+                "cached_total_files_count",
+                "cached_total_files_size",
+                "cached_totals_timestamp",
+            ],
+        )
+        return aggregates
+
+    @property
     def file_types(self):
         return self.file_metadata.values_list("file_type__pref_label", flat=True)
 
@@ -250,11 +277,17 @@ class FileSet(AbstractBaseModel):
 
     def clear_cached_file_properties(self):
         """Clear cached file properties after changes to FileSet files."""
-        for prop in ["total_files_aggregates", "file_types"]:
-            try:
-                delattr(self, prop)
-            except AttributeError:
-                pass
+        self.cached_total_files_count = None
+        self.cached_total_files_size = None
+        self.cached_totals_timestamp = None
+        models.Model.save(
+            self,
+            update_fields=[
+                "cached_total_files_count",
+                "cached_total_files_size",
+                "cached_totals_timestamp",
+            ],
+        )
 
     def add_files_by_id(self, files_to_add: Iterable[uuid.UUID]):
         """Add files to fileset using list of file ids.

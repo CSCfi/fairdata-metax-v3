@@ -532,6 +532,10 @@ class FileBulkSerializer(serializers.ListSerializer):
             "non_pas_compatible_file",
         )
 
+        # Update storage modification timestamps
+        storages = {f.storage_id for f in files}
+        FileStorage.objects.filter(id__in=storages).update(modified=timezone.now())
+
         # Cleanup any orphaned characteristics
         FileCharacteristics.objects.filter(file__isnull=True).delete()
 
@@ -560,6 +564,10 @@ class FileBulkSerializer(serializers.ListSerializer):
         files_to_delete = File.objects.filter(id__in=file_ids)
         pre_files_deleted.send(sender=File, queryset=files_to_delete)  # Deprecate datasets
         files_to_delete.update(removed=now)
+
+        # Update storage modification timestamps
+        storages = {f.storage_id for f in files}
+        FileStorage.objects.filter(id__in=storages).update(modified=now)
 
         return [
             {

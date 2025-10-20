@@ -37,7 +37,7 @@ from apps.common.serializers.serializers import IncludeRemovedQueryParamsSeriali
 from apps.common.views import CommonModelViewSet
 from apps.core.serializers.dataset_serializer import DatasetFieldsQueryParamsSerializer
 from apps.files.helpers import get_file_metadata_model
-from apps.files.models.file import File
+from apps.files.models.file import File, FileStorage
 from apps.files.permissions import FilesAccessPolicy
 from apps.files.serializers import FileSerializer
 from apps.files.serializers.fields import StorageServiceField
@@ -542,6 +542,7 @@ class FileViewSet(BaseFileViewSet):
 
             pre_files_deleted.send(sender=File, queryset=queryset)
             files_to_sync = None
+            now = timezone.now()
             if not request.user.is_v2_migration:
                 # Collect files before they are potentially deleted from DB
                 files_to_sync = list(queryset.all())
@@ -551,7 +552,6 @@ class FileViewSet(BaseFileViewSet):
                 # Sync removals to V2.
                 # Flush is not currently implemented in sync,
                 # soft delete is used instead.
-                now = timezone.now()
                 if not flush:
                     # When not flushing, get removal timestamp from
                     # first removed file and use it for all files.

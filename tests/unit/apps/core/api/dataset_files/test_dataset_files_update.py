@@ -1004,3 +1004,57 @@ def test_dataset_patch_fileset_only_published(admin_client, deep_file_tree, data
         "/dir2/subdir2/subsub/subsubsub2/file1.txt",
         "/dir2/subdir2/subsub/subsubsub2/file2.txt",
     ]
+
+
+def test_dataset_files_cached_totals(admin_client, deep_file_tree, data_urls):
+    dataset = factories.DatasetFactory()
+    fileset = factories.FileSetFactory(
+        dataset=dataset,
+        storage=deep_file_tree["storage"],
+        files=[
+            deep_file_tree["files"]["/dir2/subdir1/file3.txt"],
+        ],
+    )
+
+    assert fileset.total_files_count == 1
+    assert fileset.total_files_size == 1024
+    assert fileset.cached_total_files_count == 1
+    assert fileset.cached_total_files_size == 1024
+
+    # Adding file should update cached value
+    urls = data_urls(dataset)
+    actions = {
+        **deep_file_tree["params"],
+        "file_actions": [
+            {"pathname": "/dir2/subdir2/file1.txt"},
+        ],
+    }
+    res = admin_client.patch(
+        urls["dataset"], {"fileset": actions}, content_type="application/json"
+    )
+    assert res.status_code == 200
+
+    fileset.refresh_from_db()
+    assert fileset.total_files_count == 2
+    assert fileset.total_files_size == 2048
+    assert fileset.cached_total_files_count == 2
+    assert fileset.cached_total_files_size == 2048
+
+    fileset.cached_total_files_count = 7777  # Set cached value manually
+    fileset.save()
+
+    # Try to add file that already exists. No files are added or removed
+    # so the cached value is kept.
+    actions["file_actions"] = [{"pathname": "/dir2/subdir1/file3.txt"}]
+    res = admin_client.patch(
+        urls["dataset"], {"fileset": actions}, content_type="application/json"
+    )
+    assert res.status_code == 200
+    fileset.refresh_from_db()
+    assert fileset.cached_total_files_count == 7777
+
+    # Clear cache timestamp. Accessing total_files_count triggers updating of the cached value.
+    fileset.cached_totals_timestamp = None
+    assert fileset.cached_total_files_count == 7777
+    assert fileset.total_files_count == 2
+    assert fileset.cached_total_files_count == 2

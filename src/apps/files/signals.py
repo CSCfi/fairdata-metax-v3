@@ -8,10 +8,12 @@ import urllib3
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models.signals import m2m_changed, post_delete, pre_delete
+from django.utils import timezone
 from django.dispatch import Signal, receiver
 from rest_framework import exceptions, status
 
 from apps.files.models import File
+from apps.files.models.file_storage import FileStorage
 
 logger = logging.getLogger(__name__)
 
@@ -81,3 +83,10 @@ def handle_sync_files(sender, actions: List[dict], **kwargs):
     # Update legacy_id values for files that didn't have one yet
     files_with_new_legacy_ids = [f for f in files_without_legacy_ids.values() if f.legacy_id]
     File.all_objects.bulk_update(files_with_new_legacy_ids, fields=["legacy_id"], batch_size=2000)
+
+
+@receiver(pre_files_deleted, sender=File)
+def handle_files_deleted(sender, queryset, **kwargs):
+    # Update storage modification timestamps
+    storages = queryset.order_by().values("storage_id").distinct("storage_id")
+    FileStorage.objects.filter(id__in=storages).update(modified=timezone.now())
