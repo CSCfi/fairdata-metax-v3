@@ -7,7 +7,7 @@ from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 from django_filters import fields, rest_framework as filters
 
-logger = logging.getLogger("__name__")
+logger = logging.getLogger(__name__)
 
 
 def parse_csv_string(string):

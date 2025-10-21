@@ -2,7 +2,7 @@ from django.apps import apps
 
 
 def get_models():
-    checked_apps = ["actors", "core", "common", "files", "cache", "refdata", "users"]
+    checked_apps = ["actors", "core", "common", "files", "cache", "refdata", "rems", "users"]
     for app in checked_apps:
         config = apps.get_app_config(app)
         for model in config.get_models():

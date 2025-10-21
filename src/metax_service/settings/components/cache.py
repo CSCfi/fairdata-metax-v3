@@ -5,7 +5,7 @@ from metax_service.settings.components.base import env
 ENABLE_MEMCACHED = env.bool("ENABLE_MEMCACHED", False)
 CACHALOT_DATABASES = ["default"] # Only use cache for the default connection
 CACHALOT_UNCACHABLE_TABLES = {"django_migrations", "core_v2syncstatus"}
-CACHALOT_TIMEOUT = 7200 # Cachalot cache entry TTL in seconds
+CACHALOT_TIMEOUT = env.int("CACHALOT_TIMEOUT", 7200) # Cachalot cache entry TTL in seconds
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.dummy.DummyCache",

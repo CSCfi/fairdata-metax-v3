@@ -27,7 +27,7 @@ from apps.core.serializers.file_metadata_serializer import (
 from apps.files.models import FileStorage
 from apps.files.serializers.fields import DirectoryPathField, StorageServiceField
 
-logger = logging.getLogger("__name__")
+logger = logging.getLogger(__name__)
 
 
 class Action(TextChoices):

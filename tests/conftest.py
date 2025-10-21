@@ -935,6 +935,15 @@ def appsupport_client(appsupport_user):
 @pytest.fixture(autouse=True)
 def tweaked_settings(settings):
     logging.disable(logging.CRITICAL)
+    settings.LOG_QUERIES = False
+    settings.LOGGING["handlers"]["file"] = {"class": "logging.NullHandler"}
+    settings.LOGGING["handlers"]["queries_file"] = {"class": "logging.NullHandler"}
+    settings.LOGGING["loggers"]["apps.common.profiling.queries"] = {
+        "handlers": [],
+        "propagate": True,
+    }
+    logging.config.dictConfig(settings.LOGGING) # Update logging config
+
     settings.CACHES = {
         "default": {
             "BACKEND": "django.core.cache.backends.dummy.DummyCache",
@@ -973,7 +982,7 @@ def tweaked_settings(settings):
     settings.REMS_ORGANIZATION_ID = "csc"
     settings.REMS_RESOURCE_PREFIX = "metax-test"
     settings.REMS_MANUAL_WORKFLOW = False
-    settings.LOG_QUERIES = False
+
 
 
 @pytest.fixture

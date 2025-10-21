@@ -6,7 +6,7 @@ from apps.actors.models import Actor, HomePage, Organization, Person
 from apps.common.serializers import CommonListSerializer
 from apps.common.serializers.serializers import CommonModelSerializer
 
-logger = logging.getLogger("__name__")
+logger = logging.getLogger(__name__)
 
 
 class HomePageSerializer(CommonModelSerializer):

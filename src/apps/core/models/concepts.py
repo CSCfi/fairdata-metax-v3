@@ -6,7 +6,6 @@ from django.utils.translation import gettext as _
 
 from apps.common.copier import ModelCopier
 from apps.common.models import AbstractBaseModel
-from apps.common.serializers import URLReferencedModelField, URLReferencedModelListField
 from apps.refdata import models as refdata
 from apps.refdata.models import ConceptProxyMixin
 

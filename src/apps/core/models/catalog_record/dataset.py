@@ -278,6 +278,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         "provenance__is_associated_with__person",
         "provenance__is_associated_with",
         "provenance__lifecycle_event",
+        "provenance__preservation_event",
         "provenance__spatial__reference",
         "provenance__spatial",
         "provenance__temporal",

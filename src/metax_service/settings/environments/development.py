@@ -20,6 +20,8 @@ ALLOWED_HOSTS = ALLOWED_HOSTS + [
 
 SHELL_PLUS_IMPORTS = [
     "from django.db import connection",
+    "from django.db.models.functions import Coalesce, Concat, Upper, Lower",
+    "from apps.common.profiling import log_queries, count_queries",
     "from apps.rems.rems_service import REMSService, REMSSession",
 ]
 SHELL_PLUS_SUBCLASSES_IMPORT = [serializers.Serializer]

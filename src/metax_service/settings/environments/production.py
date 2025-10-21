@@ -1,16 +1,3 @@
-import os
-
-from metax_service.settings.components.base import DATABASES, LOGGING
-
-LOGGING["handlers"]["file"] = {
-    "level": "INFO",
-    "class": "logging.FileHandler",
-    "filename": os.environ.get("DJANGO_ERROR_LOG_FILENAME"),
-    "formatter": "verbose",
-}
-LOGGING["root"]["handlers"] = ["console", "file"]
-
-
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 SECURE_HSTS_SECONDS = 3600  # one year 31536000
