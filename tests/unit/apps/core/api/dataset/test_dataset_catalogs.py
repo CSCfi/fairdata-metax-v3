@@ -55,7 +55,7 @@ def publishing_channel_catalogs(
     # Catalog with etsin publishing channel
     etsin_pc_dc_json = datacatalog_a_json
     etsin_pc_dc_json["id"] = "etsin-pc-data-catalog"
-    etsin_pc_dc_json["publishing_channels"] = ["etsin"]
+    etsin_pc_dc_json["publishing_channels"] = ["default", "etsin"]
     res = admin_client.post(
         data_catalog_list_url, etsin_pc_dc_json, content_type="application/json"
     )
@@ -71,7 +71,7 @@ def publishing_channel_catalogs(
     # Catalog with both publishing channels
     both_pc_dc_json = datacatalog_a_json
     both_pc_dc_json["id"] = "both-pc-data-catalog"
-    both_pc_dc_json["publishing_channels"] = ["etsin", "ttv"]
+    both_pc_dc_json["publishing_channels"] = ["default", "etsin", "ttv"]
     res = admin_client.post(
         data_catalog_list_url, both_pc_dc_json, content_type="application/json"
     )
@@ -331,7 +331,8 @@ def test_catalog_datasets_publishing_channels_single_dataset(
 @pytest.mark.parametrize(
     "publishing_channels,expected_count",
     [
-        ("etsin", 1),
+        ("default", 1),
+        ("etsin", 0),
         ("ttv", 0),
         ("all", 1),
         (None, 1),
@@ -355,6 +356,44 @@ def test_get_datasets_without_catalog(
     assert (
         actual_count == expected_count
     ), f"publishing_channels: {publishing_channels}, expected_count: {expected_count}, actual count: {actual_count}"
+
+
+def test_catalog_datasets_publishing_channels_pas(admin_client):
+    factories.PublishedDatasetFactory(
+        data_catalog__id="urn:nbn:fi:att:data-catalog-pas",
+        preservation=factories.PreservationFactory(state=120),
+    )
+    factories.PublishedDatasetFactory(
+        data_catalog__id="urn:nbn:fi:att:data-catalog-pas",
+        preservation=factories.PreservationFactory(state=30),
+    )
+
+    res = admin_client.get("/v3/datasets")
+    assert res.data["count"] == 2  # All published PAS datasets
+
+    res = admin_client.get("/v3/datasets?publishing_channels=etsin")
+    assert res.data["count"] == 1  # Only published PAS datasets with state 120
+
+    res = admin_client.get("/v3/datasets?publishing_channels=ttv")
+    assert res.data["count"] == 1  # Only published PAS datasets with state 120
+
+
+def test_catalog_datasets_publishing_channels_drafts(admin_client):
+    factories.DatasetFactory(data_catalog__id="urn:nbn:fi:att:data-catalog-ida")
+    factories.DatasetFactory(data_catalog__id="urn:nbn:fi:att:data-catalog-ida")
+    factories.PublishedDatasetFactory(data_catalog__id="urn:nbn:fi:att:data-catalog-ida")
+
+    res = admin_client.get("/v3/datasets")
+    assert res.data["count"] == 3 # All datasets
+
+    res = admin_client.get("/v3/datasets?publishing_channels=default")
+    assert res.data["count"] == 3 # All datasets
+
+    res = admin_client.get("/v3/datasets?publishing_channels=etsin")
+    assert res.data["count"] == 1  # No drafts for etsin
+
+    res = admin_client.get("/v3/datasets?publishing_channels=ttv")
+    assert res.data["count"] == 1  # No drafts for ttv
 
 
 # Update catalog

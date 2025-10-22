@@ -330,7 +330,7 @@ class DataCatalogFactory(factory.django.DjangoModelFactory):
     system_creator = factory.SubFactory(MetaxUserFactory)
     allow_remote_resources = True
     storage_services = ["ida", "pas", "test"]
-    publishing_channels = ["etsin", "ttv"]
+    publishing_channels = ["default", "etsin", "ttv"]
     rems_enabled = True
     allow_download = True
 

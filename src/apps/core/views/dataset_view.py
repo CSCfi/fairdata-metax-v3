@@ -191,10 +191,10 @@ class DatasetFilter(filters.FilterSet):
     )
 
     publishing_channels = VerboseChoiceFilter(
-        choices=[("etsin", "etsin"), ("ttv", "ttv"), ("all", "all")],
+        choices=[("default", "default"), ("etsin", "etsin"), ("ttv", "ttv"), ("all", "all")],
         method="filter_publishing_channels",
-        label="publishing channels\nFilter datasets based on the publishing channels of the dataset's catalog. The default value is 'etsin'.",
-        help_text="Filter datasets based on the publishing channels of the dataset's catalog. The default value is 'etsin'.",
+        label="publishing channels\nFilter datasets based on the publishing channels of the dataset's catalog. The default value is 'default'.",
+        help_text="Filter datasets based on the publishing channels of the dataset's catalog. The default value is 'default'.",
     )
 
     search = filters.CharFilter(method="search_dataset")
@@ -317,9 +317,16 @@ class DatasetFilter(filters.FilterSet):
     def filter_publishing_channels(self, queryset, name, value):
         if value == "all":
             return queryset
-        if value == "etsin":
+        if value in ["etsin", "ttv"]:
+            # Show PAS datasets only when preservation state is 120
+            queryset = queryset.filter(state=Dataset.StateChoices.PUBLISHED).filter(
+                ~Q(data_catalog__id="urn:nbn:fi:att:data-catalog-pas")
+                | Q(preservation__state=Preservation.PreservationState.IN_PAS)
+            )
+        if value == "default":
+            # Default includes drafts without catalogs
             return queryset.filter(
-                Q(data_catalog__publishing_channels__contains=["etsin"])
+                Q(data_catalog__publishing_channels__contains=["default"])
                 | Q(data_catalog__isnull=True)
             )
         return queryset.filter(data_catalog__publishing_channels__contains=[value])
@@ -402,7 +409,7 @@ class DatasetFilter(filters.FilterSet):
     def filter_queryset(self, queryset):
         # Use "etsin" as the default publishing channel filter value
         if not self.form.cleaned_data["publishing_channels"]:
-            self.form.cleaned_data["publishing_channels"] = "etsin"
+            self.form.cleaned_data["publishing_channels"] = "default"
         queryset = self.filter_temporals(queryset)
         return super().filter_queryset(queryset)
 

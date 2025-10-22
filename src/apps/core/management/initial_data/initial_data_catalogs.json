@@ -35,7 +35,7 @@
     "dataset_versioning_enabled": false,
     "dataset_groups_create": ["abo"],
     "dataset_groups_admin": ["abo"],
-    "publishing_channels": ["etsin", "ttv"]
+    "publishing_channels": ["default", "etsin", "ttv"]
   },
   {
     "id": "urn:nbn:fi:att:data-catalog-acris",
@@ -73,7 +73,7 @@
     "dataset_versioning_enabled": false,
     "dataset_groups_create": ["aalto"],
     "dataset_groups_admin": ["aalto"],
-    "publishing_channels": ["etsin", "ttv"]
+    "publishing_channels": ["default", "etsin", "ttv"]
   },
   {
     "id": "urn:nbn:fi:att:data-catalog-att",
@@ -118,7 +118,7 @@
     ],
     "rems_enabled": false,
     "storage_services": [],
-    "publishing_channels": ["etsin","ttv"]
+    "publishing_channels": ["default", "etsin","ttv"]
   },
   {
     "id": "urn:nbn:fi:att:data-catalog-e2e-tests-harvested",
@@ -154,7 +154,7 @@
     "dataset_versioning_enabled": false,
     "dataset_groups_create": ["e2e"],
     "dataset_groups_admin": ["e2e"],
-    "publishing_channels": ["etsin", "ttv"]
+    "publishing_channels": ["default", "etsin", "ttv"]
   },
   {
     "id": "urn:nbn:fi:att:data-catalog-fmi",
@@ -190,7 +190,7 @@
     "dataset_versioning_enabled": false,
     "dataset_groups_create": ["fmi"],
     "dataset_groups_admin": ["fmi"],
-    "publishing_channels": ["etsin", "ttv"]
+    "publishing_channels": ["default", "etsin", "ttv"]
   },
   {
     "id": "urn:nbn:fi:att:data-catalog-harvest-fsd",
@@ -226,7 +226,7 @@
     "dataset_versioning_enabled": false,
     "dataset_groups_create": ["fsd"],
     "dataset_groups_admin": ["fsd"],
-    "publishing_channels": ["etsin", "ttv"]
+    "publishing_channels": ["default", "etsin", "ttv"]
   },
   {
     "id": "urn:nbn:fi:att:data-catalog-harvest-kielipankki",
@@ -262,7 +262,7 @@
     "dataset_versioning_enabled": false,
     "dataset_groups_create": ["kielipankki"],
     "dataset_groups_admin": ["kielipankki"],
-    "publishing_channels": ["etsin", "ttv"]
+    "publishing_channels": ["default", "etsin", "ttv"]
   },
   {
     "id": "urn:nbn:fi:att:data-catalog-hy",
@@ -300,7 +300,7 @@
     "dataset_versioning_enabled": false,
     "dataset_groups_create": ["hy"],
     "dataset_groups_admin": ["hy"],
-    "publishing_channels": ["etsin", "ttv"]
+    "publishing_channels": ["default", "etsin", "ttv"]
   },
   {
     "id": "urn:nbn:fi:att:data-catalog-ida",
@@ -340,7 +340,7 @@
     "rems_enabled": true,
     "storage_services": ["ida"],
     "allowed_pid_types": ["URN", "DOI"],
-    "publishing_channels": ["etsin", "ttv"],
+    "publishing_channels": ["default", "etsin", "ttv"],
     "allow_download": true
   },
   {
@@ -401,6 +401,7 @@
     [],
     "publishing_channels":
     [
+      "default",
       "etsin",
       "ttv"
     ],
@@ -455,6 +456,7 @@
     "allow_remote_resources": true,
     "storage_services": [],
     "publishing_channels": [
+      "default",
       "etsin",
       "ttv"
     ],
@@ -518,6 +520,7 @@
     [],
     "publishing_channels":
     [
+      "default",
       "etsin",
       "ttv"
     ],
@@ -570,7 +573,7 @@
     "allow_remote_resources": false,
     "rems_enabled": false,
     "storage_services": ["pas"],
-    "publishing_channels": ["etsin","ttv"]
+    "publishing_channels": ["default", "etsin","ttv"]
   },
   {
     "id": "urn:nbn:fi:att:data-catalog-reportronic",
@@ -677,6 +680,7 @@
     [],
     "publishing_channels":
     [
+      "default",
       "etsin",
       "ttv"
     ],
@@ -719,6 +723,6 @@
     "dataset_versioning_enabled": false,
     "dataset_groups_create": ["tuni"],
     "dataset_groups_admin": ["tuni"],
-    "publishing_channels": ["etsin", "ttv"]
+    "publishing_channels": ["default", "etsin", "ttv"]
   }
 ]

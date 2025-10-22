@@ -113,6 +113,7 @@ class DataCatalog(AbstractBaseModel):
     class PublishingChannel(models.TextChoices):
         ETSIN = "etsin", _("etsin")
         TTV = "ttv", _("ttv")
+        DEFAULT = "default", _("default")
 
     publishing_channels = ArrayField(
         models.CharField(max_length=64, choices=PublishingChannel.choices),

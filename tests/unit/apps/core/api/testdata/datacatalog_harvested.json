@@ -26,5 +26,5 @@
   },
   "dataset_versioning_enabled": true,
   "is_external": true,
-  "publishing_channels": ["etsin", "ttv"]
+  "publishing_channels": ["default", "etsin", "ttv"]
 }
