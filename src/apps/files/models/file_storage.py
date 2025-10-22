@@ -209,7 +209,11 @@ class FileStorage(ProxyBasePolymorphicModel, AbstractBaseModel):
     required_file_fields = set()
 
     class Meta(AbstractBaseModel.Meta):
-        unique_together = [("csc_project", "storage_service")]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["storage_service", "csc_project"], name="unique_storage_project"
+            )
+        ]
 
     @classmethod
     @functools.lru_cache

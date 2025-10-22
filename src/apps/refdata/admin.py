@@ -2,7 +2,7 @@ from django import forms
 from django.contrib import admin
 from django.db.models import Case, F, When
 
-from apps.common.admin import SystemCreatorBaseAdmin
+from apps.common.admin import CommonAdmin, SystemCreatorBaseAdmin
 from apps.refdata.models import reference_data_models
 
 
@@ -15,7 +15,7 @@ class ReferenceDataAdminForm(forms.ModelForm):
             )
 
 
-class AbstractConceptAdmin(SystemCreatorBaseAdmin):
+class AbstractConceptAdmin(SystemCreatorBaseAdmin, CommonAdmin):
     form = ReferenceDataAdminForm
     search_fields = ("url", "pref_label")
     list_display = ("id", "url", "label_en", "broader_concept")

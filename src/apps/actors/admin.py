@@ -3,6 +3,7 @@ from django.contrib import admin
 from django.db.models import Case, When
 
 from apps.actors.models import Actor, Organization, Person
+from apps.common.admin import CommonAdmin
 
 
 class OrganizationAdminForm(forms.ModelForm):
@@ -15,7 +16,7 @@ class OrganizationAdminForm(forms.ModelForm):
 
 
 @admin.register(Organization)
-class OrganizationAdmin(admin.ModelAdmin):
+class OrganizationAdmin(CommonAdmin):
     form = OrganizationAdminForm
     search_fields = ("url", "pref_label")
     list_display = ("id", "url", "label_en", "parent_label")
@@ -43,7 +44,7 @@ class OrganizationAdmin(admin.ModelAdmin):
 
 
 @admin.register(Actor)
-class ActorAdmin(admin.ModelAdmin):
+class ActorAdmin(CommonAdmin):
     list_display = (
         "person",
         "organization",
@@ -53,6 +54,6 @@ class ActorAdmin(admin.ModelAdmin):
 
 
 @admin.register(Person)
-class PersonAdmin(admin.ModelAdmin):
+class PersonAdmin(CommonAdmin):
     list_display = ("name", "email")
     search_fields = ("name", "email")

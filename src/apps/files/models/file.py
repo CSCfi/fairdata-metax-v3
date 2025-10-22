@@ -51,7 +51,7 @@ class File(SystemCreatorBaseModel, CustomSoftDeletableModel):
     published = models.DateTimeField(null=True, blank=True)
 
     characteristics = models.OneToOneField(
-        FileCharacteristics, related_name="file", on_delete=models.SET_NULL, null=True
+        FileCharacteristics, related_name="file", on_delete=models.SET_NULL, null=True, blank=True
     )
     characteristics_extension = models.JSONField(blank=True, null=True)
 

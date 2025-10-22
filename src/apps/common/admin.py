@@ -10,6 +10,14 @@ class SystemCreatorBaseAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
 
-class AbstractDatasetPropertyBaseAdmin(SystemCreatorBaseAdmin, SimpleHistoryAdmin):
+class CommonAdmin(admin.ModelAdmin):
+    def __init__(self, model, admin_site):
+        # Add help text to indicate what fields are used in the search
+        if self.search_fields and not self.search_help_text:
+            self.search_help_text = f"Searched fields: {', '.join(self.search_fields)}"
+        super().__init__(model, admin_site)
+
+
+class AbstractDatasetPropertyBaseAdmin(SystemCreatorBaseAdmin, SimpleHistoryAdmin, CommonAdmin):
     list_filter = ("created", "modified")
     exclude = ("removed",)

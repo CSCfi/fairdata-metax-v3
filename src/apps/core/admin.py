@@ -7,7 +7,7 @@ from django.db.models.functions import Cast, Substr
 from django_json_widget.widgets import JSONEditorWidget
 from simple_history.admin import SimpleHistoryAdmin
 
-from apps.common.admin import AbstractDatasetPropertyBaseAdmin
+from apps.common.admin import AbstractDatasetPropertyBaseAdmin, CommonAdmin
 
 # Register your models here.
 from apps.common.tasks import run_task
@@ -82,7 +82,7 @@ class DataCatalogAdmin(AbstractDatasetPropertyBaseAdmin, SimpleHistoryAdmin):
 
 
 @admin.register(MetadataProvider)
-class MetadataProviderAdmin(admin.ModelAdmin):
+class MetadataProviderAdmin(CommonAdmin):
     list_display = ("user", "organization")
     list_filter = ("created", "modified")
     search_fields = ("organization", "user__username", "user__email")
@@ -95,29 +95,29 @@ class CoreRefDataAdminMixin:
 
 
 @admin.register(Language)
-class DatasetLanguage(CoreRefDataAdminMixin, admin.ModelAdmin):
+class DatasetLanguage(CoreRefDataAdminMixin, CommonAdmin):
     pass
 
 
 @admin.register(Theme)
-class DatasetTheme(CoreRefDataAdminMixin, admin.ModelAdmin):
+class DatasetTheme(CoreRefDataAdminMixin, CommonAdmin):
     pass
 
 
 @admin.register(FieldOfScience)
-class DatasetFieldOfScience(CoreRefDataAdminMixin, admin.ModelAdmin):
+class DatasetFieldOfScience(CoreRefDataAdminMixin, CommonAdmin):
     pass
 
 
 @admin.register(Funding)
-class Funding(admin.ModelAdmin):
+class Funding(CommonAdmin):
     search_fields = ["funding_identifier"]
     list_filter = ("created", "modified")
     readonly_fields = ("funder",)
 
 
 @admin.register(RestrictionGrounds)
-class RestrictionGrounds(CoreRefDataAdminMixin, admin.ModelAdmin):
+class RestrictionGrounds(CoreRefDataAdminMixin, CommonAdmin):
     pass
 
 
@@ -257,7 +257,7 @@ class DatasetAdmin(AbstractDatasetPropertyBaseAdmin, SimpleHistoryAdmin):
 
 
 @admin.register(DatasetActor)
-class DatasetActorAdmin(admin.ModelAdmin):
+class DatasetActorAdmin(CommonAdmin):
     list_display = (
         "dataset",
         "actor",
@@ -290,7 +290,7 @@ class DatasetActorAdmin(admin.ModelAdmin):
 
 
 @admin.register(Preservation)
-class PreservationAdmin(admin.ModelAdmin):
+class PreservationAdmin(CommonAdmin):
     list_display = ("id", "dataset", "state", "pas_process_running")
     list_filter = ("state", "pas_process_running")
     search_fields = ("dataset__id",)
@@ -298,7 +298,7 @@ class PreservationAdmin(admin.ModelAdmin):
 
 
 @admin.register(Temporal)
-class TemporalAdmin(admin.ModelAdmin):
+class TemporalAdmin(CommonAdmin):
     list_display = ("id", "start_date", "end_date", "dataset", "provenance")
     list_filter = ("created", "modified", "start_date", "end_date")
     search_fields = ("dataset__id", "provenance__id")
@@ -306,7 +306,7 @@ class TemporalAdmin(admin.ModelAdmin):
 
 
 @admin.register(Provenance)
-class ProvenanceAdmin(admin.ModelAdmin):
+class ProvenanceAdmin(CommonAdmin):
     list_display = ("id", "title", "description")
     list_filter = ["created", "modified", "event_outcome", "lifecycle_event", "preservation_event"]
     autocomplete_fields = ["is_associated_with", "spatial"]
@@ -315,7 +315,7 @@ class ProvenanceAdmin(admin.ModelAdmin):
 
 
 @admin.register(Spatial)
-class SpatialAdmin(admin.ModelAdmin):
+class SpatialAdmin(CommonAdmin):
     list_display = ("id", "full_address", "geographic_name", "dataset")
     search_fields = ["dataset__id", "full_address", "geographic_name"]
     list_filter = ("created", "modified", "geographic_name")
@@ -323,13 +323,13 @@ class SpatialAdmin(admin.ModelAdmin):
 
 
 @admin.register(OtherIdentifier)
-class OtherIdentifierAdmin(admin.ModelAdmin):
+class OtherIdentifierAdmin(CommonAdmin):
     list_display = ("notation",)
     list_filter = ("identifier_type", "created", "modified")
 
 
 @admin.register(DatasetProject)
-class DatasetProjectAdmin(admin.ModelAdmin):
+class DatasetProjectAdmin(CommonAdmin):
     list_display = ("title", "dataset")
     list_filter = ("created", "modified")
     search_fields = ["dataset__id", "title", "project_identifier"]
@@ -337,7 +337,7 @@ class DatasetProjectAdmin(admin.ModelAdmin):
 
 
 @admin.register(LegacyDataset)
-class LegacyDatasetAdmin(admin.ModelAdmin):
+class LegacyDatasetAdmin(CommonAdmin):
     fields = (
         "id",
         "created",
@@ -389,7 +389,7 @@ class FileSetAdmin(AbstractDatasetPropertyBaseAdmin):
 
 
 @admin.register(V2SyncStatus)
-class V2SyncStatusAdmin(admin.ModelAdmin):
+class V2SyncStatusAdmin(CommonAdmin):
     readonly_fields = (
         "dataset",
         "sync_started",

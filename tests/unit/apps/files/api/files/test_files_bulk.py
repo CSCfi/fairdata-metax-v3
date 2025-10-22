@@ -765,8 +765,10 @@ def test_files_bulk_update_locked_ok(pas_client, action_url):
         ]
     )
     files[0].pop("pas_process_running")
+    files[0]["pas_process_running"] = False
     res = pas_client.post(action_url("update"), files, content_type="application/json")
     assert res.status_code == 200
+    assert File.objects.get(id=files[0]["id"]).pas_process_running == False
 
 
 def test_files_bulk_update_set_pas_process_running_not_allowed(ida_client, action_url):
