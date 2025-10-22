@@ -72,6 +72,45 @@ def test_log_queries_format_query():
     assert formatted == "SELECT x FROM y WHERE id IN (%s, %s, %s, %s, ..., %s, %s)"
 
 
+def test_log_queries_format_query_values():
+    l = log_queries()
+    formatted = l.format_query(
+        "INSERT INTO x (somefields) VALUES "
+        "(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s), "
+        "(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s), "
+        "(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s), "
+        "(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+    )
+    assert formatted == (
+        "INSERT INTO x (somefields) VALUES "
+        "(%s, %s, %s, %s, ..., %s, %s), ..., "
+        "(%s, %s, %s, %s, ..., %s, %s)"
+    )
+
+
+def test_log_queries_format_query_case():
+    l = log_queries()
+    formatted = l.format_query(
+        'UPDATE "files_file" set "legacy_id"=(CASE '
+        'WHEN ("files_file"."id" = %s) THEN %s '
+        'WHEN ("files_file"."id" = %s) THEN %s '
+        'WHEN ("files_file"."id" = %s) THEN %s '
+        'WHEN ("files_file"."id" = %s) THEN %s '
+        'WHEN ("files_file"."id" = %s) THEN %s ELSE NULL END)'
+    )
+    assert formatted == (
+        'UPDATE "files_file" set "legacy_id"='
+        '(CASE WHEN ("files_file"."id" = %s) THEN %s ...ELSE NULL END)'
+    )
+
+
+def test_log_queries_format_long_query():
+    l = log_queries()
+    query = "SELECT " + ", ".join(f"'hello world ({i})'" for i in range(150))
+    formatted = l.format_query(query)
+    assert formatted == f"{query[:1800]} ... {query[-200:]}"
+
+
 def test_log_queries_query_param(admin_client, caplog):
     logging.disable(logging.NOTSET)
     dataset = factories.DatasetFactory(title={"en": "Hello world"})

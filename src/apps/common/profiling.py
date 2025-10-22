@@ -70,6 +70,14 @@ queries_logger = logging.getLogger(f"{__name__}.queries")
 # Match SQL query strings where placeholder "%s, " is repeated a lot
 re_repeated_s = re.compile(r"(?:%s, ){9,}")
 
+# Match SQL query strings where "(%s, %s, %s, ..., %s), " is repeated
+re_values = r"\((?:%s, )+%s\)"
+re_repeated_values = re.compile(rf"({re_values}, )(?:{re_values}, )(?:{re_values}, )+")
+
+# Match SQL query strings with CASE WHEN ... THEN ... WHEN ... THEN ... END
+re_when = r"WHEN \([^)]+\) THEN .+?"
+re_case = re.compile(rf"CASE ({re_when})(?:{re_when})+(ELSE\s+.+?)? END")
+
 
 class log_queries(ContextDecorator):
     """Context manager and decorator to log Django SQL queries.
@@ -142,14 +150,19 @@ class log_queries(ContextDecorator):
 
     def format_query(self, query: str) -> str:
         """Truncate repeated %s in queries to make e.g. "... WHERE id IN (%s, %s, ...)" more readable."""
-        return re_repeated_s.sub("%s, %s, %s, %s, ..., %s, ", query)
+        query = re_case.sub("CASE \g<1>...\g<2> END", query)
+        query = re_repeated_values.sub("\g<1>..., ", query)
+        query = re_repeated_s.sub("%s, %s, %s, %s, ..., %s, ", query)
+        if len(query) > 2000:
+            query = f"{query[:1800]} ... {query[-200:]}"
+        return query
 
     def format_label(self):
         return f"{self.label} --- " if self.label else ""
 
     def analyze_query(self, sql: str, params: list, many: bool, context: dict):
         if not sql.startswith("SELECT "):
-            return # Don't analyze updates to avoid duplicating query effects
+            return  # Don't analyze updates to avoid duplicating query effects
         connection = context["connection"]
         with connection.cursor() as c:
             label = self.format_label()
@@ -162,7 +175,7 @@ class log_queries(ContextDecorator):
             else:
                 c._execute(sql, params)
 
-            analysis = "\n".join(row[0] for row in c.fetchall())
+            analysis = "\n".join(row[0][:200] for row in c.fetchall())
             queries_logger.info(f"{label}EXPLAIN ANALYZE:\n{analysis}")
 
     def __enter__(self):
@@ -189,7 +202,6 @@ class log_queries(ContextDecorator):
                 )
                 if self.analyze:
                     self.analyze_query(sql, params, many, context)
-
 
         self.wrapper = self.connection.execute_wrapper(exec)
         self.wrapper.__enter__()
