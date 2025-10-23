@@ -245,6 +245,7 @@ REST_FRAMEWORK = {
         "apps.users.authentication.SSOSyncSessionAuthentication",
         "apps.users.authentication.SSOSyncKnoxTokenAuthentication",
     ],
+    "UNAUTHENTICATED_USER": "apps.users.models.AnonymousMetaxUser",
     "DEFAULT_PAGINATION_CLASS": "apps.common.pagination.DefaultOffsetPagination",
     "DEFAULT_FILTER_BACKENDS": ("apps.common.filters.CustomDjangoFilterBackend",),
     "EXCEPTION_HANDLER": "common.exceptions.exception_handler",
@@ -392,6 +393,8 @@ COMMON_QUERY_PARAMS = {
     "include_nulls",  # set ?include_nulls=true include null values in responses
     "log_queries",  # set ?log_queries=true to log all SQL queries
     "slow_query_limit",  # minimum logged query duration (default 0 seconds) when log_queries=true
+    "analyze",  # set ?analyze=true to log analysis for slow queries
+    "cachalot_disabled",  # use to disable query caching for request
 }
 
 # Email configuration

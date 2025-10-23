@@ -6,11 +6,11 @@ import uuid
 import sys
 import traceback
 from collections.abc import Hashable
-from contextlib import contextmanager
+from contextlib import contextmanager, ExitStack
 from datetime import datetime, timezone as tz
 from itertools import islice
 from textwrap import dedent
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, Generator, Iterable, List, Optional, ContextManager
 from urllib.parse import SplitResult, parse_qsl, quote, urlencode, urlsplit, urlunsplit
 
 import shapely
@@ -512,3 +512,35 @@ def datetime_fromisoformat(str) -> datetime:
     import isodate
 
     return isodate.parse_datetime(str)
+
+
+@contextmanager
+def context_managers(managers: Iterable[Optional[ContextManager]]) -> Generator[list, None, None]:
+    """
+    A context manager that enters multiple context managers provided in an iterable.
+
+    Args:
+        managers: An iterable of context manager instances to be entered.
+                  Use None to omit a manager without altering the yielded list order.
+
+    Yields:
+        List of values returned from entering each manager. None values in the input list
+        result in None values in the yielded list.
+
+    Example:
+        Nested managers like this:
+        ```
+        with open('file1.txt') as file1:
+            with open('file2.txt') as file2:
+                with open('file3.txt') as file3:
+                    # do stuff
+        ```
+        can be replaced with
+        ```
+        managers = [open(file) for file in ['file1.txt', 'file2.txt', 'file3.txt']]
+        with context_managers(managers) as (file1, file2, file3):
+            # do stuff
+        ```
+    """
+    with ExitStack() as stack:
+        yield [stack.enter_context(manager) if manager else None for manager in managers]

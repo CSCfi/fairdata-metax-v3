@@ -1,6 +1,7 @@
 from functools import cached_property
-from typing import List
+from typing import ContextManager, List, Optional
 
+from cachalot.api import cachalot_disabled
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from rest_access_policy import AccessViewSetMixin
@@ -12,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
 from apps.common.exceptions import ResourceLocked
+from apps.common.helpers import context_managers
 from apps.common.permissions import BaseAccessPolicy
 from apps.common.profiling import log_queries
 
@@ -200,18 +202,23 @@ class NonFilteringGetObjectMixin:
 
 
 class LogQueriesQueryParamsSerializer(serializers.Serializer):
-    """Serializer for 'strict' query parameter."""
-
     log_queries = serializers.BooleanField(required=False)
     slow_query_limit = serializers.FloatField(required=False)
+    analyze = serializers.BooleanField(required=False)
 
 
-class LogQueriesMixin(viewsets.ViewSet):
-    """Support logging SQL queries made in the view.
+class CachalotQueryParamsSerializer(serializers.Serializer):
+    cachalot_disabled = serializers.BooleanField(default=False)
+
+
+class QueryProfilingMixin(viewsets.ViewSet):
+    """Mixin that adds SQL query profiling support to views.
 
     - To enable query logging, set ?log_queries=true
     - To set minimum duration in seconds for logging a query, use slow_query_limit
-    - Example: ?log_queries=true&slow_query_limit=1 logs queries that take more thna 1 second
+    - Example: ?log_queries=true&slow_query_limit=1 logs queries that take more than 1 second
+    - Example: ?log_queries=true&analyze=true analyze SELECT queries (needs appsupport rights)
+    - Use ?cachalot_disabled=true to disable cachalot for the request (needs appsupport rights)
     """
 
     @cached_property
@@ -220,37 +227,93 @@ class LogQueriesMixin(viewsets.ViewSet):
         serializer.is_valid(raise_exception=True)
         return serializer.validated_data
 
-    def dispatch(self, request, *args, **kwargs):
+    @cached_property
+    def cachalot_params(self) -> dict:
+        serializer = CachalotQueryParamsSerializer(data=self.request.GET.dict())
+        serializer.is_valid(raise_exception=True)
+        return serializer.validated_data
+
+    def _get_log_queries_context_manager(self, request) -> Optional[ContextManager]:
         log_queries_enabled = settings.LOG_QUERIES
         slow_query_limit = settings.SLOW_QUERY_LIMIT
         slow_total_queries_limit = settings.SLOW_TOTAL_QUERIES_LIMIT
+        analyze = False
 
         # Override query logging settings using query params
-        params = self.log_queries_params
-        if "log_queries" in params:
-            log_queries_enabled = params["log_queries"]
+        log_params = self.log_queries_params
+        if "log_queries" in log_params:
+            log_queries_enabled = log_params["log_queries"]
             slow_query_limit = 0
             slow_total_queries_limit = 0  # always log totals
-        slow_query_limit = params.get("slow_query_limit", slow_query_limit)
 
+            # Analyze produces extra queries, restrict its usage
+            analyze = log_params.get("analyze", False)
+            if analyze and not (request.user.is_superuser or request.user.is_appsupport):
+                raise exceptions.PermissionDenied({"analyze": "Only allowed for appsupport users"})
+
+        slow_query_limit = log_params.get("slow_query_limit", slow_query_limit)
         if log_queries_enabled:
             # Run the view functions with query logging enabled
             label = f"{request.method} {request.get_full_path()}"
-            with log_queries(
+            return log_queries(
                 slow_limit=slow_query_limit,
                 slow_total_limit=slow_total_queries_limit,
                 label=label,
-            ):
-                return super().dispatch(request, *args, **kwargs)
-        return super().dispatch(request, *args, **kwargs)
+            )
+
+    def _get_cachalot_context_manager(self, request) -> Optional[ContextManager]:
+        if self.cachalot_params["cachalot_disabled"]:
+            # Disabling cachalot only Override query logging settings using query params
+            if request.user.is_superuser or request.user.is_appsupport:
+                return cachalot_disabled()
+            else:
+                raise exceptions.PermissionDenied(
+                    {"cachalot_disabled": "Only allowed for appsupport users"}
+                )
+
+    def _get_view_context_manager(self, request) -> ContextManager:
+        """Get context manager used for all views using the mixin."""
+        return context_managers(  # Combine context managers into one
+            [
+                self._get_log_queries_context_manager(request),
+                self._get_cachalot_context_manager(request),
+            ]
+        )
+
+    def dispatch(self, request, *args, **kwargs):
+        """DRF dispatch with added support for context managers around view function."""
+        self.args = args
+        self.kwargs = kwargs
+        request = self.initialize_request(request, *args, **kwargs)
+        self.request = request
+        self.headers = self.default_response_headers  # deprecate?
+
+        try:
+            self.initial(request, *args, **kwargs)
+
+            # Get the appropriate handler method
+            if request.method.lower() in self.http_method_names:
+                handler = getattr(self, request.method.lower(), self.http_method_not_allowed)
+            else:
+                handler = self.http_method_not_allowed
+
+            # Run view function with optional context managers
+            with self._get_view_context_manager(request):  # this line added
+                response = handler(request, *args, **kwargs)
+
+        except Exception as exc:
+            response = self.handle_exception(exc)
+
+        self.response = self.finalize_response(request, response, *args, **kwargs)
+        return self.response
 
 
-class CommonViewSet(LogQueriesMixin, QueryParamsMixin, viewsets.ViewSet):
+class CommonViewSet(QueryProfilingMixin, QueryParamsMixin, viewsets.ViewSet):
     """ViewSet with common functionality."""
 
 
 class CommonModelViewSet(
-    LogQueriesMixin,
+    QueryProfilingMixin,
     AccessViewSetMixin,
     QueryParamsMixin,
     NonFilteringGetObjectMixin,
@@ -276,7 +339,7 @@ class CommonModelViewSet(
 
 
 class CommonReadOnlyModelViewSet(
-    LogQueriesMixin,
+    QueryProfilingMixin,
     AccessViewSetMixin,
     QueryParamsMixin,
     NonFilteringGetObjectMixin,

@@ -1,6 +1,6 @@
 import uuid
 
-from django.contrib.auth.models import AbstractUser, UserManager
+from django.contrib.auth.models import AbstractUser, AnonymousUser, UserManager
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils.functional import cached_property
@@ -65,8 +65,35 @@ class MetaxUser(AbstractUser, CustomSoftDeletableModel):
     def is_v2_migration(self):
         return any(g for g in self.groups.all() if g.name == "v2_migration")
 
+    @cached_property
+    def is_appsupport(self):
+        return any(g for g in self.groups.all() if g.name == "appsupport")
+
     def __str__(self):
         return self.username
 
     class Meta:
         ordering = ["username"]
+
+
+class AnonymousMetaxUser(AnonymousUser):
+    """Unauthenticated Metax user.
+
+    Fields and properties added for MetaxUser should also be implemented here.
+    """
+
+    is_hidden = False
+    fairdata_username = None
+    csc_projects = []
+    dac_organizations = []
+    admin_organizations = []
+    removed = None
+    synced = None
+
+    @property
+    def is_appsupport(self):
+        return False
+
+    @property
+    def is_v2_migration(self):
+        return False

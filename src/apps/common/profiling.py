@@ -163,6 +163,8 @@ class log_queries(ContextDecorator):
     def analyze_query(self, sql: str, params: list, many: bool, context: dict):
         if not sql.startswith("SELECT "):
             return  # Don't analyze updates to avoid duplicating query effects
+        if self.query_has_sensitive_values(sql):
+            return  # Avoid possibly exposing credentials in the query plan
         connection = context["connection"]
         with connection.cursor() as c:
             label = self.format_label()
