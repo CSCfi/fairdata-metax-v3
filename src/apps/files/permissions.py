@@ -152,8 +152,13 @@ class DirectoriesAccessPolicy(BaseFilesAccessPolicy):
 
     def can_view_directory(self, request, view, action):
         params = view.query_params
+        csc_projects = getattr(request.user, "csc_projects", [])
         if dataset_id := params["dataset"]:
-            return self.can_view_dataset_file_metadata(request, dataset_id)
+            can_view_dataset_files = self.can_view_dataset_file_metadata(request, dataset_id)
+            if params["exclude_dataset"] or params["include_all"]:
+                has_project = params["csc_project"] in csc_projects
+                return can_view_dataset_files and has_project
+            return can_view_dataset_files
         else:
-            csc_projects = getattr(request.user, "csc_projects", [])
-            return params["csc_project"] in csc_projects
+            has_project = params["csc_project"] in csc_projects
+            return has_project

@@ -31,6 +31,7 @@ def test_directory_permissions_project_user(project_client, file_tree):
             "csc_project": file_tree["storage"].csc_project,
         },
     )
+    assert res.status_code == 200, res.data
     assert res.data["count"] == 4
 
 
@@ -60,6 +61,34 @@ def test_directory_permissions_dataset_anon_published(client, dataset_with_files
     )
     assert res.status_code == 200
     assert res.data["count"] == 2
+
+
+def test_directory_permissions_dataset_anon_include_all(client, dataset_with_files):
+    dataset_with_files.publish()
+    res = client.get(
+        "/v3/directories",
+        {
+            "dataset": dataset_with_files.id,
+            "storage_service": dataset_with_files.file_set.storage.storage_service,
+            "csc_project": dataset_with_files.file_set.storage.csc_project,
+            "include_all": True,
+        },
+    )
+    assert res.status_code == 403
+
+
+def test_directory_permissions_dataset_anon_exclude_dataset(client, dataset_with_files):
+    dataset_with_files.publish()
+    res = client.get(
+        "/v3/directories",
+        {
+            "dataset": dataset_with_files.id,
+            "storage_service": dataset_with_files.file_set.storage.storage_service,
+            "csc_project": dataset_with_files.file_set.storage.csc_project,
+            "exclude_dataset": True,
+        },
+    )
+    assert res.status_code == 403
 
 
 def test_directory_permissions_dataset_noncreator_published(user_client, dataset_with_files):
