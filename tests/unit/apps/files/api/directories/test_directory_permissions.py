@@ -31,7 +31,36 @@ def test_directory_permissions_project_user(project_client, file_tree):
             "csc_project": file_tree["storage"].csc_project,
         },
     )
+    assert res.status_code == 200, res.data
     assert res.data["count"] == 4
+
+
+def test_directory_permissions_project_user_include_all(project_client, dataset_with_files):
+    res = project_client.get(
+        "/v3/directories",
+        {
+            "dataset": dataset_with_files.id,  # draft visible for user due to project membership
+            "storage_service": dataset_with_files.file_set.storage.storage_service,
+            "csc_project": dataset_with_files.file_set.storage.csc_project,
+            "include_all": True,
+        },
+    )
+    assert res.status_code == 200, res.data
+    assert res.data["count"] == 4
+
+
+def test_directory_permissions_project_user_exclude_dataset(project_client, dataset_with_files):
+    res = project_client.get(
+        "/v3/directories",
+        {
+            "dataset": dataset_with_files.id,  # draft visible for user due to project membership
+            "storage_service": dataset_with_files.file_set.storage.storage_service,
+            "csc_project": dataset_with_files.file_set.storage.csc_project,
+            "exclude_dataset": True,
+        },
+    )
+    assert res.status_code == 200, res.data
+    assert res.data["count"] == 3
 
 
 def test_directory_permissions_dataset_anon_nonpublic(client, dataset_with_files):
@@ -62,6 +91,34 @@ def test_directory_permissions_dataset_anon_published(client, dataset_with_files
     assert res.data["count"] == 2
 
 
+def test_directory_permissions_dataset_anon_include_all(client, dataset_with_files):
+    dataset_with_files.publish()
+    res = client.get(
+        "/v3/directories",
+        {
+            "dataset": dataset_with_files.id,
+            "storage_service": dataset_with_files.file_set.storage.storage_service,
+            "csc_project": dataset_with_files.file_set.storage.csc_project,
+            "include_all": True,
+        },
+    )
+    assert res.status_code == 403
+
+
+def test_directory_permissions_dataset_anon_exclude_dataset(client, dataset_with_files):
+    dataset_with_files.publish()
+    res = client.get(
+        "/v3/directories",
+        {
+            "dataset": dataset_with_files.id,
+            "storage_service": dataset_with_files.file_set.storage.storage_service,
+            "csc_project": dataset_with_files.file_set.storage.csc_project,
+            "exclude_dataset": True,
+        },
+    )
+    assert res.status_code == 403
+
+
 def test_directory_permissions_dataset_noncreator_published(user_client, dataset_with_files):
     dataset_with_files.publish()
     res = user_client.get(
@@ -74,3 +131,41 @@ def test_directory_permissions_dataset_noncreator_published(user_client, dataset
     )
     assert res.status_code == 200
     assert res.data["count"] == 2
+
+
+def test_directory_permissions_editor_not_project_member_include_all(
+    user_client, dataset_with_files
+):
+    """Non-project member should be able to use include_all if they can edit the dataset."""
+    dataset_with_files.publish()
+    dataset_with_files.permissions.editors.add(user_client._user)
+    res = user_client.get(
+        "/v3/directories",
+        {
+            "dataset": dataset_with_files.id,
+            "storage_service": dataset_with_files.file_set.storage.storage_service,
+            "csc_project": dataset_with_files.file_set.storage.csc_project,
+            "include_all": True,
+        },
+    )
+    assert res.status_code == 200
+    assert res.data["count"] == 4
+
+
+def test_directory_permissions_editor_not_project_member_include_all(
+    user_client, dataset_with_files
+):
+    """Non-project member should be able to use exclude_dataset if they can edit the dataset."""
+    dataset_with_files.publish()
+    dataset_with_files.permissions.editors.add(user_client._user)
+    res = user_client.get(
+        "/v3/directories",
+        {
+            "dataset": dataset_with_files.id,
+            "storage_service": dataset_with_files.file_set.storage.storage_service,
+            "csc_project": dataset_with_files.file_set.storage.csc_project,
+            "exclude_dataset": True,
+        },
+    )
+    assert res.status_code == 200
+    assert res.data["count"] == 3

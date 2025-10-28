@@ -37,6 +37,21 @@ class BaseFilesAccessPolicy(BaseAccessPolicy):
 
         return False
 
+    @classmethod
+    def can_edit_dataset(cls, request, dataset_id):
+        from apps.core.models import Dataset
+        from apps.core.permissions import DatasetAccessPolicy
+
+        datasets = Dataset.available_objects.all()
+        dataset = (
+            DatasetAccessPolicy.scope_queryset(request, queryset=datasets)
+            .filter(id=dataset_id)
+            .first()
+        )
+        if dataset is None:
+            return False
+        return dataset.has_permission_to_edit(request.user)
+
 
 class FilesAccessPolicy(BaseFilesAccessPolicy):
     statements = BaseFilesAccessPolicy.statements + [
@@ -152,8 +167,15 @@ class DirectoriesAccessPolicy(BaseFilesAccessPolicy):
 
     def can_view_directory(self, request, view, action):
         params = view.query_params
+        csc_projects = getattr(request.user, "csc_projects", [])
         if dataset_id := params["dataset"]:
-            return self.can_view_dataset_file_metadata(request, dataset_id)
+            can_view_dataset_files = self.can_view_dataset_file_metadata(request, dataset_id)
+            if params["exclude_dataset"] or params["include_all"]:
+                has_project = params["csc_project"] in csc_projects
+                return (can_view_dataset_files and has_project) or self.can_edit_dataset(
+                    request, dataset_id
+                )
+            return can_view_dataset_files
         else:
-            csc_projects = getattr(request.user, "csc_projects", [])
-            return params["csc_project"] in csc_projects
+            has_project = params["csc_project"] in csc_projects
+            return has_project
