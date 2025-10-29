@@ -440,8 +440,8 @@ class Datacitedata:
     def get_sizes(self, dataset):
         """Unstructured size information about the resource."""
         sizes = []
-        if fileset := getattr(dataset, "file_set", None):  # Byte size of fileset
-            if size := fileset.files.aggregate(size=Sum("size")).get("size"):
+        if fileset := getattr(dataset, "file_set", None):  # Get byte size of fileset
+            if size := fileset.total_files_size:
                 sizes.append(f"{size} bytes")
         return sizes
 

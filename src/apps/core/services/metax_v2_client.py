@@ -198,12 +198,14 @@ class MetaxV2Client:
             "directories": [d.to_legacy() for d in fileset.directory_metadata.all()],
         }
 
-        missing_legacy = fileset.files.filter(legacy_id__isnull=True)
+        missing_legacy = fileset.files.filter(legacy_id__isnull=True, storage=fileset.storage)
         if missing_legacy_count := missing_legacy.count():
             logger.error(f"{missing_legacy_count} files are missing legacy_id, not syncing to V2")
             raise LegacyUpdateFailed(f"Failed to sync dataset {identifier} files to Metax V2")
 
-        legacy_ids = list(fileset.files.values_list("legacy_id", flat=True))
+        legacy_ids = list(
+            fileset.files.filter(storage=fileset.storage).values_list("legacy_id", flat=True)
+        )
         if created and not legacy_ids:
             return  # New dataset with no files to sync
 

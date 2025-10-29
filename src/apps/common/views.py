@@ -259,6 +259,7 @@ class QueryProfilingMixin(viewsets.ViewSet):
                 slow_limit=slow_query_limit,
                 slow_total_limit=slow_total_queries_limit,
                 label=label,
+                analyze=analyze,
             )
 
     def _get_cachalot_context_manager(self, request) -> Optional[ContextManager]:

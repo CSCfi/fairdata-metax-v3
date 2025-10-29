@@ -35,9 +35,11 @@ from apps.common.serializers import DeleteListReturnValueSerializer, FlushQueryP
 from apps.common.serializers.fields import CommaSeparatedListField
 from apps.common.serializers.serializers import IncludeRemovedQueryParamsSerializer
 from apps.common.views import CommonModelViewSet
+from apps.core.models.catalog_record.related import FileSet
 from apps.core.serializers.dataset_serializer import DatasetFieldsQueryParamsSerializer
 from apps.files.helpers import get_file_metadata_model
-from apps.files.models.file import File, FileStorage
+from apps.files.models.file import File
+from apps.files.models.file_storage import FileStorage
 from apps.files.permissions import FilesAccessPolicy
 from apps.files.serializers import FileSerializer
 from apps.files.serializers.fields import StorageServiceField
@@ -84,16 +86,47 @@ class FileFilterSet(FileCommonFilterset):
     """Add project and dataset filters to file filterset."""
 
     csc_project = filters.CharFilter(
-        field_name="storage__csc_project",
-        max_length=200,
+        method="filter_noop", field_name="storage__csc_project", max_length=200
     )
     storage_service = VerboseChoiceFilter(
+        method="filter_noop",
         field_name="storage__storage_service",
         choices=[(v, v) for v in settings.STORAGE_SERVICE_FILE_STORAGES],
     )
 
-    dataset = filters.UUIDFilter(field_name="file_sets__dataset_id")
+    dataset = filters.UUIDFilter(method="filter_dataset", field_name="file_sets__dataset_id")
     published = filters.BooleanFilter(lookup_expr="isnull", exclude=True)
+
+    def filter_noop(self, queryset, name, value):
+        return queryset  # Filter implemented in filter_queryset
+
+    def filter_dataset(self, queryset, name, value):
+        # Use fileset instead of file_sets__dataset_id in the query to avoid an extra join.
+        # Include storage_id so indexes with storage_id as the leftmost column can be used.
+        try:
+            file_set = FileSet.objects.get(dataset=value)
+            return queryset.filter(file_sets=file_set.id, storage_id=file_set.storage_id)
+        except FileSet.DoesNotExist:
+            return queryset.none()
+
+    def filter_queryset(self, queryset):
+        data = self.form.cleaned_data
+
+        # Filter by storage
+        storage_service = data["storage_service"]
+        csc_project = data["csc_project"]
+        storage_filters = Q()
+        if storage_service:
+            storage_filters &= Q(storage_service=storage_service)
+        if csc_project:
+            storage_filters &= Q(csc_project=csc_project)
+
+        if storage_filters:
+            storages = FileStorage.objects.filter(storage_filters).order_by()
+            storage_ids = list(storages.values_list("id", flat=True))
+            queryset = queryset.filter(storage_id__in=storage_ids)
+
+        return super().filter_queryset(queryset)
 
     class Meta:
         model = File
@@ -259,6 +292,7 @@ class BaseFileViewSet(CommonModelViewSet):
                 get_file_metadata_model()
                 .objects.filter(file_set__dataset_id=dataset_id)
                 .prefetch_related("file_type")
+                .order_by()
                 .distinct("file_id")
                 .in_bulk(file_ids, field_name="file_id")
             )

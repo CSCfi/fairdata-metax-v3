@@ -95,6 +95,15 @@ def test_files_get_no_dataset(admin_client, file_tree_a):
     assert "dataset_metadata" not in res.data["results"][0]
 
 
+def test_files_get_dataset_files_dataset_not_found(admin_client, dataset):
+    res = admin_client.get(
+        "/v3/files",
+        {"dataset": "00000000-0000-0000-0000-000000001234"},
+        content_type="application/json",
+    )
+    assert res.data["results"] == []
+
+
 def test_files_get_dataset_files(admin_client, dataset):
     res = admin_client.get(
         "/v3/files",

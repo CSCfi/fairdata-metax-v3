@@ -238,8 +238,10 @@ class FileSet(AbstractBaseModel):
             }
 
         # Storage modification timestamp has changed, update aggregates
-        aggregates = self.files(manager="available_objects").aggregate(
-            total_files_count=Count("*"), total_files_size=Coalesce(Sum("size"), 0)
+        aggregates = (
+            self.files(manager="available_objects")
+            .filter(storage=self.storage) # helps DB filter files more efficiently
+            .aggregate(total_files_count=Count("*"), total_files_size=Coalesce(Sum("size"), 0))
         )
 
         self.cached_total_files_count = aggregates["total_files_count"]

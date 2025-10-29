@@ -997,4 +997,4 @@ class DatasetFilesViewSet(BaseFileViewSet):
             file_set = FileSet.objects.get(dataset=dataset_id)
         except FileSet.DoesNotExist:
             return files.none()
-        return files.filter(file_sets=file_set.id)
+        return files.filter(file_sets=file_set.id, storage=file_set.storage)

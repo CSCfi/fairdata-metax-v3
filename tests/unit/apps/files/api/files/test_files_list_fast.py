@@ -50,8 +50,8 @@ def test_files_list_fast(admin_client, file_tree_a, include_nulls):
             params,
             content_type="application/json",
         )
-    # Confirm FileStorage was not fetched in a separate query (we're in the fast path)
-    assert "FileStorage" not in count["SQLCompiler"]
+    # Confirm FileStorage was fetched only once (we're in the fast path)
+    assert count["SQLCompiler"]["FileStorage"] == 1
 
     results = res.json()
     assert len(results) == 16
