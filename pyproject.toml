@@ -64,6 +64,7 @@ numpy = [
     { version = "1.24.0", markers = "python_version < '3.12'" },
     { version = "2.3.0", markers = "python_version >= '3.12'" }
 ]
+fastuuid = "^0.14.0"
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.12.0"

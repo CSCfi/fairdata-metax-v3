@@ -2,17 +2,19 @@ import copy
 import logging
 import pickle
 import re
-import uuid
 import sys
 import traceback
+import uuid
+import warnings
 from collections.abc import Hashable
-from contextlib import contextmanager, ExitStack
+from contextlib import ExitStack, contextmanager
 from datetime import datetime, timezone as tz
 from itertools import islice
 from textwrap import dedent
-from typing import Dict, Generator, Iterable, List, Optional, ContextManager
+from typing import ContextManager, Dict, Generator, Iterable, List, Optional
 from urllib.parse import SplitResult, parse_qsl, quote, urlencode, urlsplit, urlunsplit
 
+import fastuuid
 import shapely
 from cachalot.api import cachalot_disabled
 from django.conf import settings
@@ -221,6 +223,23 @@ def datetime_to_date(dt):
 def changed_fields(a: dict, b: dict) -> list:
     all_keys = set(a) | set(b)
     return sorted(key for key in all_keys if a.get(key, empty) != b.get(key, empty))
+
+
+def uuid7() -> uuid.UUID:
+    """Create UUIDv7 identifier using fastuuid.
+
+    The resulting UUID is converted to uuid.UUID to keep it
+    compatible with standard Python UUID objects.
+
+    This function will no longer be needed with Python 14.
+    """
+    if sys.version_info >= (3, 14):
+        warnings.warn(
+            "Python 3.14 has uuid7 in the standard uuid library. Use it instead of fastuuid.",
+            DeprecationWarning,
+        )
+
+    return uuid.UUID(bytes=fastuuid.uuid7().bytes)
 
 
 def is_valid_uuid(val):

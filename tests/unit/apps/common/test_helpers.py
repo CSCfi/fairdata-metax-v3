@@ -1,4 +1,8 @@
-from apps.common.helpers import merge_sets, normalize_doi
+import uuid
+
+import fastuuid
+
+from apps.common.helpers import merge_sets, normalize_doi, uuid7
 
 
 def test_merge_sets():
@@ -55,3 +59,11 @@ def test_normalize_doi():
     assert normalize_doi("https://doi.org/10.1000/123") == "doi:10.1000/123"
     assert normalize_doi("https://notadoi.org/10.1000/123") is None
     assert normalize_doi("12.345/67") is None
+
+
+def test_uuid7():
+    """Test UUIDv7 value remains unchanged between `uuid` and `fastuuid` libraries."""
+    std_id: uuid.UUID = uuid7()
+    fast_id = fastuuid.UUID(bytes=std_id.bytes)
+    std_id_2 = uuid.UUID(bytes=fast_id.bytes)
+    assert str(std_id) == str(fast_id) == str(std_id_2)

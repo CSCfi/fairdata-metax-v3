@@ -37,6 +37,7 @@ drf-yasg==1.21.8 ; python_full_version >= "3.8.10" and python_full_version < "4.
 environs==11.2.1 ; python_full_version >= "3.8.10" and python_full_version < "4.0.0"
 factory-boy==3.3.1 ; python_full_version >= "3.8.10" and python_full_version < "4.0.0"
 faker==33.1.0 ; python_full_version >= "3.8.10" and python_full_version < "4.0.0"
+fastuuid==0.14.0 ; python_full_version >= "3.8.10" and python_full_version < "4.0.0"
 ghp-import==2.1.0 ; python_full_version >= "3.8.10" and python_full_version < "4.0.0"
 greenlet==3.1.1 ; python_full_version >= "3.8.10" and python_full_version < "4.0.0"
 griffe==1.4.0 ; python_full_version >= "3.8.10" and python_full_version < "4.0.0"

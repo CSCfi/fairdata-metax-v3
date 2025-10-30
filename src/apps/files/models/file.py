@@ -14,6 +14,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from model_utils.fields import AutoCreatedField, AutoLastModifiedField
 
+from apps.common.helpers import uuid7
 from apps.common.models import CustomSoftDeletableModel, SystemCreatorBaseModel
 from apps.common.serializers.fields import ChecksumField
 from apps.files.helpers import convert_checksum_v2_to_v3, convert_checksum_v3_to_v2
@@ -26,7 +27,7 @@ from .file_storage import FileStorage
 class File(SystemCreatorBaseModel, CustomSoftDeletableModel):
     """A file stored in external data storage."""
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid7, editable=False)
 
     # timestamp fields prefixed with record_ to avoid confusion with values from storage service
     record_created = AutoCreatedField(_("created"))
