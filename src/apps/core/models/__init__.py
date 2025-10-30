@@ -38,5 +38,7 @@ from .data_catalog import CatalogHomePage, DataCatalog, DatasetPublisher
 from .entity import Entity
 from .file_metadata import FileSetDirectoryMetadata, FileSetFileMetadata
 from .legacy import LegacyDataset
+from .organization_statistics import OrganizationStatistics
 from .preservation import Preservation
+from .project_statistics import ProjectStatistics
 from .provenance import Provenance, ProvenanceVariable

@@ -39,7 +39,20 @@ router.register(
     core_views.DatasetPermissionsEditorsViewSet,
     basename="dataset-permissions-editors",
 )
+
 router.register(r"migrated-datasets", core_views.LegacyDatasetViewSet, basename="migrated-dataset")
+
+router.register(
+    r"statistics/organization-statistics",
+    core_views.OrganizationStatisticsViewSet,
+    basename="statistics-organizationstatistics",
+)
+router.register(
+    r"statistics/project-statistics",
+    core_views.ProjectStatisticsViewSet,
+    basename="statistics-projectstatistics",
+)
+
 # Nested routes
 dataset_router = routers.NestedSimpleRouter(router, r"datasets", lookup="dataset")
 router.register(r"tasks", core_views.TaskViewSet, basename="task")

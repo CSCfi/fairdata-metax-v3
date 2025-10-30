@@ -25,3 +25,4 @@ from .permissions_serializer import (
 from .preservation_serializers import PreservationModelSerializer
 from .project_serializer import ProjectModelSerializer
 from .provenance_serializers import ProvenanceModelSerializer
+from .statistics_serializers import OrganizationStatisticsSerializer, ProjectStatisticsSerializer

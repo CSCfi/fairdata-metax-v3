@@ -1,0 +1,63 @@
+{
+  "id": "urn:nbn:fi:att:data-catalog-oulu",
+  "title":
+  {
+    "en": "Data catalog for testing University of Oulu's CRIS integration",
+    "fi": "Katalogi Oulun yliopiston Metax-integraation testaamiseen"
+  },
+  "description":
+  {
+    "en": "Datasets stored in University of Oulu's CRIS",
+    "fi": "Sisältää aineistoja Oulun yliopiston CRIS-palvelusta"
+  },
+  "is_external": true,
+  "publisher":
+  {
+    "name":
+    {
+      "en": "University of Oulu"
+    },
+    "homepage":
+    [
+      {
+        "url": "https://www.oulu.fi/fi",
+        "title":
+        {
+          "en": "University of Oulu",
+          "fi": "Oulun yliopisto"
+        }
+      }
+    ]
+  },
+  "language":
+  [
+    {
+      "url": "http://lexvo.org/id/iso639-3/eng"
+    },
+    {
+      "url": "http://lexvo.org/id/iso639-3/fin"
+    }
+  ],
+  "dataset_versioning_enabled": false,
+  "dataset_groups_create":
+  [
+    "oulu"
+  ],
+  "dataset_groups_admin":
+  [
+    "oulu"
+  ],
+  "allow_remote_resources": true,
+  "rems_enabled": false,
+  "storage_services":
+  [],
+  "publishing_channels":
+  [
+    "etsin",
+    "ttv"
+  ],
+  "allowed_pid_types":
+  [
+    "external"
+  ]
+}
