@@ -338,8 +338,6 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             return True
         elif not user.is_authenticated:
             return False
-        elif user == self.system_creator:
-            return True
         elif self.metadata_owner and self.metadata_owner.user == user:
             return True
         elif (

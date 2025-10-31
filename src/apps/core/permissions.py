@@ -118,7 +118,6 @@ class DatasetAccessPolicy(BaseAccessPolicy):
         return queryset.filter(
             Q(state=Dataset.StateChoices.PUBLISHED)
             | Q(metadata_owner__user=request.user)
-            | Q(system_creator=request.user)
             | Q(permissions__editors=request.user)
             | Q(file_set__storage__csc_project__in=csc_projects)
             | Q(data_catalog__dataset_groups_admin__in=groups)
@@ -218,7 +217,6 @@ class LegacyDatasetAccessPolicy(BaseAccessPolicy):
         csc_projects = getattr(request.user, 'csc_projects', [])
         return queryset.filter(
             Q(dataset__metadata_owner__user=request.user)
-            | Q(dataset__system_creator=request.user)
             | Q(dataset__permissions__editors=request.user)
             | Q(dataset__file_set__storage__csc_project__in=csc_projects)
             | Q(dataset__data_catalog__dataset_groups_admin__in=groups)
