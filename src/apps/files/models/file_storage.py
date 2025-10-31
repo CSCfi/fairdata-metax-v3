@@ -72,7 +72,7 @@ class FileStorageManagerMixin(ProxyBasePolymorphicManager):
         filters = [models.Q(**key._asdict()) for key in files_by_key]
         if filters:
             combined_filters = functools.reduce(operator.or_, filters)
-            queryset = self.filter(combined_filters)
+            queryset = self.order_by().filter(combined_filters)
             storages_by_key = {self.model.get_key(fs): fs for fs in queryset}
         return storages_by_key
 
@@ -302,11 +302,7 @@ class FileStorage(ProxyBasePolymorphicModel, AbstractBaseModel):
             qs = self.files(manager="all_objects")
         if file_set:
             qs = qs.filter(file_sets=file_set)
-        file_pathnames = (
-            qs.values_list("directory_path", flat=True)
-            .order_by("directory_path")
-            .distinct("directory_path")
-        )
+        file_pathnames = qs.values_list("directory_path", flat=True).order_by().distinct()
         all_paths = set(file_pathnames)
 
         # Add intermediate directories that don't have files directly but in subdirs.

@@ -4,8 +4,10 @@ from contextlib import ContextDecorator, contextmanager
 from datetime import datetime
 from inspect import currentframe, getframeinfo
 from os import path
+import traceback
 import re
 
+from django.conf import settings
 from django.db import connection
 from django.db.models.sql.compiler import SQLCompiler, SQLInsertCompiler, SQLUpdateCompiler
 from django.utils import timezone
@@ -160,6 +162,23 @@ class log_queries(ContextDecorator):
     def format_label(self):
         return f"{self.label} --- " if self.label else ""
 
+    def get_user_code_line(self) -> str:
+        """Get Metax line that triggered the query."""
+        project_root = path.abspath(settings.BASE_DIR)
+        stack = traceback.extract_stack()
+
+        # Find closest stack frame that is in the Metax project and is not in profiling.py
+        for frame in reversed(stack):
+            filename = frame.filename
+            is_user_code = (
+                path.abspath(filename).startswith(project_root)
+                and path.basename(filename) != "profiling.py"
+            )
+            if is_user_code:
+                rel_path = path.relpath(frame.filename, start=project_root)
+                return f" [{rel_path}:{frame.lineno} in {frame.name}]"
+        return ""
+
     def analyze_query(self, sql: str, params: list, many: bool, context: dict):
         if not sql.startswith("SELECT "):
             return  # Don't analyze updates to avoid duplicating query effects
@@ -198,8 +217,9 @@ class log_queries(ContextDecorator):
             if elapsed >= self.slow_limit:
                 many_str = "many " if many else ""
                 self.logged = True
+                code_line = self.get_user_code_line()
                 queries_logger.info(
-                    f"{label}Execute SQL {many_str}({elapsed:.3f}s): "
+                    f"{label}Execute SQL {many_str}({elapsed:.3f}s){code_line}: "
                     f"{self.format_query(sql)}{self.format_params(sql, params)}"
                 )
                 if self.analyze:

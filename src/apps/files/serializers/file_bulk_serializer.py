@@ -146,7 +146,9 @@ class FileBulkSerializer(serializers.ListSerializer):
     def check_ids_exist(self, files: List[dict]) -> List[dict]:
         """Check that all file ids point to existing files."""
         data_ids = [f["id"] for f in files if "id" in f]
-        existing_ids = set(File.objects.filter(id__in=data_ids).values_list("id", flat=True))
+        existing_ids = set(
+            File.objects.order_by().filter(id__in=data_ids).values_list("id", flat=True)
+        )
 
         for file in files:
             if "id" in file and file["id"] not in existing_ids:
@@ -187,13 +189,17 @@ class FileBulkSerializer(serializers.ListSerializer):
                     ] = "Either storage_identifier or id is required."
 
             # Get all files with matching external id
-            existing_files = File.available_objects.filter(
-                storage__storage_service=storage_service,
-                storage_identifier__in=files_by_external_id.keys(),
-            ).values(
-                "storage_identifier",
-                "id",
-                csc_project=F("storage__csc_project"),
+            existing_files = (
+                File.available_objects.order_by()
+                .filter(
+                    storage__storage_service=storage_service,
+                    storage_identifier__in=files_by_external_id.keys(),
+                )
+                .values(
+                    "storage_identifier",
+                    "id",
+                    csc_project=F("storage__csc_project"),
+                )
             )
 
             for existing_file in existing_files:
@@ -252,9 +258,9 @@ class FileBulkSerializer(serializers.ListSerializer):
             # Map existing file.id -> file.pas_compatible_file.id relations
             pas_compatible = [f["pas_compatible_file"].id for f in files_with_pas]
             pas_relations = dict(
-                File.all_objects.filter(
-                    id__in=pas_compatible, non_pas_compatible_file__isnull=False
-                ).values_list("non_pas_compatible_file", "id")
+                File.all_objects.order_by()
+                .filter(id__in=pas_compatible, non_pas_compatible_file__isnull=False)
+                .values_list("non_pas_compatible_file", "id")
             )
 
             # Determine what the relations would look like after the update
@@ -314,12 +320,14 @@ class FileBulkSerializer(serializers.ListSerializer):
         existing_files_with_missing_project_data = [
             f for f in files if "id" in f and not ("storage_service" in f and "csc_project" in f)
         ]
-        project_data = File.objects.filter(
-            id__in=[f["id"] for f in existing_files_with_missing_project_data]
-        ).values(
-            "id",
-            storage_service=F("storage__storage_service"),
-            csc_project=F("storage__csc_project"),
+        project_data = (
+            File.objects.order_by()
+            .filter(id__in=[f["id"] for f in existing_files_with_missing_project_data])
+            .values(
+                "id",
+                storage_service=F("storage__storage_service"),
+                csc_project=F("storage__csc_project"),
+            )
         )
         project_data_by_id = {f["id"]: f for f in project_data}
 
@@ -452,6 +460,7 @@ class FileBulkSerializer(serializers.ListSerializer):
         existing_files_by_id = (
             File.available_objects.prefetch_related("storage")
             .select_related("characteristics")
+            .order_by()
             .in_bulk([f["id"] for f in validated_data if "id" in f])
         )
 

@@ -71,7 +71,7 @@ class URLReferencedModelListField(serializers.ListField):
             )
 
         model = self.child.Meta.model
-        entries = list(model.objects.filter(url__in=urls))
+        entries = list(model.objects.order_by().filter(url__in=urls))
 
         retrieved_urls = set(entry.url for entry in entries)
         missing_urls = urls - retrieved_urls
@@ -117,7 +117,7 @@ class ReferenceDataCache:
         val = self.entries[url]
         if val is None:
             # Entry not queried yet, query all entries that haven't been queried yet
-            instances = self.model.available_objects.filter(
+            instances = self.model.available_objects.order_by().filter(
                 url__in=[_url for _url, entry in self.entries.items() if entry is None]
             )
             self.entries.update({entry.url: entry for entry in instances})

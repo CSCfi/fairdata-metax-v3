@@ -181,7 +181,9 @@ class FileSetSerializer(StrictSerializer):
                     action["_found"] = True
 
         # Group files by the unique fields (note that a file is allowed to have multiple actions)
-        storage_files = storage.files.annotate(pathname=Concat("directory_path", "filename"))
+        storage_files = storage.files.order_by().annotate(
+            pathname=Concat("directory_path", "filename")
+        )
         by_id = {}
         by_storage_identifier = {}
         by_pathname = {}

@@ -204,7 +204,9 @@ class MetaxV2Client:
             raise LegacyUpdateFailed(f"Failed to sync dataset {identifier} files to Metax V2")
 
         legacy_ids = list(
-            fileset.files.filter(storage=fileset.storage).values_list("legacy_id", flat=True)
+            fileset.files.filter(storage=fileset.storage)
+            .order_by()
+            .values_list("legacy_id", flat=True)
         )
         if created and not legacy_ids:
             return  # New dataset with no files to sync
