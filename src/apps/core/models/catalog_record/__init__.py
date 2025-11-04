@@ -6,9 +6,9 @@ from .related import (
     DatasetActor,
     DatasetProject,
     EntityRelation,
-    FileSet,
     Funder,
     Funding,
     RemoteResource,
     Temporal,
 )
+from .fileset import FileSet

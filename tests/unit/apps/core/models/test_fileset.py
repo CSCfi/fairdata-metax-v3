@@ -4,8 +4,7 @@ import pytest
 from rest_framework.exceptions import ValidationError
 
 from apps.core import factories
-from apps.core.models import FileSetDirectoryMetadata, FileSetFileMetadata, UseCategory
-from apps.core.models.catalog_record.related import FileSet
+from apps.core.models import FileSet, FileSetDirectoryMetadata, FileSetFileMetadata, UseCategory
 from apps.files.factories import FileFactory
 from apps.files.models import FileCharacteristics, FileStorage
 

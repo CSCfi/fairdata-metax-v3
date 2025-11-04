@@ -35,7 +35,7 @@ from apps.common.serializers import DeleteListReturnValueSerializer, FlushQueryP
 from apps.common.serializers.fields import CommaSeparatedListField
 from apps.common.serializers.serializers import IncludeRemovedQueryParamsSerializer
 from apps.common.views import CommonModelViewSet
-from apps.core.models.catalog_record.related import FileSet
+from apps.core.models.catalog_record import FileSet
 from apps.core.serializers.dataset_serializer import DatasetFieldsQueryParamsSerializer
 from apps.files.helpers import get_file_metadata_model
 from apps.files.models.file import File

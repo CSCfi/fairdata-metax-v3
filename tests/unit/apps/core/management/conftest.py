@@ -9,8 +9,7 @@ import pytest
 from apps.files import factories as file_factories
 from apps.files.models import File
 from apps.core import factories
-from apps.core.models import Dataset, MetadataProvider
-from apps.core.models.catalog_record.related import FileSet
+from apps.core.models import Dataset, MetadataProvider, FileSet
 from apps.files.models import FileStorage
 from apps.users.models import MetaxUser
 

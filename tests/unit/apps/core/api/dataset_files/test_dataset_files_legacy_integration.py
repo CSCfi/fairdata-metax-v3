@@ -7,7 +7,7 @@ import pytest
 from tests.unit.apps.core.api.conftest import load_test_json
 
 from apps.core import factories
-from apps.core.models.catalog_record.related import FileSet
+from apps.core.models.catalog_record import FileSet
 from apps.core.models.file_metadata import FileSetFileMetadata
 from apps.core.models.sync import V2SyncStatus
 from apps.files.models import File
