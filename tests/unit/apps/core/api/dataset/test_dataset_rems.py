@@ -2,6 +2,7 @@ import pytest
 from django.conf import settings
 
 from apps.core import factories
+from apps.core.models.access_rights import AccessTypeChoices
 from apps.core.models.catalog_record.dataset import Dataset, REMSStatus
 from apps.refdata.models import License
 from apps.rems.models import REMSCatalogueItem, REMSLicense
@@ -321,3 +322,115 @@ def test_list_dataset_rems_applications(mock_rems, user_client, user2_client):
     assert res.data[0]["application/id"] == 1
     assert res.data[1]["application/id"] == 2
     assert res.data[2]["application/id"] == 3
+
+
+def test_rems_unpublish(
+    mock_rems, rems_dataset_json, admin_client, user_client, reference_data, data_catalog
+):
+    """Test that removing dataset from REMS closes applications and archives related entities."""
+    rems_dataset_json["access_rights"]["data_access_terms"] = {
+        "en": "Terms here",
+        "fi": "Käyttöehdot tähän",
+    }
+    res = admin_client.post("/v3/datasets", rems_dataset_json, content_type="application/json")
+    assert res.status_code == 201, res.data
+    dataset = Dataset.objects.get(id=res.data["id"])
+    service = REMSService()
+
+    # Create application
+    res = user_client.post(
+        f"/v3/datasets/{dataset.id}/rems-applications",
+        {"accept_licenses": service.get_dataset_rems_license_ids(dataset)},
+        content_type="application/json",
+    )
+    assert res.status_code == 200, res.data
+    assert res.json() == {"success": True, "application-id": 1}
+
+    # Auto-approve is enabled, there should be an entitlement
+    res = user_client.get(
+        f"/v3/datasets/{dataset.id}/rems-entitlements", content_type="application/json"
+    )
+    assert res.status_code == 200
+    assert len(res.data) == 1
+    assert mock_rems.entities["entitlement"]["test_user"][1]["end"] is None
+
+    # Open the dataset --> dataset should be removed from REMS and applications should be closed
+    access_rights_json = {
+        "access_rights": {
+            **rems_dataset_json["access_rights"],
+            "access_type": {"url": AccessTypeChoices.OPEN},
+            "restriction_grounds": [],
+        }
+    }
+    res = admin_client.patch(
+        f"/v3/datasets/{dataset.id}", access_rights_json, content_type="application/json"
+    )
+    assert res.status_code == 200, res.data
+    dataset.refresh_from_db()
+    assert dataset.rems_publish_error is None
+
+    # Catalogue item should be archived
+    catalogue_item = mock_rems.entities["catalogue-item"][1]
+    assert catalogue_item["archived"] == True
+    assert catalogue_item["enabled"] == False
+
+    # Resource should be archived
+    resource = mock_rems.entities["resource"][1]
+    assert resource["archived"] == True
+    assert resource["enabled"] == False
+
+    # Dataset-specific licenses should be archived
+    custom_licenses = set(
+        REMSLicense.all_objects.filter(is_custom_license=True).values_list("rems_id", flat=True)
+    )
+    assert len(mock_rems.entities["license"]) == 2
+    custom_license_count = 0
+    for lic in mock_rems.entities["license"].values():
+        if lic["id"] in custom_licenses:
+            # Custom license should be archived
+            custom_license_count += 1
+            assert lic["archived"] == True
+            assert lic["enabled"] == False
+        else:
+            # Refdata license should not be archived
+            assert lic["archived"] == False
+            assert lic["enabled"] == True
+    assert custom_license_count == 1
+
+    # Application is closed and entitlement has ended
+    assert mock_rems.entities["application"][1]["application/state"] == "application.state/closed"
+    close_event = mock_rems.entities["application"][1]["application/events"][-1]
+    assert close_event["event/type"] == "application.event/closed"
+    assert "no longer in REMS" in close_event["application/comment"]
+
+    assert mock_rems.entities["entitlement"]["test_user"][1]["end"] is not None
+
+
+def test_rems_unpublish_fail(
+    mock_rems, rems_dataset_json, admin_client, reference_data, data_catalog, requests_mock
+):
+    """Test that error when unpublishing dataset is saved to dataset.rems_publish_error."""
+    res = admin_client.post("/v3/datasets", rems_dataset_json, content_type="application/json")
+    assert res.status_code == 201, res.data
+    dataset = Dataset.objects.get(id=res.data["id"])
+
+    requests_mock.put(
+        f"{settings.REMS_BASE_URL}/api/catalogue-items/archived",
+        status_code=500,
+        json="this failed",
+    )
+
+    # Open the dataset --> dataset should be removed from REMS
+    access_rights_json = {
+        "access_rights": {
+            **rems_dataset_json["access_rights"],
+            "access_type": {"url": AccessTypeChoices.OPEN},
+            "restriction_grounds": [],
+        }
+    }
+    res = admin_client.patch(
+        f"/v3/datasets/{dataset.id}", access_rights_json, content_type="application/json"
+    )
+    assert res.status_code == 200, res.data
+    dataset.refresh_from_db()
+    assert "this failed" in dataset.rems_publish_error

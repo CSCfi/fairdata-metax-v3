@@ -292,6 +292,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         "relation__entity",
         "relation__relation_type",
         "relation",
+        "rems_resources",
         "remote_resources__file_type",
         "remote_resources__use_category",
         "remote_resources",
@@ -494,8 +495,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         return (
             self.state == "published"
             and self.data_catalog.rems_enabled
-            and self.access_rights.access_type.url
-            in {AccessTypeChoices.PERMIT, AccessTypeChoices.RESTRICTED}
+            and self.access_rights.access_type.url == AccessTypeChoices.PERMIT
             and self.access_rights.rems_approval_type is not None
         )
 

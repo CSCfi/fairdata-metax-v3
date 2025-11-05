@@ -110,10 +110,13 @@ def sync_dataset_to_v2(dataset: Dataset, action: SyncAction, force_update=False)
 
 
 def sync_dataset_to_rems(dataset: Dataset) -> Optional[bool]:
-    if not settings.REMS_ENABLED or not dataset.is_rems_dataset:
+    if not settings.REMS_ENABLED:
         return None
-    if REMSService().publish_dataset(dataset):
-        return True
+    if dataset.is_rems_dataset:
+        return bool(REMSService().publish_dataset(dataset))
+    elif len(dataset.rems_resources.all()) > 0:
+        # Dataset has a REMS resource but is no longer a REMS dataset -> remove from REMS
+        return bool(REMSService().unpublish_dataset(dataset))
     return False
 
 

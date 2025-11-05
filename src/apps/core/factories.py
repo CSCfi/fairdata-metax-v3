@@ -288,7 +288,6 @@ class UseCategoryFactory(factory.django.DjangoModelFactory):
 class AccessRightsFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.AccessRights
-        django_get_or_create = ("description",)
         skip_postgeneration_save = True
 
     access_type = factory.SubFactory(AccessTypeFactory)

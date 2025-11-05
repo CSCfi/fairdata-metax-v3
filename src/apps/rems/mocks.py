@@ -357,8 +357,9 @@ class MockREMS:
         )
 
     def user_can_see_application(self, request, application: dict):
-        return self.user_is_applicant(request, application) or self.user_is_handler(
-            request, application
+        return self.user_is_applicant(request, application) or (
+            self.user_is_handler(request, application)
+            and application["application/state"] != self.ApplicationState.DRAFT
         )
 
     def handle_list(self, entity_type: EntityType):
@@ -674,10 +675,19 @@ class MockREMS:
         application["application/modified"] = now.isoformat()
         application["application/state"] = self.ApplicationState.REJECTED
 
-    def close_application(self, application) -> dict:
+    def close_application(self, application, comment: Optional[str] = None) -> dict:
         now = timezone.now()
         application["application/modified"] = now.isoformat()
         application["application/state"] = self.ApplicationState.CLOSED
+
+        event = {
+            "event/type": "application.event/closed",
+            "event/visibility": "visibility/public",
+        }
+        if comment:
+            event["application/comment"] = comment
+
+        self.add_application_event(application, {"userid": "owner", "name": "Owner"}, event)
 
         # End all entitlements linked to the application
         application_entitlements = [
@@ -816,11 +826,16 @@ class MockREMS:
         application, error = self.validate_application_command(
             request,
             context,
-            allowed_states=[self.ApplicationState.SUBMITTED, self.ApplicationState.APPROVED],
+            allowed_states=[
+                self.ApplicationState.SUBMITTED,
+                self.ApplicationState.APPROVED,
+                self.ApplicationState.RETURNED,
+            ],
         )
         if error:
             return error
-        self.close_application(application)
+        comment = request.json().get("comment")
+        self.close_application(application, comment=comment)
         return {"success": True}
 
     def handle_remark_application(self, request, context):

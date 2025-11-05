@@ -85,7 +85,7 @@ class REMSService:
         if not entity._state.adding:  # Don't try to delete temporary entities
             entity.delete(soft=True)
 
-    def archive_catalogue_items_by_resid(self, resid):
+    def archive_catalogue_items_by_resid(self, resid: str):
         """Archive catalogue items by resid."""
         # The resource parameter for this query is the resid value, not the internal REMS id.
         item_data = self.session.get(
@@ -279,6 +279,7 @@ class REMSService:
             key=key,
             rems_id=lic["id"],
             custom_license_dataset=custom_license_dataset,
+            is_custom_license=bool(custom_license_dataset),
             is_data_access_terms=is_data_access_terms,
         )
         return entity
@@ -338,7 +339,11 @@ class REMSService:
         return ids
 
     def create_resource(
-        self, key: str, identifier: str, licenses: List[REMSLicense]
+        self,
+        key: str,
+        identifier: str,
+        licenses: List[REMSLicense],
+        dataset: Optional["Dataset"] = None,
     ) -> REMSResource:
         """Create or update REMS resource."""
         entity_data = None
@@ -363,10 +368,7 @@ class REMSService:
             self.archive_entity(entity)
 
         resource = self.session.post("/api/resources/create", json=data).json()
-        entity = REMSResource.objects.create(
-            key=key,
-            rems_id=resource["id"],
-        )
+        entity = REMSResource.objects.create(key=key, rems_id=resource["id"], dataset=dataset)
         return entity
 
     def get_catalogue_item_operation(self, new: dict, entity: REMSCatalogueItem) -> REMSOperation:
@@ -573,6 +575,7 @@ class REMSService:
                 key=dataset_key,
                 identifier=self.get_dataset_resource_id(dataset),
                 licenses=licenses,
+                dataset=dataset,
             )
             return self.create_catalogue_item(
                 key=dataset_key,
@@ -593,6 +596,72 @@ class REMSService:
 
             msg += format_exception(e)
             logger.error(f"Dataset {dataset.id} REMS sync failed: {msg}")
+            dataset.rems_publish_error = msg
+            models.Model.save(dataset, update_fields=["rems_publish_error"])
+            return None
+
+    def close_dataset_applications(self, dataset: "Dataset", comment: str = ""):
+        """Close all existing applications for dataset."""
+        applications = self.get_applications_for_dataset(dataset, include_all=True)
+        ids_to_close = [
+            a["application/id"]
+            for a in applications
+            if a["application/state"]
+            not in {
+                "application.state/closed",
+                "application.state/revoked",
+                "application.state/rejected",
+                # Drafts can't be closed, only the applicant can delete them
+                "application.state/draft",
+            }
+        ]
+        if not ids_to_close:
+            return
+
+        logger.info(f"Closing {len(ids_to_close)} applications for dataset {dataset.id}")
+        for application_id in ids_to_close:
+            self.close_application_as_owner(application_id=application_id, comment=comment)
+            logger.info(f"Closed application {application_id}")
+
+    @transaction.atomic
+    def unpublish_dataset(
+        self, dataset: "Dataset", raise_errors=False
+    ) -> Optional[REMSCatalogueItem]:
+        """Close applications, disable and archive dataset in REMS."""
+        lock_rems_publish(id=dataset.id)
+
+        resources = dataset.rems_resources.all()
+        if not resources:
+            raise ValueError("Dataset is not in REMS.")
+
+        if dataset.rems_publish_error:
+            dataset.rems_publish_error = None
+            models.Model.save(dataset, update_fields=["rems_publish_error"])
+
+        logging.info(
+            f"Unpublishing dataset {dataset.id} ({dataset.persistent_identifier}) from REMS"
+        )
+
+        try:
+            self.close_dataset_applications(dataset, comment="Dataset is no longer in REMS.")
+            resid = self.get_dataset_resource_id(dataset)
+            self.archive_catalogue_items_by_resid(resid)
+            self.archive_resources_by_resid(resid)
+            self.archive_unused_custom_licenses(dataset, used_licenses=[])
+
+        except Exception as e:
+            if raise_errors:
+                raise
+
+            # If REMS sync fails, store error
+            timestamp = timezone.now().isoformat(timespec="milliseconds")
+            msg = f"REMS unpublish failed for dataset {dataset.id} {timestamp}\n\n"
+            resp = getattr(e, "response", None)
+            if resp is not None:
+                msg = f"Response status {resp.status_code}:\n {resp.text}\n\n"
+
+            msg += format_exception(e)
+            logger.error(f"Dataset {dataset.id} REMS unpublish failed: {msg}")
             dataset.rems_publish_error = msg
             models.Model.save(dataset, update_fields=["rems_publish_error"])
             return None
@@ -684,6 +753,24 @@ class REMSService:
             ):
                 matching_applications.append(application)
         return matching_applications
+
+    def get_applications_for_dataset(self, dataset: "Dataset", include_all=False) -> List[dict]:
+        """Get all available applications for a dataset."""
+        dataset_resource_id = self.get_dataset_resource_id(dataset)
+        resp = self.session.get(f'/api/applications?query=resource:"{dataset_resource_id}"')
+
+        # Get only applications with correct resource id and no other resources
+        applications = []
+        for application in self.filter_applications(resp.json()):
+            resources = application["application/resources"]
+            # All applications where dataset is one of the resources
+            if include_all:
+                if any(r["resource/ext-id"] == dataset_resource_id for r in resources):
+                    applications.append(application)
+            # Only applications where dataset is the only resource
+            elif len(resources) == 1 and resources[0]["resource/ext-id"] == dataset_resource_id:
+                applications.append(application)
+        return applications
 
     def get_user_applications_for_dataset(self, user: MetaxUser, dataset: "Dataset") -> List[dict]:
         self.check_user(user)
@@ -857,9 +944,20 @@ class REMSService:
         if not application:
             raise exceptions.NotFound("REMS application not found")
 
+        data = {"application-id": application_id}
         with self.session.as_user(handler.fairdata_username):
-            data = {
-                "application-id": application_id,
-            }
             resp = self.session.post("/api/applications/close", json=data)
+        return resp.json()
+
+    def close_application_as_owner(self, application_id: int, comment: str = ""):
+        """Close REMS application as the REMS owner."""
+        resp = self.session.get(f"/api/applications/{application_id}")
+        application = resp.json()
+        if not application:
+            return None
+
+        data = {"application-id": application_id}
+        if comment:
+            data["comment"] = comment
+        resp = self.session.post("/api/applications/close", json=data)
         return resp.json()

@@ -126,6 +126,9 @@ class REMSLicense(REMSEntity):
         null=True,
         blank=True,
     )
+    is_custom_license = models.BooleanField(
+        default=False, help_text="True when license is specific to a dataset."
+    )
     is_data_access_terms = models.BooleanField(
         default=False, help_text="True when license is generated from data_access_terms."
     )
@@ -141,6 +144,13 @@ class REMSResource(REMSEntity):
     """
 
     entity_type = EntityType.RESOURCE
+    dataset = models.ForeignKey(
+        "core.Dataset",
+        related_name="rems_resources",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
 
 
 class REMSCatalogueItem(REMSEntity):
