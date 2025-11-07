@@ -96,7 +96,7 @@ class Preservation(AbstractBaseModel):
             # Dataset that enters the preservation process must have a
             # contract
             models.CheckConstraint(
-                check=Q(state__lt=0) | Q(contract_id__isnull=False),
+                condition=Q(state__lt=0) | Q(contract_id__isnull=False),
                 name="%(app_label)s_%(class)s_has_valid_contract",
             )
         ]

@@ -335,7 +335,7 @@ PROJECT_STORAGE_SERVICE_USER_GROUPS = {"ida", "pas"}
 WATSON_BACKEND = "apps.common.search.CommonSearchBackend"
 
 # Profiling
-ENABLE_DEBUG_TOOLBAR = env.bool("ENABLE_DEBUG_TOOLBAR", True)
+ENABLE_DEBUG_TOOLBAR = env.bool("ENABLE_DEBUG_TOOLBAR", False)
 ENABLE_SILK_PROFILER = env.bool("ENABLE_SILK_PROFILER", False)
 
 # Languages

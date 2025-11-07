@@ -340,6 +340,7 @@ class DirectoryViewSet(CommonViewSet, AccessViewSetMixin, viewsets.ViewSet):
                     get_file_metadata_model()
                     .objects.filter(file_set__dataset_id=dataset)
                     .prefetch_related("file_type")
+                    .order_by()
                     .distinct("file_id")
                     .in_bulk([get_attr_or_item(f, "id") for f in files], field_name="file_id")
                 )

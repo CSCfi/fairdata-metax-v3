@@ -292,6 +292,7 @@ class BaseFileViewSet(CommonModelViewSet):
             file_metadata = (
                 get_file_metadata_model()
                 .objects.filter(file_set__dataset_id=dataset_id)
+                .order_by()
                 .prefetch_related("file_type")
                 .order_by()
                 .distinct("file_id")

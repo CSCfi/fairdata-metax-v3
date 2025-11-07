@@ -380,6 +380,14 @@ class DatasetFactory(factory.django.DjangoModelFactory):
         if extracted:
             self.temporal.set(extracted)
 
+    @factory.post_generation
+    def file_set(self, create, extracted, **kwargs):
+        if not create:
+            return
+        if extracted:
+            # Does not save anything, assumes that file.dataset points to current dataset
+            self.file_set = extracted
+
 
 class DatasetActorFactory(factory.django.DjangoModelFactory):
     class Meta:

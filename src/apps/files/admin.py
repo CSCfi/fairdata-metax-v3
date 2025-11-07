@@ -98,8 +98,9 @@ class FileAdmin(AbstractDatasetPropertyBaseAdmin):
     list_display = ("storage_identifier", "pathname", "storage_service", "csc_project")
     autocomplete_fields = ["pas_compatible_file", "characteristics"]
     ordering = ["storage_id", "directory_path", "filename"]
-    show_full_result_count = False
+    show_full_result_count = False # don't count total files
     exclude = []  # don't exclude "removed" timestamp
+    show_facets = admin.ShowFacets.NEVER
 
     # Search fields have optimized implementation, see _get_search_filter
     search_fields = ["=id", "^storage_identifier", "^pathname"]

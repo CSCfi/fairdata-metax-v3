@@ -130,7 +130,7 @@ class FileSetSerializer(StrictSerializer):
                     urls.add(item["url"])
 
         # Get dict of model instances by url
-        refdata_by_url = model.objects.distinct("url").in_bulk(urls, field_name="url")
+        refdata_by_url = model.objects.order_by().distinct("url").in_bulk(urls, field_name="url")
         if invalid_types := urls - set(refdata_by_url):
             raise serializers.ValidationError(
                 {key: _("Invalid values: {values}").format(key=key, values=list(invalid_types))}

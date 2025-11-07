@@ -103,7 +103,7 @@ class Contract(SystemCreatorBaseModel, CustomSoftDeletableModel):
         ordering = ["record_created", "id"]
         constraints = [
             models.CheckConstraint(
-                check=~models.Q(id=""),
+                condition=~models.Q(id=""),
                 name="%(app_label)s_%(class)s_require_nonempty_id",
             )
         ]

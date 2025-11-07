@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name='contract',
             constraint=models.CheckConstraint(
-                check=models.Q(('id', ''), _negated=True),
+                condition=models.Q(('id', ''), _negated=True),
                 name='core_contract_require_nonempty_id'
             ),
         ),

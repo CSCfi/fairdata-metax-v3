@@ -47,7 +47,7 @@ class AbstractConcept(AbstractBaseModel):
         constraints = [
             # All concepts should have a URL.
             models.CheckConstraint(
-                check=~models.Q(url=""),
+                condition=~models.Q(url=""),
                 name="%(app_label)s_%(class)s_require_url",
             ),
             # URLs should be unique within reference data.
@@ -57,7 +57,7 @@ class AbstractConcept(AbstractBaseModel):
             ),
             # Reference data should have a scheme.
             models.CheckConstraint(
-                check=~models.Q(in_scheme=""),
+                condition=~models.Q(in_scheme=""),
                 name="%(app_label)s_%(class)s_require_reference_data_scheme",
             ),
         ]

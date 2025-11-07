@@ -18,6 +18,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='file',
-            constraint=models.CheckConstraint(check=models.Q(('pas_compatible_file', models.F('id')), _negated=True), name='files_file_no_self_pas_compatible_relation'),
+            constraint=models.CheckConstraint(condition=models.Q(('pas_compatible_file', models.F('id')), _negated=True), name='files_file_no_self_pas_compatible_relation'),
         ),
     ]

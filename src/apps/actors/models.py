@@ -110,7 +110,7 @@ class Organization(AbstractBaseModel):
         constraints = [
             # Reference organizations should have a URL.
             models.CheckConstraint(
-                check=~models.Q(url="") | models.Q(is_reference_data=False),
+                condition=~models.Q(url="") | models.Q(is_reference_data=False),
                 name="%(app_label)s_%(class)s_require_url",
             ),
             # Reference organization urls should be unique.
@@ -121,7 +121,7 @@ class Organization(AbstractBaseModel):
             ),
             # Reference organizations should have a code.
             models.CheckConstraint(
-                check=~models.Q(code="") | models.Q(is_reference_data=False),
+                condition=~models.Q(code="") | models.Q(is_reference_data=False),
                 name="%(app_label)s_%(class)s_require_code",
             ),
             # Codes should be unique within reference data.
@@ -132,7 +132,7 @@ class Organization(AbstractBaseModel):
             ),
             # Reference organizations should have a scheme.
             models.CheckConstraint(
-                check=(models.Q(in_scheme__isnull=False) & ~models.Q(in_scheme=""))
+                condition=(models.Q(in_scheme__isnull=False) & ~models.Q(in_scheme=""))
                 | models.Q(is_reference_data=False),
                 name="%(app_label)s_%(class)s_require_reference_data_scheme",
             ),

@@ -30,7 +30,7 @@ def test_admin_dataset_rems_filters(mock_rems):
     not_published_dataset = factories.REMSDatasetFactory()
     error_dataset = factories.REMSDatasetFactory(rems_publish_error="hups, pieleen meni")
 
-    assert REMSService().publish_dataset(rems_dataset) is not None
+    assert REMSService().publish_dataset(rems_dataset, raise_errors=True) is not None
 
     factory = RequestFactory()
     status_dataset = {
@@ -39,7 +39,8 @@ def test_admin_dataset_rems_filters(mock_rems):
         REMSStatus.NOT_PUBLISHED: not_published_dataset,
         REMSStatus.ERROR: error_dataset,
     }
+
     for status, dataset in status_dataset.items():
         request = factory.get(f"/v3/admin/core/dataset?rems_status={status}")
-        filter_ = REMSStatusFilter(request, request.GET.dict(), Dataset, DatasetAdmin)
+        filter_ = REMSStatusFilter(request, request.GET.copy(), Dataset, DatasetAdmin)
         assert list(filter_.queryset(request, Dataset.objects.all())) == [dataset]

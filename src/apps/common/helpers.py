@@ -510,27 +510,7 @@ def normalize_doi(identifier: str) -> Optional[str]:
 
 def format_exception(exception: BaseException) -> str:
     """Format exception as a string."""
-    # Use new format_exception signature for python >= 3.10
-    if sys.version_info >= (3, 10):
-        return "".join(traceback.format_exception(exception))
-
-    return "".join(
-        traceback.format_exception(
-            etype=type(exception), value=exception, tb=exception.__traceback__
-        )
-    )
-
-
-def datetime_fromisoformat(str) -> datetime:
-    """Parse datetime from string in ISO 8601 format."""
-    if sys.version_info >= (3, 11):
-        return datetime.fromisoformat(str)
-
-    # Python < 3.11 needs to use external library because that version
-    # of datetime.fromisoformat doesn't yet support the formats we use
-    import isodate
-
-    return isodate.parse_datetime(str)
+    return "".join(traceback.format_exception(exception))
 
 
 @contextmanager

@@ -66,11 +66,11 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='file',
-            constraint=models.CheckConstraint(check=models.Q(('filename', ''), _negated=True), name='files_file_require_filename'),
+            constraint=models.CheckConstraint(condition=models.Q(('filename', ''), _negated=True), name='files_file_require_filename'),
         ),
         migrations.AddConstraint(
             model_name='file',
-            constraint=models.CheckConstraint(check=models.Q(('directory_path__startswith', '/'), ('directory_path__endswith', '/')), name='files_file_require_dir_slash'),
+            constraint=models.CheckConstraint(condition=models.Q(('directory_path__startswith', '/'), ('directory_path__endswith', '/')), name='files_file_require_dir_slash'),
         ),
         migrations.AddConstraint(
             model_name='file',

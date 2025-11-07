@@ -165,6 +165,8 @@ class REMSStatusFilter(admin.SimpleListFilter):
             return rems_datasets.filter(rems_publish_error__isnull=True).exclude(
                 id__in=in_rems_ids
             )
+        if value is not None:
+            raise ValueError(f"Invalid REMSStatus {value=}")
 
 
 @admin.register(Dataset)

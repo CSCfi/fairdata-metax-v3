@@ -216,7 +216,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='usecategory',
-            constraint=models.CheckConstraint(check=models.Q(('url', ''), _negated=True), name='refdata_usecategory_require_url'),
+            constraint=models.CheckConstraint(condition=models.Q(('url', ''), _negated=True), name='refdata_usecategory_require_url'),
         ),
         migrations.AddConstraint(
             model_name='usecategory',
@@ -224,7 +224,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='usecategory',
-            constraint=models.CheckConstraint(check=models.Q(('in_scheme', ''), _negated=True), name='refdata_usecategory_require_reference_data_scheme'),
+            constraint=models.CheckConstraint(condition=models.Q(('in_scheme', ''), _negated=True), name='refdata_usecategory_require_reference_data_scheme'),
         ),
         migrations.AddIndex(
             model_name='theme',
@@ -232,7 +232,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='theme',
-            constraint=models.CheckConstraint(check=models.Q(('url', ''), _negated=True), name='refdata_theme_require_url'),
+            constraint=models.CheckConstraint(condition=models.Q(('url', ''), _negated=True), name='refdata_theme_require_url'),
         ),
         migrations.AddConstraint(
             model_name='theme',
@@ -240,7 +240,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='theme',
-            constraint=models.CheckConstraint(check=models.Q(('in_scheme', ''), _negated=True), name='refdata_theme_require_reference_data_scheme'),
+            constraint=models.CheckConstraint(condition=models.Q(('in_scheme', ''), _negated=True), name='refdata_theme_require_reference_data_scheme'),
         ),
         migrations.AddIndex(
             model_name='restrictiongrounds',
@@ -248,7 +248,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='restrictiongrounds',
-            constraint=models.CheckConstraint(check=models.Q(('url', ''), _negated=True), name='refdata_restrictiongrounds_require_url'),
+            constraint=models.CheckConstraint(condition=models.Q(('url', ''), _negated=True), name='refdata_restrictiongrounds_require_url'),
         ),
         migrations.AddConstraint(
             model_name='restrictiongrounds',
@@ -256,7 +256,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='restrictiongrounds',
-            constraint=models.CheckConstraint(check=models.Q(('in_scheme', ''), _negated=True), name='refdata_restrictiongrounds_require_reference_data_scheme'),
+            constraint=models.CheckConstraint(condition=models.Q(('in_scheme', ''), _negated=True), name='refdata_restrictiongrounds_require_reference_data_scheme'),
         ),
         migrations.AddIndex(
             model_name='resourcetype',
@@ -264,7 +264,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='resourcetype',
-            constraint=models.CheckConstraint(check=models.Q(('url', ''), _negated=True), name='refdata_resourcetype_require_url'),
+            constraint=models.CheckConstraint(condition=models.Q(('url', ''), _negated=True), name='refdata_resourcetype_require_url'),
         ),
         migrations.AddConstraint(
             model_name='resourcetype',
@@ -272,7 +272,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='resourcetype',
-            constraint=models.CheckConstraint(check=models.Q(('in_scheme', ''), _negated=True), name='refdata_resourcetype_require_reference_data_scheme'),
+            constraint=models.CheckConstraint(condition=models.Q(('in_scheme', ''), _negated=True), name='refdata_resourcetype_require_reference_data_scheme'),
         ),
         migrations.AddIndex(
             model_name='researchinfra',
@@ -280,7 +280,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='researchinfra',
-            constraint=models.CheckConstraint(check=models.Q(('url', ''), _negated=True), name='refdata_researchinfra_require_url'),
+            constraint=models.CheckConstraint(condition=models.Q(('url', ''), _negated=True), name='refdata_researchinfra_require_url'),
         ),
         migrations.AddConstraint(
             model_name='researchinfra',
@@ -288,7 +288,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='researchinfra',
-            constraint=models.CheckConstraint(check=models.Q(('in_scheme', ''), _negated=True), name='refdata_researchinfra_require_reference_data_scheme'),
+            constraint=models.CheckConstraint(condition=models.Q(('in_scheme', ''), _negated=True), name='refdata_researchinfra_require_reference_data_scheme'),
         ),
         migrations.AddIndex(
             model_name='relationtype',
@@ -296,7 +296,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='relationtype',
-            constraint=models.CheckConstraint(check=models.Q(('url', ''), _negated=True), name='refdata_relationtype_require_url'),
+            constraint=models.CheckConstraint(condition=models.Q(('url', ''), _negated=True), name='refdata_relationtype_require_url'),
         ),
         migrations.AddConstraint(
             model_name='relationtype',
@@ -304,7 +304,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='relationtype',
-            constraint=models.CheckConstraint(check=models.Q(('in_scheme', ''), _negated=True), name='refdata_relationtype_require_reference_data_scheme'),
+            constraint=models.CheckConstraint(condition=models.Q(('in_scheme', ''), _negated=True), name='refdata_relationtype_require_reference_data_scheme'),
         ),
         migrations.AddIndex(
             model_name='preservationevent',
@@ -312,7 +312,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='preservationevent',
-            constraint=models.CheckConstraint(check=models.Q(('url', ''), _negated=True), name='refdata_preservationevent_require_url'),
+            constraint=models.CheckConstraint(condition=models.Q(('url', ''), _negated=True), name='refdata_preservationevent_require_url'),
         ),
         migrations.AddConstraint(
             model_name='preservationevent',
@@ -320,7 +320,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='preservationevent',
-            constraint=models.CheckConstraint(check=models.Q(('in_scheme', ''), _negated=True), name='refdata_preservationevent_require_reference_data_scheme'),
+            constraint=models.CheckConstraint(condition=models.Q(('in_scheme', ''), _negated=True), name='refdata_preservationevent_require_reference_data_scheme'),
         ),
         migrations.AddIndex(
             model_name='location',
@@ -328,7 +328,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='location',
-            constraint=models.CheckConstraint(check=models.Q(('url', ''), _negated=True), name='refdata_location_require_url'),
+            constraint=models.CheckConstraint(condition=models.Q(('url', ''), _negated=True), name='refdata_location_require_url'),
         ),
         migrations.AddConstraint(
             model_name='location',
@@ -336,7 +336,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='location',
-            constraint=models.CheckConstraint(check=models.Q(('in_scheme', ''), _negated=True), name='refdata_location_require_reference_data_scheme'),
+            constraint=models.CheckConstraint(condition=models.Q(('in_scheme', ''), _negated=True), name='refdata_location_require_reference_data_scheme'),
         ),
         migrations.AddIndex(
             model_name='lifecycleevent',
@@ -344,7 +344,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='lifecycleevent',
-            constraint=models.CheckConstraint(check=models.Q(('url', ''), _negated=True), name='refdata_lifecycleevent_require_url'),
+            constraint=models.CheckConstraint(condition=models.Q(('url', ''), _negated=True), name='refdata_lifecycleevent_require_url'),
         ),
         migrations.AddConstraint(
             model_name='lifecycleevent',
@@ -352,7 +352,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='lifecycleevent',
-            constraint=models.CheckConstraint(check=models.Q(('in_scheme', ''), _negated=True), name='refdata_lifecycleevent_require_reference_data_scheme'),
+            constraint=models.CheckConstraint(condition=models.Q(('in_scheme', ''), _negated=True), name='refdata_lifecycleevent_require_reference_data_scheme'),
         ),
         migrations.AddIndex(
             model_name='license',
@@ -360,7 +360,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='license',
-            constraint=models.CheckConstraint(check=models.Q(('url', ''), _negated=True), name='refdata_license_require_url'),
+            constraint=models.CheckConstraint(condition=models.Q(('url', ''), _negated=True), name='refdata_license_require_url'),
         ),
         migrations.AddConstraint(
             model_name='license',
@@ -368,7 +368,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='license',
-            constraint=models.CheckConstraint(check=models.Q(('in_scheme', ''), _negated=True), name='refdata_license_require_reference_data_scheme'),
+            constraint=models.CheckConstraint(condition=models.Q(('in_scheme', ''), _negated=True), name='refdata_license_require_reference_data_scheme'),
         ),
         migrations.AddIndex(
             model_name='language',
@@ -376,7 +376,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='language',
-            constraint=models.CheckConstraint(check=models.Q(('url', ''), _negated=True), name='refdata_language_require_url'),
+            constraint=models.CheckConstraint(condition=models.Q(('url', ''), _negated=True), name='refdata_language_require_url'),
         ),
         migrations.AddConstraint(
             model_name='language',
@@ -384,7 +384,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='language',
-            constraint=models.CheckConstraint(check=models.Q(('in_scheme', ''), _negated=True), name='refdata_language_require_reference_data_scheme'),
+            constraint=models.CheckConstraint(condition=models.Q(('in_scheme', ''), _negated=True), name='refdata_language_require_reference_data_scheme'),
         ),
         migrations.AddIndex(
             model_name='identifiertype',
@@ -392,7 +392,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='identifiertype',
-            constraint=models.CheckConstraint(check=models.Q(('url', ''), _negated=True), name='refdata_identifiertype_require_url'),
+            constraint=models.CheckConstraint(condition=models.Q(('url', ''), _negated=True), name='refdata_identifiertype_require_url'),
         ),
         migrations.AddConstraint(
             model_name='identifiertype',
@@ -400,7 +400,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='identifiertype',
-            constraint=models.CheckConstraint(check=models.Q(('in_scheme', ''), _negated=True), name='refdata_identifiertype_require_reference_data_scheme'),
+            constraint=models.CheckConstraint(condition=models.Q(('in_scheme', ''), _negated=True), name='refdata_identifiertype_require_reference_data_scheme'),
         ),
         migrations.AddIndex(
             model_name='fundertype',
@@ -408,7 +408,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='fundertype',
-            constraint=models.CheckConstraint(check=models.Q(('url', ''), _negated=True), name='refdata_fundertype_require_url'),
+            constraint=models.CheckConstraint(condition=models.Q(('url', ''), _negated=True), name='refdata_fundertype_require_url'),
         ),
         migrations.AddConstraint(
             model_name='fundertype',
@@ -416,7 +416,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='fundertype',
-            constraint=models.CheckConstraint(check=models.Q(('in_scheme', ''), _negated=True), name='refdata_fundertype_require_reference_data_scheme'),
+            constraint=models.CheckConstraint(condition=models.Q(('in_scheme', ''), _negated=True), name='refdata_fundertype_require_reference_data_scheme'),
         ),
         migrations.AddIndex(
             model_name='filetype',
@@ -424,7 +424,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='filetype',
-            constraint=models.CheckConstraint(check=models.Q(('url', ''), _negated=True), name='refdata_filetype_require_url'),
+            constraint=models.CheckConstraint(condition=models.Q(('url', ''), _negated=True), name='refdata_filetype_require_url'),
         ),
         migrations.AddConstraint(
             model_name='filetype',
@@ -432,7 +432,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='filetype',
-            constraint=models.CheckConstraint(check=models.Q(('in_scheme', ''), _negated=True), name='refdata_filetype_require_reference_data_scheme'),
+            constraint=models.CheckConstraint(condition=models.Q(('in_scheme', ''), _negated=True), name='refdata_filetype_require_reference_data_scheme'),
         ),
         migrations.AddIndex(
             model_name='fileformatversion',
@@ -440,7 +440,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='fileformatversion',
-            constraint=models.CheckConstraint(check=models.Q(('url', ''), _negated=True), name='refdata_fileformatversion_require_url'),
+            constraint=models.CheckConstraint(condition=models.Q(('url', ''), _negated=True), name='refdata_fileformatversion_require_url'),
         ),
         migrations.AddConstraint(
             model_name='fileformatversion',
@@ -448,7 +448,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='fileformatversion',
-            constraint=models.CheckConstraint(check=models.Q(('in_scheme', ''), _negated=True), name='refdata_fileformatversion_require_reference_data_scheme'),
+            constraint=models.CheckConstraint(condition=models.Q(('in_scheme', ''), _negated=True), name='refdata_fileformatversion_require_reference_data_scheme'),
         ),
         migrations.AddIndex(
             model_name='fieldofscience',
@@ -456,7 +456,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='fieldofscience',
-            constraint=models.CheckConstraint(check=models.Q(('url', ''), _negated=True), name='refdata_fieldofscience_require_url'),
+            constraint=models.CheckConstraint(condition=models.Q(('url', ''), _negated=True), name='refdata_fieldofscience_require_url'),
         ),
         migrations.AddConstraint(
             model_name='fieldofscience',
@@ -464,7 +464,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='fieldofscience',
-            constraint=models.CheckConstraint(check=models.Q(('in_scheme', ''), _negated=True), name='refdata_fieldofscience_require_reference_data_scheme'),
+            constraint=models.CheckConstraint(condition=models.Q(('in_scheme', ''), _negated=True), name='refdata_fieldofscience_require_reference_data_scheme'),
         ),
         migrations.AddIndex(
             model_name='eventoutcome',
@@ -472,7 +472,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='eventoutcome',
-            constraint=models.CheckConstraint(check=models.Q(('url', ''), _negated=True), name='refdata_eventoutcome_require_url'),
+            constraint=models.CheckConstraint(condition=models.Q(('url', ''), _negated=True), name='refdata_eventoutcome_require_url'),
         ),
         migrations.AddConstraint(
             model_name='eventoutcome',
@@ -480,7 +480,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='eventoutcome',
-            constraint=models.CheckConstraint(check=models.Q(('in_scheme', ''), _negated=True), name='refdata_eventoutcome_require_reference_data_scheme'),
+            constraint=models.CheckConstraint(condition=models.Q(('in_scheme', ''), _negated=True), name='refdata_eventoutcome_require_reference_data_scheme'),
         ),
         migrations.AddIndex(
             model_name='contributortype',
@@ -488,7 +488,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='contributortype',
-            constraint=models.CheckConstraint(check=models.Q(('url', ''), _negated=True), name='refdata_contributortype_require_url'),
+            constraint=models.CheckConstraint(condition=models.Q(('url', ''), _negated=True), name='refdata_contributortype_require_url'),
         ),
         migrations.AddConstraint(
             model_name='contributortype',
@@ -496,7 +496,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='contributortype',
-            constraint=models.CheckConstraint(check=models.Q(('in_scheme', ''), _negated=True), name='refdata_contributortype_require_reference_data_scheme'),
+            constraint=models.CheckConstraint(condition=models.Q(('in_scheme', ''), _negated=True), name='refdata_contributortype_require_reference_data_scheme'),
         ),
         migrations.AddIndex(
             model_name='contributorrole',
@@ -504,7 +504,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='contributorrole',
-            constraint=models.CheckConstraint(check=models.Q(('url', ''), _negated=True), name='refdata_contributorrole_require_url'),
+            constraint=models.CheckConstraint(condition=models.Q(('url', ''), _negated=True), name='refdata_contributorrole_require_url'),
         ),
         migrations.AddConstraint(
             model_name='contributorrole',
@@ -512,7 +512,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='contributorrole',
-            constraint=models.CheckConstraint(check=models.Q(('in_scheme', ''), _negated=True), name='refdata_contributorrole_require_reference_data_scheme'),
+            constraint=models.CheckConstraint(condition=models.Q(('in_scheme', ''), _negated=True), name='refdata_contributorrole_require_reference_data_scheme'),
         ),
         migrations.AddIndex(
             model_name='accesstype',
@@ -520,7 +520,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='accesstype',
-            constraint=models.CheckConstraint(check=models.Q(('url', ''), _negated=True), name='refdata_accesstype_require_url'),
+            constraint=models.CheckConstraint(condition=models.Q(('url', ''), _negated=True), name='refdata_accesstype_require_url'),
         ),
         migrations.AddConstraint(
             model_name='accesstype',
@@ -528,6 +528,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='accesstype',
-            constraint=models.CheckConstraint(check=models.Q(('in_scheme', ''), _negated=True), name='refdata_accesstype_require_reference_data_scheme'),
+            constraint=models.CheckConstraint(condition=models.Q(('in_scheme', ''), _negated=True), name='refdata_accesstype_require_reference_data_scheme'),
         ),
     ]

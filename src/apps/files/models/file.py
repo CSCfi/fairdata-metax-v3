@@ -219,11 +219,11 @@ class File(SystemCreatorBaseModel, CustomSoftDeletableModel):
 
         constraints = [
             models.CheckConstraint(
-                check=~models.Q(filename=""),
+                condition=~models.Q(filename=""),
                 name="%(app_label)s_%(class)s_require_filename",
             ),
             models.CheckConstraint(
-                check=models.Q(directory_path__startswith="/")
+                condition=models.Q(directory_path__startswith="/")
                 & models.Q(directory_path__endswith="/"),
                 name="%(app_label)s_%(class)s_require_dir_slash",
             ),
@@ -242,7 +242,7 @@ class File(SystemCreatorBaseModel, CustomSoftDeletableModel):
             ),
             # pas_compatible_file cannot refer to file itself
             models.CheckConstraint(
-                check=~models.Q(pas_compatible_file=models.F("id")),
+                condition=~models.Q(pas_compatible_file=models.F("id")),
                 name="%(app_label)s_%(class)s_no_self_pas_compatible_relation",
             ),
         ]

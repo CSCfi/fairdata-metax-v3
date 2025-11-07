@@ -681,7 +681,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='preservation',
-            constraint=models.CheckConstraint(check=models.Q(('state__lt', 0), ('contract_id__isnull', False), _connector='OR'), name='core_preservation_has_valid_contract'),
+            constraint=models.CheckConstraint(condition=models.Q(('state__lt', 0), ('contract_id__isnull', False), _connector='OR'), name='core_preservation_has_valid_contract'),
         ),
         migrations.AlterUniqueTogether(
             name='filesetfilemetadata',

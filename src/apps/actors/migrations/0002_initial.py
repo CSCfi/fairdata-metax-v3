@@ -75,7 +75,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='organization',
-            constraint=models.CheckConstraint(check=models.Q(models.Q(('url', ''), _negated=True), ('is_reference_data', False), _connector='OR'), name='actors_organization_require_url'),
+            constraint=models.CheckConstraint(condition=models.Q(models.Q(('url', ''), _negated=True), ('is_reference_data', False), _connector='OR'), name='actors_organization_require_url'),
         ),
         migrations.AddConstraint(
             model_name='organization',
@@ -83,7 +83,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='organization',
-            constraint=models.CheckConstraint(check=models.Q(models.Q(('code', ''), _negated=True), ('is_reference_data', False), _connector='OR'), name='actors_organization_require_code'),
+            constraint=models.CheckConstraint(condition=models.Q(models.Q(('code', ''), _negated=True), ('is_reference_data', False), _connector='OR'), name='actors_organization_require_code'),
         ),
         migrations.AddConstraint(
             model_name='organization',
@@ -91,6 +91,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='organization',
-            constraint=models.CheckConstraint(check=models.Q(models.Q(('in_scheme__isnull', False), models.Q(('in_scheme', ''), _negated=True)), ('is_reference_data', False), _connector='OR'), name='actors_organization_require_reference_data_scheme'),
+            constraint=models.CheckConstraint(condition=models.Q(models.Q(('in_scheme__isnull', False), models.Q(('in_scheme', ''), _negated=True)), ('is_reference_data', False), _connector='OR'), name='actors_organization_require_reference_data_scheme'),
         ),
     ]
