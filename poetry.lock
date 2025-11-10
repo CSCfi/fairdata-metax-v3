@@ -1159,6 +1159,22 @@ files = [
 django = ">=4.2"
 
 [[package]]
+name = "dpres_file_formats"
+version = "1.2.0"
+description = "File formats supported by the DPS in Finland"
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = []
+develop = false
+
+[package.source]
+type = "git"
+url = "https://github.com/Digital-Preservation-Finland/dpres-file-formats.git"
+reference = "HEAD"
+resolved_reference = "1f5dc5ae0824e9bcaca21392e70f94256eb67651"
+
+[[package]]
 name = "drf-access-policy"
 version = "1.5.0"
 description = "Declarative access policies/permissions modeled after AWS' IAM policies."
@@ -3764,4 +3780,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0.0"
-content-hash = "5cedf2681b6710804b1fab785f651bab4988264ee2341f7d55aaf5aefbb77022"
+content-hash = "cab48f537a2295c85366c8e7a22acc6a5c649f1a1c6ffad8b905bca8f1dc4d6e"

@@ -65,6 +65,7 @@ pymdown-extensions = "^10.16.1"
 django-silk = "^5.4.3"
 django-test-migrations = "^1.5.0"
 fastuuid = "^0.14.0"
+dpres-file-formats = {git = "https://github.com/Digital-Preservation-Finland/dpres-file-formats.git"}
 
 [tool.poetry.group.dev.dependencies]
 isort = "^7.0.0"

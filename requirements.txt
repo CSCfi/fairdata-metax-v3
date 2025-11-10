@@ -36,6 +36,7 @@ django-watchman==1.3.0 ; python_version >= "3.12" and python_full_version < "4.0
 django-watson==1.6.3 ; python_version >= "3.12" and python_full_version < "4.0.0"
 django==5.2.8 ; python_version >= "3.12" and python_full_version < "4.0.0"
 djangorestframework==3.16.1 ; python_version >= "3.12" and python_full_version < "4.0.0"
+dpres-file-formats @ git+https://github.com/Digital-Preservation-Finland/dpres-file-formats.git@1f5dc5ae0824e9bcaca21392e70f94256eb67651 ; python_version >= "3.12" and python_full_version < "4.0.0"
 drf-access-policy==1.5.0 ; python_version >= "3.12" and python_full_version < "4.0.0"
 drf-nested-routers==0.95.0 ; python_version >= "3.12" and python_full_version < "4.0.0"
 drf-yasg==1.21.11 ; python_version >= "3.12" and python_full_version < "4.0.0"
