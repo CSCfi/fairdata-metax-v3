@@ -768,6 +768,7 @@ def file_format_reference_data():
             pref_label={"en": "text/csv", "fi": "text/csv"},
             file_format="text/csv",
             format_version="",
+            allowed_encodings=["ISO-8859-15", "UTF-8", "UTF-16", "UTF-32"],
             **common_args,
         ),
         files_factories.FileFormatVersionFactory.build(

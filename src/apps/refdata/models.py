@@ -122,7 +122,10 @@ class EventOutcome(AbstractConcept):
 class FileFormatVersion(AbstractConcept):
     file_format = models.CharField(max_length=255)
     format_version = models.CharField(max_length=255, default="", blank=True)
-    serializer_extra_fields = ("file_format", "format_version")
+    allowed_encodings = models.JSONField(default=list)
+    serializer_extra_fields = (
+        "file_format", "format_version", "allowed_encodings"
+    )
 
 
 class FileType(AbstractConcept):
