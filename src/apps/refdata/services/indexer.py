@@ -1,8 +1,8 @@
 from django.apps import apps
 from django.conf import settings
 
+from apps.refdata.services.importers.dpres_file_formats import DPRESFileFormatVersionImporter
 from apps.refdata.services.importers.local import (
-    LocalJSONFileFormatVersionImporter,
     LocalJSONImporter,
     LocalJSONLicenseImporter,
 )
@@ -15,8 +15,8 @@ def index(types=None):
         "Finto": FintoImporter,
         "FintoLocation": FintoLocationImporter,
         "LocalJSON": LocalJSONImporter,
-        "LocalJSONFileFormatVersion": LocalJSONFileFormatVersionImporter,
         "LocalJSONLicense": LocalJSONLicenseImporter,
+        "DPRESFileFormatVersion": DPRESFileFormatVersionImporter
     }
 
     if not types:

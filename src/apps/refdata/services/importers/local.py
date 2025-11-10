@@ -30,28 +30,6 @@ class LocalJSONImporter(BaseDataImporter):
         return data
 
 
-class LocalJSONFileFormatVersionImporter(LocalJSONImporter):
-    """Importer for file format version data from local json."""
-
-    def data_item_from_json(self, json_item):
-        item = super().data_item_from_json(json_item)
-        file_format = json_item["input_file_format"]
-        format_version = json_item["output_format_version"]
-        label = " ".join(filter(None, [file_format, format_version]))
-        item.update(
-            {
-                "file_format": file_format,
-                "format_version": format_version,
-                "pref_label": {
-                    "en": label,
-                    "fi": label,
-                    "und": label,
-                },
-            }
-        )
-        return item
-
-
 class LocalJSONLicenseImporter(LocalJSONImporter):
     """Importer for license data from local json."""
 

@@ -52,12 +52,6 @@ LOCAL_REFERENCE_DATA_SOURCES = {
         "source": f"{LOCAL_REF_DATA_DIR}/event_outcome.json",
         "scheme": "http://uri.suomi.fi/codelist/fairdata/event_outcome",
     },
-    "file_format_version": {
-        "model": "refdata.FileFormatVersion",
-        "importer": "LocalJSONFileFormatVersion",
-        "source": f"{LOCAL_REF_DATA_DIR}/file_format_version.json",
-        "scheme": "http://uri.suomi.fi/codelist/fairdata/file_format_version",
-    },
     "file_type": {
         "model": "refdata.FileType",
         "importer": "LocalJSON",
@@ -125,9 +119,18 @@ LOCAL_REFERENCE_DATA_SOURCES = {
         "scheme": "http://uri.suomi.fi/codelist/fairdata/use_category",
     },
 }
+DPRES_REFERENCE_DATA_SOURCES = {
+    "file_format_version": {
+        "model": "refdata.FileFormatVersion",
+        "importer": "DPRESFileFormatVersion",
+        "source": "https://raw.githubusercontent.com/Digital-Preservation-Finland/dpres-file-formats/refs/heads/master/dpres_file_formats/data/file_formats.json",
+        "scheme": "http://uri.suomi.fi/codelist/fairdata/file_format_version",
+    },
+}
 
 REFERENCE_DATA_SOURCES = {
     **FINTO_REFERENCE_DATA_SOURCES,
     **LOCAL_REFERENCE_DATA_SOURCES,
+    **DPRES_REFERENCE_DATA_SOURCES,
 }
 REFDATA_LANGUAGES = {"en", "fi", "sv", "und"}  # Languages to use from reference data

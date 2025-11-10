@@ -44,9 +44,9 @@ TEST_DATA_SOURCES = {
     },
     "file_format_version": {
         "model": "refdata.FileFormatVersion",
-        "importer": "LocalJSONFileFormatVersion",
-        "source": "file_format_version.json",
-        "scheme": "https://schemes/file_format_version",
+        "importer": "DPRESFileFormatVersion",
+        "source": "https://dpres/file-format.json",
+        "scheme": "https://schemes/file_format_version"
     },
 }
 
@@ -57,10 +57,10 @@ def mock_importers(mocker):
         "Finto": mocker.patch("apps.refdata.services.indexer.FintoImporter"),
         "FintoLocation": mocker.patch("apps.refdata.services.indexer.FintoLocationImporter"),
         "LocalJSON": mocker.patch("apps.refdata.services.indexer.LocalJSONImporter"),
-        "LocalJSONFileFormatVersion": mocker.patch(
-            "apps.refdata.services.indexer.LocalJSONFileFormatVersionImporter"
-        ),
         "LocalJSONLicense": mocker.patch("apps.refdata.services.indexer.LocalJSONLicenseImporter"),
+        "DPRESFileFormatVersion": mocker.patch(
+            "apps.refdata.services.indexer.DPRESFileFormatVersionImporter"
+        ),
     }
 
 
@@ -96,7 +96,7 @@ def test_import_all(mock_importers):
         source=TEST_DATA_SOURCES["license"]["source"],
         scheme=TEST_DATA_SOURCES["license"]["scheme"],
     )
-    mock_importers["LocalJSONFileFormatVersion"].assert_called_once_with(
+    mock_importers["DPRESFileFormatVersion"].assert_called_once_with(
         model=FileFormatVersion,
         source=TEST_DATA_SOURCES["file_format_version"]["source"],
         scheme=TEST_DATA_SOURCES["file_format_version"]["scheme"],

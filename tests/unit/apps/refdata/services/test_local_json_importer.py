@@ -5,7 +5,6 @@ from django.conf import settings
 
 from apps.refdata.models import AccessType, FileFormatVersion, License
 from apps.refdata.services.importers import (
-    LocalJSONFileFormatVersionImporter,
     LocalJSONImporter,
     LocalJSONLicenseImporter,
 )
@@ -92,22 +91,3 @@ def test_import_local_json_license(local_ref_data_importer):
         "fi": "Creative Commons Nimeä 4.0 Kansainvälinen (CC BY 4.0)",
     }
     assert ccby.same_as == ["https://creativecommons.org/licenses/by/4.0/"]
-
-
-def test_import_local_json_file_format(local_ref_data_importer):
-    importer = local_ref_data_importer(
-        LocalJSONFileFormatVersionImporter, "file_format_version", FileFormatVersion
-    )
-    assert FileFormatVersion.all_objects.count() == 0
-    importer.load()
-    pdf = FileFormatVersion.all_objects.get(
-        url="http://uri.suomi.fi/codelist/fairdata/file_format_version/code/application_pdf_A-2b"
-    )
-    assert pdf.in_scheme == importer.scheme
-    assert pdf.pref_label == {
-        "en": "application/pdf A-2b",
-        "fi": "application/pdf A-2b",
-        "und": "application/pdf A-2b",
-    }
-    assert pdf.file_format == "application/pdf"
-    assert pdf.format_version == "A-2b"
