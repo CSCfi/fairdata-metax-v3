@@ -62,6 +62,7 @@ class DPRESFileFormatVersionImporter(BaseDataImporter):
                 "url": f"http://uri.suomi.fi/codelist/fairdata/file_format_version/code/{id_}",
                 "format_version": version,
                 "file_format": mime,
+                "allowed_encodings": file_format["charsets"],
                 "pref_label": {
                     "en": label,
                     "fi": label,
