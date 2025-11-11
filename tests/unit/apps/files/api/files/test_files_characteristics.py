@@ -296,6 +296,95 @@ def test_files_file_characteristics_patch_error(
     assert FileCharacteristics.objects.count() == 1
 
 
+@pytest.mark.usefixtures("file_format_reference_data")
+@pytest.mark.parametrize(
+    "post_content,patch_content,expected_error",
+    [
+        # Attempting to use an unsupported encoding fails
+        (
+            {},
+            {"encoding": "UTF-17"},
+            '"UTF-17" is not a valid choice.'
+        ),
+        # Removing file format version and leaving encoding in-place is not
+        # allowed
+        (
+            {},
+            {"file_format_version": None},
+            "'file_format_version' must be set when an encoding is provided"
+        ),
+        # Changing file format version to a different file format version
+        # which does not support the encoding is not allowed
+        (
+            {},
+            {
+                "file_format_version": {
+                    "url": "http://uri.suomi.fi/codelist/fairdata/file_format_version/code/application_pdf_1.2"
+                }
+            },
+            "Encoding not supported by the file format"
+        ),
+
+        # Removing both encoding and file format allowed
+        (
+            {},
+            {"file_format_version": None, "encoding": None},
+            None
+        ),
+        # Adding both file format and valid encoding to a file at the same
+        # time works
+        (
+            {"file_format_version": None, "encoding": None},
+            {
+                "file_format_version": {
+                    "url": "http://uri.suomi.fi/codelist/fairdata/file_format_version/code/text_csv"
+                },
+                "encoding": "UTF-16"
+            },
+            None
+        ),
+    ]
+)
+def test_files_file_characteristics_allowed_encodings(
+        ida_client, ida_file_json, characteristics_json,
+        post_content, patch_content, expected_error):
+    """
+    Update the encoding and/or file format version for a file and ensure
+    that correct errors are produced, or that the request succeeds if allowed
+    """
+    initial_data = {**ida_file_json, **characteristics_json}
+    initial_data["characteristics"].update(post_content)
+    res = ida_client.post(
+        reverse("file-list"),
+        initial_data,
+        content_type="application/json"
+    )
+
+    file_id = res.json()["id"]
+    assert res.status_code == 201
+
+    res = ida_client.patch(
+        reverse("file-characteristics-detail", kwargs={"pk": file_id}),
+        patch_content,
+        query_params={"include_nulls": True},
+        content_type="application/json",
+    )
+
+    if expected_error:
+        # Request should fail, check that the correct error was found
+        assert res.status_code == 400
+
+        assert any(
+            error for error in res.json()["encoding"]
+            if expected_error in error
+        )
+    else:
+        # Request should succeed
+        assert res.status_code == 200
+
+        assert_nested_subdict({**post_content, **patch_content}, res.json())
+
+
 def test_files_file_characteristics_delete(
         ida_client, ida_file_json, file_format_reference_data, characteristics_json):
     """Update existing characteristics using characteristic endpoint."""

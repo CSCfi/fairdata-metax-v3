@@ -70,6 +70,45 @@ class FileCharacteristicsSerializer(CommonModelSerializer, StrictSerializer):
         allow_null=True,
     )
 
+    def validate(self, data):
+        """
+        Ensure that the encoding is supported by the `file_format_version`
+        """
+        # Get the current or new encoding value
+        encoding = None
+        if self.instance and self.instance.encoding:
+            encoding = self.instance.encoding
+        if "encoding" in data:
+            encoding = data["encoding"]
+
+        if encoding:
+            # Get the current or new file format version
+            file_format_version = None
+            if self.instance and self.instance.file_format_version:
+                file_format_version = self.instance.file_format_version
+            if "file_format_version" in data:
+                file_format_version = data["file_format_version"]
+
+            if not file_format_version:
+                raise serializers.ValidationError(
+                    {"encoding": _("'file_format_version' must be set when an encoding is provided")}
+                )
+
+            if not file_format_version.allowed_encodings:
+                raise serializers.ValidationError({
+                    "encoding": _("Encoding not supported by the file format")
+                })
+
+            if encoding not in file_format_version.allowed_encodings:
+                raise serializers.ValidationError({
+                    "encoding": _(
+                        f'"{encoding}" is not a valid choice. '
+                        f"Valid choices are: {file_format_version.allowed_encodings}"
+                    )
+                })
+
+        return super().validate(data)
+
     class Meta:
         model = FileCharacteristics
         fields = [
