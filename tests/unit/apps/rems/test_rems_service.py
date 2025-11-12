@@ -83,6 +83,7 @@ def test_rems_service_publish_dataset_twice(mock_rems):
     REMSService().publish_dataset(dataset, raise_errors=True)
     assert mock_rems.call_list == [
         "get/workflow:1",
+        "get/resource:1",
         "get/license:1",
         "get/resource:1",
         "get/catalogue-item:1",
@@ -112,6 +113,7 @@ def test_rems_service_update_dataset_title(mock_rems):
     REMSService().publish_dataset(dataset)
     assert mock_rems.call_list == [
         "get/workflow:1",
+        "get/resource:1",
         "get/license:1",
         "get/resource:1",
         "get/catalogue-item:1",
@@ -137,7 +139,9 @@ def test_rems_service_update_dataset_license(mock_rems, license_reference_data):
     REMSService().publish_dataset(dataset, raise_errors=True)
     assert mock_rems.call_list == [
         "get/workflow:1",
+        "get/resource:1",
         "create/license->2",
+        "list/application?query=resource:%22metax-test:00000000-0000-0000-0000-000000000007%22",
         "get/resource:1",
         "get/resource:1",
         "list/catalogue-item?resource=metax-test%3a00000000-0000-0000-0000-000000000007&archived=false",
@@ -189,6 +193,7 @@ def test_rems_service_update_dataset_terms(mock_rems, license_reference_data):
     # before the license can be archived
     assert mock_rems.call_list == [
         "get/workflow:1",
+        "get/resource:1",
         "get/license:1",
         "list/resource?resid=metax-test%3a00000000-0000-0000-0000-000000000007&archived=false",
         "get/resource:1",
@@ -200,6 +205,7 @@ def test_rems_service_update_dataset_terms(mock_rems, license_reference_data):
         "disable/license:1",
         "archive/license:1",  # Archive old license
         "create/license->2",  # Create new license, resource and catalogue item
+        "list/application?query=resource:%22metax-test:00000000-0000-0000-0000-000000000007%22",
         "create/resource->2",
         "create/catalogue-item->2",
     ]
@@ -295,7 +301,7 @@ def test_rems_service_create_application_with_manual_approval(mock_rems, user):
         user["userid"]
         for user in applications[0]["application/workflow"]["workflow.dynamic/handlers"]
     ]
-    assert handlers == ["rejecter-bot", "owner"] # no approver-bot
+    assert handlers == ["rejecter-bot", "owner"]  # no approver-bot
 
     # Check no entitlement has been created
     entitlements = service.get_user_entitlements_for_dataset(user, dataset)
@@ -375,18 +381,27 @@ def test_rems_service_publish_dataset_custom_license_text(mock_rems):
     }
 
 
-def test_rems_service_publish_dataset_custom_license_update(mock_rems):
+def test_rems_service_publish_dataset_custom_license_update(mock_rems, user):
     dataset = factories.REMSDatasetFactory()
     lic = factories.DatasetLicenseFactory(
         title={"en": "License name"}, description={"en": "License text"}
     )
     dataset.access_rights.license.set([lic])
-    REMSService().publish_dataset(dataset, raise_errors=True)
+    service = REMSService()
+    service.publish_dataset(dataset, raise_errors=True)
     assert dataset.custom_rems_licenses.count() == 1
 
+    # Create and auto-approve application
+    service.create_application_for_dataset(
+        user, dataset, service.get_dataset_rems_license_ids(dataset)
+    )
+    application = mock_rems.entities["application"][1]
+    assert application["application/state"] == "application.state/approved"
+
+    # Edit license -> applications should close
     lic.description = {"en": "New license text"}
     lic.save()
-    REMSService().publish_dataset(dataset, raise_errors=True)
+    service.publish_dataset(dataset, raise_errors=True)
     assert dataset.custom_rems_licenses.count() == 1
 
     assert REMSLicense.all_objects.count() == 2  # Old license soft deleted
@@ -399,6 +414,39 @@ def test_rems_service_publish_dataset_custom_license_update(mock_rems):
             "textcontent": "New license text",
         }
     }
+
+    # Application should now be closed
+    application = mock_rems.entities["application"][1]
+    assert application["application/state"] == "application.state/closed"
+    assert any(
+        evt["event/type"] == "application.event/closed"
+        for evt in application["application/events"]
+    )
+
+
+def test_rems_service_publish_dataset_custom_license_update_no_changes(mock_rems, user):
+    dataset = factories.REMSDatasetFactory()
+    lic = factories.DatasetLicenseFactory(
+        title={"en": "License name"}, description={"en": "License text"}
+    )
+    dataset.access_rights.license.set([lic])
+    service = REMSService()
+    service.publish_dataset(dataset, raise_errors=True)
+    assert dataset.custom_rems_licenses.count() == 1
+
+    # Create and auto-approve application
+    service.create_application_for_dataset(
+        user, dataset, service.get_dataset_rems_license_ids(dataset)
+    )
+
+    # Publish dataset again without changes to licenses -> application unchanged
+    service.publish_dataset(dataset, raise_errors=True)
+    assert dataset.custom_rems_licenses.count() == 1
+
+    assert REMSLicense.all_objects.count() == 1  # No license changes
+
+    application = mock_rems.entities["application"][1]
+    assert application["application/state"] == "application.state/approved"
 
 
 def test_rems_service_publish_dataset_custom_license_remove(mock_rems):

@@ -558,6 +558,7 @@ class REMSService:
             logging.info(f"Syncing dataset {dataset.id} ({dataset.persistent_identifier}) to REMS")
 
             workflow = self.create_dataset_workflow(dataset)
+            old_license_ids = set(self.get_dataset_rems_license_ids(dataset))
 
             licenses = []
             if terms := dataset.access_rights.data_access_terms:
@@ -568,6 +569,17 @@ class REMSService:
                     for dl in dataset.access_rights.license.all()
                 ]
             )
+
+            # If dataset is already in REMS and licenses have changed,
+            # old applications should be closed.
+            new_license_ids = {lic.rems_id for lic in licenses}
+            if old_license_ids and (new_license_ids != old_license_ids):
+                logger.info(
+                    f"Licenses changed for dataset={dataset.id} "
+                    f"{new_license_ids=} {old_license_ids=}, closing old applications"
+                )
+                self.close_dataset_applications(dataset, comment="Dataset license has changed.")
+
             self.archive_unused_custom_licenses(dataset, licenses)
 
             dataset_key = self.get_dataset_key(dataset)
@@ -860,10 +872,10 @@ class REMSService:
 
     def get_dataset_rems_license_ids(self, dataset: "Dataset") -> List[int]:
         """Get REMS license ids for dataset resource."""
-        dataset_key = self.get_dataset_key(dataset)
-        resource = REMSResource.objects.get(key=dataset_key)
-        resource_data = self.get_entity_data(resource)
-        return [lic["id"] for lic in resource_data["licenses"]]
+        if resource := dataset.rems_resources.first():
+            resource_data = self.get_entity_data(resource)
+            return sorted(lic["id"] for lic in resource_data["licenses"])
+        return []
 
     def get_application_base_for_dataset(self, dataset: "Dataset") -> ApplicationBase:
         """Get data needed for submitting a valid application.
