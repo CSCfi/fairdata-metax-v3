@@ -26,6 +26,8 @@ class Preservation(AbstractBaseModel):
     preservation_identifier = models.CharField(max_length=256, null=True, blank=True)
 
     class PreservationState(models.IntegerChoices):
+        # NOTE: Please see dpres/metax-access for accurate state labels; these
+        # might be out of date.
         NONE = -1
         INITIALIZED = 0
         GENERATING_TECHNICAL_METADATA = 10
@@ -37,7 +39,7 @@ class Preservation(AbstractBaseModel):
         VALIDATING_METADATA = 65
         REJECTED_BY_USER = 70
         METADATA_CONFIRMED = 75
-        ACCEPTED_TO_PAS = 80
+        DATASET_VALIDATED = 80
         IN_PACKAGING_SERVICE = 90
         PACKAGING_FAILED = 100
         SIP_IN_INGESTION = 110
