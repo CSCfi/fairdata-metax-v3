@@ -58,9 +58,7 @@ class CreateOnlyFieldsMixin:
 
 class FileCharacteristicsSerializer(CommonModelSerializer, StrictSerializer):
     file_format_version = FileFormatVersion.get_serializer_field(required=False, allow_null=True)
-    encoding = ListValidChoicesField(
-        choices=FileCharacteristics.EncodingChoices.choices, required=False, allow_null=True
-    )
+    encoding = serializers.CharField(required=False, allow_null=True)
     csv_delimiter = ListValidChoicesField(
         choices=FileCharacteristics.CSVDelimiterChoices.choices, required=False, allow_null=True
     )
