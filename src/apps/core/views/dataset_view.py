@@ -25,7 +25,7 @@ from drf_yasg.openapi import TYPE_STRING, Parameter, Response, Schema
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import exceptions, response, serializers, status
 from rest_framework.decorators import action
-from rest_framework.exceptions import NotAuthenticated, ValidationError
+from rest_framework.exceptions import NotAuthenticated, ValidationError, PermissionDenied
 from rest_framework.generics import get_object_or_404
 from rest_framework.renderers import JSONRenderer
 from rest_framework.reverse import reverse
@@ -67,7 +67,11 @@ from apps.files.models import File
 from apps.files.serializers import DirectorySerializer
 from apps.files.views.directory_view import DirectoryCommonQueryParams, DirectoryViewSet
 from apps.files.views.file_view import BaseFileViewSet, FileCommonFilterset
-from apps.rems.serializers import ApplicationBaseSerializer, ApplicationDataSerializer
+from apps.rems.serializers import (
+    ApplicationBaseSerializer,
+    ApplicationCountsSerializer,
+    ApplicationDataSerializer,
+)
 from apps.rems.rems_service import REMSService
 
 from .dataset_aggregation import aggregate_queryset
@@ -899,10 +903,10 @@ class DatasetViewSet(CommonModelViewSet):
 
         return url_map
 
-    def check_rems_request(self, request, dataset: Dataset):
+    def check_rems_request(self, request, dataset: Dataset, require_fairdata_user=True):
         if not settings.REMS_ENABLED:
             raise exceptions.MethodNotAllowed(method=request.method, detail="REMS is not enabled")
-        if not getattr(request.user, "fairdata_username", None):
+        if require_fairdata_user and not getattr(request.user, "fairdata_username", None):
             raise exceptions.PermissionDenied(
                 detail="You need to be logged in as a Fairdata user."
             )
@@ -969,6 +973,24 @@ class DatasetViewSet(CommonModelViewSet):
         """Check values required for dataset to be valid for REMS."""
         dataset = self.get_object()
         return response.Response(dataset.rems_check(), status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(responses={200: ApplicationCountsSerializer()})
+    @action(methods=["get"], detail=True, url_path="rems-application-counts")
+    def get_rems_application_counts(self, request, pk=None):
+        """Count submitted and approbed REMS applications for dataset."""
+        dataset = self.get_object()
+        # GET requests are allowed for everyone in the access policy so
+        # we need to explicitly deny users who do should not have access to this endpoint.
+        if not dataset.has_permission_to_edit(request.user):
+            raise PermissionDenied()
+
+        self.check_rems_request(request, dataset, require_fairdata_user=False)
+
+        service = REMSService()
+        serializer = ApplicationCountsSerializer(
+            instance=service.get_dataset_application_counts(dataset)
+        )
+        return response.Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class DatasetDirectoryViewSet(DirectoryViewSet):

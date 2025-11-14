@@ -2,6 +2,14 @@ from rest_framework import serializers
 from apps.rems.types import ApplicationBase, ApplicationLicenseData, LicenseType
 
 
+class ApplicationCountsSerializer(serializers.Serializer):
+    """Serializer for REMS application counts."""
+
+    approved = serializers.IntegerField()
+    submitted = serializers.IntegerField()  # includes returned
+    # drafts are not included since they are not visible for non-applicants
+
+
 class ApplicationDataSerializer(serializers.Serializer):
     accept_licenses = serializers.ListField(child=serializers.IntegerField())
 

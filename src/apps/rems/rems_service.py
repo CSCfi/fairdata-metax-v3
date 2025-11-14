@@ -21,7 +21,7 @@ from apps.rems.models import (
     REMSWorkflow,
 )
 from apps.rems.rems_session import REMSError, REMSSession
-from apps.rems.types import ApplicationBase, ApplicationLicenseData, LicenseType
+from apps.rems.types import ApplicationBase, ApplicationCounts, ApplicationLicenseData, LicenseType
 from apps.users.models import MetaxUser
 
 if TYPE_CHECKING:
@@ -783,6 +783,19 @@ class REMSService:
             elif len(resources) == 1 and resources[0]["resource/ext-id"] == dataset_resource_id:
                 applications.append(application)
         return applications
+
+    def get_dataset_application_counts(self, dataset: "Dataset") -> ApplicationCounts:
+        """Count open and approved applications for dataset."""
+        applications = self.get_applications_for_dataset(dataset, include_all=True)
+        counts = ApplicationCounts()
+        for application in applications:
+            state = application["application/state"]
+            if state == "application.state/approved":
+                counts.approved += 1
+            elif state in {"application.state/submitted", "application.state/returned"}:
+                counts.submitted += 1
+        return counts
+
 
     def get_user_applications_for_dataset(self, user: MetaxUser, dataset: "Dataset") -> List[dict]:
         self.check_user(user)

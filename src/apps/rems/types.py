@@ -55,3 +55,12 @@ class ApplicationBase:
 
     licenses: List[ApplicationLicenseData]
     forms: List[dict]
+
+
+@dataclass
+class ApplicationCounts:
+    """Counts for open and approved REMS applications."""
+
+    approved: int = 0
+    submitted: int = 0  # includes returned
+    # drafts are not included since they are not visible for non-applicants

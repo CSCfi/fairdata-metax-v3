@@ -324,6 +324,33 @@ def test_list_dataset_rems_applications(mock_rems, user_client, user2_client):
     assert res.data[2]["application/id"] == 3
 
 
+def test_dataset_rems_application_counts(mock_rems, user_client, admin_client):
+    dataset = factories.REMSDatasetFactory()
+    service = REMSService()
+    service.publish_dataset(dataset)
+
+    res = user_client.post(
+        f"/v3/datasets/{dataset.id}/rems-applications",
+        {"accept_licenses": service.get_dataset_rems_license_ids(dataset)},
+        content_type="application/json",
+    )
+    assert res.status_code == 200, res.data
+
+    # REMS application counts needs editing rights to the dataset
+    res = user_client.get(
+        f"/v3/datasets/{dataset.id}/rems-application-counts", content_type="application/json"
+    )
+    assert res.status_code == 403
+
+    # Add editing rights to user, try again
+    dataset.permissions.editors.add(user_client._user)
+    res = user_client.get(
+        f"/v3/datasets/{dataset.id}/rems-application-counts", content_type="application/json"
+    )
+    assert res.status_code == 200
+    assert res.data == {"approved": 1, "submitted": 0}
+
+
 def test_rems_unpublish(
     mock_rems, rems_dataset_json, admin_client, user_client, reference_data, data_catalog
 ):
