@@ -58,7 +58,7 @@ class DatasetAccessPolicy(BaseAccessPolicy):
         {
             "action": ["create_rems_application"],
             "principal": "authenticated",
-            "effect": "allow",  # Catalog permission checked in viewset perform_create
+            "effect": "allow",
         },
     ] + BaseAccessPolicy.statements
 

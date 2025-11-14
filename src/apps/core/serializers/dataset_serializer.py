@@ -622,29 +622,6 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
         return instance
 
 
-class DatasetRevisionsQueryParamsSerializer(serializers.Serializer):
-    latest_published = serializers.BooleanField(
-        help_text=("Get latest published revision."), required=False
-    )
-    published_revision = serializers.IntegerField(
-        help_text=("Get specific published revision."),
-        required=False,
-    )
-    all_published_revisions = serializers.BooleanField(
-        help_text=("Get all published revision. "),
-        required=False,
-    )
-
-    class Meta:
-        validators = [
-            OneOf(
-                ["latest_published", "published_revision", "all_published_versions"],
-                required=False,
-                count_all_falsy=True,
-            )
-        ]
-
-
 class ExpandCatalogQueryParamsSerializer(serializers.Serializer):
     expand_catalog = serializers.BooleanField(
         default=False, help_text=_("Include expanded data catalog in response.")

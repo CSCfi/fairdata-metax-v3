@@ -57,7 +57,6 @@ from apps.core.serializers.dataset_allowed_actions import (
 from apps.core.serializers.dataset_metrics_serializer import DatasetMetricsQueryParamsSerializer
 from apps.core.serializers.dataset_serializer import (
     DatasetFieldsQueryParamsSerializer,
-    DatasetRevisionsQueryParamsSerializer,
     ExpandCatalogQueryParamsSerializer,
     LatestVersionQueryParamsSerializer,
 )
@@ -499,10 +498,6 @@ class DatasetViewSet(CommonModelViewSet):
             "actions": ["list", "retrieve", "create", "update", "partial_update"],
         },
         {
-            "class": DatasetRevisionsQueryParamsSerializer,
-            "actions": ["revisions"],
-        },
-        {
             "class": DatasetAllowedActionsQueryParamsSerializer,
             "actions": ["retrieve", "list", "create", "update", "partial_update", "revisions"],
         },
@@ -768,13 +763,6 @@ class DatasetViewSet(CommonModelViewSet):
         data = self.get_serializer(published_dataset).data
         published_dataset.signal_update()
         return response.Response(data, status=status.HTTP_200_OK)
-
-    @action(detail=True, methods=["get"])
-    def revisions(self, request, pk=None):
-        dataset: Dataset = self.get_object()
-        versions = dataset.all_revisions()
-        serializer = self.get_serializer(versions, many=True)
-        return response.Response(serializer.data)
 
     @swagger_auto_schema(
         request_body=ContactSerializer(), responses={200: ContactResponseSerializer}

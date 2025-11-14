@@ -222,17 +222,8 @@ def test_draft_revisions(admin_client, dataset_a_json, data_catalog, reference_d
     assert res.status_code == 201
     draft = res.data
 
-    res = admin_client.get(
-        f"/v3/datasets/{draft['id']}/revisions", content_type="application/json"
-    )
-    assert res.status_code == 200
-    assert isinstance(res.data, list)
-
-    # FIXME:
-    # Creating a dataset and each m2m change create a revision.
-    # It would be better if revision was only created only
-    # once, after all m2m changes have been done.
-    assert len(res.data) == 1
+    dataset = Dataset.objects.get(id=draft["id"])
+    assert len(dataset.all_revisions()) == 1
 
 
 def test_new_published_revisions(admin_client, dataset_a_json, data_catalog, reference_data):
@@ -240,11 +231,10 @@ def test_new_published_revisions(admin_client, dataset_a_json, data_catalog, ref
     assert res.status_code == 201
     dataset_id = res.data["id"]
 
-    res = admin_client.get(f"/v3/datasets/{dataset_id}/revisions", content_type="application/json")
-    assert res.status_code == 200
-    assert isinstance(res.data, list)
-    assert len(res.data) == 1
-    assert res.data[0]["published_revision"] == 1
+    dataset = Dataset.objects.get(id=dataset_id)
+    revisions = dataset.all_revisions()
+    assert len(revisions) == 1
+    assert revisions[0].published_revision == 1
 
 
 @pytest.mark.usefixtures("data_catalog", "reference_data")
@@ -260,11 +250,10 @@ def test_new_draft_publish_revisions(admin_client, dataset_a_json, dataset_signa
     assert res.status_code == 200
     dataset_signal_handlers.assert_call_counts(created=0, updated=1)
 
-    res = admin_client.get(f"/v3/datasets/{dataset_id}/revisions", content_type="application/json")
-    assert res.status_code == 200
-    assert isinstance(res.data, list)
-    assert len(res.data) == 1
-    assert res.data[0]["published_revision"] == 1
+    dataset = Dataset.objects.get(id=dataset_id)
+    revisions = dataset.all_revisions()
+    assert len(revisions) == 1
+    assert revisions[0].published_revision == 1
 
     res = admin_client.patch(
         f"/v3/datasets/{dataset_id}",
@@ -274,8 +263,11 @@ def test_new_draft_publish_revisions(admin_client, dataset_a_json, dataset_signa
     assert res.status_code == 200
 
     res = admin_client.get(f"/v3/datasets/{dataset_id}/revisions", content_type="application/json")
-    assert res.data[0]["published_revision"] == 2
-    assert len(res.data) == 2
+
+    revisions = dataset.all_revisions()
+    assert len(revisions) == 2
+    assert revisions[0].published_revision == 2
+
 
 
 @pytest.mark.usefixtures("data_catalog", "reference_data")
@@ -294,6 +286,7 @@ def test_merge_draft_revisions(admin_client, dataset_a_json):
     assert res.status_code == 200
 
     res = admin_client.get(f"/v3/datasets/{dataset_id}/revisions", content_type="application/json")
-    assert res.status_code == 200
-    assert len(res.data) == 2
-    assert res.data[0]["published_revision"] == 2
+    dataset = Dataset.objects.get(id=dataset_id)
+    revisions = dataset.all_revisions()
+    assert len(revisions) == 2
+    assert revisions[0].published_revision == 2
