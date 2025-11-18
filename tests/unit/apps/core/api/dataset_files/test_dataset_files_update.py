@@ -544,7 +544,7 @@ def test_dataset_files_update_metadata_as_non_project_member(
     use_category_reference_data,
 ):
     dataset_with_metadata.metadata_owner.user = user
-    dataset_with_metadata.metadata_owner.save()
+    dataset_with_metadata.metadata_owner.save(allow_change=True)
     use_category = {
         "use_category": {
             "url": "http://uri.suomi.fi/codelist/fairdata/use_category/code/documentation"
@@ -781,7 +781,7 @@ def test_dataset_files_wrong_project_identifier(admin_client, deep_file_tree, da
 def test_dataset_files_unknown_project_identifier(user_client, user, deep_file_tree, data_urls):
     dataset = factories.DatasetFactory()
     dataset.metadata_owner.user = user
-    dataset.metadata_owner.save()
+    dataset.metadata_owner.save(allow_change=True)
     actions = {
         "csc_project": "bleh",
         "storage_service": deep_file_tree["params"]["storage_service"],

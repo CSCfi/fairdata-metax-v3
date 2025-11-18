@@ -6,7 +6,9 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils import timezone
+from model_utils import FieldTracker
 from model_utils.fields import AutoCreatedField, AutoLastModifiedField
+from rest_framework.exceptions import ValidationError
 
 from apps.common.copier import ModelCopier
 from apps.common.models import AbstractBaseModel
@@ -29,8 +31,21 @@ class MetadataProvider(AbstractBaseModel):
     organization = models.CharField(max_length=512)
     admin_organization = models.CharField(max_length=512, null=True, blank=True)
 
+    tracker = FieldTracker(fields=["user", "organization", "admin_organization"])
+
     def __str__(self):
         return self.user.username or self.organization
+
+    def save(self, allow_change=False, *args, **kwargs):
+        # MetadataProvider fields are normally immutable and are not allowed to be change
+        if not self._state.adding and not allow_change and (changed := self.tracker.changed()):
+            previous = self.tracker.saved_data
+            current = self.tracker.current()
+            logger.error(f"Attempted to change MetadataProvider values: {previous=} {current=}")
+            raise ValidationError(
+                dict.fromkeys(changed, "Value should not be changed for an existing instance")
+            )
+        super().save(*args, **kwargs)
 
 
 class OtherIdentifier(AbstractBaseModel):

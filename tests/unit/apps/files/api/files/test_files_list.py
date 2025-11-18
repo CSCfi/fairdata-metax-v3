@@ -157,7 +157,7 @@ def test_files_get_dataset_files_non_owner_published(user_client, dataset):
 
 def test_files_get_dataset_files_dataset_owner(user_client, user, dataset):
     dataset.metadata_owner.user = user
-    dataset.metadata_owner.save()
+    dataset.metadata_owner.save(allow_change=True)
     res = user_client.get(
         "/v3/files",
         {"dataset": dataset.id},

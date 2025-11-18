@@ -83,9 +83,10 @@ class DataCatalogAdmin(AbstractDatasetPropertyBaseAdmin, SimpleHistoryAdmin):
 
 @admin.register(MetadataProvider)
 class MetadataProviderAdmin(CommonAdmin):
-    list_display = ("user", "organization")
+    list_display = ("user", "organization", "admin_organization")
     list_filter = ("created", "modified")
     search_fields = ("organization", "user__username", "user__email")
+    readonly_fields = ["user", "organization", "admin_organization"]
 
 
 class CoreRefDataAdminMixin:
