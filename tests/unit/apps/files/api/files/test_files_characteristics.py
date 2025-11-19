@@ -8,22 +8,27 @@ from apps.files.models.file import FileCharacteristics
 
 pytestmark = [pytest.mark.django_db, pytest.mark.file]
 
-characteristics_detail_json = {
-    "file_format_version": {
-        "url": "http://uri.suomi.fi/codelist/fairdata/file_format_version/code/text_csv"
-    },
-    "encoding": "UTF-8",
-    "csv_has_header": False,
-    "csv_quoting_char": '"',
-    "csv_delimiter": ",",
-    "csv_record_separator": "LF",
-}
+
+@pytest.fixture
+def characteristics_detail_json():
+    return {
+        "file_format_version": {
+            "url": "http://uri.suomi.fi/codelist/fairdata/file_format_version/code/text_csv"
+        },
+        "encoding": "UTF-8",
+        "csv_has_header": False,
+        "csv_quoting_char": '"',
+        "csv_delimiter": ",",
+        "csv_record_separator": "LF",
+    }
 
 
-characteristics_json = {
-    "characteristics": characteristics_detail_json,
-    "characteristics_extension": {"some_stuff_here": "value"},
-}
+@pytest.fixture
+def characteristics_json(characteristics_detail_json):
+    return {
+        "characteristics": characteristics_detail_json,
+        "characteristics_extension": {"some_stuff_here": "value"},
+    }
 
 
 def assert_csv_characteristics(characteristics: FileCharacteristics, encoding="UTF-8"):
@@ -49,7 +54,7 @@ def assert_pdf_characteristics(characteristics: FileCharacteristics):
 
 
 def test_files_create_file_with_characteristics(
-    ida_client, ida_file_json, file_format_reference_data
+    ida_client, ida_file_json, file_format_reference_data, characteristics_json
 ):
     """Create file with characteristics."""
     file_json = {**ida_file_json, **characteristics_json}
@@ -64,7 +69,7 @@ def test_files_create_file_with_characteristics(
 
 
 def test_files_update_file_with_characteristics(
-    ida_client, ida_file_json, file_format_reference_data
+    ida_client, ida_file_json, file_format_reference_data, characteristics_json
 ):
     """Update characteristics of existing file."""
     res = ida_client.post(reverse("file-list"), ida_file_json, content_type="application/json")
@@ -109,7 +114,9 @@ def test_files_update_file_with_characteristics(
     assert FileCharacteristics.objects.count() == 0  # Orphaned characteristics object is deleted
 
 
-def test_files_insert_many_characteristics(ida_client, ida_file_json, file_format_reference_data):
+def test_files_insert_many_characteristics(
+        ida_client, ida_file_json, file_format_reference_data,
+        characteristics_json):
     """Create file with characteristics using bulk API."""
     file_json = {**ida_file_json, **characteristics_json}
 
@@ -127,7 +134,8 @@ def test_files_insert_many_characteristics(ida_client, ida_file_json, file_forma
     assert file.characteristics_extension == {"some_stuff_here": "value"}
 
 
-def test_files_update_many_characteristics(ida_client, ida_file_json, file_format_reference_data):
+def test_files_update_many_characteristics(
+        ida_client, ida_file_json, file_format_reference_data, characteristics_json):
     """Update characteristics of existing file using bulk API."""
     res = ida_client.post(
         reverse("file-post-many"), [ida_file_json], content_type="application/json"
@@ -176,7 +184,8 @@ def test_files_update_many_characteristics(ida_client, ida_file_json, file_forma
     assert FileCharacteristics.objects.count() == 0  # Orphaned characteristics object is deleted
 
 
-def test_files_update_many_characteristics(ida_client, ida_file_json, file_format_reference_data):
+def test_files_update_many_characteristics(
+        ida_client, ida_file_json, file_format_reference_data, characteristics_json):
     """Update characteristics of existing file using bulk API."""
     res = ida_client.post(
         reverse("file-post-many"), [ida_file_json], content_type="application/json"
@@ -225,7 +234,8 @@ def test_files_update_many_characteristics(ida_client, ida_file_json, file_forma
     assert FileCharacteristics.objects.count() == 0  # Orphaned characteristics object is deleted
 
 
-def test_files_file_characteristics_create(ida_client, ida_file_json, file_format_reference_data):
+def test_files_file_characteristics_create(
+        ida_client, ida_file_json, file_format_reference_data, characteristics_detail_json):
     """Add characteristics to existing file using characteristic endpoint."""
     res = ida_client.post(reverse("file-list"), ida_file_json, content_type="application/json")
     assert res.status_code == 201
@@ -244,7 +254,9 @@ def test_files_file_characteristics_create(ida_client, ida_file_json, file_forma
     assert FileCharacteristics.objects.count() == 1
 
 
-def test_files_file_characteristics_patch(ida_client, ida_file_json, file_format_reference_data):
+def test_files_file_characteristics_patch(
+        ida_client, ida_file_json, file_format_reference_data,
+        characteristics_json, characteristics_detail_json):
     """Update existing characteristics using characteristic endpoint."""
     file_json = {**ida_file_json, **characteristics_json}
     res = ida_client.post(reverse("file-list"), file_json, content_type="application/json")
@@ -265,7 +277,7 @@ def test_files_file_characteristics_patch(ida_client, ida_file_json, file_format
 
 
 def test_files_file_characteristics_patch_error(
-    ida_client, ida_file_json, file_format_reference_data
+    ida_client, ida_file_json, file_format_reference_data, characteristics_json
 ):
     """Patch using invalid encoding value."""
     file_json = {**ida_file_json, **characteristics_json}
@@ -284,7 +296,8 @@ def test_files_file_characteristics_patch_error(
     assert FileCharacteristics.objects.count() == 1
 
 
-def test_files_file_characteristics_delete(ida_client, ida_file_json, file_format_reference_data):
+def test_files_file_characteristics_delete(
+        ida_client, ida_file_json, file_format_reference_data, characteristics_json):
     """Update existing characteristics using characteristic endpoint."""
     file_json = {**ida_file_json, **characteristics_json}
     res = ida_client.post(reverse("file-list"), file_json, content_type="application/json")
@@ -299,7 +312,8 @@ def test_files_file_characteristics_delete(ida_client, ida_file_json, file_forma
 
 
 def test_files_file_characteristics_permissions_project_member(
-    user_client, ida_client, ida_file_json, file_format_reference_data
+    user_client, ida_client, ida_file_json, file_format_reference_data,
+    characteristics_json, characteristics_detail_json
 ):
     """Update existing characteristics using characteristic endpoint as csc_project member."""
     file_json = {**ida_file_json, **characteristics_json}
@@ -326,7 +340,8 @@ def test_files_file_characteristics_permissions_project_member(
 
 
 def test_files_file_characteristics_permissions_shared_dataset(
-    user_client, ida_client, ida_file_json, file_format_reference_data
+    user_client, ida_client, ida_file_json, file_format_reference_data,
+    characteristics_json, characteristics_detail_json
 ):
     """Update existing characteristics using characteristic endpoint as a dataset editor."""
     file_json = {**ida_file_json, **characteristics_json}
@@ -363,7 +378,8 @@ def test_files_file_characteristics_permissions_shared_dataset(
     "client,should_work", [("admin_client", True), ("pas_client", True), ("ida_client", False)]
 )
 def test_add_files_characteristics_update_pas_process_running(
-    request, client, admin_client, should_work, ida_file_json, file_format_reference_data
+    request, client, admin_client, should_work, ida_file_json, file_format_reference_data,
+    characteristics_detail_json
 ):
     """Test that updating characteristics is prevented when pas_process_running is enabled."""
     client = request.getfixturevalue(client)  # Select client fixture based on parameter
