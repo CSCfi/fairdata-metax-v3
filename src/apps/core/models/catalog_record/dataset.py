@@ -492,12 +492,47 @@ class Dataset(V2DatasetMixin, CatalogRecord):
 
     @property
     def is_rems_dataset(self) -> bool:
+        access_type_url = (
+            self.access_rights
+            and self.access_rights.access_type
+            and self.access_rights.access_type.url
+        )
+        rems_approval_type = self.access_rights and self.access_rights.rems_approval_type
         return (
             self.state == "published"
             and self.data_catalog.rems_enabled
-            and self.access_rights.access_type.url == AccessTypeChoices.PERMIT
-            and self.access_rights.rems_approval_type is not None
+            and access_type_url == AccessTypeChoices.PERMIT
+            and rems_approval_type is not None
         )
+
+    def rems_check(self) -> dict:
+        """Check values that are required for dataset to be valid for REMS."""
+        access_type_url = (
+            self.access_rights
+            and self.access_rights.access_type
+            and self.access_rights.access_type.url
+        )
+        rems_approval_type = self.access_rights and self.access_rights.rems_approval_type
+        catalog_rems_enabled = bool(self.data_catalog and self.data_catalog.rems_enabled)
+        dataset_has_admin_organization = bool(
+            self.metadata_owner and self.metadata_owner.admin_organization
+        )
+        in_rems = None
+        if settings.REMS_ENABLED:  # Check if dataset is actually in rems
+            try:
+                in_rems = bool(self.rems_id)
+            except Exception:
+                pass
+
+        return {
+            "metax_rems_enabled": bool(settings.REMS_ENABLED),
+            "data_catalog_rems_enabled": catalog_rems_enabled,
+            "dataset_is_published": self.state == "published",
+            "dataset_has_admin_organization": dataset_has_admin_organization,
+            "access_type_is_permit": access_type_url == AccessTypeChoices.PERMIT,
+            "rems_approval_type_is_set": rems_approval_type is not None,
+            "dataset_in_rems": in_rems,
+        }
 
     @property
     def rems_id(self) -> Optional[int]:

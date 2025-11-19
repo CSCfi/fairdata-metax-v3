@@ -200,6 +200,7 @@ class DatasetAdmin(AbstractDatasetPropertyBaseAdmin, SimpleHistoryAdmin):
         "draft_of",
         "permissions",
         "rems_status",
+        "rems_check",
     )
     list_select_related = ("access_rights", "data_catalog", "metadata_owner")
     search_fields = ["id", "persistent_identifier", "title__values", "keyword"]

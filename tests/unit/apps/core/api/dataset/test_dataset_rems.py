@@ -434,3 +434,42 @@ def test_rems_unpublish_fail(
     assert res.status_code == 200, res.data
     dataset.refresh_from_db()
     assert "this failed" in dataset.rems_publish_error
+
+
+def test_dataset_rems_check(
+    mock_rems, admin_client, rems_dataset_json, data_catalog, reference_data
+):
+    res = admin_client.post("/v3/datasets", rems_dataset_json, content_type="application/json")
+    assert res.status_code == 201
+
+    res = admin_client.get(
+        f"/v3/datasets/{res.data["id"]}/rems-check", content_type="application/json"
+    )
+    assert res.status_code == 200
+    assert res.data == {
+        "metax_rems_enabled": True,
+        "data_catalog_rems_enabled": True,
+        "access_type_is_permit": True,
+        "dataset_is_published": True,
+        "dataset_has_admin_organization": False, # TODO: Require admin org here
+        "rems_approval_type_is_set": True,
+        "dataset_in_rems": True,
+    }
+
+    res = admin_client.post(
+        "/v3/datasets", {"title": {"en": "hello world"}}, content_type="application/json"
+    )
+    assert res.status_code == 201
+
+    res = admin_client.get(
+        f"/v3/datasets/{res.data["id"]}/rems-check", content_type="application/json"
+    )
+    assert res.data == {
+        "metax_rems_enabled": True,
+        "data_catalog_rems_enabled": False,
+        "dataset_is_published": False,
+        "access_type_is_permit": False,
+        "dataset_has_admin_organization": False,
+        "rems_approval_type_is_set": False,
+        "dataset_in_rems": False,
+    }

@@ -63,7 +63,8 @@ class REMSLicenseAdmin(REMSEntityAdmin):
 
 @admin.register(REMSResource)
 class REMSResourceAdmin(REMSEntityAdmin):
-    pass
+    fields = ["key", "rems_id", "dataset", "rems_data"]
+    readonly_fields = ("rems_data", "dataset")
 
 
 @admin.register(REMSCatalogueItem)

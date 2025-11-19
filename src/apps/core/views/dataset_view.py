@@ -643,7 +643,7 @@ class DatasetViewSet(CommonModelViewSet):
         else:
             return self.get_paginated_response(serialized_data)
 
-    def get_object(self):
+    def get_object(self) -> Dataset:
         if self.request.method not in ("GET", "OPTIONS"):
             # Lock dataset row for the duration of the transaction
             lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
@@ -945,6 +945,12 @@ class DatasetViewSet(CommonModelViewSet):
         application_base = service.get_application_base_for_dataset(dataset)
         data = ApplicationBaseSerializer(instance=application_base).data
         return response.Response(data, status=status.HTTP_200_OK)
+
+    @action(methods=["get"], detail=True, url_path="rems-check")
+    def get_rems_check(self, request, pk=None):
+        """Check values required for dataset to be valid for REMS."""
+        dataset = self.get_object()
+        return response.Response(dataset.rems_check(), status=status.HTTP_200_OK)
 
 
 class DatasetDirectoryViewSet(DirectoryViewSet):
