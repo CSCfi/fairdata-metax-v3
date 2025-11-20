@@ -62,44 +62,50 @@ class MetadataProviderModelSerializer(AbstractDatasetModelSerializer):
             user=request.user, object=self.instance, action="<op:custom_metadata_owner>"
         )
 
-    def save(self, **kwargs):
-        """Save with support for custom values.
+    def get_user_default_data(self):
+        """Return default user and organization values for user."""
+        user = self.context["request"].user
+        return {
+            "user": user.username,
+            "organization": user.organization or user.username,
+        }
 
-        Call save with an empty dict as self._validated_data
-        to use request user."""
-        data = self._validated_data
+    def check_user_data(self, data):
+        """Validate user-provided data."""
+        if self.is_custom_value_allowed():
+            return  # Services can use any values for username and organization
 
-        # Default to existing values or values from authenticated user
-        if data and self.is_custom_value_allowed():
-            ctx_data = data
-        elif self.instance:
-            ctx_data = {
+        # End users are not allowed to change the existing/default values for user and organization
+        if self.instance:
+            expected_values = {
                 "user": self.instance.user.username,
                 "organization": self.instance.organization,
             }
         else:
-            user = self.context["request"].user
-            ctx_data = {
-                "user": user.username,
-                "organization": user.organization or user.username,
-            }
+            expected_values = self.get_user_default_data()
 
-        if not data:
-            # Data is empty, use values from request user
-            data = ctx_data
+        errors = {}
+        if data["user"] != expected_values["user"]:
+            errors["user"] = f"Not allowed to change value. Expected '{expected_values['user']}'."
+        if data["organization"] != expected_values["organization"]:
+            errors["organization"] = (
+                f"Not allowed to change value. Expected '{expected_values['organization']}'."
+            )
+        if errors:
+            raise serializers.ValidationError(errors)
+
+    def save(self, **kwargs):
+        """Save with support for custom values.
+
+        Call save with an empty dict as self._validated_data
+        to use values from request user."""
+        data = self._validated_data
+
+        if data:
+            self.check_user_data(data)
         else:
-            # Data has values but they should match the request user
-            errors = {}
-            if data["user"] != ctx_data["user"]:
-                errors["user"] = _("Not allowed to change value. Expected '{}'.").format(
-                    ctx_data["user"]
-                )
-            if data["organization"] != ctx_data["organization"]:
-                errors["organization"] = _(
-                    _("Not allowed to change value. Expected '{}'.")
-                ).format(ctx_data["organization"])
-            if errors:
-                raise serializers.ValidationError(errors)
+            data = self.get_user_default_data()  # Use values from request user as defaults
+
         return super().save(**data)
 
     def validate_admin_organization(self, value):
