@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import MinLengthValidator
 from django.db import models, transaction
 from django.db.models import prefetch_related_objects
-from django.db.models.signals import post_delete
+from django.db.models.signals import pre_delete, post_delete
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
@@ -799,12 +799,17 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         if self.access_rights:
             self.access_rights.delete(*args, **kwargs)
 
+        # Soft deletion does not trigger delete signals by default,
+        # so we need to send them explicitly here.
         # Set modification timestamp so pre_delete signal
         # handlers have it up-to-date.
         self.record_modified = timezone.now()
+        soft = "soft" in kwargs and kwargs["soft"] is True
+        if soft:
+            pre_delete.send(Dataset, instance=self, soft=True)
 
         _deleted = super().delete(*args, **kwargs)
-        if "soft" in kwargs and kwargs["soft"] is True:
+        if soft:
             post_delete.send(Dataset, instance=self, soft=True)
         return _deleted
 

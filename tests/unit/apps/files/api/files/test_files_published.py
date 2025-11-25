@@ -81,3 +81,21 @@ def test_files_list_published(admin_client, file_tree_a, published_dataset, draf
         content_type="application/json",
     )
     assert res.data["results"] == []
+
+
+def test_files_list_published_soft_delete_dataset(admin_client, file_tree_a, published_dataset):
+    """Soft deleting a dataset should unpublish files."""
+    res = admin_client.get(
+        "/v3/files",
+        {**file_tree_a["params"], "published": True},
+        content_type="application/json",
+    )
+    assert len(res.data["results"]) > 0
+
+    admin_client.delete(f"/v3/datasets/{published_dataset.id}")
+    res = admin_client.get(
+        "/v3/files",
+        {**file_tree_a["params"], "published": True},
+        content_type="application/json",
+    )
+    assert len(res.data["results"]) == 0
