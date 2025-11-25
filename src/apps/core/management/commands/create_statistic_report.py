@@ -111,7 +111,7 @@ class Command(BaseCommand):
                 pas_count += aggregates["count"]
                 pas_byte_size += aggregates["size"]
 
-            stat = ProjectStatistics.objects.create(
+            ProjectStatistics.objects.create(
                 project_identifier=project_id,
                 ida_count=ida_count,
                 ida_byte_size=ida_byte_size,
@@ -197,7 +197,7 @@ class Command(BaseCommand):
 
             count_other = count_total - count_ida - count_pas - count_att
 
-            stat = OrganizationStatistics.objects.create(
+            OrganizationStatistics.objects.create(
                 organization=org_id,
                 count_total=count_total,
                 count_ida=count_ida,

@@ -1,24 +1,26 @@
-from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.middleware.csrf import get_token
 from knox.models import AuthToken
 from rest_framework import serializers
-from rest_framework.serializers import ModelSerializer
 
+from django.core.cache import cache
+from apps.common.serializers.fields import CommaSeparatedListField, MultiLanguageField
 from apps.common.serializers.serializers import CommonModelSerializer
-from apps.users.models import MetaxUser
+from apps.users.models import AdminOrganization, MetaxUser
+
+DAY_IN_SECONDS = 86400
+PAO_CACHE_TIMEOUT = DAY_IN_SECONDS
 
 
-class MetaxUserModelSerializer(CommonModelSerializer):
-    """User model serializer for use in datasets."""
+class AdminOrganizationModelSerializer(CommonModelSerializer):
+    """Admin organization model serializer."""
+
+    pref_label = MultiLanguageField(required=True)
+    other_identifier = CommaSeparatedListField(required=False)
+    url = serializers.URLField(required=True)
 
     class Meta:
-        model = MetaxUser
-        fields = ("username",)
-        extra_kwargs = {"username": {"validators": []}}
-
-    def create(self, validated_data):
-        username = validated_data.pop("username")
-        return MetaxUser.objects.get_or_create(username=username, defaults=validated_data)[0]
+        model = AdminOrganization
+        fields = ("id", "pref_label", "other_identifier", "url")
 
 
 class UserInfoSerializer(CommonModelSerializer):
@@ -34,7 +36,12 @@ class UserInfoSerializer(CommonModelSerializer):
 
     class Meta:
         model = MetaxUser
-        fields = ("username", "csc_projects", "dataset_count", "groups")
+        fields = (
+            "username",
+            "csc_projects",
+            "dataset_count",
+            "groups",
+        )
         read_only_fields = fields
 
 
@@ -42,6 +49,9 @@ class AuthenticatedUserInfoSerializer(UserInfoSerializer):
     """User serializer with user session data required by external services."""
 
     metax_csrf_token = serializers.SerializerMethodField()
+
+    available_admin_organizations = serializers.SerializerMethodField()
+    default_admin_organization = AdminOrganizationModelSerializer(required=False)
 
     def get_metax_csrf_token(self, obj):
         """Return CSRF token.
@@ -56,12 +66,28 @@ class AuthenticatedUserInfoSerializer(UserInfoSerializer):
         """
         return get_token(self.context["request"])
 
+    def get_available_admin_organizations(self, obj):
+        available_admin_organizations = cache.get("available_admin_organizations")
+        if available_admin_organizations is None:
+            available_admin_organizations = AdminOrganizationModelSerializer(
+                AdminOrganization.objects.all(), many=True, context=self.context
+            ).data
+            cache.set(
+                "available_admin_organizations",
+                available_admin_organizations,
+                timeout=PAO_CACHE_TIMEOUT,
+            )
+        return available_admin_organizations
+
     class Meta:
         model = MetaxUser
+        cached_fields = ["available_admin_organizations"]
         fields = (
             "username",
             "organization",
             "admin_organizations",
+            "default_admin_organization",
+            "available_admin_organizations",
             "csc_projects",
             "groups",
             "metax_csrf_token",

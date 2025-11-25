@@ -1,0 +1,52 @@
+# docker-compose.dev.yaml
+version: "3.8"
+
+services:
+  metax-service:
+    image: fairdata-metax-service
+    hostname: metax-service
+    ports:
+      - 8002:8002
+    environment:
+      DEBUG: "false"
+      POSTGRES_DATABASE_NAME: metax3_dev_db
+      POSTGRES_USER: metax_service
+      POSTGRES_PASS: password
+      POSTGRES_HOST: metax-v3-postgres
+      POSTGRES_PORT: 5432
+      ENABLE_MEMCACHED: "true"
+      ENABLE_SILK_PROFILER: "false"
+      ENABLE_DRF_TOKEN_AUTH: "true"
+      CSRF_TRUSTED_ORIGINS: https://metax-v3.fd-dev.csc.fi,https://qvain.fd-dev.csc.fi,https://etsin.fd-dev.csc.fi,https://localhost,https://localhost:8002
+      METAX_V2_INTEGRATION_ENABLED: "false"
+    volumes:
+      - .:/code
+    stdin_open: True
+    tty: True
+    extra_hosts:
+      - "etsin.fd-dev.csc.fi:172.18.0.3"
+      - "qvain.fd-dev.csc.fi:172.18.0.3"
+  metax-v3-postgres:
+    image: postgres:14
+    hostname: metax-v3-postgres
+    environment:
+      POSTGRES_USER: metax_service
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: metax3_dev_db
+    ports:
+      - 5452:5432
+    volumes:
+      - metax-v3-postgres:/var/lib/postgresql/data
+
+  memcached:
+    image: memcached
+    hostname: memcached
+    ports:
+      - 11212:11211
+    entrypoint:
+      - memcached
+      - -m 64
+
+volumes:
+  metax-v3-postgres:
+    external: True

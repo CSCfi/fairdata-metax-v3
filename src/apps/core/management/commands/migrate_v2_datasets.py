@@ -11,7 +11,10 @@ from cachalot.api import cachalot_disabled
 from django.core.management.base import BaseCommand
 from django.db.models import Q
 
-from apps.common.helpers import is_valid_uuid, parse_iso_dates_in_nested_dict
+from apps.common.helpers import (
+    is_valid_uuid,
+    parse_iso_dates_in_nested_dict,
+)
 from apps.core.models import LegacyDataset
 
 from ._v2_client import MigrationV2Client

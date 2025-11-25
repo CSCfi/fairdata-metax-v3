@@ -19,7 +19,6 @@ def test_no_admin_org_mismatch(mock_ldap_class, dataset, caplog):
     mock_ldap.check_admin_org_mismatch.return_value = (
         "test-org"  # Same as metadata_owner.organization
     )
-    print(Dataset.objects.all())
     # Capture log output
     with caplog.at_level(logging.INFO):
         call_command("check_admin_orgs")
@@ -169,3 +168,99 @@ def test_check_admin_org_mismatch_exception_handling(mock_ldap_class, dataset):
         call_command("check_admin_orgs")
 
     assert "LDAP query failed" in str(exc_info.value)
+
+
+@pytest.mark.django_db
+@patch("apps.core.management.commands.check_admin_orgs.LdapIdm")
+def test_dataset_with_org_in_admin_org_map_skipped(
+    mock_ldap_class, test_user, ida_storage, data_catalog, caplog
+):
+    """Test that datasets with organizations in admin_org_map are skipped."""
+    # Create a metadata provider with an organization that's in admin_org_map
+    metadata_provider_in_map = factories.MetadataProviderFactory(
+        user=test_user, organization="fairdata.fi", admin_organization="test-admin-org"
+    )
+    metadata_provider_in_map.save()
+
+    # Create a dataset with this metadata provider
+    dataset_in_map = factories.PublishedDatasetFactory(
+        metadata_owner=metadata_provider_in_map,
+        title={"en": "Dataset with org in admin_org_map"},
+        data_catalog=data_catalog,
+    )
+    file_set = factories.FileSetFactory(dataset=dataset_in_map, storage=ida_storage)
+    factories.DatasetMetricsFactory(dataset=dataset_in_map)
+
+    # Mock LdapIdm instance
+    mock_ldap = Mock()
+    mock_ldap_class.return_value = mock_ldap
+    mock_ldap.check_admin_org_mismatch.return_value = "some-admin-org"
+
+    # Capture log output
+    with caplog.at_level(logging.INFO):
+        call_command("check_admin_orgs")
+
+    # Verify check_admin_org_mismatch was NOT called (dataset was skipped)
+    mock_ldap.check_admin_org_mismatch.assert_not_called()
+
+    # Verify only the completion message was logged
+    assert len(caplog.records) == 1
+    assert "Datasets with admin org mismatch checked" in caplog.records[0].message
+
+
+@pytest.mark.django_db
+@patch("apps.core.management.commands.check_admin_orgs.LdapIdm")
+def test_mixed_datasets_org_in_map_and_not_in_map(
+    mock_ldap_class, test_user, metadata_provider, data_catalog, caplog
+):
+    """Test that datasets with orgs in admin_org_map are skipped while others are processed."""
+    # Create a dataset with organization in admin_org_map
+    ida_storage_in_map = file_factories.FileStorageFactory(
+        storage_service="ida", csc_project="2001481"
+    )
+    metadata_provider_in_map = factories.MetadataProviderFactory(
+        user=test_user, organization="service_tuni", admin_organization="test-admin-org"
+    )
+    metadata_provider_in_map.save()
+    dataset_in_map = factories.PublishedDatasetFactory(
+        metadata_owner=metadata_provider_in_map,
+        title={"en": "Dataset with org in admin_org_map"},
+        data_catalog=data_catalog,
+    )
+
+    factories.FileSetFactory(dataset=dataset_in_map, storage=ida_storage_in_map)
+    factories.DatasetMetricsFactory(dataset=dataset_in_map)
+
+    # Create a dataset with organization NOT in admin_org_map
+    ida_storage_not_in_map = file_factories.FileStorageFactory(
+        storage_service="ida", csc_project="2001482"
+    )
+    metadata_provider_not_in_map = factories.MetadataProviderFactory(
+        user=test_user, organization="test_org", admin_organization=None
+    )
+
+    dataset_not_in_map = factories.PublishedDatasetFactory(
+        metadata_owner=metadata_provider_not_in_map,  # metadata_provider has organization="test-org" which is not in map
+        title={"en": "Dataset with org NOT in admin_org_map"},
+        data_catalog=data_catalog,
+    )
+    dataset_not_in_map.metadata_owner.admin_organization = None
+    dataset_not_in_map.metadata_owner.save()
+
+    factories.FileSetFactory(dataset=dataset_not_in_map, storage=ida_storage_not_in_map)
+    factories.DatasetMetricsFactory(dataset=dataset_not_in_map)
+
+    # Mock LdapIdm instance
+    mock_ldap = Mock()
+    mock_ldap_class.return_value = mock_ldap
+    mock_ldap.check_admin_org_mismatch.return_value = "some-admin-org"
+
+    # Capture log output
+    with caplog.at_level(logging.INFO):
+        call_command("check_admin_orgs")
+
+    # Verify check_admin_org_mismatch was called only for the dataset NOT in admin_org_map
+    mock_ldap.check_admin_org_mismatch.assert_called_once_with("2001482")
+
+    # Verify only the completion message was logged (no mismatch since we returned same org)
+    assert len(caplog.records) == 2

@@ -1,13 +1,43 @@
 import uuid
 
 from django.contrib.auth.models import AbstractUser, AnonymousUser, UserManager
-from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.db import models
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from model_utils import FieldTracker
 
 from apps.common.models import CustomSoftDeletableManager, CustomSoftDeletableModel
+from django.core.cache import cache
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+class AdminOrganization(CustomSoftDeletableModel):
+    id = models.CharField(
+        max_length=255, primary_key=True
+    )  # https://refeds.org/specifications/schac
+    pref_label = HStoreField(
+        help_text=_('example: {"en":"title", "fi":"otsikko"}'), null=True, blank=True
+    )
+    other_identifier = ArrayField(models.CharField(max_length=255), default=list, blank=True)
+    url = models.URLField(max_length=255, blank=True, null=True)
+
+    # Relations to MetaxUser with related_name="admin_organizations"
+
+    def save(self, *args, **kwargs):
+        cache.delete("available_admin_organizations")
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        cache.delete("available_admin_organizations")
+        return super().delete(*args, **kwargs)
+
+    class Meta:
+        verbose_name = "admin organization"
+        verbose_name_plural = "admin organizations"
+        ordering = ["id"]
 
 
 class MetaxUserManager(UserManager):
@@ -43,6 +73,13 @@ class MetaxUser(AbstractUser, CustomSoftDeletableModel):
     )
     organization = models.CharField(max_length=512, blank=True, null=True)
     admin_organizations = ArrayField(models.CharField(max_length=512), default=list, blank=True)
+    default_admin_organization = models.ForeignKey(
+        AdminOrganization,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        help_text="The default admin organization for the user.",
+    )
 
     # Getting DAC membership from SSO session is not implemented yet,
     # so this field can only be tested by setting the value manually.

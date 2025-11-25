@@ -77,6 +77,13 @@ class SSOClient:
             if csc_project not in user.csc_projects:  # Add csc_project to user projects
                 user.csc_projects.append(csc_project)
                 user.save()
+
+            if admin_organizations := user_data.get("admin_organizations", []):
+                for admin_organization in admin_organizations:
+                    if admin_organization not in user.admin_organizations:
+                        user.admin_organizations.append(admin_organization)
+                        user.save()
+
             users.append(user)
 
         # Remove membership from users that are no longer project members
@@ -110,6 +117,8 @@ class SSOClient:
         user.email = data.get("email", "")
         user.is_active = not data["locked"]
         user.csc_projects = data["projects"]
+        user.admin_organizations = data.get("admin_organizations", [])
+        _logger.info(f"Synced user: {user}")
         user.save()
         return True
 

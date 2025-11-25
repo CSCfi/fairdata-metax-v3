@@ -10,8 +10,9 @@ from django.utils.translation import get_language, gettext_lazy as _
 from knox.auth import TokenAuthentication
 from rest_framework import authentication, exceptions
 
-from apps.users.models import MetaxUser
+from apps.users.models import AdminOrganization, MetaxUser
 from apps.users.sso_client import SSOClient
+
 
 logger = logging.getLogger(__name__)
 
@@ -136,12 +137,15 @@ class SSOAuthentication(authentication.SessionAuthentication):
             bool: True if user was updated."""
         initiated = parse(sso_session.get("initiated"))
         if (not user.synced) or (initiated > user.synced):
+            logger.info(f"Updating user details for {user} using SSO session {sso_session}")
             sso_user = sso_session.get("authenticated_user", {})
             user.first_name = sso_user.get("firstname", "")
             user.last_name = sso_user.get("lastname", "")
             user.organization = (
                 sso_session.get("authenticated_user").get("organization", {}).get("id")
             )
+            if default_admin_org := AdminOrganization.objects.filter(id=user.organization).first():
+                user.default_admin_organization = default_admin_org
             user.email = sso_session.get("authenticated_user").get("email", "")
 
             fairdata_user = sso_session.get("fairdata_user", {})

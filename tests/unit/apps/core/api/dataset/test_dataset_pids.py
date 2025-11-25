@@ -448,6 +448,7 @@ def test_update_dataset_with_doi(
 # Create a dataset with DOI from Metax V2
 # Update that dataset in V3
 # Assert that datasets gets updated in PID MS
+@mock.patch("apps.core.serializers.metadata_provider_serializer.admin_org_map", {"csc.fi": None})
 @override_settings(PID_MS_CLIENT_INSTANCE="apps.core.services.pid_ms_client._PIDMSClient")
 def test_update_dataset_with_doi_from_v2(
     legacy_dataset_a_json,

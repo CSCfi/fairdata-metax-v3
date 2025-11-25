@@ -1,0 +1,18 @@
+admin_org_map = {
+    "fairdata.fi": None,
+    "service_tuni": None,
+    "service_abo": None,
+    "service_fsd": None,
+    "service_fmi": None,
+    "service_kielipankki": None,
+    "ut.ee": "helsinki.fi",
+    "valtori.fi": "kotus.fi",
+    "igf.edu.pl": "helsinki.fi",
+    "justus.csc.fi": "csc.fi",
+    "ki.se": "helsinki.fi",
+    "tampere.fi": "vtt.fi",
+    "web.centria.fi": "centria.fi",
+    "inversedynamics.fi": "helsinki.fi",
+    "mpg.de": "aalto.fi",
+    "uwasa.fi": "uva.fi",
+}

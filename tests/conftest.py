@@ -34,6 +34,7 @@ from apps.files import factories as files_factories
 from apps.rems.mocks import MockREMS
 from apps.users.factories import MetaxUserFactory
 from apps.users.models import MetaxUser
+from apps.users.factories import AdminOrganizationFactory
 
 
 def pytest_addoption(parser):
@@ -156,6 +157,7 @@ def user(fairdata_users_group):
     user.groups.set([fairdata_users_group])
     user.set_password("teppo")
     user.save()
+    AdminOrganizationFactory(id="test_organization", pref_label={"en": "Test Organization"})
     return user
 
 
@@ -190,6 +192,48 @@ def appsupport_user():
     user.groups.set([_group])
     user.set_password("appsupport")
     user.save()
+    return user
+
+
+@pytest.fixture
+def admin_org_user(fairdata_users_group):
+    """User with admin organization permissions."""
+    user, _created = MetaxUser.objects.get_or_create(
+        username="admin_org_user",
+        fairdata_username="admin_org_user",
+        first_name="Admin",
+        last_name="OrgUser",
+        email="admin_org@example.com",
+        is_hidden=False,
+        organization="test_organization",
+        admin_organizations=["test_org", "another_org"],
+    )
+    user.groups.set([fairdata_users_group])
+    user.set_password("admin_org")
+    user.save()
+    AdminOrganizationFactory(id="test_organization", pref_label={"en": "Test Organization"})
+    return user
+
+
+@pytest.fixture
+def non_admin_org_user(fairdata_users_group):
+    """User without admin organization permissions."""
+    user, _created = MetaxUser.objects.get_or_create(
+        username="non_admin_org_user",
+        fairdata_username="non_admin_org_user",
+        first_name="Non",
+        last_name="AdminUser",
+        email="non_admin@example.com",
+        is_hidden=False,
+        organization="different_organization",
+        admin_organizations=[],
+    )
+    user.groups.set([fairdata_users_group])
+    user.set_password("non_admin")
+    user.save()
+    AdminOrganizationFactory(
+        id="different_organization", pref_label={"en": "Different Organization"}
+    )
     return user
 
 
@@ -237,6 +281,7 @@ def pas_client():
     client.force_login(user)
     client._user = user
     return client
+
 
 @pytest.fixture
 def handler(fairdata_users_group):
@@ -959,6 +1004,82 @@ def appsupport_client(appsupport_user):
     return client
 
 
+@pytest.fixture
+def admin_org_user_client(admin_org_user):
+    client = Client()
+    client.force_login(admin_org_user)
+    client._user = admin_org_user
+    return client
+
+
+@pytest.fixture
+def non_admin_org_user_client(non_admin_org_user):
+    client = Client()
+    client.force_login(non_admin_org_user)
+    client._user = non_admin_org_user
+    return client
+
+
+@pytest.fixture
+def dataset_with_admin_org(admin_client, dataset_a_json, data_catalog, reference_data):
+    """Create a dataset with admin_organization set."""
+    AdminOrganizationFactory(id="test_org", pref_label={"en": "Test Organization"})
+    dataset_a_json["metadata_owner"] = {
+        "user": "test_user",
+        "organization": "test_org",
+        "admin_organization": "test_org",
+    }
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    return res.data
+
+
+@pytest.fixture
+def dataset_with_different_admin_org(admin_client, dataset_a_json, data_catalog, reference_data):
+    """Create a dataset with different admin_organization."""
+    AdminOrganizationFactory(id="different_org", pref_label={"en": "Different Organization"})
+    dataset_a_json["metadata_owner"] = {
+        "user": "test_user",
+        "organization": "different_org",
+        "admin_organization": "different_org",
+    }
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    return res.data
+
+
+@pytest.fixture
+def draft_dataset_with_admin_org(admin_client, dataset_a_json, data_catalog, reference_data):
+    """Create a draft dataset with admin_organization set."""
+    AdminOrganizationFactory(id="test_org", pref_label={"en": "Test Organization"})
+    dataset_a_json["state"] = "draft"
+    dataset_a_json["metadata_owner"] = {
+        "user": "test_user",
+        "organization": "test_org",
+        "admin_organization": "test_org",
+    }
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    return res.data
+
+
+@pytest.fixture
+def draft_dataset_with_different_admin_org(
+    admin_client, dataset_a_json, data_catalog, reference_data
+):
+    """Create a draft dataset with different admin_organization."""
+    AdminOrganizationFactory(id="different_org", pref_label={"en": "Different Organization"})
+    dataset_a_json["state"] = "draft"
+    dataset_a_json["metadata_owner"] = {
+        "user": "test_user",
+        "organization": "different_org",
+        "admin_organization": "different_org",
+    }
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    return res.data
+
+
 @pytest.fixture(autouse=True)
 def tweaked_settings(settings):
     logging.disable(logging.CRITICAL)
@@ -969,7 +1090,7 @@ def tweaked_settings(settings):
         "handlers": [],
         "propagate": True,
     }
-    logging.config.dictConfig(settings.LOGGING) # Update logging config
+    logging.config.dictConfig(settings.LOGGING)  # Update logging config
 
     settings.CACHES = {
         "default": {
@@ -1010,7 +1131,6 @@ def tweaked_settings(settings):
     settings.REMS_RESOURCE_PREFIX = "metax-test"
     settings.REMS_MANUAL_WORKFLOW = False
     settings.FILE_LOCK_TIMEOUT = 0
-
 
 
 @pytest.fixture

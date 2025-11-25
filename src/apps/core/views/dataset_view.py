@@ -193,8 +193,14 @@ class DatasetFilter(filters.FilterSet):
     publishing_channels = VerboseChoiceFilter(
         choices=[("default", "default"), ("etsin", "etsin"), ("ttv", "ttv"), ("all", "all")],
         method="filter_publishing_channels",
-        label="publishing channels\nFilter datasets based on the publishing channels of the dataset's catalog. The default value is 'default'.",
-        help_text="Filter datasets based on the publishing channels of the dataset's catalog. The default value is 'default'.",
+        label="""publishing channels
+        Filter datasets based on the publishing channels of the dataset's catalog.
+        The default value is 'default'.
+        """,
+        help_text="""
+        Filter datasets based on the publishing channels of the dataset's catalog.
+        The default value is 'default'.
+        """,
     )
 
     search = filters.CharFilter(method="search_dataset")
@@ -206,14 +212,30 @@ class DatasetFilter(filters.FilterSet):
 
     temporal__end_date = filters.DateFilter(
         method="temporal_search",
-        label="temporal end date\nFilter datasets based on their temporal information. 'temporal__end_date' can be used together with 'temporal__start_date' to filter datasets' which have temporal information that overlaps with given timerange. If only 'temporal__end_date' is given, all datasets are returned unless, the dataset's temporal's start_date is after the given 'temporal__end_date'",
-        help_text="Filter datasets based on their temporal information. 'temporal__end_date' can be used together with 'temporal__start_date' to filter datasets' which have temporal information that overlaps with given timerange. If only 'temporal__end_date' is given, all datasets are returned unless, the dataset's temporal's start_date is after the given 'temporal__end_date'",
+        label="""temporal end date
+        Filter datasets based on their temporal information.
+        'temporal__end_date' can be used together with 'temporal__start_date' to filter datasets' which have temporal information that overlaps with given timerange.
+        If only 'temporal__end_date' is given, all datasets are returned unless, the dataset's temporal's start_date is after the given 'temporal__end_date'
+        """,
+        help_text="""
+        Filter datasets based on their temporal information.
+        'temporal__end_date' can be used together with 'temporal__start_date' to filter datasets' which have temporal information that overlaps with given timerange.
+        If only 'temporal__end_date' is given, all datasets are returned unless, the dataset's temporal's start_date is after the given 'temporal__end_date'
+        """,
     )
 
     temporal__start_date = filters.DateFilter(
         method="temporal_search",
-        label="temporal start date\nFilter datasets based on their temporal information. 'temporal__start_date' can be used together with 'temporal__end_date' to filter datasets' which have temporal information that overlaps with given timerange. If only 'temporal__start_date' is given, all datasets are returned unless, the dataset's temporal's end_date is before the given 'temporal__start_date'",
-        help_text="Filter datasets based on their temporal information. 'temporal__start_date' can be used together with 'temporal__end_date' to filter datasets' which have temporal information that overlaps with given timerange. If only 'temporal__start_date' is given, all datasets are returned unless, the dataset's temporal's end_date is before the given 'temporal__start_date'",
+        label="""temporal start date
+        Filter datasets based on their temporal information.
+        'temporal__start_date' can be used together with 'temporal__end_date' to filter datasets' which have temporal information that overlaps with given timerange.
+        If only 'temporal__start_date' is given, all datasets are returned unless, the dataset's temporal's end_date is before the given 'temporal__start_date'
+        """,
+        help_text="""
+        Filter datasets based on their temporal information.
+        'temporal__start_date' can be used together with 'temporal__end_date' to filter datasets' which have temporal information that overlaps with given timerange.
+        If only 'temporal__start_date' is given, all datasets are returned unless, the dataset's temporal's end_date is before the given 'temporal__start_date'
+        """,
     )
 
     title = filters.CharFilter(
@@ -400,10 +422,18 @@ class DatasetFilter(filters.FilterSet):
 
     only_owned_or_shared = filters.BooleanFilter(method="filter_owned_or_shared")
 
+    only_admin = filters.BooleanFilter(method="filter_only_admin")
+
     def filter_owned_or_shared(self, queryset, name, value):
         """Filter datasets owned by or shared with the authenticated user."""
         if value:
             return DatasetAccessPolicy.scope_queryset_owned_or_shared(self.request, queryset)
+        return queryset
+
+    def filter_only_admin(self, queryset, name, value):
+        """Filter datasets the authenticated user is an admin of."""
+        if value:
+            return DatasetAccessPolicy.scope_queryset_admin(self.request, queryset)
         return queryset
 
     def filter_queryset(self, queryset):

@@ -10,6 +10,8 @@ from apps.common.serializers.serializers import StrictSerializer
 from apps.core.models import MetadataProvider
 from apps.core.permissions import DatasetAccessPolicy
 from apps.users.models import MetaxUser
+from apps.users.models import AdminOrganization
+from apps.core.management.initial_data.admin_org_map import admin_org_map
 
 logger = logging.getLogger(__name__)
 
@@ -74,22 +76,12 @@ class MetadataProviderModelSerializer(AbstractDatasetModelSerializer):
             ctx_data = {
                 "user": self.instance.user.username,
                 "organization": self.instance.organization,
-                "admin_organization": (
-                    self.instance.admin_organization
-                    if getattr(self.instance, "admin_organization")
-                    else self.instance.organization
-                ),
             }
         else:
             user = self.context["request"].user
             ctx_data = {
                 "user": user.username,
                 "organization": user.organization or user.username,
-                "admin_organization": (
-                    user.admin_organization
-                    if getattr(user, "admin_organization", None)
-                    else user.organization
-                ),
             }
 
         if not data:
@@ -110,6 +102,21 @@ class MetadataProviderModelSerializer(AbstractDatasetModelSerializer):
                 raise serializers.ValidationError(errors)
         return super().save(**data)
 
+    def validate_admin_organization(self, value):
+        if not (value is None or AdminOrganization.objects.filter(id=value).exists()):
+            raise serializers.ValidationError(f"Value is not allowed: {value}")
+        return value
+
+    # todo: map these to AdminOrganization objects using other_identifier
+    def get_admin_organization_for_organization(self, organization: str) -> str | None:
+        if organization in admin_org_map:
+            return admin_org_map[organization]
+
+        if admin_organization := AdminOrganization.objects.filter(id=organization).first():
+            return admin_organization.id
+
+        return None
+
     def get_or_create_provider(self, validated_data):
         """Reuse existing metadata provider when possible."""
         user, created = get_user_model().objects.get_or_create(username=validated_data["user"])
@@ -120,11 +127,13 @@ class MetadataProviderModelSerializer(AbstractDatasetModelSerializer):
         elif self.instance:
             admin_organization = self.instance.admin_organization
         else:
-            admin_organization = organization
+            admin_organization = self.get_admin_organization_for_organization(organization)
 
         if admin_organization:
             provider = MetadataProvider.objects.filter(
-                user=user, organization=organization, admin_organization=admin_organization
+                user=user,
+                organization=organization,
+                admin_organization=admin_organization,
             ).first()
         else:
             provider = MetadataProvider.objects.filter(
@@ -134,7 +143,9 @@ class MetadataProviderModelSerializer(AbstractDatasetModelSerializer):
             return provider
 
         return MetadataProvider.objects.create(
-            user=user, organization=organization, admin_organization=admin_organization
+            user=user,
+            organization=organization,
+            admin_organization=admin_organization,
         )
 
     def create(self, validated_data):

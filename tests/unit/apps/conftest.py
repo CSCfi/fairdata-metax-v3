@@ -11,6 +11,7 @@ from rest_framework.reverse import reverse
 from apps.core import factories
 from apps.core.models import Dataset, AccessType
 from apps.files.factories import create_project_with_files
+from apps.users.models import AdminOrganization
 
 
 @pytest.fixture
@@ -165,3 +166,24 @@ def update_request_client_auth_token():
         return client
 
     return _update_request_client_auth_token
+
+
+@pytest.fixture
+def admin_organizations():
+    admin_orgs = [
+        AdminOrganization(
+            id="aalto.fi",
+            pref_label={"en": "Aalto University", "fi": "Aalto-yliopisto"},
+        ),
+        AdminOrganization(
+            id="helsinki.fi",
+            pref_label={"en": "University of Helsinki", "fi": "Helsingin yliopisto"},
+        ),
+        AdminOrganization(
+            id="test_org",
+            pref_label={"en": "Test Organization", "fi": "Testi Organisaatio"},
+        ),
+    ]
+    for admin_org in admin_orgs:
+        admin_org.save()
+    return AdminOrganization.objects.all()

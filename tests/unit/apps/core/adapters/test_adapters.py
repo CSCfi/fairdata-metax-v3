@@ -13,6 +13,7 @@ from apps.core import factories
 from apps.core.models import LegacyDataset
 from apps.core.models.legacy_compatibility import LegacyCompatibility
 from apps.files.models import File, FileStorage
+from apps.users.factories import AdminOrganizationFactory
 
 logger = logging.getLogger(__name__)
 
@@ -89,8 +90,10 @@ def test_v2_to_v3_dataset_conversion(
     test_file_path,
     files_path,
     expected_diff,
+    admin_organizations,
 ):
     factories.ContractFactory(legacy_id=123)
+    AdminOrganizationFactory(id="csc.fi", pref_label={"en": "CSC - IT Center for Science Ltd."})
     # Data prep
     test_data_path = os.path.dirname(os.path.abspath(__file__)) + "/testdata/"
     data = None
@@ -152,6 +155,7 @@ def test_v2_to_v3_dataset_conversion_invalid_identifier(harvested_json, license_
 
 @pytest.mark.django_db
 def test_v2_to_v3_dataset_conversion_removed(harvested_json, license_reference_data):
+    AdminOrganizationFactory(id="aalto.fi", pref_label={"en": "Aalto University"})
     data = harvested_json
     data["removed"] = True
     data["date_removed"] = "2022-01-03T12:13:14Z"
@@ -163,6 +167,7 @@ def test_v2_to_v3_dataset_conversion_removed(harvested_json, license_reference_d
 
 @pytest.mark.django_db
 def test_v2_to_v3_dataset_conversion_removed_restored(harvested_json, license_reference_data):
+    AdminOrganizationFactory(id="aalto.fi", pref_label={"en": "Aalto University"})
     data = harvested_json
     data["removed"] = False  # dataset has date_removed but is no longer removed
     data["date_removed"] = "2022-01-03T12:13:14Z"
@@ -188,6 +193,7 @@ def test_v2_to_v3_dataset_conversion_existing_v3_dataset_id(
 
 @pytest.mark.django_db
 def test_v2_to_v3_dataset_conversion_ignore_invalid_email(harvested_json, license_reference_data):
+    AdminOrganizationFactory(id="aalto.fi", pref_label={"en": "Aalto University"})
     data = harvested_json
     data["research_dataset"]["creator"][0]["email"] = "person@example;com"
     data["research_dataset"]["creator"][1]["email"] = "ok@example.com"
@@ -233,6 +239,7 @@ def test_get_version_identifiers():
 
 @pytest.mark.django_db
 def test_v2_to_v3_dataset_conversion_draft_of(harvested_json, license_reference_data):
+    AdminOrganizationFactory(id="aalto.fi", pref_label={"en": "Aalto University"})
     data = harvested_json
     data_draft = copy.deepcopy(data)
     data_draft["identifier"] = str(uuid.UUID(int=123))
@@ -254,6 +261,7 @@ def test_v2_to_v3_dataset_conversion_draft_of(harvested_json, license_reference_
 
 @pytest.mark.django_db
 def test_v2_to_v3_dataset_conversion_next_draft(harvested_json, license_reference_data):
+    AdminOrganizationFactory(id="aalto.fi", pref_label={"en": "Aalto University"})
     data = harvested_json
     data_draft = copy.deepcopy(data)
     data_draft["identifier"] = str(uuid.UUID(int=123))
@@ -276,6 +284,7 @@ def test_v2_to_v3_dataset_conversion_next_draft(harvested_json, license_referenc
 
 @pytest.mark.django_db
 def test_v2_to_v3_dataset_conversion_invalid_license(harvested_json, license_reference_data):
+    AdminOrganizationFactory(id="aalto.fi", pref_label={"en": "Aalto University"})
     data = harvested_json
     data["removed"] = "2025-01-14T14:45:00Z"
     data["research_dataset"]["access_rights"]["license"][0][
@@ -295,6 +304,7 @@ def test_v2_to_v3_special_case_dataset(
     data_catalog, ida_json, ida_file_legacy_ids, license_reference_data
 ):
     """Wrong file size in this dataset should not show as an error."""
+    AdminOrganizationFactory(id="csc.fi", pref_label={"en": "CSC - IT Center for Science Ltd."})
     ida_json["identifier"] = "ac5eced9-151f-43ad-b3c4-384fde66c70e"
     ida_json["research_dataset"]["total_files_byte_size"] = 123456  # wrong
     ida_json.pop("contract")

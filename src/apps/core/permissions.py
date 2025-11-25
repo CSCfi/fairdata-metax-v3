@@ -113,7 +113,7 @@ class DatasetAccessPolicy(BaseAccessPolicy):
         elif request.user.is_anonymous:
             return queryset.filter(state=Dataset.StateChoices.PUBLISHED)
         groups = request.user.groups.all()
-        csc_projects = getattr(request.user, 'csc_projects', [])
+        csc_projects = getattr(request.user, "csc_projects", [])
 
         return queryset.filter(
             Q(state=Dataset.StateChoices.PUBLISHED)
@@ -121,6 +121,7 @@ class DatasetAccessPolicy(BaseAccessPolicy):
             | Q(permissions__editors=request.user)
             | Q(file_set__storage__csc_project__in=csc_projects)
             | Q(data_catalog__dataset_groups_admin__in=groups)
+            | Q(metadata_owner__admin_organization__in=request.user.admin_organizations)
         ).distinct()
 
     @classmethod
@@ -128,11 +129,22 @@ class DatasetAccessPolicy(BaseAccessPolicy):
         if request.user.is_anonymous:
             return queryset.none()
 
-        csc_projects = getattr(request.user, 'csc_projects', [])
+        csc_projects = getattr(request.user, "csc_projects", [])
         return queryset.filter(
             Q(metadata_owner__user=request.user)
             | Q(permissions__editors=request.user)
             | Q(file_set__storage__csc_project__in=csc_projects)
+        ).distinct()
+
+    @classmethod
+    def scope_queryset_admin(cls, request, queryset):
+        if request.user.is_anonymous:
+            return queryset.none()
+
+        user_admin_organizations = request.user.admin_organizations
+
+        return queryset.filter(
+            metadata_owner__admin_organization__in=user_admin_organizations
         ).distinct()
 
 
@@ -214,12 +226,13 @@ class LegacyDatasetAccessPolicy(BaseAccessPolicy):
             return queryset.all()
 
         # Users can only see the legacy datasests they can edit.
-        csc_projects = getattr(request.user, 'csc_projects', [])
+        csc_projects = getattr(request.user, "csc_projects", [])
         return queryset.filter(
             Q(dataset__metadata_owner__user=request.user)
             | Q(dataset__permissions__editors=request.user)
             | Q(dataset__file_set__storage__csc_project__in=csc_projects)
             | Q(dataset__data_catalog__dataset_groups_admin__in=groups)
+            | Q(dataset__metadata_owner__admin_organization__in=request.user.admin_organizations)
         ).distinct()
 
 

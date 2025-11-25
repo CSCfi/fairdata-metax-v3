@@ -1,0 +1,387 @@
+[
+  {
+    "pref_label": {
+      "fi": "Geologian tutkimuskeskus (GTK)",
+      "en": "Geological Survey of Finland"
+    },
+    "id": "gtk.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Ilmatieteen laitos",
+      "en": "Finnish Meteorological Institute (FMI)"
+    },
+    "id": "fmi.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Luonnonvarakeskus (LUKE)",
+      "en": "Natural Resources Institute Finland"
+    },
+    "id": "luke.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Maanmittauslaitos (MML)",
+      "en": "National Land Survey of Finland"
+    },
+    "id": "maanmittauslaitos.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Ruokavirasto",
+      "en": "Finnish Food Authority"
+    },
+    "id": "ruokavirasto.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Suomen ympäristökeskus (SYKE)",
+      "en": "Finnish Environment Institute"
+    },
+    "id": "syke.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Säteilyturvakeskus (STUK)",
+      "en": "STUK - Radiation and Nuclear Safety Authority"
+    },
+    "id": "stuk.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Teknologian tutkimuskeskus VTT Oy",
+      "en": "VTT Technical Research Centre of Finland"
+    },
+    "id": "vtt.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Terveyden ja hyvinvoinnin laitos",
+      "en": "Finnish Institute for Health and Welfare"
+    },
+    "id": "thl.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Työterveyslaitos (TTL)",
+      "en": "Finnish Institute of Occupational Health"
+    },
+    "id": "ttl.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Ulkopoliittinen instituutti (UPI)",
+      "en": "Finnish Institute of International Affairs"
+    },
+    "id": "fiia.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Valtion taloudellinen tutkimuskeskus (VATT)",
+      "en": "Government Institute for Economic Research"
+    },
+    "id": "vatt.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Suomen Akatemia",
+      "en": "Research Council of Finland"
+    },
+    "id": "aka.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Kansallisarkisto",
+      "en": "National Archives of Finland"
+    },
+    "id": "arkisto.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Kotimaisten kielten keskus, Kotus",
+      "en": "Institute for the Languages of Finland"
+    },
+    "id": "kotus.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Varastokirjasto",
+      "en": "National Repository Library"
+    },
+    "id": "nrl.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Tieteellisten seurain valtuuskunta",
+      "en": "Federation of Finnish Learned Societies"
+    },
+    "id": "tsv.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Centria ammattikorkeakoulu",
+      "en": "Centria University of Applied Sciences"
+    },
+    "id": "centria.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Diakonia-ammattikorkeakoulu",
+      "en": "Diaconia University of Applied Sciences"
+    },
+    "id": "diak.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Haaga-Helia ammattikorkeakoulu",
+      "en": "Haaga-Helia University of Applied Sciences"
+    },
+    "id": "haaga-helia.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Humanistinen ammattikorkeakoulu",
+      "en": "Humak University of Applied Sciences"
+    },
+    "id": "humak.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Hämeen ammattikorkeakoulu",
+      "en": "Häme University of Applied Sciences"
+    },
+    "id": "hamk.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Högskolan på Åland",
+      "en": "Åland University of Applied Sciences"
+    },
+    "id": "ha.ax"
+  },
+  {
+    "pref_label": {
+      "fi": "Jyväskylän ammattikorkeakoulu",
+      "en": "JAMK University of Applied Sciences"
+    },
+    "id": "jamk.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Kaakkois-Suomen ammattikorkeakoulu",
+      "en": "South-Eastern Finland University of Applied Sciences"
+    },
+    "id": "xamk.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Kajaanin ammattikorkeakoulu",
+      "en": "Kajaani University of Applied Sciences"
+    },
+    "id": "kamk.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Karelia-ammattikorkeakoulu",
+      "en": "Karelia University of Applied Sciences"
+    },
+    "id": "karelia.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "LAB-ammattikorkeakoulu",
+      "en": "LAB University of Applied Sciences"
+    },
+    "id": "lab.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Lapin ammattikorkeakoulu",
+      "en": "Lapland University of Applied Science"
+    },
+    "id": "lapinamk.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Laurea-ammattikorkeakoulu",
+      "en": "Laurea University of Applied Sciences"
+    },
+    "id": "laurea.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Metropolia Ammattikorkeakoulu",
+      "en": "Metropolia University of Applied Sciences Ltd."
+    },
+    "id": "metropolia.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Oulun Ammattikorkeakoulu",
+      "en": "Oulu University of Applied Sciences"
+    },
+    "id": "oamk.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Poliisiammattikorkeakoulu",
+      "en": "Police University College"
+    },
+    "id": "polamk.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Satakunnan ammattikorkeakoulu",
+      "en": "Satakunta University of Applied Sciences"
+    },
+    "id": "samk.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Savonia-ammattikorkeakoulu",
+      "en": "Savonia University of Applied Sciences"
+    },
+    "id": "savonia.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Seinäjoen ammattikorkeakoulu",
+      "en": "Seinäjoki University of Applied Sciences"
+    },
+    "id": "seamk.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Turun ammattikorkeakoulu",
+      "en": "Turku University of Applied Sciences"
+    },
+    "id": "turkuamk.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Vaasan ammattikorkeakoulu",
+      "en": "Vaasa University of Applied Sciences"
+    },
+    "id": "vamk.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Yrkeshögskolan Arcada",
+      "en": "Arcada University of Applied Sciences"
+    },
+    "id": "arcada.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Yrkeshögskolan Novia",
+      "en": "Novia University of Applied Sciences"
+    },
+    "id": "novia.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Aalto-yliopisto",
+      "en": "Aalto University"
+    },
+    "id": "aalto.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Helsingin yliopisto",
+      "en": "University of Helsinki"
+    },
+    "id": "helsinki.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Itä-Suomen yliopisto",
+      "en": "University of Eastern Finland"
+    },
+    "id": "uef.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Jyväskylän yliopisto",
+      "en": "University of Jyväskylä"
+    },
+    "id": "jyu.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Lapin yliopisto",
+      "en": "University of Lapland"
+    },
+    "id": "ulapland.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Lappeenrannan–Lahden teknillinen yliopisto LUT",
+      "en": "Lappeenranta-Lahti University of Technology LUT"
+    },
+    "id": "lut.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Maanpuolustuskorkeakoulu",
+      "en": "National Defence University"
+    },
+    "id": "mpkk.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Oulun yliopisto",
+      "en": "University of Oulu"
+    },
+    "id": "oulu.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Svenska handelshögskolan (Hanken)",
+      "en": "Hanken School of Economics"
+    },
+    "id": "hanken.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Taideyliopisto",
+      "en": "University of the Arts"
+    },
+    "id": "uniarts.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Tampereen yliopisto (korkeakouluyhteisö)",
+      "en": "Tampere University"
+    },
+    "id": "tuni.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Turun yliopisto",
+      "en": "University of Turku"
+    },
+    "id": "utu.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Vaasan yliopisto",
+      "en": "University of Vaasa"
+    },
+    "id": "uva.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "Åbo Akademi",
+      "en": "Åbo Akademi University"
+    },
+    "id": "abo.fi"
+  },
+  {
+    "pref_label": {
+      "fi": "CSC - Tieteen tietotekniikan keskus Oy",
+      "en": "CSC - IT Center for Science Ltd"
+    },
+    "id": "csc.fi"
+  }
+]

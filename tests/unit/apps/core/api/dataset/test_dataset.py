@@ -15,6 +15,7 @@ from apps.core.factories import DatasetFactory, MetadataProviderFactory
 from apps.core.models import OtherIdentifier
 from apps.core.models.catalog_record.dataset import Dataset
 from apps.files.factories import FileStorageFactory
+from apps.users.factories import AdminOrganizationFactory
 
 logger = logging.getLogger(__name__)
 
@@ -215,6 +216,7 @@ def test_put_dataset_by_user(
     user_client, dataset_a_json, data_catalog, reference_data, requests_mock
 ):
     res = user_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+
     assert res.status_code == 201
     user = res.data["metadata_owner"]["user"]
 
@@ -223,6 +225,7 @@ def test_put_dataset_by_user(
     res = user_client.put(
         f"/v3/datasets/{res.data['id']}", dataset_a_json, content_type="application/json"
     )
+
     assert res.status_code == 200
     assert res.data["metadata_owner"]["user"] == user
 
@@ -236,6 +239,7 @@ def test_patch_metadata_owner_not_allowed(
         "organization": "organization-a.fi",
         "user": "metax-user-a",
     }
+    assert res.status_code == 201
     dataset_id = res.data["id"]
     res = user_client.patch(
         f"/v3/datasets/{dataset_id}",
@@ -988,7 +992,6 @@ def test_show_file_metadata_for_open_access_external_catalog(
     dataset_a_json["access_rights"]["access_type"] = {
         "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open"
     }
-    print(dataset_a_json["access_rights"])
     res = admin_client.post(
         "/v3/datasets?include_nulls=true", dataset_a_json, content_type="application/json"
     )
@@ -1039,7 +1042,7 @@ def test_show_file_metadata_with_user_defined_default_value(
 
 
 def test_metadata_owner_admin_organization_default_behavior(
-    admin_client, dataset_a_json, data_catalog, reference_data
+    admin_client, dataset_a_json, data_catalog, reference_data, admin_organizations
 ):
     """Test the default behavior of admin_organization when not explicitly provided."""
 
@@ -1049,7 +1052,9 @@ def test_metadata_owner_admin_organization_default_behavior(
         "user": "test_user",
         "organization": "test_org",
     }
-    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    res = admin_client.post(
+        "/v3/datasets?include_nulls=true", dataset_a_json, content_type="application/json"
+    )
     assert res.status_code == 201
     assert res.data["metadata_owner"]["admin_organization"] == "test_org"
     dataset_id = res.data["id"]
@@ -1061,7 +1066,7 @@ def test_metadata_owner_admin_organization_default_behavior(
         "organization": "new_org",
     }
     res = admin_client.patch(
-        f"/v3/datasets/{dataset_id}",
+        f"/v3/datasets/{dataset_id}?include_nulls=true",
         {"metadata_owner": new_owner},
         content_type="application/json",
     )
@@ -1075,6 +1080,7 @@ def test_metadata_owner_admin_organization_default_behavior(
         "organization": "org2",
         "admin_organization": "admin_org",
     }
+    AdminOrganizationFactory(id="admin_org", pref_label={"en": "Admin Organization"})
     res = admin_client.patch(
         f"/v3/datasets/{dataset_id}",
         {"metadata_owner": new_owner_with_admin},
@@ -1111,3 +1117,214 @@ def test_metadata_owner_admin_organization_default_behavior(
     )
     assert res.status_code == 200
     assert res.data["metadata_owner"]["admin_organization"] is None
+
+
+# Tests for admin organization permissions
+def test_admin_org_user_can_view_dataset(admin_org_user_client, dataset_with_admin_org):
+    """Test that admin org user can view dataset with matching admin_organization."""
+    dataset_id = dataset_with_admin_org["id"]
+    res = admin_org_user_client.get(f"/v3/datasets/{dataset_id}", content_type="application/json")
+    assert res.status_code == 200
+    assert res.data["id"] == dataset_id
+
+
+def test_admin_org_user_can_edit_dataset(admin_org_user_client, dataset_with_admin_org):
+    """Test that admin org user can edit dataset with matching admin_organization."""
+    dataset_id = dataset_with_admin_org["id"]
+    update_data = {"title": {"en": "Updated by admin org user"}}
+    res = admin_org_user_client.patch(
+        f"/v3/datasets/{dataset_id}",
+        update_data,
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert res.data["title"]["en"] == "Updated by admin org user"
+
+
+def test_admin_org_user_can_delete_dataset(admin_org_user_client, dataset_with_admin_org):
+    """Test that admin org user can delete dataset with matching admin_organization."""
+    dataset_id = dataset_with_admin_org["id"]
+    res = admin_org_user_client.delete(f"/v3/datasets/{dataset_id}")
+    assert res.status_code == 204
+
+
+def test_admin_org_user_can_view_published_dataset_from_different_org(
+    admin_org_user_client, dataset_with_different_admin_org
+):
+    """Test that admin org user can view published dataset even with different admin_organization."""
+    dataset_id = dataset_with_different_admin_org["id"]
+    res = admin_org_user_client.get(f"/v3/datasets/{dataset_id}", content_type="application/json")
+    assert res.status_code == 200  # Published datasets are viewable by all users
+
+
+def test_non_admin_org_user_can_view_published_admin_org_dataset(
+    non_admin_org_user_client, dataset_with_admin_org
+):
+    """Test that non-admin org user can view published dataset with admin_organization."""
+    dataset_id = dataset_with_admin_org["id"]
+    res = non_admin_org_user_client.get(
+        f"/v3/datasets/{dataset_id}", content_type="application/json"
+    )
+    assert res.status_code == 200  # Published datasets are viewable by all users
+
+
+# Tests for draft dataset admin organization permissions
+def test_admin_org_user_can_view_draft_dataset_with_matching_admin_org(
+    admin_org_user_client, draft_dataset_with_admin_org
+):
+    """Test that admin org user can view draft dataset with matching admin_organization."""
+    dataset_id = draft_dataset_with_admin_org["id"]
+    res = admin_org_user_client.get(f"/v3/datasets/{dataset_id}", content_type="application/json")
+    assert res.status_code == 200
+
+
+def test_admin_org_user_cannot_view_draft_dataset_with_different_admin_org(
+    admin_org_user_client, draft_dataset_with_different_admin_org
+):
+    """Test that admin org user cannot view draft dataset with different admin_organization."""
+    dataset_id = draft_dataset_with_different_admin_org["id"]
+    res = admin_org_user_client.get(f"/v3/datasets/{dataset_id}", content_type="application/json")
+    assert res.status_code == 404
+
+
+def test_non_admin_org_user_cannot_view_draft_dataset_with_admin_org(
+    non_admin_org_user_client, draft_dataset_with_admin_org
+):
+    """Test that non-admin org user cannot view draft dataset with admin_organization."""
+    dataset_id = draft_dataset_with_admin_org["id"]
+    res = non_admin_org_user_client.get(
+        f"/v3/datasets/{dataset_id}", content_type="application/json"
+    )
+    assert res.status_code == 404
+
+
+def test_admin_org_user_can_edit_draft_dataset_with_matching_admin_org(
+    admin_org_user_client, draft_dataset_with_admin_org
+):
+    """Test that admin org user can edit draft dataset with matching admin_organization."""
+    dataset_id = draft_dataset_with_admin_org["id"]
+    update_data = {"title": {"en": "Updated by admin org user"}}
+    res = admin_org_user_client.patch(
+        f"/v3/datasets/{dataset_id}",
+        update_data,
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert res.data["title"]["en"] == "Updated by admin org user"
+
+
+def test_admin_org_user_cannot_edit_draft_dataset_with_different_admin_org(
+    admin_org_user_client, draft_dataset_with_different_admin_org
+):
+    """Test that admin org user cannot edit draft dataset with different admin_organization."""
+    dataset_id = draft_dataset_with_different_admin_org["id"]
+    update_data = {"title": {"en": "Updated by admin org user"}}
+    res = admin_org_user_client.patch(
+        f"/v3/datasets/{dataset_id}",
+        update_data,
+        content_type="application/json",
+    )
+    assert res.status_code == 404
+
+
+def test_non_admin_org_user_cannot_edit_admin_org_dataset(
+    non_admin_org_user_client, dataset_with_admin_org
+):
+    """Test that non-admin org user cannot edit dataset with admin_organization."""
+    dataset_id = dataset_with_admin_org["id"]
+    update_data = {"title": {"en": "Updated by non-admin user"}}
+    res = non_admin_org_user_client.patch(
+        f"/v3/datasets/{dataset_id}",
+        update_data,
+        content_type="application/json",
+    )
+    assert res.status_code == 403
+
+
+def test_non_admin_org_user_cannot_delete_admin_org_dataset(
+    non_admin_org_user_client, dataset_with_admin_org
+):
+    """Test that non-admin org user cannot delete dataset with admin_organization."""
+    dataset_id = dataset_with_admin_org["id"]
+    res = non_admin_org_user_client.delete(f"/v3/datasets/{dataset_id}")
+    assert res.status_code == 403
+
+
+# Tests for only_admin query parameter
+def test_only_admin_true_for_admin_org_user(
+    admin_org_user_client,
+    dataset_with_admin_org,
+    dataset_with_different_admin_org,
+    draft_dataset_with_admin_org,
+    draft_dataset_with_different_admin_org,
+):
+    """Test that only_admin=true returns only datasets where user is admin."""
+    res = admin_org_user_client.get(
+        "/v3/datasets?only_admin=true&pagination=false", content_type="application/json"
+    )
+    assert res.status_code == 200
+    dataset_ids = [dataset["id"] for dataset in res.data]
+    # Should include both published and draft datasets with matching admin_org
+    assert dataset_with_admin_org["id"] in dataset_ids
+    assert draft_dataset_with_admin_org["id"] in dataset_ids
+    # Should not include datasets with different admin_org
+    assert dataset_with_different_admin_org["id"] not in dataset_ids
+    assert draft_dataset_with_different_admin_org["id"] not in dataset_ids
+
+
+def test_only_admin_true_for_non_admin_org_user(
+    non_admin_org_user_client,
+    dataset_with_admin_org,
+    dataset_with_different_admin_org,
+    draft_dataset_with_admin_org,
+    draft_dataset_with_different_admin_org,
+):
+    """Test that only_admin=true returns empty list for non-admin org user."""
+    res = non_admin_org_user_client.get(
+        "/v3/datasets?only_admin=true&pagination=false", content_type="application/json"
+    )
+    assert res.status_code == 200
+    assert len(res.data) == 0
+
+
+def test_only_admin_false_for_admin_org_user(
+    admin_org_user_client,
+    dataset_with_admin_org,
+    dataset_with_different_admin_org,
+    draft_dataset_with_admin_org,
+    draft_dataset_with_different_admin_org,
+):
+    """Test that only_admin=false returns all accessible datasets for admin org user."""
+    res = admin_org_user_client.get(
+        "/v3/datasets?only_admin=false&pagination=false", content_type="application/json"
+    )
+    assert res.status_code == 200
+    dataset_ids = [dataset["id"] for dataset in res.data]
+    # Should include published datasets (all users can see published)
+    assert dataset_with_admin_org["id"] in dataset_ids
+    assert dataset_with_different_admin_org["id"] in dataset_ids
+    # Should include draft dataset with matching admin_org
+    assert draft_dataset_with_admin_org["id"] in dataset_ids
+    # Should not include draft dataset with different admin_org
+    assert draft_dataset_with_different_admin_org["id"] not in dataset_ids
+
+
+def test_only_admin_false_for_non_admin_org_user(
+    non_admin_org_user_client,
+    dataset_with_admin_org,
+    dataset_with_different_admin_org,
+    draft_dataset_with_admin_org,
+    draft_dataset_with_different_admin_org,
+):
+    """Test that only_admin=false returns all accessible datasets for non-admin org user."""
+    res = non_admin_org_user_client.get(
+        "/v3/datasets?only_admin=false&pagination=false", content_type="application/json"
+    )
+    assert res.status_code == 200
+    dataset_ids = [dataset["id"] for dataset in res.data]
+    # Should include published datasets (all users can see published)
+    assert dataset_with_admin_org["id"] in dataset_ids
+    assert dataset_with_different_admin_org["id"] in dataset_ids
+    # Should not include any draft datasets since user doesn't have admin access
+    assert draft_dataset_with_admin_org["id"] not in dataset_ids
+    assert draft_dataset_with_different_admin_org["id"] not in dataset_ids

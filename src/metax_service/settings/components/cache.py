@@ -3,9 +3,11 @@ from cachalot.settings import SUPPORTED_CACHE_BACKENDS
 from metax_service.settings.components.base import env
 
 ENABLE_MEMCACHED = env.bool("ENABLE_MEMCACHED", False)
-CACHALOT_DATABASES = ["default"] # Only use cache for the default connection
+CACHALOT_DATABASES = ["default"]  # Only use cache for the default connection
 CACHALOT_UNCACHABLE_TABLES = {"django_migrations", "core_v2syncstatus"}
-CACHALOT_TIMEOUT = env.int("CACHALOT_TIMEOUT", 7200) # Cachalot cache entry TTL in seconds
+CACHALOT_TIMEOUT = env.int("CACHALOT_TIMEOUT", 7200)  # Cachalot cache entry TTL in seconds
+MEMCACHED_HOST = env.str("MEMCACHED_HOST", "localhost")
+MEMCACHED_PORT = env.str("MEMCACHED_PORT", "11211")
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.dummy.DummyCache",
@@ -15,7 +17,7 @@ if ENABLE_MEMCACHED:
     CACHES = {
         "default": {
             "BACKEND": "apps.cache.caches.IgnoreTooLargePyMemcacheCache",
-            "LOCATION": "localhost:11211",
+            "LOCATION": f"{MEMCACHED_HOST}:{MEMCACHED_PORT}",
         }
     }
     # Patch list of supported cache backends to suppress warning
@@ -37,7 +39,7 @@ if ENABLE_DATASET_CACHE:
     if ENABLE_MEMCACHED:
         CACHES["serialized_datasets"] = {
             "BACKEND": "apps.cache.caches.IgnoreTooLargePyMemcacheCache",
-            "LOCATION": "localhost:11211",
+            "LOCATION": f"{MEMCACHED_HOST}:{MEMCACHED_PORT}",
             "KEY_PREFIX": "dataset",
             "TIMEOUT": None,
         }
