@@ -154,8 +154,8 @@ class log_queries(ContextDecorator):
         """Truncate repeated %s in queries to make
         e.g. "... WHERE id IN (%s, %s, ...)" more readable.
         """
-        query = re_case.sub("CASE \g<1>...\g<2> END", query)
-        query = re_repeated_values.sub("\g<1>..., ", query)
+        query = re_case.sub(r"CASE \g<1>...\g<2> END", query)
+        query = re_repeated_values.sub(r"\g<1>..., ", query)
         query = re_repeated_s.sub("%s, %s, %s, %s, ..., %s, ", query)
         if len(query) > 2000:
             query = f"{query[:1800]} ... {query[-200:]}"
