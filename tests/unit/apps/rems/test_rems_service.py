@@ -31,7 +31,7 @@ def test_rems_service_publish_dataset(mock_rems, user):
 
     catalog = factories.DataCatalogFactory(rems_enabled=True)
     dataset = factories.REMSDatasetFactory(
-        data_catalog=catalog, metadata_owner__organization=user.organization
+        data_catalog=catalog, metadata_owner__admin_organization=user.organization
     )
     REMSService().publish_dataset(dataset, raise_errors=True)
 
@@ -82,6 +82,7 @@ def test_rems_service_publish_dataset_twice(mock_rems):
     mock_rems.clear_calls()
     REMSService().publish_dataset(dataset, raise_errors=True)
     assert mock_rems.call_list == [
+        "get/catalogue-item:1",
         "get/workflow:1",
         "get/resource:1",
         "get/license:1",
@@ -112,6 +113,7 @@ def test_rems_service_update_dataset_title(mock_rems):
     dataset.save()
     REMSService().publish_dataset(dataset)
     assert mock_rems.call_list == [
+        "get/catalogue-item:1",
         "get/workflow:1",
         "get/resource:1",
         "get/license:1",
@@ -138,6 +140,7 @@ def test_rems_service_update_dataset_license(mock_rems, license_reference_data):
     # License changed -> new resource -> new catalog item
     REMSService().publish_dataset(dataset, raise_errors=True)
     assert mock_rems.call_list == [
+        "get/catalogue-item:1",
         "get/workflow:1",
         "get/resource:1",
         "create/license->2",
@@ -192,6 +195,7 @@ def test_rems_service_update_dataset_terms(mock_rems, license_reference_data):
     # License dependencies (catalogue item and resource) need to be archived first
     # before the license can be archived
     assert mock_rems.call_list == [
+        "get/catalogue-item:1",
         "get/workflow:1",
         "get/resource:1",
         "get/license:1",
@@ -482,3 +486,88 @@ def test_rems_service_get_license_type_errors():
         service.get_license_type(url=None, description=None)
     with pytest.raises(ValueError):
         service.get_license_type(url="https://www.example.com", description={"en": "License text"})
+
+
+def test_rems_service_publish_dataset_change_admin_org(mock_rems, user):
+    """Test REMS publish when changing admin organization for dataset."""
+    user.dac_organizations = ["test_organization"]
+    user.save()
+    service = REMSService()
+
+    catalog = factories.DataCatalogFactory(rems_enabled=True)
+    dataset = factories.REMSDatasetFactory(
+        data_catalog=catalog, metadata_owner__admin_organization="admin_org1"
+    )
+    service.publish_dataset(dataset, raise_errors=True)
+
+    assert len(mock_rems.entities["workflow"]) == 1
+    assert len(mock_rems.entities["license"]) == 1
+    assert len(mock_rems.entities["resource"]) == 1
+    assert len(mock_rems.entities["catalogue-item"]) == 1
+
+    # Create auto-approved application
+    service.create_application_for_dataset(
+        user, dataset, service.get_dataset_rems_license_ids(dataset)
+    )
+    assert len(mock_rems.entities["application"]) == 1
+    assert (
+        mock_rems.entities["application"][1]["application/state"] == "application.state/approved"
+    )
+
+    # Change admin_organization. Dataset should close REMS applications and change workflow
+    dataset.metadata_owner = factories.MetadataProviderFactory(
+        user=dataset.metadata_owner.user,
+        organization=dataset.metadata_owner.organization,
+        admin_organization="admin_org2",
+    )
+    dataset.save()
+
+    service.publish_dataset(dataset, raise_errors=True)
+
+    # A workflow for admin_org_2 is created along with a catalogue item that uses the new workflow.
+    # The existing license and resource are unchanged.
+    assert len(mock_rems.entities["workflow"]) == 2
+    assert len(mock_rems.entities["catalogue-item"]) == 2
+    assert len(mock_rems.entities["resource"]) == 1
+    assert len(mock_rems.entities["license"]) == 1
+
+    # The old catalogue item is archived.
+    # The old workflow may be in use in other datasets and is not archived.
+    assert mock_rems.entities["catalogue-item"][1]["archived"] == True
+    assert mock_rems.entities["catalogue-item"][1]["wfid"] == 1
+    assert mock_rems.entities["workflow"][1]["archived"] == False
+    assert mock_rems.entities["workflow"][2]["archived"] == False
+    assert mock_rems.entities["catalogue-item"][2]["archived"] == False
+    assert mock_rems.entities["catalogue-item"][2]["wfid"] == 2
+
+    # The old application is closed
+    assert len(mock_rems.entities["application"]) == 1
+    assert mock_rems.entities["application"][1]["application/state"] == "application.state/closed"
+    assert (
+        mock_rems.entities["application"][1]["application/events"][-1]["event/type"]
+        == "application.event/closed"
+    )
+    assert (
+        mock_rems.entities["application"][1]["application/events"][-1]["application/comment"]
+        == "Permission granter organization has changed."
+    )
+
+
+def test_rems_service_publish_dataset_missing_admin_organization(mock_rems, user):
+    """Test publishing dataset to REMS without admin organization."""
+    user.dac_organizations = ["test_organization"]
+    user.save()
+
+    catalog = factories.DataCatalogFactory(rems_enabled=True)
+    dataset = factories.REMSDatasetFactory(
+        data_catalog=catalog, metadata_owner__admin_organization=None
+    )
+    with pytest.raises(ValueError) as ec:
+        REMSService().publish_dataset(dataset, raise_errors=True)
+
+    assert str(ec.value) == "Dataset is not enabled for REMS."
+
+    with pytest.raises(ValueError) as ec:
+        REMSService().create_dataset_workflow(dataset) # Try creating workflow directly
+
+    assert str(ec.value) == "Dataset is missing admin_organization."

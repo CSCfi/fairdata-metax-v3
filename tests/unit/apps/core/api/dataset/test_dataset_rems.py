@@ -12,8 +12,13 @@ pytestmark = [pytest.mark.django_db]
 
 
 @pytest.fixture
-def rems_dataset_json(dataset_a_json):
+def rems_dataset_json(dataset_a_json, admin_organizations):
     access_rights = dataset_a_json["access_rights"]
+    dataset_a_json["metadata_owner"] = {
+        "user": "admin",
+        "organization": "admin",
+        "admin_organization": "test_org",
+    }
     access_rights["access_type"] = {
         "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/permit"
     }
@@ -45,6 +50,38 @@ def test_publish_rems_dataset(
     assert dataset.rems_publish_error is None
     assert dataset.rems_status == REMSStatus.PUBLISHED
 
+    catalogue_items = REMSCatalogueItem.objects.filter(key=f"dataset-{res.data['id']}")
+    assert catalogue_items.count() == 1
+    item = catalogue_items.first()
+    assert dataset.rems_id == item.rems_id
+
+
+def test_publish_rems_dataset_no_admin_organization(
+    mock_rems, admin_client, rems_dataset_json, data_catalog, reference_data
+):
+    rems_dataset_json["metadata_owner"]["admin_organization"] = None
+    res = admin_client.post("/v3/datasets", rems_dataset_json, content_type="application/json")
+    assert res.status_code == 201
+    dataset = Dataset.objects.get(id=res.data["id"])
+    assert dataset.rems_publish_error is None
+    assert dataset.rems_status == REMSStatus.NOT_REMS # No admin_organization, not REMS dataset
+
+    # Adding admin_organization should make dataset ok for REMS
+    res = admin_client.patch(
+        f"/v3/datasets/{res.data['id']}",
+        {
+            "metadata_owner": {
+                "user": "admin",
+                "organization": "admin",
+                "admin_organization": "test_org",
+            }
+        },
+        content_type="application/json",
+    )
+
+    dataset.refresh_from_db()
+    assert dataset.rems_publish_error is None
+    assert dataset.rems_status == REMSStatus.PUBLISHED
     catalogue_items = REMSCatalogueItem.objects.filter(key=f"dataset-{res.data['id']}")
     assert catalogue_items.count() == 1
     item = catalogue_items.first()
@@ -155,7 +192,7 @@ def test_rems_applications(mock_rems, user_client):
 
 def test_rems_application_reviewer_instructions(mock_rems, user_client, handler_client):
     dataset = factories.REMSDatasetFactory(
-        metadata_owner__organization="test_organization",
+        metadata_owner__admin_organization="test_organization",
         access_rights__data_access_reviewer_instructions={
             "en": "Top secret instructions for reviewers"
         },
@@ -478,7 +515,7 @@ def test_dataset_rems_check(
         "data_catalog_rems_enabled": True,
         "access_type_is_permit": True,
         "dataset_is_published": True,
-        "dataset_has_admin_organization": False, # TODO: Require admin org here
+        "dataset_has_admin_organization": True,
         "rems_approval_type_is_set": True,
         "dataset_in_rems": True,
     }

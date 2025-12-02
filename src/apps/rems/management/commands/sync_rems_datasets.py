@@ -1,20 +1,20 @@
 from django.core.management import BaseCommand
-from django.db.models import Q, Exists, OuterRef
+from django.db.models import Exists, OuterRef, Q
 
-from apps.rems.rems_service import REMSService, REMSResource
+from apps.core.models import Dataset
+from apps.core.models.access_rights import AccessTypeChoices
+from apps.rems.rems_service import REMSResource, REMSService
 
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
         self.service = REMSService()
-        from apps.core import factories
-        from apps.core.models import Dataset
-        from apps.core.models.access_rights import AccessTypeChoices
 
         rems_dataset_filter = Q(
             access_rights__access_type__url=AccessTypeChoices.PERMIT,
             access_rights__rems_approval_type__isnull=False,
             data_catalog__rems_enabled=True,
+            metadata_owner__admin_organization__isnull=False,
         )
 
         rems_datasets = (

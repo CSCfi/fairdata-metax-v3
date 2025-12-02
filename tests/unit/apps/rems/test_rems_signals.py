@@ -10,7 +10,7 @@ def test_rems_add_organization_dac_member(mock_rems, user):
     """Test adding organization DAC member as REMS workflow handler."""
     catalog = factories.DataCatalogFactory(rems_enabled=True)
     dataset = factories.REMSDatasetFactory(
-        data_catalog=catalog, metadata_owner__organization=user.organization
+        data_catalog=catalog, metadata_owner__admin_organization=user.organization
     )
     service = REMSService()
     service.publish_dataset(dataset, raise_errors=True)
@@ -41,7 +41,7 @@ def test_rems_remove_organization_dac_member(mock_rems, user):
 
     catalog = factories.DataCatalogFactory(rems_enabled=True)
     dataset = factories.REMSDatasetFactory(
-        data_catalog=catalog, metadata_owner__organization=user.organization
+        data_catalog=catalog, metadata_owner__admin_organization=user.organization
     )
     service = REMSService()
     service.publish_dataset(dataset, raise_errors=True)
@@ -70,7 +70,7 @@ def test_rems_add_organization_dac_member_manual_approval(mock_rems, user):
     catalog = factories.DataCatalogFactory(rems_enabled=True)
     dataset = factories.REMSDatasetFactory(
         data_catalog=catalog,
-        metadata_owner__organization=user.organization,
+        metadata_owner__admin_organization=user.organization,
         access_rights__rems_approval_type="manual",
     )
     service = REMSService()

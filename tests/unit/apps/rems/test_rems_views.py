@@ -34,7 +34,7 @@ def automatic_rems_dataset(mock_rems, user):
         data_catalog=catalog,
         access_rights__rems_approval_type="automatic",
         metadata_owner__user=user,
-        metadata_owner__organization="test_organization",
+        metadata_owner__admin_organization="test_organization",
     )
     return dataset
 
@@ -46,7 +46,7 @@ def manual_rems_dataset(mock_rems, user):
         data_catalog=catalog,
         access_rights__rems_approval_type="manual",
         metadata_owner__user=user,
-        metadata_owner__organization="test_organization",
+        metadata_owner__admin_organization="test_organization",
     )
     return dataset
 

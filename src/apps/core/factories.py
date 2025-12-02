@@ -435,6 +435,9 @@ class REMSDatasetFactory(PublishedDatasetFactory):
         access_type=factory.SubFactory(AccessTypeFactory, url=AccessTypeChoices.PERMIT),
         rems_approval_type=REMSApprovalType.AUTOMATIC,
     )
+    metadata_owner = factory.SubFactory(
+        MetadataProviderFactory, admin_organization="admin_org"
+    )
 
 
 class FileSetFactory(factory.django.DjangoModelFactory):

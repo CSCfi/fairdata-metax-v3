@@ -520,10 +520,14 @@ class REMSService:
         """Get or create REMS workflow for dataset."""
         from apps.core.models.access_rights import REMSApprovalType
 
+        organization = dataset.metadata_owner and dataset.metadata_owner.admin_organization
+        if not organization:
+            raise ValueError("Dataset is missing admin_organization.")
+
         if dataset.access_rights.rems_approval_type == REMSApprovalType.AUTOMATIC:
-            return self.create_automatic_workflow(dataset.metadata_owner.organization)
+            return self.create_automatic_workflow(organization)
         if dataset.access_rights.rems_approval_type == REMSApprovalType.MANUAL:
-            return self.create_manual_workflow(dataset.metadata_owner.organization)
+            return self.create_manual_workflow(organization)
         raise ValueError("Dataset is not enabled for REMS.")
 
     def update_organization_workflows(self, metax_organization: str) -> List[REMSWorkflow]:
@@ -550,14 +554,29 @@ class REMSService:
 
         if not dataset.is_rems_dataset:
             raise ValueError("Dataset is not enabled for REMS.")
-
         try:
             if dataset.rems_publish_error:
                 dataset.rems_publish_error = None
                 models.Model.save(dataset, update_fields=["rems_publish_error"])
             logging.info(f"Syncing dataset {dataset.id} ({dataset.persistent_identifier}) to REMS")
+            dataset_key = self.get_dataset_key(dataset)
+
+            old_workflow: REMSWorkflow | None = None
+            if old_item := REMSCatalogueItem.objects.filter(key=dataset_key).first():
+                old_workflow_id = self.get_entity_data(old_item)["wfid"]
+                old_workflow = REMSWorkflow.objects.get(rems_id=old_workflow_id)
 
             workflow = self.create_dataset_workflow(dataset)
+            if old_workflow and workflow.metax_organization != old_workflow.metax_organization:
+                logger.info(
+                    f"Workflow organization changed for dataset={dataset.id} "
+                    f"{old_workflow=} {workflow.rems_id=}, "
+                    "closing old applications"
+                )
+                self.close_dataset_applications(
+                    dataset, comment="Permission granter organization has changed."
+                )
+
             old_license_ids = set(self.get_dataset_rems_license_ids(dataset))
 
             licenses = []
@@ -582,7 +601,6 @@ class REMSService:
 
             self.archive_unused_custom_licenses(dataset, licenses)
 
-            dataset_key = self.get_dataset_key(dataset)
             resource = self.create_resource(
                 key=dataset_key,
                 identifier=self.get_dataset_resource_id(dataset),
@@ -795,7 +813,6 @@ class REMSService:
             elif state in {"application.state/submitted", "application.state/returned"}:
                 counts.submitted += 1
         return counts
-
 
     def get_user_applications_for_dataset(self, user: MetaxUser, dataset: "Dataset") -> List[dict]:
         self.check_user(user)

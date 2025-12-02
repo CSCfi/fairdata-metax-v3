@@ -500,11 +500,15 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             and self.access_rights.access_type.url
         )
         rems_approval_type = self.access_rights and self.access_rights.rems_approval_type
+        dataset_has_admin_organization = bool(
+            self.metadata_owner and self.metadata_owner.admin_organization
+        )
         return (
             self.state == "published"
             and self.data_catalog.rems_enabled
             and access_type_url == AccessTypeChoices.PERMIT
             and rems_approval_type is not None
+            and dataset_has_admin_organization
         )
 
     def rems_check(self) -> dict:

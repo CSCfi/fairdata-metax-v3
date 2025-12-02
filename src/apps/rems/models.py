@@ -91,7 +91,7 @@ class REMSWorkflow(REMSEntity):
     entity_type = EntityType.WORKFLOW
     metax_organization = models.CharField(
         null=True, blank=True
-    )  # Id of the organization the workflow belongs to in Metax, not the REMS organization
+    )  # The admin_organization the workflow belongs to in Metax
 
 
 class REMSForm(REMSEntity):
