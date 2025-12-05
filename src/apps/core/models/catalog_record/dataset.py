@@ -123,6 +123,44 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         ]
     )
 
+    # Fields that replace values from published dataset when merging draft
+    draft_merge_fields = [
+        "access_rights",
+        "actors",
+        "api_version",
+        "bibliographic_citation",
+        "cumulation_ended",
+        "cumulation_started",
+        "cumulative_state",
+        "data_catalog",
+        "deprecated",
+        "description",
+        "field_of_science",
+        "file_set",
+        "generate_pid_on_publish",
+        "index_entries",
+        "infrastructure",
+        "issued",
+        "keyword",
+        "language",
+        "last_cumulative_addition",
+        "last_modified_by",
+        "modified",
+        "other_identifiers",
+        "persistent_identifier",
+        "pid_generated_by_fairdata",
+        "projects",
+        "provenance",
+        "record_modified",
+        "relation",
+        "remote_resources",
+        "removed",
+        "spatial",
+        "temporal",
+        "theme",
+        "title",
+    ]
+
     persistent_identifier = models.CharField(max_length=255, null=True, blank=True, db_index=True)
     issued = models.DateField(
         null=True,
@@ -731,28 +769,14 @@ class Dataset(V2DatasetMixin, CatalogRecord):
 
         self._check_merge_draft_files()
         dft = self.next_draft
-        ignored_values = [
-            "id",
-            "catalogrecord_ptr",
-            "state",
-            "published_revision",
-            "created",
-            "next_draft",
-            "draft_of",
-            "metadata_owner",
-            "other_versions",
-            "legacydataset",
-            "preservation",
-            "draft_revision",
-            "sync_status",
-        ]
+        merge_fields = set(self.draft_merge_fields)
 
         # Ignore PID from draft if it starts with "draft:"
         if dft.persistent_identifier and dft.persistent_identifier.startswith("draft:"):
-            ignored_values.append("persistent_identifier")
+            merge_fields.remove("persistent_identifier")
 
         for field in self._meta.get_fields():
-            if field.name in ignored_values:
+            if field.name not in merge_fields:
                 continue
 
             if field.is_relation and not field.many_to_one:

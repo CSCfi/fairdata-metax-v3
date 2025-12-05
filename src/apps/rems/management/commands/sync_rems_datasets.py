@@ -7,6 +7,8 @@ from apps.rems.rems_service import REMSResource, REMSService
 
 
 class Command(BaseCommand):
+    help = """Updates all REMS-enabled datasets in REMS."""
+
     def handle(self, *args, **options):
         self.service = REMSService()
 

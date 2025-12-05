@@ -64,7 +64,7 @@ def test_publish_rems_dataset_no_admin_organization(
     assert res.status_code == 201
     dataset = Dataset.objects.get(id=res.data["id"])
     assert dataset.rems_publish_error is None
-    assert dataset.rems_status == REMSStatus.NOT_REMS # No admin_organization, not REMS dataset
+    assert dataset.rems_status == REMSStatus.NOT_REMS  # No admin_organization, not REMS dataset
 
     # Adding admin_organization should make dataset ok for REMS
     res = admin_client.patch(
@@ -537,3 +537,97 @@ def test_dataset_rems_check(
         "rems_approval_type_is_set": False,
         "dataset_in_rems": False,
     }
+
+
+def test_rems_dataset_merge_draft(mock_rems, admin_client, user_client, handler_client):
+    """Test that merging REMS dataset draft updates REMS localizations."""
+    dataset = factories.REMSDatasetFactory(
+        title={"en": "Some title"},
+        metadata_owner__admin_organization="test_organization",
+    )
+    service = REMSService()
+    service.publish_dataset(dataset, raise_errors=True)
+    assert mock_rems.entities["catalogue-item"][1]["localizations"]["en"]["title"] == "Some title"
+
+    # Create application
+    res = user_client.post(
+        f"/v3/datasets/{dataset.id}/rems-applications",
+        {"accept_licenses": service.get_dataset_rems_license_ids(dataset)},
+        content_type="application/json",
+    )
+    assert res.status_code == 200, res.data
+    assert (
+        mock_rems.entities["application"][1]["application/state"]
+        == mock_rems.ApplicationState.APPROVED
+    )
+
+    # Create new draft, change title
+    res = admin_client.post(
+        f"/v3/datasets/{dataset.id}/create-draft",
+        content_type="application/json",
+    )
+    assert res.status_code == 201
+
+    draft = res.json()
+    draft["title"] = {"en": "New title"}
+    res = admin_client.patch(f"/v3/datasets/{draft['id']}", draft, content_type="application/json")
+    assert res.status_code == 200, res.data
+
+    res = admin_client.post(f"/v3/datasets/{draft['id']}/publish", content_type="application/json")
+    assert res.status_code == 200
+
+    # Localizations for existing catalogue item are updated, applications are unchanged
+    assert len(mock_rems.entities["resource"]) == 1
+    assert len(mock_rems.entities["catalogue-item"]) == 1
+    assert mock_rems.entities["catalogue-item"][1]["localizations"]["en"]["title"] == "New title"
+    assert (
+        mock_rems.entities["application"][1]["application/state"]
+        == mock_rems.ApplicationState.APPROVED
+    )
+
+
+def test_rems_dataset_merge_draft_change_terms(
+    mock_rems, admin_client, user_client, handler_client
+):
+    """Test that applications are closed when changed data access terms are merged."""
+    dataset = factories.REMSDatasetFactory(
+        metadata_owner__admin_organization="test_organization",
+        access_rights__data_access_terms={"en": "Terms for data access"},
+    )
+    service = REMSService()
+    service.publish_dataset(dataset, raise_errors=True)
+
+    # Create application
+    res = user_client.post(
+        f"/v3/datasets/{dataset.id}/rems-applications",
+        {"accept_licenses": service.get_dataset_rems_license_ids(dataset)},
+        content_type="application/json",
+    )
+    assert res.status_code == 200, res.data
+    assert (
+        mock_rems.entities["application"][1]["application/state"]
+        == mock_rems.ApplicationState.APPROVED
+    )
+
+    # Create new draft, change terms
+    res = admin_client.post(
+        f"/v3/datasets/{dataset.id}/create-draft",
+        content_type="application/json",
+    )
+    assert res.status_code == 201
+
+    draft = res.json()
+    draft["access_rights"]["data_access_terms"] = {"en": "New terms for data access"}
+    res = admin_client.patch(f"/v3/datasets/{draft['id']}", draft, content_type="application/json")
+    assert res.status_code == 200, res.data
+
+    res = admin_client.post(f"/v3/datasets/{draft['id']}/publish", content_type="application/json")
+    assert res.status_code == 200
+
+    # New resource is created, old applications are closed
+    assert len(mock_rems.entities["resource"]) == 2
+    assert len(mock_rems.entities["catalogue-item"]) == 2
+    assert (
+        mock_rems.entities["application"][1]["application/state"]
+        == mock_rems.ApplicationState.CLOSED
+    )

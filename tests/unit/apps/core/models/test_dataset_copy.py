@@ -249,3 +249,41 @@ def test_dataset_copy_bulk():
     orig_temporal_ids = set(orig.temporal.values_list("id", flat=True))
     copy_temporal_ids = set(copy.temporal.values_list("id", flat=True))
     assert orig_temporal_ids.isdisjoint(copy_temporal_ids)
+
+
+def test_dataset_draft_merge_fields():
+    """Test that merging draft copy of dataset uses correct fields."""
+    merge_fields = set(Dataset.draft_merge_fields)  # Fields that are merged when publishing draft
+    dataset_fields = {field.name for field in Dataset._meta.get_fields()}  # All dataset fields
+
+    # Fields that are not merged.
+    # When adding a new field to Dataset, it needs to be added to Dataset.draft_merge_fields
+    # or listed here as a field that should not be used when merging.
+    expected_ignored_fields = {
+        "created",
+        "custom_rems_licenses",
+        "dataset_versions",
+        "draft_of",
+        "draft_revision",
+        "id",
+        "is_legacy",
+        "legacydataset",
+        "metadata_owner",
+        "metrics",
+        "next_draft",
+        "permissions",
+        "preservation",
+        "published_revision",
+        "record_created",
+        "rems_publish_error",
+        "rems_resources",
+        "state",
+        "sync_status",
+        "system_creator",
+    }
+    ignored_fields = dataset_fields - merge_fields
+    assert ignored_fields == expected_ignored_fields
+
+    # Check that Dataset.draft_merge_fields does not contain any invalid fields
+    unknown_merge_fields = merge_fields - dataset_fields
+    assert not unknown_merge_fields

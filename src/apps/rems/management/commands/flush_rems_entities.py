@@ -24,7 +24,9 @@ models = [
 
 class Command(BaseCommand):
     help = """Deletes all REMS entities from the Metax database.
-    Does not delete anything from REMS."""
+    Does not delete anything from the actual REMS instance. Needed when switching to
+    a new REMS instance so Metax knows it needs to create new objects in REMS.
+    """
 
     def handle(self, *args, **options):
         self.stdout.write("Flushing all REMS entities")
