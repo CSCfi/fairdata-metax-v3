@@ -517,8 +517,8 @@ def access_type_reference_data():
         factories.AccessTypeFactory.build(
             url="http://uri.suomi.fi/codelist/fairdata/access_type/code/permit",
             pref_label={
-                "fi": "Vaatii luvan hakemista Fairdata-palvelussa",
-                "en": "Requires applying permission in Fairdata service",
+                "fi": "Vaatii luvan hakemista",
+                "en": "Requires applying for permission",
             },
             same_as=["http://publications.europa.eu/resource/authority/access-right/RESTRICTED"],
             **common_args,
