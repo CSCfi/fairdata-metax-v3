@@ -21,11 +21,12 @@ from apps.common.copier import ModelCopier
 from apps.common.exceptions import TopLevelValidationError
 from apps.common.helpers import datetime_to_date, normalize_doi, single_translation
 from apps.common.history import SnapshotHistoricalRecords
-from apps.common.models import AbstractBaseModel
+from apps.common.models import AbstractBaseModel, CustomSoftDeletableManager
 from apps.common.tasks import run_task
 from apps.core.models.access_rights import AccessRights, AccessTypeChoices
 from apps.core.models.catalog_record.dataset_index import DatasetIndexEntry
 from apps.core.models.catalog_record.dataset_permissions import DatasetPermissions
+from apps.core.models.catalog_record.managers import DatasetManager, SoftDeletableDatasetManager
 from apps.core.models.concepts import (
     FieldOfScience,
     IdentifierType,
@@ -105,6 +106,10 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         theme (models.ManyToManyField): Keyword ManyToMany relation
         title (HStoreField): Title of the dataset
     """
+
+    objects = SoftDeletableDatasetManager()
+    available_objects = SoftDeletableDatasetManager()
+    all_objects = DatasetManager()
 
     # Model nested copying configuration
     copier = ModelCopier(

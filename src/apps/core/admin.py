@@ -142,14 +142,7 @@ class REMSStatusFilter(admin.SimpleListFilter):
         return REMSStatus.choices
 
     def queryset(self, request, queryset):
-        rems_datasets = queryset.filter(
-            state="published",
-            access_rights__access_type__url__in=[
-                AccessTypeChoices.PERMIT,
-                AccessTypeChoices.RESTRICTED,
-            ],
-            access_rights__rems_approval_type__isnull=False,
-        )
+        rems_datasets = queryset.rems_datasets()
 
         value = self.value()
         if value == REMSStatus.NOT_REMS:
