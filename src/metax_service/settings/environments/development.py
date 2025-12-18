@@ -31,6 +31,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://localhost",
     "https://etsin.fd-dev.csc.fi",
     "https://qvain.fd-dev.csc.fi",
+    "https://smear-backend.fd-dev.csc.fi",
 ]
 CORS_ORIGIN_ALLOW_ALL = True
 

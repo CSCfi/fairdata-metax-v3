@@ -70,6 +70,12 @@ python manage.py migrate
 mkdir static
 python manage.py collectstatic --no-input
 ```
+* Alternatively if you run Metax in Docker, you can use `first_time_setup.sh` script, which will initialize the database. Note: To work, the script expects that Metax is running inside a Docker container named `metax-v3`
+```bash
+# In the repository root, run
+chmod a+x first_time_setup.sh
+./first_time_setup.sh
+```
 
 ### Optional: Docker setup
 

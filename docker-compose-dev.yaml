@@ -2,9 +2,9 @@
 version: "3.8"
 
 services:
-  metax-service:
-    image: fairdata-metax-service
-    hostname: metax-service
+  metax-v3:
+    image: fairdata-metax-v3
+    hostname: metax-v3
     ports:
       - 8002:8002
     environment:

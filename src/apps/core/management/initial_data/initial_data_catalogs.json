@@ -690,6 +690,46 @@
     ]
   },
   {
+    "id": "urn:nbn:fi:att:data-catalog-smartsmear",
+    "title": {
+      "en": "Data catalog for testing SmartSMEAR integration",
+      "fi": "Testi katalogi SmartSMEARin Metax-integraatiolle"
+    },
+    "language": [
+      {
+        "url": "http://lexvo.org/id/iso639-3/fin"
+      }
+    ],
+    "is_external": true,
+    "publisher": {
+      "name": {
+        "en": "CSC Fairdata",
+        "fi": "CSC Fairdata"
+      },
+      "homepage": [
+        {
+          "title": {
+            "en": "Publisher organization website",
+            "fi": "Julkaisijaorganisaation kotisivu"
+          },
+          "url": "http://www.fairdata.fi/"
+        }
+      ]
+    },
+    "description": {
+      "en": "Data catalog for testing SmartSMEAR integration",
+      "fi": "Testi katalogi SmartSMEARin Metax-integraatiolle"
+    },
+    "dataset_versioning_enabled": false,
+    "dataset_groups_create": ["smartsmear"],
+    "dataset_groups_admin": ["smartsmear"],
+    "publishing_channels": ["default", "etsin", "ttv"],
+    "allowed_pid_types":
+    [
+      "DOI"
+    ]
+  },
+  {
     "id": "urn:nbn:fi:att:data-catalog-tuni",
     "title": {
       "en": "Data catalog for testing TUNI integration",
