@@ -58,3 +58,4 @@ venv*/
 .scannerwork
 staticfiles/*
 site/*
+src/metax_service/settings/local.py

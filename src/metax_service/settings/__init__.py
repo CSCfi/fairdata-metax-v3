@@ -26,6 +26,7 @@ base_settings = [
     "components/tasks.py",
     "components/rems.py",
     "environments/{0}.py".format(ENV),
+    optional("local.py"),  # Local settings, not committed to git
 ]
 # Include settings:
 include(*base_settings)
