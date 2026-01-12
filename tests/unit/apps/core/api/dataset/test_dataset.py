@@ -764,9 +764,8 @@ def test_missing_restriction_grounds(admin_client, dataset_a_json, data_catalog,
     }
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 400
-    assert (
-        "Dataset access rights has to contain restriction grounds if access type is not 'Open'."
-        in str(res.data["access_rights"])
+    assert "Restriction grounds are required if access type is not 'Open'." in str(
+        res.data["access_rights"]["restriction_grounds"]
     )
 
     dataset_a_json["access_rights"]["restriction_grounds"] = [

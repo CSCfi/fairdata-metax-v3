@@ -56,6 +56,22 @@ def test_publish_rems_dataset(
     assert dataset.rems_id == item.rems_id
 
 
+def test_rems_dataset_missing_approval_type(
+    mock_rems, admin_client, rems_dataset_json, data_catalog, reference_data
+):
+    # Catalog with rems_enabled requires "permit" datasets to have rems_approval_type
+    del rems_dataset_json["access_rights"]["rems_approval_type"]
+    res = admin_client.post("/v3/datasets", rems_dataset_json, content_type="application/json")
+    assert res.status_code == 400
+    assert "Approval type is required" in res.json()["access_rights"]["rems_approval_type"]
+
+    # Catalog without rems_enabled does not require rems_approval_type
+    data_catalog.rems_enabled = False
+    data_catalog.save()
+    res = admin_client.post("/v3/datasets", rems_dataset_json, content_type="application/json")
+    assert res.status_code == 201
+
+
 def test_publish_rems_dataset_no_admin_organization(
     mock_rems, admin_client, rems_dataset_json, data_catalog, reference_data
 ):

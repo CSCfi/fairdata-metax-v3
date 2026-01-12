@@ -993,6 +993,40 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         self.create_snapshot()
         return self
 
+    def validate_published_access_rights(self) -> dict:
+        errors = {}
+        if not self.is_legacy:
+            if not self.access_rights.license.exists():
+                errors["license"] = "Dataset has to have a license when publishing."
+
+            if (
+                self.access_rights.access_type.url != AccessTypeChoices.OPEN
+                and not self.access_rights.restriction_grounds.exists()
+            ):
+                errors["restriction_grounds"] = (
+                    "Restriction grounds are required if access type is not 'Open'."
+                )
+            if (
+                self.access_rights.access_type.url == AccessTypeChoices.OPEN
+                and self.access_rights.restriction_grounds.exists()
+            ):
+                errors["restriction_grounds"] = "Open datasets do not accept restriction grounds."
+
+        if not getattr(self, "_saving_legacy", False):
+            catalog_rems_enabled = (
+                settings.REMS_ENABLED and self.data_catalog and self.data_catalog.rems_enabled
+            )
+            if (
+                catalog_rems_enabled
+                and self.access_rights.access_type.url == AccessTypeChoices.PERMIT
+                and self.access_rights.rems_approval_type is None
+            ):
+                errors["rems_approval_type"] = (
+                    "Approval type is required by the data catalog for the 'Permit' access type."
+                )
+
+        return errors
+
     def validate_published(self, require_pid=True):
         """Validates that dataset is acceptable for publishing.
 
@@ -1018,7 +1052,10 @@ class Dataset(V2DatasetMixin, CatalogRecord):
                     "Value is required by the catalog when publishing. "
                 )
 
-        if not self.access_rights:
+        if self.access_rights:
+            if access_rights_errors := self.validate_published_access_rights():
+                errors["access_rights"] = access_rights_errors
+        else:
             errors["access_rights"] = _("Dataset has to have access rights when publishing.")
         if not self.description:
             errors["description"] = _("Dataset has to have a description when publishing.")
@@ -1052,27 +1089,6 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         if not self.is_legacy:
             if publisher_count != 1:
                 actor_errors.append(_("Exactly one actor with publisher role is required."))
-            if self.access_rights and not self.access_rights.license.exists():
-                access_rights_errors.append(_("Dataset has to have a license when publishing."))
-                errors["access_rights"] = access_rights_errors
-            if (
-                self.access_rights
-                and self.access_rights.access_type.url != AccessTypeChoices.OPEN
-                and not self.access_rights.restriction_grounds.exists()
-            ):
-                access_rights_errors.append(
-                    _(
-                        "Dataset access rights has to contain restriction grounds if access type is not 'Open'."
-                    )
-                )
-                errors["access_rights"] = access_rights_errors
-            if (
-                self.access_rights
-                and self.access_rights.access_type.url == AccessTypeChoices.OPEN
-                and self.access_rights.restriction_grounds.exists()
-            ):
-                access_rights_errors.append(_("Open datasets do not accept restriction grounds."))
-                errors["access_rights"] = access_rights_errors
 
         if actor_errors:
             errors["actors"] = actor_errors
