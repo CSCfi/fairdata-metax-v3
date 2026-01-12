@@ -14,6 +14,7 @@ from .catalog_record import (
     OtherIdentifier,
     RemoteResource,
     Temporal,
+    DatasetIndexEntry,
 )
 from .concepts import (
     AccessType,

@@ -94,7 +94,7 @@ def test_aggregation_and_filters(
     res = admin_client.get("/v3/datasets")
     assert res.data["count"] == 3
 
-    res = admin_client.get("/v3/datasets/aggregates")
+    res = admin_client.get("/v3/datasets/aggregates?language=en")
     assert res.data != None
     assert sorted(res.data.keys()) == [
         "access_type",
@@ -154,7 +154,7 @@ def test_aggregation_soft_deleted_actor(
     assert DatasetActor.available_objects.count() == 1
 
     # Aggregates should not return soft deleted DatasetActor organizations
-    res = admin_client.get("/v3/datasets/aggregates")
+    res = admin_client.get("/v3/datasets/aggregates?language=en")
     assert res.status_code == 200
     hits_en = [hit["value"]["en"] for hit in res.data["creator"]["hits"] if "en" in hit["value"]]
     assert hits_en == ["Organization"]
@@ -163,20 +163,28 @@ def test_aggregation_soft_deleted_actor(
 def test_aggregation_query_params(user_client):
     factories.PublishedDatasetFactory(title={"en": "apples"}, keyword=["fruit"])
     factories.PublishedDatasetFactory(title={"en": "bananas"}, keyword=["fruit"])
+    from io import StringIO
+    from django.core.management import call_command
+
+    out = StringIO()
+    err = StringIO()
+    call_command("index_datasets", stdout=out, stderr=err)
+    assert err.getvalue() == ""
+    assert "datasets indexed" in out.getvalue()
 
     # No params, includes all published datasets
-    res = user_client.get("/v3/datasets/aggregates")
+    res = user_client.get("/v3/datasets/aggregates?language=en")
     assert res.status_code == 200
-    assert res.data["keyword"]["hits"] == [{"value": {"und": "fruit"}, "count": 2}]
+    assert res.data["keyword"]["hits"] == [{"value": {"en": "fruit"}, "count": 2}]
 
     # Includes only results matching dataset filtering query params
-    res = user_client.get("/v3/datasets/aggregates?title=apple")
+    res = user_client.get("/v3/datasets/aggregates?language=en&title=apple")
     assert res.status_code == 200
-    assert res.data["keyword"]["hits"] == [{"value": {"und": "fruit"}, "count": 1}]
+    assert res.data["keyword"]["hits"] == [{"value": {"en": "fruit"}, "count": 1}]
 
 
 def test_aggregation_query_params_invalid(user_client):
-    res = user_client.get("/v3/datasets/aggregates?schtitle=apple")
+    res = user_client.get("/v3/datasets/aggregates?language=en&schtitle=apple")
     assert res.status_code == 400
     assert res.json() == {"schtitle": "Unknown query parameter"}
 

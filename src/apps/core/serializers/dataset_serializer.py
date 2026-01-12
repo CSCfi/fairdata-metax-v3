@@ -647,3 +647,52 @@ class DatasetFieldsQueryParamsSerializer(serializers.Serializer):
         ),
         help_text=_("Filter specific fields of the dataset."),
     )
+
+
+class DatasetAggregationQueryParamsSerializer(serializers.Serializer):
+    organization_facet_search = serializers.CharField(
+        help_text="Filter dataset aggregation by organization", required=False
+    )
+
+    creator_facet_search = serializers.CharField(
+        help_text="Filter dataset aggregation by creator", required=False
+    )
+
+    field_of_science_facet_search = serializers.CharField(
+        help_text="Filter dataset aggregation by field of science", required=False
+    )
+
+    keyword_facet_search = serializers.CharField(
+        help_text="Filter dataset aggregation by keyword", required=False
+    )
+
+    project_facet_search = serializers.CharField(
+        help_text="Filter dataset aggregation by keyword", required=False
+    )
+
+    language = serializers.CharField(help_text="Return language", required=True)
+
+    limit_hits = serializers.IntegerField(
+        help_text="Limit the number of results", required=False, default=20
+    )
+
+    def validate_language(self, value):
+        if value not in ["en", "fi"]:
+            raise serializers.ValidationError("Invalid value")
+        return value
+
+    # OneOf
+    class Meta:
+        validators = [
+            OneOf(
+                [
+                    "organization_facet_search",
+                    "creator_facet_search",
+                    "field_of_science_facet_search",
+                    "keyword_facet_search",
+                    "project_facet_search",
+                ],
+                required=False,
+                count_all_falsy=True,
+            )
+        ]

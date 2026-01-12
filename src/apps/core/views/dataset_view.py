@@ -59,6 +59,7 @@ from apps.core.serializers.dataset_serializer import (
     DatasetFieldsQueryParamsSerializer,
     ExpandCatalogQueryParamsSerializer,
     LatestVersionQueryParamsSerializer,
+    DatasetAggregationQueryParamsSerializer,
 )
 from apps.core.serializers.legacy_serializer import LegacyDatasetConversionValidationSerializer
 from apps.core.services import MetaxV2Client, PIDMSClient
@@ -528,6 +529,10 @@ class DatasetViewSet(CommonModelViewSet):
             "class": DatasetFieldsQueryParamsSerializer,
             "actions": ["list", "retrieve"],
         },
+        {
+            "class": DatasetAggregationQueryParamsSerializer,
+            "actions": ["aggregates"],
+        },
     ]
     access_policy = DatasetAccessPolicy
     serializer_class = DatasetSerializer
@@ -878,7 +883,7 @@ class DatasetViewSet(CommonModelViewSet):
     @action(detail=False)
     def aggregates(self, request):
         queryset = self.filter_queryset(self.get_queryset())
-        aggregates = aggregate_queryset(queryset)
+        aggregates = aggregate_queryset(queryset, request)
         return response.Response(aggregates, status=status.HTTP_200_OK)
 
     def perform_destroy(self, instance):
