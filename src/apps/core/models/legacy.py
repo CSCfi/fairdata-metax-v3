@@ -416,6 +416,7 @@ class LegacyDataset(AbstractBaseModel):
                 dataset_versions = get_or_create_dataset_versions(self)
                 self.dataset = serializer.save(dataset_versions=dataset_versions)
                 self.attach_draft()
+                self.dataset.dataset_versions.update_dataset_order()
                 with cachalot_disabled():
                     self.attach_files()
                 self.attach_contract()

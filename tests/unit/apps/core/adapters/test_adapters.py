@@ -226,8 +226,7 @@ def test_v2_to_v3_dataset_conversion_ignore_invalid_email(harvested_json, licens
 @pytest.mark.django_db
 def test_get_version_identifiers():
     dataset = factories.DatasetFactory()
-    dataset2 = factories.DatasetFactory()
-    dataset.dataset_versions.datasets.add(dataset2)
+    dataset2 = factories.DatasetFactory(dataset_versions=dataset.dataset_versions)
     assert dataset._get_version_identifiers() == sorted([str(dataset.id), str(dataset2.id)])
 
     # If dataset has no dataset_versions, dataset id should be returned

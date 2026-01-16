@@ -346,3 +346,73 @@ def test_list_latest_versions(admin_client, user_client, dataset_a_json):
     assert len(res.data) == 2
     assert res.data[0]["title"]["en"] == "dataset"
     assert res.data[1]["title"]["en"] == "version 2"
+
+
+@pytest.fixture
+def datasets_in_odd_order(admin_client, dataset_a_json, data_catalog, reference_data):
+    # Datasets generated in the following order
+    # - dataset1, dataset2, dataset2 draft, dataset1 draft
+    dataset_a_json["title"] = {"en": "Version 1"}
+    res1 = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res1.status_code == 201
+    dataset1 = Dataset.objects.get(id=res1.data["id"])
+
+    res2 = admin_client.post(
+        f"/v3/datasets/{res1.data['id']}/new-version", content_type="application/json"
+    )
+    assert res2.status_code == 201
+    dataset2 = Dataset.objects.get(id=res2.data["id"])
+    dataset2.title = {"en": "Version 2"}
+    dataset2.save()
+    dataset2.publish()
+
+    dataset2dft = dataset2.create_new_draft()
+    dataset2dft.title = {"en": "Version 2 draft"}
+    dataset2dft.save()
+
+    dataset1dft = dataset1.create_new_draft()
+    dataset1dft.title = {"en": "Version 1 draft"}
+    dataset1dft.save()
+
+    return [dataset1, dataset1dft, dataset2, dataset2dft]
+
+def test_dataset_versions_ordering(
+    datasets_in_odd_order, admin_client, user_client
+):
+    [dataset1, _dataset1dft, _dataset2, _dataset2dft] = datasets_in_odd_order
+
+    # Latest version should be first in dataset_versions
+    res = admin_client.get(f"/v3/datasets/{dataset1.id}", content_type="application/json")
+    titles = [d["title"]["en"] for d in res.data["dataset_versions"]]
+    assert titles == [
+        "Version 2 draft",
+        "Version 2",
+        "Version 1 draft",
+        "Version 1",
+    ]
+
+def test_dataset_versions_latest_versions_by_state(
+    datasets_in_odd_order, admin_client, user_client
+):
+    [_dataset1, _dataset1dft, dataset2, dataset2dft] = datasets_in_odd_order
+
+    # Latest published dataset version should be returned even if a change draft exists
+    res = admin_client.get("/v3/datasets?latest_versions=true&state=published", content_type="application/json")
+    assert res.data["count"] == 1
+    assert res.data["results"][0]["title"]["en"] == "Version 2"
+
+    # Latest draft should be returned if there are no later published versions
+    res = admin_client.get("/v3/datasets?latest_versions=true&state=draft", content_type="application/json")
+    assert res.data["count"] == 1
+    assert res.data["results"][0]["title"]["en"] == "Version 2 draft"
+
+    # Later published version exists -> don't return draft 1
+    dataset2dft.delete()
+    res = admin_client.get("/v3/datasets?latest_versions=true&state=draft", content_type="application/json")
+    assert res.data["count"] == 0
+
+    # Later published version no longer exists -> return draft 1
+    dataset2.delete()
+    res = admin_client.get("/v3/datasets?latest_versions=true&state=draft", content_type="application/json")
+    assert res.data["count"] == 1
+    assert res.data["results"][0]["title"]["en"] == "Version 1 draft"

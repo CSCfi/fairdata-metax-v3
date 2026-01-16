@@ -19,11 +19,11 @@ from watson.search import skip_index_update
 
 from apps.common.copier import ModelCopier
 from apps.common.exceptions import TopLevelValidationError
-from apps.common.helpers import datetime_to_date, normalize_doi, single_translation
+from apps.common.helpers import datetime_to_date, normalize_doi
 from apps.common.history import SnapshotHistoricalRecords
-from apps.common.models import AbstractBaseModel, CustomSoftDeletableManager
 from apps.common.tasks import run_task
 from apps.core.models.access_rights import AccessRights, AccessTypeChoices
+from apps.core.models.catalog_record.dataset_versions import DatasetVersions
 from apps.core.models.catalog_record.dataset_index import DatasetIndexEntry
 from apps.core.models.catalog_record.dataset_permissions import DatasetPermissions
 from apps.core.models.catalog_record.managers import DatasetManager, SoftDeletableDatasetManager
@@ -67,14 +67,6 @@ class REMSApplicationStatus(models.TextChoices):
     SUBMITTED = "submitted", "Application submitted"
     APPROVED = "approved", "REMS application approved"
     REJECTED = "rejected", "REMS application rejected"
-
-
-class DatasetVersions(AbstractBaseModel):
-    """A collection of dataset's versions."""
-
-    # List of ids of legacy datasets belonging to set. May contain ids
-    # of datasets that haven't been migrated yet.
-    legacy_versions = ArrayField(models.UUIDField(), default=list, blank=True)
 
 
 class Dataset(V2DatasetMixin, CatalogRecord):
@@ -231,6 +223,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
     dataset_versions = models.ForeignKey(
         DatasetVersions, related_name="datasets", on_delete=models.SET_NULL, null=True
     )
+    dataset_versions_order = models.IntegerField(null=True, blank=True)
     permissions = models.ForeignKey(
         DatasetPermissions, related_name="datasets", on_delete=models.SET_NULL, null=True
     )
@@ -356,7 +349,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
     def get_versions_prefetch(cls):
         return models.Prefetch(
             "dataset_versions__datasets",
-            queryset=cls.all_objects.order_by("-created").prefetch_related(
+            queryset=cls.all_objects.order_by("-dataset_versions_order").prefetch_related(
                 *cls.dataset_versions_prefetch_fields
             ),
             to_attr="_datasets",
@@ -365,6 +358,34 @@ class Dataset(V2DatasetMixin, CatalogRecord):
     is_legacy = models.BooleanField(
         default=False, help_text="Is the dataset migrated from legacy Metax"
     )
+
+    class Meta(CatalogRecord.Meta):
+        indexes = [
+            models.Index(
+                fields=("state", "dataset_versions_id", "dataset_versions_order"),
+                condition=models.Q(removed__isnull=True),
+                name="%(app_label)s_%(class)s_state_versions",
+            ),
+        ]
+        # Constraints to ensure dataset versions have a consistent ordering.
+        constraints = [
+            # Can't have two datasets with same order in the same dataset_versions
+            models.UniqueConstraint(
+                fields=["dataset_versions_id", "dataset_versions_order"],
+                name="%(app_label)s_%(class)s_unique_version_order",
+            ),
+            # Can't have two datasets with same creation time in the same dataset_versions,
+            # except for drafts with draft_of.
+            models.UniqueConstraint(
+                fields=["dataset_versions_id", "created"],
+                # This condition would preferably be just draft_of__isnull=True,
+                # but the legacy converter may save datasets temporarily without a draft_of
+                # relation so we use a weaker condition for legacy datasets for now.
+                condition=models.Q(draft_of__isnull=True, is_legacy=False)
+                | models.Q(state="published", is_legacy=True),
+                name="%(app_label)s_%(class)s_unique_version_created",
+            ),
+        ]
 
     def __init__(self, *args, **kwargs):
         """Init Dataset instance.
@@ -479,7 +500,14 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         if versions := getattr(self.dataset_versions, "_datasets", None):  # Prefetched versions
             index = (
                 sum(
-                    1 if v.created < self.created and v.state == "published" else 0
+                    (
+                        1
+                        if v.dataset_versions_order is not None
+                        and self.dataset_versions_order is not None
+                        and v.dataset_versions_order < self.dataset_versions_order
+                        and v.state == "published"
+                        else 0
+                    )
                     for v in versions
                 )
                 + 1
@@ -487,7 +515,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         else:
             index = (
                 self.dataset_versions.datasets.filter(state="published")
-                .filter(created__lt=self.created)
+                .filter(dataset_versions_order__lt=self.dataset_versions_order)
                 .count()
                 + 1
             )
@@ -651,6 +679,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             draft_of=None,
             api_version=3,
             rems_publish_error=None,
+            dataset_versions_order=None,  # Order will be determined when saving
         )
         new_values.update(kwargs)
         copy = self.copier.copy(self, new_values=new_values)
@@ -836,6 +865,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         # so we need to send them explicitly here.
         # Set modification timestamp so pre_delete signal
         # handlers have it up-to-date.
+        self.dataset_versions_order = None
         self.record_modified = timezone.now()
         soft = "soft" in kwargs and kwargs["soft"] is True
         if soft:
@@ -1209,8 +1239,11 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         if not self.dataset_versions_id:
             if draft_relation:
                 self.dataset_versions = draft_relation.dataset_versions
+                self.dataset_versions_order = None
             else:
                 self.dataset_versions = DatasetVersions.objects.create()
+                self.dataset_versions_order = 0
+
         if not self.permissions_id:
             if draft_relation:
                 self.permissions = draft_relation.permissions
@@ -1256,6 +1289,11 @@ class Dataset(V2DatasetMixin, CatalogRecord):
 
         self.set_update_reason(f"{self.state}-{self.published_revision}.{self.draft_revision}")
         super().save(*args, **kwargs)
+
+        # Updating versions order handled separately when migrating from legacy
+        if self.dataset_versions_order is None and not getattr(self, "_saving_legacy", False):
+            self.dataset_versions.update_dataset_order()
+            self.refresh_from_db(fields=("dataset_versions_order",))
         self.is_prefetched = False  # Prefetch again after save
 
         # Update file publication state when dataset is published or files are added or removed

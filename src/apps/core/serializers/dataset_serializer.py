@@ -189,7 +189,7 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
             # Use prefetched results stored in _datasets when available
             versions = getattr(version_set, "_datasets", None) or version_set.datasets(
                 manager="all_objects"
-            ).order_by("-created").prefetch_related(*Dataset.dataset_versions_prefetch_fields)
+            ).order_by("-dataset_versions_order").prefetch_related(*Dataset.dataset_versions_prefetch_fields)
 
             has_drafts = any(
                 dataset for dataset in versions if dataset.state != Dataset.StateChoices.PUBLISHED

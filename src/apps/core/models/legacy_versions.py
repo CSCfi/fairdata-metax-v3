@@ -8,6 +8,7 @@ from rest_framework import serializers
 from apps.common.helpers import is_valid_uuid, merge_sets
 from apps.core.models import DatasetVersions
 from apps.core.models.legacy import LegacyDataset
+from apps.core.models.catalog_record.dataset_versions import update_dataset_versions_order
 
 
 class LegacyDatasetVersionSerializer(serializers.Serializer):
@@ -112,6 +113,10 @@ def migrate_dataset_versions(apps=django_apps):
     legacy_dataset_model = apps.get_model("core", "LegacyDataset")
     dataset_model = apps.get_model("core", "Dataset")
 
+    # Clear ordering
+    if hasattr(dataset_model, "dataset_versions_order"):
+        dataset_model.objects.update(dataset_versions_order=None)
+
     # Collect all datasets and version sets by their identifiers
     datasets_by_id = dataset_model.objects.only("id", "dataset_versions_id").in_bulk()
     version_sets_by_id = versions_model.objects.in_bulk()
@@ -159,3 +164,7 @@ def migrate_dataset_versions(apps=django_apps):
     versions_model.objects.filter(
         datasets__isnull=True
     ).delete()  # remove versions without datasets
+
+    # Reorder dataset versions
+    if hasattr(dataset_model, "dataset_versions_order"):
+        update_dataset_versions_order(dataset_model.objects.all())

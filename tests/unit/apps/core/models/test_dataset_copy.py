@@ -263,6 +263,7 @@ def test_dataset_draft_merge_fields():
         "created",
         "custom_rems_licenses",
         "dataset_versions",
+        "dataset_versions_order",
         "draft_of",
         "draft_revision",
         "id",

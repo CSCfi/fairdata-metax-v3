@@ -14,7 +14,7 @@ from typing import List
 from django.conf import settings
 from django.core.cache import caches
 from django.db import transaction
-from django.db.models import Q, QuerySet, Value
+from django.db.models import Exists, OuterRef, Q, QuerySet, Value
 from django.http import Http404, HttpResponse
 from django.utils.decorators import method_decorator
 from django.utils.http import parse_http_date
@@ -25,14 +25,14 @@ from drf_yasg.openapi import TYPE_STRING, Parameter, Response, Schema
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import exceptions, response, serializers, status
 from rest_framework.decorators import action
-from rest_framework.exceptions import NotAuthenticated, ValidationError, PermissionDenied
+from rest_framework.exceptions import NotAuthenticated, PermissionDenied, ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.renderers import JSONRenderer
 from rest_framework.reverse import reverse
 from watson import search
 
 from apps.common.filters import MultipleCharFilter, VerboseChoiceFilter
-from apps.common.helpers import ensure_dict, omit_empty, is_valid_uuid
+from apps.common.helpers import ensure_dict, is_valid_uuid, omit_empty
 from apps.common.serializers.serializers import (
     FlushQueryParamsSerializer,
     IncludeRemovedQueryParamsSerializer,
@@ -57,10 +57,10 @@ from apps.core.serializers.dataset_allowed_actions import (
 )
 from apps.core.serializers.dataset_metrics_serializer import DatasetMetricsQueryParamsSerializer
 from apps.core.serializers.dataset_serializer import (
+    DatasetAggregationQueryParamsSerializer,
     DatasetFieldsQueryParamsSerializer,
     ExpandCatalogQueryParamsSerializer,
     LatestVersionQueryParamsSerializer,
-    DatasetAggregationQueryParamsSerializer,
 )
 from apps.core.serializers.legacy_serializer import LegacyDatasetConversionValidationSerializer
 from apps.core.services import MetaxV2Client, PIDMSClient
@@ -69,12 +69,12 @@ from apps.files.models import File
 from apps.files.serializers import DirectorySerializer
 from apps.files.views.directory_view import DirectoryCommonQueryParams, DirectoryViewSet
 from apps.files.views.file_view import BaseFileViewSet, FileCommonFilterset
+from apps.rems.rems_service import REMSService
 from apps.rems.serializers import (
     ApplicationBaseSerializer,
     ApplicationCountsSerializer,
     ApplicationDataSerializer,
 )
-from apps.rems.rems_service import REMSService
 
 from .dataset_aggregation import aggregate_queryset
 
@@ -559,13 +559,24 @@ class DatasetViewSet(CommonModelViewSet):
     def filter_queryset(self, queryset):
         queryset = super().filter_queryset(queryset)
         if self.query_params.get("latest_versions"):
-            # Return only latest versions available for the current user
-            available_datasets = self.get_queryset()
-            latest_versions = available_datasets.order_by(
-                "dataset_versions_id", "-created"
-            ).distinct("dataset_versions_id")
-            return queryset.filter(id__in=latest_versions)
+            # Return only the latest dataset versions available for the current user.
+            # By default, includes drafts if the user can see them.
+            if self.request.GET.get("state") == Dataset.StateChoices.PUBLISHED:
+                # Ignore drafts to allow users to see the latest published version
+                # with ?latest_versions=true&state=published
+                # even if there exists a later draft.
+                available_datasets = self.get_queryset(only_published=True)
+            else:
+                available_datasets = self.get_queryset()
 
+            return queryset.filter(
+                ~Exists(
+                    available_datasets.filter(
+                        dataset_versions_id=OuterRef("dataset_versions_id"),
+                        dataset_versions_order__gt=OuterRef("dataset_versions_order"),
+                    )
+                )
+            )
         return queryset
 
     @swagger_auto_schema(
@@ -612,7 +623,7 @@ class DatasetViewSet(CommonModelViewSet):
             headers={"Content-Disposition": f"attachment; filename={pk}-metadata.{extension}"},
         )
 
-    def get_queryset(self):
+    def get_queryset(self, only_published=False):
         include_all_datasets = self.query_params.get("include_removed") or self.query_params.get(
             "flush"
         )
@@ -641,7 +652,11 @@ class DatasetViewSet(CommonModelViewSet):
                 if date:
                     qs = qs.filter(modified__gt=date)
 
-        qs = self.access_policy.scope_queryset(self.request, qs)
+        if only_published:
+            # Optimization allowing skipping access policy when only published datasets are needed
+            qs = qs.filter(state=Dataset.StateChoices.PUBLISHED)
+        else:
+            qs = self.access_policy.scope_queryset(self.request, qs)
         return qs
 
     def get_serializer(self, *args, cached_instances=[], cache_autocommit=True, **kwargs):
@@ -653,7 +668,8 @@ class DatasetViewSet(CommonModelViewSet):
 
     def list(self, request, *args, **kwargs):
         """List datasets."""
-        queryset = self.filter_queryset(self.get_queryset())
+        only_published = request.GET.get("state") == Dataset.StateChoices.PUBLISHED
+        queryset = self.filter_queryset(self.get_queryset(only_published=only_published))
 
         # Defer prefetching until after pagination is done
         # and we know which datasets are in serialized datasets cache
