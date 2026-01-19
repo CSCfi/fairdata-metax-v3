@@ -40,6 +40,7 @@ from apps.common.serializers.serializers import (
 from apps.common.views import CommonModelViewSet
 from apps.core.cache import DatasetSerializerCache
 from apps.core.models.catalog_record import Dataset, FileSet
+from apps.core.models.concepts import AccessType
 from apps.core.models.data_catalog import DataCatalog
 from apps.core.models.legacy_converter import LegacyDatasetConverter
 from apps.core.models.preservation import Preservation
@@ -263,11 +264,14 @@ class DatasetFilter(filters.FilterSet):
         return search.filter(queryset=queryset, search_text=value, ranking=False)
 
     def filter_access_type(self, queryset, name, value):
-        return self._filter_list(
-            queryset=queryset,
-            value=value,
-            filter_param="access_rights__access_type__pref_label__values__icontains",
+        access_types = list(
+            self._filter_list(
+                queryset=AccessType.objects.order_by().values_list("id", flat=True),
+                value=value,
+                filter_param="pref_label__values__icontains",
+            )
         )
+        return queryset.filter(access_rights__access_type__in=access_types)
 
     def filter_organization(self, queryset, name, value):
         result = queryset
@@ -349,13 +353,18 @@ class DatasetFilter(filters.FilterSet):
                 ~Q(data_catalog__id="urn:nbn:fi:att:data-catalog-pas")
                 | Q(preservation__state=Preservation.PreservationState.IN_PAS)
             )
+
+        catalog_ids = list(
+            DataCatalog.objects.filter(publishing_channels__contains=[value]).values_list(
+                "id", flat=True
+            )
+        )
         if value == "default":
             # Default includes drafts without catalogs
             return queryset.filter(
-                Q(data_catalog__publishing_channels__contains=["default"])
-                | Q(data_catalog__isnull=True)
+                Q(data_catalog_id__in=catalog_ids) | Q(data_catalog__isnull=True)
             )
-        return queryset.filter(data_catalog__publishing_channels__contains=[value])
+        return queryset.filter(data_catalog_id__in=catalog_ids)
 
     def filter_preservation_state(self, queryset, name, value):
         result = queryset
