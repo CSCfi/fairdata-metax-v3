@@ -244,10 +244,13 @@ def test_dataset_metadata_download_license_custom_url(admin_client):
 
 
 def test_dataset_metadata_download_invalid_id(admin_client):
-    res = admin_client.get(f"/v3/datasets/invalid_id/metadata-download")
+    res = admin_client.get(
+        f"/v3/datasets/invalid_id/metadata-download",
+        headers={"Accept": "application/xml"},
+    )
     assert res.status_code == 404
-    assert res.headers.get("Content-Disposition") == None
-    assert res.data == "Dataset not found."
+    assert res.headers.get("Content-Disposition") is None
+    assert res.text == "Dataset not found."
 
 
 def test_dataset_metadata_download_datacite_empty_fileset(admin_client, doi_dataset):

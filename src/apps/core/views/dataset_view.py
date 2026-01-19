@@ -15,7 +15,7 @@ from django.conf import settings
 from django.core.cache import caches
 from django.db import transaction
 from django.db.models import Q, QuerySet, Value
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.utils.decorators import method_decorator
 from django.utils.http import parse_http_date
 from django.utils.translation import gettext_lazy as _
@@ -593,7 +593,8 @@ class DatasetViewSet(CommonModelViewSet):
         try:
             obj = self.get_object()
         except Http404:
-            return response.Response("Dataset not found.", status=404, content_type="text/plain")
+            # Use Django HttpResponse directly to avoid renderer
+            return HttpResponse("Dataset not found.", status=404, content_type="text/plain")
 
         serializer = self.serializer_class
         serializer_context = self.get_serializer_context()
