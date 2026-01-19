@@ -1,3 +1,4 @@
+import json
 import logging
 
 from datacite import schema43
@@ -97,7 +98,7 @@ class DataciteXMLRenderer(renderers.BaseRenderer, Datacitedata):
             response = renderer_context["response"]
             response.status_code = 400
             response.headers["Content-Type"] = "application/json"
-            import json
+            response.headers.pop("Content-Disposition", None)
 
             if isinstance(err.detail, (list, dict)):
                 data = err.detail

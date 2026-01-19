@@ -327,6 +327,7 @@ def test_dataset_metadata_download_datacite_doi_required(
     res = admin_client.get(f"/v3/datasets/{dataset_id}/metadata-download?format=datacite")
     assert res.status_code == 400
     assert res.json() == {"persistent_identifier": "Dataset should have a DOI identifier."}
+    assert res.headers.get("Content-Disposition") is None
 
 
 def test_dataset_metadata_download_datacite_duplicate_creators(
