@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.translation import gettext as _
 
 from apps.users.forms import OptionalPasswordUserCreationForm
-from apps.users.models import MetaxUser
+from apps.users.models import AdminOrganization, MetaxUser
 
 
 class MetaxUserAdmin(BaseUserAdmin):
@@ -64,3 +64,29 @@ class MetaxUserAdmin(BaseUserAdmin):
 
 
 admin.site.register(MetaxUser, MetaxUserAdmin)
+
+
+class AdminOrganizationAdmin(admin.ModelAdmin):
+    fields = [
+        "id",
+        "pref_label",
+        "other_identifier",
+        "url",
+        "allow_manual_rems_approval",
+        "manual_approval_rems_datasets",
+    ]
+    readonly_fields = ["manual_approval_rems_datasets"]
+    list_display = ["id", "pref_label", "allow_manual_rems_approval"]
+
+    def get_readonly_fields(self, request, obj: AdminOrganization):
+        fields = super().get_readonly_fields(request, obj)
+        if obj.count_manual_rems_approval_datasets() > 0 and obj.allow_manual_rems_approval:
+            fields.append("allow_manual_rems_approval")
+
+        return fields
+
+    def manual_approval_rems_datasets(self, obj: AdminOrganization):
+        return obj.count_manual_rems_approval_datasets()
+
+
+admin.site.register(AdminOrganization, AdminOrganizationAdmin)

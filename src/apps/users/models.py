@@ -24,6 +24,9 @@ class AdminOrganization(CustomSoftDeletableModel):
     other_identifier = ArrayField(models.CharField(max_length=255), default=list, blank=True)
     url = models.URLField(max_length=255, blank=True, null=True)
 
+    # Is manual REMS approval supported for the organization?
+    allow_manual_rems_approval = models.BooleanField(default=False)
+
     # Relations to MetaxUser with related_name="admin_organizations"
 
     def save(self, *args, **kwargs):
@@ -33,6 +36,16 @@ class AdminOrganization(CustomSoftDeletableModel):
     def delete(self, *args, **kwargs):
         cache.delete("available_admin_organizations")
         return super().delete(*args, **kwargs)
+
+    def count_manual_rems_approval_datasets(self):
+        from apps.core.models import Dataset
+        from apps.core.models.access_rights import REMSApprovalType
+
+        datasets = Dataset.objects.filter(
+            metadata_owner__admin_organization=self.id,
+            access_rights__rems_approval_type=REMSApprovalType.MANUAL
+        )
+        return datasets.count()
 
     class Meta:
         verbose_name = "admin organization"

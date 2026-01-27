@@ -22,7 +22,7 @@ from apps.rems.models import (
 )
 from apps.rems.rems_session import REMSError, REMSSession
 from apps.rems.types import ApplicationBase, ApplicationCounts, ApplicationLicenseData, LicenseType
-from apps.users.models import MetaxUser
+from apps.users.models import AdminOrganization, MetaxUser
 
 if TYPE_CHECKING:
     from apps.core.models import Dataset, DatasetLicense
@@ -520,14 +520,24 @@ class REMSService:
         """Get or create REMS workflow for dataset."""
         from apps.core.models.access_rights import REMSApprovalType
 
-        organization = dataset.metadata_owner and dataset.metadata_owner.admin_organization
-        if not organization:
+        organization_id = dataset.metadata_owner and dataset.metadata_owner.admin_organization
+        if not organization_id:
             raise ValueError("Dataset is missing admin_organization.")
 
+        organization: AdminOrganization = AdminOrganization.objects.filter(
+            id=organization_id
+        ).first()
+        if not organization:
+            raise ValueError(f"Unknown admin_organization {organization_id}.")
+
         if dataset.access_rights.rems_approval_type == REMSApprovalType.AUTOMATIC:
-            return self.create_automatic_workflow(organization)
+            return self.create_automatic_workflow(organization_id)
         if dataset.access_rights.rems_approval_type == REMSApprovalType.MANUAL:
-            return self.create_manual_workflow(organization)
+            if not organization.allow_manual_rems_approval:
+                raise ValueError(
+                    f"Dataset admin organization does not allow manual REMS approval."
+                )
+            return self.create_manual_workflow(organization_id)
         raise ValueError("Dataset is not enabled for REMS.")
 
     def update_organization_workflows(self, metax_organization: str) -> List[REMSWorkflow]:

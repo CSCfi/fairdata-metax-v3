@@ -150,13 +150,3 @@ class AccessRights(AbstractBaseModel):
             # Access controlled by REMS. User needs to have at least one active entitlement
             return self._user_has_rems_entitlement(request.user, dataset)
         return False  # unknown or missing access type
-
-    def save(self, *args, **kwargs):
-        if (
-            self.rems_approval_type == REMSApprovalType.MANUAL
-            and not settings.REMS_MANUAL_WORKFLOW
-        ):
-            raise ValidationError(
-                {"rems_approval_type": f"{REMSApprovalType.MANUAL} is not implemented yet"}
-            )
-        return super().save(*args, **kwargs)

@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 from django.core.management import call_command
 
+from apps.core import factories
 from apps.users.models import AdminOrganization
 
 pytestmark = [
@@ -22,6 +23,7 @@ def mock_json_data():
                 "fi": "Test Organisaatio 1",
                 "en": "Test Organization 1",
             },
+            "allow_manual_rems_approval": False,
         },
         {
             "id": "test-org-2.fi",
@@ -29,13 +31,16 @@ def mock_json_data():
                 "fi": "Test Organisaatio 2",
                 "en": "Test Organization 2",
             },
+            "allow_manual_rems_approval": False,
         },
     ]
 
 
 @patch("apps.users.management.commands.load_admin_organizations.json.load")
 @patch("builtins.open", create=True)
-def test_load_admin_organizations_creates_new_organizations(mock_file, mock_json_load, mock_json_data):
+def test_load_admin_organizations_creates_new_organizations(
+    mock_file, mock_json_load, mock_json_data
+):
     """Test that the command creates new admin organizations from JSON."""
     # Mock json.load to return our test data
     mock_json_load.return_value = mock_json_data
@@ -67,7 +72,9 @@ def test_load_admin_organizations_creates_new_organizations(mock_file, mock_json
 
 @patch("apps.users.management.commands.load_admin_organizations.json.load")
 @patch("builtins.open", create=True)
-def test_load_admin_organizations_updates_existing_organizations(mock_file, mock_json_load, mock_json_data):
+def test_load_admin_organizations_updates_existing_organizations(
+    mock_file, mock_json_load, mock_json_data
+):
     """Test that the command updates existing admin organizations."""
     # Create an existing organization
     existing_org = AdminOrganization.objects.create(
@@ -214,3 +221,71 @@ def test_load_admin_organizations_updates_existing_with_null_pref_label(mock_fil
     # Verify the existing organization was updated to null pref_label
     existing_org.refresh_from_db()
     assert existing_org.pref_label is None
+
+
+@patch("apps.users.management.commands.load_admin_organizations.json.load")
+@patch("builtins.open", create=True)
+def test_load_admin_organizations_create_allow_manual_rems_organization(mock_file, mock_json_load):
+    """Test that allow_manual_rems_approval is read from admin_organizations.json."""
+    org_data = [
+        {"id": "org_id", "pref_label": None, "allow_manual_rems_approval": True},
+    ]
+    mock_json_load.return_value = org_data
+    call_command("load_admin_organizations")
+    assert AdminOrganization.objects.count() == 1
+    assert AdminOrganization.objects.first().allow_manual_rems_approval == True
+
+
+@patch("apps.users.management.commands.load_admin_organizations.json.load")
+@patch("builtins.open", create=True)
+def test_load_admin_organizations_update_allow_manual_rems_organization(mock_file, mock_json_load):
+    """Test that allow_manual_rems_approval is updated from admin_organizations.json."""
+    org_data = [
+        {"id": "org_id", "pref_label": None, "allow_manual_rems_approval": False},
+    ]
+    mock_json_load.return_value = org_data
+
+    call_command("load_admin_organizations")
+    assert AdminOrganization.objects.count() == 1
+    assert AdminOrganization.objects.first().allow_manual_rems_approval == False
+
+    # Test that allow_manual_rems_approval is updated when load_admin_organizations is called again
+    org_data = [
+        {"id": "org_id", "pref_label": None, "allow_manual_rems_approval": True},
+    ]
+    mock_json_load.return_value = org_data
+
+    call_command("load_admin_organizations")
+    assert AdminOrganization.objects.count() == 1
+    assert AdminOrganization.objects.first().allow_manual_rems_approval == True
+
+
+@patch("apps.users.management.commands.load_admin_organizations.json.load")
+@patch("builtins.open", create=True)
+def test_load_admin_organizations_force_allow_manual_rems_organization(mock_file, mock_json_load):
+    """Test that existing manual approval datasets force allow_manual_rems_approval=True."""
+
+    org_data = [
+        {
+            "id": "org_id",
+            "pref_label": None,
+        },
+    ]
+    mock_json_load.return_value = org_data
+
+    call_command("load_admin_organizations")
+    assert AdminOrganization.objects.count() == 1
+    assert AdminOrganization.objects.first().allow_manual_rems_approval == False
+
+    # Create REMS dataset with manual approval
+    AdminOrganization.objects.update(allow_manual_rems_approval=True)
+    factories.REMSDatasetFactory(
+        access_rights__rems_approval_type="manual", metadata_owner__admin_organization="org_id"
+    )
+
+    # Force allow_manual_rems_approval=False and check that load_admin_organization reverts
+    # it back to true because a manual approval dataset exists
+    AdminOrganization.objects.update(allow_manual_rems_approval=False)
+    call_command("load_admin_organizations")
+    assert AdminOrganization.objects.count() == 1
+    assert AdminOrganization.objects.first().allow_manual_rems_approval == True

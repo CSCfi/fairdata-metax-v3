@@ -19,7 +19,7 @@ def handler(fairdata_users_group):
         email="handler@example.com",
         is_hidden=False,
         admin_organizations=[],
-        dac_organizations=["test_organization"],
+        dac_organizations=["admin_org"],
     )
     _group, _ = Group.objects.get_or_create(name="fairdata_users")
     user.groups.set([fairdata_users_group])
@@ -34,7 +34,7 @@ def automatic_rems_dataset(mock_rems, user):
         data_catalog=catalog,
         access_rights__rems_approval_type="automatic",
         metadata_owner__user=user,
-        metadata_owner__admin_organization="test_organization",
+        metadata_owner__admin_organization="admin_org",
     )
     return dataset
 
@@ -46,7 +46,7 @@ def manual_rems_dataset(mock_rems, user):
         data_catalog=catalog,
         access_rights__rems_approval_type="manual",
         metadata_owner__user=user,
-        metadata_owner__admin_organization="test_organization",
+        metadata_owner__admin_organization="admin_org",
     )
     return dataset
 

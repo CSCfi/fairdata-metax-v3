@@ -14,6 +14,7 @@ from apps.rems.models import (
 )
 from apps.rems.rems_service import REMSService
 from apps.rems.rems_session import REMSError
+from apps.users.models import AdminOrganization
 
 pytestmark = [pytest.mark.django_db]
 
@@ -493,6 +494,8 @@ def test_rems_service_publish_dataset_change_admin_org(mock_rems, user):
     user.dac_organizations = ["test_organization"]
     user.save()
     service = REMSService()
+    AdminOrganization.objects.create(id="admin_org1")
+    AdminOrganization.objects.create(id="admin_org2")
 
     catalog = factories.DataCatalogFactory(rems_enabled=True)
     dataset = factories.REMSDatasetFactory(

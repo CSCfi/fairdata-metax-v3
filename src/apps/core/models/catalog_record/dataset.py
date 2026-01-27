@@ -22,7 +22,7 @@ from apps.common.exceptions import TopLevelValidationError
 from apps.common.helpers import datetime_to_date, normalize_doi
 from apps.common.history import SnapshotHistoricalRecords
 from apps.common.tasks import run_task
-from apps.core.models.access_rights import AccessRights, AccessTypeChoices
+from apps.core.models.access_rights import AccessRights, AccessTypeChoices, REMSApprovalType
 from apps.core.models.catalog_record.dataset_versions import DatasetVersions
 from apps.core.models.catalog_record.dataset_index import DatasetIndexEntry
 from apps.core.models.catalog_record.dataset_permissions import DatasetPermissions
@@ -40,7 +40,7 @@ from apps.core.models.preservation import Preservation
 from apps.core.services.pid_ms_client import PIDMSClient, ServiceUnavailableError
 from apps.files.models import File
 from apps.rems.rems_service import REMSService
-from apps.users.models import MetaxUser
+from apps.users.models import AdminOrganization, MetaxUser
 
 from .meta import CatalogRecord, OtherIdentifier
 
@@ -1060,6 +1060,12 @@ class Dataset(V2DatasetMixin, CatalogRecord):
                 errors["rems_approval_type"] = (
                     "Approval type is required by the data catalog for the 'Permit' access type."
                 )
+
+        if self.access_rights.rems_approval_type == REMSApprovalType.MANUAL:
+            admin_org_id = self.metadata_owner.admin_organization
+            admin_org = admin_org_id and AdminOrganization.objects.filter(id=admin_org_id).first()
+            if not (admin_org and admin_org.allow_manual_rems_approval):
+                errors["rems_approval_type"] = "Dataset admin organization does not allow manual REMS approval."
 
         return errors
 

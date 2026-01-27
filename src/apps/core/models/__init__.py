@@ -1,4 +1,4 @@
-from .access_rights import AccessRights, AccessTypeChoices
+from .access_rights import AccessRights, AccessTypeChoices, REMSApprovalType
 from .catalog_record import (
     CatalogRecord,
     Dataset,

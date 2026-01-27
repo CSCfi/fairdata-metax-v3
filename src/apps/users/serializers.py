@@ -17,10 +17,11 @@ class AdminOrganizationModelSerializer(CommonModelSerializer):
     pref_label = MultiLanguageField(required=True)
     other_identifier = CommaSeparatedListField(required=False)
     url = serializers.URLField(required=True)
+    allow_manual_rems_approval = serializers.BooleanField(required=False)
 
     class Meta:
         model = AdminOrganization
-        fields = ("id", "pref_label", "other_identifier", "url")
+        fields = ("id", "pref_label", "other_identifier", "url", "allow_manual_rems_approval")
 
 
 class UserInfoSerializer(CommonModelSerializer):

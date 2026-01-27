@@ -33,7 +33,7 @@ from apps.core.signals import dataset_created, dataset_updated
 from apps.files import factories as files_factories
 from apps.rems.mocks import MockREMS
 from apps.users.factories import MetaxUserFactory
-from apps.users.models import MetaxUser
+from apps.users.models import AdminOrganization, MetaxUser
 from apps.users.factories import AdminOrganizationFactory
 
 
@@ -1131,7 +1131,6 @@ def tweaked_settings(settings):
     settings.REMS_API_KEY = "42"
     settings.REMS_ORGANIZATION_ID = "csc"
     settings.REMS_RESOURCE_PREFIX = "metax-test"
-    settings.REMS_MANUAL_WORKFLOW = False
     settings.FILE_LOCK_TIMEOUT = 0
 
 
@@ -1162,14 +1161,21 @@ def mock_v2_integration(requests_mock, v2_integration_settings):
         "patch": requests_mock.register_uri("PATCH", matcher, status_code=200),
     }
 
+@pytest.fixture
+def rems_admin_organization():
+    return AdminOrganization.objects.create(
+        id="admin_org",
+        pref_label={"en": "Admin Organization", "fi": "Admin-organisaatio"},
+        allow_manual_rems_approval=True
+    )
 
 @pytest.fixture
-def mock_rems(requests_mock, settings) -> MockREMS:
+def mock_rems(requests_mock, settings, rems_admin_organization) -> MockREMS:
     settings.REMS_ENABLED = True
-    settings.REMS_MANUAL_WORKFLOW = True
     rems = MockREMS()
     rems.register_endpoints(requests_mock)
     management.call_command("create_initial_rems_entities")
+
 
     # Clear request history
     rems.clear_calls()
