@@ -360,6 +360,7 @@ def data_catalog(fairdata_users_group, service_group, pas_group, ida_group) -> D
         rems_enabled=True,
     )
     catalog.dataset_groups_create.set([fairdata_users_group, service_group])
+    catalog.dataset_groups_update.set([fairdata_users_group, service_group])
     catalog.dataset_groups_admin.set([pas_group, ida_group])
     return catalog
 

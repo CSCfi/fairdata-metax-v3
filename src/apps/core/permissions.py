@@ -168,6 +168,12 @@ class DataCatalogAccessPolicy(BaseAccessPolicy):
             "condition": "is_creating_datasets_allowed",
         },
         {
+            "action": ["<op:update_dataset>"],
+            "principal": "authenticated",
+            "effect": "allow",
+            "condition": "is_updating_datasets_allowed",
+        },
+        {
             "action": ["<op:admin_dataset>"],
             "principal": "authenticated",
             "effect": "allow",
@@ -184,6 +190,16 @@ class DataCatalogAccessPolicy(BaseAccessPolicy):
         catalog = view.get_object()
         user_groups = user.groups.all()
         return catalog.dataset_groups_create.intersection(user_groups).exists()
+
+    def is_updating_datasets_allowed(self, request, view, action) -> bool:
+        """Return True if user is allowed to update datasets in this catalog."""
+        user = request.user
+        if user.is_superuser:
+            return True
+
+        catalog = view.get_object()
+        user_groups = user.groups.all()
+        return catalog.dataset_groups_update.intersection(user_groups).exists()
 
     def is_dataset_admin(self, request, view, action) -> bool:
         """Return True if user is allowed to edit all datasets in this catalog."""

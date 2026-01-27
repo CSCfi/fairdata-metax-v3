@@ -1,25 +1,30 @@
 import pytest
 
 from apps.users.models import MetaxUser
+from apps.core.factories import DataCatalogFactory
+from django.contrib.auth.models import Group
 
 pytestmark = [pytest.mark.django_db, pytest.mark.file]
 
 
 @pytest.fixture
 def project_user(file_tree):
-    user, created = MetaxUser.objects.get_or_create(
+    group, _ = Group.objects.get_or_create(name="fairdata_users")
+    user, _ = MetaxUser.objects.get_or_create(
         username="test_project_user",
         first_name="Project User",
         last_name="Testaaja",
         is_hidden=False,
         csc_projects=[file_tree["storage"].csc_project],
     )
+    user.groups.set([group])
     return user
 
 
 @pytest.fixture
 def project_client(client, project_user):
     client.force_login(project_user)
+    client._user = project_user
     return client
 
 
@@ -35,7 +40,13 @@ def test_directory_permissions_project_user(project_client, file_tree):
     assert res.data["count"] == 4
 
 
-def test_directory_permissions_project_user_include_all(project_client, dataset_with_files):
+def test_directory_permissions_project_user_include_all(
+    project_client, dataset_with_files, project_user
+):
+    data_catalog = DataCatalogFactory()
+    data_catalog.dataset_groups_update.set([project_user.groups.first()])
+    dataset_with_files.data_catalog = data_catalog
+    dataset_with_files.save()
     res = project_client.get(
         "/v3/directories",
         {
@@ -49,7 +60,13 @@ def test_directory_permissions_project_user_include_all(project_client, dataset_
     assert res.data["count"] == 4
 
 
-def test_directory_permissions_project_user_exclude_dataset(project_client, dataset_with_files):
+def test_directory_permissions_project_user_exclude_dataset(
+    project_client, dataset_with_files, project_user
+):
+    data_catalog = DataCatalogFactory()
+    data_catalog.dataset_groups_update.set([project_user.groups.first()])
+    dataset_with_files.data_catalog = data_catalog
+    dataset_with_files.save()
     res = project_client.get(
         "/v3/directories",
         {

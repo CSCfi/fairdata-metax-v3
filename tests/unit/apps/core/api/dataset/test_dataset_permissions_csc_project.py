@@ -10,6 +10,7 @@ from apps.core.factories import (
     FileSetFactory,
     FileStorageFactory,
     PublishedDatasetFactory,
+    DataCatalogFactory,
 )
 
 logger = logging.getLogger(__name__)
@@ -92,7 +93,10 @@ def test_dataset_permissions_csc_project_list_owned_or_shared(user_client):
 
 def test_dataset_permissions_csc_project_detail(user_client):
     """Test that user can access and modify dataset in csc_project."""
-    dataset = DatasetFactory()  # draft dataset
+    data_catalog = DataCatalogFactory()
+    data_catalog.dataset_groups_update.set([user_client._user.groups.first()])
+
+    dataset = DatasetFactory(data_catalog=data_catalog)  # draft dataset
     fileset = FileSetFactory(dataset=dataset)
 
     res = user_client.get(f"/v3/datasets/{dataset.id}")

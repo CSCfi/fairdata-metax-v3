@@ -403,6 +403,11 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             return True
         elif not user.is_authenticated:
             return False
+        elif self.data_catalog and self.data_catalog.can_admin_datasets(user):
+            return True
+        if self.data_catalog and not self.data_catalog.can_update_datasets(user):
+            return False
+
         elif self.metadata_owner and self.metadata_owner.user == user:
             return True
         elif (
@@ -411,9 +416,10 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             return True
         elif self.permissions and user in self.permissions.editors.all():
             return True
-        elif self.data_catalog and self.data_catalog.can_admin_datasets(user):
-            return True
-        elif self.metadata_owner.admin_organization in user.admin_organizations:
+        elif (
+            self.metadata_owner
+            and self.metadata_owner.admin_organization in user.admin_organizations
+        ):
             return True
         return False
 

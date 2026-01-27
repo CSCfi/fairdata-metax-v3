@@ -2,6 +2,7 @@ import logging
 from datetime import timedelta
 
 import pytest
+from django.contrib.auth.models import Group
 from django.utils.timezone import now
 
 from apps.common.helpers import datetime_to_date
@@ -19,7 +20,7 @@ pytestmark = [
 
 
 @pytest.fixture
-def create_dataset(admin_client, end_users, dataset_a_json):
+def create_dataset(admin_client, end_users, dataset_a_json, data_catalog):
     def _create(access_rights, state=Dataset.StateChoices.PUBLISHED):
         user = end_users[0].user
         dataset_a_json["metadata_owner"] = {
@@ -36,6 +37,7 @@ def create_dataset(admin_client, end_users, dataset_a_json):
             ]
         dataset_a_json["state"] = state
         res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+
         assert res.status_code == 201
         return res.data
 

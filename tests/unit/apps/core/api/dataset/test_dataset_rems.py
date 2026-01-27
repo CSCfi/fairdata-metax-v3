@@ -378,7 +378,9 @@ def test_list_dataset_rems_applications(mock_rems, user_client, user2_client):
 
 
 def test_dataset_rems_application_counts(mock_rems, user_client, admin_client):
-    dataset = factories.REMSDatasetFactory()
+    data_catalog = factories.DataCatalogFactory()
+    data_catalog.dataset_groups_update.set([user_client._user.groups.first()])
+    dataset = factories.REMSDatasetFactory(data_catalog=data_catalog)
     service = REMSService()
     service.publish_dataset(dataset)
 

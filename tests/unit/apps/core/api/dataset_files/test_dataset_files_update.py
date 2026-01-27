@@ -3,6 +3,7 @@
 from typing import Dict
 
 import pytest
+from django.contrib.auth.models import Group
 from tests.utils import assert_nested_subdict, matchers
 
 from apps.core import factories
@@ -41,18 +42,24 @@ def test_dataset_files_post_empty(admin_client, deep_file_tree, data_urls):
 
 
 def test_dataset_files_project_without_files(user_client, user, data_urls):
+    data_catalog = factories.DataCatalogFactory()
+    data_catalog.dataset_groups_update.set([user.groups.first()])
     user.csc_projects = ["user_project"]
     user.save()
 
     # User can create an empty (no files) IDA FileStorage if they are a member of the csc_project
-    dataset = factories.DatasetFactory(metadata_owner=factories.MetadataProviderFactory(user=user))
+    dataset = factories.DatasetFactory(
+        metadata_owner=factories.MetadataProviderFactory(user=user), data_catalog=data_catalog
+    )
     actions = {"storage_service": "ida", "csc_project": "user_project"}
     urls = data_urls(dataset)
     res = user_client.patch(urls["dataset"], {"fileset": actions}, content_type="application/json")
     assert res.status_code == 200
 
     # Forbid creating IDA FileStorage if user is not a member of csc_project
-    dataset = factories.DatasetFactory(metadata_owner=factories.MetadataProviderFactory(user=user))
+    dataset = factories.DatasetFactory(
+        metadata_owner=factories.MetadataProviderFactory(user=user), data_catalog=data_catalog
+    )
     actions = {"storage_service": "ida", "csc_project": "userdoesnothavethisproject"}
     urls = data_urls(dataset)
     res = user_client.patch(urls["dataset"], {"fileset": actions}, content_type="application/json")
@@ -64,12 +71,9 @@ def test_dataset_files_post_multiple_file_sets(admin_client, deep_file_tree, dat
     actions = deep_file_tree["params"]
     urls = data_urls(dataset)
     res = admin_client.patch(
-        urls["dataset"],
-        {"fileset": actions},
-        content_type="application/json",
+        urls["dataset"], {"fileset": actions}, content_type="application/json"
     )
     assert res.status_code == 200
-
     # Cannot alter storage for existing FileSet
     factories.FileStorageFactory(storage_service="test", csc_project=None)
     res = admin_client.patch(
@@ -543,6 +547,10 @@ def test_dataset_files_update_metadata_as_non_project_member(
     data_urls,
     use_category_reference_data,
 ):
+    data_catalog = factories.DataCatalogFactory()
+    data_catalog.dataset_groups_update.set([user.groups.first()])
+    dataset_with_metadata.data_catalog = data_catalog
+    dataset_with_metadata.save()
     dataset_with_metadata.metadata_owner.user = user
     dataset_with_metadata.metadata_owner.save(allow_change=True)
     use_category = {
@@ -779,7 +787,9 @@ def test_dataset_files_wrong_project_identifier(admin_client, deep_file_tree, da
 
 
 def test_dataset_files_unknown_project_identifier(user_client, user, deep_file_tree, data_urls):
-    dataset = factories.DatasetFactory()
+    data_catalog = factories.DataCatalogFactory()
+    data_catalog.dataset_groups_update.set([user.groups.first()])
+    dataset = factories.DatasetFactory(data_catalog=data_catalog)
     dataset.metadata_owner.user = user
     dataset.metadata_owner.save(allow_change=True)
     actions = {

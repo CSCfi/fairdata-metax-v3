@@ -196,7 +196,13 @@ class DatasetFilter(filters.FilterSet):
     )
 
     publishing_channels = VerboseChoiceFilter(
-        choices=[("default", "default"), ("etsin", "etsin"), ("ttv", "ttv"), ("all", "all")],
+        choices=[
+            ("default", "default"),
+            ("etsin", "etsin"),
+            ("ttv", "ttv"),
+            ("all", "all"),
+            ("qvain", "qvain"),
+        ],
         method="filter_publishing_channels",
         label="""publishing channels
         Filter datasets based on the publishing channels of the dataset's catalog.
@@ -880,6 +886,15 @@ class DatasetViewSet(CommonModelViewSet):
         ):
             raise exceptions.PermissionDenied(
                 "You are not allowed to create datasets in this data catalog."
+            )
+
+    def _check_allow_update_datasets_in_catalog(self, catalog: DataCatalog):
+        """Raise error if request user is not allowed to update datasets in the catalog."""
+        if not DataCatalogAccessPolicy().query_object_permission(
+            user=self.request.user, object=catalog, action="<op:update_dataset>"
+        ):
+            raise exceptions.PermissionDenied(
+                "You are not allowed to update datasets in this data catalog."
             )
 
     def perform_create(self, serializer):

@@ -88,6 +88,12 @@ class DataCatalog(AbstractBaseModel):
         related_name="catalogs_create_datasets",
         blank=True,
     )
+    dataset_groups_update = models.ManyToManyField(
+        Group,
+        help_text="User groups that are allowed to update datasets in catalog.",
+        related_name="catalogs_update_datasets",
+        blank=True,
+    )
     dataset_groups_admin = models.ManyToManyField(
         Group,
         help_text="User groups that are allowed to update all datasets in catalog.",
@@ -111,6 +117,7 @@ class DataCatalog(AbstractBaseModel):
     )
 
     class PublishingChannel(models.TextChoices):
+        QVAIN = "qvain", _("qvain")
         ETSIN = "etsin", _("etsin")
         TTV = "ttv", _("ttv")
         DEFAULT = "default", _("default")
@@ -138,6 +145,8 @@ class DataCatalog(AbstractBaseModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._admin_user_cache = {}  # Map of user.id -> can admin datasets
+        self._update_user_cache = {}  # Map of user.id -> can update datasets
+        self._create_user_cache = {}  # Map of user.id -> can create datasets
 
     @property
     def managed_pid_types(self) -> list:
@@ -157,6 +166,16 @@ class DataCatalog(AbstractBaseModel):
             user=user, object=self, action="<op:admin_dataset>"
         )
 
+    def _can_create_datasets(self, user: MetaxUser) -> bool:
+        return DataCatalogAccessPolicy().query_object_permission(
+            user=user, object=self, action="<op:create_dataset>"
+        )
+
+    def _can_update_datasets(self, user: MetaxUser) -> bool:
+        return DataCatalogAccessPolicy().query_object_permission(
+            user=user, object=self, action="<op:update_dataset>"
+        )
+
     def can_admin_datasets(self, user: MetaxUser) -> bool:
         """Determine if user has permission to update all datasets in catalog.
 
@@ -169,9 +188,17 @@ class DataCatalog(AbstractBaseModel):
 
     def can_create_datasets(self, user: MetaxUser) -> bool:
         """Determine if user has permission to create datasets in catalog."""
-        return DataCatalogAccessPolicy().query_object_permission(
-            user=user, object=self, action="<op:create_dataset>"
-        )
+        perms_cache = self._create_user_cache
+        if user.id not in perms_cache:
+            perms_cache[user.id] = self._can_create_datasets(user)
+        return perms_cache[user.id]
+
+    def can_update_datasets(self, user: MetaxUser) -> bool:
+        """Determine if user has permission to update datasets in catalog."""
+        perms_cache = self._update_user_cache
+        if user.id not in perms_cache:
+            perms_cache[user.id] = self._can_update_datasets(user)
+        return perms_cache[user.id]
 
 
 class CatalogHomePage(AbstractDatasetProperty):

@@ -2,6 +2,8 @@ import logging
 
 import pytest
 from django.contrib.auth.models import Group
+from django.test import Client
+from django.contrib.auth import get_user_model
 
 from apps.core import factories
 from apps.core.models import DataCatalog
@@ -128,7 +130,7 @@ def test_catalog_datasets_create_fairdata(user_client, catalog_datasets, dataset
 
 
 def test_catalog_datasets_create_and_set_catalog_fairdata(
-    user_client, catalog_datasets, dataset_a_json, admin_client
+    user_client, catalog_datasets, dataset_a_json, admin_client, user
 ):
     # Create draft without catalog
     dataset_a_json["state"] = "draft"
@@ -141,7 +143,7 @@ def test_catalog_datasets_create_and_set_catalog_fairdata(
     assert res.status_code == 201
     dataset_id = res.data["id"]
 
-    # Setting catalog should require dataset creation permission in the catalog
+    # Setting catalog should require dataset update permission in the catalog
     res = user_client.patch(
         f"/v3/datasets/{dataset_id}",
         {"data_catalog": "data-catalog-test"},
@@ -151,7 +153,7 @@ def test_catalog_datasets_create_and_set_catalog_fairdata(
 
     # Setting catalog should work after creation permission has been added
     dc = DataCatalog.objects.get(id="data-catalog-test")
-    dc.dataset_groups_create.add(Group.objects.get(name="fairdata_users"))
+    dc.dataset_groups_create.add(user.groups.first())
     res = user_client.patch(
         f"/v3/datasets/{dataset_id}",
         {"data_catalog": "data-catalog-test"},
@@ -159,14 +161,14 @@ def test_catalog_datasets_create_and_set_catalog_fairdata(
     )
     assert res.status_code == 200
 
-    # Patching dataset that is already in the catalog should not require creation permission
-    dc.dataset_groups_create.remove(Group.objects.get(name="fairdata_users"))
+    # Patching dataset that is already in the catalog should require update permission
+    dc.dataset_groups_create.remove(user.groups.first())
     res = user_client.patch(
         f"/v3/datasets/{dataset_id}",
         {"data_catalog": "data-catalog-test"},
         content_type="application/json",
     )
-    assert res.status_code == 200
+    assert res.status_code == 403
 
 
 def test_catalog_datasets_create_service(service_client, catalog_datasets, dataset_a_json):
@@ -234,6 +236,156 @@ def test_catalog_datasets_update_admin(admin_client, catalog_datasets, dataset_a
 
     dataset_id = Dataset.objects.get(persistent_identifier="test-public-dataset").id
     res = admin_client.patch(f"/v3/datasets/{dataset_id}", {}, content_type="application/json")
+    assert res.status_code == 200
+
+
+def test_catalog_datasets_update_requires_update_group(
+    user_client,
+    admin_org_user_client,
+    fairdata_users_group,
+    dataset_a_json,
+    reference_data,
+):
+    """User with admin_organization permission needs update group to edit datasets."""
+    from apps.users.factories import AdminOrganizationFactory
+
+    # Catalog where fairdata users can create but not update datasets
+    catalog = factories.DataCatalogFactory(
+        id="data-catalog-update-test",
+        allowed_pid_types=["URN", "DOI"],
+    )
+    catalog.dataset_groups_create.set([fairdata_users_group])
+    catalog.dataset_groups_update.set([])
+    catalog.save()
+
+    # Create admin organization and dataset with admin_organization set
+    AdminOrganizationFactory(id="test_org", pref_label={"en": "Test Organization"})
+    dataset_payload = {
+        **dataset_a_json,
+        "data_catalog": catalog.id,
+        "metadata_owner": {
+            "user": "test_user",
+            "organization": "test_organization",
+            "admin_organization": "test_org",
+        },
+    }
+    res = user_client.post("/v3/datasets", dataset_payload, content_type="application/json")
+    assert res.status_code == 201
+    dataset_id = res.data["id"]
+
+    # admin_org_user has permission through admin_organization but should fail
+    # because they are not in dataset_groups_update
+    res = admin_org_user_client.patch(
+        f"/v3/datasets/{dataset_id}",
+        {"title": {"en": "Updated title"}},
+        content_type="application/json",
+    )
+    assert res.status_code == 403
+
+    # Add user's group to dataset_groups_update
+    catalog.dataset_groups_update.add(fairdata_users_group)
+    catalog.save()
+
+    # Updating the dataset should now succeed
+    res = admin_org_user_client.patch(
+        f"/v3/datasets/{dataset_id}",
+        {"description": {"en": "Updated description"}},
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+
+
+def test_catalog_datasets_update_with_dataset_groups_update(
+    user_client,
+    admin_client,
+    user,
+    fairdata_users_group,
+    dataset_a_json,
+    reference_data,
+):
+    """User should be able to update datasets in catalogs where their group is in dataset_groups_update."""
+    # Create first datacatalog with fairdata_users in dataset_groups_update
+    catalog_with_update = factories.DataCatalogFactory(
+        id="data-catalog-with-update",
+        allowed_pid_types=["URN", "DOI"],
+    )
+    catalog_with_update.dataset_groups_create.set([fairdata_users_group])
+    catalog_with_update.dataset_groups_update.set([fairdata_users_group])
+    catalog_with_update.save()
+
+    # Create second datacatalog without fairdata_users in dataset_groups_update
+    catalog_without_update = factories.DataCatalogFactory(
+        id="data-catalog-without-update",
+        allowed_pid_types=["URN", "DOI"],
+    )
+    catalog_without_update.dataset_groups_create.set([fairdata_users_group])
+    catalog_without_update.dataset_groups_update.set([])
+    catalog_without_update.save()
+
+    # Create dataset in first catalog (with dataset_groups_update)
+    dataset_payload_1 = {
+        **dataset_a_json,
+        "data_catalog": catalog_with_update.id,
+        "metadata_owner": {
+            "user": user.username,
+            "organization": "test_organization",
+        },
+    }
+    res = user_client.post("/v3/datasets", dataset_payload_1, content_type="application/json")
+    assert res.status_code == 201
+    dataset_id_with_update = res.data["id"]
+
+    # Create dataset in second catalog (without dataset_groups_update)
+    dataset_payload_2 = {
+        **dataset_a_json,
+        "data_catalog": catalog_without_update.id,
+        "metadata_owner": {
+            "user": user.username,
+            "organization": "test_organization",
+        },
+    }
+    res = user_client.post("/v3/datasets", dataset_payload_2, content_type="application/json")
+    assert res.status_code == 201
+    dataset_id_without_update = res.data["id"]
+
+    # Updating the dataset in catalog with dataset_groups_update should succeed
+    res = user_client.patch(
+        f"/v3/datasets/{dataset_id_with_update}",
+        {"title": {"en": "Updated title"}},
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+
+    # Updating the dataset in catalog without dataset_groups_update should fail
+    res = user_client.patch(
+        f"/v3/datasets/{dataset_id_without_update}",
+        {"title": {"en": "Updated title"}},
+        content_type="application/json",
+    )
+    assert res.status_code == 403
+
+    # Admin should be able to update the same dataset even without dataset_groups_update
+    res = admin_client.patch(
+        f"/v3/datasets/{dataset_id_without_update}",
+        {"title": {"en": "Updated title"}},
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+
+    # Superuser should also be able to update the same dataset even without dataset_groups_update
+    MetaxUser = get_user_model()
+    superuser = MetaxUser.objects.create_user(
+        username="superuser_test",
+        email="superuser@example.com",
+        is_superuser=True,
+    )
+    superuser_client = Client()
+    superuser_client.force_login(superuser)
+    res = superuser_client.patch(
+        f"/v3/datasets/{dataset_id_without_update}",
+        {"title": {"en": "Updated title by superuser"}},
+        content_type="application/json",
+    )
     assert res.status_code == 200
 
 
@@ -384,16 +536,58 @@ def test_catalog_datasets_publishing_channels_drafts(admin_client):
     factories.PublishedDatasetFactory(data_catalog__id="urn:nbn:fi:att:data-catalog-ida")
 
     res = admin_client.get("/v3/datasets")
-    assert res.data["count"] == 3 # All datasets
+    assert res.data["count"] == 3  # All datasets
 
     res = admin_client.get("/v3/datasets?publishing_channels=default")
-    assert res.data["count"] == 3 # All datasets
+    assert res.data["count"] == 3  # All datasets
 
     res = admin_client.get("/v3/datasets?publishing_channels=etsin")
     assert res.data["count"] == 1  # No drafts for etsin
 
     res = admin_client.get("/v3/datasets?publishing_channels=ttv")
     assert res.data["count"] == 1  # No drafts for ttv
+
+
+def test_catalog_datasets_publishing_channels_qvain(
+    admin_client, dataset_a_json, data_catalog_list_url, reference_data, datacatalog_a_json
+):
+    """Test that only datasets from datacatalogs with qvain in publishing_channels are returned."""
+    # Create first datacatalog with qvain in publishing_channels
+    qvain_dc_json = datacatalog_a_json.copy()
+    qvain_dc_json["id"] = "qvain-pc-data-catalog"
+    qvain_dc_json["publishing_channels"] = ["qvain"]
+    res = admin_client.post(data_catalog_list_url, qvain_dc_json, content_type="application/json")
+    assert res.status_code == 201
+
+    # Create second datacatalog without qvain in publishing_channels
+    non_qvain_dc_json = datacatalog_a_json.copy()
+    non_qvain_dc_json["id"] = "non-qvain-pc-data-catalog"
+    non_qvain_dc_json["publishing_channels"] = ["etsin", "ttv"]
+    res = admin_client.post(
+        data_catalog_list_url, non_qvain_dc_json, content_type="application/json"
+    )
+    assert res.status_code == 201
+
+    # Create dataset in first datacatalog (with qvain)
+    dataset_json_1 = dataset_a_json.copy()
+    dataset_json_1["data_catalog"] = "qvain-pc-data-catalog"
+    res = admin_client.post("/v3/datasets", dataset_json_1, content_type="application/json")
+    assert res.status_code == 201
+    qvain_dataset_id = res.json()["id"]
+
+    # Create dataset in second datacatalog (without qvain)
+    dataset_json_2 = dataset_a_json.copy()
+    dataset_json_2["data_catalog"] = "non-qvain-pc-data-catalog"
+    res = admin_client.post("/v3/datasets", dataset_json_2, content_type="application/json")
+    assert res.status_code == 201
+    non_qvain_dataset_id = res.json()["id"]
+
+    # Test that only the dataset with qvain is returned
+    res = admin_client.get("/v3/datasets?publishing_channels=qvain")
+    assert res.status_code == 200
+    assert res.json()["count"] == 1
+    assert res.json()["results"][0]["id"] == qvain_dataset_id
+    assert res.json()["results"][0]["id"] != non_qvain_dataset_id
 
 
 # Update catalog

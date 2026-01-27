@@ -11,7 +11,7 @@ from tests.utils import assert_nested_subdict, matchers
 from watson.models import SearchEntry
 
 from apps.core import factories
-from apps.core.factories import DatasetFactory, MetadataProviderFactory
+from apps.core.factories import DatasetFactory, MetadataProviderFactory, DataCatalogFactory
 from apps.core.models import OtherIdentifier
 from apps.core.models.catalog_record.dataset import Dataset
 from apps.files.factories import FileStorageFactory
@@ -551,12 +551,18 @@ def test_api_version(admin_client, dataset_a_json, data_catalog, reference_data)
 
 def test_dataset_last_modified_by(admin_client, user_client, user):
     dataset = DatasetFactory(metadata_owner=MetadataProviderFactory(user=user))
+    data_catalog = DataCatalogFactory()
+    data_catalog.dataset_groups_update.set([Group.objects.get(name="fairdata_users")])
+    dataset.data_catalog = data_catalog
+    dataset.save()
 
-    admin_client.patch(f"/v3/datasets/{dataset.id}", {}, content_type="application/json")
+    res = admin_client.patch(f"/v3/datasets/{dataset.id}", {}, content_type="application/json")
+    assert res.status_code == 200
     dataset.refresh_from_db()
     assert dataset.last_modified_by.username == "admin"
 
-    user_client.patch(f"/v3/datasets/{dataset.id}", {}, content_type="application/json")
+    res = user_client.patch(f"/v3/datasets/{dataset.id}", {}, content_type="application/json")
+    assert res.status_code == 200
     dataset.refresh_from_db()
     assert dataset.last_modified_by == user
 

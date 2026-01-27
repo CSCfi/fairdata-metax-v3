@@ -38,6 +38,7 @@ class DataCatalogModelSerializer(CommonNestedModelSerializer):
     publisher = DatasetPublisherModelSerializer(required=False)
     language = Language.get_serializer_field(required=False, many=True)
     dataset_groups_create = GetOrCreateGroupField(required=False, many=True)
+    dataset_groups_update = GetOrCreateGroupField(required=False, many=True)
     dataset_groups_admin = GetOrCreateGroupField(required=False, many=True)
     harvested = NoopField(help_text="No longer in use. Replaced by is_external.")
 
@@ -54,6 +55,7 @@ class DataCatalogModelSerializer(CommonNestedModelSerializer):
             "is_external",
             "harvested",
             "dataset_groups_create",
+            "dataset_groups_update",
             "dataset_groups_admin",
             "allow_download",
             "allow_remote_resources",

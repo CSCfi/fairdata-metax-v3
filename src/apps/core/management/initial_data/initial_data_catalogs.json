@@ -34,6 +34,7 @@
     },
     "dataset_versioning_enabled": false,
     "dataset_groups_create": ["abo"],
+    "dataset_groups_update": ["abo"],
     "dataset_groups_admin": ["abo"],
     "publishing_channels": ["default", "etsin", "ttv"]
   },
@@ -72,6 +73,7 @@
     },
     "dataset_versioning_enabled": false,
     "dataset_groups_create": ["aalto"],
+    "dataset_groups_update": ["aalto"],
     "dataset_groups_admin": ["aalto"],
     "publishing_channels": ["default", "etsin", "ttv"]
   },
@@ -107,18 +109,13 @@
       ]
     },
     "dataset_versioning_enabled": true,
-    "dataset_groups_admin": [
-      "pas"
-    ],
-    "dataset_groups_create": [
-      "fairdata_users"
-    ],
-    "allowed_pid_types": [
-      "URN"
-    ],
+    "dataset_groups_admin": ["pas"],
+    "dataset_groups_create": ["fairdata_users"],
+    "dataset_groups_update": ["fairdata_users"],
+    "allowed_pid_types": ["URN"],
     "rems_enabled": false,
     "storage_services": [],
-    "publishing_channels": ["default", "etsin","ttv"]
+    "publishing_channels": ["default", "etsin", "ttv", "qvain"]
   },
   {
     "id": "urn:nbn:fi:att:data-catalog-e2e-tests-harvested",
@@ -153,6 +150,7 @@
     },
     "dataset_versioning_enabled": false,
     "dataset_groups_create": ["e2e"],
+    "dataset_groups_update": ["e2e"],
     "dataset_groups_admin": ["e2e"],
     "publishing_channels": ["default", "etsin", "ttv"]
   },
@@ -189,6 +187,7 @@
     },
     "dataset_versioning_enabled": false,
     "dataset_groups_create": ["fmi"],
+    "dataset_groups_update": ["fmi"],
     "dataset_groups_admin": ["fmi"],
     "publishing_channels": ["default", "etsin", "ttv"]
   },
@@ -225,6 +224,7 @@
     },
     "dataset_versioning_enabled": false,
     "dataset_groups_create": ["fsd"],
+    "dataset_groups_update": ["fsd"],
     "dataset_groups_admin": ["fsd"],
     "publishing_channels": ["default", "etsin", "ttv"]
   },
@@ -261,6 +261,7 @@
     },
     "dataset_versioning_enabled": false,
     "dataset_groups_create": ["kielipankki"],
+    "dataset_groups_update": ["kielipankki"],
     "dataset_groups_admin": ["kielipankki"],
     "publishing_channels": ["default", "etsin", "ttv"]
   },
@@ -299,6 +300,7 @@
     },
     "dataset_versioning_enabled": false,
     "dataset_groups_create": ["hy"],
+    "dataset_groups_update": ["hy"],
     "dataset_groups_admin": ["hy"],
     "publishing_channels": ["default", "etsin", "ttv"]
   },
@@ -335,28 +337,26 @@
     "dataset_versioning_enabled": true,
     "is_external": false,
     "dataset_groups_create": ["fairdata_users", "ida"],
+    "dataset_groups_update": ["fairdata_users", "ida"],
     "dataset_groups_admin": ["ida", "pas"],
     "allow_remote_resources": false,
     "rems_enabled": true,
     "storage_services": ["ida"],
     "allowed_pid_types": ["URN", "DOI"],
-    "publishing_channels": ["default", "etsin", "ttv"],
+    "publishing_channels": ["default", "etsin", "ttv", "qvain"],
     "allow_download": true
   },
   {
     "id": "urn:nbn:fi:att:data-catalog-justus",
-    "title":
-    {
+    "title": {
       "en": "JUSTUS catalog",
       "fi": "JUSTUS katalogi"
     },
-    "description":
-    {
+    "description": {
       "en": "Contains datasets exported from JUSTUS - Publication Information Reporting Service to Fairdata",
       "fi": "Sisältää tutkimusaineistoja, jotka on viety JUSTUS – julkaisutietojen tallennuspalvelusta Fairdataan"
     },
-    "language":
-    [
+    "language": [
       {
         "url": "http://lexvo.org/id/iso639-3/fin"
       },
@@ -365,19 +365,15 @@
       }
     ],
     "is_external": true,
-    "publisher":
-    {
-      "name":
-      {
+    "publisher": {
+      "name": {
         "en": "JUSTUS - Publication Information Reporting Service",
         "fi": "JUSTUS – julkaisutietojen tallennuspalvelu",
         "sv": "JUSTUS-service"
       },
-      "homepage":
-      [
+      "homepage": [
         {
-          "title":
-          {
+          "title": {
             "en": "JUSTUS - Publication Information Reporting Service",
             "fi": "JUSTUS – julkaisutietojen tallennuspalvelu",
             "sv": "JUSTUS-service"
@@ -387,28 +383,14 @@
       ]
     },
     "dataset_versioning_enabled": false,
-    "dataset_groups_create":
-    [
-      "justus"
-    ],
-    "dataset_groups_admin":
-    [
-      "justus"
-    ],
+    "dataset_groups_create": ["justus"],
+    "dataset_groups_update": ["justus"],
+    "dataset_groups_admin": ["justus"],
     "allow_remote_resources": true,
     "rems_enabled": false,
-    "storage_services":
-    [],
-    "publishing_channels":
-    [
-      "default",
-      "etsin",
-      "ttv"
-    ],
-    "allowed_pid_types":
-    [
-      "external"
-    ]
+    "storage_services": [],
+    "publishing_channels": ["default", "etsin", "ttv"],
+    "allowed_pid_types": ["external"]
   },
   {
     "id": "urn:nbn:fi:att:data-catalog-jyu",
@@ -446,58 +428,42 @@
     },
     "dataset_versioning_enabled": false,
     "is_external": true,
-    "dataset_groups_create": [
-      "jyu"
-    ],
-    "dataset_groups_admin": [
-      "jyu"
-    ],
+    "dataset_groups_create": ["jyu"],
+    "dataset_groups_update": ["jyu"],
+    "dataset_groups_admin": ["jyu"],
     "allow_download": false,
     "allow_remote_resources": true,
     "storage_services": [],
-    "publishing_channels": [
-      "default",
-      "etsin",
-      "ttv"
-    ],
-    "allowed_pid_types": [
-      "external"
-    ],
+    "publishing_channels": ["default", "etsin", "ttv"],
+    "allowed_pid_types": ["external"],
     "rems_enabled": false
   },
   {
     "id": "urn:nbn:fi:att:data-catalog-oulu",
-    "title":
-    {
+    "title": {
       "en": "Data catalog for testing University of Oulu's CRIS integration",
       "fi": "Katalogi Oulun yliopiston Metax-integraation testaamiseen"
     },
-    "description":
-    {
+    "description": {
       "en": "Datasets stored in University of Oulu's CRIS",
       "fi": "Sisältää aineistoja Oulun yliopiston CRIS-palvelusta"
     },
     "is_external": true,
-    "publisher":
-    {
-      "name":
-      {
+    "publisher": {
+      "name": {
         "en": "University of Oulu"
       },
-      "homepage":
-      [
+      "homepage": [
         {
           "url": "https://www.oulu.fi/fi",
-          "title":
-          {
+          "title": {
             "en": "University of Oulu",
             "fi": "Oulun yliopisto"
           }
         }
       ]
     },
-    "language":
-    [
+    "language": [
       {
         "url": "http://lexvo.org/id/iso639-3/eng"
       },
@@ -506,28 +472,14 @@
       }
     ],
     "dataset_versioning_enabled": false,
-    "dataset_groups_create":
-    [
-      "oulu"
-    ],
-    "dataset_groups_admin":
-    [
-      "oulu"
-    ],
+    "dataset_groups_create": ["oulu"],
+    "dataset_groups_update": ["oulu"],
+    "dataset_groups_admin": ["oulu"],
     "allow_remote_resources": true,
     "rems_enabled": false,
-    "storage_services":
-    [],
-    "publishing_channels":
-    [
-      "default",
-      "etsin",
-      "ttv"
-    ],
-    "allowed_pid_types":
-    [
-      "external"
-    ]
+    "storage_services": [],
+    "publishing_channels": ["default", "etsin", "ttv"],
+    "allowed_pid_types": ["external"]
   },
   {
     "id": "urn:nbn:fi:att:data-catalog-pas",
@@ -561,19 +513,14 @@
       ]
     },
     "dataset_versioning_enabled": true,
-    "dataset_groups_admin": [
-      "pas"
-    ],
-    "dataset_groups_create": [
-      "pas"
-    ],
-    "allowed_pid_types": [
-      "DOI"
-    ],
+    "dataset_groups_admin": ["pas"],
+    "dataset_groups_create": ["pas"],
+    "dataset_groups_update": ["pas"],
+    "allowed_pid_types": ["DOI"],
     "allow_remote_resources": false,
     "rems_enabled": false,
     "storage_services": ["pas"],
-    "publishing_channels": ["default", "etsin","ttv"]
+    "publishing_channels": ["default", "etsin", "ttv", "qvain"]
   },
   {
     "id": "urn:nbn:fi:att:data-catalog-reportronic",
@@ -609,55 +556,41 @@
     ],
     "dataset_versioning_enabled": false,
     "is_external": true,
-    "dataset_groups_create": [
-      "reportronic"
-    ],
-    "dataset_groups_admin": [
-      "reportronic"
-    ],
+    "dataset_groups_create": ["reportronic"],
+    "dataset_groups_update": ["reportronic"],
+    "dataset_groups_admin": ["reportronic"],
     "allow_download": false,
     "allow_remote_resources": true,
     "storage_services": [],
-    "publishing_channels": [
-      "ttv"
-    ],
-    "allowed_pid_types": [
-      "external"
-    ],
+    "publishing_channels": ["ttv"],
+    "allowed_pid_types": ["external"],
     "rems_enabled": false
   },
   {
     "id": "urn:nbn:fi:att:data-catalog-sd",
-    "title":
-    {
+    "title": {
       "en": "CSC SD services datasets",
       "fi": "CSC:n Arkaluonteisen datan palveluiden aineistokatalogi"
     },
-    "description":
-    {
+    "description": {
       "en": "Datasets stored in CSC SD services",
       "fi": "Sisältää aineistoja CSC:n SD-palvelusta"
     },
     "is_external": true,
-    "publisher":
-    {
-      "name":
-      {
+    "publisher": {
+      "name": {
         "en": "CSC Sensitive Data Services for Research"
       },
-      "homepage":
-      [
+      "homepage": [
         {
           "url": "https://research.csc.fi/sensitive-data-services-for-research",
-          "title":
-          {
+          "title": {
             "en": "Sensitive Data Services for Research - Services for Research - CSC Company Site"
           }
         }
       ]
     },
-    "language":
-    [
+    "language": [
       {
         "url": "http://lexvo.org/id/iso639-3/eng"
       },
@@ -666,28 +599,14 @@
       }
     ],
     "dataset_versioning_enabled": false,
-    "dataset_groups_create":
-    [
-      "sd"
-    ],
-    "dataset_groups_admin":
-    [
-      "sd"
-    ],
+    "dataset_groups_create": ["sd"],
+    "dataset_groups_update": ["sd"],
+    "dataset_groups_admin": ["sd"],
     "allow_remote_resources": true,
     "rems_enabled": false,
-    "storage_services":
-    [],
-    "publishing_channels":
-    [
-      "default",
-      "etsin",
-      "ttv"
-    ],
-    "allowed_pid_types":
-    [
-      "external"
-    ]
+    "storage_services": [],
+    "publishing_channels": ["default", "etsin", "ttv"],
+    "allowed_pid_types": ["external"]
   },
   {
     "id": "urn:nbn:fi:att:data-catalog-smartsmear",
@@ -762,6 +681,7 @@
     },
     "dataset_versioning_enabled": false,
     "dataset_groups_create": ["tuni"],
+    "dataset_groups_update": ["tuni"],
     "dataset_groups_admin": ["tuni"],
     "publishing_channels": ["default", "etsin", "ttv"]
   }

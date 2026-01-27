@@ -156,6 +156,10 @@ def test_files_get_dataset_files_non_owner_published(user_client, dataset):
 
 
 def test_files_get_dataset_files_dataset_owner(user_client, user, dataset):
+    data_catalog = factories.DataCatalogFactory()
+    data_catalog.dataset_groups_update.set([user.groups.first()])
+    dataset.data_catalog = data_catalog
+    dataset.save()
     dataset.metadata_owner.user = user
     dataset.metadata_owner.save(allow_change=True)
     res = user_client.get(
