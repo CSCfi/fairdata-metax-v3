@@ -975,7 +975,10 @@ class DatasetViewSet(CommonModelViewSet):
         serializer = ApplicationDataSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = service.create_application_for_dataset(
-            request.user, dataset, accept_licenses=serializer.validated_data["accept_licenses"]
+            request.user,
+            dataset,
+            accept_licenses=serializer.validated_data["accept_licenses"],
+            field_values=serializer.validated_data["field_values"],
         )
         return response.Response(data, status=status.HTTP_200_OK)
 

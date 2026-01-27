@@ -65,7 +65,10 @@ def manual_rems_application(manual_rems_dataset, user, handler):
     service = REMSService()
     service.publish_dataset(manual_rems_dataset)
     service.create_application_for_dataset(
-        user, manual_rems_dataset, service.get_dataset_rems_license_ids(manual_rems_dataset)
+        user,
+        manual_rems_dataset,
+        accept_licenses=service.get_dataset_rems_license_ids(manual_rems_dataset),
+        field_values=[{"form": 1, "field": "project_description", "value": "proj description"}],
     )
 
 

@@ -1,7 +1,9 @@
+import copy
 import logging
 import re
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Set, Tuple, Type, Union
+from collections import Counter
 
 from django.conf import settings
 from django.utils import timezone
@@ -214,6 +216,26 @@ class MockREMS:
             licenses.append(license_data)
         return licenses
 
+    def create_application_form_data(self, catalogue_item_ids: List[int]) -> List[dict]:
+        """Determine application form objects.
+
+        Note: Supports only catalogue item forms, workflow forms are not implemented.
+        """
+        forms = []
+        catalogue_items = [
+            self.entities[EntityType.CATALOGUE_ITEM][_id] for _id in catalogue_item_ids
+        ]
+        for item in catalogue_items:
+            if form_id := item.get("formid"):
+                data = copy.deepcopy(self.entities[EntityType.FORM][form_id])
+                data.pop("enabled", None)
+                data.pop("archived", None)
+                # Fields get an additional value property that is initially empty
+                for field in data["form/fields"]:
+                    field["field/value"] = ""
+                forms.append(data)
+        return forms
+
     def create_application_data(
         self, application_id: int, user_id: str, catalogue_item_ids: List[int]
     ) -> dict:
@@ -224,6 +246,9 @@ class MockREMS:
         licenses = self.create_application_license_data(
             resource_data.license_ids | workflow_data.license_ids
         )
+
+        # Workflow forms not implemented
+        forms = self.create_application_form_data(catalogue_item_ids=catalogue_item_ids)
 
         # Most of these fields are not used by Metax
         # but they are kept here for documentation
@@ -254,7 +279,7 @@ class MockREMS:
             "application/todo": None,  # e.g. "waiting-for-review"
             "application/description": "",  # filled in when a form has application title field
             "application/attachments": [],  # filled in from attachment fields
-            "application/forms": [],  # forms from both workflow and catalogue item
+            "application/forms": forms,  # forms from both workflow and catalogue item
             # Fields with partial implementation
             "application/events": [],  # all changes to application, who, what, when etc.
             # Fields created dynamically on response
@@ -324,6 +349,8 @@ class MockREMS:
                 # REMS replaces catalogue item resid with resource.resid
                 data["resource-id"] = data["resid"]
                 data["resid"] = self.entities[EntityType.RESOURCE][data["resid"]]["resid"]
+                if formid := data.pop("form", None):  # Form value is the id of the form
+                    data["formid"] = formid
 
             if entity_type == EntityType.APPLICATION:
                 user_id = request.headers["X-REMS-USER-ID"]
@@ -334,6 +361,9 @@ class MockREMS:
                 )
                 # Note "application-id" on creation but "application/id" on GET
                 output = {"success": True, "application-id": data["application/id"]}
+
+            if entity_type == EntityType.FORM:
+                data["form/id"] = data.pop("id")  # Form id is in "form/id" field
 
             self.entities[entity_type][_id] = data
             return output
@@ -612,6 +642,21 @@ class MockREMS:
                 "errors": [{"type": "t.actions.errors/licenses-not-accepted"}],
             }
 
+        # All required form fields need to be set
+        field_errors = []
+        for form in application["application/forms"]:
+            for field in form["form/fields"]:
+                if not (field.get("field/optional") or field.get("field/value")):
+                    field_errors.append(
+                        {
+                            "form-id": form["form/id"],
+                            "field-id": field["field/id"],
+                            "type": "t.form.validation/required",
+                        }
+                    )
+        if field_errors:
+            return {"success": False, "errors": field_errors}
+
         # Update application state
         now = timezone.now()
         application["application/first-submitted"] = now.isoformat()
@@ -712,6 +757,21 @@ class MockREMS:
             event["event/visibility"] = "visibility/private"
         self.add_application_event(application, handler, event)
 
+    def save_application_draft(
+        self, application: dict, user: dict, field_values: list[dict]
+    ) -> dict:
+        """Assign form values supplied by applicant."""
+        forms_by_id = {form["form/id"]: form for form in application["application/forms"]}
+        for item in field_values:
+            form_id = item["form"]
+            if form := forms_by_id.get(form_id):
+                field_id = item["field"]
+                field_value = item["value"]
+                for field in form["form/fields"]:
+                    if field["field/id"] != field_id:
+                        continue
+                    field["field/value"] = field_value
+
     def filter_application_list_fields(self, application):
         """Application lists don't include forms or licenses."""
         return {
@@ -720,12 +780,16 @@ class MockREMS:
             if field not in {"application/forms", "application/licenses"}
         }
 
-    def add_user_application_fields(self, request, application: dict) -> dict:
+    def get_user_application_roles(self, request, application: dict) -> list[str]:
         roles = []
         if self.user_is_applicant(request, application=application):
             roles.append("applicant")
         if self.user_is_handler(request, application=application):
             roles.append("handler")
+        return roles
+
+    def add_user_application_fields(self, request, application: dict) -> dict:
+        roles = self.get_user_application_roles(request, application)
         return {**application, "application/roles": roles}
 
     def filter_user_application_events(self, request, application: dict) -> dict:
@@ -771,7 +835,7 @@ class MockREMS:
         ]
 
     def validate_application_command(
-        self, request, context, allowed_states: list
+        self, request, context, allowed_states: list, allowed_roles={"handler"}
     ) -> Tuple[Optional[dict], any]:
         """Validate application command.
 
@@ -793,8 +857,9 @@ class MockREMS:
         if not self.user_can_see_application(request, application):
             context.status_code = 403
             return None, "Forbidden"
+        user_roles = self.get_user_application_roles(request, application)
         if (
-            not self.user_is_handler(request, application)
+            not set(allowed_roles) & set(user_roles)
             or application["application/state"] not in allowed_states
         ):
             # When user can see application, but has wrong role
@@ -856,6 +921,22 @@ class MockREMS:
         comment: str = data["comment"]  # required
         public: bool = data["public"]  # required
         self.remark_application(application, handler=handler, comment=comment, public=public)
+        return {"success": True}
+
+    def handle_save_application_draft(self, request, context):
+        application, error = self.validate_application_command(
+            request,
+            context,
+            allowed_states=[self.ApplicationState.DRAFT],
+            allowed_roles=["applicant"],
+        )
+        if error:
+            return error
+        userid = request.headers["X-REMS-USER-ID"]
+        user = self.entities[EntityType.USER][userid]
+        data = request.json()
+        field_values: List[dict] = data["field-values"]  # required
+        self.save_application_draft(application, user=user, field_values=field_values)
         return {"success": True}
 
     def handle_list_entitlements(self, request, context):
@@ -945,6 +1026,11 @@ class MockREMS:
         mocker.post(
             f"{settings.REMS_BASE_URL}/api/applications/remark",
             json=self.handle_remark_application,
+        )
+
+        mocker.post(
+            f"{settings.REMS_BASE_URL}/api/applications/save-draft",
+            json=self.handle_save_application_draft,
         )
 
         # Entitlement-specific endpoints

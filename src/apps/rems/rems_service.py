@@ -1,6 +1,6 @@
 import logging
 
-from typing import TYPE_CHECKING, Iterable, List, Optional
+from typing import TYPE_CHECKING, Any, Iterable, List, Optional
 
 from django.conf import settings
 from django.db import models, transaction
@@ -9,6 +9,7 @@ from rest_framework import exceptions
 
 from apps.common.helpers import format_exception, single_translation
 from apps.common.locks import lock_rems_publish
+from apps.rems.form_builder import REMSFormBuilder, REMSTextField
 from apps.rems.models import (
     EntityType,
     REMSCatalogueItem,
@@ -52,7 +53,7 @@ class REMSService:
         resp = self.session.get(f"/api/{entity.entity_type}s/{entity.rems_id}")
         return resp.json()
 
-    def archive_entity(self, entity: REMSEntity):
+    def archive_entity(self, entity: REMSEntity, disable_only=False):
         """Archive entity in REMS and soft delete it in Metax."""
         entity_type = entity.entity_type
         if entity.entity_type == EntityType.USER:
@@ -78,10 +79,11 @@ class REMSService:
             f"/api/{entity_type}s/enabled",
             json={entity.rems_id_field: entity.rems_id, "enabled": False},
         )
-        self.session.put(
-            f"/api/{entity_type}s/archived",
-            json={entity.rems_id_field: entity.rems_id, "archived": True},
-        )
+        if not disable_only:
+            self.session.put(
+                f"/api/{entity_type}s/archived",
+                json={entity.rems_id_field: entity.rems_id, "archived": True},
+            )
         if not entity._state.adding:  # Don't try to delete temporary entities
             entity.delete(soft=True)
 
@@ -173,6 +175,54 @@ class REMSService:
         ):
             return REMSOperation.edit  # Update title and handlers
         return REMSOperation.keep  # No changes, use existing item
+
+    def get_form_data(self, form_id) -> dict:
+        return self.session.get(f"/api/forms/{form_id}").json()
+
+    def create_manual_application_form(self) -> REMSForm:
+        builder = REMSFormBuilder(
+            organization=self.get_default_organization_data(),
+            title={"en": "Data access request form", "fi": "Datan lupahakemus"},
+            fields=[
+                REMSTextField(
+                    field_id="project_description",
+                    title={
+                        "en": "Description of your research project",
+                        "fi": "Tutkimusprojektin kuvaus",
+                    },
+                ),
+                REMSTextField(
+                    field_id="access_control",
+                    title={
+                        "en": "Procedures to prevent unauthorized access to the requested data",
+                        "fi": "Menettelyt luvattoman pääsyn estämiseksi pyydettyihin tietoihin",
+                    },
+                    optional=True,
+                ),
+                REMSTextField(
+                    field_id="other_persons",
+                    title={
+                        "en": "Other persons presumed to get access to the requested data",
+                        "fi": "Muut henkilöt joiden oletetaan saavan pääsyn pyydettyihin tietoihin",
+                    },
+                    optional=True,
+                ),
+            ],
+        )
+
+        # We could check if form is actually in use with /api/forms/<rems_id>/editable
+        # and update instead of creating new.
+        entity = REMSForm.objects.filter(key="manual-rems-application").first()
+        if entity:
+            if builder.is_changed(self.get_entity_data(entity)):
+                logger.info(f"Form changed, disabling old version, rems_id={entity.rems_id}")
+                self.archive_entity(entity, disable_only=True)  # can't archive form that is in use
+            else:
+                return entity  # No changes, return the existing form
+
+        resp = self.session.post("/api/forms/create", json=builder.data)
+        _id = resp.json()["id"]
+        return REMSForm.objects.create(key="manual-rems-application", rems_id=_id)
 
     def create_workflow(
         self,
@@ -617,11 +667,19 @@ class REMSService:
                 licenses=licenses,
                 dataset=dataset,
             )
+
+            form: REMSForm | None = None
+            from apps.core.models.access_rights import REMSApprovalType
+
+            if dataset.access_rights.rems_approval_type == REMSApprovalType.MANUAL:
+                form = self.create_manual_application_form()
+
             return self.create_catalogue_item(
                 key=dataset_key,
                 resource=resource,
                 workflow=workflow,
                 localizations=self.get_dataset_localizations(dataset),
+                form=form,
             )
 
         except Exception as e:
@@ -711,15 +769,48 @@ class REMSService:
         if not getattr(user, "fairdata_username", None):
             raise ValueError("User should be a Fairdata user")
 
+    def validate_field_values(self, application: dict, field_values: List[dict]):
+        values: dict[tuple[int, str], str] = {}
+        required_fields: list[tuple[int, str]] = []
+        for form in application["application/forms"]:
+            form_id = form["form/id"]
+            for field in form["form/fields"]:
+                field_id = field["field/id"]
+                values[(form_id, field_id)] = None
+                if not field.get("field/optional"):
+                    required_fields.append((form_id, field_id))
+
+        for field_value in field_values:
+            form_id = field_value["form"]
+            field_id = field_value["field"]
+            if (form_id, field_id) not in values:
+                raise exceptions.ValidationError(f"Unknown field {field_id} for form {form_id}")
+            values[form_id, field_id] = field_value["value"]
+
+        for field_value in required_fields:
+            if not values.get(field_value):
+                form_id, field_id = field_value
+                raise exceptions.ValidationError(
+                    f"Missing value for required field {field_id} for form {form_id}"
+                )
+
+    def submit_field_values(self, application_id: int, field_values: List[dict]):
+        """Submit form field values for application."""
+        application = self.session.get(f"/api/applications/{application_id}").json()
+
+        self.validate_field_values(application, field_values)
+        data = {"application-id": application_id, "field-values": field_values}
+        self.session.post("/api/applications/save-draft", json=data)
+
     def validate_accepted_licenses(self, application: dict, accept_licenses: List[int]):
         all_licenses = set([lic["license/id"] for lic in application["application/licenses"]])
         if missing_licenses := all_licenses - set(accept_licenses):
-            raise ValueError(
+            raise exceptions.ValidationError(
                 f"All licenses need to be accepted. Missing: {sorted(missing_licenses)}"
             )
 
         if extra_licenses := set(accept_licenses) - all_licenses:
-            raise ValueError(
+            raise exceptions.ValidationError(
                 f"The following licenses are not available for the application: {sorted(extra_licenses)}"
             )
 
@@ -737,7 +828,11 @@ class REMSService:
         self.session.post("/api/applications/accept-licenses", json=data)
 
     def create_application_for_dataset(
-        self, user: MetaxUser, dataset: "Dataset", accept_licenses: List[int]
+        self,
+        user: MetaxUser,
+        dataset: "Dataset",
+        accept_licenses: List[int],
+        field_values: List[dict] = {},
     ) -> dict:
         """Create a REMS application for dataset."""
         self.check_user(user)
@@ -759,6 +854,8 @@ class REMSService:
                 "application-id"
             ]
             logger.info(f"Created REMS application {application_id} for dataset {dataset.id}")
+            self.submit_field_values(application_id=application_id, field_values=field_values)
+
             self.accept_licenses(application_id=application_id, licenses=accept_licenses)
 
             # On failed submit, may return 200 with success=false e.g.
@@ -933,7 +1030,8 @@ class REMSService:
         """
         dataset_key = self.get_dataset_key(dataset)
         resource = REMSResource.objects.get(key=dataset_key)
-        # TODO: Check resource is enabled?
+        catalogue_item = REMSCatalogueItem.objects.get(key=dataset_key)
+        # TODO: Check resource and catalogue item are enabled?
         resource_data = self.get_entity_data(resource)
         licenses_data = resource_data.get("licenses")
         terms_rems_ids = set(  # REMS identifiers of data_access_terms licenses
@@ -948,7 +1046,13 @@ class REMSService:
                     lic_data, is_data_access_terms=lic_data["id"] in terms_rems_ids
                 )
             )
-        forms = []  # not implemented yet
+
+        # Only catalogue item form implemented, not workflow forms
+        catalogue_item_data = self.get_entity_data(catalogue_item)
+        forms = []
+        if form_id := catalogue_item_data.get("formid"):
+            forms.append(self.get_form_data(form_id))
+
         return ApplicationBase(licenses=licenses, forms=forms)
 
     def approve_application(self, handler: MetaxUser, application_id: int):

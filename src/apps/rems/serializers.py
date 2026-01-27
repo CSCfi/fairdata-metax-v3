@@ -10,8 +10,15 @@ class ApplicationCountsSerializer(serializers.Serializer):
     # drafts are not included since they are not visible for non-applicants
 
 
+class ApplicationFieldValueSerializer(serializers.Serializer):
+    form = serializers.IntegerField()  # form id
+    field = serializers.CharField()  # id of field in the form
+    value = serializers.CharField()
+
+
 class ApplicationDataSerializer(serializers.Serializer):
     accept_licenses = serializers.ListField(child=serializers.IntegerField())
+    field_values = serializers.ListField(child=ApplicationFieldValueSerializer(), default=list)
 
 
 class ApplicationLicenseSerializer(serializers.Serializer):
@@ -37,7 +44,16 @@ class ApplicationBaseSerializer(serializers.Serializer):
 
     def get_fields(self):
         # Fields defined in dict because the field names are not valid Python identifiers
-        return {"application/licenses": ApplicationLicenseSerializer(source="licenses", many=True)}
+        return {
+            "application/licenses": ApplicationLicenseSerializer(source="licenses", many=True),
+            # Forms are mostly in the same shape in applications as elsewhere
+            "application/forms": serializers.JSONField(source="forms"),
+        }
 
     def to_representation(self, instance: ApplicationBase):
-        return super().to_representation(instance)
+        rep = super().to_representation(instance)
+        if forms := rep.get("application/forms"):
+            for form in forms:
+                form.pop("archived", None)
+                form.pop("enabled", None)
+        return rep

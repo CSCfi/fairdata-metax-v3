@@ -1,6 +1,7 @@
 import uuid
 import pytest
 from django.conf import settings
+from rest_framework.exceptions import ValidationError
 
 from apps.core import factories
 from apps.refdata.models import License
@@ -289,6 +290,61 @@ def test_rems_service_create_application_with_autoapprove(mock_rems, user):
     assert entitlements[0]["resource"] == f"metax-test:{dataset.id}"
 
 
+def test_rems_service_manual_approval_form(mock_rems, user):
+    catalog = factories.DataCatalogFactory(rems_enabled=True)
+    dataset = factories.REMSDatasetFactory(
+        data_catalog=catalog, access_rights__rems_approval_type="manual"
+    )
+    service = REMSService()
+    service.publish_dataset(dataset)
+
+    assert len(mock_rems.entities["form"]) == 1
+    form = mock_rems.entities["form"][1]
+    fields = [
+        {
+            "id": field["field/id"],
+            "type": field["field/type"],
+            "title": field["field/title"]["en"],
+            "optional": field["field/optional"],
+        }
+        for field in form["form/fields"]
+    ]
+    assert fields == [
+        {
+            "id": "project_description",
+            "type": "text",
+            "title": "Description of your research project",
+            "optional": False,
+        },
+        {
+            "id": "access_control",
+            "type": "text",
+            "title": "Procedures to prevent unauthorized access to the requested data",
+            "optional": True,
+        },
+        {
+            "id": "other_persons",
+            "type": "text",
+            "title": "Other persons presumed to get access to the requested data",
+            "optional": True,
+        },
+    ]
+
+
+def test_rems_service_update_manual_approval_form(mock_rems, user):
+    service = REMSService()
+    service.create_manual_application_form()
+    forms = mock_rems.entities["form"]
+    assert len(forms) == 1
+    forms[1]["form/fields"][0]["field/title"]["en"] = "Some other title"
+
+    service.create_manual_application_form()
+    assert len(forms) == 2
+    assert forms[1]["form/fields"][0]["field/title"]["en"] == "Some other title"
+    assert forms[1]["enabled"] == False
+    assert forms[2]["form/fields"][0]["field/title"]["en"] == "Description of your research project"
+
+
 def test_rems_service_create_application_with_manual_approval(mock_rems, user):
     catalog = factories.DataCatalogFactory(rems_enabled=True)
     dataset = factories.REMSDatasetFactory(
@@ -297,7 +353,16 @@ def test_rems_service_create_application_with_manual_approval(mock_rems, user):
     service = REMSService()
     service.publish_dataset(dataset)
     service.create_application_for_dataset(
-        user, dataset, service.get_dataset_rems_license_ids(dataset)
+        user,
+        dataset,
+        accept_licenses=service.get_dataset_rems_license_ids(dataset),
+        field_values=[
+            {
+                "form": 1,
+                "field": "project_description",
+                "value": "some project description",
+            }
+        ],
     )
     applications = service.get_user_applications_for_dataset(user, dataset)
     assert len(applications) == 1
@@ -325,18 +390,21 @@ def test_rems_service_create_application_missing_license(mock_rems, user):
     dataset = factories.REMSDatasetFactory(access_rights__rems_approval_type="automatic")
     service = REMSService()
     service.publish_dataset(dataset)
-    with pytest.raises(ValueError) as ec:
+    with pytest.raises(ValidationError) as ec:
         service.create_application_for_dataset(user, dataset, accept_licenses=[])
-    assert str(ec.value) == "All licenses need to be accepted. Missing: [1]"
+    assert str(ec.value.detail[0]) == "All licenses need to be accepted. Missing: [1]"
 
 
 def test_rems_service_create_application_extra_license(mock_rems, user):
     dataset = factories.REMSDatasetFactory(access_rights__rems_approval_type="automatic")
     service = REMSService()
     service.publish_dataset(dataset)
-    with pytest.raises(ValueError) as ec:
+    with pytest.raises(ValidationError) as ec:
         service.create_application_for_dataset(user, dataset, accept_licenses=[1, 12345])
-    assert str(ec.value) == "The following licenses are not available for the application: [12345]"
+    assert (
+        str(ec.value.detail[0])
+        == "The following licenses are not available for the application: [12345]"
+    )
 
 
 def test_rems_service_publish_dataset_custom_license_link(mock_rems):
@@ -571,6 +639,6 @@ def test_rems_service_publish_dataset_missing_admin_organization(mock_rems, user
     assert str(ec.value) == "Dataset is not enabled for REMS."
 
     with pytest.raises(ValueError) as ec:
-        REMSService().create_dataset_workflow(dataset) # Try creating workflow directly
+        REMSService().create_dataset_workflow(dataset)  # Try creating workflow directly
 
     assert str(ec.value) == "Dataset is missing admin_organization."

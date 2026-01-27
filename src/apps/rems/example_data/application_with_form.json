@@ -1,0 +1,164 @@
+{
+  "application/workflow": {
+    "workflow/id": 55,
+    "workflow/type": "workflow/default"
+  },
+  "application/external-id": "2026/4",
+  "application/blacklist": [],
+  "application/id": 286,
+  "application/applicant": {
+    "userid": "test_user",
+    "name": "Test User",
+    "email": "test_user@example.com"
+  },
+  "application/todo": null,
+  "application/members": [],
+  "application/resources": [
+    {
+      "catalogue-item/end": null,
+      "catalogue-item/expired": false,
+      "catalogue-item/enabled": true,
+      "resource/id": 198,
+      "catalogue-item/title": {
+        "en": "Manual REMS dataset"
+      },
+      "catalogue-item/infourl": {
+        "en": "https://etsin.fairdata.fi/dataset/0431f926-0e44-4eb8-9d8d-d2dc36d6f211"
+      },
+      "resource/ext-id": "metax-dev-jori:0431f926-0e44-4eb8-9d8d-d2dc36d6f211",
+      "catalogue-item/start": "2026-01-23T13:58:46.791Z",
+      "catalogue-item/archived": false,
+      "catalogue-item/id": 186
+    }
+  ],
+  "application/accepted-licenses": {
+    "test_user": [
+      70
+    ]
+  },
+  "application/forms": [
+    {
+      "form/id": 95,
+      "form/title": "REMS form test",
+      "form/internal-name": "REMS form test",
+      "form/external-title": {
+        "fi": "REMS-lomaketesti",
+        "en": "REMS form test"
+      },
+      "form/fields": [
+        {
+          "field/private": false,
+          "field/title": {
+            "fi": "Tekstikenttä",
+            "en": "Text field"
+          },
+          "field/visible": true,
+          "field/type": "text",
+          "field/value": "",
+          "field/id": "fld1",
+          "field/max-length": null,
+          "field/optional": false
+        },
+        {
+          "field/private": false,
+          "field/title": {
+            "fi": "Tekstikenttä",
+            "en": "Text field"
+          },
+          "field/visible": true,
+          "field/type": "text",
+          "field/value": "",
+          "field/id": "fld2",
+          "field/max-length": null,
+          "field/optional": true
+        }
+      ]
+    }
+  ],
+  "application/invited-members": [],
+  "application/description": "",
+  "application/generated-external-id": "2026/4",
+  "application/permissions": [
+    "application.command/copy-as-new",
+    "application.command/invite-member",
+    "application.command/submit",
+    "application.command/remove-member",
+    "application.command/accept-licenses",
+    "application.command/uninvite-member",
+    "application.command/delete",
+    "application.command/save-draft",
+    "application.command/change-resources"
+  ],
+  "application/last-activity": "2026-01-26T11:21:35.291Z",
+  "application/events": [
+    {
+      "application/external-id": "2026/4",
+      "event/actor-attributes": {
+        "userid": "test_user",
+        "name": "Test User",
+        "email": "test_user@example.com"
+      },
+      "application/id": 286,
+      "event/time": "2026-01-26T11:21:35.262Z",
+      "workflow/type": "workflow/default",
+      "application/resources": [
+        {
+          "resource/ext-id": "metax-dev-jori:0431f926-0e44-4eb8-9d8d-d2dc36d6f211",
+          "catalogue-item/id": 186
+        }
+      ],
+      "application/forms": [
+        {
+          "form/id": 95
+        }
+      ],
+      "workflow/id": 55,
+      "event/actor": "test_user",
+      "event/type": "application.event/created",
+      "event/id": 977,
+      "application/licenses": [
+        {
+          "license/id": 70
+        }
+      ]
+    },
+    {
+      "event/id": 978,
+      "event/type": "application.event/licenses-accepted",
+      "event/time": "2026-01-26T11:21:35.291Z",
+      "event/actor": "test_user",
+      "application/id": 286,
+      "event/actor-attributes": {
+        "userid": "test_user",
+        "name": "Test User",
+        "email": "test_user@example.com"
+      },
+      "application/accepted-licenses": [
+        70
+      ]
+    }
+  ],
+  "application/roles": [
+    "applicant"
+  ],
+  "application/attachments": [],
+  "application/licenses": [
+    {
+      "license/type": "link",
+      "license/link": {
+        "fi": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0",
+        "en": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0"
+      },
+      "license/title": {
+        "fi": "Creative Commons Nimeä 4.0 Kansainvälinen (CC BY 4.0)",
+        "en": "Creative Commons Attribution 4.0 International (CC BY 4.0)"
+      },
+      "license/id": 70,
+      "license/enabled": true,
+      "license/archived": false
+    }
+  ],
+  "application/created": "2026-01-26T11:21:35.262Z",
+  "application/state": "application.state/draft",
+  "application/modified": "2026-01-26T11:21:35.262Z"
+}

@@ -206,6 +206,61 @@ def test_rems_applications(mock_rems, user_client):
     assert res.data["allowed_actions"]["download"] == True
 
 
+def test_rems_application_manual_approval(mock_rems, user_client):
+    dataset = factories.REMSDatasetFactory(access_rights__rems_approval_type="manual")
+    service = REMSService()
+    service.publish_dataset(dataset)
+
+    # Create application
+    res = user_client.post(
+        f"/v3/datasets/{dataset.id}/rems-applications",
+        {
+            "accept_licenses": service.get_dataset_rems_license_ids(dataset),
+            "field_values": [{"form": 1, "field": "project_description", "value": "hello world"}],
+        },
+        content_type="application/json",
+    )
+    assert res.status_code == 200, res.data
+    assert res.json() == {"success": True, "application-id": 1}
+
+
+def test_rems_application_manual_approval_missing_field(mock_rems, user_client):
+    dataset = factories.REMSDatasetFactory(access_rights__rems_approval_type="manual")
+    service = REMSService()
+    service.publish_dataset(dataset)
+
+    # Create application
+    res = user_client.post(
+        f"/v3/datasets/{dataset.id}/rems-applications",
+        {
+            "accept_licenses": service.get_dataset_rems_license_ids(dataset),
+            # missing required field project_description
+            "field_values": [{"form": 1, "field": "access_control", "value": "hello world"}],
+        },
+        content_type="application/json",
+    )
+    assert res.status_code == 400, res.data
+    assert res.json() == ["Missing value for required field project_description for form 1"]
+
+
+def test_rems_application_manual_approval_unknown_field(mock_rems, user_client):
+    dataset = factories.REMSDatasetFactory(access_rights__rems_approval_type="manual")
+    service = REMSService()
+    service.publish_dataset(dataset)
+
+    # Create application
+    res = user_client.post(
+        f"/v3/datasets/{dataset.id}/rems-applications",
+        {
+            "accept_licenses": service.get_dataset_rems_license_ids(dataset),
+            "field_values": [{"form": 1, "field": "pröject_descriptiön", "value": "hello world"}],
+        },
+        content_type="application/json",
+    )
+    assert res.status_code == 400, res.data
+    assert res.json() == ["Unknown field pröject_descriptiön for form 1"]
+
+
 def test_rems_application_reviewer_instructions(mock_rems, user_client, handler_client):
     dataset = factories.REMSDatasetFactory(
         metadata_owner__admin_organization="test_organization",
@@ -338,7 +393,98 @@ def test_dataset_rems_application_base(
                 "license/title": {"en": "License name", "fi": "Lisenssin nimi"},
                 "license/type": "link",
             },
-        ]
+        ],
+        "application/forms": [],
+    }
+
+
+def test_dataset_rems_application_base_for_manual_approval(
+    settings, mock_rems, admin_client, user_client, license_reference_data
+):
+    dataset = factories.REMSDatasetFactory(
+        access_rights__data_access_terms={"en": "Terms here", "fi": "Ehdot tässä"},
+        access_rights__rems_approval_type="manual",
+    )
+    ref_lic = factories.DatasetLicenseFactory(
+        reference=License.objects.get(
+            url="http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0"
+        )
+    )
+    dataset.access_rights.license.set([ref_lic])
+    service = REMSService()
+    service.publish_dataset(dataset)
+
+    data = user_client.get(f"/v3/datasets/{dataset.id}/rems-application-base").json()
+    assert data == {
+        "application/licenses": [
+            {
+                "is_data_access_terms": True,
+                "license/id": 1,
+                "license/link": None,
+                "license/text": {"en": "Terms here", "fi": "Ehdot tässä"},
+                "license/title": {"en": "Terms for data access", "fi": "Käyttöluvan ehdot"},
+                "license/type": "text",
+            },
+            {
+                "is_data_access_terms": False,
+                "license/id": 2,
+                "license/link": {
+                    "en": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0",
+                    "fi": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0",
+                },
+                "license/text": None,
+                "license/title": {
+                    "en": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+                    "fi": "Creative Commons Nimeä 4.0 Kansainvälinen (CC BY 4.0)",
+                },
+                "license/type": "link",
+            },
+        ],
+        "application/forms": [
+            {
+                "form/external-title": {
+                    "en": "Data access request form",
+                    "fi": "Datan lupahakemus",
+                },
+                "form/fields": [
+                    {
+                        "field/id": "project_description",
+                        "field/max-length": None,
+                        "field/optional": False,
+                        "field/title": {
+                            "en": "Description of your research project",
+                            "fi": "Tutkimusprojektin kuvaus",
+                        },
+                        "field/type": "text",
+                    },
+                    {
+                        "field/id": "access_control",
+                        "field/max-length": None,
+                        "field/optional": True,
+                        "field/title": {
+                            "en": "Procedures to prevent unauthorized access to the requested data",
+                            "fi": "Menettelyt luvattoman pääsyn estämiseksi pyydettyihin tietoihin",
+                        },
+                        "field/type": "text",
+                    },
+                    {
+                        "field/id": "other_persons",
+                        "field/max-length": None,
+                        "field/optional": True,
+                        "field/title": {
+                            "en": "Other persons presumed to get access to the requested data",
+                            "fi": "Muut henkilöt joiden oletetaan saavan pääsyn pyydettyihin tietoihin",
+                        },
+                        "field/type": "text",
+                    },
+                ],
+                "form/internal-name": "Data access request form",
+                "form/id": 1,
+                "organization": {
+                    "organization/id": "csc",
+                },
+            },
+        ],
     }
 
 

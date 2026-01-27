@@ -543,3 +543,22 @@ def context_managers(managers: Iterable[Optional[ContextManager]]) -> Generator[
     """
     with ExitStack() as stack:
         yield [stack.enter_context(manager) if manager else None for manager in managers]
+
+
+def flatten_dict(data, parent_key="", exclude=set()):
+    """Flatten nested dict into dot notation."""
+    items = {}
+    if isinstance(data, dict):
+        for key, value in data.items():
+            if key in exclude:
+                continue
+            new_key = f"{parent_key}.{key}" if parent_key else key
+            items.update(flatten_dict(value, new_key))
+    elif isinstance(data, list):
+        for index, value in enumerate(data):
+            new_key = f"{parent_key}.{index}"
+            items.update(flatten_dict(value, new_key))
+    else:
+        items[parent_key] = data
+
+    return items
