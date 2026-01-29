@@ -280,7 +280,7 @@ class DatasetFilter(filters.FilterSet):
         return queryset.filter(access_rights__access_type__in=access_types)
 
     def filter_organization(self, queryset, name, value):
-        result = queryset
+        org_query = Dataset.all_objects.filter(id=OuterRef("id"))
         for group in value:
             union = reduce(
                 operator.or_,
@@ -293,20 +293,20 @@ class DatasetFilter(filters.FilterSet):
                     for x in group
                 ),
             )
-            result = result.filter(union)
-        return result.distinct()
+            org_query = org_query.filter(union)
+        return queryset.filter(Exists(org_query))
 
     def filter_keyword(self, queryset, name, value):
         return self._filter_list(queryset, value, filter_param="keyword__icontains")
 
     def filter_creator(self, queryset, name, value):
-        result = queryset
+        creator_query = Dataset.all_objects.filter(id=OuterRef("id"))
         for group in value:
             if not group:
                 continue
-            union = queryset.none()
+            union = Q()
             for val in group:
-                union = union | queryset.filter(
+                union = union | (
                     Q(actors__roles__contains=["creator"])
                     & (
                         Q(actors__organization__pref_label__values__contains=[val])
@@ -319,8 +319,8 @@ class DatasetFilter(filters.FilterSet):
                         | Q(actors__person__name__exact=val)
                     )
                 )
-            result = result & union
-        return result.distinct()
+            creator_query = creator_query.filter(union)
+        return queryset.filter(Exists(creator_query))
 
     def filter_field_of_science(self, queryset, name, value):
         return self._filter_list(
