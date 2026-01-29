@@ -465,3 +465,38 @@ def test_filter_by_metadata_owner_organization_multiple_groups(
     )
     assert res.status_code == 200
     assert {d["id"] for d in res.data} == {str(dataset1.id)}
+
+
+def test_filter_by_creator_organization(admin_client, data_catalog, reference_data):
+    """Test filtering datasets by creator organization. Should find creator by organization and it's parent organization."""
+
+    parent_org = factories.OrganizationFactory(pref_label={"en": "parent_org"})
+    org1 = factories.OrganizationFactory(pref_label={"en": "org1"}, parent=parent_org)
+    actor = factories.DatasetActorFactory(organization=org1, roles=["creator", "publisher"])
+    dataset = factories.DatasetFactory()
+    dataset.actors.set([actor])
+    res = admin_client.get(
+        "/v3/datasets?actors__roles__creator=org1&pagination=false",
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert {d["id"] for d in res.data} == {str(dataset.id)}
+
+    res = admin_client.get(
+        "/v3/datasets?actors__roles__creator=parent_org&pagination=false",
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert {d["id"] for d in res.data} == {str(dataset.id)}
+
+    org2 = factories.OrganizationFactory(pref_label={"en": "org2"}, parent=parent_org)
+    actor2 = factories.DatasetActorFactory(organization=org2, roles=["creator", "publisher"])
+    dataset2 = factories.DatasetFactory()
+    dataset2.actors.set([actor2])
+
+    res = admin_client.get(
+        "/v3/datasets?actors__roles__creator=&pagination=false",
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert {d["id"] for d in res.data} == {str(dataset.id), str(dataset2.id)}

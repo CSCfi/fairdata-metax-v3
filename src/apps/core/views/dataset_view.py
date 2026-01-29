@@ -302,26 +302,24 @@ class DatasetFilter(filters.FilterSet):
     def filter_creator(self, queryset, name, value):
         result = queryset
         for group in value:
-            union = None
+            if not group:
+                continue
+            union = queryset.none()
             for val in group:
-                if union is not None:
-                    union = union | queryset.filter(
-                        Q(actors__roles__contains=["creator"])
-                        & (
-                            Q(actors__organization__pref_label__values__contains=[val])
-                            | Q(actors__person__name__exact=val)
+                union = union | queryset.filter(
+                    Q(actors__roles__contains=["creator"])
+                    & (
+                        Q(actors__organization__pref_label__values__contains=[val])
+                        | Q(actors__organization__parent__pref_label__values__contains=[val])
+                        | Q(
+                            actors__organization__parent__parent__pref_label__values__contains=[
+                                val
+                            ]
                         )
+                        | Q(actors__person__name__exact=val)
                     )
-                else:
-                    union = queryset.filter(
-                        Q(actors__roles__contains=["creator"])
-                        & (
-                            Q(actors__organization__pref_label__values__contains=[val])
-                            | Q(actors__person__name__exact=val)
-                        )
-                    )
-            if union is not None:
-                result = result & union
+                )
+            result = result & union
         return result.distinct()
 
     def filter_field_of_science(self, queryset, name, value):
