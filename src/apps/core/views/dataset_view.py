@@ -363,8 +363,8 @@ class DatasetFilter(filters.FilterSet):
                 "id", flat=True
             )
         )
-        if value == "default":
-            # Default includes drafts without catalogs
+        if value in {"default", "qvain"}:
+            # Default and qvain include drafts without catalogs
             return queryset.filter(
                 Q(data_catalog_id__in=catalog_ids) | Q(data_catalog__isnull=True)
             )
