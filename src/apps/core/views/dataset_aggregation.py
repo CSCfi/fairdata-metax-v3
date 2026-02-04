@@ -1,20 +1,9 @@
 import logging
 
-from django.db.models import Count, F, Func, Q, Window
-from django.db.models.functions import Coalesce, RowNumber
+from django.db.models import Count, F, Q, Window
+from django.db.models.functions import RowNumber
 
-from apps.actors.models import Organization
-from apps.core.models import (
-    AccessType,
-    DataCatalog,
-    Dataset,
-    DatasetActor,
-    DatasetProject,
-    FieldOfScience,
-    ResearchInfra,
-    DatasetIndexEntry,
-)
-from apps.refdata.models import FileType
+from apps.core.models import DatasetIndexEntry
 
 logger = logging.getLogger(__name__)
 
@@ -40,15 +29,15 @@ def aggregate_queryset(queryset, request):
     limit_hits = request.query_params.get("limit_hits", 20)
 
     facet_query_params = {
-        "data_catalog": "data_catalog__title",
-        "access_type": "access_rights__access_type__pref_label",
-        "organization": "actors__organization__pref_label",
-        "creator": "actors__roles__creator",
-        "field_of_science": "field_of_science__pref_label",
-        "keyword": "keyword",
-        "infrastructure": "infrastructure__pref_label",
-        "file_type": "file_type",
-        "project": "projects__title",
+        "data_catalog": "facet_data_catalog",
+        "access_type": "facet_access_type",
+        "organization": "facet_organization",
+        "creator": "facet_creator",
+        "field_of_science": "facet_field_of_science",
+        "keyword": "facet_keyword",
+        "infrastructure": "facet_infrastructure",
+        "file_type": "facet_file_type",
+        "project": "facet_project",
     }
 
     filters = Q()

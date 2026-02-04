@@ -1,8 +1,10 @@
 import uuid
 
 import fastuuid
+import pytest
 
-from apps.common.helpers import merge_sets, normalize_doi, uuid7
+from apps.common.helpers import get_sql, merge_sets, normalize_doi, uuid7
+from apps.core.models.catalog_record.dataset import Dataset
 
 
 def test_merge_sets():
@@ -67,3 +69,12 @@ def test_uuid7():
     fast_id = fastuuid.UUID(bytes=std_id.bytes)
     std_id_2 = uuid.UUID(bytes=fast_id.bytes)
     assert str(std_id) == str(fast_id) == str(std_id_2)
+
+
+@pytest.mark.django_db
+def test_get_sql():
+    """Test that get_sql returns a SQL string where parameters are in quotes."""
+    sql = get_sql(
+        Dataset.objects.order_by().values("id").filter(id="00000000-0000-0000-0000-000000001234")
+    )
+    assert "'00000000000000000000000000001234'" in sql

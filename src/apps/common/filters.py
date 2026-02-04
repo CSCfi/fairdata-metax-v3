@@ -44,6 +44,8 @@ class MultipleTextInput(forms.TextInput):
 
 
 class MultipleCharField(forms.CharField):
+    """CharField that produces a list of values from comma-separated input."""
+
     widget = MultipleTextInput
 
     default_error_messages = {

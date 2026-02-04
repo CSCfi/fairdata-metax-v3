@@ -1,6 +1,6 @@
+import copy
 import csv
 import io
-import copy
 import logging
 import pickle
 import re
@@ -21,7 +21,7 @@ import shapely
 from cachalot.api import cachalot_disabled
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db import models
+from django.db import connection, models
 from django.utils.dateparse import parse_date, parse_datetime
 from django_filters import NumberFilter
 from drf_yasg import openapi
@@ -562,8 +562,18 @@ def flatten_dict(data, parent_key="", exclude=set()):
             items.update(flatten_dict(value, new_key))
     else:
         items[parent_key] = data
-
     return items
+
+
+def get_sql(queryset: models.QuerySet) -> str:
+    """Get SQL for queryset with parameters filled in.
+
+    Like str(queryset.query) but has parameters quoted
+    correctly etc. so the output is valid SQL.
+    """
+    sql, params = queryset.query.sql_with_params()
+    cursor = connection.cursor()
+    return cursor.mogrify(sql, params)
 
 
 def parse_csv_string(string: str) -> list:

@@ -189,7 +189,9 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
             # Use prefetched results stored in _datasets when available
             versions = getattr(version_set, "_datasets", None) or version_set.datasets(
                 manager="all_objects"
-            ).order_by("-dataset_versions_order").prefetch_related(*Dataset.dataset_versions_prefetch_fields)
+            ).order_by("-dataset_versions_order").prefetch_related(
+                *Dataset.dataset_versions_prefetch_fields
+            )
 
             has_drafts = any(
                 dataset for dataset in versions if dataset.state != Dataset.StateChoices.PUBLISHED
@@ -646,6 +648,15 @@ class DatasetFieldsQueryParamsSerializer(serializers.Serializer):
             )
         ),
         help_text=_("Filter specific fields of the dataset."),
+    )
+
+
+class FacetLanguageQueryParamsSerializer(serializers.Serializer):
+    # TODO: Should this (and the dataset aggregation parameter?) be called something else?
+    language = serializers.ChoiceField(
+        choices=("en", "fi"),
+        help_text="Language used for filtering results by facet. Omit to match any language.",
+        required=False,
     )
 
 

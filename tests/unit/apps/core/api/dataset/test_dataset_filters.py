@@ -117,8 +117,7 @@ def test_aggregation_and_filters(
                 or aggregate["hits"][0]["value"].get("und")
             )
             count = aggregate["hits"][0]["count"]
-            print(f"{aggregate['query_parameter']}, {value}, {count}")
-            res = admin_client.get(f"/v3/datasets?{aggregate['query_parameter']}={value}")
+            res = admin_client.get(f"/v3/datasets?{aggregate['query_parameter']}={value}&language=en")
             assert res.data["count"] == count
 
 
