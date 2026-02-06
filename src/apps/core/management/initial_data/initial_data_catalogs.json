@@ -439,6 +439,53 @@
     "rems_enabled": false
   },
   {
+    "id": "urn:nbn:fi:att:data-catalog-luke",
+    "title": {
+      "en": "Natural Resources Institute Finland catalog",
+      "fi": "Luonnonvarakeskus katalogi",
+      "sv": "Naturresursinstitutet katalog"
+    },
+    "description": {
+      "en": "Contains datasets from Natural Resources Institute Finland's forest growth experiments",
+      "fi": "Sisältää tutkimusaineistoja Luonnonvarakeskuksen pitkäaikaisista metsäkokeista"
+    },
+    "language": [
+      {
+        "url": "http://lexvo.org/id/iso639-3/fin"
+      },
+      {
+        "url": "http://lexvo.org/id/iso639-3/eng"
+      }
+    ],
+    "is_external": true,
+    "publisher": {
+      "name": {
+        "en": "Natural Resources Institute Finland (Luke)",
+        "fi": "Luonnonvarakeskus (Luke)",
+        "sv": "Naturresursinstitutet (Luke)"
+      },
+      "homepage": [
+        {
+          "title": {
+            "en": "Directory of statistics | Natural Resources Institute Finland",
+            "fi": "Tilastohakemisto | Luonnonvarakeskus",
+            "sv": "Statistisk katalog | Naturresursinstitutet"
+          },
+          "url": "https://www.luke.fi/fi/tilastot/tilastohakemisto"
+        }
+      ]
+    },
+    "dataset_versioning_enabled": false,
+    "dataset_groups_create": ["luke"],
+    "dataset_groups_update": ["luke"],
+    "dataset_groups_admin": ["luke"],
+    "allow_remote_resources": true,
+    "rems_enabled": false,
+    "storage_services": [],
+    "publishing_channels": ["default", "etsin", "ttv"],
+    "allowed_pid_types": ["URN"]
+  },
+  {
     "id": "urn:nbn:fi:att:data-catalog-oulu",
     "title": {
       "en": "Data catalog for testing University of Oulu's CRIS integration",
@@ -628,8 +675,8 @@
       "homepage": [
         {
           "title": {
-            "en": "Publisher organization website",
-            "fi": "Julkaisijaorganisaation kotisivu"
+            "en": "Fairdata | Take care of your research data",
+            "fi": "Fairdata | Huolehdi tutkimusaineistoistasi"
           },
           "url": "http://www.fairdata.fi/"
         }
