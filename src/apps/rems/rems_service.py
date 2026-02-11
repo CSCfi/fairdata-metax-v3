@@ -879,16 +879,24 @@ class REMSService:
             )
         return data
 
-    def filter_applications(self, applications: List[dict]) -> List[dict]:
+    def filter_applications(
+        self, applications: List[dict], roles: Iterable | None = None
+    ) -> List[dict]:
         """Filter applications belonging to this Metax instance, determined by prefix."""
         matching_applications = []
         prefix = f"{settings.REMS_RESOURCE_PREFIX}:"
         for application in applications:
             resources = application.get("application/resources", [])
-            if len(resources) > 0 and all(
-                res["resource/ext-id"].startswith(prefix) for res in resources
+            if len(resources) == 0:
+                continue
+            if not all(res["resource/ext-id"].startswith(prefix) for res in resources):
+                continue
+            # Filter by role
+            if roles is not None and set(roles).isdisjoint(
+                application.get("application/roles", [])
             ):
-                matching_applications.append(application)
+                continue
+            matching_applications.append(application)
         return matching_applications
 
     def get_applications_for_dataset(self, dataset: "Dataset", include_all=False) -> List[dict]:
@@ -936,11 +944,11 @@ class REMSService:
                 applications.append(application)
         return applications
 
-    def get_user_applications(self, user: MetaxUser):
+    def get_user_applications(self, user: MetaxUser, roles: Iterable | None = None):
         self.check_user(user)
         with self.session.as_user(user.fairdata_username):
             resp = self.session.get("/api/applications")
-            return self.filter_applications(resp.json())
+            return self.filter_applications(resp.json(), roles=roles)
 
     def get_user_applications_todo(self, user: MetaxUser):
         self.check_user(user)

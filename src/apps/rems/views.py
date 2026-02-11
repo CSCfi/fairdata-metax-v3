@@ -1,14 +1,25 @@
 from django.conf import settings
+from rest_framework import exceptions, serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework import exceptions
 
+from apps.common.serializers.fields import CommaSeparatedListField
 from apps.common.views import CommonViewSet
 from apps.rems.rems_service import REMSService
 from apps.rems.rems_session import REMSError
 
 
+class RolesQueryParamsSerializer(serializers.Serializer):
+    roles = CommaSeparatedListField(
+        child=serializers.ChoiceField(choices=["applicant", "handler"]), default=None
+    )
+
+
 class REMSApplicationsViewSet(CommonViewSet):
+    query_serializers = [
+        {"class": RolesQueryParamsSerializer, "actions": ["list"]},
+    ]
+
     def check_rems_request(self, request):
         if not settings.REMS_ENABLED:
             raise exceptions.MethodNotAllowed(method=request.method, detail="REMS is not enabled")
@@ -93,18 +104,23 @@ class REMSApplicationsViewSet(CommonViewSet):
         """List all REMS applications user can see."""
         self.check_rems_request(request)
         service = REMSService()
-        return Response(data=service.get_user_applications(request.user))
+        applications = service.get_user_applications(
+            request.user, roles=self.query_params["roles"]
+        )
+        return Response(data=applications)
 
     @action(detail=False, url_path="todo")
     def list_todo(self, request, *args, **kwargs):
-        """List REMS applications user needs to act on."""
+        """List received REMS applications user needs to act on."""
         self.check_rems_request(request)
         service = REMSService()
-        return Response(data=service.get_user_applications_todo(request.user))
+        applications = service.get_user_applications_todo(request.user)
+        return Response(data=applications)
 
     @action(detail=False, url_path="handled")
     def list_handled(self, request, *args, **kwargs):
-        """List REMS applications user no longer needs to act on."""
+        """List received REMS applications user no longer needs to act on."""
         self.check_rems_request(request)
         service = REMSService()
-        return Response(data=service.get_user_applications_handled(request.user))
+        applications = service.get_user_applications_handled(request.user)
+        return Response(data=applications)

@@ -95,6 +95,42 @@ def test_list_rems_applications(
     assert len(res.data) == 0
 
 
+def test_list_rems_applications_roles(
+    mock_rems, user_client, user2_client, handler_client, automatic_rems_application
+):
+    """Test filtering REMS applications by roles."""
+    # Applicant user can see REMS application when roles includes applicant
+    res = user_client.get("/v3/rems/applications?roles=applicant")
+    assert res.status_code == 200
+    assert len(res.data) == 1
+
+    res = user_client.get("/v3/rems/applications?roles=handler")
+    assert res.status_code == 200
+    assert len(res.data) == 0
+
+    res = user_client.get("/v3/rems/applications?roles=handler,applicant")
+    assert res.status_code == 200
+    assert len(res.data) == 1
+
+    # Other user can't see application
+    res = user2_client.get("/v3/rems/applications?roles=handler,applicant")
+    assert res.status_code == 200
+    assert len(res.data) == 0
+
+    # Handler can see application when roles includes handler
+    res = handler_client.get("/v3/rems/applications?roles=applicant")
+    assert res.status_code == 200
+    assert len(res.data) == 0
+
+    res = handler_client.get("/v3/rems/applications?roles=handler")
+    assert res.status_code == 200
+    assert len(res.data) == 1
+
+    res = handler_client.get("/v3/rems/applications?roles=handler,applicant")
+    assert res.status_code == 200
+    assert len(res.data) == 1
+
+
 def test_get_rems_application(
     mock_rems, user_client, user2_client, handler_client, automatic_rems_application
 ):
