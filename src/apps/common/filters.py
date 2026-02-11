@@ -1,4 +1,3 @@
-import csv
 import logging
 
 from django import forms
@@ -7,12 +6,9 @@ from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 from django_filters import fields, rest_framework as filters
 
+from apps.common.helpers import parse_csv_string
+
 logger = logging.getLogger(__name__)
-
-
-def parse_csv_string(string):
-    reader = csv.reader([string], delimiter=",", quotechar='"', escapechar="\\")
-    return next(reader)
 
 
 class VerboseChoiceField(fields.ChoiceField):

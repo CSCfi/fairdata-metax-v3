@@ -18,6 +18,7 @@ from rest_framework import serializers
 from rest_framework.fields import empty, to_choices_dict
 from rest_framework.utils import html
 
+from apps.common.helpers import parse_csv_string, to_csv_string
 from apps.common.models import MediaTypeValidator
 
 logger = logging.getLogger(__name__)
@@ -457,11 +458,11 @@ class CommaSeparatedListField(serializers.ListField):
         return super(serializers.ListField, self).get_value(dictionary)
 
     def to_internal_value(self, data):
-        data = data.split(",")
-        return super().to_internal_value(data)
+        return super().to_internal_value(parse_csv_string(data))
 
     def to_representation(self, data):
-        return ",".join(data)
+        data = super().to_representation(data)
+        return to_csv_string(data)
 
 
 class LaxIntegerField(serializers.IntegerField):

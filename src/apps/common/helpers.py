@@ -1,3 +1,5 @@
+import csv
+import io
 import copy
 import logging
 import pickle
@@ -562,3 +564,17 @@ def flatten_dict(data, parent_key="", exclude=set()):
         items[parent_key] = data
 
     return items
+
+
+def parse_csv_string(string: str) -> list:
+    """Convert comma-separated string to list."""
+    reader = csv.reader([string], delimiter=",", quotechar='"', escapechar="\\")
+    return next(reader)
+
+
+def to_csv_string(lst: list) -> str:
+    """Convert list to comma-separated string."""
+    output = io.StringIO()
+    writer = csv.writer(output, delimiter=",", quotechar='"', escapechar="\\")
+    writer.writerow(lst)
+    return output.getvalue().strip("\r\n")  # remove trailing newline

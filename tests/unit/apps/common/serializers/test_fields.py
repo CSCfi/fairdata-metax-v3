@@ -14,12 +14,14 @@ from apps.common.serializers.fields import (
 )
 
 
-def validate_input(field, input, expected):
+def validate_input(field, input: str, expected: list):
     if isinstance(expected, type) and issubclass(expected, Exception):
         with pytest.raises(expected):
             field.run_validation(input)
     else:
-        assert field.run_validation(input) == expected
+        output: list = field.run_validation(input)
+        assert output == expected
+        assert field.to_representation(output) == input  # convert back to comma-separated string
 
 
 @pytest.mark.parametrize(
@@ -28,6 +30,8 @@ def validate_input(field, input, expected):
         ("first,second,third", ["first", "second", "third"]),
         ("a,,b", serializers.ValidationError),
         ("1,2", ["1", "2"]),
+        ('first,"some, value here",third', ["first", "some, value here", "third"]),
+        ("", []),
     ],
 )
 def test_comma_separated_field(input, expected):
