@@ -272,6 +272,8 @@ class DatasetFilter(filters.FilterSet):
     def filter_organization(self, queryset, name, value):
         org_query = Dataset.all_objects.filter(id=OuterRef("id"))
         for group in value:
+            if not group:
+                continue
             union = reduce(
                 operator.or_,
                 (
@@ -407,9 +409,11 @@ class DatasetFilter(filters.FilterSet):
 
     def filter_metadata_owner_organization(self, queryset, name, value):
         result = queryset
-        for groups in value:
+        for group in value:
+            if not group:
+                continue
             union = reduce(
-                operator.or_, (Q(metadata_owner__organization__exact=x) for x in groups)
+                operator.or_, (Q(metadata_owner__organization__exact=x) for x in group)
             )
             result = result.filter(union)
         return result.distinct()
@@ -417,6 +421,8 @@ class DatasetFilter(filters.FilterSet):
     def _filter_list(self, queryset: QuerySet, value: List[List[str]], filter_param: str):
         result = queryset
         for group in value:
+            if not group:
+                continue
             union = reduce(operator.or_, (Q(**{filter_param: x}) for x in group))
             result = result.filter(union)
         return result.distinct()

@@ -4,6 +4,7 @@ import logging
 import pytest
 from django.utils.http import http_date
 from apps.core.models.catalog_record.related import DatasetActor
+from apps.core.views.dataset_filters import DatasetFilter
 from tests.utils import assert_nested_subdict
 
 from apps.core import factories
@@ -117,7 +118,9 @@ def test_aggregation_and_filters(
                 or aggregate["hits"][0]["value"].get("und")
             )
             count = aggregate["hits"][0]["count"]
-            res = admin_client.get(f"/v3/datasets?{aggregate['query_parameter']}={value}&language=en")
+            res = admin_client.get(
+                f"/v3/datasets?{aggregate['query_parameter']}={value}&language=en"
+            )
             assert res.data["count"] == count
 
 
@@ -499,3 +502,17 @@ def test_filter_by_creator_organization(admin_client, data_catalog, reference_da
     )
     assert res.status_code == 200
     assert {d["id"] for d in res.data} == {str(dataset.id), str(dataset2.id)}
+
+
+def test_filter_by_empty_values(admin_client):
+    """Test that empty values in filters don't cause errors."""
+    # Create params dict where all filters have an empty value
+    params = dict.fromkeys(DatasetFilter.declared_filters, "")
+
+    # Check that params contains filters that have caused problems in the past
+    assert "access_rights__access_type__pref_label" in params
+    assert "actors__organization__pref_label" in params
+    assert "metadata_owner__organization" in params
+
+    resp = admin_client.get("/v3/datasets", params)
+    assert resp.status_code == 200
