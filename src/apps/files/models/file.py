@@ -211,7 +211,7 @@ class File(SystemCreatorBaseModel, CustomSoftDeletableModel):
                 fields=("storage", "directory_path"),
                 opclasses=["", "text_pattern_ops"],  # Support LIKE '/path/%' for non-C-locales
                 condition=models.Q(removed__isnull=True),
-                include=("size", "modified", "published"),
+                include=("size", "modified", "published", "id"),
                 name="%(app_label)s_%(class)s_dir_aggregation",
             ),
         ]
