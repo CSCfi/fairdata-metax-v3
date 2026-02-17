@@ -293,8 +293,7 @@ def handler(fairdata_users_group):
         last_name="Handler",
         email="handler@example.com",
         is_hidden=False,
-        admin_organizations=[],
-        dac_organizations=["test_organization"],
+        admin_organizations=["test_organization"],
     )
     _group, _ = Group.objects.get_or_create(name="fairdata_users")
     user.groups.set([fairdata_users_group])

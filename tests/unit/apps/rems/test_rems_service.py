@@ -28,7 +28,7 @@ def test_initial_rems_entities(mock_rems):
 
 def test_rems_service_publish_dataset(mock_rems, user):
     """Test publishing dataset to REMS."""
-    user.dac_organizations = ["test_organization"]
+    user.admin_organizations = ["test_organization"]
     user.save()
 
     catalog = factories.DataCatalogFactory(rems_enabled=True)
@@ -559,7 +559,7 @@ def test_rems_service_get_license_type_errors():
 
 def test_rems_service_publish_dataset_change_admin_org(mock_rems, user):
     """Test REMS publish when changing admin organization for dataset."""
-    user.dac_organizations = ["test_organization"]
+    user.admin_organizations = ["test_organization"]
     user.save()
     service = REMSService()
     AdminOrganization.objects.create(id="admin_org1")
@@ -626,7 +626,7 @@ def test_rems_service_publish_dataset_change_admin_org(mock_rems, user):
 
 def test_rems_service_publish_dataset_missing_admin_organization(mock_rems, user):
     """Test publishing dataset to REMS without admin organization."""
-    user.dac_organizations = ["test_organization"]
+    user.admin_organizations = ["test_organization"]
     user.save()
 
     catalog = factories.DataCatalogFactory(rems_enabled=True)

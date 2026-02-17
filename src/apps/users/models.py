@@ -43,7 +43,7 @@ class AdminOrganization(CustomSoftDeletableModel):
 
         datasets = Dataset.objects.filter(
             metadata_owner__admin_organization=self.id,
-            access_rights__rems_approval_type=REMSApprovalType.MANUAL
+            access_rights__rems_approval_type=REMSApprovalType.MANUAL,
         )
         return datasets.count()
 
@@ -57,10 +57,6 @@ class MetaxUserManager(UserManager):
     def get_organization_admins(self, organization: str) -> models.QuerySet:
         """List all admin users of given organization."""
         return self.filter(admin_organizations__contains=[organization])
-
-    def get_organization_dac(self, organization: str) -> models.QuerySet:
-        """List all Data Access Committee users of given organization."""
-        return self.filter(dac_organizations__contains=[organization])
 
 
 class SoftDeletableMetaxUserManager(MetaxUserManager, CustomSoftDeletableManager):
@@ -94,17 +90,8 @@ class MetaxUser(AbstractUser, CustomSoftDeletableModel):
         help_text="The default admin organization for the user.",
     )
 
-    # Getting DAC membership from SSO session is not implemented yet,
-    # so this field can only be tested by setting the value manually.
-    dac_organizations = ArrayField(
-        models.CharField(max_length=512),
-        default=list,
-        blank=True,
-        help_text="Organizations where the user is a member of the Data Access Committee.",
-    )
-
-    # Track changes to values in dac_organizations
-    tracker = FieldTracker(fields=["dac_organizations"])
+    # Track changes to values in admin_organizations
+    tracker = FieldTracker(fields=["admin_organizations"])
 
     def undelete(self):
         self.removed = None
@@ -135,7 +122,6 @@ class AnonymousMetaxUser(AnonymousUser):
     is_hidden = False
     fairdata_username = None
     csc_projects = []
-    dac_organizations = []
     admin_organizations = []
     removed = None
     synced = None
