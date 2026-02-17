@@ -57,3 +57,7 @@ class ApplicationBaseSerializer(serializers.Serializer):
                 form.pop("archived", None)
                 form.pop("enabled", None)
         return rep
+
+
+class ApplicationCommandSerializer(serializers.Serializer):
+    comment = serializers.CharField(default="")

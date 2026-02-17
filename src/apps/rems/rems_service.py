@@ -1063,7 +1063,7 @@ class REMSService:
 
         return ApplicationBase(licenses=licenses, forms=forms)
 
-    def approve_application(self, handler: MetaxUser, application_id: int):
+    def approve_application(self, handler: MetaxUser, application_id: int, comment: str = ""):
         """Approve REMS application."""
         # Ensure the REMS application exists for this user and is for this Metax instance
         application = self.get_user_application(
@@ -1072,14 +1072,16 @@ class REMSService:
         if not application:
             raise exceptions.NotFound("REMS application not found")
 
+        data = {
+            "application-id": application_id,
+        }
+        if comment:
+            data["comment"] = comment
         with self.session.as_user(handler.fairdata_username):
-            data = {
-                "application-id": application_id,
-            }
             resp = self.session.post("/api/applications/approve", json=data)
         return resp.json()
 
-    def reject_application(self, handler: MetaxUser, application_id: int):
+    def reject_application(self, handler: MetaxUser, application_id: int, comment: str = ""):
         """Reject REMS application."""
         # Ensure the REMS application exists for this user and is for this Metax instance
         application = self.get_user_application(
@@ -1088,14 +1090,16 @@ class REMSService:
         if not application:
             raise exceptions.NotFound("REMS application not found")
 
+        data = {
+            "application-id": application_id,
+        }
+        if comment:
+            data["comment"] = comment
         with self.session.as_user(handler.fairdata_username):
-            data = {
-                "application-id": application_id,
-            }
             resp = self.session.post("/api/applications/reject", json=data)
         return resp.json()
 
-    def close_application(self, handler: MetaxUser, application_id: int):
+    def close_application(self, handler: MetaxUser, application_id: int, comment: str = ""):
         """Close REMS application.
 
         A submitted or approved application can be closed to mark it as no longer relevant.
@@ -1109,6 +1113,9 @@ class REMSService:
             raise exceptions.NotFound("REMS application not found")
 
         data = {"application-id": application_id}
+        if comment:
+            data["comment"] = comment
+
         with self.session.as_user(handler.fairdata_username):
             resp = self.session.post("/api/applications/close", json=data)
         return resp.json()

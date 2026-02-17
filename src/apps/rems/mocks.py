@@ -695,11 +695,20 @@ class MockREMS:
         assert "event/visibility" in event
         application["application/events"].append(event)
 
-    def approve_application(self, application, approver) -> dict:
+    def approve_application(self, application, handler, comment: str | None = None) -> dict:
         now = timezone.now()
         userid = application["application/applicant"]["userid"]
         application["application/modified"] = now.isoformat()
         application["application/state"] = self.ApplicationState.APPROVED
+        self.add_application_event(
+            application,
+            handler,
+            {
+                "event/type": "application.event/approved",
+                "application/comment": comment,
+                "event/visibility": "visibility/public",
+            },
+        )
 
         # Create entitlement
         self.id_counters[EntityType.ENTITLEMENT] += 1
@@ -711,28 +720,37 @@ class MockREMS:
             "application-id": application["application/id"],
             "start": now.isoformat(),
             "end": None,
-            "mail": approver.get("email"),
+            "mail": handler.get("email"),
         }
         return entitlements[entitlement_id]
 
-    def reject_application(self, application: dict):
+    def reject_application(self, application: dict, handler, comment: str | None = None):
         now = timezone.now()
+        self.add_application_event(
+            application,
+            handler,
+            {
+                "event/type": "application.event/rejected",
+                "application/comment": comment,
+                "event/visibility": "visibility/public",
+            },
+        )
         application["application/modified"] = now.isoformat()
         application["application/state"] = self.ApplicationState.REJECTED
 
-    def close_application(self, application, comment: Optional[str] = None) -> dict:
+    def close_application(self, application, handler, comment: Optional[str] = None) -> dict:
         now = timezone.now()
         application["application/modified"] = now.isoformat()
         application["application/state"] = self.ApplicationState.CLOSED
-
-        event = {
-            "event/type": "application.event/closed",
-            "event/visibility": "visibility/public",
-        }
-        if comment:
-            event["application/comment"] = comment
-
-        self.add_application_event(application, {"userid": "owner", "name": "Owner"}, event)
+        self.add_application_event(
+            application,
+            handler,
+            {
+                "event/type": "application.event/closed",
+                "application/comment": comment,
+                "event/visibility": "visibility/public",
+            },
+        )
 
         # End all entitlements linked to the application
         application_entitlements = [
@@ -875,7 +893,8 @@ class MockREMS:
             return error
         userid = request.headers["X-REMS-USER-ID"]
         handler = self.entities[EntityType.USER][userid]
-        self.approve_application(application, approver=handler)
+        comment = request.json().get("comment", "")
+        self.approve_application(application, handler=handler, comment=comment)
         return {"success": True}
 
     def handle_reject_application(self, request, context):
@@ -884,7 +903,10 @@ class MockREMS:
         )
         if error:
             return error
-        self.reject_application(application)
+        userid = request.headers["X-REMS-USER-ID"]
+        handler = self.entities[EntityType.USER][userid]
+        comment = request.json().get("comment", "")
+        self.reject_application(application, handler=handler, comment=comment)
         return {"success": True}
 
     def handle_close_application(self, request, context):
@@ -899,8 +921,10 @@ class MockREMS:
         )
         if error:
             return error
-        comment = request.json().get("comment")
-        self.close_application(application, comment=comment)
+        userid = request.headers["X-REMS-USER-ID"]
+        handler = self.entities[EntityType.USER][userid]
+        comment = request.json().get("comment", "")
+        self.close_application(application, handler=handler, comment=comment)
         return {"success": True}
 
     def handle_remark_application(self, request, context):

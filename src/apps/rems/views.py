@@ -2,11 +2,13 @@ from django.conf import settings
 from rest_framework import exceptions, serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from drf_yasg.utils import swagger_auto_schema
 
 from apps.common.serializers.fields import CommaSeparatedListField
 from apps.common.views import CommonViewSet
 from apps.rems.rems_service import REMSService
 from apps.rems.rems_session import REMSError
+from apps.rems.serializers import ApplicationCommandSerializer
 
 
 class RolesQueryParamsSerializer(serializers.Serializer):
@@ -49,6 +51,14 @@ class REMSApplicationsViewSet(CommonViewSet):
                 raise exceptions.NotFound("Application not found")
             raise
 
+    def _get_application_command_comment(self, request) -> str:
+        if not request.data:
+            return ""
+        serializer = ApplicationCommandSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return serializer.validated_data["comment"]
+
+    @swagger_auto_schema(request_body=ApplicationCommandSerializer)
     @action(detail=True, url_path="approve", methods=["post"])
     def approve(self, request, *args, **kwargs):
         """Approve a REMS application."""
@@ -57,7 +67,8 @@ class REMSApplicationsViewSet(CommonViewSet):
 
         service = REMSService()
         try:
-            data = service.approve_application(request.user, application_id=application_id)
+            comment = self._get_application_command_comment(request)
+            data = service.approve_application(request.user, application_id=application_id, comment=comment)
         except REMSError as err:
             if err.is_forbidden:
                 raise exceptions.PermissionDenied(
@@ -66,6 +77,7 @@ class REMSApplicationsViewSet(CommonViewSet):
             raise
         return Response(data=data)
 
+    @swagger_auto_schema(request_body=ApplicationCommandSerializer)
     @action(detail=True, url_path="reject", methods=["post"])
     def reject(self, request, *args, **kwargs):
         """Reject a REMS application."""
@@ -74,7 +86,8 @@ class REMSApplicationsViewSet(CommonViewSet):
 
         service = REMSService()
         try:
-            data = service.reject_application(request.user, application_id=application_id)
+            comment = self._get_application_command_comment(request)
+            data = service.reject_application(request.user, application_id=application_id, comment=comment)
         except REMSError as err:
             if err.is_forbidden:
                 raise exceptions.PermissionDenied(
@@ -83,6 +96,7 @@ class REMSApplicationsViewSet(CommonViewSet):
             raise
         return Response(data=data)
 
+    @swagger_auto_schema(request_body=ApplicationCommandSerializer)
     @action(detail=True, url_path="close", methods=["post"])
     def close(self, request, *args, **kwargs):
         """Close a submitted or approved REMS application."""
@@ -91,7 +105,8 @@ class REMSApplicationsViewSet(CommonViewSet):
 
         service = REMSService()
         try:
-            data = service.close_application(request.user, application_id=application_id)
+            comment = self._get_application_command_comment(request)
+            data = service.close_application(request.user, application_id=application_id, comment=comment)
         except REMSError as err:
             if err.is_forbidden:
                 raise exceptions.PermissionDenied(

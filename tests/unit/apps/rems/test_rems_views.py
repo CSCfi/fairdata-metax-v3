@@ -162,9 +162,8 @@ def test_get_rems_applications_todo_handled(
 
     # Approve the application.
     # 'Todo' applications should be moved to 'handled' after approval.
-    res = handler_client.post("/v3/rems/applications/1/approve")
+    res = handler_client.post("/v3/rems/applications/1/approve", content_type="application/json")
     assert res.status_code == 200
-
     res = handler_client.get("/v3/rems/applications/todo")
     assert res.status_code == 200
     assert len(res.data) == 0  # No more todo
@@ -181,34 +180,40 @@ def test_get_rems_applications_todo_handled(
 def test_rems_applications_approve(
     mock_rems, user_client, handler_client, manual_rems_application
 ):
-    res = user_client.post("/v3/rems/applications/1/approve")
+    res = user_client.post("/v3/rems/applications/1/approve", content_type="application/json")
     assert res.status_code == 403  # Only handler can approve
 
-    res = handler_client.post("/v3/rems/applications/1/approve")
+    res = handler_client.post(
+        "/v3/rems/applications/1/approve", {"comment": "hei vaan"}, content_type="application/json"
+    )
     assert res.status_code == 200
 
     res = handler_client.get("/v3/rems/applications/1")
     assert res.status_code == 200
     assert res.data["application/state"] == "application.state/approved"
+    assert res.data["application/events"][-1]["application/comment"] == "hei vaan"
     assert len(mock_rems.entities["entitlement"]["test_user"]) == 1
 
-    res = handler_client.post("/v3/rems/applications/1/approve")
+    res = handler_client.post("/v3/rems/applications/1/approve", content_type="application/json")
     assert res.status_code == 403  # Approving twice is forbidden
 
 
 def test_rems_applications_reject(mock_rems, user_client, handler_client, manual_rems_application):
-    res = user_client.post("/v3/rems/applications/1/reject")
+    res = user_client.post("/v3/rems/applications/1/reject", content_type="application/json")
     assert res.status_code == 403  # Only handler can reject
 
-    res = handler_client.post("/v3/rems/applications/1/reject")
+    res = handler_client.post(
+        "/v3/rems/applications/1/reject", {"comment": "ei käy"}, content_type="application/json"
+    )
     assert res.status_code == 200
 
     res = handler_client.get("/v3/rems/applications/1")
     assert res.status_code == 200
     assert res.data["application/state"] == "application.state/rejected"
+    assert res.data["application/events"][-1]["application/comment"] == "ei käy"
     assert len(mock_rems.entities["entitlement"]) == 0
 
-    res = handler_client.post("/v3/rems/applications/1/reject")
+    res = handler_client.post("/v3/rems/applications/1/reject", content_type="application/json")
     assert res.status_code == 403  # Rejecting twice is forbidden
 
 
@@ -216,15 +221,20 @@ def test_rems_applications_close_submitted(
     mock_rems, user_client, handler_client, manual_rems_application
 ):
     """Close application in 'submitted' state."""
-    res = user_client.post("/v3/rems/applications/1/close")
+    res = user_client.post("/v3/rems/applications/1/close", content_type="application/json")
     assert res.status_code == 403  # Only handler can close
 
-    res = handler_client.post("/v3/rems/applications/1/close")
+    res = handler_client.post(
+        "/v3/rems/applications/1/close",
+        {"comment": "meni kiinni"},
+        content_type="application/json",
+    )
     assert res.status_code == 200
 
     res = handler_client.get("/v3/rems/applications/1")
     assert res.status_code == 200
     assert res.data["application/state"] == "application.state/closed"
+    assert res.data["application/events"][-1]["application/comment"] == "meni kiinni"
     assert len(mock_rems.entities["entitlement"]) == 0
 
 
@@ -232,10 +242,10 @@ def test_rems_applications_close_approved(
     mock_rems, user_client, handler_client, automatic_rems_application
 ):
     """Close application in 'approved' state."""
-    res = user_client.post("/v3/rems/applications/1/close")
+    res = user_client.post("/v3/rems/applications/1/close", content_type="application/json")
     assert res.status_code == 403  # Only handler can close
 
-    res = handler_client.post("/v3/rems/applications/1/close")
+    res = handler_client.post("/v3/rems/applications/1/close", content_type="application/json")
     assert res.status_code == 200
 
     res = handler_client.get("/v3/rems/applications/1")
