@@ -853,6 +853,70 @@ def test_omit_owner_user_when_no_edit_access(
     assert "user" not in res.data["metadata_owner"]
 
 
+def test_expand_user_with_edit_access(
+    user_client, dataset_a_json, data_catalog, reference_data
+):
+    """With expand_user=true and edit access, metadata_owner.user is expanded with user details."""
+    res = user_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    _id = res.data["id"]
+
+    res = user_client.get(f"/v3/datasets/{_id}?expand_user=true", content_type="application/json")
+    assert res.status_code == 200
+    user = res.data["metadata_owner"]["user"]
+    assert isinstance(user, dict)
+    assert user.get("username") == "test_user"
+    assert "first_name" in user
+    assert "last_name" in user
+    assert "organization" in user
+    assert "admin_organizations" in user
+
+
+def test_expand_user_without_edit_access(
+    user_client, user2_client, dataset_a_json, data_catalog, reference_data
+):
+    """With expand_user=true but no edit access, metadata_owner.user remains hidden (security)."""
+    res = user_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    _id = res.data["id"]
+
+    res = user2_client.get(f"/v3/datasets/{_id}?expand_user=true", content_type="application/json")
+    assert res.status_code == 200
+    assert "user" not in res.data["metadata_owner"]
+
+
+def test_expand_user_with_admin_organization_rights(
+    user_client,
+    admin_org_user_client,
+    data_catalog,
+):
+    """User with admin_organization rights (admin_organizations matches metadata_owner.organization)
+    can see and expand metadata_owner.user."""
+    from apps.core import factories
+
+    AdminOrganizationFactory(id="test_org", pref_label={"en": "Test Organization"})
+    dataset = factories.PublishedDatasetFactory(
+        data_catalog=data_catalog,
+        metadata_owner=MetadataProviderFactory(
+            user=user_client._user, organization="test_org", admin_organization="test_org"
+        ),
+    )
+
+    # admin_org_user has admin_organizations=["test_org", "another_org"]; no edit (catalog blocks it)
+    res = admin_org_user_client.get(
+        f"/v3/datasets/{dataset.id}?expand_user=true", content_type="application/json"
+    )
+    assert res.status_code == 200
+    assert "user" in res.data["metadata_owner"], "admin_org user should see metadata_owner.user"
+    user_data = res.data["metadata_owner"]["user"]
+    assert isinstance(user_data, dict), "expand_user should return expanded user object"
+    assert user_data.get("username") == "test_user"
+    assert "first_name" in user_data
+    assert "last_name" in user_data
+    assert "organization" in user_data
+    assert "admin_organizations" in user_data
+
+
 @pytest.mark.django_db(databases=("default", "extra_connection"), transaction=True)
 def test_dataset_lock_for_update(admin_client):
     """Dataset update should lock the row for updating."""

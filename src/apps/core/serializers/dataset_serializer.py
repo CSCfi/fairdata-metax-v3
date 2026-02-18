@@ -53,6 +53,7 @@ from apps.core.serializers.project_serializer import ProjectModelSerializer
 
 # for preventing circular import, using submodule instead of apps.core.serializers
 from apps.core.serializers.provenance_serializers import ProvenanceModelSerializer
+from apps.users.models import MetaxUser
 
 from .dataset_files_serializer import FileSetSerializer
 
@@ -346,6 +347,15 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
 
         self.omit_pid_fields(instance, ret)
         self.handle_owner_user(instance, ret)
+        if (
+            view.query_params.get("expand_user")
+            and instance.has_permission_to_edit(request.user)
+            and ret.get("metadata_owner")
+            and "user" in ret["metadata_owner"]
+        ):
+            ret["metadata_owner"]["user"] = ExpandedMetadataOwnerUserSerializer(
+                instance.metadata_owner.user, context={"request": request}
+            ).data
         self.handle_access_rights_private_fields(instance, ret)
 
         if has_emails:
@@ -624,9 +634,35 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
         return instance
 
 
+class ExpandedMetadataOwnerUserSerializer(serializers.ModelSerializer):
+    """Read-only serializer for metadata owner user when expand_user=true.
+
+    Exposes first_name, last_name, organization, username, admin_organizations.
+    Only used when the requesting user has permission to see the metadata owner.
+    """
+
+    class Meta:
+        model = MetaxUser
+        fields = ("first_name", "last_name", "organization", "username", "admin_organizations")
+        read_only_fields = fields
+
+    def to_representation(self, instance):
+        return super().to_representation(instance)
+
+
 class ExpandCatalogQueryParamsSerializer(serializers.Serializer):
     expand_catalog = serializers.BooleanField(
         default=False, help_text=_("Include expanded data catalog in response.")
+    )
+
+
+class ExpandUserQueryParamsSerializer(serializers.Serializer):
+    expand_user = serializers.BooleanField(
+        default=False,
+        help_text=_(
+            "Include expanded metadata owner user (first_name, last_name, organization, "
+            "username, admin_organizations) in response. Only visible when user has edit access."
+        ),
     )
 
 

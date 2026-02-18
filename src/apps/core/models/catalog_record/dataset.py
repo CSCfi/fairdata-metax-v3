@@ -405,9 +405,9 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             return False
         elif self.data_catalog and self.data_catalog.can_admin_datasets(user):
             return True
+
         if self.data_catalog and not self.data_catalog.can_update_datasets(user):
             return False
-
         elif self.metadata_owner and self.metadata_owner.user == user:
             return True
         elif (
@@ -421,6 +421,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             and self.metadata_owner.admin_organization in user.admin_organizations
         ):
             return True
+
         return False
 
     def get_lock_reason(self, user: MetaxUser) -> Optional[str]:
