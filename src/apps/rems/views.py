@@ -68,7 +68,9 @@ class REMSApplicationsViewSet(CommonViewSet):
         service = REMSService()
         try:
             comment = self._get_application_command_comment(request)
-            data = service.approve_application(request.user, application_id=application_id, comment=comment)
+            data = service.approve_application(
+                request.user, application_id=application_id, comment=comment
+            )
         except REMSError as err:
             if err.is_forbidden:
                 raise exceptions.PermissionDenied(
@@ -87,7 +89,9 @@ class REMSApplicationsViewSet(CommonViewSet):
         service = REMSService()
         try:
             comment = self._get_application_command_comment(request)
-            data = service.reject_application(request.user, application_id=application_id, comment=comment)
+            data = service.reject_application(
+                request.user, application_id=application_id, comment=comment
+            )
         except REMSError as err:
             if err.is_forbidden:
                 raise exceptions.PermissionDenied(
@@ -106,7 +110,30 @@ class REMSApplicationsViewSet(CommonViewSet):
         service = REMSService()
         try:
             comment = self._get_application_command_comment(request)
-            data = service.close_application(request.user, application_id=application_id, comment=comment)
+            data = service.close_application(
+                request.user, application_id=application_id, comment=comment
+            )
+        except REMSError as err:
+            if err.is_forbidden:
+                raise exceptions.PermissionDenied(
+                    detail="You are not allowed to perform this action"
+                )
+            raise
+        return Response(data=data)
+
+    @swagger_auto_schema(request_body=ApplicationCommandSerializer)
+    @action(detail=True, url_path="return", methods=["post"])
+    def return_application(self, request, *args, **kwargs):
+        """Request changes to previously submitted REMS application."""
+        self.check_rems_request(request)
+        application_id = self.parse_application_id(kwargs["pk"])
+
+        service = REMSService()
+        try:
+            comment = self._get_application_command_comment(request)
+            data = service.return_application(
+                request.user, application_id=application_id, comment=comment
+            )
         except REMSError as err:
             if err.is_forbidden:
                 raise exceptions.PermissionDenied(

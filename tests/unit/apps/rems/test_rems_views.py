@@ -238,6 +238,27 @@ def test_rems_applications_close_submitted(
     assert len(mock_rems.entities["entitlement"]) == 0
 
 
+def test_rems_applications_return_submitted(
+    mock_rems, user_client, handler_client, manual_rems_application
+):
+    """Close application in 'submitted' state."""
+    res = user_client.post("/v3/rems/applications/1/return", content_type="application/json")
+    assert res.status_code == 403  # Only handler can return
+
+    res = handler_client.post(
+        "/v3/rems/applications/1/return",
+        {"comment": "muutas vähä"},
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+
+    res = handler_client.get("/v3/rems/applications/1")
+    assert res.status_code == 200
+    assert res.data["application/state"] == "application.state/returned"
+    assert res.data["application/events"][-1]["application/comment"] == "muutas vähä"
+    assert len(mock_rems.entities["entitlement"]) == 0
+
+
 def test_rems_applications_close_approved(
     mock_rems, user_client, handler_client, automatic_rems_application
 ):

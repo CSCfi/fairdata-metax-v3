@@ -834,7 +834,7 @@ class REMSService:
         accept_licenses: List[int],
         field_values: List[dict] = {},
     ) -> dict:
-        """Create a REMS application for dataset."""
+        """Create and submit a REMS application for dataset."""
         self.check_user(user)
 
         item = REMSCatalogueItem.objects.filter(key=self.get_dataset_key(dataset)).first()
@@ -1118,6 +1118,23 @@ class REMSService:
 
         with self.session.as_user(handler.fairdata_username):
             resp = self.session.post("/api/applications/close", json=data)
+        return resp.json()
+
+    def return_application(self, handler: MetaxUser, application_id: int, comment: str = ""):
+        """Request changes to previously submitted REMS application."""
+        # Ensure the REMS application exists for this user and is for this Metax instance
+        application = self.get_user_application(
+            user=handler, application_id=application_id, allow_errors=[403, 404]
+        )
+        if not application:
+            raise exceptions.NotFound("REMS application not found")
+
+        data = {"application-id": application_id}
+        if comment:
+            data["comment"] = comment
+
+        with self.session.as_user(handler.fairdata_username):
+            resp = self.session.post("/api/applications/return", json=data)
         return resp.json()
 
     def close_application_as_owner(self, application_id: int, comment: str = ""):

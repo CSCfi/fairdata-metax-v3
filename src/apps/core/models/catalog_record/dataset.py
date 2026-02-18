@@ -64,6 +64,7 @@ class REMSApplicationStatus(models.TextChoices):
     NOT_IN_REMS = "not_in_rems", "Dataset not published in REMS"
     NO_APPLICATION = "no_application", "No active applications"
     DRAFT = "draft", "Application incomplete"
+    RETURNED = "returned", "Application needs changes"
     SUBMITTED = "submitted", "Application submitted"
     APPROVED = "approved", "REMS application approved"
     REJECTED = "rejected", "REMS application rejected"
@@ -469,10 +470,12 @@ class Dataset(V2DatasetMixin, CatalogRecord):
 
         latest = sorted(applications, key=lambda a: a["application/created"], reverse=True)[0]
         state = latest["application/state"]
-        if state in {"application.state/draft", "application.state/returned"}:
+        if state == "application.state/draft":
             # draft: application created but not submitted yet
-            # returned: handler requests changes to the submitted application.
             return REMSApplicationStatus.DRAFT
+        if state == "application.state/returned":
+            # returned: handler requests changes to the submitted application.
+            return REMSApplicationStatus.RETURNED
         if state == "application.state/submitted":
             # submitted: application waiting for approval
             return REMSApplicationStatus.SUBMITTED

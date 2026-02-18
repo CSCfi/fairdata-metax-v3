@@ -762,6 +762,19 @@ class MockREMS:
         for entitlement in application_entitlements:
             entitlement["end"] = now.isoformat()
 
+    def return_application(self, application, handler, comment: Optional[str] = None) -> dict:
+        now = timezone.now()
+        application["application/modified"] = now.isoformat()
+        application["application/state"] = self.ApplicationState.RETURNED
+
+        event = {
+            "event/type": "application.event/returned",
+            "event/visibility": "visibility/public",
+        }
+        if comment:
+            event["application/comment"] = comment
+        self.add_application_event(application, handler, event)
+
     def remark_application(
         self, application: dict, handler: dict, comment: str, public: bool
     ) -> dict:
@@ -927,6 +940,22 @@ class MockREMS:
         self.close_application(application, handler=handler, comment=comment)
         return {"success": True}
 
+    def handle_return_application(self, request, context):
+        application, error = self.validate_application_command(
+            request,
+            context,
+            allowed_states=[
+                self.ApplicationState.SUBMITTED,
+            ],
+        )
+        if error:
+            return error
+        userid = request.headers["X-REMS-USER-ID"]
+        handler = self.entities[EntityType.USER][userid]
+        comment = request.json().get("comment", "")
+        self.return_application(application, handler=handler, comment=comment)
+        return {"success": True}
+
     def handle_remark_application(self, request, context):
         application, error = self.validate_application_command(
             request,
@@ -1047,6 +1076,11 @@ class MockREMS:
             f"{settings.REMS_BASE_URL}/api/applications/close",
             json=self.handle_close_application,
         )
+        mocker.post(
+            f"{settings.REMS_BASE_URL}/api/applications/return",
+            json=self.handle_return_application,
+        )
+
         mocker.post(
             f"{settings.REMS_BASE_URL}/api/applications/remark",
             json=self.handle_remark_application,
