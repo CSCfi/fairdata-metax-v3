@@ -56,7 +56,7 @@ class DatasetAccessPolicy(BaseAccessPolicy):
             "effect": "allow",  # Catalog permission checked in viewset perform_create
         },
         {
-            "action": ["create_rems_application"],
+            "action": ["create_rems_application", "submit_rems_application"],
             "principal": "authenticated",
             "effect": "allow",
         },

@@ -552,7 +552,7 @@ class DatasetViewSet(CommonModelViewSet):
 
     @list_rems_applications.mapping.post
     def create_rems_application(self, request, pk=None):
-        """Create dataset REMS application for logged in user."""
+        """Create and submit dataset REMS application for logged in user."""
         dataset = self.get_object()
         self.check_rems_request(request, dataset)
         service = REMSService()
@@ -567,17 +567,38 @@ class DatasetViewSet(CommonModelViewSet):
         return response.Response(data, status=status.HTTP_200_OK)
 
     @action(methods=["get"], detail=True, url_path="rems-applications/(?P<application_id>[0-9]+)")
-    def get_rems_application(self, request, pk: str, application_id: int):
+    def get_rems_application(self, request, pk: str, application_id: str):
         """Get dataset REMS application by id for logged in user."""
         dataset = self.get_object()
         self.check_rems_request(request, dataset)
         service = REMSService()
         application = service.get_user_application_for_dataset(
-            request.user, dataset, application_id=application_id
+            request.user, dataset, application_id=int(application_id)
         )
         if not application:
             raise Http404("Application not found for dataset")
         return response.Response(application, status=status.HTTP_200_OK)
+
+    @action(
+        methods=["post"],
+        detail=True,
+        url_path="rems-applications/(?P<application_id>[0-9]+)/submit",
+    )
+    def submit_rems_application(self, request, pk: str, application_id: str):
+        """Submit draft or returned REMS application with new data."""
+        dataset = self.get_object()
+        self.check_rems_request(request, dataset)
+        service = REMSService()
+        serializer = ApplicationDataSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = service.submit_application_for_dataset(
+            request.user,
+            dataset=dataset,
+            application_id=int(application_id),
+            accept_licenses=serializer.validated_data["accept_licenses"],
+            field_values=serializer.validated_data["field_values"],
+        )
+        return response.Response(data, status=status.HTTP_200_OK)
 
     @action(methods=["get"], detail=True, url_path="rems-entitlements")
     def list_rems_entitlements(self, request, pk=None):

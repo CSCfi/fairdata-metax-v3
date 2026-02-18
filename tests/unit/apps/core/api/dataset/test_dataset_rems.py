@@ -241,6 +241,25 @@ def test_rems_application_manual_approval_missing_field(mock_rems, user_client):
     )
     assert res.status_code == 400, res.data
     assert res.json() == ["Missing value for required field project_description for form 1"]
+    assert mock_rems.entities["application"][1]["application/state"] == "application.state/draft"
+
+    # Application left in draft state, resubmit it with required vlaues
+    res = user_client.post(
+        f"/v3/datasets/{dataset.id}/rems-applications/1/submit",
+        {
+            "accept_licenses": service.get_dataset_rems_license_ids(dataset),
+            # missing required field project_description
+            "field_values": [
+                {"form": 1, "field": "access_control", "value": "hello world"},
+                {"form": 1, "field": "project_description", "value": "kuvaus"},
+            ],
+        },
+        content_type="application/json",
+    )
+    assert res.status_code == 200, res.data
+    assert (
+        mock_rems.entities["application"][1]["application/state"] == "application.state/submitted"
+    )
 
 
 def test_rems_application_manual_approval_unknown_field(mock_rems, user_client):

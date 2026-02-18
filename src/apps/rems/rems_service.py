@@ -827,19 +827,21 @@ class REMSService:
         data = {"application-id": application_id, "accepted-licenses": licenses}
         self.session.post("/api/applications/accept-licenses", json=data)
 
-    def create_application_for_dataset(
+    def submit_application_for_dataset(
         self,
         user: MetaxUser,
         dataset: "Dataset",
+        application_id: int,
         accept_licenses: List[int],
         field_values: List[dict] = {},
     ) -> dict:
-        """Create and submit a REMS application for dataset."""
+        """Update form values and accepted licenses for REMS application and submit it."""
         self.check_user(user)
 
-        item = REMSCatalogueItem.objects.filter(key=self.get_dataset_key(dataset)).first()
-        if not item:
-            raise ValueError("Dataset has not been published to REMS.")
+        if not self.get_user_application_for_dataset(
+            user, dataset=dataset, application_id=application_id
+        ):
+            raise exceptions.NotFound("REMS application not found")
 
         # Ensure user exists in REMS
         self.create_user(
@@ -847,15 +849,9 @@ class REMSService:
         )
 
         # Create application for single dataset
-        data = {"catalogue-item-ids": [item.rems_id]}
         with self.session.as_user(user.fairdata_username):
-            # Create application, get the created application data
-            application_id = self.session.post("/api/applications/create", json=data).json()[
-                "application-id"
-            ]
-            logger.info(f"Created REMS application {application_id} for dataset {dataset.id}")
-            self.submit_field_values(application_id=application_id, field_values=field_values)
-
+            if field_values:
+                self.submit_field_values(application_id=application_id, field_values=field_values)
             self.accept_licenses(application_id=application_id, licenses=accept_licenses)
 
             # On failed submit, may return 200 with success=false e.g.
@@ -877,6 +873,44 @@ class REMSService:
                 "/api/applications/remark",
                 json={"application-id": application_id, "comment": msg, "public": False},
             )
+
+        return data
+
+    def create_application_for_dataset(
+        self,
+        user: MetaxUser,
+        dataset: "Dataset | None",
+        accept_licenses: List[int],
+        field_values: List[dict] = {},
+    ) -> dict:
+        """Create and submit a REMS application for dataset."""
+        self.check_user(user)
+
+        item = REMSCatalogueItem.objects.filter(key=self.get_dataset_key(dataset)).first()
+        if not item:
+            raise ValueError("Dataset has not been published to REMS.")
+
+        # Ensure user exists in REMS
+        self.create_user(
+            userid=user.fairdata_username, name=user.get_full_name(), email=user.email
+        )
+
+        # Create draft application for single dataset
+        data = {"catalogue-item-ids": [item.rems_id]}
+        with self.session.as_user(user.fairdata_username):
+            # Create application, get the created application data
+            application_id = self.session.post("/api/applications/create", json=data).json()[
+                "application-id"
+            ]
+            logger.info(f"Created REMS application {application_id} for dataset {dataset.id}")
+
+        data = self.submit_application_for_dataset(
+            user=user,
+            dataset=dataset,
+            application_id=application_id,
+            accept_licenses=accept_licenses,
+            field_values=field_values,
+        )
         return data
 
     def filter_applications(
