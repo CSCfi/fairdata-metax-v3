@@ -22,7 +22,7 @@ class LoadPasTestData(TestCase):
         # Command requires the name of the <dataset>.json as an argument
         call_command("load_pas_test_data", "demo")
 
-        expected_contract_count = 25
+        expected_contract_count = 26
         self.assertEqual(
             Contract.all_objects.count(),
             expected_contract_count,
@@ -62,7 +62,7 @@ class LoadPasTestData(TestCase):
         """
         # First call to create the data.
         call_command("load_pas_test_data", "demo")
-        self.assertEqual(Contract.objects.count(), 25, "Initial creation failed.")
+        self.assertEqual(Contract.objects.count(), 26, "Initial creation failed.")
         contract_before_update = Contract.objects.get(
             id="urn:uuid:b9ba17f1-67dc-400f-b7d9-1982540210db"
         )
@@ -75,7 +75,7 @@ class LoadPasTestData(TestCase):
         call_command("load_pas_test_data", "demo")
 
         self.assertEqual(
-            Contract.objects.count(), 25, "The command should not create duplicate contracts."
+            Contract.objects.count(), 26, "The command should not create duplicate contracts."
         )
 
         contract_after_update = Contract.objects.get(

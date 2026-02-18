@@ -120,6 +120,11 @@
       "contact_name": "fddps_demo_user_91"
     },
     {
+      "id": "urn:uuid:f48d4ee1-cc0e-41db-8a28-d4b9634564cd",
+      "title": "Fairdata Demo User 99 agreement",
+      "contact_name": "fddps_demo_user_99"
+    },
+    {
       "id": "urn:uuid:534bf7b4-1bfc-41b7-8477-451f57daa544",
       "title": "Fairdata Demo User 100 agreement",
       "contact_name": "fddps_demo_user_100"
