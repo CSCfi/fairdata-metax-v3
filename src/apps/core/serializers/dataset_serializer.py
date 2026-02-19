@@ -688,10 +688,9 @@ class DatasetFieldsQueryParamsSerializer(serializers.Serializer):
 
 
 class FacetLanguageQueryParamsSerializer(serializers.Serializer):
-    # TODO: Should this (and the dataset aggregation parameter?) be called something else?
-    language = serializers.ChoiceField(
+    filter_language = serializers.ChoiceField(
         choices=("en", "fi"),
-        help_text="Language used for filtering results by facet. Omit to match any language.",
+        help_text="Language used for faceted filtering. Omit to match any language.",
         required=False,
     )
 
@@ -717,7 +716,11 @@ class DatasetAggregationQueryParamsSerializer(serializers.Serializer):
         help_text="Filter dataset aggregation by keyword", required=False
     )
 
-    language = serializers.CharField(help_text="Return language", required=True)
+    language = NoopField(help_text="No longer in use. Use filter_language instead.")
+    filter_language = serializers.CharField(
+        help_text="Language used for faceted filtering and aggregation return values.",
+        required=True,
+    )
 
     limit_hits = serializers.IntegerField(
         help_text="Limit the number of results", required=False, default=20

@@ -95,7 +95,7 @@ def test_aggregation_and_filters(
     res = admin_client.get("/v3/datasets")
     assert res.data["count"] == 3
 
-    res = admin_client.get("/v3/datasets/aggregates?language=en")
+    res = admin_client.get("/v3/datasets/aggregates?filter_language=en")
     assert res.data != None
     assert sorted(res.data.keys()) == [
         "access_type",
@@ -119,7 +119,7 @@ def test_aggregation_and_filters(
             )
             count = aggregate["hits"][0]["count"]
             res = admin_client.get(
-                f"/v3/datasets?{aggregate['query_parameter']}={value}&language=en"
+                f"/v3/datasets?{aggregate['query_parameter']}={value}&filter_language=en"
             )
             assert res.data["count"] == count
 
@@ -156,7 +156,7 @@ def test_aggregation_soft_deleted_actor(
     assert DatasetActor.available_objects.count() == 1
 
     # Aggregates should not return soft deleted DatasetActor organizations
-    res = admin_client.get("/v3/datasets/aggregates?language=en")
+    res = admin_client.get("/v3/datasets/aggregates?filter_language=en")
     assert res.status_code == 200
     hits_en = [hit["value"]["en"] for hit in res.data["creator"]["hits"] if "en" in hit["value"]]
     assert hits_en == ["Organization"]
@@ -175,18 +175,18 @@ def test_aggregation_query_params(user_client):
     assert "datasets indexed" in out.getvalue()
 
     # No params, includes all published datasets
-    res = user_client.get("/v3/datasets/aggregates?language=en")
+    res = user_client.get("/v3/datasets/aggregates?filter_language=en")
     assert res.status_code == 200
     assert res.data["keyword"]["hits"] == [{"value": {"en": "fruit"}, "count": 2}]
 
     # Includes only results matching dataset filtering query params
-    res = user_client.get("/v3/datasets/aggregates?language=en&title=apple")
+    res = user_client.get("/v3/datasets/aggregates?filter_language=en&title=apple")
     assert res.status_code == 200
     assert res.data["keyword"]["hits"] == [{"value": {"en": "fruit"}, "count": 1}]
 
 
 def test_aggregation_query_params_invalid(user_client):
-    res = user_client.get("/v3/datasets/aggregates?language=en&schtitle=apple")
+    res = user_client.get("/v3/datasets/aggregates?filter_language=en&schtitle=apple")
     assert res.status_code == 400
     assert res.json() == {"schtitle": "Unknown query parameter"}
 

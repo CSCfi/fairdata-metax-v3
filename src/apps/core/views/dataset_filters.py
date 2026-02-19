@@ -55,7 +55,7 @@ class DatasetIndexEntryFilter(filters.MultipleChoiceFilter):
         # Filter by language query parameter when set
         lang_filter = Q()
         request = self.get_request()
-        if request and (lang := request.GET.get("language")):
+        if request and (lang := request.GET.get("filter_language")):
             lang_filter = Q(datasetindexentry__language=lang)
 
         # Do an Exists() query for each "AND" condition

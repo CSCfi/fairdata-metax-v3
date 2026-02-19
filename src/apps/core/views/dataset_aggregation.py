@@ -24,7 +24,7 @@ def _get_facet_search_params(request):
 
 def aggregate_queryset(queryset, request):
     dataset_ids = list(queryset.values_list("id", flat=True))
-    language = request.query_params.get("language")
+    language = request.query_params.get("filter_language")
     facet_search_params = _get_facet_search_params(request)
     limit_hits = request.query_params.get("limit_hits", 20)
 
