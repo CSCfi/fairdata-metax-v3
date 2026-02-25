@@ -15,7 +15,10 @@ class Command(BaseCommand):
 
         for dataset in Dataset.all_objects.filter(file_set__storage__storage_service="ida"):
             if dataset.metadata_owner.organization in admin_org_map:
-                continue
+                continue  # Skip if organization is in admin_org_map
+
+            if dataset.metadata_owner.admin_organization:
+                continue  # Skip if admin_organization is already set
 
             if admin_org := ldap_idm.check_admin_org_mismatch(dataset.file_set.csc_project):
                 if dataset.metadata_owner.organization != admin_org:

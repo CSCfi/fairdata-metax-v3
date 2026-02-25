@@ -11,8 +11,12 @@ from apps.core.models import Dataset
 
 @pytest.mark.django_db
 @patch("apps.core.management.commands.check_admin_orgs.LdapIdm")
-def test_no_admin_org_mismatch(mock_ldap_class, dataset, caplog):
+def test_no_admin_org_mismatch(mock_ldap_class, dataset, caplog, test_user):
     """Test when no admin org mismatches exist."""
+    dataset.metadata_owner = factories.MetadataProviderFactory(
+        user=test_user, organization="test-org", admin_organization=None
+    )
+    dataset.save()
     # Mock LdapIdm instance
     mock_ldap = Mock()
     mock_ldap_class.return_value = mock_ldap
@@ -33,8 +37,12 @@ def test_no_admin_org_mismatch(mock_ldap_class, dataset, caplog):
 
 @pytest.mark.django_db
 @patch("apps.core.management.commands.check_admin_orgs.LdapIdm")
-def test_admin_org_mismatch_found(mock_ldap_class, dataset, caplog):
+def test_admin_org_mismatch_found(mock_ldap_class, dataset, caplog, test_user):
     """Test when admin org mismatches are found and logged."""
+    dataset.metadata_owner = factories.MetadataProviderFactory(
+        user=test_user, organization="test-org", admin_organization=None
+    )
+    dataset.save()
     # Mock LdapIdm instance
     mock_ldap = Mock()
     mock_ldap_class.return_value = mock_ldap
@@ -52,8 +60,12 @@ def test_admin_org_mismatch_found(mock_ldap_class, dataset, caplog):
 
 @pytest.mark.django_db
 @patch("apps.core.management.commands.check_admin_orgs.LdapIdm")
-def test_no_admin_org_returned(mock_ldap_class, dataset, caplog):
+def test_no_admin_org_returned(mock_ldap_class, dataset, caplog, test_user):
     """Test when check_admin_org_mismatch returns None."""
+    dataset.metadata_owner = factories.MetadataProviderFactory(
+        user=test_user, organization="test-org", admin_organization=None
+    )
+    dataset.save()
     # Mock LdapIdm instance
     mock_ldap = Mock()
     mock_ldap_class.return_value = mock_ldap
@@ -70,8 +82,12 @@ def test_no_admin_org_returned(mock_ldap_class, dataset, caplog):
 
 @pytest.mark.django_db
 @patch("apps.core.management.commands.check_admin_orgs.LdapIdm")
-def test_only_ida_datasets_processed(mock_ldap_class, dataset, non_ida_dataset):
+def test_only_ida_datasets_processed(mock_ldap_class, dataset, non_ida_dataset, test_user):
     """Test that only IDA datasets are processed."""
+    dataset.metadata_owner = factories.MetadataProviderFactory(
+        user=test_user, organization="test-org", admin_organization=None
+    )
+    dataset.save()
     # Mock LdapIdm instance
     mock_ldap = Mock()
     mock_ldap_class.return_value = mock_ldap
@@ -85,8 +101,12 @@ def test_only_ida_datasets_processed(mock_ldap_class, dataset, non_ida_dataset):
 
 @pytest.mark.django_db
 @patch("apps.core.management.commands.check_admin_orgs.LdapIdm")
-def test_multiple_ida_datasets(mock_ldap_class, dataset, metadata_provider):
+def test_multiple_ida_datasets(mock_ldap_class, dataset, test_user):
     """Test with multiple IDA datasets."""
+    dataset.metadata_owner = factories.MetadataProviderFactory(
+        user=test_user, organization="test-org", admin_organization=None
+    )
+    dataset.save()
     # Create another IDA dataset
     another_ida_storage = file_factories.FileStorageFactory(
         storage_service="ida", csc_project="2001480"
@@ -94,8 +114,12 @@ def test_multiple_ida_datasets(mock_ldap_class, dataset, metadata_provider):
     # Create dataset manually to ensure metadata_owner is used correctly
     from apps.core.models import Dataset
 
+    another_metadata_provider = factories.MetadataProviderFactory(
+        user=test_user, organization="test-org", admin_organization=None
+    )
+
     another_dataset = factories.PublishedDatasetFactory(
-        metadata_owner=metadata_provider,
+        metadata_owner=another_metadata_provider,
         title={"en": "Another Dataset"},
     )
     # Create file_set with the dataset
@@ -120,8 +144,12 @@ def test_multiple_ida_datasets(mock_ldap_class, dataset, metadata_provider):
 
 @pytest.mark.django_db
 @patch("apps.core.management.commands.check_admin_orgs.LdapIdm")
-def test_logging_format(mock_ldap_class, dataset, caplog):
+def test_logging_format(mock_ldap_class, dataset, caplog, test_user):
     """Test the format of mismatch log messages."""
+    dataset.metadata_owner = factories.MetadataProviderFactory(
+        user=test_user, organization="test-org", admin_organization=None
+    )
+    dataset.save()
     # Mock LdapIdm instance
     mock_ldap = Mock()
     mock_ldap_class.return_value = mock_ldap
@@ -142,8 +170,12 @@ def test_logging_format(mock_ldap_class, dataset, caplog):
 
 @pytest.mark.django_db
 @patch("apps.core.management.commands.check_admin_orgs.LdapIdm")
-def test_ldap_idm_exception_handling(mock_ldap_class, dataset):
+def test_ldap_idm_exception_handling(mock_ldap_class, dataset, test_user):
     """Test behavior when LdapIdm raises an exception."""
+    dataset.metadata_owner = factories.MetadataProviderFactory(
+        user=test_user, organization="test-org", admin_organization=None
+    )
+    dataset.save()
     # Mock LdapIdm to raise an exception
     mock_ldap_class.side_effect = Exception("LDAP connection failed")
 
@@ -156,8 +188,12 @@ def test_ldap_idm_exception_handling(mock_ldap_class, dataset):
 
 @pytest.mark.django_db
 @patch("apps.core.management.commands.check_admin_orgs.LdapIdm")
-def test_check_admin_org_mismatch_exception_handling(mock_ldap_class, dataset):
+def test_check_admin_org_mismatch_exception_handling(mock_ldap_class, dataset, test_user):
     """Test behavior when check_admin_org_mismatch raises an exception."""
+    dataset.metadata_owner = factories.MetadataProviderFactory(
+        user=test_user, organization="test-org", admin_organization=None
+    )
+    dataset.save()
     # Mock LdapIdm instance
     mock_ldap = Mock()
     mock_ldap_class.return_value = mock_ldap
@@ -244,8 +280,10 @@ def test_mixed_datasets_org_in_map_and_not_in_map(
         title={"en": "Dataset with org NOT in admin_org_map"},
         data_catalog=data_catalog,
     )
-    dataset_not_in_map.metadata_owner.admin_organization = None
-    dataset_not_in_map.metadata_owner.save()
+    dataset_not_in_map.metadata_owner = factories.MetadataProviderFactory(
+        user=test_user, organization="test-org", admin_organization=None
+    )
+    dataset_not_in_map.save()
 
     factories.FileSetFactory(dataset=dataset_not_in_map, storage=ida_storage_not_in_map)
     factories.DatasetMetricsFactory(dataset=dataset_not_in_map)
@@ -264,3 +302,19 @@ def test_mixed_datasets_org_in_map_and_not_in_map(
 
     # Verify only the completion message was logged (no mismatch since we returned same org)
     assert len(caplog.records) == 2
+
+
+@pytest.mark.django_db
+@patch("apps.core.management.commands.check_admin_orgs.LdapIdm")
+def test_dataset_with_admin_org_already_set(mock_ldap_class, dataset, test_user):
+    """Test that datasets with admin_organization already set are skipped."""
+    dataset.metadata_owner = factories.MetadataProviderFactory(
+        user=test_user, organization="test-org", admin_organization="test-admin-org"
+    )
+    dataset.save()
+    # Mock LdapIdm instance
+    mock_ldap = Mock()
+    mock_ldap_class.return_value = mock_ldap
+    mock_ldap.check_admin_org_mismatch.return_value = "some-admin-org"
+    call_command("check_admin_orgs")
+    mock_ldap.check_admin_org_mismatch.assert_not_called()
