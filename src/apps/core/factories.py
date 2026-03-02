@@ -1,6 +1,7 @@
 import factory
 import factory.django
 import factory.fuzzy
+from django.contrib.gis.geos import Point
 from django.utils import timezone
 
 from apps.actors.factories import OrganizationFactory, PersonFactory
@@ -469,6 +470,12 @@ class LocationFactory(factory.django.DjangoModelFactory):
         return f"https://location-{self}.fi"
 
 
+class GeoLocationFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.GeoLocation
+    geographic_type = 4
+    geometry = Point(0, 0)
+
 class SpatialFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.Spatial
@@ -477,6 +484,10 @@ class SpatialFactory(factory.django.DjangoModelFactory):
         LocationFactory, url="http://www.yso.fi/onto/onto/yso/c_9908ce39"
     )
 
+    geolocations = factory.RelatedFactory(
+        GeoLocationFactory,
+        factory_related_name='spatial',
+    )
 
 class IdentifierTypeFactory(factory.django.DjangoModelFactory):
     class Meta:

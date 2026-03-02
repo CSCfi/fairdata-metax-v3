@@ -8,5 +8,22 @@
     }
   },
   "full_address": "Alppikylä",
-  "geographic_name": "Alppikylä"
+  "geographic_name": "Alppikylä",
+  "altitude_in_meters": 21,
+  "custom_wkt": [],
+  "geolocations": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            25.068183,
+            60.259874
+          ]
+        }
+      }
+    ]
+  }
 }

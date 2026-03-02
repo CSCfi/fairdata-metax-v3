@@ -194,6 +194,8 @@ Language field is a list of language reference data objects. Only url field is r
 Spatial coverage describes the spatial characteristics of the dataset.
 The optional `reference` field should contain a location from reference data.
 The `custom_wkt` field allows specifying geometry as WKT strings in WGS84 coordinate system.
+The optional `geolocations` field follow the GeoJson format as shown in the example.
+Supported geometries are `POINT`, `POLYGON`, `LINESTRING`, `MULTIPOINT`, `MULTIPOLYGON` and `MULTILINESTRING`. 
 
 !!! Example
 

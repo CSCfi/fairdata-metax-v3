@@ -71,6 +71,37 @@ def test_nested_serializer_bulk_upsert(admin_user, location_reference_data, mock
             "id": spatial_id,
             "geographic_name": "Alppikylä is now Tapiola",
             "reference": {"url": "http://www.yso.fi/onto/yso/p105747"},
+            "geolocations": {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "MultiPolygon",
+                            "coordinates": [
+                                [
+                                    [
+                                        [19.0, 59.0],
+                                        [20.0, 59.0],
+                                        [20.0, 65.0],
+                                        [19.0, 65.0],
+                                        [19.0, 59.0]
+                                    ]
+                                ],
+                                [
+                                    [
+                                        [21.0, 61.0],
+                                        [22.0, 61.0],
+                                        [22.0, 62.0],
+                                        [21.0, 62.0],
+                                        [21.0, 61.0]
+                                    ]
+                                ]
+                            ]
+                        }
+                    }
+                ]
+            },
         }
     )
     spatials.append(

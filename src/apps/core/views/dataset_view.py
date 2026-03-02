@@ -10,6 +10,8 @@ from datetime import datetime, timezone
 from typing import List
 
 from django.conf import settings
+from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis.measure import D
 from django.core.cache import caches
 from django.db import transaction
 from django.db.models import Exists, OuterRef, QuerySet, Value

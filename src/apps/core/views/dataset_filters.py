@@ -3,12 +3,15 @@ import operator
 from functools import reduce
 from typing import List
 
+from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis.measure import D
 from django.core.cache import caches
 from django.db.models import Exists, OuterRef, Q, QuerySet
 from django.utils.translation import gettext_lazy as _
 from django_filters import rest_framework as filters
 from django_filters.fields import CSVWidget
 from rest_framework import exceptions
+from rest_framework_gis.filters import GeometryFilter
 from rest_framework.exceptions import ValidationError
 from watson import search
 
@@ -116,6 +119,13 @@ class DatasetFilter(filters.FilterSet):
 
     deprecated = filters.BooleanFilter(lookup_expr="isnull", exclude=True)
 
+    distance = filters.NumberFilter(
+        method="filter_geometry",
+        field_name="distance",
+        label="Geographical distance in meters\nThe query parameter 'distance' is used together with the 'geolocation' parameter. The parameter defines the maximum distance of the given geolocation from the retrieved dataset geolocations.",
+        help_text="The query parameter 'distance' is used together with the 'geolocation' parameter. The parameter defines the maximum distance of the given geolocation from the retrieved dataset geolocations."
+    )
+
     field_of_science__pref_label = MultipleCharFilter(
         method="filter_field_of_science",
         label="field of science",
@@ -125,6 +135,14 @@ class DatasetFilter(filters.FilterSet):
         method="filter_file_type",
         label="file_type",
     )
+
+    geolocation = GeometryFilter(
+        method="filter_geometry",
+        label="Geolocation\nThis filter allows to search for datasets based on a given geolocation. "
+              "Geolocation can be given in point or polygon format. For example, point(24.12345 60.65432) or "
+              "polygon((24.11 60.12, 24.11 60.00, 24.21 60.00, 24.11 60.12)). If 'distance' query parameter is set,"
+              " then all datasets whose geolocation is within the specified distance are returned. Without 'distance' "
+              "parameter geolocations must overlap.")
 
     id = MultipleCharFilter(
         label="id",
@@ -490,6 +508,18 @@ class DatasetFilter(filters.FilterSet):
             | Q(temporal__start_date__isnull=True, temporal__end_date__gte=start_date)
             | Q(temporal__end_date__isnull=True, temporal__start_date__lte=end_date)
         ).distinct()
+        return queryset
+
+    def filter_geometry(self, queryset, name, value):
+        query_params = self.form.cleaned_data
+        geom = GEOSGeometry(query_params["geolocation"])
+        distance = None if not query_params["distance"] else int(query_params["distance"])
+
+        if distance and geom:
+            queryset = queryset.filter(Q(spatial__geolocations__geometry__distance_lte=(geom, D(m=distance)))).distinct()
+        elif geom:
+            queryset = queryset.filter(Q(spatial__geolocations__geometry__intersects=geom)).distinct()
+
         return queryset
 
     # Facet filters

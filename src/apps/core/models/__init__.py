@@ -33,6 +33,7 @@ from .concepts import (
     Spatial,
     Theme,
     UseCategory,
+    GeoLocation,
 )
 from .contract import Contract, ContractContact, ContractService
 from .data_catalog import CatalogHomePage, DataCatalog, DatasetPublisher

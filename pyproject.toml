@@ -64,6 +64,7 @@ django-silk = "^5.4.3"
 django-test-migrations = "^1.5.0"
 fastuuid = "^0.14.0"
 dpres-file-formats = {git = "https://github.com/Digital-Preservation-Finland/dpres-file-formats.git"}
+djangorestframework-gis = "^1.2.0"
 
 [tool.poetry.group.dev.dependencies]
 isort = "^7.0.0"

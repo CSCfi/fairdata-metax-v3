@@ -183,6 +183,8 @@ def test_dataset_copied_fields():
         "dataset.rems_resources",
         "dataset.sync_status",
         "dataset.index_entries",
+        'dataset.provenance.spatial.geolocations',
+        'dataset.spatial.geolocations',
     }
 
 

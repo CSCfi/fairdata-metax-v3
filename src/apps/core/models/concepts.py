@@ -1,7 +1,7 @@
 import uuid
 
 from django.contrib.postgres.fields import ArrayField, HStoreField
-from django.db import models
+from django.contrib.gis.db import models
 from django.utils.translation import gettext as _
 
 from apps.common.copier import ModelCopier
@@ -13,6 +13,21 @@ from apps.refdata.models import ConceptProxyMixin
 def not_implemented_function(*args, **kwargs):
     raise NotImplementedError()
 
+
+class GeoType(models.IntegerChoices):
+    POINT = 4, "POINT"
+    LINESTRING = 8, "LINESTRING"
+    POLYGON = 12, "POLYGON"
+    MULTIPOINT = 16, "MULTIPOINT"
+    MULTILINESTRING = 20, "MULTILINESTRING"
+    MULTIPOLYGON = 24, "MULTIPOLYGON"
+
+    @staticmethod
+    def area_choices(self):
+        return (
+            self.POLYGON,
+            self.MULTIPOLYGON,
+        )
 
 class AccessType(ConceptProxyMixin, refdata.AccessType):
     """Accessibility of the resource"""
@@ -129,7 +144,7 @@ class Spatial(AbstractBaseModel):
     """The geographical area covered by the dataset.
 
     Attributes:
-        reference(refdata.License): License's reference
+        reference(refdata.Location): Location's reference
         full_address(models.CharField): The complete address written as a string,
             with or without formatting.
         geographic_name(models.CharField): A geographic name is a proper noun applied to
@@ -172,6 +187,26 @@ class Spatial(AbstractBaseModel):
 
     class Meta(AbstractBaseModel.Meta):
         indexes = []
+
+
+class GeoLocation(AbstractBaseModel):
+    """GeoLocation includes the geographic locations and areas of the spatial data associated with the dataset.
+
+    Attributes:
+        spatial: Spatial ForeignKey relation
+        geometry: A single geometry that is associated with the spatial/dataset data. Recognized geometries are
+        POINT, MULTIPOINT, LINESTRING, MULTILINESTRING, POLYGON and MULTIPOLYGON
+        """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    spatial = models.ForeignKey(
+        "Spatial", on_delete=models.CASCADE, related_name="geolocations", null=True, blank=True
+    )
+    geometry = models.GeometryField(geography=True)
+    geographic_type = models.IntegerField(choices=GeoType.choices)
+
+    def __str__(self):
+        return "GeoLocation"
 
 
 class RelationType(ConceptProxyMixin, refdata.RelationType):

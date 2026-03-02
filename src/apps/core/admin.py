@@ -26,6 +26,7 @@ from apps.core.models import (
     FieldOfScience,
     FileSet,
     Funding,
+    GeoLocation,
     Language,
     LegacyDataset,
     MetadataProvider,
@@ -435,3 +436,7 @@ class V2SyncStatusAdmin(CommonAdmin):
             f"{len(queryset)} datasets set to sync to V2",
             messages.SUCCESS,
         )
+
+@admin.register(GeoLocation)
+class GeoLocationAdmin(CommonAdmin):
+    pass

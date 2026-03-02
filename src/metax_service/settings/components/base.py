@@ -86,9 +86,11 @@ DEFAULT_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.postgres",
+    "django.contrib.gis",
 ]
 THIRD_PARTY_APPS = [
     "rest_framework",
+    "rest_framework_gis",
     "knox",
     "django_extensions",
     "drf_yasg",
@@ -163,7 +165,7 @@ ASGI_APPLICATION = "metax_service.asgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
+        "ENGINE": "django.contrib.gis.db.backends.postgis",
         "NAME": os.environ.get("POSTGRES_DATABASE_NAME"),
         "USER": os.environ.get("POSTGRES_USER"),
         "PASSWORD": os.environ.get("POSTGRES_PASS"),
