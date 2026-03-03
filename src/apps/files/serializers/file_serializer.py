@@ -89,21 +89,27 @@ class FileCharacteristicsSerializer(CommonModelSerializer, StrictSerializer):
 
             if not file_format_version:
                 raise serializers.ValidationError(
-                    {"encoding": _("'file_format_version' must be set when an encoding is provided")}
+                    {
+                        "encoding": _(
+                            "'file_format_version' must be set when an encoding is provided"
+                        )
+                    }
                 )
 
             if not file_format_version.allowed_encodings:
-                raise serializers.ValidationError({
-                    "encoding": _("Encoding not supported by the file format")
-                })
+                raise serializers.ValidationError(
+                    {"encoding": _("Encoding not supported by the file format")}
+                )
 
             if encoding not in file_format_version.allowed_encodings:
-                raise serializers.ValidationError({
-                    "encoding": _(
-                        f'"{encoding}" is not a valid choice. '
-                        f"Valid choices are: {file_format_version.allowed_encodings}"
-                    )
-                })
+                raise serializers.ValidationError(
+                    {
+                        "encoding": _(
+                            f'"{encoding}" is not a valid choice. '
+                            f"Valid choices are: {file_format_version.allowed_encodings}"
+                        )
+                    }
+                )
 
         return super().validate(data)
 

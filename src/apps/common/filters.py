@@ -4,7 +4,7 @@ from django import forms
 from django.core import exceptions
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
-from django_filters import fields, rest_framework as filters
+from django_filters import fields, rest_framework as filters, constants
 
 from apps.common.helpers import parse_csv_string
 
@@ -120,3 +120,21 @@ class CustomDjangoFilterBackend(filters.DjangoFilterBackend):
                 parameter["schema"]["enum"] = [c[0] for c in field.extra["choices"]]
             parameters.append(parameter)
         return parameters
+
+    def get_ordering(self, request, queryset, view) -> list[str]:
+        """Return ordering value as expected by CursorPagination.
+
+        Assumes the relevant query parameter is named "ordering".
+        """
+        filterset = self.get_filterset(request, queryset, view)
+        ordering_filter = filterset.get_filters().get("ordering")
+        if not ordering_filter:
+            return []
+        if not filterset.form.is_valid():  # Needed so cleaned_data exists
+            return []
+        value = filterset.form.cleaned_data.get("ordering") or []
+        return [
+            ordering_filter.get_ordering_value(param)
+            for param in value
+            if param not in constants.EMPTY_VALUES
+        ]

@@ -249,7 +249,7 @@ REST_FRAMEWORK = {
         "apps.users.authentication.SSOSyncKnoxTokenAuthentication",
     ],
     "UNAUTHENTICATED_USER": "apps.users.models.AnonymousMetaxUser",
-    "DEFAULT_PAGINATION_CLASS": "apps.common.pagination.DefaultOffsetPagination",
+    "DEFAULT_PAGINATION_CLASS": "apps.common.pagination.OffsetPagination",
     "DEFAULT_FILTER_BACKENDS": ("apps.common.filters.CustomDjangoFilterBackend",),
     "EXCEPTION_HANDLER": "common.exceptions.exception_handler",
     "DEFAULT_RENDERER_CLASSES": [

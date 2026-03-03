@@ -16,9 +16,9 @@ from django.db.models import F, Q, QuerySet, Value
 from django.db.models.functions import Concat
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from django_filters import rest_framework as filters
+from django_filters import OrderingFilter, rest_framework as filters
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import serializers, exceptions
+from rest_framework import exceptions, serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -51,6 +51,7 @@ from apps.files.serializers.file_bulk_serializer import (
 )
 from apps.files.serializers.legacy_files_serializer import LegacyFilesSerializer
 from apps.files.signals import pre_files_deleted, sync_files
+from apps.files.views.file_pagination import FileOffsetOrCursorPagination
 
 logger = logging.getLogger(__name__)
 
@@ -77,6 +78,17 @@ class FileCommonFilterset(filters.FilterSet):
         return queryset.alias(pathname=Concat("directory_path", "filename")).filter(
             pathname__startswith=value
         )
+
+    ordering = OrderingFilter(
+        fields=(
+            "directory_path",
+            "filename",
+            "id",
+            "storage_id",
+            "storage_identifier",
+            "record_created",
+        )
+    )
 
     class Meta:
         model = File
@@ -164,6 +176,10 @@ class FilesDatasetsBodySerializer(serializers.ListSerializer):
 class BaseFileViewSet(CommonModelViewSet):
     """Basic read-only files view."""
 
+    # Allow to select paginator by setting pagination_type to "offset" or "cursor".
+    # For cursor pagination, record_created is always needed in the queryset.
+    pagination_class = FileOffsetOrCursorPagination
+
     serializer_class = FileSerializer
     filterset_class = FileFilterSet
     filter_actions = ["list", "destroy_list"]
@@ -223,7 +239,10 @@ class BaseFileViewSet(CommonModelViewSet):
 
                 # Ensure id and storage_service are always present since FileSerializer needs them
                 queryset = queryset.annotate(storage_service=F("storage__storage_service"))
-                queryset = queryset.values(*fields, "storage_service", "id")
+                extra_fields = ["storage_service", "id"]
+                if self.paginator.pagination_type == "cursor":
+                    extra_fields.append("record_created")  # Needed by cursor pagination
+                queryset = queryset.values(*fields, *extra_fields)
 
         return self.access_policy.scope_queryset(
             self.request, queryset, dataset_id=self.get_dataset_id()
@@ -240,6 +259,14 @@ class BaseFileViewSet(CommonModelViewSet):
                 detail="Authentication is required, "
                 "or you must specify a public dataset in the request."
             )
+
+    @property
+    def paginator(self):
+        """The paginator instance associated with the view."""
+        # Modified to include request in the paginator init
+        if not hasattr(self, "_paginator"):
+            self._paginator = self.pagination_class(self.request)
+        return self._paginator
 
     def list(self, request, *args, **kwargs):
         self.enforce_authenticated_or_dataset_id()
@@ -350,9 +377,9 @@ class FileViewSet(BaseFileViewSet):
         """Return serialized datasets for given list of dataset ids.
 
         When by_id is enabled, return dict of dataset id -> serialized dataset."""
-        from apps.core.serializers import DatasetSerializer
-        from apps.core.models import Dataset
         from apps.core.cache import DatasetSerializerCache
+        from apps.core.models import Dataset
+        from apps.core.serializers import DatasetSerializer
 
         # DatasetSerializer expects view and request in context,
         # so we create dummy objects containing the required attributes.

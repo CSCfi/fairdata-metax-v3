@@ -214,6 +214,12 @@ class File(SystemCreatorBaseModel, CustomSoftDeletableModel):
                 include=("size", "modified", "published", "id"),
                 name="%(app_label)s_%(class)s_dir_aggregation",
             ),
+            # Index for cursor pagination of files in a specific storage
+            models.Index(
+                fields=("storage", "record_created"),
+                condition=models.Q(removed__isnull=True),
+                name="%(app_label)s_%(class)s_storage_rec_created",
+            ),
         ]
         ordering = ["directory_path", "filename"]
 

@@ -1,3 +1,6 @@
+from itertools import batched
+from urllib.parse import urlencode
+
 import pytest
 
 from apps.core import factories
@@ -355,3 +358,67 @@ def test_files_filter_name(admin_client, file_tree_a):
 def test_files_invalid_dataset_id(client):
     res = client.get("/v3/files?dataset=123")
     assert res.status_code == 400
+
+
+@pytest.mark.parametrize(
+    "ordering,descending",
+    [("record_created", False), ("-record_created", True)],
+)
+def test_files_cursor_pagination(admin_client, file_tree_a, ordering, descending):
+    """Test filtering files by name and path."""
+    storage_service = file_tree_a["params"]["storage_service"]
+    csc_project = file_tree_a["params"]["csc_project"]
+    params = {
+        "storage_service": storage_service,
+        "csc_project": csc_project,
+        "fields": "id,pathname",
+        "limit": 5,
+        "pagination_type": "cursor",
+        "ordering": ordering,
+    }
+    url = f"/v3/files?{urlencode(params)}"
+    expected = [
+        "/dir/sub1/file1.csv",
+        "/dir/sub1/file2.csv",
+        "/dir/sub1/file3.csv",
+        "/dir/sub2/file.csv",
+        "/dir/sub3/file.csv",
+        "/dir/sub4/file.csv",
+        "/dir/sub5/file1.csv",
+        "/dir/sub5/file2.csv",
+        "/dir/sub6/file.csv",
+        "/dir/a.txt",
+        "/dir/b.txt",
+        "/dir/c.txt",
+        "/dir/d.txt",
+        "/dir/e.txt",
+        "/dir/f.txt",
+        "/rootfile.txt",
+    ]
+    if descending:
+        expected = reversed(expected)
+
+    # Expect files to be returned 5 at a time in order of creation (or reverse)
+    for expected_batch in batched(expected, 5):
+        res = admin_client.get(url, content_type="application/json")
+        assert res.status_code == 200
+        paths = tuple(f["pathname"] for f in res.data["results"])
+        assert paths == expected_batch
+        url = res.data.get("next")
+    assert url is None
+
+
+def test_files_cursor_pagination_invalid_ordering(admin_client, file_tree_a):
+    storage_service = file_tree_a["params"]["storage_service"]
+    csc_project = file_tree_a["params"]["csc_project"]
+    params = {
+        "storage_service": storage_service,
+        "csc_project": csc_project,
+        "fields": "id,pathname",
+        "limit": 5,
+        "pagination_type": "cursor",
+        "ordering": "id",
+    }
+    res = admin_client.get("/v3/files", params, content_type="application/json")
+    assert res.status_code == 400
+    assert "not allowed for cursor" in res.json()["ordering"]

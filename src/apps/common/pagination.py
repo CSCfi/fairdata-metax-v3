@@ -1,23 +1,17 @@
-from collections import OrderedDict
-
 from django.forms.fields import NullBooleanField
 from django.utils.encoding import force_str
 from django.utils.translation import gettext_lazy as _
-from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.response import Response
+from rest_framework.pagination import LimitOffsetPagination, BasePagination
 
 
-class OffsetPagination(LimitOffsetPagination):
-    default_limit = 20
+class TogglablePaginationMixin(BasePagination):
+    """Pagination mixin that allows disabling pagination with ?pagination=false."""
 
-    # Allow disabling pagination with pagination=false
     pagination_param = "pagination"
     pagination_description = _("Set false to disable pagination.")
 
     # Declare which query parameters are used by pagination so they can be used in validation
     params = {
-        LimitOffsetPagination.limit_query_param,
-        LimitOffsetPagination.offset_query_param,
         pagination_param,
     }
 
@@ -35,21 +29,6 @@ class OffsetPagination(LimitOffsetPagination):
             return None
         return super().paginate_queryset(queryset, request, view)
 
-    def aggregate_queryset(self, queryset):
-        raise NotImplementedError('"aggregate_queryset()" must be implemented.')
-
-    def get_paginated_response(self, data):
-        return Response(
-            OrderedDict(
-                [
-                    ("count", self.count),
-                    ("next", self.get_next_link()),
-                    ("previous", self.get_previous_link()),
-                    ("results", data),
-                ]
-            )
-        )
-
     def get_schema_operation_parameters(self, view):
         parameters = super().get_schema_operation_parameters(view)
         parameters.append(
@@ -64,6 +43,14 @@ class OffsetPagination(LimitOffsetPagination):
         return parameters
 
 
-class DefaultOffsetPagination(OffsetPagination):
-    def aggregate_queryset(self, queryset):
-        return None
+class OffsetPagination(TogglablePaginationMixin, LimitOffsetPagination):
+    """Togglable offset pagination."""
+
+    default_limit = 20
+
+    # Declare which query parameters are used by pagination so they can be used in validation
+    params = {
+        LimitOffsetPagination.limit_query_param,
+        LimitOffsetPagination.offset_query_param,
+        *TogglablePaginationMixin.params,
+    }
