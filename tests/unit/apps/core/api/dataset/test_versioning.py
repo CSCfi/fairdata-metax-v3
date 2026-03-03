@@ -376,9 +376,8 @@ def datasets_in_odd_order(admin_client, dataset_a_json, data_catalog, reference_
 
     return [dataset1, dataset1dft, dataset2, dataset2dft]
 
-def test_dataset_versions_ordering(
-    datasets_in_odd_order, admin_client, user_client
-):
+
+def test_dataset_versions_ordering(datasets_in_odd_order, admin_client, user_client):
     [dataset1, _dataset1dft, _dataset2, _dataset2dft] = datasets_in_odd_order
 
     # Latest version should be first in dataset_versions
@@ -391,28 +390,38 @@ def test_dataset_versions_ordering(
         "Version 1",
     ]
 
+
 def test_dataset_versions_latest_versions_by_state(
     datasets_in_odd_order, admin_client, user_client
 ):
     [_dataset1, _dataset1dft, dataset2, dataset2dft] = datasets_in_odd_order
 
     # Latest published dataset version should be returned even if a change draft exists
-    res = admin_client.get("/v3/datasets?latest_versions=true&state=published", content_type="application/json")
+    res = admin_client.get(
+        "/v3/datasets?latest_versions=true&state=published", content_type="application/json"
+    )
     assert res.data["count"] == 1
     assert res.data["results"][0]["title"]["en"] == "Version 2"
 
     # Latest draft should be returned if there are no later published versions
-    res = admin_client.get("/v3/datasets?latest_versions=true&state=draft", content_type="application/json")
+    res = admin_client.get(
+        "/v3/datasets?latest_versions=true&state=draft", content_type="application/json"
+    )
     assert res.data["count"] == 1
     assert res.data["results"][0]["title"]["en"] == "Version 2 draft"
 
     # Later published version exists -> don't return draft 1
     dataset2dft.delete()
-    res = admin_client.get("/v3/datasets?latest_versions=true&state=draft", content_type="application/json")
+    res = admin_client.get(
+        "/v3/datasets?latest_versions=true&state=draft", content_type="application/json"
+    )
     assert res.data["count"] == 0
 
     # Later published version no longer exists -> return draft 1
+    dataset2.refresh_from_db()  # next_draft has been deleted, reload dataset
     dataset2.delete()
-    res = admin_client.get("/v3/datasets?latest_versions=true&state=draft", content_type="application/json")
+    res = admin_client.get(
+        "/v3/datasets?latest_versions=true&state=draft", content_type="application/json"
+    )
     assert res.data["count"] == 1
     assert res.data["results"][0]["title"]["en"] == "Version 1 draft"

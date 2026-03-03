@@ -211,6 +211,25 @@ def test_delete_draft(admin_client, dataset_a_json, data_catalog, reference_data
     assert not Dataset.all_objects.filter(id=draft["id"]).exists()
 
 
+def test_delete_draft_of(admin_client, dataset_a_json, data_catalog, reference_data):
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    dataset_id = res.data["id"]
+
+    res = admin_client.post(
+        f"/v3/datasets/{dataset_id}/create-draft", dataset_a_json, content_type="application/json"
+    )
+    assert res.status_code == 201
+    draft = res.data
+
+    # Original dataset is soft deleted, next_draft is hard deleted
+    res = admin_client.delete(
+        f"/v3/datasets/{dataset_id}", dataset_a_json, content_type="application/json"
+    )
+    assert Dataset.all_objects.filter(id=dataset_id).exists()
+    assert not Dataset.all_objects.filter(id=draft["id"]).exists()
+
+
 def test_draft_revisions(admin_client, dataset_a_json, data_catalog, reference_data):
     res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 201
@@ -267,7 +286,6 @@ def test_new_draft_publish_revisions(admin_client, dataset_a_json, dataset_signa
     revisions = dataset.all_revisions()
     assert len(revisions) == 2
     assert revisions[0].published_revision == 2
-
 
 
 @pytest.mark.usefixtures("data_catalog", "reference_data")

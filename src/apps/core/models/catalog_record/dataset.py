@@ -873,6 +873,10 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         if self.access_rights:
             self.access_rights.delete(*args, **kwargs)
 
+        # Linked draft should also be deleted if it exists
+        if next_draft := getattr(self, 'next_draft', None):
+            next_draft.delete()
+
         # Soft deletion does not trigger delete signals by default,
         # so we need to send them explicitly here.
         # Set modification timestamp so pre_delete signal
