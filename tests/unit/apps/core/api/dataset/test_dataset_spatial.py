@@ -120,7 +120,7 @@ def test_create_dataset_geolocations_bulk(
                                         [20.0, 59.0],
                                         [20.0, 65.0],
                                         [19.0, 65.0],
-                                        [19.0, 59.0]
+                                        [19.0, 59.0],
                                     ]
                                 ],
                                 [
@@ -129,14 +129,14 @@ def test_create_dataset_geolocations_bulk(
                                         [22.0, 61.0],
                                         [22.0, 62.0],
                                         [21.0, 62.0],
-                                        [21.0, 61.0]
+                                        [21.0, 61.0],
                                     ]
-                                ]
-                            ]
-                        }
+                                ],
+                            ],
+                        },
                     }
-                ]
-            }
+                ],
+            },
         },
         {
             "geographic_name": "Koitajoki",
@@ -167,8 +167,9 @@ def test_create_dataset_geolocations_bulk(
     assert create.call_count == 0
     assert bulk_create.call_count == 2
 
-    assert res.data["spatial"][0]["geolocations"]["features"][0]["geometry"]["type"] == "MultiPolygon"
-
+    assert (
+        res.data["spatial"][0]["geolocations"]["features"][0]["geometry"]["type"] == "MultiPolygon"
+    )
 
 
 def test_remove_dataset_geolocations_bulk(
@@ -334,7 +335,8 @@ def test_remove_dataset_geolocations_bulk(
     assert len(res.data["spatial"][0]["geolocations"]["features"]) == 0
 
 
-def test_create_invalid_dataset_geolocations_bulk(admin_client, dataset_a_json, data_catalog, reference_data, mocker
+def test_create_invalid_dataset_geolocations_bulk(
+    admin_client, dataset_a_json, data_catalog, reference_data, mocker
 ):
     spatials = [
         {
@@ -443,4 +445,57 @@ def test_create_invalid_dataset_geolocations_bulk(admin_client, dataset_a_json, 
 
     assert res.data["spatial"][0]["geolocations"]["features"][0]["geometry"]["type"] == "Polygon"
     assert res.data["spatial"][1]["geolocations"]["features"][0]["geometry"]["type"] == "Point"
-    assert res.data["provenance"][0]["spatial"]["geolocations"]["features"][0]["geometry"]["type"] == "MultiPoint"
+    assert (
+        res.data["provenance"][0]["spatial"]["geolocations"]["features"][0]["geometry"]["type"]
+        == "MultiPoint"
+    )
+
+
+def test_create_dataset_geolocations_copy(
+    admin_client, dataset_a_json, data_catalog, reference_data, mocker
+):
+    spatials = [
+        {
+            "geographic_name": "Alppikylä",
+            "reference": {"url": "http://www.yso.fi/onto/onto/yso/c_9908ce39"},
+            "geolocations": {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [
+                                [
+                                    [19.0, 59.0],
+                                    [20.0, 59.0],
+                                    [20.0, 65.0],
+                                    [19.0, 65.0],
+                                    [19.0, 59.0],
+                                ]
+                            ],
+                        },
+                    }
+                ],
+            },
+        },
+    ]
+    res = admin_client.post(
+        "/v3/datasets",
+        {**dataset_a_json, "spatial": spatials},
+        content_type="application/json",
+    )
+    assert res.status_code == 201
+    dataset_id = res.data["id"]
+
+    res = admin_client.post(
+        f"/v3/datasets/{dataset_id}/new-version", content_type="application/json"
+    )
+    assert res.status_code == 201
+
+    res = admin_client.get("/v3/datasets")
+    assert res.data["count"] == 2
+    d1 = res.data["results"][0]
+    d2 = res.data["results"][1]
+    assert len(d1["spatial"][0]["geolocations"]["features"]) == 1
+    assert len(d2["spatial"][0]["geolocations"]["features"]) == 1

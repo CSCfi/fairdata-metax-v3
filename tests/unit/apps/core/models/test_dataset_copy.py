@@ -117,6 +117,7 @@ def test_dataset_copied_fields():
         "dataset.provenance.is_associated_with.person",
         "dataset.provenance.is_associated_with",
         "dataset.provenance.spatial",
+        "dataset.provenance.spatial.geolocations",
         "dataset.provenance.temporal",
         "dataset.provenance.used_entity",
         "dataset.provenance.variables.concept",
@@ -127,6 +128,7 @@ def test_dataset_copied_fields():
         "dataset.relation",
         "dataset.remote_resources",
         "dataset.spatial",
+        "dataset.spatial.geolocations",
         "dataset.temporal",
     }
 
@@ -183,8 +185,6 @@ def test_dataset_copied_fields():
         "dataset.rems_resources",
         "dataset.sync_status",
         "dataset.index_entries",
-        'dataset.provenance.spatial.geolocations',
-        'dataset.spatial.geolocations',
     }
 
 

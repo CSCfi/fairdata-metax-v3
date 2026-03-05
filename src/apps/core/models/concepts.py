@@ -29,6 +29,7 @@ class GeoType(models.IntegerChoices):
             self.MULTIPOLYGON,
         )
 
+
 class AccessType(ConceptProxyMixin, refdata.AccessType):
     """Accessibility of the resource"""
 
@@ -154,7 +155,7 @@ class Spatial(AbstractBaseModel):
     """
 
     copier = ModelCopier(
-        copied_relations=[], parent_relations=["dataset", "provenance"], bulk=True
+        copied_relations=["geolocations"], parent_relations=["dataset", "provenance"], bulk=True
     )
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -196,7 +197,9 @@ class GeoLocation(AbstractBaseModel):
         spatial: Spatial ForeignKey relation
         geometry: A single geometry that is associated with the spatial/dataset data. Recognized geometries are
         POINT, MULTIPOINT, LINESTRING, MULTILINESTRING, POLYGON and MULTIPOLYGON
-        """
+    """
+
+    copier = ModelCopier(copied_relations=[], parent_relations=["spatial"])
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     spatial = models.ForeignKey(
