@@ -1075,7 +1075,9 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             admin_org_id = self.metadata_owner.admin_organization
             admin_org = admin_org_id and AdminOrganization.objects.filter(id=admin_org_id).first()
             if not (admin_org and admin_org.allow_manual_rems_approval):
-                errors["rems_approval_type"] = "Dataset admin organization does not allow manual REMS approval."
+                errors["rems_approval_type"] = (
+                    "Dataset admin organization does not allow manual REMS approval."
+                )
 
         return errors
 
@@ -1251,7 +1253,8 @@ class Dataset(V2DatasetMixin, CatalogRecord):
 
     def ensure_prefetch(self):
         """Ensure related fields have been prefetched."""
-        if not self.is_prefetched:
+        is_prefetched = self.is_prefetched and getattr(self, "_prefetched_objects_cache", None)
+        if not is_prefetched:
             models.prefetch_related_objects([self], *self.common_prefetch_fields)
             self.is_prefetched = True
 
