@@ -102,6 +102,19 @@ class RestrictionGroundsFactory(factory.django.DjangoModelFactory):
         return f"https://dataset-restriction-grounds-{self}.fi"
 
 
+class SensitivityRationaleFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = refdata.SensitivityRationale
+        django_get_or_create = ("url",)
+
+    pref_label = factory.Dict({"en": factory.Sequence(lambda n: f"restriction-grounds-{n}")})
+    in_scheme = factory.Faker("url")
+
+    @factory.sequence
+    def url(self):
+        return f"https://data-sensitivity-rationale-{self}.fi"
+
+
 class FunderTypeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.FunderType

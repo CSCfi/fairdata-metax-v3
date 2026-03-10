@@ -187,6 +187,10 @@ class RestrictionGrounds(AbstractConcept):
         verbose_name_plural = "restriction grounds"
 
 
+class SensitivityRationale(AbstractConcept):
+    pass
+
+
 class UseCategory(AbstractConcept):
     @classmethod
     def get_model_url(cls) -> str:
@@ -213,6 +217,7 @@ reference_data_models = [
     ResearchInfra,
     ResourceType,
     RestrictionGrounds,
+    SensitivityRationale,
     UseCategory,
 ]
 

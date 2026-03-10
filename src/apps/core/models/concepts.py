@@ -224,5 +224,9 @@ class RestrictionGrounds(ConceptProxyMixin, refdata.RestrictionGrounds):
     """Reason for access restriction."""
 
 
+class SensitivityRationale(ConceptProxyMixin, refdata.SensitivityRationale):
+    """Rationale for marking data as sensitive"""
+
+
 class FunderType(ConceptProxyMixin, refdata.FunderType):
     """Funder type"""

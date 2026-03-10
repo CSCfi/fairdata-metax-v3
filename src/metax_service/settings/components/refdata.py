@@ -112,6 +112,13 @@ LOCAL_REFERENCE_DATA_SOURCES = {
         "source": f"{LOCAL_REF_DATA_DIR}/restriction_grounds.json",
         "scheme": "http://uri.suomi.fi/codelist/fairdata/restriction_grounds",
     },
+    "sensitivity_rationale": {
+        "model": "refdata.SensitivityRationale",
+        "importer": "LocalJSON",
+        "source": f"{LOCAL_REF_DATA_DIR}/sensitivity_rationale.json",
+        # FIXME: does not exist
+        "scheme": "http://uri.suomi.fi/codelist/fairdata/sensitivity_rationale",
+    },
     "use_category": {
         "model": "refdata.UseCategory",
         "importer": "LocalJSON",
