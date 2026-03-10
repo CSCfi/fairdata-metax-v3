@@ -5,10 +5,9 @@
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
 import copy
-import json
 import logging
 from contextlib import contextmanager
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Type
+from typing import Dict, Iterable, Mapping, Type
 from uuid import UUID
 
 from django.core.exceptions import FieldDoesNotExist
@@ -151,6 +150,7 @@ class CommonListSerializer(serializers.ListSerializer):
         """Delete instances, use lazy deleting if enabled."""
         if not instances:
             return
+
         if self.child.lazy:  # Delete at end of deserialization
             lazy_saver = LazyInstanceSaver.get_from_context(self.context)
             for item in instances:
