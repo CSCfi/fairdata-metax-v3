@@ -1,5 +1,6 @@
 import logging
-from typing import List, Optional
+from dataclasses import dataclass
+from typing import Iterator, List, Optional
 from uuid import UUID
 
 from django.conf import settings
@@ -8,7 +9,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import MinLengthValidator
 from django.db import models, transaction
 from django.db.models import prefetch_related_objects
-from django.db.models.signals import pre_delete, post_delete
+from django.db.models.signals import post_delete, pre_delete
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
@@ -23,9 +24,9 @@ from apps.common.helpers import datetime_to_date, normalize_doi
 from apps.common.history import SnapshotHistoricalRecords
 from apps.common.tasks import run_task
 from apps.core.models.access_rights import AccessRights, AccessTypeChoices, REMSApprovalType
-from apps.core.models.catalog_record.dataset_versions import DatasetVersions
 from apps.core.models.catalog_record.dataset_index import DatasetIndexEntry
 from apps.core.models.catalog_record.dataset_permissions import DatasetPermissions
+from apps.core.models.catalog_record.dataset_versions import DatasetVersions
 from apps.core.models.catalog_record.managers import DatasetManager, SoftDeletableDatasetManager
 from apps.core.models.concepts import (
     FieldOfScience,
@@ -68,6 +69,22 @@ class REMSApplicationStatus(models.TextChoices):
     SUBMITTED = "submitted", "Application submitted"
     APPROVED = "approved", "REMS application approved"
     REJECTED = "rejected", "REMS application rejected"
+
+
+@dataclass
+class UserRole:
+    name: str
+    can_read: bool  # Special read, e.g. see email addresses and data
+    can_write: bool
+
+
+class UserRoleChoices(models.TextChoices):
+    CATALOG_ADMIN = "catalog_admin"
+    CSC_PROJECT_MEMBER = "csc_project_member"
+    EDITOR = "editor"
+    METAX_ADMIN = "metax_admin"
+    ORGANIZATION_ADMIN = "organization_admin"
+    OWNER = "owner"
 
 
 class Dataset(V2DatasetMixin, CatalogRecord):
@@ -400,32 +417,36 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             self._saving_legacy = val
         super().__init__(*args, **kwargs)
 
-    def has_permission_to_edit(self, user: MetaxUser) -> bool:
-        """Determine if user has permission to edit dataset."""
-        if user.is_superuser:
-            return True
-        elif not user.is_authenticated:
-            return False
-        elif self.data_catalog and self.data_catalog.can_admin_datasets(user):
-            return True
+    def get_user_roles(self, user: MetaxUser) -> Iterator[UserRole]:
+        """Get user roles and the special permissions the roles give."""
+        if not user.is_authenticated:
+            return
 
-        if self.data_catalog and not self.data_catalog.can_update_datasets(user):
-            return False
-        elif self.metadata_owner and self.metadata_owner.user == user:
-            return True
-        elif (
+        choices = UserRoleChoices
+        if user.is_superuser:
+            yield UserRole(choices.METAX_ADMIN, can_read=True, can_write=True)
+        if self.data_catalog and self.data_catalog.can_admin_datasets(user):
+            yield UserRole(choices.CATALOG_ADMIN, can_read=True, can_write=True)
+
+        can_update = self.data_catalog is None or self.data_catalog.can_update_datasets(user)
+        if self.metadata_owner and self.metadata_owner.user == user:
+            yield UserRole(choices.OWNER, can_read=True, can_write=can_update)
+        if (
             fileset := getattr(self, "file_set", None)
         ) and fileset.storage.csc_project in user.csc_projects:
-            return True
-        elif self.permissions and user in self.permissions.editors.all():
-            return True
-        elif (
+            yield UserRole(choices.CSC_PROJECT_MEMBER, can_read=True, can_write=can_update)
+        if self.permissions and user in self.permissions.editors.all():
+            yield UserRole(choices.EDITOR, can_read=True, can_write=can_update)
+        if (
             self.metadata_owner
             and self.metadata_owner.admin_organization in user.admin_organizations
         ):
-            return True
+            yield UserRole("organization_admin", can_read=True, can_write=can_update)
+        return
 
-        return False
+    def has_permission_to_edit(self, user: MetaxUser) -> bool:
+        """Determine if user has permission to edit dataset."""
+        return any(role.can_write for role in self.get_user_roles(user))
 
     def get_lock_reason(self, user: MetaxUser) -> Optional[str]:
         """Determine if and why user is locked from modifying the dataset."""
@@ -874,7 +895,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             self.access_rights.delete(*args, **kwargs)
 
         # Linked draft should also be deleted if it exists
-        if next_draft := getattr(self, 'next_draft', None):
+        if next_draft := getattr(self, "next_draft", None):
             next_draft.delete()
 
         # Soft deletion does not trigger delete signals by default,

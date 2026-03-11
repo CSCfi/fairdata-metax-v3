@@ -56,6 +56,7 @@ from apps.core.serializers.dataset_serializer import (
     ExpandCatalogQueryParamsSerializer,
     FacetLanguageQueryParamsSerializer,
     ExpandUserQueryParamsSerializer,
+    IncludeDatasetUserRolesQueryParamsSerializer,
     LatestVersionQueryParamsSerializer,
 )
 from apps.core.serializers.legacy_serializer import LegacyDatasetConversionValidationSerializer
@@ -102,6 +103,10 @@ class DatasetViewSet(CommonModelViewSet):
         },
         {
             "class": DatasetAllowedActionsQueryParamsSerializer,
+            "actions": ["retrieve", "list", "create", "update", "partial_update", "revisions"],
+        },
+        {
+            "class": IncludeDatasetUserRolesQueryParamsSerializer,
             "actions": ["retrieve", "list", "create", "update", "partial_update", "revisions"],
         },
         {

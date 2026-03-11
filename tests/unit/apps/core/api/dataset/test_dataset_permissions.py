@@ -5,6 +5,7 @@ import pytest
 from django.conf import settings as django_settings
 from django.core import mail
 from django.test import override_settings
+from apps.users.factories import AdminOrganizationFactory
 from tests.utils import matchers
 
 from apps.core import factories
@@ -271,3 +272,59 @@ def test_dataset_permissions_add_editor_with_message(admin_client, user, user_cl
     )
     assert "Hello world." in msg.body
     assert msg.to == ["teppo@example.com"]
+
+
+def test_dataset_permissions_user_roles(
+    admin_client, user, user_client, dataset_a, requests_mock, admin_organizations
+):
+    # Dataset does not show as owned or shared
+    url = f"/v3/datasets/{dataset_a.dataset_id}?include_user_roles=true&fields=user_roles"
+    res = admin_client.get(url, content_type="application/json")
+    assert res.data["user_roles"] == ["catalog_admin", "metax_admin", "owner"]
+
+    res = user_client.get(url, content_type="application/json")
+    assert res.data["user_roles"] == []
+
+    # Add editor permission
+    data = {"username": "test_user"}
+    res = admin_client.post(
+        f"/v3/datasets/{dataset_a.dataset_id}/permissions/editors",
+        data,
+        content_type="application/json",
+    )
+    assert res.status_code == 201
+
+    # Add csc project to dataset
+    res = admin_client.patch(
+        f"/v3/datasets/{dataset_a.dataset_id}",
+        {"fileset": {"csc_project": "dataset_project", "storage_service": "ida"}},
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+
+    res = user_client.get(url, content_type="application/json")
+    assert res.data["user_roles"] == ["editor"]
+
+    # Add csc project for user
+    user.csc_projects = ["dataset_project"]
+    user.save()
+    res = user_client.get(url, content_type="application/json")
+    assert res.data["user_roles"] == ["csc_project_member", "editor"]
+
+    # Add admin_organization managed by user to dataset
+    AdminOrganizationFactory(id="admin.org")
+    res = admin_client.patch(
+        f"/v3/datasets/{dataset_a.dataset_id}",
+        {
+            "metadata_owner": {
+                "user": "admin",
+                "organization": "org",
+                "admin_organization": "admin.org",
+            }
+        },
+        content_type="application/json",
+    )
+    assert res.status_code == 200, res.data
+
+    res = user_client.get(url, content_type="application/json")
+    assert res.data["user_roles"] == ["csc_project_member", "editor", "organization_admin"]

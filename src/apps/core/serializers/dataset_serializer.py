@@ -47,6 +47,7 @@ from apps.core.serializers.data_catalog_serializer import DataCatalogModelSerial
 from apps.core.serializers.dataset_actor_serializers import DatasetActorSerializer
 from apps.core.serializers.dataset_allowed_actions import DatasetAllowedActionsSerializer
 from apps.core.serializers.dataset_metrics_serializer import DatasetMetricsSerializer
+from apps.core.serializers.dataset_user_roles import DatasetUserRolesSerializer
 from apps.core.serializers.metadata_provider_serializer import MetadataProviderModelSerializer
 from apps.core.serializers.preservation_serializers import PreservationModelSerializer
 from apps.core.serializers.project_serializer import ProjectModelSerializer
@@ -137,6 +138,13 @@ class DatasetListSerializer(CommonListSerializer):
         return super().to_representation(data)
 
 
+class IncludeDatasetUserRolesQueryParamsSerializer(serializers.Serializer):
+    include_user_roles = serializers.BooleanField(
+        default=False,
+        help_text="Enable to include user roles in the response.",
+    )
+
+
 class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
     metadata_repository = ConstantField(value="Fairdata")
     access_rights = AccessRightsModelSerializer(required=False, allow_null=True, many=False)
@@ -157,6 +165,7 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
     projects = ProjectModelSerializer(required=False, many=True)
     dataset_versions = serializers.SerializerMethodField()
     allowed_actions = DatasetAllowedActionsSerializer(read_only=True, source="*")
+    user_roles = DatasetUserRolesSerializer(read_only=True, source="*")
     created = serializers.DateTimeField(required=False, read_only=False)
     modified = serializers.DateTimeField(required=False, read_only=False)
     next_draft = LinkedDraftSerializer(read_only=True)
@@ -257,6 +266,8 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
             fields.pop("allowed_actions", None)
         if not query_params.get("include_metrics"):
             fields.pop("metrics", None)
+        if not query_params.get("include_user_roles"):
+            fields.pop("user_roles", None)
         return fields
 
     def save(self, **kwargs):
@@ -391,6 +402,7 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
                     "state",
                     "temporal",
                     "theme",
+                    "user_roles",
                     "title",
                     "version",
                 },
@@ -421,6 +433,7 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
             "api_version",
             "metadata_repository",
             "metrics",
+            "user_roles",
         )
         fields = (
             "id",  # read only
@@ -679,8 +692,8 @@ class DatasetFieldsQueryParamsSerializer(serializers.Serializer):
         child=serializers.ChoiceField(
             choices=sorted(
                 list(DatasetSerializer().get_fields())
-                # Add fields that are not enavbled in get_fields by default
-                + ["allowed_actions", "metrics"]
+                # Add fields that are not enabled in get_fields by default
+                + ["allowed_actions", "metrics", "user_roles"]
             )
         ),
         help_text=_("Filter specific fields of the dataset."),

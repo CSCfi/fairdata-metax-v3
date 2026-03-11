@@ -176,7 +176,6 @@ class LegacyDatasetUpdateSerializer(CommonNestedModelSerializer):
     preservation = LegacyPreservationSerializer(required=False, many=False)
     provenance = ProvenanceModelSerializer(required=False, many=True)
     projects = ProjectModelSerializer(required=False, many=True)
-    allowed_actions = DatasetAllowedActionsSerializer(read_only=True, source="*")
     created = serializers.DateTimeField(required=False, read_only=False)
     modified = serializers.DateTimeField(required=False, read_only=False)
     removed = serializers.DateTimeField(required=False, read_only=False, allow_null=True)
@@ -213,6 +212,8 @@ class LegacyDatasetUpdateSerializer(CommonNestedModelSerializer):
                 "metrics",  # field is not writable
                 "fileset",  # assigned directly in LegacyDataset
                 "version",  # field is not writable
+                "allowed_actions",  # field is not writable
+                "user_roles",  # field is not writable
             ]
         ] + nonpublic_fields
 
