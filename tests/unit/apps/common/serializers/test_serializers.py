@@ -5,7 +5,8 @@ from django.db import transaction
 from rest_framework import serializers
 
 from apps.common.serializers import CommonModelSerializer
-from apps.core.factories import DatasetFactory
+from apps.common.serializers.serializers import CommonListSerializer, CommonNestedModelSerializer
+from apps.core.factories import DatasetFactory, MetadataProviderFactory
 from apps.core.models import AccessRights, Dataset
 from apps.core.models.concepts import Spatial
 from apps.core.serializers import DatasetSerializer, SpatialModelSerializer
@@ -85,7 +86,7 @@ def test_nested_serializer_bulk_upsert(admin_user, location_reference_data, mock
                                         [20.0, 59.0],
                                         [20.0, 65.0],
                                         [19.0, 65.0],
-                                        [19.0, 59.0]
+                                        [19.0, 59.0],
                                     ]
                                 ],
                                 [
@@ -196,3 +197,75 @@ def test_nested_serializer_strict():
         context={"strict": False},
     )
     assert serializer.is_valid() is True
+
+
+@pytest.mark.django_db()
+def test_nested_serializer_self_source():
+    """Test nested serializers with source="*"."""
+
+    # Forward relation Dataset->AccessRights
+    class AccessRightsSerializer(CommonModelSerializer):
+        class Meta:
+            model = AccessRights
+            fields = ["description"]
+
+    # Reverse relation Spatial->Dataset
+    class SpatialSerializer(CommonModelSerializer):
+        class Meta:
+            model = Spatial
+            list_serializer_class = CommonListSerializer
+            fields = ["geographic_name"]
+
+    # Represent dataset fields in nested "research_dataset" object
+    class ResearchDatasetSerializer(CommonNestedModelSerializer):
+        access_rights = AccessRightsSerializer()
+        spatial = SpatialSerializer(many=True)
+
+        class Meta:
+            model = Dataset
+            fields = ["title", "access_rights", "spatial"]
+
+    class DatasetSerializer(CommonNestedModelSerializer):
+        research_dataset = ResearchDatasetSerializer(source="*")
+
+        class Meta:
+            model = Dataset
+            fields = [
+                "research_dataset",
+                "metadata_owner",  # Metadata owner is required by dataset, use primary key here
+            ]
+
+    # Create datasets, check that related objects get created
+    provider = MetadataProviderFactory()
+    data = {
+        "research_dataset": {
+            "title": {"en": "dataset title"},
+            "access_rights": {"description": {"en": "access rights description"}},
+            "spatial": [{"geographic_name": "Some location"}],
+        },
+        "metadata_owner": str(provider.id),
+    }
+    serializer = DatasetSerializer(data=data)
+    serializer.is_valid(raise_exception=True)
+    dataset = serializer.save()
+    dataset.refresh_from_db()
+    assert dataset.title == {"en": "dataset title"}
+    assert dataset.access_rights.description == {"en": "access rights description"}
+    assert list(dataset.spatial.values_list("geographic_name", flat=True)) == ["Some location"]
+
+    # Update dataset fields, check that relations get updated
+    data = {
+        "research_dataset": {
+            "title": {"en": "updated dataset title"},
+            "access_rights": {"description": {"en": "updated access rights description"}},
+            "spatial": [{"geographic_name": "Updated location"}],
+        },
+        "metadata_owner": str(provider.id),
+    }
+    serializer = DatasetSerializer(data=data, instance=dataset)
+    serializer.is_valid(raise_exception=True)
+    dataset = serializer.save()
+    dataset.refresh_from_db()
+    assert dataset.title == {"en": "updated dataset title"}
+    assert dataset.access_rights.description == {"en": "updated access rights description"}
+    assert list(dataset.spatial.values_list("geographic_name", flat=True)) == ["Updated location"]

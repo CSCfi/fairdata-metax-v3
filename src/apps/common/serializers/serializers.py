@@ -466,11 +466,16 @@ class NestedModelSerializer(LazyableModelSerializer):
         self.reverse_serializers = {}
         self.many_serializers = {}
         self.lazy_serializers = {}
+        self.self_serializers = {}
 
         for name, field in self.fields.items():
             actual_field = getattr(field, "child", None) or field
             if getattr(actual_field, "lazy", False):
                 self.lazy_serializers[name] = field
+
+            if field.source == "*":
+                self.self_serializers[name] = field
+                continue
 
             is_nested_serializer = (
                 isinstance(field, serializers.BaseSerializer)
@@ -632,7 +637,8 @@ class NestedModelSerializer(LazyableModelSerializer):
             if serializer.source in validated_data
         }
 
-    def create(self, validated_data):
+    def handle_pre_create_relations(self, validated_data) -> tuple[dict, dict]:
+        """Create relations that don't need the parent instance to exist."""
         self.collect_relation_info()
         self.check_lazy_transaction()
         if self.parent is None:  # Root serializer handles lazy save
@@ -645,8 +651,19 @@ class NestedModelSerializer(LazyableModelSerializer):
             self.forward_serializers, instance=None, related_data=related_data
         )
 
-        # Create instance, assign forward one-to-one and many-to-one relations
-        instance = super().create(validated_data={**validated_data, **forward_instances})
+        # Handle relations for nested serializers with source="*"
+        for serializer in self.self_serializers.values():
+            if handle_pre_create_relations := getattr(
+                serializer, "handle_pre_create_relations", None
+            ):
+                _related_data, _forward_instances = handle_pre_create_relations(validated_data)
+                related_data.update(_related_data)
+                forward_instances.update(_forward_instances)
+
+        return related_data, forward_instances
+
+    def handle_post_create_relations(self, instance, related_data):
+        """Create relations that need the parent instance to exist."""
 
         # Create reverse related objects
         self.create_related(self.reverse_serializers, instance=instance, related_data=related_data)
@@ -668,11 +685,26 @@ class NestedModelSerializer(LazyableModelSerializer):
                 instance_field = getattr(instance, source)
                 instance_field.set(related_instance)
 
+        # Handle relations for nested serializers with source="*"
+        for serializer in self.self_serializers.values():
+            if handle_post_create_relations := getattr(
+                serializer, "handle_post_create_relations", None
+            ):
+                handle_post_create_relations(instance, related_data)
+
+    def create(self, validated_data):
+        related_data, forward_instances = self.handle_pre_create_relations(validated_data)
+
+        # Create instance, assign forward one-to-one and many-to-one relations
+        instance = super().create(validated_data={**validated_data, **forward_instances})
+
+        self.handle_post_create_relations(instance, related_data)
         if self.parent is None:  # Root serializer handles lazy save
             LazyInstanceSaver.get_from_context(self.context).save()
         return instance
 
-    def update(self, instance, validated_data):
+    def handle_update_relations(self, instance, validated_data):
+        """Update related instances and assign relations."""
         self.collect_relation_info()
         self.check_lazy_transaction()
         if self.parent is None:  # Root serializer handles lazy save
@@ -698,6 +730,15 @@ class NestedModelSerializer(LazyableModelSerializer):
             if is_many_to_many:
                 instance_field = getattr(instance, source)
                 instance_field.set(related_instance)
+
+        # Handle relations for nested serializers with source="*"
+        for serializer in self.self_serializers.values():
+            if handle_update_relations := getattr(serializer, "handle_update_relations", None):
+                forward_instances.update(handle_update_relations(instance, validated_data))
+        return forward_instances
+
+    def update(self, instance, validated_data):
+        forward_instances = self.handle_update_relations(instance, validated_data)
 
         # Update instance, assign forward one-to-one and many-to-one relations
         instance = super().update(
