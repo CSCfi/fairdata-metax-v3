@@ -1,8 +1,11 @@
 import logging
-import time
 import os
+import time
+from urllib.parse import urlparse
 
 from environs import Env
+
+from apps.common.context import ctx_request
 
 env = Env()
 
@@ -12,12 +15,51 @@ env = Env()
 # https://docs.djangoproject.com/en/dev/ref/settings/#logging
 # See https://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.
-class DateTimeZFormatter(logging.Formatter):
-    """Log formatter with datetime with milliseconds and Z timezone."""
+
+
+class LogFormatter(logging.Formatter):
+    """Custom log formatter.
+
+    Includes:
+    - Timestamp as datetime with milliseconds and Z timezone.
+    - Additional 'source' attribute for determining what made the request.
+    """
 
     default_time_format = "%Y-%m-%d %H:%M:%S"
     default_msec_format = "%s.%03dZ"
     converter = time.gmtime
+
+    def get_special_user(self, request) -> str:
+        if user := getattr(request, "user", None):
+            is_service = any(g.name == "service" for g in user.groups.all())
+            if is_service or user.is_staff or user.is_superuser:
+                return request.user.username
+        return ""
+
+    def get_request_origin_host(self, request) -> str:
+        """Return host from request origin headers."""
+        try:
+            origin = request.headers.get("origin", "")
+            return urlparse(origin).netloc
+        except Exception:
+            return ""
+
+    def get_source(self) -> str:
+        """Return source of request.
+
+        For special users (service, staff, admin) return username.
+        For cross-origin requests, return host.
+        """
+        if request := ctx_request.get():
+            if special_user := self.get_special_user(request):
+                return special_user
+            elif origin := self.get_request_origin_host(request):
+                return origin
+        return "-"
+
+    def format(self, record):
+        record.source = self.get_source()
+        return super().format(record)
 
 
 LOGGING = {
@@ -25,12 +67,12 @@ LOGGING = {
     "disable_existing_loggers": False,
     "formatters": {
         "verbose": {
-            "class": "metax_service.settings.components.logging.DateTimeZFormatter",
-            "format": "%(asctime)s p%(process)d %(name)s %(levelname)s: %(message)s",
+            "class": "metax_service.settings.components.logging.LogFormatter",
+            "format": "%(asctime)s p%(process)d %(source)s %(name)s %(levelname)s: %(message)s",
         },
         "simple": {
-            "class": "metax_service.settings.components.logging.DateTimeZFormatter",
-            "format": "{levelname} {asctime} {module} {message}",
+            "class": "metax_service.settings.components.logging.LogFormatter",
+            "format": "{levelname} {source} {asctime} {module} {message}",
             "style": "{",
         },
     },

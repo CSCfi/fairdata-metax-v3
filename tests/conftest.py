@@ -186,6 +186,7 @@ def appsupport_user():
         last_name="Support",
         email="appsupport@example.com",
         is_hidden=False,
+        is_staff=True,
         admin_organizations=[],
     )
     _group, _ = Group.objects.get_or_create(name="appsupport")
