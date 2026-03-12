@@ -219,8 +219,10 @@ class DatasetViewSet(CommonModelViewSet):
         )
 
     def get_queryset(self, only_published=False):
-        include_all_datasets = self.query_params.get("include_removed") or self.query_params.get(
-            "flush"
+        include_all_datasets = (
+            self.query_params.get("include_removed")
+            or self.query_params.get("flush")
+            or self.action == "restore"
         )
         qs: QuerySet
         if include_all_datasets:
@@ -392,6 +394,16 @@ class DatasetViewSet(CommonModelViewSet):
         published_dataset = dataset.publish()
         data = self.get_serializer(published_dataset).data
         published_dataset.signal_update()
+        return response.Response(data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["post"])
+    def restore(self, request, pk=None):
+        """Restore a deleted dataset."""
+        dataset: Dataset = self.get_object()
+        dataset.removed = None
+        dataset.save()
+        dataset.signal_update()
+        data = self.get_serializer(dataset).data
         return response.Response(data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(

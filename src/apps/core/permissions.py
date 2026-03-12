@@ -17,6 +17,7 @@ class DatasetAccessPolicy(BaseAccessPolicy):
                 "new_version",
                 "create_draft",
                 "publish",
+                "restore",
             ],
             "principal": "authenticated",
             "effect": "allow",

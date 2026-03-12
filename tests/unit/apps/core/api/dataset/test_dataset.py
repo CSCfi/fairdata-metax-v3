@@ -114,6 +114,28 @@ def test_get_removed_dataset(admin_client, dataset_a_json, data_catalog, referen
     assert_nested_subdict(dataset_a_json, res5.data, ignore=["generate_pid_on_publish"])
 
 
+@pytest.mark.usefixtures("data_catalog", "reference_data")
+def test_restore_dataset(admin_client, user_client, dataset_a_json, dataset_signal_handlers):
+    # Create dataset and soft delete it
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    dataset_id = res.data["id"]
+    res = admin_client.delete(f"/v3/datasets/{dataset_id}", content_type="application/json")
+    assert res.status_code == 204
+    assert Dataset.all_objects.get(id=dataset_id).removed
+    dataset_signal_handlers.reset()
+
+    # Test restoring with wrong user
+    res = user_client.post(f"/v3/datasets/{dataset_id}/restore", content_type="application/json")
+    assert res.status_code == 403
+
+    # Test restoring
+    res = admin_client.post(f"/v3/datasets/{dataset_id}/restore", content_type="application/json")
+    assert res.status_code == 200
+    dataset_signal_handlers.assert_call_counts(created=0, updated=1)
+    assert not Dataset.all_objects.get(id=dataset_id).removed
+
+
 def test_list_datasets_with_default_pagination(admin_client, dataset_a, dataset_b):
     res = admin_client.get(reverse("dataset-list"))
     assert res.status_code == 200
@@ -853,9 +875,7 @@ def test_omit_owner_user_when_no_edit_access(
     assert "user" not in res.data["metadata_owner"]
 
 
-def test_expand_user_with_edit_access(
-    user_client, dataset_a_json, data_catalog, reference_data
-):
+def test_expand_user_with_edit_access(user_client, dataset_a_json, data_catalog, reference_data):
     """With expand_user=true and edit access, metadata_owner.user is expanded with user details."""
     res = user_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
     assert res.status_code == 201
