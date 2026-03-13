@@ -144,3 +144,18 @@ def test_contract_set_sensitive_data(pas_client, contract_a):
 
     assert resp.data["data_sensitivity"]["is_sensitive"] is False
     assert not resp.data["data_sensitivity"]["rationales"]
+
+
+def test_contract_hide_sensitivity_from_nonpas(pas_client, ida_client, user_client, contract_a):
+    contract_id = contract_a.json()["id"]
+
+    # 'data_sensitivity' field visible for PAS service user
+    resp = pas_client.get(f"/v3/contracts/{contract_id}")
+    assert "validity" in resp.data
+    assert "data_sensitivity" in resp.data
+
+    # 'data_sensitivity' hidden for other users
+    for client in [ida_client, user_client]:
+        resp = client.get(f"/v3/contracts/{contract_id}")
+        assert "validity" in resp.data
+        assert "data_sensitivity" not in resp.data

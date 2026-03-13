@@ -13,6 +13,7 @@ from apps.common.serializers.serializers import (
 from apps.core.models import Contract
 from apps.core.models.contract import ContractContact, ContractService, ContractSensitivityRationale
 from apps.core.models.concepts import SensitivityRationale
+from apps.users.models import MetaxUser
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +73,7 @@ class ContractDataSensitivitySerializer(CommonNestedModelSerializer):
 
     rationales = ContractSensitivityRationaleSerializer(many=True, min_length=0)
 
+
     class Meta:
         model = Contract
         fields = ("is_sensitive", "rationales")
@@ -119,6 +121,37 @@ class ContractModelSerializer(CommonNestedModelSerializer):
         extra_kwargs = {
             "removed": {"read_only": True},
         }
+
+    def has_permission_to_view_sensitivity(self, user: MetaxUser) -> bool:
+        """
+        Determine if user has permission to view data sensitivity information
+        """
+        if user.is_superuser:
+            return True
+        if not user.is_authenticated:
+            return False
+
+        return any(
+            group.name == "pas" for group in user.groups.all()
+        )
+
+    def to_representation(self, instance: Contract):
+        result = super().to_representation(instance)
+
+        include_hidden_fields = self.context.get("include_hidden_fields")
+
+        # If 'include_hidden_fields' is not provided explicitly, check
+        # user permissions to determine field visibility.
+        if include_hidden_fields is None:
+            user = self.context["request"].user
+
+            # Hide 'data_sensitivity' field for non-PAS users
+            include_hidden_fields = self.has_permission_to_view_sensitivity(user)
+
+        if not include_hidden_fields:
+            result.pop("data_sensitivity", None)
+
+        return result
 
     def update(self, instance, validated_data):
         if "id" in validated_data and validated_data["id"] != instance.id:

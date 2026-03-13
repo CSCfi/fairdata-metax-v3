@@ -37,7 +37,7 @@ class ContractViewSet(CommonModelViewSet):
     @action(detail=False, methods=["post"], url_path="from-legacy")
     def from_legacy(self, request):
         contract, created = Contract.create_or_update_from_legacy(request.data)
-        rep = ContractModelSerializer(instance=contract).data
+        rep = ContractModelSerializer(instance=contract, context={"request": request}).data
         return Response(rep, status=201 if created else 200)
 
     def perform_create(self, serializer):

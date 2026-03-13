@@ -131,7 +131,9 @@ class Contract(SystemCreatorBaseModel, CustomSoftDeletableModel):
     def create_or_update_from_legacy(cls, legacy_contract: dict) -> Tuple["Contract", bool]:
         from apps.core.serializers.contract_serializers import LegacyContractSerializer
 
-        serializer = LegacyContractSerializer(data=legacy_contract)
+        serializer = LegacyContractSerializer(
+            data=legacy_contract, context={"include_hidden_fields": False}
+        )
         serializer.is_valid(raise_exception=True)
         existing = Contract.all_objects.filter(
             legacy_id=serializer.validated_data.get("legacy_id")
@@ -142,7 +144,9 @@ class Contract(SystemCreatorBaseModel, CustomSoftDeletableModel):
     def to_legacy(self) -> dict:
         from apps.core.serializers.contract_serializers import LegacyContractSerializer
 
-        serializer = LegacyContractSerializer(instance=self)
+        serializer = LegacyContractSerializer(
+            instance=self, context={"include_hidden_fields": False}
+        )
         return serializer.data
 
     def signal_sync(self):
