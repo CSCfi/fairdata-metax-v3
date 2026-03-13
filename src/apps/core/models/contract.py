@@ -10,6 +10,7 @@ from simple_history.models import HistoricalRecords
 from apps.common.helpers import single_translation
 from apps.common.models import CustomSoftDeletableModel, SystemCreatorBaseModel
 from apps.common.serializers.fields import MultiLanguageField
+from apps.refdata.models import SensitivityRationale
 
 
 class ContractContact(models.Model):
@@ -50,6 +51,19 @@ class ContractService(models.Model):
         ordering = ["name", "identifier"]
 
 
+class ContractSensitivityRationale(models.Model):
+    id = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)
+
+    rationale = models.ForeignKey(SensitivityRationale, on_delete=models.CASCADE)
+    expiration_date = models.DateField(blank=True, null=True)
+    contract = models.ForeignKey(
+        "Contract", related_name="rationales", on_delete=models.CASCADE
+    )
+
+    class Meta:
+        ordering = ["-expiration_date"]
+
+
 class Contract(SystemCreatorBaseModel, CustomSoftDeletableModel):
     """Preservation contract.
 
@@ -72,6 +86,9 @@ class Contract(SystemCreatorBaseModel, CustomSoftDeletableModel):
        validity_start_date       http://iow.csc.fi/ns/jhs#alkamispaivamaara
        validity_end_date         http://iow.csc.fi/ns/jhs#paattymispaivamaara
 
+    DataSensitivity attributes:
+       is_sensitive
+       rationales (one-to-many)
     """
 
     id = models.CharField(max_length=64, primary_key=True, editable=False)
@@ -92,6 +109,8 @@ class Contract(SystemCreatorBaseModel, CustomSoftDeletableModel):
     # Validity
     validity_start_date = models.DateField()
     validity_end_date = models.DateField(blank=True, null=True)
+
+    is_sensitive = models.BooleanField(default=False)
 
     # Internal modification timestamps
     record_created = AutoCreatedField(_("created"))
