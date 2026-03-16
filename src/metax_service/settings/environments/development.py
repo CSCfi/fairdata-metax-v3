@@ -1,3 +1,5 @@
+import contextlib
+
 from rest_framework import serializers
 
 from metax_service.settings.components.base import (
@@ -66,6 +68,11 @@ if ENABLE_DEBUG_TOOLBAR:
 if ENABLE_SILK_PROFILER:
     INSTALLED_APPS = INSTALLED_APPS + SILK_APP
     MIDDLEWARE = SILK_MIDDLEWARE + MIDDLEWARE
+
+with contextlib.suppress(ValueError):
+    # Remove 'SameOriginCookiesMiddleware' in local test environments, where
+    # SSO won't be used anyway.
+    MIDDLEWARE.remove("apps.users.middleware.SameOriginCookiesMiddleware")
 
 SILKY_DYNAMIC_PROFILING = [
     {"module": "apps.core.views.dataset_view", "function": "DatasetViewSet.list"}
