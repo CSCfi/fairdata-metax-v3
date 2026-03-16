@@ -1,5 +1,6 @@
 import pytest
 
+from apps.core.factories import SensitivityRationaleFactory
 from apps.core.models import Contract
 
 pytestmark = [pytest.mark.django_db, pytest.mark.contract]
@@ -92,3 +93,54 @@ def test_contract_from_legacy_permissions(user_client, legacy_contract_json):
         "/v3/contracts/from-legacy", legacy_contract_json, content_type="application/json"
     )
     assert resp.status_code == 403
+
+
+def test_contract_set_sensitive_data(pas_client, contract_a):
+    contract_id = contract_a.json()["id"]
+
+    rationale = SensitivityRationaleFactory()
+    rationale2 = SensitivityRationaleFactory()
+
+    resp = pas_client.patch(
+        f"/v3/contracts/{contract_id}?include_nulls=True",
+        {
+            "data_sensitivity": {
+                "is_sensitive": True,
+                "rationales": [
+                    {
+                        "rationale": {"url": rationale.url}
+                    },
+                    {
+                        "rationale": {"url": rationale2.url},
+                        "expiration_date": "2027-01-01"
+                    }
+                ]
+            }
+        },
+        content_type="application/json"
+    )
+
+    assert resp.status_code == 200
+
+    assert resp.data["data_sensitivity"]["is_sensitive"] is True
+    assert len(resp.data["data_sensitivity"]["rationales"]) == 2
+    rationales = resp.data["data_sensitivity"]["rationales"]
+
+    assert rationales[0]["rationale"]["url"] == rationale.url
+    assert rationales[0]["expiration_date"] is None
+
+    assert rationales[1]["rationale"]["url"] == rationale2.url
+    assert rationales[1]["expiration_date"] == "2027-01-01"
+
+    resp = pas_client.patch(
+        f"/v3/contracts/{contract_id}",
+        {
+            "data_sensitivity": {"is_sensitive": False, "rationales": []}
+        },
+        content_type="application/json"
+    )
+
+    assert resp.status_code == 200
+
+    assert resp.data["data_sensitivity"]["is_sensitive"] is False
+    assert not resp.data["data_sensitivity"]["rationales"]

@@ -11,7 +11,8 @@ from apps.common.serializers.serializers import (
     CommonNestedModelSerializer,
 )
 from apps.core.models import Contract
-from apps.core.models.contract import ContractContact, ContractService
+from apps.core.models.contract import ContractContact, ContractService, ContractSensitivityRationale
+from apps.core.models.concepts import SensitivityRationale
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +58,25 @@ class ContractValiditySerializer(CommonModelSerializer):
         }
 
 
+class ContractSensitivityRationaleSerializer(CommonModelSerializer):
+    rationale = SensitivityRationale.get_serializer_field(required=True)
+
+    class Meta:
+        list_serializer_class = CommonListSerializer
+        model = ContractSensitivityRationale
+        fields = ("id", "rationale", "expiration_date")
+
+
+class ContractDataSensitivitySerializer(CommonNestedModelSerializer):
+    """Contract data sensitivity serializer."""
+
+    rationales = ContractSensitivityRationaleSerializer(many=True, min_length=0)
+
+    class Meta:
+        model = Contract
+        fields = ("is_sensitive", "rationales")
+
+
 class ContractModelSerializer(CommonNestedModelSerializer):
     """Model serializer for Contract"""
 
@@ -72,6 +92,9 @@ class ContractModelSerializer(CommonNestedModelSerializer):
     # One-to-one objects included in the contract model
     organization = ContractOrganizationSerializer(source="*")
     validity = ContractValiditySerializer(source="*")
+    data_sensitivity = ContractDataSensitivitySerializer(
+        source="*", required=False
+    )
 
     # To-many relations
     contact = ContractContactSerializer(many=True, min_length=1)
@@ -90,6 +113,7 @@ class ContractModelSerializer(CommonNestedModelSerializer):
             "validity",
             "contact",
             "related_service",
+            "data_sensitivity",
             "removed",
         )
         extra_kwargs = {
