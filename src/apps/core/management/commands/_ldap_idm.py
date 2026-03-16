@@ -50,6 +50,8 @@ class LdapIdm:
         project = self.get_project_by_id(project_id)
         if project is None:
             return
+        if len(project["attributes"]["CSCPrjPriResp"]) == 0:
+            return
         user_dn = project["attributes"]["CSCPrjPriResp"][0]
         user = self.get_user_service_profile(user_dn, project_id)
         if user is None:

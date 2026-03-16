@@ -410,6 +410,42 @@ class TestLdapIdm:
     )
     @patch("apps.core.management.commands._ldap_idm.Server")
     @patch("apps.core.management.commands._ldap_idm.Connection")
+    def test_check_admin_org_mismatch_empty_primary_responsible(
+        self, mock_connection_class, mock_server_class
+    ):
+        """Test check_admin_org_mismatch when CSCPrjPriResp is an empty list."""
+        # Setup mocks
+        mock_server = Mock()
+        mock_server_class.return_value = mock_server
+
+        mock_conn = Mock()
+        mock_connection_class.return_value = mock_conn
+
+        # Mock project with empty CSCPrjPriResp
+        project_data = {"attributes": {"CSCPrjPriResp": []}}
+        mock_conn.search.return_value = (True, [1], [project_data], None)
+
+        # Create LdapIdm instance
+        ldap_idm = LdapIdm()
+
+        # Test check_admin_org_mismatch
+        project_id = "2001479"
+        result = ldap_idm.check_admin_org_mismatch(project_id)
+
+        # Should return None when CSCPrjPriResp is empty
+        assert result is None
+
+    @patch.dict(
+        os.environ,
+        {
+            "LDAP_HOST": "test.ldap.com",
+            "LDAP_PORT": "636",
+            "LDAP_BIND_DN": "cn=admin,dc=test,dc=com",
+            "LDAP_PASSWORD": "testpassword",
+        },
+    )
+    @patch("apps.core.management.commands._ldap_idm.Server")
+    @patch("apps.core.management.commands._ldap_idm.Connection")
     def test_check_admin_org_mismatch_user_not_found(
         self, mock_connection_class, mock_server_class
     ):
