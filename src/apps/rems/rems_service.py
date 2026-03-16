@@ -496,17 +496,19 @@ class REMSService:
 
     def get_dataset_localizations(self, dataset: "Dataset"):
         """Get localizations for dataset."""
-        # TODO: Handle missing en?
         localizations = {}
-        localizations["en"] = {
-            "title": dataset.title.get("en"),
-            "infourl": f"https://{settings.ETSIN_URL}/dataset/{dataset.id}",
-        }
-        if dataset.title.get("fi"):
-            localizations["fi"] = {
-                "title": dataset.title.get("fi"),
+        for lang in ["en", "fi", "sv"]:
+            if dataset.title.get(lang):
+                localizations[lang] = {
+                    "title": dataset.title.get(lang),
+                    "infourl": f"https://{settings.ETSIN_URL}/dataset/{dataset.id}",
+                }
+        if not localizations:
+            localizations["en"] = {
+                "title": single_translation(dataset.title),
                 "infourl": f"https://{settings.ETSIN_URL}/dataset/{dataset.id}",
             }
+
         return localizations
 
     def get_dataset(self, dataset: "Dataset") -> Optional[REMSCatalogueItem]:

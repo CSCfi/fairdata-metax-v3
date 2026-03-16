@@ -56,6 +56,20 @@ def test_publish_rems_dataset(
     assert dataset.rems_id == item.rems_id
 
 
+def test_publish_rems_dataset_missing_languages(
+    mock_rems, admin_client, rems_dataset_json, data_catalog, reference_data
+):
+    rems_dataset_json["title"] = {"und": "Dataset in undefined language"}
+    res = admin_client.post("/v3/datasets", rems_dataset_json, content_type="application/json")
+    assert res.status_code == 201
+    dataset = Dataset.objects.get(id=res.data["id"])
+    assert dataset.rems_publish_error is None
+    assert dataset.rems_status == REMSStatus.PUBLISHED
+
+    item = mock_rems.entities["catalogue-item"][1]
+    assert item["localizations"]["en"]["title"] == "Dataset in undefined language"
+
+
 def test_rems_dataset_missing_approval_type(
     mock_rems, admin_client, rems_dataset_json, data_catalog, reference_data
 ):
