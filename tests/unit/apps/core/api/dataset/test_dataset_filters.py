@@ -2,6 +2,8 @@ import datetime
 import logging
 
 import pytest
+from django.contrib.auth.models import AnonymousUser
+from django.test import RequestFactory
 from django.utils.http import http_date
 from apps.core.models.catalog_record.related import DatasetActor
 from apps.core.views.dataset_filters import DatasetFilter
@@ -303,6 +305,47 @@ def test_owned_dataset(
     assert res.data["results"][0]["id"] == dataset_id
 
 
+def test_exclude_owned_or_shared(
+    admin_client,
+    admin_org_user,
+    admin_org_user_client,
+    dataset_with_admin_org,
+    dataset_a_json,
+    data_catalog,
+    reference_data,
+):
+    """Datasets where user is owner/editor/csc member are excluded, admin_organization-only kept."""
+    # Create a dataset owned by admin_org_user
+    dataset_a_json["metadata_owner"] = {
+        "user": "admin_org_user",
+        "organization": "test_organization",
+        "admin_organization": "test_org",
+    }
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201, res.data
+    owned_dataset_id = res.data["id"]
+
+    # Sanity check: without the filter, both datasets are visible
+    res = admin_org_user_client.get(
+        "/v3/datasets?pagination=false",
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    all_ids = {d["id"] for d in res.data}
+    assert owned_dataset_id in all_ids
+    assert dataset_with_admin_org["id"] in all_ids
+
+    # With exclude_owned_or_shared=true, dataset where user is owner should be excluded
+    res = admin_org_user_client.get(
+        "/v3/datasets?exclude_owned_or_shared=true&pagination=false",
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    filtered_ids = {d["id"] for d in res.data}
+    assert owned_dataset_id not in filtered_ids
+    assert filtered_ids == {dataset_with_admin_org["id"]}
+
+
 def test_filter_by_storage_service(admin_client, ida_dataset, ida_dataset_other, pas_dataset):
     res = admin_client.get(
         "/v3/datasets?storage_services=ida&pagination=false", content_type="application/json"
@@ -516,3 +559,29 @@ def test_filter_by_empty_values(admin_client):
 
     resp = admin_client.get("/v3/datasets", params)
     assert resp.status_code == 200
+
+
+def test_filter_exclude_owned_or_shared_noop_when_value_false():
+    """Guard: when value is falsy, queryset is returned unchanged."""
+    # Create some datasets so that queryset is non-empty
+    factories.DatasetFactory.create_batch(2)
+    queryset = Dataset.objects.all()
+
+    request = RequestFactory().get("/v3/datasets")
+    dataset_filter = DatasetFilter(data={"exclude_owned_or_shared": False}, queryset=queryset, request=request)
+
+    result = dataset_filter.filter_exclude_owned_or_shared(queryset, "exclude_owned_or_shared", False)
+    assert result is queryset
+
+
+def test_filter_exclude_owned_or_shared_noop_for_anonymous_user():
+    """Guard: for anonymous users, filtering should be a no-op."""
+    factories.DatasetFactory.create_batch(2)
+    queryset = Dataset.objects.all()
+
+    request = RequestFactory().get("/v3/datasets", {"exclude_owned_or_shared": "true"})
+    request.user = AnonymousUser()
+    dataset_filter = DatasetFilter(data={"exclude_owned_or_shared": True}, queryset=queryset, request=request)
+
+    result = dataset_filter.filter_exclude_owned_or_shared(queryset, "exclude_owned_or_shared", True)
+    assert set(result.values_list("id", flat=True)) == set(queryset.values_list("id", flat=True))

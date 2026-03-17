@@ -455,6 +455,8 @@ class DatasetFilter(filters.FilterSet):
 
     only_admin = filters.BooleanFilter(method="filter_only_admin")
 
+    exclude_owned_or_shared = filters.BooleanFilter(method="filter_exclude_owned_or_shared")
+
     def filter_owned_or_shared(self, queryset, name, value):
         """Filter datasets owned by or shared with the authenticated user."""
         if value:
@@ -466,6 +468,24 @@ class DatasetFilter(filters.FilterSet):
         if value:
             return DatasetAccessPolicy.scope_queryset_admin(self.request, queryset)
         return queryset
+
+    def filter_exclude_owned_or_shared(self, queryset, name, value):
+        """Exclude datasets where user is owner/editor/csc member, keeping admin_organization-only."""
+        if not value:
+            return queryset
+
+        request = self.request
+        if request.user.is_anonymous:
+            return queryset
+
+        csc_projects = getattr(request.user, "csc_projects", [])
+        non_admin_roles = (
+            Q(metadata_owner__user=request.user)
+            | Q(permissions__editors=request.user)
+            | Q(file_set__storage__csc_project__in=csc_projects)
+        )
+
+        return queryset.exclude(non_admin_roles).distinct()
 
     def filter_queryset(self, queryset):
         # Use "etsin" as the default publishing channel filter value
