@@ -4,12 +4,13 @@ from django.db.models import Count, F, Q, Window
 from django.db.models.functions import RowNumber
 
 from apps.core.models import DatasetIndexEntry
+from src.apps.common.helpers import parse_csv_string
 
 logger = logging.getLogger(__name__)
 
 
 def _get_facet_search_params(request):
-    facet_search_params = {
+    facet_search_params: dict[str, str] = {
         "project": request.query_params.get("project_facet_search"),
         "creator": request.query_params.get("creator_facet_search"),
         "organization": request.query_params.get("organization_facet_search"),
@@ -17,9 +18,6 @@ def _get_facet_search_params(request):
         "keyword": request.query_params.get("keyword_facet_search"),
     }
     return {k: v for k, v in facet_search_params.items() if v}
-
-
-# /datasets/aggregates?language=fi&project_facet_search=test
 
 
 def aggregate_queryset(queryset, request):
@@ -88,19 +86,60 @@ def aggregate_queryset(queryset, request):
             for entry in result.get(key, [])
         ]
 
+    # If the query includes parameters related to aggregate facets, store
+    # the parameters so that each facet is saved as its own key, and any
+    # associated value or values are stored as a list under that key.
+    # The resulting list includes both:
+    # - AND cases: multiple occurrences of the same query parameter key:
+    #   retrieved via getlist(), e.g. ?keyword=cat&keyword=dog
+    # - OR cases: a single parameter value containing a comma-separated list:
+    #   parsed via parse_csv_string(), e.g. ?keyword=cat,dog or
+    #   ?keyword="cat, domestic","dog"
+    existing_aggregate_query_params: dict[str, list[str]] = {}
+    for query_param_key in request.query_params.keys():
+        if query_param_key in facet_query_params.values():
+            raw_values: list[str] = request.query_params.getlist(query_param_key)
+            values: list[str] = []
+            for value in raw_values:
+                values += parse_csv_string(value)
+
+            # Remove duplicate occurences by converting to a set and back to
+            # a list:
+            existing_aggregate_query_params[query_param_key] = list(set(values))
+
     if has_facet_search_params():
         return {
             facet: {
-                "query_parameter": facet_query_params[facet],
+                "query_parameter": facet_query_params.get(facet),
                 "hits": get_hits(facet),
             }
             for facet in facet_search_params.keys()
         }
     else:
+        # If the query includes parameters for a facet whose hits don't
+        # contain any aggregates, return the values provided in the query
+        # as dictionary items in the facet's hits list with a count of 0.
+        # This ensures that if an aggregate/filter item was selected and a
+        # another query parameter is added afterward, the Etsin UI still
+        # shows the aggregate/filter item as selected (with a count of 0)
+        # even when no datasets match it anymore.
+
+        # Otherwise, retrieve all aggregate items related to the facet.
         return {
             facet: {
                 "query_parameter": query_parameter,
-                "hits": get_hits(facet),
+                "hits": (
+                    [
+                        {
+                            "value": {language: aggregate},
+                            "count": 0,
+                        }
+                        for aggregate in existing_aggregate_query_params[query_parameter]
+                    ]
+                    if query_parameter in existing_aggregate_query_params.keys()
+                    and len(get_hits(facet)) == 0
+                    else get_hits(facet)
+                ),
             }
             for facet, query_parameter in facet_query_params.items()
         }

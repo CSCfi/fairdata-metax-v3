@@ -126,6 +126,333 @@ def test_aggregation_and_filters(
             assert res.data["count"] == count
 
 
+@pytest.mark.parametrize(
+    "facet, unfiltered_value, filtered_value, facet_search_param",
+    [
+        (
+            "organization",
+            {"value": {"en": "publisher org"}, "count": 1},
+            {"value": {"en": "creator org"}, "count": 1},
+            "organization_facet_search=cre",
+        ),
+        (
+            "keyword",
+            {"value": {"en": "keyword"}, "count": 1},
+            {"value": {"en": "another_keyword"}, "count": 1},
+            "keyword_facet_search=an",
+        ),
+    ],
+)
+def test_aggregate_search(
+    admin_client,
+    data_catalog,
+    reference_data,
+    dataset_a_json,
+    facet,
+    unfiltered_value,
+    filtered_value,
+    facet_search_param,
+):
+    dataset_a_json["actors"] = [
+        {"organization": {"pref_label": {"en": "publisher org"}}, "roles": ["publisher"]},
+        {"organization": {"pref_label": {"en": "creator org"}}, "roles": ["creator"]},
+    ]
+
+    dataset_a_json["keyword"] = ["keyword", "another_keyword"]
+
+    post_res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert post_res.status_code == 201
+
+    aggregate_path = "/v3/datasets/aggregates?filter_language=en"
+    aggregate_res = admin_client.get(aggregate_path)
+    assert aggregate_res.status_code == 200
+
+    unfiltered_hits = aggregate_res.data.get(facet).get("hits")
+    assert filtered_value in unfiltered_hits
+    assert unfiltered_value in unfiltered_hits
+
+    facet_search_res = admin_client.get(f"{aggregate_path}&{facet_search_param}")
+    assert aggregate_res.status_code == 200
+
+    filtered_hits = facet_search_res.data.get(facet).get("hits")
+    assert filtered_value in filtered_hits
+    assert unfiltered_value not in filtered_hits
+
+
+# The result should be the same with or without the equal sign when the facet
+# search key is provided without a value:
+@pytest.mark.parametrize(
+    "facet_search_param, facet, result1, result2",
+    [
+        (
+            "organization_facet_search=",
+            "organization",
+            {"value": {"en": "publisher org"}, "count": 1},
+            {"value": {"en": "creator org"}, "count": 1},
+        ),
+        (
+            "organization_facet_search",
+            "organization",
+            {"value": {"en": "publisher org"}, "count": 1},
+            {"value": {"en": "creator org"}, "count": 1},
+        ),
+    ],
+)
+def test_aggregate_search_with_empty_value(
+    admin_client,
+    data_catalog,
+    reference_data,
+    dataset_a_json,
+    facet_search_param,
+    facet,
+    result1,
+    result2,
+):
+    dataset_a_json["actors"] = [
+        {"organization": {"pref_label": {"en": "publisher org"}}, "roles": ["publisher"]},
+        {"organization": {"pref_label": {"en": "creator org"}}, "roles": ["creator"]},
+    ]
+
+    post_res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert post_res.status_code == 201
+
+    aggregate_path = f"/v3/datasets/aggregates?filter_language=en&{facet_search_param}"
+
+    aggregate_res = admin_client.get(aggregate_path)
+    assert aggregate_res.status_code == 200
+
+    hits = aggregate_res.data.get(facet).get("hits")
+    assert result1 in hits
+    assert result2 in hits
+
+
+@pytest.mark.parametrize(
+    "facet, facet_search_param",
+    [("organization", "organization_facet_search=aal"), ("keyword", "keyword_facet_search=aal")],
+)
+def test_aggregate_search_with_no_hits(
+    admin_client,
+    data_catalog,
+    reference_data,
+    dataset_a_json,
+    facet,
+    facet_search_param,
+):
+    dataset_a_json["actors"] = [
+        {"organization": {"pref_label": {"en": "publisher org"}}, "roles": ["publisher"]},
+        {"organization": {"pref_label": {"en": "creator org"}}, "roles": ["creator"]},
+    ]
+
+    dataset_a_json["keyword"] = ["keyword", "another_keyword"]
+
+    post_res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert post_res.status_code == 201
+
+    aggregate_path = f"/v3/datasets/aggregates?filter_language=en&{facet_search_param}"
+
+    aggregate_res = admin_client.get(aggregate_path)
+    assert aggregate_res.status_code == 200
+
+    hits = aggregate_res.data.get(facet).get("hits")
+    assert hits == []
+
+
+def test_aggregate_search_with_wrong_query_parameter(admin_client, data_catalog, reference_data):
+    aggregate_path = f"/v3/datasets/aggregates?filter_language=en&organization_filter=aal"
+
+    res = admin_client.get(aggregate_path)
+    assert res.status_code == 400
+    assert res.data == {"organization_filter": "Unknown query parameter"}
+
+
+def test_aggregate_multiple_facet_search_parameters_error(
+    admin_client,
+    data_catalog,
+    reference_data,
+):
+    aggregate_path = f"/v3/datasets/aggregates?filter_language=en&organization_facet_search=aal&keyword_facet_search=an"
+    res = admin_client.get(aggregate_path)
+
+    error_response = {
+        "non_field_errors": [
+            "Only one of fields 'creator_facet_search', 'field_of_science_facet_search', 'keyword_facet_search', "
+            "'organization_facet_search', 'project_facet_search' is allowed."
+        ]
+    }
+
+    assert res.status_code == 400
+    assert res.data == error_response
+
+
+@pytest.mark.parametrize(
+    "facet, aggregation_param, result1, result2",
+    [
+        (
+            "organization",
+            "facet_organization=test+org",
+            {"value": {"en": "test org"}, "count": 1},
+            {"value": {"en": "test org"}, "count": 0},
+        ),
+        (
+            "access_type",
+            "facet_access_type=Open",
+            {"value": {"en": "Open"}, "count": 1},
+            {"value": {"en": "Open"}, "count": 0},
+        ),
+    ],
+)
+def test_aggregate_no_matching_datasets(
+    admin_client,
+    data_catalog,
+    reference_data,
+    dataset_a_json,
+    facet,
+    aggregation_param,
+    result1,
+    result2,
+):
+    dataset_a_json["actors"] = [
+        {"organization": {"pref_label": {"en": "test org"}}, "roles": ["publisher", "creator"]},
+    ]
+
+    dataset_a_json["access_rights"] = {
+        "access_type": {"url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open"},
+        "license": [{"url": "http://uri.suomi.fi/codelist/fairdata/license/code/CC0-1.0"}],
+    }
+
+    dataset_a_json["temporal"] = [{"start_date": "2023-09-20", "end_date": "2023-11-25"}]
+
+    post_res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert post_res.status_code == 201
+
+    aggregate_path = f"/v3/datasets/aggregates?filter_language=en&{aggregation_param}"
+    filtered_aggregate_res = admin_client.get(aggregate_path)
+    assert filtered_aggregate_res.status_code == 200
+
+    assert result1 in filtered_aggregate_res.data.get(facet).get("hits")
+    assert result2 not in filtered_aggregate_res.data.get(facet).get("hits")
+
+    filtered_aggregate_with_temporal_res = admin_client.get(
+        f"{aggregate_path}&temporal__end_date=2022-12-31"
+    )
+    assert filtered_aggregate_with_temporal_res.status_code == 200
+
+    hits = filtered_aggregate_with_temporal_res.data.get(facet).get("hits")
+    assert result1 not in hits
+    assert result2 in hits
+
+
+def test_aggregate_filtering_multiple_facets(
+    admin_client, data_catalog, reference_data, dataset_a_json
+):
+    dataset_a_json["actors"] = [
+        {"organization": {"pref_label": {"en": "test org"}}, "roles": ["publisher", "creator"]},
+    ]
+
+    dataset_a_json["field_of_science"] = [
+        {"url": "http://www.yso.fi/onto/okm-tieteenala/ta111"},
+    ]
+
+    dataset_a_json["keyword"] = ["geosciences"]
+
+    post_res_a = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert post_res_a.status_code == 201
+
+    aggregate_path = f"/v3/datasets/aggregates?filter_language=en&facet_organization=test+org&facet_field_of_science=Mathematics"
+
+    aggregate_res = admin_client.get(aggregate_path)
+    assert aggregate_res.status_code == 200
+    assert {"value": {"en": "test org"}, "count": 1} in aggregate_res.data.get("organization").get(
+        "hits"
+    )
+    assert {"value": {"en": "Mathematics"}, "count": 1} in aggregate_res.data.get(
+        "field_of_science"
+    ).get("hits")
+
+    aggregate_path += "&facet_keyword=physics"
+
+    aggregate_res = admin_client.get(aggregate_path)
+    assert aggregate_res.status_code == 200
+    assert {"value": {"en": "test org"}, "count": 0} in aggregate_res.data.get("organization").get(
+        "hits"
+    )
+    assert {"value": {"en": "Mathematics"}, "count": 0} in aggregate_res.data.get(
+        "field_of_science"
+    ).get("hits")
+    assert {"value": {"en": "physics"}, "count": 0} in aggregate_res.data.get("keyword").get(
+        "hits"
+    )
+
+
+def test_aggregate_filtering_with_logical_or(
+    admin_client, data_catalog, reference_data, dataset_a_json
+):
+    dataset_a_json["keyword"] = ["mathematics"]
+
+    post_res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert post_res.status_code == 201
+
+    aggregate_path = (
+        f"/v3/datasets/aggregates?filter_language=en&facet_keyword=mathematics,physics"
+    )
+
+    aggregate_res = admin_client.get(aggregate_path)
+    assert aggregate_res.status_code == 200
+    assert {"value": {"en": "mathematics"}, "count": 1} in aggregate_res.data.get("keyword").get(
+        "hits"
+    )
+    assert {"value": {"en": "physics"}, "count": 1} not in aggregate_res.data.get("keyword").get(
+        "hits"
+    )
+    assert len(aggregate_res.data.get("keyword").get("hits")) == 1
+
+
+def test_aggregate_filtering_with_logical_or_no_matching_datasets(
+    admin_client, data_catalog, reference_data, dataset_a_json
+):
+    dataset_a_json["keyword"] = ["mathematics"]
+
+    post_res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert post_res.status_code == 201
+
+    aggregate_path = f'/v3/datasets/aggregates?filter_language=en&facet_keyword="geosciences, mathematics and physics",physics'
+
+    aggregate_res = admin_client.get(aggregate_path)
+    assert aggregate_res.status_code == 200
+    assert {
+        "value": {"en": "geosciences, mathematics and physics"},
+        "count": 0,
+    } in aggregate_res.data.get("keyword").get("hits")
+    assert {"value": {"en": "physics"}, "count": 0} in aggregate_res.data.get("keyword").get(
+        "hits"
+    )
+    assert len(aggregate_res.data.get("keyword").get("hits")) == 2
+
+
+def test_aggregate_filtering_multiple_values_for_single_facet(
+    admin_client, data_catalog, reference_data, dataset_a_json
+):
+    dataset_a_json["actors"] = [
+        {"organization": {"pref_label": {"en": "creator org"}}, "roles": ["creator"]},
+        {"organization": {"pref_label": {"en": "publisher org"}}, "roles": ["publisher"]},
+    ]
+
+    post_res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert post_res.status_code == 201
+
+    aggregate_path = f"/v3/datasets/aggregates?filter_language=en&facet_organization=creator+org&facet_organization=publisher+org"
+
+    aggregate_res = admin_client.get(aggregate_path)
+    assert aggregate_res.status_code == 200
+    assert {"value": {"en": "creator org"}, "count": 1} in aggregate_res.data.get(
+        "organization"
+    ).get("hits")
+    assert {"value": {"en": "publisher org"}, "count": 1} in aggregate_res.data.get(
+        "organization"
+    ).get("hits")
+    assert len(aggregate_res.data.get("organization").get("hits")) == 2
+
+
 def test_aggregation_soft_deleted_actor(
     admin_client, dataset_a_json, data_catalog, reference_data
 ):
