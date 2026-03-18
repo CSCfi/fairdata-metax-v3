@@ -1,11 +1,14 @@
-[{
+[
+	{
 		"id": "CC0-1.0",
 		"label": {
 			"fi": "Creative Commons Yleismaailmallinen (CC0 1.0) Public Domain -lausuma",
 			"en": "Creative Commons CC0 1.0 Universal (CC0 1.0) Public Domain Dedication"
 		},
 		"uri": "http://uri.suomi.fi/codelist/fairdata/license/code/CC0-1.0",
-		"same_as": ["https://creativecommons.org/publicdomain/zero/1.0/"]
+		"same_as": [
+			"https://creativecommons.org/publicdomain/zero/1.0/"
+		]
 	},
 	{
 		"id": "CC-BY-4.0",
@@ -14,7 +17,9 @@
 			"en": "Creative Commons Attribution 4.0 International (CC BY 4.0)"
 		},
 		"uri": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-4.0",
-		"same_as": ["https://creativecommons.org/licenses/by/4.0/"]
+		"same_as": [
+			"https://creativecommons.org/licenses/by/4.0/"
+		]
 	},
 	{
 		"id": "CC-BY-SA-4.0",
@@ -23,7 +28,9 @@
 			"en": "Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)"
 		},
 		"uri": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-SA-4.0",
-		"same_as": ["https://creativecommons.org/licenses/by-sa/4.0/"]
+		"same_as": [
+			"https://creativecommons.org/licenses/by-sa/4.0/"
+		]
 	},
 	{
 		"id": "CC-BY-NC-4.0",
@@ -32,7 +39,9 @@
 			"en": "Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)"
 		},
 		"uri": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-NC-4.0",
-		"same_as": ["https://creativecommons.org/licenses/by-nc/4.0/"]
+		"same_as": [
+			"https://creativecommons.org/licenses/by-nc/4.0/"
+		]
 	},
 	{
 		"id": "ODC-PDDL-1.0",
@@ -40,7 +49,9 @@
 			"en": "Open Data Commons Public Domain Dedication and License 1.0"
 		},
 		"uri": "http://uri.suomi.fi/codelist/fairdata/license/code/ODC-PDDL-1.0",
-		"same_as": ["http://www.opendefinition.org/licenses/odc-pddl"]
+		"same_as": [
+			"http://www.opendefinition.org/licenses/odc-pddl"
+		]
 	},
 	{
 		"id": "ODbL-1.0",
@@ -48,7 +59,9 @@
 			"en": "Open Data Commons Open Database License 1.0"
 		},
 		"uri": "http://uri.suomi.fi/codelist/fairdata/license/code/ODbL-1.0",
-		"same_as": ["http://www.opendefinition.org/licenses/odc-odbl"]
+		"same_as": [
+			"http://www.opendefinition.org/licenses/odc-odbl"
+		]
 	},
 	{
 		"id": "ODC-BY-1.0",
@@ -56,7 +69,9 @@
 			"en": "Open Data Commons Attribution License 1.0"
 		},
 		"uri": "http://uri.suomi.fi/codelist/fairdata/license/code/ODC-BY-1.0",
-		"same_as": ["http://www.opendefinition.org/licenses/odc-by"]
+		"same_as": [
+			"http://www.opendefinition.org/licenses/odc-by"
+		]
 	},
 	{
 		"id": "GFDL-1.3-no-cover-texts-no-invariant-sections",
@@ -64,7 +79,9 @@
 			"en": "GNU Free Documentation License 1.3 with no cover texts and no invariant sections"
 		},
 		"uri": "http://uri.suomi.fi/codelist/fairdata/license/code/GFDL-1.3-no-cover-texts-no-invariant-sections",
-		"same_as": ["http://www.opendefinition.org/licenses/gfdl"]
+		"same_as": [
+			"http://www.opendefinition.org/licenses/gfdl"
+		]
 	},
 	{
 		"id": "CC-BY-3.0",
@@ -73,7 +90,9 @@
 			"en": "Creative Commons Attribution 3.0 Unported (CC BY 3.0)"
 		},
 		"uri": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-3.0",
-		"same_as": ["https://creativecommons.org/licenses/by/3.0/"]
+		"same_as": [
+			"https://creativecommons.org/licenses/by/3.0/"
+		]
 	},
 	{
 		"id": "CC-BY-SA-3.0",
@@ -82,7 +101,9 @@
 			"en": "Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0)"
 		},
 		"uri": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-SA-3.0",
-		"same_as": ["https://creativecommons.org/licenses/by-sa/3.0/"]
+		"same_as": [
+			"https://creativecommons.org/licenses/by-sa/3.0/"
+		]
 	},
 	{
 		"id": "CC-BY-NC-3.0",
@@ -91,7 +112,9 @@
 			"en": "Creative Commons Attribution-NonCommercial 3.0 Unported (CC BY-NC 3.0)"
 		},
 		"uri": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-NC-3.0",
-		"same_as": ["https://creativecommons.org/licenses/by-nc/3.0/"]
+		"same_as": [
+			"https://creativecommons.org/licenses/by-nc/3.0/"
+		]
 	},
 	{
 		"id": "CC-BY-2.0",
@@ -100,7 +123,9 @@
 			"en": "Creative Commons Attribution 2.0 Generic (CC BY 2.0)"
 		},
 		"uri": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-2.0",
-		"same_as": ["https://creativecommons.org/licenses/by/2.0/"]
+		"same_as": [
+			"https://creativecommons.org/licenses/by/2.0/"
+		]
 	},
 	{
 		"id": "CC-BY-SA-2.0",
@@ -109,7 +134,9 @@
 			"en": "Creative Commons Attribution-ShareAlike 2.0 Generic (CC BY-SA 2.0)"
 		},
 		"uri": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-SA-2.0",
-		"same_as": ["https://creativecommons.org/licenses/by-sa/2.0/"]
+		"same_as": [
+			"https://creativecommons.org/licenses/by-sa/2.0/"
+		]
 	},
 	{
 		"id": "CC-BY-NC-2.0",
@@ -118,7 +145,9 @@
 			"en": "Creative Commons Attribution-NonCommercial 2.0 Generic (CC BY-NC 2.0"
 		},
 		"uri": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-NC-2.0",
-		"same_as": ["https://creativecommons.org/licenses/by-nc/2.0/"]
+		"same_as": [
+			"https://creativecommons.org/licenses/by-nc/2.0/"
+		]
 	},
 	{
 		"id": "CC-BY-1.0",
@@ -127,7 +156,9 @@
 			"en": "Creative Commons Attribution 1.0 Generic (CC BY 1.0)"
 		},
 		"uri": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-1.0",
-		"same_as": ["https://creativecommons.org/licenses/by/1.0/"]
+		"same_as": [
+			"https://creativecommons.org/licenses/by/1.0/"
+		]
 	},
 	{
 		"id": "CC-BY-SA-1.0",
@@ -136,7 +167,9 @@
 			"fi": "Creative Commons Nimeä-JaaSamoin 1.0 Yleinen (CC BY-SA 1.0)"
 		},
 		"uri": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-SA-1.0",
-		"same_as": ["https://creativecommons.org/licenses/by-sa/1.0/"]
+		"same_as": [
+			"https://creativecommons.org/licenses/by-sa/1.0/"
+		]
 	},
 	{
 		"id": "CC-BY-NC-1.0",
@@ -145,7 +178,9 @@
 			"fi": "Creative Commons Nimeä-EiKaupallinen 1.0 Yleinen (CC BY-NC 1.0)"
 		},
 		"uri": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-NC-1.0",
-		"same_as": ["https://creativecommons.org/licenses/by-nc/1.0/"]
+		"same_as": [
+			"https://creativecommons.org/licenses/by-nc/1.0/"
+		]
 	},
 	{
 		"id": "Apache-2.0",
@@ -153,7 +188,9 @@
 			"en": "Apache Software License 2.0"
 		},
 		"uri": "http://uri.suomi.fi/codelist/fairdata/license/code/Apache-2.0",
-		"same_as": ["http://www.opensource.org/licenses/Apache-2.0"]
+		"same_as": [
+			"http://www.opensource.org/licenses/Apache-2.0"
+		]
 	},
 	{
 		"id": "ClarinPUB-1.0",
@@ -161,7 +198,9 @@
 			"en": "CLARIN PUB (Public) End-User License 1.0"
 		},
 		"uri": "http://uri.suomi.fi/codelist/fairdata/license/code/ClarinPUB-1.0",
-		"same_as": ["https://kitwiki.csc.fi/twiki/bin/view/FinCLARIN/ClarinEulaPub"]
+		"same_as": [
+			"https://kitwiki.csc.fi/twiki/bin/view/FinCLARIN/ClarinEulaPub"
+		]
 	},
 	{
 		"id": "ClarinACA-1.0",
@@ -169,7 +208,9 @@
 			"en": "CLARIN ACA (Academic) End-User License 1.0"
 		},
 		"uri": "http://uri.suomi.fi/codelist/fairdata/license/code/ClarinACA-1.0",
-		"same_as": ["https://kitwiki.csc.fi/twiki/bin/view/FinCLARIN/ClarinEulaAca"]
+		"same_as": [
+			"https://kitwiki.csc.fi/twiki/bin/view/FinCLARIN/ClarinEulaAca"
+		]
 	},
 	{
 		"id": "ClarinACA+NC-1.0",
@@ -177,7 +218,9 @@
 			"en": "CLARIN ACA+NC (Academic, Non-Commercial) End-User License 1.0"
 		},
 		"uri": "http://uri.suomi.fi/codelist/fairdata/license/code/ClarinACA+NC-1.0",
-		"same_as": ["https://kitwiki.csc.fi/twiki/bin/view/FinCLARIN/ClarinEulaAcaNCDep"]
+		"same_as": [
+			"https://kitwiki.csc.fi/twiki/bin/view/FinCLARIN/ClarinEulaAcaNCDep"
+		]
 	},
 	{
 		"id": "ClarinRES-1.0",
@@ -185,7 +228,9 @@
 			"en": "CLARIN RES (Restricted) End-User License 1.0"
 		},
 		"uri": "http://uri.suomi.fi/codelist/fairdata/license/code/ClarinRES-1.0",
-		"same_as": ["https://kitwiki.csc.fi/twiki/bin/view/FinCLARIN/ClarinEulaRes"]
+		"same_as": [
+			"https://kitwiki.csc.fi/twiki/bin/view/FinCLARIN/ClarinEulaRes"
+		]
 	},
 	{
 		"id": "CC-BY-ND-3.0",
@@ -194,7 +239,9 @@
 			"fi": "Creative Commons Nimeä-EiMuutoksia 3.0 Ei sovitettu (CC BY-ND 3.0)"
 		},
 		"uri": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-ND-3.0",
-		"same_as": ["https://creativecommons.org/licenses/by-nd/3.0/"]
+		"same_as": [
+			"https://creativecommons.org/licenses/by-nd/3.0/"
+		]
 	},
 	{
 		"id": "CC-BY-ND-4.0",
@@ -203,7 +250,9 @@
 			"fi": "Creative Commons Nimeä-EiMuutoksia 4.0 Kansainvälinen (CC BY-ND 4.0)"
 		},
 		"uri": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-ND-4.0",
-		"same_as": ["https://creativecommons.org/licenses/by-nd/4.0/"]
+		"same_as": [
+			"https://creativecommons.org/licenses/by-nd/4.0/"
+		]
 	},
 	{
 		"id": "CC-BY-NC-SA-3.0",
@@ -212,7 +261,9 @@
 			"fi": "Creative Commons Nimeä-EiKaupallinen-JaaSamoin 3.0 Ei sovitettu (CC BY-NC-SA 3.0)"
 		},
 		"uri": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-NC-SA-3.0",
-		"same_as": ["https://creativecommons.org/licenses/by-nc-sa/3.0/"]
+		"same_as": [
+			"https://creativecommons.org/licenses/by-nc-sa/3.0/"
+		]
 	},
 	{
 		"id": "CC-BY-NC-SA-4.0",
@@ -221,7 +272,9 @@
 			"fi": "Creative Commons Nimeä-EiKaupallinen-JaaSamoin 4.0 Kansainvälinen (CC BY-NC-SA 4.0) "
 		},
 		"uri": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-NC-SA-4.0",
-		"same_as": ["https://creativecommons.org/licenses/by-nc-sa/4.0/"]
+		"same_as": [
+			"https://creativecommons.org/licenses/by-nc-sa/4.0/"
+		]
 	},
 	{
 		"id": "CC-BY-NC-ND-3.0",
@@ -230,7 +283,9 @@
 			"fi": "Creative Commons Nimeä-EiKaupallinen-EiMuutoksia 3.0 Ei sovitettu (CC BY-NC-ND 3.0)"
 		},
 		"uri": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-NC-ND-3.0",
-		"same_as": ["https://creativecommons.org/licenses/by-nc-nd/3.0/"]
+		"same_as": [
+			"https://creativecommons.org/licenses/by-nc-nd/3.0/"
+		]
 	},
 	{
 		"id": "CC-BY-NC-ND-4.0",
@@ -239,7 +294,31 @@
 			"fi": "Creative Commons Nimeä-EiKaupallinen-EiMuutoksia 4.0 Kansainvälinen (CC BY-NC-ND 4.0)"
 		},
 		"uri": "http://uri.suomi.fi/codelist/fairdata/license/code/CC-BY-NC-ND-4.0",
-		"same_as": ["https://creativecommons.org/licenses/by-nc-nd/4.0/"]
+		"same_as": [
+			"https://creativecommons.org/licenses/by-nc-nd/4.0/"
+		]
+	},
+	{
+		"id": "MIT",
+		"label": {
+			"en": "MIT License",
+			"fi": "MIT-lisenssi"
+		},
+		"uri": "http://uri.suomi.fi/codelist/fairdata/license/code/MIT",
+		"same_as": [
+			"https://opensource.org/license/mit"
+		]
+	},
+	{
+		"id": "MIT-0",
+		"label": {
+			"en": "MIT No Attribution License (MIT-0)",
+			"fi": "MIT-0-lisenssi (MIT No Attribution)"
+		},
+		"uri": "http://uri.suomi.fi/codelist/fairdata/license/code/MIT-0",
+		"same_as": [
+			"https://opensource.org/license/mit-0"
+		]
 	},
 	{
 		"id": "other",
