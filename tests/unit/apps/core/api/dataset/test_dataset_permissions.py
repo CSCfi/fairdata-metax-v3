@@ -5,6 +5,7 @@ import pytest
 from django.conf import settings as django_settings
 from django.core import mail
 from django.test import override_settings
+from apps.core.models.catalog_record.dataset import Dataset
 from apps.users.factories import AdminOrganizationFactory
 from tests.utils import matchers
 
@@ -328,3 +329,45 @@ def test_dataset_permissions_user_roles(
 
     res = user_client.get(url, content_type="application/json")
     assert res.data["user_roles"] == ["csc_project_member", "editor", "organization_admin"]
+
+
+def test_dataset_organization_admin_update(
+    admin_client, user, user_client, user2_client, dataset_a, requests_mock, admin_organizations
+):
+    dataset = Dataset.objects.get(id=dataset_a.dataset_id)
+    catalog = dataset.data_catalog
+    catalog.dataset_groups_update.clear()
+    user.admin_organizations = [dataset.metadata_owner.admin_organization]
+    user.save()
+
+    # Org admin is not in dataset_groups_update, so cannot update the dataset.
+    # Check that allowed_actions.update is False and update is forbidden
+    url = f"/v3/datasets/{dataset_a.dataset_id}?include_allowed_actions=true"
+    res = user_client.get(url, content_type="application/json")
+    assert res.data["allowed_actions"]["update"] == False
+    res = user_client.patch(
+        f"/v3/datasets/{dataset_a.dataset_id}", {}, content_type="application/json"
+    )
+    assert res.status_code == 403
+
+    # Enable dataset_organization_admin_update, org admin should now be able
+    # to update the dataset even without being in dataset_groups_update.
+    # Check that allowed_actions.update is True and update is allowed.
+    catalog.dataset_organization_admin_update = True
+    catalog.save()
+    res = user_client.get(url, content_type="application/json")
+    assert res.data["allowed_actions"]["update"] == True
+    res = user_client.patch(
+        f"/v3/datasets/{dataset_a.dataset_id}", {}, content_type="application/json"
+    )
+    assert res.status_code == 200
+
+    # Check that the user cannot update the dataset without organization admin rights
+    user.admin_organizations = []
+    user.save()
+    res = user_client.get(url, content_type="application/json")
+    assert res.data["allowed_actions"]["update"] == False
+    res = user_client.patch(
+        f"/v3/datasets/{dataset_a.dataset_id}", {}, content_type="application/json"
+    )
+    assert res.status_code == 403

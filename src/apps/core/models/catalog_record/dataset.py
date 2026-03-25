@@ -441,7 +441,19 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         if self.data_catalog and self.data_catalog.can_admin_datasets(user):
             yield UserRole(choices.CATALOG_ADMIN, can_read=True, can_write=True)
 
-        can_update = self.data_catalog is None or self.data_catalog.can_update_datasets(user)
+        is_dataset_org_admin = (
+            self.metadata_owner
+            and self.metadata_owner.admin_organization in user.admin_organizations
+        )
+        can_update: bool
+        if self.data_catalog:
+            can_update = (
+                is_dataset_org_admin and self.data_catalog.dataset_organization_admin_update
+            ) or self.data_catalog.can_update_datasets(user)
+        else:
+             can_update = True
+        if is_dataset_org_admin:
+            yield UserRole("organization_admin", can_read=True, can_write=can_update)
         if self.metadata_owner and self.metadata_owner.user_id == user.id:
             yield UserRole(choices.OWNER, can_read=True, can_write=can_update)
         if (
@@ -450,11 +462,6 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             yield UserRole(choices.CSC_PROJECT_MEMBER, can_read=True, can_write=can_update)
         if self.permissions and user in self.permissions.editors.all():
             yield UserRole(choices.EDITOR, can_read=True, can_write=can_update)
-        if (
-            self.metadata_owner
-            and self.metadata_owner.admin_organization in user.admin_organizations
-        ):
-            yield UserRole("organization_admin", can_read=True, can_write=can_update)
         return
 
     def has_permission_to_edit(self, user: MetaxUser) -> bool:

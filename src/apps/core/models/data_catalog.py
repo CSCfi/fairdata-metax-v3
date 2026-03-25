@@ -100,6 +100,13 @@ class DataCatalog(AbstractBaseModel):
         related_name="catalogs_admin_datasets",
         blank=True,
     )
+    dataset_organization_admin_update = models.BooleanField(
+        default=False,
+        help_text=(
+            "When enabled, dataset organization admins can update datasets in the catalog "
+            "even if they are not in dataset_groups_update."
+        ),
+    )
     allow_download = models.BooleanField(
         default=False, help_text="Allow downloading files of datasets in catalog."
     )

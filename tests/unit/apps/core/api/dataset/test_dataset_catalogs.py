@@ -159,7 +159,7 @@ def test_catalog_datasets_create_and_set_catalog_fairdata(
         {"data_catalog": "data-catalog-test"},
         content_type="application/json",
     )
-    assert res.status_code == 200
+    assert res.status_code == 200, res.data
 
     # Patching dataset that is already in the catalog should require update permission
     dc.dataset_groups_create.remove(user.groups.first())
