@@ -389,6 +389,7 @@ def test_dataset_put_maximal_and_minimal(
         "api_version",
         "created",
         "data_catalog",
+        "data_sensitivity",
         "dataset_versions",
         "draft_revision",
         "generate_pid_on_publish",

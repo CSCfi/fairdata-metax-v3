@@ -22,7 +22,9 @@ from apps.core.serializers.dataset_actor_serializers import DatasetActorSerializ
 from apps.core.serializers.dataset_actor_serializers.actor_serializer import DatasetActorSerializer
 from apps.core.serializers.dataset_allowed_actions import DatasetAllowedActionsSerializer
 from apps.core.serializers.dataset_files_serializer import FileSetSerializer
-from apps.core.serializers.dataset_serializer import DatasetSerializer, LinkedDraftSerializer
+from apps.core.serializers.dataset_serializer import (
+    DatasetDataSensitivitySerializer, DatasetSerializer, LinkedDraftSerializer
+)
 from apps.core.serializers.metadata_provider_serializer import MetadataProviderModelSerializer
 from apps.core.serializers.preservation_serializers import PreservationModelSerializer
 from apps.core.serializers.project_serializer import ProjectModelSerializer
@@ -175,6 +177,7 @@ class LegacyDatasetUpdateSerializer(CommonNestedModelSerializer):
     spatial = SpatialModelSerializer(required=False, many=True)
     temporal = TemporalModelSerializer(required=False, many=True)
     relation = EntityRelationSerializer(required=False, many=True)
+    data_sensitivity = DatasetDataSensitivitySerializer(source="*", required=False)
     preservation = LegacyPreservationSerializer(required=False, many=False)
     provenance = ProvenanceModelSerializer(required=False, many=True)
     projects = ProjectModelSerializer(required=False, many=True)

@@ -32,6 +32,7 @@ from apps.common.helpers import omit_none
 from apps.core.models.access_rights import AccessTypeChoices
 from apps.core.helpers import clean_pid
 from apps.core.models import DataCatalog, Dataset
+from apps.core.models.catalog_record.data_sensitivity import DatasetSensitivityRationale
 from apps.core.models.catalog_record.dataset_index import DatasetIndexEntry
 from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
 from apps.core.models.data_catalog import GeneratedPIDType
@@ -51,6 +52,7 @@ from apps.core.serializers.dataset_user_roles import DatasetUserRolesSerializer
 from apps.core.serializers.metadata_provider_serializer import MetadataProviderModelSerializer
 from apps.core.serializers.preservation_serializers import PreservationModelSerializer
 from apps.core.serializers.project_serializer import ProjectModelSerializer
+from apps.core.serializers.dataset_sensitivity_serializer import DatasetDataSensitivitySerializer
 
 # for preventing circular import, using submodule instead of apps.core.serializers
 from apps.core.serializers.provenance_serializers import ProvenanceModelSerializer
@@ -188,6 +190,7 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
     temporal = TemporalModelSerializer(required=False, many=True, lazy=True)
     relation = EntityRelationSerializer(required=False, many=True)
     preservation = PreservationModelSerializer(required=False, many=False)
+    data_sensitivity = DatasetDataSensitivitySerializer(source="*", required=False)
     provenance = ProvenanceModelSerializer(required=False, many=True, lazy=True)
     projects = ProjectModelSerializer(required=False, many=True)
     dataset_versions = serializers.SerializerMethodField()
@@ -474,6 +477,7 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
             "bibliographic_citation",
             "cumulative_state",
             "data_catalog",
+            "data_sensitivity",
             "description",
             "field_of_science",
             "fileset",
