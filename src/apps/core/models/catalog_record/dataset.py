@@ -103,6 +103,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         draft_revision (models.IntegerField): Draft number
         field_of_science (models.ManyToManyField): FieldOfScience ManyToMany relation
         deprecated (models.DateTimeField): Is the dataset deprecated
+        is_sensitive (models.BooleanField): Is the dataset content's sensitive
         issued (models.DateTimeField): Publication date of the dataset
         keyword (ArrayField): Dataset keywords
         language (models.ManyToManyField): Language ManyToMany relation
@@ -132,6 +133,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             "file_set",
             "spatial",
             "temporal",
+            "rationales",
             "remote_resources",
             "relation",
             "preservation",
@@ -216,6 +218,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         null=True,
         blank=True,
     )
+    is_sensitive = models.BooleanField(default=False)
     deprecated = models.DateTimeField(null=True, blank=True)
     cumulation_started = models.DateTimeField(null=True, blank=True)
     cumulation_ended = models.DateTimeField(null=True, blank=True)
@@ -343,6 +346,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         "provenance__variables__universe",
         "provenance__variables",
         "provenance",
+        "rationales",
         "relation__entity__type",
         "relation__entity",
         "relation__relation_type",
