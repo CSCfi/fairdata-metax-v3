@@ -221,6 +221,22 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
             or instance.has_permission_to_see_drafts(self.context["request"].user)
         )
 
+    def can_view_data_sensitivity(self) -> bool:
+        """
+        Determine if user has permission to view data sensitivity
+        information
+        """
+        user = self.context["request"].user
+
+        if user.is_superuser:
+            return True
+        if not user.is_authenticated:
+            return False
+
+        return any(
+            group.name == "pas" for group in user.groups.all()
+        )
+
     def get_version(self, instance):
         return instance.version_number
 
@@ -366,6 +382,10 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
             ret.pop("draft_revision", None)
             ret.pop("next_draft", None)
             ret.pop("draft_of", None)
+
+        # Data sensitivity should be hidden from non-PAS users
+        if not self.can_view_data_sensitivity():
+            ret.pop("data_sensitivity", None)
 
         has_emails = self.context.pop("has_emails", False)
 
