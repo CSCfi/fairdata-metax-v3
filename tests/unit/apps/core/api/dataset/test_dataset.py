@@ -1206,3 +1206,29 @@ def test_metadata_owner_admin_organization_default_behavior(
     )
     assert res.status_code == 200
     assert res.data["metadata_owner"]["admin_organization"] is None
+
+
+def test_extra_version_fields(admin_client, dataset_a_json, reference_data, data_catalog):
+    res = admin_client.post("/v3/datasets", dataset_a_json, content_type="application/json")
+    assert res.status_code == 201
+    dataset = Dataset.objects.get(id=res.data["id"])
+    dataset.preservation = factories.PreservationFactory()
+    dataset.save()
+
+    res = admin_client.get(
+        f"/v3/datasets/{dataset.id}",
+        {"extra_version_fields": "preservation"},
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert res.data["dataset_versions"][0]["preservation"][
+        "reason_description"
+    ] == dataset.preservation.reason_description
+
+    res = admin_client.get(
+        f"/v3/datasets/{dataset.id}",
+        {"extra_version_fields": "doesnotexist"},
+        content_type="application/json",
+    )
+    assert res.status_code == 400
+    assert "not a valid choice" in res.json()["extra_version_fields"]['0'][0]

@@ -63,6 +63,10 @@ logger = logging.getLogger(__name__)
 
 class VersionSerializer(CommonModelSerializer):
     version = serializers.IntegerField(source="version_number", read_only=True)
+    preservation = PreservationModelSerializer()
+
+    # Fields only shown when in query_params.extra_version_fields
+    optional_fields = {"preservation"}
 
     class Meta:
         model = Dataset
@@ -77,8 +81,31 @@ class VersionSerializer(CommonModelSerializer):
             "next_draft",
             "draft_of",
             "version",
+            "preservation",
         ]
         list_serializer_class = CommonListSerializer
+
+    @property
+    def extra_version_fields(self) -> set:
+        query_params = getattr(self.context.get("view"), "query_params", {})
+        return query_params.get("extra_version_fields", set())
+
+    @property
+    def omitted_fields(self) -> set:
+        if extra_fields := self.extra_version_fields:
+            return self.optional_fields - set(extra_fields)
+        return self.optional_fields
+
+    @property
+    def _readable_fields(self):
+        # Omit optional fields not in extra_version_fields
+        if omitted_fields := self.omitted_fields:
+            return [
+                field
+                for field in super()._readable_fields
+                if field.field_name not in omitted_fields
+            ]
+        return super()._readable_fields
 
     def get_version(self, instance):
         return instance.version_number
@@ -197,11 +224,16 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
     def get_dataset_versions(self, instance):
         if version_set := instance.dataset_versions:
             # Use prefetched results stored in _datasets when available
-            versions = getattr(version_set, "_datasets", None) or version_set.datasets(
-                manager="all_objects"
-            ).order_by("-dataset_versions_order").prefetch_related(
-                *Dataset.dataset_versions_prefetch_fields
-            )
+            versions = getattr(version_set, "_datasets", None)
+            if versions is None:
+                extra_fields = list(self.versions_serializer.child.extra_version_fields)
+                versions = (
+                    version_set.datasets(manager="all_objects")
+                    .order_by("-dataset_versions_order")
+                    .prefetch_related(
+                        *Dataset.get_versions_prefetch_fields(extra_fields=extra_fields)
+                    )
+                )
 
             has_drafts = any(
                 dataset for dataset in versions if dataset.state != Dataset.StateChoices.PUBLISHED
@@ -697,6 +729,14 @@ class DatasetFieldsQueryParamsSerializer(serializers.Serializer):
             )
         ),
         help_text=_("Filter specific fields of the dataset."),
+    )
+
+
+class ExtraVersionFieldsQueryParamsSerializer(serializers.Serializer):
+    extra_version_fields = CommaSeparatedListField(
+        required=False,
+        child=ListValidChoicesField(choices=VersionSerializer.optional_fields),
+        help_text=_("Include extra fields in dataset_versions."),
     )
 
 

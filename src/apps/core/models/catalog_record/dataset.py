@@ -366,11 +366,24 @@ class Dataset(V2DatasetMixin, CatalogRecord):
     )
 
     @classmethod
-    def get_versions_prefetch(cls):
+    def get_versions_prefetch_fields(cls, extra_fields: list[str] = []) -> list[str]:
+        # Only prefetch extra_fields that are actual Dataset fields
+        dataset_fields = set(field.name for field in cls._meta.get_fields())
+        extra_fields = set(extra_fields) & dataset_fields
+        extra_related = []
+        if "preservation" in extra_fields:
+            extra_related.extend([
+                "preservation__dataset_version__dataset",
+                "preservation__dataset_origin_version__dataset",
+            ])
+        return [*cls.dataset_versions_prefetch_fields, *extra_fields, *extra_related]
+
+    @classmethod
+    def get_versions_prefetch(cls, extra_fields: list[str] = []) -> models.Prefetch:
         return models.Prefetch(
             "dataset_versions__datasets",
             queryset=cls.all_objects.order_by("-dataset_versions_order").prefetch_related(
-                *cls.dataset_versions_prefetch_fields
+                *cls.get_versions_prefetch_fields(extra_fields=extra_fields)
             ),
             to_attr="_datasets",
         )

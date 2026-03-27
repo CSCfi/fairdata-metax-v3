@@ -54,6 +54,7 @@ from apps.core.serializers.dataset_serializer import (
     DatasetAggregationQueryParamsSerializer,
     DatasetFieldsQueryParamsSerializer,
     ExpandCatalogQueryParamsSerializer,
+    ExtraVersionFieldsQueryParamsSerializer,
     FacetLanguageQueryParamsSerializer,
     ExpandUserQueryParamsSerializer,
     IncludeDatasetUserRolesQueryParamsSerializer,
@@ -130,6 +131,10 @@ class DatasetViewSet(CommonModelViewSet):
         },
         {
             "class": DatasetFieldsQueryParamsSerializer,
+            "actions": ["list", "retrieve"],
+        },
+        {
+            "class": ExtraVersionFieldsQueryParamsSerializer,
             "actions": ["list", "retrieve"],
         },
         {
@@ -233,7 +238,9 @@ class DatasetViewSet(CommonModelViewSet):
         if self.request.method == "GET":
             # Prefetch Dataset.dataset_versions.datasets to DatasetVersions._datasets
             # but only for read-only requests to avoid having to invalidate the cached value
-            qs = qs.prefetch_related(Dataset.get_versions_prefetch())
+            qs = qs.prefetch_related(
+                Dataset.get_versions_prefetch(self.query_params.get("extra_version_fields", []))
+            )
 
             if timestamp := self.request.META.get("HTTP_IF_MODIFIED_SINCE"):
                 try:
