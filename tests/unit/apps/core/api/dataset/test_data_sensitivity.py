@@ -90,3 +90,38 @@ def test_data_sensitive_hidden(sensitive_dataset, pas_client, ida_client, user_c
         resp = client.get(f"/v3/datasets/{dataset_id}")
         assert resp.status_code == 200
         assert "data_sensitivity" not in resp.data
+
+
+def test_data_sensitive_writable_only_by_pas(sensitive_dataset, pas_client, ida_client):
+    """
+    Test that 'data_sensitivity' field is only writably by PAS user
+    """
+    dataset_id = sensitive_dataset.id
+    resp = pas_client.patch(
+        f"/v3/datasets/{dataset_id}",
+        {
+            "data_sensitivity": {
+                "is_sensitive": False,
+                "rationales": []
+            }
+        },
+        content_type="application/json"
+    )
+
+    assert resp.status_code == 200
+
+    # Forbidden for non-PAS user
+    for value in [True, False]:
+        resp = ida_client.patch(
+            f"/v3/datasets/{dataset_id}",
+            {
+                "data_sensitivity": {
+                    "is_sensitive": value,
+                    "rationales": []
+                }
+            },
+            content_type="application/json"
+        )
+
+        assert resp.status_code == 400
+        assert resp.data["is_sensitive"] == "Only PAS users are allowed to set is_sensitive"

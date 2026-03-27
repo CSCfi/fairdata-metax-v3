@@ -523,6 +523,14 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
             "title",
             *read_only_fields,
         )
+        # Fields only writable by PAS
+        pas_only_fields = (
+            # data_sensitivity
+            "is_sensitive",
+            "rationales",
+
+            "preservation",
+        )
         list_serializer_class = DatasetListSerializer
 
     def _validate_timestamps(self, data, errors):
@@ -551,11 +559,17 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
             existing_fileset = getattr(self.instance, "file_set", None)
             existing_remote_resources = self.instance.remote_resources.all()
         _user = self.context["request"].user
-        preservation = data.get("preservation", None)
-        if preservation and not (
-            _user.is_superuser or any(group.name == "pas" for group in _user.groups.all())
-        ):
-            errors["preservation"] = "Only PAS users are allowed to set preservation"
+
+        # If PAS fields provided for writing, check PAS permission
+        found_pas_fields = set(self.Meta.pas_only_fields) & set(data.keys())
+        for field_name in found_pas_fields:
+            has_pas_rights = \
+                _user.is_superuser or any(group.name == "pas" for group in _user.groups.all())
+
+            field_value = data.get(field_name, None)
+            if field_value is not None and not has_pas_rights:
+                errors[field_name] = f"Only PAS users are allowed to set {field_name}"
+
         fileset = data.get("file_set", existing_fileset)
         remote_resources = data.get("remote_resources", existing_remote_resources)
         if fileset and remote_resources:
