@@ -125,3 +125,112 @@ def test_data_sensitive_writable_only_by_pas(sensitive_dataset, pas_client, ida_
 
         assert resp.status_code == 400
         assert resp.data["is_sensitive"] == "Only PAS users are allowed to set is_sensitive"
+
+
+def test_contract_must_be_sensitive(sensitive_contract, sensitive_dataset, pas_client):
+    """
+    Test that dataset cannot be made sensitive if the contract is not sensitive
+    """
+    resp = pas_client.patch(
+        f"/v3/datasets/{sensitive_dataset.id}",
+        {"data_sensitivity": {"is_sensitive": False, "rationales": []}},
+        content_type="application/json"
+    )
+    assert resp.status_code == 200
+    resp = pas_client.patch(
+        f"/v3/contracts/{sensitive_contract.id}",
+        {
+            "data_sensitivity": {"is_sensitive": False, "rationales": []}
+        },
+        content_type="application/json"
+    )
+    assert resp.status_code == 200
+
+    # Dataset cannot be made sensitive
+    resp = pas_client.patch(
+        f"/v3/datasets/{sensitive_dataset.id}",
+        {
+            "data_sensitivity": {"is_sensitive": True, "rationales": []}
+        },
+        content_type="application/json"
+    )
+
+    assert resp.status_code == 400
+    assert resp.data["is_sensitive"] == "Linked contract must have 'is_sensitive' set"
+
+
+@pytest.mark.usefixtures("data_catalog", "reference_data")
+def test_new_dataset_must_contain_rationales(sensitive_contract, dataset_a_json, pas_client):
+    """
+    Test that newly created must only use rationales from the linked
+    contract
+    """
+    new_rationale = SensitivityRationaleFactory()
+
+    resp = pas_client.post(
+        "/v3/datasets",
+        {
+            **dataset_a_json,
+            "preservation": {"contract": sensitive_contract.id},
+            "data_sensitivity": {
+                "is_sensitive": True,
+                "rationales": [
+                    {"rationale": {"url": new_rationale.url}}
+                ]
+            }
+        },
+        content_type="application/json"
+    )
+    assert resp.status_code == 400
+    assert resp.data["rationales"] == \
+        f"Following rationales are not listed in the linked contract: {new_rationale.url}"
+
+
+def test_contract_must_contain_rationales(sensitive_contract, sensitive_dataset, pas_client):
+    """
+    Test that any rationales (refdata.SensitivityRationale) included
+    in the dataset must also exist in the contract
+    """
+    sensitive_dataset.rationales.first().delete()
+
+    # Contract will have A, B.
+    # We will attempt to enter B, C into dataset.
+    # C missing from contract causes an error.
+    rationale_a = SensitivityRationaleFactory()
+    rationale_b = SensitivityRationaleFactory()
+    rationale_c = SensitivityRationaleFactory()
+
+    resp = pas_client.patch(
+        f"/v3/contracts/{sensitive_contract.id}",
+        {
+            "data_sensitivity": {
+                "is_sensitive": True,
+                "rationales": [
+                    {"rationale": {"url": rationale_a.url}},
+                    {"rationale": {"url": rationale_b.url}}
+                ],
+            }
+        },
+        content_type="application/json"
+    )
+    assert resp.status_code == 200
+
+    # Attempt adding B, C into dataset.
+    # A missing is allowed, but C is not allowed because it's not in the contract;
+    # rationales in dataset must be a subset of contract's.
+    resp = pas_client.patch(
+        f"/v3/datasets/{sensitive_dataset.id}",
+        {
+            "data_sensitivity": {
+                "is_sensitive": True,
+                "rationales": [
+                    {"rationale": {"url": rationale_b.url}},
+                    {"rationale": {"url": rationale_c.url}},
+                ]
+            }
+        },
+        content_type="application/json"
+    )
+    assert resp.status_code == 400
+    assert resp.data["rationales"] == \
+        f"Following rationales are not listed in the linked contract: {rationale_c.url}"

@@ -35,6 +35,7 @@ from apps.core.models import DataCatalog, Dataset
 from apps.core.models.catalog_record.data_sensitivity import DatasetSensitivityRationale
 from apps.core.models.catalog_record.dataset_index import DatasetIndexEntry
 from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, Theme
+from apps.core.models.preservation import Preservation
 from apps.core.models.data_catalog import GeneratedPIDType
 from apps.core.serializers.common_serializers import (
     AccessRightsModelSerializer,
@@ -61,6 +62,9 @@ from apps.users.models import MetaxUser
 from .dataset_files_serializer import FileSetSerializer
 
 logger = logging.getLogger(__name__)
+
+
+MISSING = object()
 
 
 class VersionSerializer(CommonModelSerializer):
@@ -623,6 +627,78 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
         if msg:
             raise serializers.ValidationError({"persistent_identifier": msg})
 
+    @classmethod
+    def validate_new_data_sensitivity(
+        cls,
+        dataset: Optional["Dataset"],
+        new_is_sensitive: Optional[bool] = None,
+        new_rationales: Optional[list[DatasetSensitivityRationale]] = None,
+        new_preservation: Optional[Preservation] = None
+    ):
+        """
+        Validate that new data sensitivity and the corresponding contract are
+        consistent:
+
+        * if dataset is sensitive, contract must be sensitive as well
+        * any rationales listed in dataset must be listed in the
+          contract as well
+        """
+        new_contract = new_preservation["contract"] if new_preservation else MISSING
+
+        if dataset:
+            # For values not being updated, use their existing values
+            if new_contract is MISSING:
+                new_contract = dataset.preservation.contract if dataset.preservation else None
+            if new_is_sensitive is None:
+                new_is_sensitive = dataset.is_sensitive
+            if new_rationales is None:
+                new_rationales = dataset.rationales
+
+        contract_rationale_urls = set()
+        if new_contract not in (None, MISSING):
+            contract_rationale_urls = set(
+                rationale.rationale.url for rationale
+                in new_contract.rationales.prefetch_related("rationale")
+            )
+
+        # Check contract has 'is_sensitive' set to True if we attempt
+        # to set it in the dataset
+        if new_is_sensitive:
+            if not new_contract:
+                raise serializers.ValidationError({
+                    "is_sensitive": \
+                        "Linked contract with is_sensitive=true is required"
+                })
+
+            if not new_contract.is_sensitive:
+                raise serializers.ValidationError({
+                    "is_sensitive": "Linked contract must have 'is_sensitive' set"
+                })
+
+        # Check any rationales to be added into the dataset are also
+        # listed in the contract
+        if new_rationales:
+            try:
+                # Cast query set to list
+                new_rationales = list(new_rationales.all())
+            except AttributeError:
+                pass
+
+            new_rationale_urls = set(
+                rationale["rationale"].url for rationale in new_rationales
+            )
+            missing_rationale_urls = new_rationale_urls - contract_rationale_urls
+
+            if missing_rationale_urls:
+                raise serializers.ValidationError(
+                    {
+                        "rationales": (
+                            f"Following rationales are not listed in the "
+                            f"linked contract: {', '.join(missing_rationale_urls)}"
+                        )
+                    }
+                )
+
     def to_internal_value(self, data):
         if self.instance:  # dataset actors need dataset in context
             self.context["dataset"] = self.instance
@@ -658,6 +734,15 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
                 new_data_catalog=validated_data.get("data_catalog"),
             )
 
+        if "is_sensitive" in validated_data or "rationales" in validated_data \
+                or "preservation" in validated_data:
+            self.validate_new_data_sensitivity(
+                dataset=instance,
+                new_is_sensitive=validated_data.get("is_sensitive"),
+                new_rationales=validated_data.get("rationales"),
+                new_preservation=validated_data.get("preservation")
+            )
+
         # Ensure modification timestamp gets set on PATCH which does not use model defaults
         if "modified" not in validated_data:
             validated_data["modified"] = timezone.now()
@@ -682,6 +767,12 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
             dataset=None,
             new_pid=validated_data.get("persistent_identifier"),
             new_data_catalog=validated_data.get("data_catalog"),
+        )
+        self.validate_new_data_sensitivity(
+            dataset=None,
+            new_is_sensitive=validated_data.get("is_sensitive"),
+            new_rationales=validated_data.get("rationales"),
+            new_preservation=validated_data.get("preservation")
         )
 
         if validated_data.get("access_rights", False):
