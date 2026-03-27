@@ -10,13 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
-import json
-import logging
-import os
 import sys
-import time
 from datetime import timedelta
-from os.path import join
+import os.path
 from pathlib import Path
 
 import factory.random
@@ -32,18 +28,18 @@ PROJECT_DIR = Path(__file__).resolve().parent.parent
 
 ROOT_DIR = BASE_DIR.parent
 
-APPS_DIR = join(BASE_DIR, "apps")
+APPS_DIR = os.path.join(BASE_DIR, "apps")
 
 sys.path.append(APPS_DIR)
 
 # collect static files here
-STATIC_ROOT = os.environ.get("STATIC_ROOT", join(ROOT_DIR, "staticfiles"))
+STATIC_ROOT = env.str("STATIC_ROOT", os.path.join(ROOT_DIR, "staticfiles"))
 STATIC_URL = "/v3/static/"
 
-NO_NGINX_PROXY = os.environ.get("NO_NGINX_PROXY", True)
+NO_NGINX_PROXY = env.bool("NO_NGINX_PROXY", True)
 
 # collect media files here
-MEDIA_ROOT = join(ROOT_DIR, "media")
+MEDIA_ROOT = os.path.join(ROOT_DIR, "media")
 
 # watchman storage setting
 WATCHMAN_STORAGE_PATH = "django-watchman/"
@@ -55,26 +51,26 @@ WATCHMAN_CHECKS = watchman_constants.DEFAULT_CHECKS + (
 
 # look for static assets here
 STATICFILES_DIRS = [
-    join(ROOT_DIR, "static"),
+    os.path.join(ROOT_DIR, "static"),
 ]
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get(
+SECRET_KEY = env.str(
     "DJANGO_SECRET_KEY", "django-insecure-+#ohm#9qx8+2gc28g6%r8iww^8f&yye_)^-&=3x51kzw$&svk("
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("DEBUG", False)
+DEBUG = env.bool("DEBUG", False)
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,0.0.0.0,127.0.0.1,[::1]").split(",")
+ALLOWED_HOSTS = env.str("ALLOWED_HOSTS", "localhost,0.0.0.0,127.0.0.1,[::1]").split(",")
 # This previously used `split(", ")`. This ensures backwards compatibility.
 ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS]
 
-INTERNAL_IPS = os.environ.get("INTERNAL_IPS", "127.0.0.1").split(",")
+INTERNAL_IPS = env.str("INTERNAL_IPS", "127.0.0.1").split(",")
 
 # Application definition
 
@@ -167,11 +163,11 @@ ASGI_APPLICATION = "metax_service.asgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.contrib.gis.db.backends.postgis",
-        "NAME": os.environ.get("POSTGRES_DATABASE_NAME"),
-        "USER": os.environ.get("POSTGRES_USER"),
-        "PASSWORD": os.environ.get("POSTGRES_PASS"),
-        "HOST": os.getenv("POSTGRES_HOST", default="localhost"),
-        "PORT": os.getenv("POSTGRES_PORT", default="5432"),
+        "NAME": env.str("POSTGRES_DATABASE_NAME", ""),
+        "USER": env.str("POSTGRES_USER", ""),
+        "PASSWORD": env.str("POSTGRES_PASS", ""),
+        "HOST": env.str("POSTGRES_HOST", default="localhost"),
+        "PORT": env.str("POSTGRES_PORT", default="5432"),
         "CONN_MAX_AGE": 30,
         "ATOMIC_REQUESTS": True,
     },

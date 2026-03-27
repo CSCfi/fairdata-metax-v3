@@ -97,7 +97,7 @@ LOGGING = {
         }
     },
     "root": {
-        "level": os.environ.get("DJANGO_LOG_LEVEL", default="INFO"),
+        "level": env.str("DJANGO_LOG_LEVEL", default="INFO"),
         "handlers": ["console", "file"],
     },
 }
@@ -112,7 +112,7 @@ SLOW_QUERY_LIMIT = env.float("SLOW_QUERY_LIMIT", 0)
 # If queries by request exceed total limit or a query was slow, log total queries for request
 SLOW_TOTAL_QUERIES_LIMIT = env.float("SLOW_TOTAL_QUERIES_LIMIT", 0)
 
-LOG_FILE = os.environ.get("DJANGO_ERROR_LOG_FILENAME")
+LOG_FILE = env.str("DJANGO_ERROR_LOG_FILENAME", "")
 if LOG_FILE:
     LOGGING["handlers"]["file"] = {
         "level": "INFO",
