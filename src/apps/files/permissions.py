@@ -11,14 +11,16 @@ class BaseFilesAccessPolicy(BaseAccessPolicy):
 
     @classmethod
     def can_view_dataset_file_metadata(cls, request, dataset_id):
-        # Allow viewing dataset files if user can view dataset
+        # Allow viewing dataset files if user can view dataset and the access rights allow it
         from apps.core.models import Dataset
         from apps.core.permissions import DatasetAccessPolicy
 
         datasets = Dataset.available_objects.all()
         dataset = (
             DatasetAccessPolicy.scope_queryset(request, queryset=datasets)
+            .order_by()
             .filter(id=dataset_id)
+            .select_related("access_rights")
             .first()
         )
         if dataset is None:

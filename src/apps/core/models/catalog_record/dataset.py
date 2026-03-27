@@ -429,7 +429,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             yield UserRole(choices.CATALOG_ADMIN, can_read=True, can_write=True)
 
         can_update = self.data_catalog is None or self.data_catalog.can_update_datasets(user)
-        if self.metadata_owner and self.metadata_owner.user == user:
+        if self.metadata_owner and self.metadata_owner.user_id == user.id:
             yield UserRole(choices.OWNER, can_read=True, can_write=can_update)
         if (
             fileset := getattr(self, "file_set", None)
