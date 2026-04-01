@@ -1,5 +1,7 @@
 import logging
 
+from typing import Optional
+
 from django.db import models
 from rest_framework import serializers, validators
 
@@ -11,6 +13,7 @@ from apps.common.serializers.serializers import (
     CommonNestedModelSerializer,
 )
 from apps.core.models import Contract
+from apps.core.models.catalog_record.dataset import Dataset
 from apps.core.models.contract import ContractContact, ContractService, ContractSensitivityRationale
 from apps.core.models.concepts import SensitivityRationale
 from apps.users.models import MetaxUser
@@ -153,12 +156,102 @@ class ContractModelSerializer(CommonNestedModelSerializer):
 
         return result
 
+    @classmethod
+    def validate_new_data_sensitivity(
+        cls,
+        contract: Optional["Contract"],
+        new_is_sensitive: Optional[bool] = None,
+        new_rationales: Optional[list[ContractSensitivityRationale]] = None,
+    ):
+        """
+        Validate that new contract and any linked datasets remain valid
+        after update:
+
+        * contract cannot be made non-sensitive if any datasets are sensitive
+        * rationales cannot be removed if any datasets still use them
+        """
+        if contract:
+            # For values not being updated, use their existing values
+            if new_is_sensitive is None:
+                new_is_sensitive = contract.is_sensitive
+            if new_rationales is None:
+                new_rationales = contract.rationales
+
+        # If 'is_sensitive' is being set to False, query for datasets that
+        # are still sensitive
+        if new_is_sensitive is False:
+            dataset_ids = [
+                str(dataset.id) for dataset
+                in Dataset.objects.filter(
+                    preservation__contract=contract.id, is_sensitive=True
+                ).only("id")
+            ]
+            if dataset_ids:
+                raise serializers.ValidationError({
+                    "is_sensitive": (
+                        f"Following datasets are still sensitive: {', '.join(dataset_ids)}"
+                    )
+                })
+
+        # If rationales are changed, retrieve any that are being removed
+        # and query for datasets still using them
+        if new_rationales is not None:
+            try:
+                # Cast query set to list
+                new_rationales = list(new_rationales.all())
+            except AttributeError:
+                pass
+
+            new_rationale_urls = {
+                new_rationale["rationale"].url for new_rationale in new_rationales
+            }
+            old_rationale_urls = {
+                old_rationale.rationale.url for old_rationale
+                in contract.rationales.prefetch_related("rationale")
+            } if contract else set()
+
+            removed_rationale_urls = old_rationale_urls - new_rationale_urls
+
+            if removed_rationale_urls:
+                dataset_ids = [
+                    str(dataset.id) for dataset
+                    in Dataset.objects.filter(
+                        preservation__contract=contract.id,
+                        is_sensitive=True, rationales__rationale__url__in=removed_rationale_urls
+                    ).only("id")
+                ]
+
+                if dataset_ids:
+                    raise serializers.ValidationError({
+                        "rationales": (
+                            f"Following datasets still use rationales that are "
+                            f"being removed: {', '.join(dataset_ids)}"
+                        )
+                    })
+
     def update(self, instance, validated_data):
         if "id" in validated_data and validated_data["id"] != instance.id:
             raise serializers.ValidationError(
                 {"id": "Value cannot be changed for an existing contract."}
             )
+
+        if "is_sensitive" in validated_data or "rationales" in validated_data:
+            self.validate_new_data_sensitivity(
+                contract=instance,
+                new_is_sensitive=validated_data.get("is_sensitive"),
+                new_rationales=validated_data.get("rationales")
+            )
+
         return super().update(instance, validated_data)
+
+    def create(self, validated_data):
+        self.validate_new_data_sensitivity(
+            contract=None,
+            new_is_sensitive=validated_data.get("is_sensitive"),
+            new_rationales=validated_data.get("rationales")
+        )
+
+        return super().create(validated_data=validated_data)
 
 
 class LegacyContractJSONSerializer(ContractModelSerializer):

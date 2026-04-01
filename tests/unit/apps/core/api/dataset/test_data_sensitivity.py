@@ -234,3 +234,90 @@ def test_contract_must_contain_rationales(sensitive_contract, sensitive_dataset,
     assert resp.status_code == 400
     assert resp.data["rationales"] == \
         f"Following rationales are not listed in the linked contract: {rationale_c.url}"
+
+
+def test_contract_must_retain_rationales(sensitive_contract, sensitive_dataset, pas_client):
+    """
+    Test that creating datasets using certain rationales prevents their
+    removal from the contract
+    """
+    # Delete existing rationale
+    sensitive_dataset.rationales.first().delete()
+
+    # Contract will have A, B, C, dataset will have A, B.
+    # Attempting to set contract's rationales to just B will cause an error
+    # due to dataset still using rationale A.
+    rationale_a = SensitivityRationaleFactory()
+    rationale_b = SensitivityRationaleFactory()
+    rationale_c = SensitivityRationaleFactory()
+
+    resp = pas_client.patch(
+        f"/v3/contracts/{sensitive_contract.id}",
+        {
+            "data_sensitivity": {
+                "is_sensitive": True,
+                "rationales": [
+                    {"rationale": {"url": rationale_a.url}},
+                    {"rationale": {"url": rationale_b.url}},
+                    {"rationale": {"url": rationale_c.url}},
+                ],
+            }
+        },
+        content_type="application/json"
+    )
+    assert resp.status_code == 200
+
+    resp = pas_client.patch(
+        f"/v3/datasets/{sensitive_dataset.id}",
+        {
+            "data_sensitivity": {
+                "is_sensitive": True,
+                "rationales": [
+                    {"rationale": {"url": rationale_a.url}},
+                    {"rationale": {"url": rationale_b.url}},
+                ]
+            }
+        },
+        content_type="application/json"
+    )
+    assert resp.status_code == 200
+
+    # Attempt removal of A and C from contract.
+    resp = pas_client.patch(
+        f"/v3/contracts/{sensitive_contract.id}",
+        {
+            "data_sensitivity": {
+                "is_sensitive": True,
+                "rationales": [
+                    {"rationale": {"url": rationale_b.url}}
+                ]
+            }
+        },
+        content_type="application/json"
+    )
+    assert resp.status_code == 400
+    assert resp.data["rationales"] \
+        == f"Following datasets still use rationales that are being removed: {sensitive_dataset.id}"
+
+
+def test_sensitive_dataset_prevents_contract_change(sensitive_contract, sensitive_dataset, pas_client):
+    """
+    Test that an existing sensitive dataset prevents making the contract non-sensitive
+    """
+    assert sensitive_dataset.is_sensitive
+
+    resp = pas_client.patch(
+        f"/v3/contracts/{sensitive_contract.id}",
+        {
+            "data_sensitivity": {
+                "is_sensitive": False,
+                "rationales": [
+                    {"rationale": {"url": sensitive_contract.rationales.first().rationale.url}}
+                ]
+            }
+        },
+        content_type="application/json"
+    )
+    assert resp.status_code == 400
+    assert resp.data["is_sensitive"] == \
+        f"Following datasets are still sensitive: {sensitive_dataset.id}"
