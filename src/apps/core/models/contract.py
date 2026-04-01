@@ -10,7 +10,7 @@ from simple_history.models import HistoricalRecords
 from apps.common.helpers import single_translation
 from apps.common.models import CustomSoftDeletableModel, SystemCreatorBaseModel
 from apps.common.serializers.fields import MultiLanguageField
-from apps.refdata.models import SensitivityRationale
+from apps.core.models.concepts import SensitivityRationale
 
 
 class ContractContact(models.Model):
