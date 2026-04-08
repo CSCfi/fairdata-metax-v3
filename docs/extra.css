@@ -29,8 +29,11 @@
 
 /* SIDEBAR TWEAKS */
 
-.md-sidebar {
-  width: 14rem;
+/* Only takes effect when hamburger menu is not available */
+@media screen and (min-width: 1220px) {
+  .md-sidebar {
+    width: 14rem;
+  }
 }
 
 .md-tabs__item a{
