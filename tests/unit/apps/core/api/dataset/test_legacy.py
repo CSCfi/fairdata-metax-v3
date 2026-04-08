@@ -4,6 +4,7 @@ from uuid import UUID
 
 import pytest
 from rest_framework.reverse import reverse
+from apps.core.models.catalog_record.dataset_index import DatasetIndexEntry
 from tests.utils import matchers
 
 from apps.core import factories
@@ -18,6 +19,7 @@ def test_create_legacy_dataset(legacy_dataset_a):
     assert legacy_dataset_a.status_code == 201, legacy_dataset_a.data
     assert not legacy_dataset_a.data.get("migration_errors")
     assert legacy_dataset_a.data.get("preservation") is None
+    assert DatasetIndexEntry.objects.exists()
 
 
 def test_create_same_legacy_dataset_twice(admin_client, legacy_dataset_a, legacy_dataset_a_json):

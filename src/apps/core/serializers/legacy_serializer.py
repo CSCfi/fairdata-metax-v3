@@ -52,12 +52,14 @@ class LegacyDatasetModelSerializer(CommonModelSerializer):
 
     def save(self, **kwargs):
         try:
-            res = super().save(**kwargs)
+            instance = super().save(**kwargs)
+            if instance.dataset:
+                instance.dataset.update_index()
         except Exception as e:
             # Log errors here to make migration issues easier to debug
             logger.error(e.__repr__())
             raise
-        return res
+        return instance
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
