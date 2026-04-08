@@ -8,7 +8,13 @@ RUN mkdir /static
 COPY dev-requirements.txt /code/
 WORKDIR /code
 
-RUN pip install -r dev-requirements.txt
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+  --mount=type=cache,target=/var/lib/apt,sharing=locked \
+  apt-get update && \
+  apt-get --no-install-recommends install -y libgdal-dev libgeos-dev
+
+RUN --mount=type=cache,target=/root/.cache/pip \
+  pip install -r dev-requirements.txt
 
 COPY . /code
 
