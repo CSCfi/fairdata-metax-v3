@@ -65,6 +65,7 @@ class File(SystemCreatorBaseModel, CustomSoftDeletableModel):
         blank=True,
         on_delete=models.SET_NULL,
     )
+    is_sensitive = models.BooleanField(default=False, null=False)
 
     user = models.CharField(max_length=200, null=True, blank=True)
     legacy_id = models.BigIntegerField(unique=True, null=True, blank=True)
