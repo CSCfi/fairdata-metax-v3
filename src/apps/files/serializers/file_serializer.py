@@ -132,7 +132,7 @@ class FileSerializer(CreateOnlyFieldsMixin, CommonNestedModelSerializer):
         "storage_service",
         "storage_identifier",
     ]
-    pas_only_fields = ["pas_compatible_file", "pas_process_running"]
+    pas_only_fields = ["pas_compatible_file", "pas_process_running", "is_sensitive"]
 
     # FileStorage specific fields
     storage_service = ListValidChoicesField(choices=list(settings.STORAGE_SERVICE_FILE_STORAGES))
