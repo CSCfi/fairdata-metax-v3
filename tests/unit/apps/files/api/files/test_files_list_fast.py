@@ -17,6 +17,7 @@ fast_fields = [
     "filename",
     "frozen",
     "id",
+    "is_sensitive",
     "modified",
     "pas_process_running",
     "pathname",

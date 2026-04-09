@@ -72,6 +72,7 @@ def test_directory_field_values(admin_client, file_tree_b):
                     "pas_compatible_file": None,
                     "non_pas_compatible_file": None,
                     "pas_process_running": False,
+                    "is_sensitive": False,
                 }
             ],
         },

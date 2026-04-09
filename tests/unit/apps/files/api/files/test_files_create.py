@@ -29,6 +29,7 @@ def test_files_create(admin_client, ida_file_json):
             "pas_compatible_file": None,
             "non_pas_compatible_file": None,
             "pas_process_running": False,
+            "is_sensitive": False,
         },
         res.json(),
         check_all_keys_equal=True,

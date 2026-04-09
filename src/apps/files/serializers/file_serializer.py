@@ -257,5 +257,6 @@ class FileSerializer(CreateOnlyFieldsMixin, CommonNestedModelSerializer):
             "pas_process_running",
             "pas_compatible_file",
             "non_pas_compatible_file",
+            "is_sensitive",
         ]
         extra_kwargs = {"published": {"read_only": True}}
