@@ -106,6 +106,10 @@ class MetaxUser(AbstractUser, CustomSoftDeletableModel):
     def is_appsupport(self):
         return any(g for g in self.groups.all() if g.name == "appsupport")
 
+    @cached_property
+    def is_pas_service(self):
+        return any(g for g in self.groups.all() if g.name == "pas")
+
     def __str__(self):
         return self.username
 
