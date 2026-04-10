@@ -134,9 +134,7 @@ class ContractModelSerializer(CommonNestedModelSerializer):
         if not user.is_authenticated:
             return False
 
-        return any(
-            group.name == "pas" for group in user.groups.all()
-        )
+        return user.is_pas_service
 
     def to_representation(self, instance: Contract):
         result = super().to_representation(instance)

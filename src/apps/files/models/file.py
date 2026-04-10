@@ -176,9 +176,7 @@ class File(SystemCreatorBaseModel, CustomSoftDeletableModel):
         """Determine if and why user is locked from modifying the file."""
         if user.is_superuser:
             return None
-        if self.pas_process_running and not any(
-            group.name == "pas" for group in user.groups.all()
-        ):
+        if self.pas_process_running and not user.is_pas_service:
             return "Only PAS service is allowed to modify the file while it is in PAS process."
 
         return None
@@ -188,7 +186,7 @@ class File(SystemCreatorBaseModel, CustomSoftDeletableModel):
         cls, user: MetaxUser, queryset: models.QuerySet
     ) -> Dict[uuid.UUID, str]:
         """Determine if and why user is locked from modifying the file."""
-        if user.is_superuser or any(group.name == "pas" for group in user.groups.all()):
+        if user.is_superuser or user.is_pas_service:
             return {}
 
         msg = "Only PAS service is allowed to modify the file while it is in PAS process."

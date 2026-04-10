@@ -481,7 +481,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         if (
             self.preservation
             and self.preservation.pas_process_running
-            and not any(group.name == "pas" for group in user.groups.all())
+            and not user.is_pas_service
         ):
             return (
                 "Only PAS service is allowed to modify "

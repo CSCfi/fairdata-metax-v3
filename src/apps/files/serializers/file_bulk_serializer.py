@@ -234,9 +234,7 @@ class FileBulkSerializer(serializers.ListSerializer):
     def is_pas_user(self):
         if not hasattr(self, "_is_pas_user"):
             user = self.get_context_user()
-            self._is_pas_user = user.is_superuser or any(
-                group.name == "pas" for group in user.groups.all()
-            )
+            self._is_pas_user = user.is_superuser or user.is_pas_service
         return self._is_pas_user
 
     def handle_file_locks(self, files: List[dict]) -> List[dict]:

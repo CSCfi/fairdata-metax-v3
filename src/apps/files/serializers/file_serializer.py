@@ -196,7 +196,7 @@ class FileSerializer(CreateOnlyFieldsMixin, CommonNestedModelSerializer):
 
     def check_pas_field_permissions(self, instance: Optional[File], validated_data):
         user = self.context["request"].user
-        if user.is_superuser or any(group.name == "pas" for group in user.groups.all()):
+        if user.is_superuser or user.is_pas_service:
             return
 
         errors = {}

@@ -237,9 +237,7 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
         if not user.is_authenticated:
             return False
 
-        return any(
-            group.name == "pas" for group in user.groups.all()
-        )
+        return user.is_pas_service
 
     def get_version(self, instance):
         return instance.version_number
@@ -567,8 +565,7 @@ class DatasetSerializer(CommonNestedModelSerializer, SerializerCacheSerializer):
         # If PAS fields provided for writing, check PAS permission
         found_pas_fields = set(self.Meta.pas_only_fields) & set(data.keys())
         for field_name in found_pas_fields:
-            has_pas_rights = \
-                _user.is_superuser or any(group.name == "pas" for group in _user.groups.all())
+            has_pas_rights = _user.is_superuser or _user.is_pas_service
 
             field_value = data.get(field_name, None)
             if field_value is not None and not has_pas_rights:
