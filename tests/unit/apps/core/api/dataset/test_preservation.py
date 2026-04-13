@@ -482,6 +482,34 @@ def test_create_dataset_preservation_version_twice(
     assert "already has a PAS version" in res.json()["detail"]
 
 
+def test_create_dataset_preservation_version_permit_to_restricted(
+    pas_client, preservation_dataset_json, data_catalog_pas
+):
+    """When creating preservation version of 'permit' dataset, it is changed to 'restricted'."""
+    preservation_dataset_json["access_rights"]["access_type"] = {
+        "url": "http://uri.suomi.fi/codelist/fairdata/access_type/code/permit"
+    }
+    preservation_dataset_json["access_rights"]["restriction_grounds"] = [
+        {"url": "http://uri.suomi.fi/codelist/fairdata/restriction_grounds/code/research"}
+    ]
+
+    res = pas_client.post(
+        "/v3/datasets", preservation_dataset_json, content_type="application/json"
+    )
+    assert res.status_code == 201, res.data
+    origin_id = res.data["id"]
+
+    res = pas_client.post(
+        f"/v3/datasets/{origin_id}/create-preservation-version",
+        content_type="application/json",
+    )
+    assert res.status_code == 201, res.data
+    assert (
+        res.json()["access_rights"]["access_type"]["url"]
+        == "http://uri.suomi.fi/codelist/fairdata/access_type/code/restricted"
+    )
+
+
 @pytest.mark.usefixtures("data_catalog", "reference_data")
 def test_preservation_pas_process_running(pas_client, ida_client, preservation_dataset):
     # Lock dataset from modifications by non-PAS users

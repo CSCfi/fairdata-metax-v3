@@ -150,3 +150,19 @@ class AccessRights(AbstractBaseModel):
             # Access controlled by REMS. User needs to have at least one active entitlement
             return self._user_has_rems_entitlement(request.user, dataset)
         return False  # unknown or missing access type
+
+    def convert_access_type(self, from_url: str, to_url: str):
+        """When access type url matches from_url, convert to new access type."""
+        if self.access_type and self.access_type.url == from_url:
+            try:
+                self.access_type = AccessType.objects.get(url=to_url)
+                self.save()
+            except AccessType.DoesNotExist:
+                raise ValidationError(
+                    {
+                        "detail": (
+                            f"Failed to convert access type. "
+                            f"Target access type {to_url} does not exist."
+                        )
+                    }
+                )

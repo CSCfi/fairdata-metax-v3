@@ -797,6 +797,14 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             data_catalog=pas_catalog,
             generate_pid_on_publish=GeneratedPIDType.DOI,
         )
+
+        # Convert 'permit' to 'restricted' to prevent creating the copy as a REMS dataset
+        if pas_version.access_rights:
+            pas_version.access_rights.convert_access_type(
+                from_url="http://uri.suomi.fi/codelist/fairdata/access_type/code/permit",
+                to_url="http://uri.suomi.fi/codelist/fairdata/access_type/code/restricted",
+            )
+
         logger.info("Copying file entries to PAS storage_service")
         if fileset := getattr(self, "file_set", None):
             pas_version.file_set = fileset.create_preservation_copy(pas_version)
