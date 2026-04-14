@@ -1,5 +1,6 @@
 import pytest
 from django.conf import settings
+from django.utils import timezone
 
 from apps.core import factories
 from apps.core.models.access_rights import AccessTypeChoices
@@ -701,10 +702,9 @@ def test_dataset_rems_check(
 ):
     res = admin_client.post("/v3/datasets", rems_dataset_json, content_type="application/json")
     assert res.status_code == 201
+    _id = res.data["id"]
 
-    res = admin_client.get(
-        f"/v3/datasets/{res.data["id"]}/rems-check", content_type="application/json"
-    )
+    res = admin_client.get(f"/v3/datasets/{_id}/rems-check", content_type="application/json")
     assert res.status_code == 200
     assert res.data == {
         "metax_rems_enabled": True,
@@ -713,17 +713,33 @@ def test_dataset_rems_check(
         "dataset_is_published": True,
         "dataset_has_admin_organization": True,
         "rems_approval_type_is_set": True,
+        "dataset_not_deprecated_or_removed": True,
         "dataset_in_rems": True,
     }
 
+    # Deprecate the dataset
+    Dataset.objects.get(id=_id).deprecate()
+    res = admin_client.get(f"/v3/datasets/{_id}/rems-check", content_type="application/json")
+    assert res.status_code == 200
+    assert res.data == {
+        "metax_rems_enabled": True,
+        "data_catalog_rems_enabled": True,
+        "access_type_is_permit": True,
+        "dataset_is_published": True,
+        "dataset_has_admin_organization": True,
+        "rems_approval_type_is_set": True,
+        "dataset_not_deprecated_or_removed": False,
+        "dataset_in_rems": False,
+    }
+
+    # Create non-REMS dataset
     res = admin_client.post(
         "/v3/datasets", {"title": {"en": "hello world"}}, content_type="application/json"
     )
     assert res.status_code == 201
+    _id = res.data["id"]
 
-    res = admin_client.get(
-        f"/v3/datasets/{res.data["id"]}/rems-check", content_type="application/json"
-    )
+    res = admin_client.get(f"/v3/datasets/{_id}/rems-check", content_type="application/json")
     assert res.data == {
         "metax_rems_enabled": True,
         "data_catalog_rems_enabled": False,
@@ -731,6 +747,7 @@ def test_dataset_rems_check(
         "access_type_is_permit": False,
         "dataset_has_admin_organization": False,
         "rems_approval_type_is_set": False,
+        "dataset_not_deprecated_or_removed": True,
         "dataset_in_rems": False,
     }
 
@@ -827,3 +844,34 @@ def test_rems_dataset_merge_draft_change_terms(
         mock_rems.entities["application"][1]["application/state"]
         == mock_rems.ApplicationState.CLOSED
     )
+
+
+def test_rems_delete_dataset(
+    mock_rems, rems_dataset_json, admin_client, reference_data, data_catalog, requests_mock
+):
+    """Unpublish dataset from REMS on delete."""
+    res = admin_client.post("/v3/datasets", rems_dataset_json, content_type="application/json")
+    assert res.status_code == 201, res.data
+    dataset = Dataset.objects.get(id=res.data["id"])
+    dataset.delete()
+
+    # Catalogue item should be archived
+    catalogue_item = mock_rems.entities["catalogue-item"][1]
+    assert catalogue_item["archived"] == True
+    assert catalogue_item["enabled"] == False
+
+
+def test_rems_deprecate_dataset(
+    mock_rems, rems_dataset_json, admin_client, reference_data, data_catalog, requests_mock
+):
+    """Unpublish dataset from REMS on deprecation."""
+    res = admin_client.post("/v3/datasets", rems_dataset_json, content_type="application/json")
+    assert res.status_code == 201, res.data
+
+    dataset = Dataset.objects.get(id=res.data["id"])
+    dataset.deprecate()
+
+    # Catalogue item should be archived
+    catalogue_item = mock_rems.entities["catalogue-item"][1]
+    assert catalogue_item["archived"] == True
+    assert catalogue_item["enabled"] == False

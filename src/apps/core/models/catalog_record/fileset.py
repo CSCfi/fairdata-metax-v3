@@ -186,8 +186,7 @@ class FileSet(AbstractBaseModel):
         """Files are removed, deprecate dataset if needed."""
         if dataset := getattr(self, "dataset", None):
             if dataset.has_published_files and not dataset.deprecated:
-                dataset.deprecated = timezone.now()
-                dataset.save()
+                dataset.deprecate()
 
     def remove_unused_file_metadata(self):
         """Remove file and directory metadata for files and directories not in FileSet."""

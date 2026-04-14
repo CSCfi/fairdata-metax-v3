@@ -367,6 +367,7 @@ def test_migrate_projects(mock_endpoint_files):
     ]
 
 
+@pytest.mark.django_db(databases=("default", "extra_connection"))
 def test_migrate_deprecation(mock_response, mock_endpoint_files_removed):
     out = StringIO()
     err = StringIO()

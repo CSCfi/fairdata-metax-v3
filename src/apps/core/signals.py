@@ -109,10 +109,10 @@ def sync_dataset_to_v2(dataset: Dataset, action: SyncAction, force_update=False)
                 ).save()
 
 
-def sync_dataset_to_rems(dataset: Dataset) -> Optional[bool]:
+def sync_dataset_to_rems(dataset: Dataset, remove=False) -> Optional[bool]:
     if not settings.REMS_ENABLED:
         return None
-    if dataset.is_rems_dataset:
+    if dataset.is_rems_dataset and not remove:
         return bool(REMSService().publish_dataset(dataset))
     elif len(dataset.rems_resources.all()) > 0:
         # Dataset has a REMS resource but is no longer a REMS dataset -> remove from REMS
@@ -148,7 +148,7 @@ def handle_dataset_pre_delete(sender, instance: Dataset, **kwargs):
         fileset := getattr(instance, "file_set", None)
     ):
         run_task(fileset.update_published, exclude_self=True)
-    # TODO: Archive dataset in REMS
+    sync_dataset_to_rems(instance, remove=True)
 
 
 @receiver(sync_contract)

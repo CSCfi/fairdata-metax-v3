@@ -376,10 +376,12 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         extra_fields = set(extra_fields) & dataset_fields
         extra_related = []
         if "preservation" in extra_fields:
-            extra_related.extend([
-                "preservation__dataset_version__dataset",
-                "preservation__dataset_origin_version__dataset",
-            ])
+            extra_related.extend(
+                [
+                    "preservation__dataset_version__dataset",
+                    "preservation__dataset_origin_version__dataset",
+                ]
+            )
         return [*cls.dataset_versions_prefetch_fields, *extra_fields, *extra_related]
 
     @classmethod
@@ -455,7 +457,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
                 is_dataset_org_admin and self.data_catalog.dataset_organization_admin_update
             ) or self.data_catalog.can_update_datasets(user)
         else:
-             can_update = True
+            can_update = True
         if is_dataset_org_admin:
             yield UserRole("organization_admin", can_read=True, can_write=can_update)
         if self.metadata_owner and self.metadata_owner.user_id == user.id:
@@ -636,6 +638,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             and self.data_catalog.rems_enabled
             and access_type_url == AccessTypeChoices.PERMIT
             and rems_approval_type is not None
+            and not (self.deprecated or self.removed)
             and dataset_has_admin_organization
         )
 
@@ -665,6 +668,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             "dataset_has_admin_organization": dataset_has_admin_organization,
             "access_type_is_permit": access_type_url == AccessTypeChoices.PERMIT,
             "rems_approval_type_is_set": rems_approval_type is not None,
+            "dataset_not_deprecated_or_removed": not (self.deprecated or self.removed),
             "dataset_in_rems": in_rems,
         }
 
@@ -918,6 +922,13 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         self.refresh_from_db()
         self.create_snapshot()
 
+    def deprecate(self):
+        """Mark dataset deprecated, save and send dataset_updated signal."""
+        if not self.deprecated:
+            self.deprecated = timezone.now()
+            self.save()
+            self.signal_update()
+
     def delete(self, *args, **kwargs):
         # Drafts are always hard deleted
         if self.state == self.StateChoices.DRAFT:
@@ -936,7 +947,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         # handlers have it up-to-date.
         self.dataset_versions_order = None
         self.record_modified = timezone.now()
-        soft = "soft" in kwargs and kwargs["soft"] is True
+        soft = kwargs.get("soft", True)  # soft delete is enabled by default
         if soft:
             pre_delete.send(Dataset, instance=self, soft=True)
 
