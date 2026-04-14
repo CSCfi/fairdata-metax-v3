@@ -27,7 +27,7 @@ services:
       - "etsin.fd-dev.csc.fi:172.18.0.3"
       - "qvain.fd-dev.csc.fi:172.18.0.3"
   metax-v3-postgres:
-    image: postgres:14
+    image: postgis/postgis:17-master
     hostname: metax-v3-postgres
     environment:
       POSTGRES_USER: metax_service
