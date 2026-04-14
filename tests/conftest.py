@@ -294,7 +294,7 @@ def handler(fairdata_users_group):
         last_name="Handler",
         email="handler@example.com",
         is_hidden=False,
-        admin_organizations=["test_organization"],
+        admin_organizations=["admin_org"],
     )
     _group, _ = Group.objects.get_or_create(name="fairdata_users")
     user.groups.set([fairdata_users_group])
@@ -1132,6 +1132,7 @@ def tweaked_settings(settings):
     settings.REMS_ORGANIZATION_ID = "csc"
     settings.REMS_RESOURCE_PREFIX = "metax-test"
     settings.FILE_LOCK_TIMEOUT = 0
+    settings.METAX_EMAIL_SENDER = "test-sender@fairdata.fi"
 
 
 @pytest.fixture

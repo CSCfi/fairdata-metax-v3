@@ -11,8 +11,6 @@ logger = logging.getLogger(__name__)
 
 pytestmark = [pytest.mark.django_db, pytest.mark.dataset]
 
-email_settings = {"METAX_EMAIL_SENDER": "test-sender@fairdata.fi"}
-
 
 @pytest.fixture
 def dataset_with_emails() -> Dataset:
@@ -60,7 +58,6 @@ def test_dataset_contact_get_roles(admin_client, dataset_with_emails):
     }
 
 
-@override_settings(**email_settings)
 def test_dataset_contact_creator(admin_client, dataset_with_emails):
     message = {
         "reply_to": "teppo@test.fi",
@@ -83,7 +80,6 @@ def test_dataset_contact_creator(admin_client, dataset_with_emails):
     assert set(msg.to) == {"creator-person@example.com", "creator-org@example.com"}
 
 
-@override_settings(**email_settings)
 def test_dataset_contact_publisher_admin(admin_client, dataset_with_emails):
     message = {
         "reply_to": "teppo@test.fi",
@@ -102,7 +98,6 @@ def test_dataset_contact_publisher_admin(admin_client, dataset_with_emails):
     assert set(msg.to) == {"publisher-org@example.com"}
 
 
-@override_settings(**email_settings)
 def test_dataset_contact_publisher_user(user_client, dataset_with_emails):
     message = {
         "reply_to": "seppo@test.fi",
@@ -121,7 +116,6 @@ def test_dataset_contact_publisher_user(user_client, dataset_with_emails):
     assert set(msg.to) == {"publisher-org@example.com"}
 
 
-@override_settings(**email_settings)
 def test_dataset_contact_publisher_service(service_client, dataset_with_emails):
     message = {
         "reply_to": "test@test.fi",
@@ -140,7 +134,6 @@ def test_dataset_contact_publisher_service(service_client, dataset_with_emails):
     assert set(msg.to) == {"publisher-org@example.com"}
 
 
-@override_settings(**email_settings)
 def test_dataset_contact_curator_no_email(admin_client, dataset_with_emails):
     message = {
         "reply_to": "teppo@test.fi",

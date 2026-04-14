@@ -9,6 +9,8 @@ from rest_framework import exceptions
 
 from apps.common.helpers import format_exception, single_translation
 from apps.common.locks import lock_rems_publish
+from apps.common.tasks import run_task
+from apps.rems.email import send_emails_for_event, Event
 from apps.rems.form_builder import REMSFormBuilder, REMSTextField
 from apps.rems.models import (
     EntityType,
@@ -829,6 +831,11 @@ class REMSService:
         data = {"application-id": application_id, "accepted-licenses": licenses}
         self.session.post("/api/applications/accept-licenses", json=data)
 
+    def send_application_emails(self, application_id: int, event: Event):
+        """Send emails for an application event."""
+        application = self.session.get(f"/api/applications/{application_id}").json()
+        run_task(send_emails_for_event, application=application, event=event)
+
     def submit_application_for_dataset(
         self,
         user: MetaxUser,
@@ -876,6 +883,13 @@ class REMSService:
                 json={"application-id": application_id, "comment": msg, "public": False},
             )
 
+        self.send_application_emails(application_id, Event.SUBMITTED)
+
+        # Check if application has been auto-approved, send email if so.
+        # Would be nicer to listen to events from REMS but this works ok for now.
+        application = self.session.get(f"/api/applications/{application_id}").json()
+        if application["application/state"] == "application.state/approved":
+            self.send_application_emails(application_id, Event.APPROVED)
         return data
 
     def create_application_for_dataset(
@@ -1115,6 +1129,8 @@ class REMSService:
             data["comment"] = comment
         with self.session.as_user(handler.fairdata_username):
             resp = self.session.post("/api/applications/approve", json=data)
+
+        self.send_application_emails(application_id, Event.APPROVED)
         return resp.json()
 
     def reject_application(self, handler: MetaxUser, application_id: int, comment: str = ""):
@@ -1133,6 +1149,8 @@ class REMSService:
             data["comment"] = comment
         with self.session.as_user(handler.fairdata_username):
             resp = self.session.post("/api/applications/reject", json=data)
+
+        run_task(send_emails_for_event, application=application, event=Event.REJECTED)
         return resp.json()
 
     def close_application(self, handler: MetaxUser, application_id: int, comment: str = ""):
@@ -1154,6 +1172,8 @@ class REMSService:
 
         with self.session.as_user(handler.fairdata_username):
             resp = self.session.post("/api/applications/close", json=data)
+
+        run_task(send_emails_for_event, application=application, event=Event.CLOSED)
         return resp.json()
 
     def return_application(self, handler: MetaxUser, application_id: int, comment: str = ""):
@@ -1171,6 +1191,8 @@ class REMSService:
 
         with self.session.as_user(handler.fairdata_username):
             resp = self.session.post("/api/applications/return", json=data)
+
+        run_task(send_emails_for_event, application=application, event=Event.RETURNED)
         return resp.json()
 
     def close_application_as_owner(self, application_id: int, comment: str = ""):
@@ -1184,4 +1206,6 @@ class REMSService:
         if comment:
             data["comment"] = comment
         resp = self.session.post("/api/applications/close", json=data)
+
+        run_task(send_emails_for_event, application=application, event=Event.CLOSED)
         return resp.json()

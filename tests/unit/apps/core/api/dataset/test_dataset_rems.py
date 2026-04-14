@@ -296,7 +296,6 @@ def test_rems_application_manual_approval_unknown_field(mock_rems, user_client):
 
 def test_rems_application_reviewer_instructions(mock_rems, user_client, handler_client):
     dataset = factories.REMSDatasetFactory(
-        metadata_owner__admin_organization="test_organization",
         access_rights__data_access_reviewer_instructions={
             "en": "Top secret instructions for reviewers"
         },

@@ -1,6 +1,8 @@
 import uuid
+from django.test import override_settings
 import pytest
 from django.conf import settings
+from django.core import mail
 from rest_framework.exceptions import ValidationError
 
 from apps.core import factories
@@ -265,10 +267,11 @@ def test_rems_service_success_false(mock_rems):
     assert "was unsuccessful" in str(ec.value)
 
 
-def test_rems_service_create_application_with_autoapprove(mock_rems, user):
+def test_rems_service_create_application_with_autoapprove(mock_rems, user, handler):
     catalog = factories.DataCatalogFactory(rems_enabled=True)
     dataset = factories.REMSDatasetFactory(
-        data_catalog=catalog, access_rights__rems_approval_type="automatic"
+        data_catalog=catalog,
+        access_rights__rems_approval_type="automatic",
     )
     service = REMSService()
     service.publish_dataset(dataset)
@@ -282,12 +285,28 @@ def test_rems_service_create_application_with_autoapprove(mock_rems, user):
         user["userid"]
         for user in applications[0]["application/workflow"]["workflow.dynamic/handlers"]
     ]
-    assert handlers == ["approver-bot", "rejecter-bot", "owner"]
+    assert handlers == ["approver-bot", "rejecter-bot", "owner", "rems_handler"]
 
     # Check entitlement has been created
     entitlements = service.get_user_entitlements_for_dataset(user, dataset)
     assert len(entitlements) == 1
     assert entitlements[0]["resource"] == f"metax-test:{dataset.id}"
+
+    assert len(mail.outbox) == 2
+
+    # "New application" mail to handlers
+    msg = mail.outbox[0]
+    assert msg.from_email == "test-sender@fairdata.fi"
+    assert msg.to == [handler.email]
+    assert "New Data Use Application" in msg.subject
+    assert "new data use application has been submitted" in msg.body
+
+    # "Request processed" mail to applicant
+    msg = mail.outbox[1]
+    assert msg.from_email == "test-sender@fairdata.fi"
+    assert msg.to == [user.email]
+    assert "request has been approved" in msg.subject
+    assert "request was reviewed" in msg.body
 
 
 def test_rems_service_manual_approval_form(mock_rems, user):
@@ -342,10 +361,12 @@ def test_rems_service_update_manual_approval_form(mock_rems, user):
     assert len(forms) == 2
     assert forms[1]["form/fields"][0]["field/title"]["en"] == "Some other title"
     assert forms[1]["enabled"] == False
-    assert forms[2]["form/fields"][0]["field/title"]["en"] == "Description of your research project"
+    assert (
+        forms[2]["form/fields"][0]["field/title"]["en"] == "Description of your research project"
+    )
 
 
-def test_rems_service_create_application_with_manual_approval(mock_rems, user):
+def test_rems_service_emails(mock_rems, user, handler):
     catalog = factories.DataCatalogFactory(rems_enabled=True)
     dataset = factories.REMSDatasetFactory(
         data_catalog=catalog, access_rights__rems_approval_type="manual"
@@ -371,11 +392,65 @@ def test_rems_service_create_application_with_manual_approval(mock_rems, user):
         user["userid"]
         for user in applications[0]["application/workflow"]["workflow.dynamic/handlers"]
     ]
-    assert handlers == ["rejecter-bot", "owner"]  # no approver-bot
+    assert handlers == ["rejecter-bot", "owner", "rems_handler"]  # no approver-bot
 
     # Check no entitlement has been created
     entitlements = service.get_user_entitlements_for_dataset(user, dataset)
     assert len(entitlements) == 0
+
+    # "New application" mail to handlers
+    assert len(mail.outbox) == 1
+    msg = mail.outbox[0]
+    assert msg.from_email == "test-sender@fairdata.fi"
+    assert msg.to == [handler.email]
+    assert "New Data Use Application" in msg.subject
+    assert "new data use application has been submitted" in msg.body
+
+
+@pytest.mark.parametrize(
+    "command,event_en,event_fi",
+    [
+        ["approve_application", "been approved", "on hyväksytty"],
+        ["reject_application", "been rejected", "on hylätty"],
+        ["return_application", "been returned", "on palautettu"],
+        ["close_application", "been closed", "on suljettu"],
+        # Revoke not yet supported by REMSService
+        # ["revoke_application", "been revoked", "on peruttu"],
+    ],
+)
+def test_rems_service_application_manual_command_emails(
+    mock_rems, user, handler, command, event_en, event_fi
+):
+    catalog = factories.DataCatalogFactory(rems_enabled=True)
+    dataset = factories.REMSDatasetFactory(
+        data_catalog=catalog, access_rights__rems_approval_type="manual"
+    )
+    service = REMSService()
+    service.publish_dataset(dataset)
+    application = service.create_application_for_dataset(
+        user,
+        dataset,
+        accept_licenses=service.get_dataset_rems_license_ids(dataset),
+        field_values=[
+            {
+                "form": 1,
+                "field": "project_description",
+                "value": "some project description",
+            }
+        ],
+    )
+
+    mail.outbox.clear()
+    command_func = getattr(service, command)
+    command_func(handler, application_id=application["application-id"], comment="hello world")
+
+    msg = mail.outbox[0]
+    assert msg.from_email == "test-sender@fairdata.fi"
+    assert msg.to == [user.email]
+    assert event_en in msg.subject
+    assert event_en in msg.body
+    assert event_fi in msg.subject
+    assert event_fi in msg.body
 
 
 def test_rems_service_create_application_dataset_not_published_to_rems(mock_rems, user):

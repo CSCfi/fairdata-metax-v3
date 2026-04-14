@@ -321,11 +321,14 @@ def format_multiline(string: str, *args, **kwargs) -> str:
     - Remove leading and trailing newlines
     - Remove all whitespace after "\\" (so it can be used for line continuation)
     - Remove common indentation
-    - Format string with `.format` using the provided"" arguments.
+    - If arguments are provided, format the string with `.format` using the provided  arguments.
     """
     string = string.strip("\n")
     string = re.sub(r"\\\s+", "", string)
-    return dedent(string).format(*args, **kwargs)
+    string = dedent(string)
+    if args or kwargs:
+        return string.format(*args, **kwargs)
+    return string
 
 
 def single_translation(value: dict, preferred_lang=None) -> Optional[str]:
