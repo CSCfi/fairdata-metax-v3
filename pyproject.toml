@@ -1,93 +1,105 @@
-[tool.poetry]
+[project]
 name = "fairdata-metax-service"
 version = "0.1.0"
 description = ""
-license = "GPL-2.0-only"
 authors = [
-    "Atro Himanen <atro.himanen@csc.fi>",
-    "Ismo Torvinen <ismo.torvinen@bearit.fi>",
-    "Jori Niemi <jori.niemi@bearit.fi>",
-    "Pekka Tiainen <aptiaine@csc.fi>",
-    "Sini Saarinen <sini.saarinen@csc.fi>",
-    "Toni Nurmi <tonurmi@csc.fi>"
+    { name = "Atro Himanen", email = "atro.himanen@csc.fi" },
+    { name = "Inka-Liina Lauranto", email = "inka-liina.lauranto@csc.fi" },
+    { name = "Ismo Torvinen", email = "ismo.torvinen@csc.fi" },
+    { name = "Janne Pulkkinen", email ="janne.pulkkinen@csc.fi" },
+    { name = "Jori Niemi", email = "jori.niemi@twoday.com" },
+    { name = "Pekka Tiainen", email = "aptiaine@csc.fi" },
+    { name = "Sini Bäckman", email = "sbackman@csc.fi" },
+    { name = "Sini Saarinen" },
+    { name = "Toni Nurmi" },
 ]
+requires-python = ">=3.12,<4.0.0"
 readme = "README.md"
-packages = [{ include = "src" }]
+license = "GPL-2.0-only"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    "Django>=5.2.11,<6",
+    "djangorestframework>=3.16.1,<4",
+    "django-model-utils>=5.0.0,<6",
+    "django-split-settings>=1.3.2,<2",
+    "python-dotenv>=1.2.1,<2",
+    "django-extensions>=4.1,<5",
+    "drf-yasg>=1.21.11,<2",
+    "mkdocs-material>=9.6.23,<10",
+    "mkdocs-literate-nav>=0.6.2,<0.7",
+    "mkdocs-section-index>=0.3.10,<0.4",
+    "rdflib>=7.4.0,<8",
+    "django-filter>=25.2,<26",
+    "factory-boy>=3.3.3,<4",
+    "inflection>=0.5.1,<0.6",
+    "django-simple-history>=3.10.1,<4",
+    "deepdiff>=8.6.1,<9",
+    "gunicorn>=23.0.0,<24",
+    "environs>=14.5.0,<15",
+    "django-watchman>=1.3.0,<2",
+    "python-dateutil>=2.8.2,<3",
+    "django-polymorphic>=4.1.0,<5",
+    "django-cors-headers>=4.9.0,<5",
+    "django-rest-knox>=5.0.2,<6",
+    "pyjwt>=2.10.1,<3",
+    "pymemcache>=4.0.0,<5",
+    "django-cachalot>=2.7.0,<3",
+    "django-watson>=1.6.3,<2",
+    "mkdocstrings>=0.30.1,<0.31",
+    "mkdocstrings-python>=1.18.2,<2",
+    "pyyaml>=6.0.3,<7",
+    "drf-access-policy>=1.5.0,<2",
+    "django-hijack>=3.7.4,<4",
+    "shapely>=2.1.2,<3",
+    "django-json-widget>=2.1.0,<3",
+    "datacite>=1.3.1,<2",
+    "lxml>=6.0.2,<7",
+    "psycopg[binary]>=3.2.12,<4",
+    "msgspec>=0.19.0,<0.20",
+    "django-q2>=1.8.0,<2",
+    "bpython>=0.26,<0.27",
+    "drf-nested-routers>=0.95.0,<0.96",
+    "ldap3>=2.9.1,<3",
+    "numpy>=2.3.4,<3",
+    "pymdown-extensions>=10.16.1,<11",
+    "django-silk>=5.4.3,<6",
+    "django-test-migrations>=1.5.0,<2",
+    "fastuuid>=0.14.0,<0.15",
+    "dpres-file-formats @ git+https://github.com/Digital-Preservation-Finland/dpres-file-formats.git",
+    "djangorestframework-gis>=1.2.0,<2",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.12,<4.0.0"
-Django = "^5.2.11"
-djangorestframework = "^3.16.1"
-django-model-utils = "^5.0.0"
-django-split-settings = "^1.3.2"
-python-dotenv = "^1.2.1"
-django-extensions = "^4.1"
-drf-yasg = "^1.21.11"
-mkdocs-material = "^9.6.23"
-mkdocs-literate-nav = "^0.6.2"
-mkdocs-section-index = "^0.3.10"
-rdflib = "^7.4.0"
-django-filter = "^25.2"
-factory-boy = "^3.3.3"
-inflection = "^0.5.1"
-django-simple-history = "^3.10.1"
-deepdiff = "^8.6.1"
-gunicorn = "^23.0.0"
-environs = "^14.5.0"
-django-watchman = "^1.3.0"
-python-dateutil = "^2.8.2"
-django-polymorphic = "^4.1.0"
-django-cors-headers = "^4.9.0"
-django-rest-knox = "^5.0.2"
-pyjwt = "^2.10.1"
-pymemcache = "^4.0.0"
-django-cachalot = "^2.7.0"
-django-watson = "^1.6.3"
-mkdocstrings = "^0.30.1"
-mkdocstrings-python = "^1.18.2"
-pyyaml = "^6.0.3"
-drf-access-policy = "^1.5.0"
-django-hijack = "^3.7.4"
-shapely = "^2.1.2"
-django-json-widget = "^2.1.0"
-datacite = "^1.3.1"
-lxml = "^6.0.2"
-psycopg = {extras = ["binary"], version = "^3.2.12"}
-msgspec = "^0.19.0"
-django-q2 = "^1.8.0"
-bpython = "^0.26"
-drf-nested-routers = "^0.95.0"
-ldap3 = "^2.9.1"
-numpy = "^2.3.4"
-pymdown-extensions = "^10.16.1"
-django-silk = "^5.4.3"
-django-test-migrations = "^1.5.0"
-fastuuid = "^0.14.0"
-dpres-file-formats = {git = "https://github.com/Digital-Preservation-Finland/dpres-file-formats.git"}
-djangorestframework-gis = "^1.2.0"
+[dependency-groups]
+dev = [
+    "isort>=7.0.0,<8",
+    "django-silk>=5.0.4,<6",
+    "pytest>=8.4.2,<9",
+    "pytest-xdist>=3.8.0,<4",
+    "pytest-cov>=7.0.0,<8",
+    "django-debug-toolbar>=6.1.0,<7",
+    "pytest-django>=4.11.1,<5",
+    "tox>=4.32.0,<5",
+    "pytest-mock>=3.15.1,<4",
+    "requests-mock>=1.11.0,<2",
+    "jsonmodels>=2.7.0,<3",
+    "black>=25.9.0,<26",
+    "django-test-migrations>=1.3.0,<2",
+    "elementpath>=5.0.4,<6",
+    "werkzeug>=3.1.5,<4",
+    "pyopenssl>=25.3.0,<26",
+    "pip-audit>=2.10.0,<3",
+]
 
-[tool.poetry.group.dev.dependencies]
-isort = "^7.0.0"
-django-silk = "^5.0.4"
-pytest = "^8.4.2"
-pytest-xdist = "^3.8.0"
-pytest-cov = "^7.0.0"
-django-debug-toolbar = "^6.1.0"
-pytest-django = "^4.11.1"
-tox = "^4.32.0"
-pytest-mock = "^3.15.1"
-requests-mock = "^1.11.0"
-jsonmodels = "^2.7.0"
-black = "^25.9.0"
-django-test-migrations = "^1.3.0"
-elementpath = "^5.0.4"
-werkzeug = "^3.1.5"
-pyopenssl = "^25.3.0"
-pip-audit = "^2.10.0"
+[tool.poetry]
+package-mode = false
 
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+[tool.uv]
+default-groups = "all"
 
 [tool.black]
 force-exclude = "src/apps/[^/]+/migrations/"

@@ -14,7 +14,7 @@ from drf_yasg.inspectors import (
     ReferencingSerializerInspector,
     SwaggerAutoSchema,
 )
-from drf_yasg.utils import force_serializer_instance, no_body, param_list_to_odict
+from drf_yasg.utils import force_serializer_instance, no_body, param_list_to_dict
 
 from .serializers.fields import URLReferencedModelField
 
@@ -97,8 +97,8 @@ class ExtendedSwaggerAutoSchema(SwaggerAutoSchema):
             serializer = force_serializer_instance(serializer)
             serializer_parameters = self.serializer_to_parameters(serializer, in_=openapi.IN_QUERY)
 
-            old_params = set(param_list_to_odict(parameters))
-            new_params = set(param_list_to_odict(serializer_parameters))
+            old_params = set(param_list_to_dict(parameters))
+            new_params = set(param_list_to_dict(serializer_parameters))
 
             if conflicts := old_params & new_params:
                 raise SwaggerGenerationError(
