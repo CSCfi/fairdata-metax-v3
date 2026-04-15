@@ -205,3 +205,27 @@ def test_files_lock_for_update(admin_client):
 
     res = admin_client.delete(f"/v3/files/{file1.id}", content_type="application/json")
     assert res.status_code == 204
+
+
+def test_file_is_sensitive_touch_forbidden(ida_file_json, admin_client, ida_client):
+    """
+    Test that attempting to modify 'is_sensitive' is always forbidden, even
+    if the value would remain unchanged. The latter would allow its real value
+    to be deduced from the error.
+    """
+    res = admin_client.post(
+        "/v3/files?include_nulls=true",
+        ida_file_json,
+        content_type="application/json",
+    )
+    assert res.status_code == 201
+    file_id = res.data["id"]
+
+    for value in [True, False]:
+        res = ida_client.patch(
+            f"/v3/files/{file_id}",
+            {"is_sensitive": value},
+            content_type="application/json"
+        )
+        assert res.status_code == 400
+        assert res.data["is_sensitive"] == "Field cannot be changed by non-PAS users"

@@ -134,6 +134,11 @@ class FileSerializer(CreateOnlyFieldsMixin, CommonNestedModelSerializer):
     ]
     pas_only_fields = ["pas_compatible_file", "pas_process_running", "is_sensitive"]
 
+    no_put_default_fields = [
+        *CommonNestedModelSerializer.no_put_default_fields,
+        "is_sensitive",
+    ]
+
     # FileStorage specific fields
     storage_service = ListValidChoicesField(choices=list(settings.STORAGE_SERVICE_FILE_STORAGES))
     csc_project = serializers.CharField(max_length=200, default=None)
@@ -169,10 +174,26 @@ class FileSerializer(CreateOnlyFieldsMixin, CommonNestedModelSerializer):
             if metadata := self.context["file_metadata"].get(obj.id):
                 return get_file_metadata_serializer()(metadata).data
 
+    def can_view_data_sensitivity(self) -> bool:
+        """
+        Determine if the user has permission to view 'is_sensitive' field
+        """
+        user = self.context["request"].user
+
+        if user.is_superuser:
+            return True
+        if not user.is_authenticated:
+            return False
+
+        return user.is_pas_service
+
     def to_representation(self, instance):
         rep = super().to_representation(instance)
         if "file_metadata" not in self.context:
             rep.pop("dataset_metadata", None)
+
+        if not self.can_view_data_sensitivity():
+            rep.pop("is_sensitive", None)
 
         storage = FileStorage.get_proxy_model(get_attr_or_item(instance, "storage_service"))
         storage.remove_unsupported_extra_fields(rep)
@@ -180,6 +201,13 @@ class FileSerializer(CreateOnlyFieldsMixin, CommonNestedModelSerializer):
 
     def to_internal_value(self, data):
         val = super().to_internal_value(data)
+
+        if "is_sensitive" in data and not self.can_view_data_sensitivity():
+            # Forbid *any* changes to this field, even those that would
+            # leave it unchanged
+            raise serializers.ValidationError({
+                "is_sensitive": "Field cannot be changed by non-PAS users"
+            })
 
         # Fill identifying data for existing files.
         if self.instance:

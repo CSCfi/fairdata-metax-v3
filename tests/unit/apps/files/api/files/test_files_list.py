@@ -422,3 +422,32 @@ def test_files_cursor_pagination_invalid_ordering(admin_client, file_tree_a):
     res = admin_client.get("/v3/files", params, content_type="application/json")
     assert res.status_code == 400
     assert "not allowed for cursor" in res.json()["ordering"]
+
+
+def test_is_sensitive_hidden_for_nonpas(
+        admin_client, pas_client, ida_client, user_client, dataset):
+    """
+    Test that 'is_sensitive' field is only visible for the PAS service user
+    """
+    dataset.publish()
+
+    # Visible for admin and PAS
+    for client in [admin_client, pas_client]:
+        res = client.get(
+            "/v3/files",
+            {"dataset": dataset.id},
+            content_type="application/json",
+        )
+        data = res.data
+        assert len(data["results"]) == 3
+        assert all("is_sensitive" in file for file in data["results"])
+
+    for client in [ida_client, user_client]:
+        res = client.get(
+            "/v3/files",
+            {"dataset": dataset.id},
+            content_type="application/json",
+        )
+        data = res.data
+        assert len(data["results"]) == 3
+        assert all("is_sensitive" not in file for file in data["results"])

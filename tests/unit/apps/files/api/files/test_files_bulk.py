@@ -15,6 +15,19 @@ from apps.files.serializers import FileSerializer
 pytestmark = [pytest.mark.django_db, pytest.mark.file]
 
 
+class MockUser:
+    """
+    Mock non-PAS user
+    """
+    is_superuser = False
+    is_authenticated = True
+    is_pas_service = False
+
+
+class MockRequest:  # Mock required serializer context
+    user = MockUser()
+
+
 def build_files_json(file_kwargs: List[dict], storage=None):
     if storage is None:
         storage = factories.FileStorageFactory(
@@ -36,7 +49,7 @@ def build_files_json(file_kwargs: List[dict], storage=None):
         else:
             instances.append(factory.build(storage=storage, **factory_args))
 
-    files = [FileSerializer(f).data for f in instances]
+    files = [FileSerializer(f, context={"request": MockRequest()}).data for f in instances]
     for f in files:
         f.pop("record_modified", None)  # Ignored by metax
         if f.get("id") is None:

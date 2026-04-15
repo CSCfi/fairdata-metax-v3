@@ -119,7 +119,10 @@ class FileBulkSerializer(serializers.ListSerializer):
 
     def __init__(self, *args, action: BulkAction, ignore_errors=False, **kwargs):
         self.action: BulkAction = action
-        self.child = PartialFileSerializer(patch=action not in self.BULK_INSERT_ACTIONS)
+        self.child = PartialFileSerializer(
+            patch=action not in self.BULK_INSERT_ACTIONS,
+            context={"request": kwargs["context"].get("request")} if "request" in kwargs else {}
+        )
         self.ignore_errors = ignore_errors
         super().__init__(*args, **kwargs)
         self.failed: List[BulkFileFail] = []
@@ -629,7 +632,8 @@ class FileBulkSerializer(serializers.ListSerializer):
 
     def to_representation(self, instance):
         return FileBulkReturnValueSerializer(
-            {"success": instance, "failed": self.failed_as_dicts}
+            {"success": instance, "failed": self.failed_as_dicts},
+            context={"request": self.context["request"]}
         ).data
 
     @property

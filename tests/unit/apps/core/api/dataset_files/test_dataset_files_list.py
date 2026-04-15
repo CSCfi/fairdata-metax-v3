@@ -148,3 +148,25 @@ def test_dataset_files_with_file_metadata_hidden(
         res.data,
         check_list_length=True,
     )
+
+
+def test_is_sensitive_hidden_for_nonpas(
+        admin_client, pas_client, ida_client, user_client,
+        data_urls, dataset_with_files_metadata_requires_login):
+    """
+    Test that 'is_sensitive' field is only visible for the PAS service user
+    """
+    url = data_urls(dataset_with_files_metadata_requires_login)["files"]
+
+    # Visible for admin and PAS
+    for client in [admin_client, pas_client]:
+        res = client.get(url)
+        data = res.data
+        assert len(data["results"]) == 4
+        assert all("is_sensitive" in file for file in data["results"])
+
+    for client in [ida_client, user_client]:
+        res = client.get(url)
+        data = res.data
+        assert len(data["results"]) == 4
+        assert all("is_sensitive" not in file for file in data["results"])
