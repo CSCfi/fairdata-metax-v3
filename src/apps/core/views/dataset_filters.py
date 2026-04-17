@@ -17,6 +17,7 @@ from watson import search
 
 from apps.common.filters import MultipleCharField, MultipleCharFilter, VerboseChoiceFilter
 from apps.common.helpers import is_valid_uuid
+from apps.core.models.access_rights import REMSApprovalType
 from apps.core.models.catalog_record import Dataset
 from apps.core.models.concepts import AccessType
 from apps.core.models.data_catalog import DataCatalog
@@ -123,7 +124,7 @@ class DatasetFilter(filters.FilterSet):
         method="filter_geometry",
         field_name="distance",
         label="Geographical distance in meters\nThe query parameter 'distance' is used together with the 'geolocation' parameter. The parameter defines the maximum distance of the given geolocation from the retrieved dataset geolocations.",
-        help_text="The query parameter 'distance' is used together with the 'geolocation' parameter. The parameter defines the maximum distance of the given geolocation from the retrieved dataset geolocations."
+        help_text="The query parameter 'distance' is used together with the 'geolocation' parameter. The parameter defines the maximum distance of the given geolocation from the retrieved dataset geolocations.",
     )
 
     field_of_science__pref_label = MultipleCharFilter(
@@ -139,10 +140,11 @@ class DatasetFilter(filters.FilterSet):
     geolocation = GeometryFilter(
         method="filter_geometry",
         label="Geolocation\nThis filter allows to search for datasets based on a given geolocation. "
-              "Geolocation can be given in point or polygon format. For example, point(24.12345 60.65432) or "
-              "polygon((24.11 60.12, 24.11 60.00, 24.21 60.00, 24.11 60.12)). If 'distance' query parameter is set,"
-              " then all datasets whose geolocation is within the specified distance are returned. Without 'distance' "
-              "parameter geolocations must overlap.")
+        "Geolocation can be given in point or polygon format. For example, point(24.12345 60.65432) or "
+        "polygon((24.11 60.12, 24.11 60.00, 24.21 60.00, 24.11 60.12)). If 'distance' query parameter is set,"
+        " then all datasets whose geolocation is within the specified distance are returned. Without 'distance' "
+        "parameter geolocations must overlap.",
+    )
 
     id = MultipleCharFilter(
         label="id",
@@ -228,6 +230,8 @@ class DatasetFilter(filters.FilterSet):
         choices=Dataset.StateChoices.choices,
         label="state",
     )
+
+    access_rights__rems_approval_type = filters.ChoiceFilter(choices=REMSApprovalType.choices)
 
     temporal__end_date = filters.DateFilter(
         method="temporal_search",
@@ -430,9 +434,7 @@ class DatasetFilter(filters.FilterSet):
         for group in value:
             if not group:
                 continue
-            union = reduce(
-                operator.or_, (Q(metadata_owner__organization__exact=x) for x in group)
-            )
+            union = reduce(operator.or_, (Q(metadata_owner__organization__exact=x) for x in group))
             result = result.filter(union)
         return result.distinct()
 
@@ -536,9 +538,13 @@ class DatasetFilter(filters.FilterSet):
         distance = None if not query_params["distance"] else int(query_params["distance"])
 
         if distance and geom:
-            queryset = queryset.filter(Q(spatial__geolocations__geometry__distance_lte=(geom, D(m=distance)))).distinct()
+            queryset = queryset.filter(
+                Q(spatial__geolocations__geometry__distance_lte=(geom, D(m=distance)))
+            ).distinct()
         elif geom:
-            queryset = queryset.filter(Q(spatial__geolocations__geometry__intersects=geom)).distinct()
+            queryset = queryset.filter(
+                Q(spatial__geolocations__geometry__intersects=geom)
+            ).distinct()
 
         return queryset
 
