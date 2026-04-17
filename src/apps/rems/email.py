@@ -11,6 +11,7 @@ from apps.common.helpers import (
     single_translation,
 )
 from apps.common.mail import send_mail
+from apps.users.models import AdminOrganization
 
 logger = logging.getLogger()
 
@@ -140,6 +141,17 @@ emails = {
 
 
 def get_handler_emails(application: dict):
+    from apps.rems.rems_service import REMSService
+
+    # Use admin organization DAC email if it exists
+    service = REMSService()
+    dataset = service.get_application_dataset(application)
+    if dataset and (admin_org_id := dataset.metadata_owner.admin_organization):
+        if admin_org := AdminOrganization.objects.filter(id=admin_org_id).first():
+            if dac_email := admin_org.dac_email:
+                return [dac_email]
+
+    # No DAC email address found, email individual handlers
     excluded = {"approver-bot", "rejecter-bot", settings.REMS_USER_ID}
     handlers = application["application/workflow"]["workflow.dynamic/handlers"]
     return [

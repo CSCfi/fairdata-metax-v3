@@ -1,10 +1,10 @@
 import logging
 
-from typing import TYPE_CHECKING, Any, Iterable, List, Optional
-
+from typing import TYPE_CHECKING, Iterable, List, Optional
 from django.conf import settings
 from django.db import models, transaction
 from django.utils import timezone
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import exceptions
 
 from apps.common.helpers import format_exception, single_translation
@@ -966,6 +966,30 @@ class REMSService:
             elif len(resources) == 1 and resources[0]["resource/ext-id"] == dataset_resource_id:
                 applications.append(application)
         return applications
+
+    def get_application_dataset(self, application: dict) -> "Dataset | None":
+        """Get dataset that matches application."""
+        from apps.core.models import Dataset
+
+        try:
+            extid = application["application/resources"][0]["resource/ext-id"]
+        except Exception:
+            logger.warning(
+                f"No external resource id found for application {application['application/id']}"
+            )
+            return None
+
+        dataset: Dataset | None = None
+        prefix = f"{settings.REMS_RESOURCE_PREFIX}:"
+        if extid.startswith(prefix):
+            id_ = extid[len(prefix) :]
+            try:
+                dataset = Dataset.objects.get(id=id_)
+            except (Exception, DjangoValidationError):
+                logger.warning(
+                    f"Dataset with {id_=} not found for application {application['application/id']}"
+                )
+        return dataset
 
     def get_dataset_application_counts(self, dataset: "Dataset") -> ApplicationCounts:
         """Count open and approved applications for dataset."""

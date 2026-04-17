@@ -309,6 +309,31 @@ def test_rems_service_create_application_with_autoapprove(mock_rems, user, handl
     assert "request was reviewed" in msg.body
 
 
+def test_rems_service_dac_email(mock_rems, user, handler):
+    catalog = factories.DataCatalogFactory(rems_enabled=True)
+    dataset = factories.REMSDatasetFactory(
+        data_catalog=catalog,
+        access_rights__rems_approval_type="automatic",
+    )
+
+    # Admin organization has dac_email sent, handler email should be sent there
+    admin_org = AdminOrganization.objects.get(id=dataset.metadata_owner.admin_organization)
+    admin_org.dac_email = "dac_email@example.com"
+    admin_org.save()
+
+    service = REMSService()
+    service.publish_dataset(dataset)
+    service.create_application_for_dataset(
+        user, dataset, service.get_dataset_rems_license_ids(dataset)
+    )
+
+    # "New application" mail to admin_org.dac_email address
+    msg = mail.outbox[0]
+    assert msg.from_email == "test-sender@fairdata.fi"
+    assert msg.to == ["dac_email@example.com"]
+    assert "New Data Use Application" in msg.subject
+
+
 def test_rems_service_manual_approval_form(mock_rems, user):
     catalog = factories.DataCatalogFactory(rems_enabled=True)
     dataset = factories.REMSDatasetFactory(
@@ -717,3 +742,25 @@ def test_rems_service_publish_dataset_missing_admin_organization(mock_rems, user
         REMSService().create_dataset_workflow(dataset)  # Try creating workflow directly
 
     assert str(ec.value) == "Dataset is missing admin_organization."
+
+
+def test_rems_service_get_application_dataset(mock_rems, user):
+    catalog = factories.DataCatalogFactory(rems_enabled=True)
+    dataset = factories.REMSDatasetFactory(
+        data_catalog=catalog,
+        access_rights__rems_approval_type="automatic",
+    )
+    service = REMSService()
+    service.publish_dataset(dataset)
+    service.create_application_for_dataset(
+        user, dataset, service.get_dataset_rems_license_ids(dataset)
+    )
+
+    application = mock_rems.entities["application"][1]
+    assert service.get_application_dataset(application) == dataset
+
+    application["application/resources"][0]["resource/ext-id"] += "höps"
+    assert service.get_application_dataset(application) is None
+
+    del application["application/resources"][0]["resource/ext-id"]
+    assert service.get_application_dataset(application) is None

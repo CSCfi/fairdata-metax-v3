@@ -27,6 +27,15 @@ class AdminOrganization(CustomSoftDeletableModel):
     # Is manual REMS approval supported for the organization?
     allow_manual_rems_approval = models.BooleanField(default=False)
 
+    dac_email = models.EmailField(
+        help_text=(
+            "If set, REMS application related emails are sent "
+            "to this address instead of individual handlers."
+        ),
+        blank=True,
+        null=True,
+    )
+
     # Relations to MetaxUser with related_name="admin_organizations"
 
     def save(self, *args, **kwargs):
