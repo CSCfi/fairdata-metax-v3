@@ -20,7 +20,6 @@ from rest_framework.settings import api_settings
 from apps.common.exceptions import ResourceLocked
 from apps.common.helpers import get_technical_metax_user
 from apps.common.locks import select_queryset_for_update
-from apps.common.serializers import StrictSerializer
 from apps.files.models.file import File, FileCharacteristics, FileStorage
 from apps.files.models.file_storage import FileStorage
 from apps.files.serializers.file_serializer import FileSerializer
@@ -121,7 +120,7 @@ class FileBulkSerializer(serializers.ListSerializer):
         self.action: BulkAction = action
         self.child = PartialFileSerializer(
             patch=action not in self.BULK_INSERT_ACTIONS,
-            context={"request": kwargs["context"].get("request")} if "request" in kwargs else {}
+            context={"request": kwargs["context"].get("request")} if "request" in kwargs else {},
         )
         self.ignore_errors = ignore_errors
         super().__init__(*args, **kwargs)
@@ -195,10 +194,15 @@ class FileBulkSerializer(serializers.ListSerializer):
                     ] = "Either storage_identifier or id is required."
 
             # Get all files with matching external id
+            storages = list(
+                FileStorage.objects.filter(storage_service=storage_service)
+                .values_list("id", flat=True)
+                .order_by()
+            )
             existing_files = (
                 File.available_objects.order_by()
                 .filter(
-                    storage__storage_service=storage_service,
+                    storage_id__in=storages,
                     storage_identifier__in=files_by_external_id.keys(),
                 )
                 .values(
@@ -633,7 +637,7 @@ class FileBulkSerializer(serializers.ListSerializer):
     def to_representation(self, instance):
         return FileBulkReturnValueSerializer(
             {"success": instance, "failed": self.failed_as_dicts},
-            context={"request": self.context["request"]}
+            context={"request": self.context["request"]},
         ).data
 
     @property
