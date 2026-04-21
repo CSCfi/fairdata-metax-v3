@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+from itertools import batched
 from typing import List
 
 from django.contrib.auth.models import AnonymousUser
@@ -8,7 +9,6 @@ from django.core.management.base import BaseCommand
 from django.db.models import Value, prefetch_related_objects
 from rest_framework.serializers import ListSerializer
 
-from apps.common.helpers import batched
 from apps.core.cache import DatasetSerializerCache
 from apps.core.models.catalog_record.dataset import Dataset
 from apps.core.serializers.dataset_serializer import DatasetSerializer

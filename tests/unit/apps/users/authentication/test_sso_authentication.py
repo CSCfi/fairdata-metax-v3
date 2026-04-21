@@ -21,7 +21,11 @@ def make_sso_auth_request(enable_sso):
         factory = APIRequestFactory()
         request = factory.get("/")
         if sso_session:
-            key = "this_key_is_wrong" if use_wrong_key else django_settings.SSO_SECRET_KEY
+            key = (
+                "this_key_is_wrong_but_at_least_it_is_long_enough"
+                if use_wrong_key
+                else django_settings.SSO_SECRET_KEY
+            )
             sso_token = jwt.encode(sso_session, key=key)
             request.COOKIES[django_settings.SSO_SESSION_COOKIE] = sso_token
         try:
@@ -86,6 +90,7 @@ def test_sso_authentication_disabled(make_sso_auth_request, sso_session_teppo, s
     assert error == None
 
 
+@pytest.mark.filterwarnings("ignore::jwt.InsecureKeyLengthWarning")
 def test_sso_authentication_missing_secret(make_sso_auth_request, sso_session_teppo, settings):
     settings.SSO_SECRET_KEY = ""
     user, error = make_sso_auth_request(sso_session_teppo)

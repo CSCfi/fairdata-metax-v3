@@ -1,6 +1,7 @@
 import pytest
 from django.db import transaction
 
+from apps.common.helpers import is_forward_relation, is_reverse_relation
 from apps.common.profiling import count_queries
 from apps.core.factories import PublishedDatasetFactory
 from apps.core.models import Dataset, Provenance, Spatial, Temporal
@@ -21,8 +22,8 @@ def collect_copy_info(model, path="", copy_info=None, ignore_fields=None, model_
     if not copy_info:
         copy_info = {}
     all_fields = model._meta.get_fields()
-    forward_relation_fields = [f for f in all_fields if f.is_relation and f.concrete]
-    reverse_relation_fields = [f for f in all_fields if f.is_relation and not f.concrete]
+    forward_relation_fields = [f for f in all_fields if is_forward_relation(f)]
+    reverse_relation_fields = [f for f in all_fields if is_reverse_relation(f)]
 
     for field in forward_relation_fields:
         if field.name in ignore_fields:

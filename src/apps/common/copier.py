@@ -23,10 +23,9 @@ class ModelCopier:
       argument for `copy()`.
 
     * For relations not listed in either `copied_relations` or `parent_relations`:
-      - Concrete relations (field defined in copied model) will be unchanged from original
-        and point to the same object as original (i.e. they are shallow copied).
-        This includes ManyToMany fields.
-      - Non-concrete relations (field defined in related model) are omitted.
+      - Forward relations (fields defined in the current model) will be unchanged
+        from original and point to the same object as original (i.e. they are shallow copied).
+      - Reverse relations (field defined in the related model) are omitted.
 
     If the same object (as determined by model name and object id) occurs
     multiple times, it is copied only once. However, the copy may get
@@ -87,12 +86,13 @@ class ModelCopier:
                 self.copied_forward_fields[field.name] = field
             elif not field.concrete and (field.one_to_one or field.one_to_many):
                 self.copied_reverse_fields[field.name] = field
-            elif field.concrete and field.many_to_many:
+            elif field.many_to_many and not field.auto_created:
+                # Only M2M fields defined on the current model (reverse field has auto_created)
                 self.copied_many_to_many_fields[field.name] = field
 
         # Collect all forward m2m fields, not just ones where related objects will be copied
         for field in self.model._meta.get_fields():
-            if field.concrete and field.many_to_many:
+            if field.many_to_many and not field.auto_created:
                 self.many_to_many_fields[field.name] = field
 
     def _create_new_copy(self, original: Model, new_values=None, copied_objects=None) -> Model:
@@ -160,7 +160,7 @@ class ModelCopier:
                     )
                     setattr(copy, name, copy_value)
 
-        # Assign concrete and copied many to many
+        # Assign many to many, copy the related objects if needed
         for name, field in self.many_to_many_fields.items():
             if name in new_values:
                 continue

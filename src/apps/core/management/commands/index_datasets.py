@@ -1,19 +1,8 @@
-from argparse import ArgumentParser
-from typing import List
-
-from django.contrib.auth.models import AnonymousUser
-from django.core.cache import caches
-from django.core.cache.backends.dummy import DummyCache
 from django.core.management.base import BaseCommand
-from django.db.models import Value, prefetch_related_objects
 from django.db import transaction
-from rest_framework.serializers import ListSerializer
 
-from apps.common.helpers import batched
-from apps.core.cache import DatasetSerializerCache
 from apps.core.models.catalog_record.dataset import Dataset
 from apps.core.models.catalog_record.dataset_index import DatasetIndexEntry
-from apps.core.serializers.dataset_serializer import DatasetSerializer
 
 
 class Command(BaseCommand):

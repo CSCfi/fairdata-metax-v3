@@ -106,7 +106,7 @@ def capture_queries(request, tweaked_settings, settings):
 @pytest.fixture
 def enable_sso(settings):
     settings.ENABLE_SSO_AUTH = True
-    settings.SSO_SECRET_KEY = "TOP_SECRET"
+    settings.SSO_SECRET_KEY = "TOP_SECRET_KEY_OF_AT_LEAST_32_BYTES"
     settings.SSO_SESSION_COOKIE = "sso_session_test"
     settings.SSO_HOST = "https://fake-sso"
     settings.SSO_METAX_SERVICE_NAME = "METAX"

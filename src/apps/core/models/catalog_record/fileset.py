@@ -1,3 +1,4 @@
+from itertools import batched
 import logging
 import uuid
 from typing import Iterable, Optional
@@ -11,7 +12,7 @@ from rest_framework.serializers import ValidationError
 from typing_extensions import Self
 
 from apps.common.copier import ModelCopier
-from apps.common.helpers import batched, prepare_for_copy
+from apps.common.helpers import prepare_for_copy
 from apps.common.models import AbstractBaseModel
 from apps.core.models.file_metadata import FileSetDirectoryMetadata, FileSetFileMetadata
 from apps.files.models import File, FileStorage

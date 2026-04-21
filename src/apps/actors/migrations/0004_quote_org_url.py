@@ -5,6 +5,8 @@ from urllib.parse import quote
 
 from django.conf import settings
 
+from apps.common.helpers import is_forward_relation
+
 def merge_organizations(org, others: list):
     """Merge organizations with org.
 
@@ -12,8 +14,11 @@ def merge_organizations(org, others: list):
     - Delete orgs in `others`
     """
     org_model = org.__class__
-    # Get relations that point to Organization
-    relations = [rel for rel in org_model._meta.get_fields() if rel.is_relation and not rel.concrete]
+    # Get reverse relations that point to Organization
+    relations = [
+        rel for rel in org_model._meta.get_fields()
+        if is_forward_relation(rel)
+    ]
 
     for other_org in others:
         for rel in relations:

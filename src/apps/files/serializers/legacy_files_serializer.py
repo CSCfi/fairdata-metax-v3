@@ -1,11 +1,11 @@
 from datetime import datetime
 from dataclasses import dataclass
+from itertools import batched
 from typing import Callable, List, Optional
 
 from django.utils import timezone
 from rest_framework import serializers
 
-from apps.common.helpers import batched
 from apps.files.models import File, FileStorage
 from apps.files.models.file_characteristics import FileCharacteristics
 from apps.refdata.models import FileFormatVersion

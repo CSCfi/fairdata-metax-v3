@@ -374,7 +374,7 @@ class LazyInstanceSaver:
         for serializer, instances in self.upserts_by_serializer.items():
             model: models.Model = serializer.Meta.model
             concrete_fields = {
-                f.name for f in model._meta.get_fields() if f.concrete and not f.many_to_many
+                f.name for f in model._meta.get_fields() if f.concrete
             }
             update_fields = [
                 f.source
@@ -516,7 +516,7 @@ class NestedModelSerializer(LazyableModelSerializer):
         the data for nested update of a.b will have {"a": a} in validated_data.
         """
         reverse_field = self.get_reverse_field(serializer)
-        if reverse_field.concrete and not reverse_field.many_to_many:
+        if reverse_field.concrete:
             # field is defined on the other model and can be assigned directly
             if isinstance(field_data, dict):
                 field_data[reverse_field.name] = instance

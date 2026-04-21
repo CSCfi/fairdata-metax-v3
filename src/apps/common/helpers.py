@@ -441,24 +441,12 @@ def is_field_value_provided(model, field_name: str, args: list, kwargs: dict):
 
     # Is value provided in args?
     index = None
-    for index, field in enumerate(model._meta.concrete_fields):
+    for index, field in enumerate(f for f in model._meta.get_fields() if f.concrete):
         if field.attname == field_name:
             return len(args) > index
 
     # Field does not exist in model
     raise ValueError(f"Concrete model field not found: {model.__name__}.{field_name}")
-
-
-def batched(iterable, n):
-    """Implementation of itertools.batched upcoming in Python 12.
-
-    See https://docs.python.org/3/library/itertools.html#itertools.batched
-    """
-    if n < 1:
-        raise ValueError("n must be at least one")
-    it = iter(iterable)
-    while batch := tuple(islice(it, n)):
-        yield batch
 
 
 def datetime_to_header(dt: datetime):
@@ -591,3 +579,17 @@ def to_csv_string(lst: list) -> str:
     writer = csv.writer(output, delimiter=",", quotechar='"', escapechar="\\")
     writer.writerow(lst)
     return output.getvalue().strip("\r\n")  # remove trailing newline
+
+
+def is_forward_relation(field: models.Field) -> bool:
+    """Return True if field is a relation defined explicitly in the model."""
+    return field.is_relation and (
+        field.concrete or (field.many_to_many and not field.auto_created)
+    )
+
+
+def is_reverse_relation(field: models.Field) -> bool:
+    """Return True if field is a relation defined in another model."""
+    return field.is_relation and not (
+        field.concrete or (field.many_to_many and not field.auto_created)
+    )
