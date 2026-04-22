@@ -378,6 +378,7 @@ class DatasetFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.Dataset
         django_get_or_create = ("title",)
+        skip_postgeneration_save = True
 
     data_catalog = factory.SubFactory(DataCatalogFactory)
     title = factory.Dict({"en": factory.Sequence(lambda n: f"research-dataset-{n}")})
@@ -398,7 +399,8 @@ class DatasetFactory(factory.django.DjangoModelFactory):
         if not create:
             return
         if extracted:
-            # Does not save anything, assumes that file.dataset points to current dataset
+            # Assigns the file_set attribute but does not update the FileSet.
+            # Assumes that file_set.dataset already points to current dataset.
             self.file_set = extracted
 
 
@@ -486,21 +488,24 @@ class LocationFactory(factory.django.DjangoModelFactory):
 class GeoLocationFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.GeoLocation
+
     geographic_type = 4
     geometry = Point(0, 0)
+
 
 class SpatialFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.Spatial
+        skip_postgeneration_save = True
 
     reference = factory.SubFactory(
         LocationFactory, url="http://www.yso.fi/onto/onto/yso/c_9908ce39"
     )
-
     geolocations = factory.RelatedFactory(
         GeoLocationFactory,
-        factory_related_name='spatial',
+        factory_related_name="spatial",
     )
+
 
 class IdentifierTypeFactory(factory.django.DjangoModelFactory):
     class Meta:
