@@ -24,7 +24,7 @@ Write [Google-styled docstrings](https://sphinxcontrib-napoleon.readthedocs.io/e
 
 ## Setting up MKDocs and important files
 
-MkDocs and all the extensions will be installed by running `poetry install`. There are several extensions at your disposal:
+MkDocs and all the extensions will be installed by running `uv sync`. There are several extensions at your disposal:
 
 - [mkdocstrings](https://mkdocstrings.github.io/): extension is used for automated docstring documentation.
 - [literate-nav](https://oprypin.github.io/mkdocs-literate-nav/): used for generationg left-hand side navigation tree.
@@ -44,5 +44,5 @@ You can start the development server from the repository root folder with comman
 
 ```bash
 # port can be defined freely
-mkdocs serve -a localhost:8005
+uv run mkdocs serve -a localhost:8005
 ```

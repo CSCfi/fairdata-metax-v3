@@ -32,4 +32,4 @@
 [Material for MkDocs Reference](https://squidfunk.github.io/mkdocs-material/reference/)
 
 ## Other
-[Poetry for Managing Dependencies](https://python-poetry.org/docs/)
+[Uv for Managing Dependencies](https://docs.astral.sh/uv/)

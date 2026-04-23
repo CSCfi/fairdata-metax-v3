@@ -8,42 +8,36 @@
 
 ### Python dependencies
 
-- This repository uses Poetry for managing Python dependencies securely
-- Poetry generates a very strict `requirements.txt` file
-- Poetry enables easy updates of minor security/bug patches from pip with `pyproject.toml`-defined version constraints
-- The generated `requirements.txt` file is guaranteed to lock all dependencies and sub-dependencies
-- The Poetry file `poetry.lock` stores hashes of all dependencies, if the integrity of the dependency-tree ever needs to be verified
-- [Poetry documentation](https://python-poetry.org/docs/)
+- This repository uses [uv](https://docs.astral.sh/) for managing Python dependencies
+- `uv` generates a very strict `requirements.txt` file
+- `uv` enables easy installation and updating of dependencies using version constraints defined in `pyproject.toml`
+- Hashes and other information on installed dependencies are stored in `uv.lock`
+- Locked dependencies can be exported as `requirements.txt` which can then be installed using `pip` in environments that don't use `uv`
 
-#### Install Poetry
+#### Install uv
 
-- First, install [pipx](https://github.com/pypa/pipx)
-- `pipx` is a system-wide Python application installer
-- `pipx` creates a virtualenv for every package installed and automatically includes them in your workstation's path
-- It can also uninstall any package installed using pipx
-- After installation, you will have poetry available system-wide
-
+First, [install uv](https://docs.astral.sh/uv/getting-started/installation). If using pipx:
 ```bash
-# With pipx installed, install Poetry
-pipx install poetry
+# Install uv
+pipx install uv
 
-# Upgrade if needed (minimum 1.2.0+ required)
-pipx upgrade poetry
+# To updgrade uv to a newer version when needed
+pipx upgrade uv
 ```
 
-#### Install dependencies
+To run a Python script, use `uv run <script_name.py>`, which
+- reads dependency constraints and configuration from `pyproject.toml`
+- resolves dependencies using the `uv.lock` file and updates it
+- creates a virtual environment in `.venv` subdirectory or updates it
+- runs the actual command
 
-- Poetry creates and manages its virtual environments in a dedicated cache directory on your workstation
-- Tested with pip version `21.1.2`
-- Tested with poetry version `1.8.0`
+If no suitable Python version is installed, `uv` also downloads the
+newest compatible Python version. To use a specific python version,
+use e.g. `uv python pin 3.12` which creates a `.python-version` file that `uv` will use.
 
-```bash
-# First, activate a poetry virtual environment
-poetry shell
+The virtual environment is an ordinary Python virtual env and can be activated
+with `source .venv/bin/activate` if you want to use `python <script_name.py>` to run scripts.
 
-# ... then, install dependencies with poetry
-poetry install
-```
 
 ### Define local environmental variables
 
@@ -59,16 +53,16 @@ cp .env.template .env
 
 ```bash
 # In the repository root, run
-python manage.py createsuperuser
+uv run manage.py createsuperuser
 ```
 
 ### Initial setup commands
 
 ```bash
 # In the repository root, run
-python manage.py migrate
+uv run manage.py migrate
 mkdir static
-python manage.py collectstatic --no-input
+uv run manage.py collectstatic --no-input
 ```
 * Alternatively if you run Metax in Docker, you can use `first_time_setup.sh` script, which will initialize the database. Note: To work, the script expects that Metax is running inside a Docker container named `metax-v3`
 ```bash
@@ -87,7 +81,7 @@ If you want to run a containerized version with PostgreSQL & Mecached, see: 🐋
   - in V3, loading test data creates two test catalogs
     - `urn:nbn:fi:att:data-catalog-test` for non-harvested datasets and
     - `urn:nbn:fi:att:data-catalog-harvested-test` for harvested datasets
-    - created with `python manage.py load_test_data`
+    - created with `uv run manage.py load_test_data`
   - create these also in V2
   - you might also need to patch the V3 catalogs with correct permissions:
 
@@ -120,18 +114,18 @@ PATCH /v3/data-catalogs/urn:nbn:fi:att:data-catalog-test
 
 ```bash
 # in metax-service -repo
-python manage.py create_api_user service_metax_v2 --groups metax_v2 service v2_migration
+uv run manage.py create_api_user service_metax_v2 --groups metax_v2 service v2_migration
 ```
 
 - create token for the user
 
 ```bash
 # in metax-service -repo
-python manage.py drf_create_token service_metax_v2
+uv run manage.py drf_create_token service_metax_v2
 ```
 
 - If V2 is in a container and V3 is not, V2 cannot access V3 if it's running at `localhost:<port>`, so start the V3 development server at `0.0.0.0:<port>` instead. This way, V3 is available to containers at host `172.17.0.1:<port>`
-  - `python manage.py runserver 0.0.0.0:<port>`
+  - `uv run manage.py runserver 0.0.0.0:<port>`
   - in this case, also add `172.17.0.1` to `ALLOWED_HOSTS` in V3 development settings `src/metax_service/settings/environments/development.py`
 
 #### Changes in Metax V2
@@ -169,13 +163,13 @@ You can change the port number as needed
 
 ```bash
 # Default development server
-python manage.py runserver 8002
+uv run manage.py runserver 8002
 
 # Enhanced development server
-python manage.py runserver_plus 8002
+uv run manage.py runserver_plus 8002
 
 # Enhanced development server, enhanced interpreter
-python manage.py runserver_plus --bpython 8002
+uv run manage.py runserver_plus --bpython 8002
 ```
 
 ### Running background tasks
@@ -185,7 +179,7 @@ Run development server and run the task processing
 cluster in e.g. another terminal
 
 ```bash
-python manage.py qcluster
+uv run manage.py qcluster
 ```
 
 ### Accessing the admin panel
@@ -197,10 +191,7 @@ python manage.py qcluster
 
 ```bash
 # Show all available management commands
-python manage.py --help
-
-# Show all setup.py commands
-python setup.py --help
+uv run manage.py --help
 ```
 
 ### Testing
@@ -210,7 +201,7 @@ python setup.py --help
 
 ```bash
 # Run tests, stop on first failure, reuse test-database, run failed tests first, 2 workers
-pytest -x --reuse-db -n 2 --ff
+uv run pytest -x --reuse-db -n 2 --ff
 ```
 
 ### Building MkDocs documentation
@@ -219,10 +210,10 @@ pytest -x --reuse-db -n 2 --ff
 
 ```bash
 # Running development server:
-mkdocs serve -a localhost:8005
+uv run mkdocs serve -a localhost:8005
 
 # Building mkdocs for production
-mkdocs build
+uv run mkdocs build
 ```
 
 ### Using Silk profiler
@@ -233,8 +224,8 @@ mkdocs build
 
 ```bash
 # After setting ENABLE_SILK_PROFILER env-var to True, run:
-python manage.py migrate
-python manage.py collectstatic --no-input
+uv run manage.py migrate
+uv run manage.py collectstatic --no-input
 ```
 
 - After successful setup, the profiler is available at /v3/silk endpoint
@@ -245,25 +236,39 @@ python manage.py collectstatic --no-input
 - The Django Debug Toolbar can slow down SQL-queries
 - Switch it off by setting `ENABLE_DEBUG_TOOLBAR` env-var to False
 
-## Managing dependencies with Poetry
+## Managing dependencies with uv
 
 ```bash
 # Adding developer dependencies
-poetry add -G dev <package>
+uv add --dev <packages>
 
 # Adding application dependencies
-poetry add <package>
+uv add <packages>
 
-# Updating all dependencies
-poetry update
+# Check dependencies for vulnerabilities (still experimental in uv 0.11.7)
+uv audit
+
+# List dependencies from pyproject.toml that have newer versions
+uv tree --outdated --depth 1 | grep latest:
+
+# Updating all dependencies while maintaing constraints defined in pyproject.toml
+uv lock --up
+
+# Updating dependency constraints in pyproject.toml, e.g. to install a new major version
+uv add [--dev] "package>=6.0.1,<7"
 
 # Removing dependencies
-poetry remove (-D) <package>
+uv remove [--dev] <packages>
 
-# Regenerating requirements.txt after modification of pyproject.toml
-poetry export --without-hashes -o requirements.txt
-poetry export --with dev --without-hashes -o dev-requirements.txt
+# Regenerating requirements.txt after dependencies have changed
+uv export --frozen --no-hashes --no-annotate --format requirements.txt --no-dev > requirements.txt
+uv export --frozen --no-hashes --no-annotate --format requirements.txt > dev-requirements.txt
 ```
+
+## Git hooks
+
+To help ensure `requirements.txt` files are up-to-date, there is a post-commit hook that notifies
+if the exported requirements are out of sync. See `hooks/HOOKS.md` for details.
 
 ## Formatting code
 

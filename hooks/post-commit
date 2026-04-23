@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+RED='\033[1;31m'
+NOCOLOR='\033[0m'
+
+# Array of export commands needed to sync requirements
+SYNC_COMMANDS=()
+
+check_requirements () {
+  # Function arguments: file [extra args to uv export]
+  local file="$1"
+  shift
+  local cmd=(uv export --frozen --no-hashes --no-annotate --format requirements.txt "$@")
+
+  if ! diff -u "$file" <("${cmd[@]}" --quiet) > /dev/null; then
+    SYNC_COMMANDS+=("${cmd[*]} > $file")
+  fi
+}
+
+check_requirements "requirements.txt" --no-dev
+check_requirements "dev-requirements.txt"
+
+# If array is not empty, print message
+if (( ${#SYNC_COMMANDS[@]} > 0 )); then
+  echo
+  echo -e "${RED}One or more requirements files are out of sync${NOCOLOR}"
+  echo
+  echo "To fix:"
+  for cmd in "${SYNC_COMMANDS[@]}"; do
+    echo "  $cmd"
+  done
+  echo
+fi
+
