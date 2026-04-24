@@ -562,7 +562,7 @@
     "dataset_versioning_enabled": true,
     "dataset_groups_admin": ["pas"],
     "dataset_groups_create": ["pas", "pas_catalog_service_users"],
-    "dataset_groups_update": ["pas", "pas_catalog_service_users"],
+    "dataset_groups_update": ["pas", "pas_catalog_service_users", "fairdata_users"],
     "dataset_organization_admin_update": true,
     "allowed_pid_types": ["DOI"],
     "allow_remote_resources": false,
