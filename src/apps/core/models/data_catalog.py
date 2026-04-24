@@ -66,7 +66,7 @@ class DataCatalog(AbstractBaseModel):
     title = HStoreField(help_text='example: {"en":"title", "fi":"otsikko"}')
     dataset_versioning_enabled = models.BooleanField(default=False)
     is_external = models.BooleanField(default=False)
-    language = models.ManyToManyField(Language, related_name="catalogs")
+    language = models.ManyToManyField(Language, related_name="catalogs", blank=True)
     publisher = models.ForeignKey(
         "DatasetPublisher",
         on_delete=models.SET_NULL,
