@@ -3,8 +3,8 @@ import logging
 from django.db.models import Count, F, Q, Window
 from django.db.models.functions import RowNumber
 
+from apps.common.helpers import parse_csv_string
 from apps.core.models import DatasetIndexEntry
-from src.apps.common.helpers import parse_csv_string
 
 logger = logging.getLogger(__name__)
 
