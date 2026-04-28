@@ -78,7 +78,7 @@ class PreservationModelSerializer(CommonModelSerializer):
     def create(self, validated_data):
         if (
             "state" in validated_data
-            and validated_data["state"] >= Preservation.PreservationState.INITIALIZED
+            and validated_data["state"] != Preservation.PreservationState.NONE
         ):
             validated_data["state_modified"] = timezone.now()
         return super().create(validated_data)

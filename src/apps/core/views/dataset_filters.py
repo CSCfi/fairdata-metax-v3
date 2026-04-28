@@ -366,10 +366,10 @@ class DatasetFilter(filters.FilterSet):
         if value == "all":
             return queryset
         if value in ["etsin", "ttv"]:
-            # Show PAS datasets only when preservation state is 120
+            # Show PAS datasets only when preservation package has been created
             queryset = queryset.filter(state=Dataset.StateChoices.PUBLISHED).filter(
                 ~Q(data_catalog__id="urn:nbn:fi:att:data-catalog-pas")
-                | Q(preservation__state=Preservation.PreservationState.IN_PAS)
+                | Q(preservation__pas_package_created=True)
             )
 
         catalog_ids = list(

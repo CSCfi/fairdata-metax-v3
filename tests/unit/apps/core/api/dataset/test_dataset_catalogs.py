@@ -513,21 +513,21 @@ def test_get_datasets_without_catalog(
 def test_catalog_datasets_publishing_channels_pas(admin_client):
     factories.PublishedDatasetFactory(
         data_catalog__id="urn:nbn:fi:att:data-catalog-pas",
-        preservation=factories.PreservationFactory(state=120),
+        preservation=factories.PreservationFactory(pas_package_created=True),
     )
     factories.PublishedDatasetFactory(
         data_catalog__id="urn:nbn:fi:att:data-catalog-pas",
-        preservation=factories.PreservationFactory(state=30),
+        preservation=factories.PreservationFactory(pas_package_created=False),
     )
 
     res = admin_client.get("/v3/datasets")
     assert res.data["count"] == 2  # All published PAS datasets
 
     res = admin_client.get("/v3/datasets?publishing_channels=etsin")
-    assert res.data["count"] == 1  # Only published PAS datasets with state 120
+    assert res.data["count"] == 1  # Only published PAS datasets with package created
 
     res = admin_client.get("/v3/datasets?publishing_channels=ttv")
-    assert res.data["count"] == 1  # Only published PAS datasets with state 120
+    assert res.data["count"] == 1  # Only published PAS datasets with package created
 
 
 def test_catalog_datasets_publishing_channels_drafts(admin_client):
