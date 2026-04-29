@@ -1,3 +1,4 @@
+from dataclasses import dataclass, field
 import logging
 from typing import Optional, Union
 
@@ -7,6 +8,7 @@ from django.db.models import Sum
 from apps.actors.models import Organization, Person
 from apps.common.helpers import deduplicate_list
 from apps.core.models import Dataset, DatasetActor
+from apps.core.models.concepts import Spatial
 
 logger = logging.getLogger(__file__)
 
@@ -22,6 +24,12 @@ def remove_duplicates(lst: list) -> list:
         if not any(added == item for added in new_lst):
             new_lst.append(item)
     return new_lst
+
+
+@dataclass
+class GeometryData:
+    points: list[shapely.Geometry] = field(default_factory=list)
+    polygons: list[shapely.Geometry] = field(default_factory=list)
 
 
 class Datacitedata:
@@ -199,17 +207,6 @@ class Datacitedata:
                 return code
         return None
 
-    def flatten_geometry(self, geometry):
-        """Flatten multipart geometries like MultiPolygon into separate parts."""
-        if geometry.geom_type in {"MultiPolygon", "GeometryCollection"}:
-            geometries = []
-            subgeometries = shapely.get_parts(geometry)
-            for sg in subgeometries:
-                geometries.extend(self.flatten_geometry(sg))
-        else:
-            geometries = [geometry]
-        return geometries
-
     def _coords_to_datacite(self, x, y):
         if not (-180 <= x <= 180):
             raise InvalidCoordinates(f"Longitude {x} is not in range [-180, 180].")
@@ -220,43 +217,58 @@ class Datacitedata:
             "pointLatitude": str(y),
         }
 
-    def get_geometries_point(self, geometries: shapely.Geometry) -> Optional[dict]:
-        """Return up to one point from flattened geometries."""
-        for geometry in geometries:
-            # DataCite supports only one point per location
-            if geometry.geom_type == "Point":
-                try:
-                    return self._coords_to_datacite(geometry.x, geometry.y)
-                except InvalidCoordinates as e:
-                    logger.warning(f"Skipping invalid point: {e}")
-                    continue
+    def flatten_geometry(self, geometry: shapely.Geometry) -> list[shapely.Geometry]:
+        """Flatten multipart geometries like MultiPolygon into separate parts."""
+
+        if geometry.geom_type in {
+            "MultiPoint",
+            "MultiLineString",  # LineString kept here for completeness, not supported by datacite
+            "MultiPolygon",
+            "GeometryCollection",
+        }:
+            geometries = []
+            subgeometries = shapely.get_parts(geometry)
+            for sg in subgeometries:
+                geometries.extend(self.flatten_geometry(sg))
+        else:
+            geometries = [geometry]
+        return geometries
+
+    def get_point_as_datacite(self, geometry: shapely.Point) -> Optional[dict]:
+        """Return point in datacite format."""
+        try:
+            return self._coords_to_datacite(geometry.x, geometry.y)
+        except InvalidCoordinates as e:
+            logger.warning(f"Skipping invalid point: {e}")
         return None
 
-    def get_geometries_polygons(self, geometries: shapely.Geometry) -> list:
-        """Return polygons from flattened geometries."""
-        polygons = []
-        for geometry in geometries:
+    def get_polygon_as_datacite(self, geometry: shapely.Geometry) -> Optional[dict]:
+        """Return polygon points in datacite format."""
+        try:
             # DataCite supports only polygon exterior, no holes
-            if geometry.geom_type == "Polygon":
-                try:
-                    polygons.append(
-                        {
-                            "polygonPoints": [
-                                self._coords_to_datacite(x, y) for x, y in geometry.exterior.coords
-                            ]
-                        }
-                    )
-                except InvalidCoordinates as e:
-                    logger.warning(f"Skipping polygon with invalid point: {e}")
-                    continue
-        return polygons
+            return {
+                "polygonPoints": [
+                    self._coords_to_datacite(x, y) for x, y in geometry.exterior.coords
+                ]
+            }
 
-    def get_wkt_data(self, wkt_list: list) -> dict:
+        except InvalidCoordinates as e:
+            logger.warning(f"Skipping polygon with invalid point: {e}")
+        return None
+
+    def get_spatial_wkt(self, spatial: Spatial) -> list[str]:
+        """Get list of WKT strings for spatial. If custom_wkt is not set, use reference data."""
+        if custom_wkt := spatial.custom_wkt:
+            return custom_wkt
+        if (reference := spatial.reference) and reference.as_wkt:
+            return [reference.as_wkt]
+        return []
+
+    def get_spatial_geometry_data(self, spatial: Spatial) -> GeometryData:
         """Parse WKT and return polygons and points."""
-        wkt_data = {}
         geometries = []
+        wkt_list = self.get_spatial_wkt(spatial)
         for wkt in wkt_list:
-            geometries = []
             try:
                 geometry = shapely.wkt.loads(wkt)
                 geometries.extend(self.flatten_geometry(geometry))
@@ -264,27 +276,59 @@ class Datacitedata:
             except shapely.errors.GEOSException as error:
                 logger.warning(f"Invalid WKT, skipping: {error}")
 
-            if point := self.get_geometries_point(geometries):
-                wkt_data["geoLocationPoint"] = point
-            if polygons := self.get_geometries_polygons(geometries):
-                wkt_data["geoLocationPolygons"] = polygons
+        data = GeometryData()
+        for geometry in geometries:
+            if geometry.geom_type == "Point":
+                data.points.append(geometry)
+            if geometry.geom_type == "Polygon":
+                data.polygons.append(geometry)
 
-        return wkt_data
+        return data
+
+    def get_geolocation_geometry_data(self, geometries: list[shapely.Geometry]) -> dict:
+        data = {}
+        for geometry in geometries:
+            if geometry.geom_type == "Point":
+                if point := self.get_point_as_datacite(geometry):
+                    data["geoLocationPoint"] = point
+            elif geometry.geom_type == "Polygon":
+                if polygon := self.get_polygon_as_datacite(geometry):
+                    data.setdefault("geoLocationPolygons", []).append(polygon)
+        return data
+
+    def get_spatial_geolocations(self, spatial: Spatial) -> list[dict]:
+        """Create geolocations for a Spatial instance.
+
+        A Datacite geolocation can have only one point but multiple polygons.
+
+        """
+        location = {}
+        if spatial.geographic_name:
+            location["geoLocationPlace"] = spatial.geographic_name
+
+        geometry_data = self.get_spatial_geometry_data(spatial)
+        parts: list[list[shapely.Geometry]] = []
+        if len(geometry_data.points) > 1:
+            if geometry_data.polygons:
+                parts.append(geometry_data.polygons)
+            parts.extend([point] for point in geometry_data.points)
+        else:
+            if single_part := [*geometry_data.points, *geometry_data.polygons]:
+                parts.append(single_part)
+
+        if location and not parts:
+            return [location]
+
+        geolocations = []
+        for part in parts:
+            if geometry_data := self.get_geolocation_geometry_data(part):
+                geolocations.append({**location, **geometry_data})
+        return geolocations
 
     def get_geolocations(self, dataset: Dataset) -> list:
         geolocations = []
         for spatial in dataset.spatial.all():
-            location = {}
-            if spatial.geographic_name:
-                location["geoLocationPlace"] = spatial.geographic_name
-
-            wkt_list = spatial.custom_wkt or []
-            if reference_wkt := spatial.reference and spatial.reference.as_wkt:
-                wkt_list.append(reference_wkt)
-
-            location.update(self.get_wkt_data(wkt_list))
-            if location:
-                geolocations.append(location)
+            geolocations.extend(self.get_spatial_geolocations(spatial))
 
         return geolocations
 
