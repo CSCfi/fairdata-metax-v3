@@ -74,6 +74,7 @@ class AdminOrganizationAdmin(admin.ModelAdmin):
         "url",
         "allow_manual_rems_approval",
         "manual_approval_rems_datasets",
+        "dac_email",
     ]
     readonly_fields = ["manual_approval_rems_datasets"]
     list_display = ["id", "pref_label", "allow_manual_rems_approval"]
