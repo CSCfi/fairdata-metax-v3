@@ -1,6 +1,7 @@
 import json
 
 from django.contrib.gis.geos import GEOSGeometry
+from django.db.models import Manager
 from drf_yasg import openapi
 from rest_framework import serializers
 from rest_framework_gis.serializers import GeoFeatureModelListSerializer, GeoFeatureModelSerializer
@@ -18,6 +19,13 @@ from apps.core.models.concepts import GeoType
 
 class GeoFeatureCommonListSerializer(GeoFeatureModelListSerializer, CommonListSerializer):
     """CommonListSerializer that outputs features with GeoJSON formatting."""
+
+    def to_representation(self, data):
+        if isinstance(data, Manager):
+            data = data.all()
+        if not data:
+            return None
+        return super().to_representation(data)
 
 
 class GeoLocationSerializer(GeoFeatureModelSerializer, LazyableModelSerializer):

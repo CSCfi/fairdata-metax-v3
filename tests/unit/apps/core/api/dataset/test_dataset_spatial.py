@@ -184,20 +184,13 @@ def test_remove_dataset_geolocations_bulk(
                 "features": [
                     {
                         "type": "Feature",
-                        "geometry": {
-                            "type": "Point",
-                            "coordinates": [10.0, 50.0]
-                        },
+                        "geometry": {"type": "Point", "coordinates": [10.0, 50.0]},
                     },
                     {
                         "type": "Feature",
                         "geometry": {
                             "type": "LineString",
-                            "coordinates": [
-                                [10.5, 50.5],
-                                [11.0, 51.0],
-                                [11.5, 50.5]
-                            ]
+                            "coordinates": [[10.5, 50.5], [11.0, 51.0], [11.5, 50.5]],
                         },
                     },
                     {
@@ -210,9 +203,9 @@ def test_remove_dataset_geolocations_bulk(
                                     [13.0, 52.0],
                                     [13.0, 53.0],
                                     [12.0, 53.0],
-                                    [12.0, 52.0]
+                                    [12.0, 52.0],
                                 ]
-                            ]
+                            ],
                         },
                     },
                     {
@@ -225,26 +218,23 @@ def test_remove_dataset_geolocations_bulk(
                                     [15.0, 54.0],
                                     [15.0, 55.0],
                                     [14.0, 55.0],
-                                    [14.0, 54.0]
+                                    [14.0, 54.0],
                                 ],
                                 [
                                     [14.2, 54.2],
                                     [14.8, 54.2],
                                     [14.8, 54.8],
                                     [14.2, 54.8],
-                                    [14.2, 54.2]
-                                ]
-                            ]
+                                    [14.2, 54.2],
+                                ],
+                            ],
                         },
                     },
                     {
                         "type": "Feature",
                         "geometry": {
                             "type": "MultiPoint",
-                            "coordinates": [
-                                [16.0, 56.0],
-                                [16.1, 56.1]
-                            ]
+                            "coordinates": [[16.0, 56.0], [16.1, 56.1]],
                         },
                     },
                     {
@@ -252,15 +242,9 @@ def test_remove_dataset_geolocations_bulk(
                         "geometry": {
                             "type": "MultiLineString",
                             "coordinates": [
-                                [
-                                    [17.0, 57.0],
-                                    [17.5, 57.5]
-                                ],
-                                [
-                                    [18.0, 58.0],
-                                    [18.5, 58.5]
-                                ]
-                            ]
+                                [[17.0, 57.0], [17.5, 57.5]],
+                                [[18.0, 58.0], [18.5, 58.5]],
+                            ],
                         },
                     },
                     {
@@ -274,7 +258,7 @@ def test_remove_dataset_geolocations_bulk(
                                         [20.0, 59.0],
                                         [20.0, 60.0],
                                         [19.0, 60.0],
-                                        [19.0, 59.0]
+                                        [19.0, 59.0],
                                     ]
                                 ],
                                 [
@@ -283,14 +267,14 @@ def test_remove_dataset_geolocations_bulk(
                                         [22.0, 61.0],
                                         [22.0, 62.0],
                                         [21.0, 62.0],
-                                        [21.0, 61.0]
+                                        [21.0, 61.0],
                                     ]
-                                ]
-                            ]
+                                ],
+                            ],
                         },
-                    }
-                ]
-            }
+                    },
+                ],
+            },
         },
         {
             "geographic_name": "Koitajoki",
@@ -332,7 +316,7 @@ def test_remove_dataset_geolocations_bulk(
         content_type="application/json",
     )
     assert res.status_code == 200
-    assert len(res.data["spatial"][0]["geolocations"]["features"]) == 0
+    assert "geolocations" not in res.data["spatial"][0]
 
 
 def test_create_invalid_dataset_geolocations_bulk(
@@ -355,13 +339,13 @@ def test_create_invalid_dataset_geolocations_bulk(
                                     [13.0, 52.0],
                                     [13.0, 53.0],
                                     [12.0, 53.0],
-                                    [12.1, 52.1]
+                                    [12.1, 52.1],
                                 ]
-                            ]
-                        }
+                            ],
+                        },
                     }
-                ]
-            }
+                ],
+            },
         },
         {
             "geographic_name": "Koitajoki",
@@ -371,13 +355,10 @@ def test_create_invalid_dataset_geolocations_bulk(
                 "features": [
                     {
                         "type": "Feature",
-                        "geometry": {
-                            "type": "Point",
-                            "coordinates": [10.0, 50.0]
-                        },
+                        "geometry": {"type": "Point", "coordinates": [10.0, 50.0]},
                     }
-                ]
-            }
+                ],
+            },
         },
     ]
     provenances = [
@@ -392,14 +373,11 @@ def test_create_invalid_dataset_geolocations_bulk(
                             "type": "Feature",
                             "geometry": {
                                 "type": "MultiPoint",
-                                "coordinates": [
-                                    [16.0, 56.0],
-                                    [16.1, 56.1]
-                                ]
+                                "coordinates": [[16.0, 56.0], [16.1, 56.1]],
                             },
                         }
-                    ]
-                }
+                    ],
+                },
             },
         }
     ]
@@ -414,22 +392,16 @@ def test_create_invalid_dataset_geolocations_bulk(
     assert res.status_code == 400
 
     spatials[0]["geolocations"]["features"] = [
-                    {
-                        "type": "Feature",
-                        "geometry": {
-                            "type": "Polygon",
-                            "coordinates": [
-                                [
-                                    [12.0, 52.0],
-                                    [13.0, 52.0],
-                                    [13.0, 53.0],
-                                    [12.0, 53.0],
-                                    [12.0, 52.0]
-                                ]
-                            ]
-                        }
-                    }
-                ]
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [[12.0, 52.0], [13.0, 52.0], [13.0, 53.0], [12.0, 53.0], [12.0, 52.0]]
+                ],
+            },
+        }
+    ]
     res = admin_client.post(
         "/v3/datasets",
         {**dataset_a_json, "spatial": spatials, "provenance": provenances},
