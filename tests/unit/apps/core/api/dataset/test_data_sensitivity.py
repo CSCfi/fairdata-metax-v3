@@ -1,5 +1,7 @@
 import pytest
+from django.contrib.auth.models import Group
 
+from apps.core import factories
 from apps.core.factories import ContractFactory, SensitivityRationaleFactory
 from apps.core.models.contract import ContractSensitivityRationale
 from apps.core.models.catalog_record.dataset import Dataset
@@ -9,14 +11,10 @@ pytestmark = [pytest.mark.django_db, pytest.mark.contract, pytest.mark.dataset]
 
 @pytest.fixture
 def sensitive_contract():
-    contract = ContractFactory(
-        is_sensitive=True
-    )
+    contract = ContractFactory(is_sensitive=True)
 
     contract_rationale = ContractSensitivityRationale(
-        rationale=SensitivityRationaleFactory(),
-        expiration_date=None,
-        contract=contract
+        rationale=SensitivityRationaleFactory(), expiration_date=None, contract=contract
     )
     contract_rationale.save()
 
@@ -35,19 +33,17 @@ def sensitive_dataset_json(dataset_a_json, reference_data, data_catalog, sensiti
             "rationales": [
                 {
                     "rationale": {"url": sensitive_contract.rationales.first().rationale.url},
-                    "expiration_date": "2027-01-01"
+                    "expiration_date": "2027-01-01",
                 }
-            ]
-        }
+            ],
+        },
     }
     return dataset
 
 
 @pytest.fixture
 def sensitive_dataset(sensitive_dataset_json, pas_client):
-    resp = pas_client.post(
-        "/v3/datasets", sensitive_dataset_json, content_type="application/json"
-    )
+    resp = pas_client.post("/v3/datasets", sensitive_dataset_json, content_type="application/json")
     assert resp.status_code == 201
 
     return Dataset.objects.get(id=resp.data["id"])
@@ -58,9 +54,7 @@ def test_create_sensitive_dataset(sensitive_dataset_json, sensitive_contract, pa
     Test creating a sensitive dataset
     """
     resp = pas_client.post(
-        "/v3/datasets?include_nulls=true",
-        sensitive_dataset_json,
-        content_type="application/json"
+        "/v3/datasets?include_nulls=true", sensitive_dataset_json, content_type="application/json"
     )
 
     assert resp.status_code == 201
@@ -69,8 +63,10 @@ def test_create_sensitive_dataset(sensitive_dataset_json, sensitive_contract, pa
 
     assert data["data_sensitivity"]["is_sensitive"] is True
     assert len(data["data_sensitivity"]["rationales"]) == 1
-    assert data["data_sensitivity"]["rationales"][0]["rationale"]["url"] \
+    assert (
+        data["data_sensitivity"]["rationales"][0]["rationale"]["url"]
         == sensitive_contract.rationales.first().rationale.url
+    )
     assert data["data_sensitivity"]["rationales"][0]["expiration_date"] == "2027-01-01"
 
 
@@ -99,13 +95,8 @@ def test_data_sensitive_writable_only_by_pas(sensitive_dataset, pas_client, ida_
     dataset_id = sensitive_dataset.id
     resp = pas_client.patch(
         f"/v3/datasets/{dataset_id}",
-        {
-            "data_sensitivity": {
-                "is_sensitive": False,
-                "rationales": []
-            }
-        },
-        content_type="application/json"
+        {"data_sensitivity": {"is_sensitive": False, "rationales": []}},
+        content_type="application/json",
     )
 
     assert resp.status_code == 200
@@ -114,13 +105,8 @@ def test_data_sensitive_writable_only_by_pas(sensitive_dataset, pas_client, ida_
     for value in [True, False]:
         resp = ida_client.patch(
             f"/v3/datasets/{dataset_id}",
-            {
-                "data_sensitivity": {
-                    "is_sensitive": value,
-                    "rationales": []
-                }
-            },
-            content_type="application/json"
+            {"data_sensitivity": {"is_sensitive": value, "rationales": []}},
+            content_type="application/json",
         )
 
         assert resp.status_code == 400
@@ -134,25 +120,21 @@ def test_contract_must_be_sensitive(sensitive_contract, sensitive_dataset, pas_c
     resp = pas_client.patch(
         f"/v3/datasets/{sensitive_dataset.id}",
         {"data_sensitivity": {"is_sensitive": False, "rationales": []}},
-        content_type="application/json"
+        content_type="application/json",
     )
     assert resp.status_code == 200
     resp = pas_client.patch(
         f"/v3/contracts/{sensitive_contract.id}",
-        {
-            "data_sensitivity": {"is_sensitive": False, "rationales": []}
-        },
-        content_type="application/json"
+        {"data_sensitivity": {"is_sensitive": False, "rationales": []}},
+        content_type="application/json",
     )
     assert resp.status_code == 200
 
     # Dataset cannot be made sensitive
     resp = pas_client.patch(
         f"/v3/datasets/{sensitive_dataset.id}",
-        {
-            "data_sensitivity": {"is_sensitive": True, "rationales": []}
-        },
-        content_type="application/json"
+        {"data_sensitivity": {"is_sensitive": True, "rationales": []}},
+        content_type="application/json",
     )
 
     assert resp.status_code == 400
@@ -174,16 +156,16 @@ def test_new_dataset_must_contain_rationales(sensitive_contract, dataset_a_json,
             "preservation": {"contract": sensitive_contract.id},
             "data_sensitivity": {
                 "is_sensitive": True,
-                "rationales": [
-                    {"rationale": {"url": new_rationale.url}}
-                ]
-            }
+                "rationales": [{"rationale": {"url": new_rationale.url}}],
+            },
         },
-        content_type="application/json"
+        content_type="application/json",
     )
     assert resp.status_code == 400
-    assert resp.data["rationales"] == \
-        f"Following rationales are not listed in the linked contract: {new_rationale.url}"
+    assert (
+        resp.data["rationales"]
+        == f"Following rationales are not listed in the linked contract: {new_rationale.url}"
+    )
 
 
 def test_contract_must_contain_rationales(sensitive_contract, sensitive_dataset, pas_client):
@@ -207,11 +189,11 @@ def test_contract_must_contain_rationales(sensitive_contract, sensitive_dataset,
                 "is_sensitive": True,
                 "rationales": [
                     {"rationale": {"url": rationale_a.url}},
-                    {"rationale": {"url": rationale_b.url}}
+                    {"rationale": {"url": rationale_b.url}},
                 ],
             }
         },
-        content_type="application/json"
+        content_type="application/json",
     )
     assert resp.status_code == 200
 
@@ -226,14 +208,16 @@ def test_contract_must_contain_rationales(sensitive_contract, sensitive_dataset,
                 "rationales": [
                     {"rationale": {"url": rationale_b.url}},
                     {"rationale": {"url": rationale_c.url}},
-                ]
+                ],
             }
         },
-        content_type="application/json"
+        content_type="application/json",
     )
     assert resp.status_code == 400
-    assert resp.data["rationales"] == \
-        f"Following rationales are not listed in the linked contract: {rationale_c.url}"
+    assert (
+        resp.data["rationales"]
+        == f"Following rationales are not listed in the linked contract: {rationale_c.url}"
+    )
 
 
 def test_contract_must_retain_rationales(sensitive_contract, sensitive_dataset, pas_client):
@@ -263,7 +247,7 @@ def test_contract_must_retain_rationales(sensitive_contract, sensitive_dataset, 
                 ],
             }
         },
-        content_type="application/json"
+        content_type="application/json",
     )
     assert resp.status_code == 200
 
@@ -275,10 +259,10 @@ def test_contract_must_retain_rationales(sensitive_contract, sensitive_dataset, 
                 "rationales": [
                     {"rationale": {"url": rationale_a.url}},
                     {"rationale": {"url": rationale_b.url}},
-                ]
+                ],
             }
         },
-        content_type="application/json"
+        content_type="application/json",
     )
     assert resp.status_code == 200
 
@@ -288,19 +272,21 @@ def test_contract_must_retain_rationales(sensitive_contract, sensitive_dataset, 
         {
             "data_sensitivity": {
                 "is_sensitive": True,
-                "rationales": [
-                    {"rationale": {"url": rationale_b.url}}
-                ]
+                "rationales": [{"rationale": {"url": rationale_b.url}}],
             }
         },
-        content_type="application/json"
+        content_type="application/json",
     )
     assert resp.status_code == 400
-    assert resp.data["rationales"] \
+    assert (
+        resp.data["rationales"]
         == f"Following datasets still use rationales that are being removed: {sensitive_dataset.id}"
+    )
 
 
-def test_sensitive_dataset_prevents_contract_change(sensitive_contract, sensitive_dataset, pas_client):
+def test_sensitive_dataset_prevents_contract_change(
+    sensitive_contract, sensitive_dataset, pas_client
+):
     """
     Test that an existing sensitive dataset prevents making the contract non-sensitive
     """
@@ -313,11 +299,32 @@ def test_sensitive_dataset_prevents_contract_change(sensitive_contract, sensitiv
                 "is_sensitive": False,
                 "rationales": [
                     {"rationale": {"url": sensitive_contract.rationales.first().rationale.url}}
-                ]
+                ],
             }
         },
-        content_type="application/json"
+        content_type="application/json",
     )
     assert resp.status_code == 400
-    assert resp.data["is_sensitive"] == \
-        f"Following datasets are still sensitive: {sensitive_dataset.id}"
+    assert (
+        resp.data["is_sensitive"]
+        == f"Following datasets are still sensitive: {sensitive_dataset.id}"
+    )
+
+
+def test_update_sensitive_dataset(sensitive_dataset_json, pas_client, data_catalog):
+    data_catalog.dataset_groups_admin.add(Group.objects.get(name="pas"))
+    dataset = factories.PublishedDatasetFactory(data_catalog=data_catalog)
+
+    resp = pas_client.patch(
+        f"/v3/datasets/{dataset.id}",
+        sensitive_dataset_json,
+        content_type="application/json",
+    )
+    assert resp.status_code == 200, resp.data
+
+    resp = pas_client.patch(
+        f"/v3/datasets/{dataset.id}",
+        {"preservation": sensitive_dataset_json["preservation"]},
+        content_type="application/json",
+    )
+    assert resp.status_code == 200, resp.data
