@@ -59,6 +59,9 @@ venv*/
 staticfiles/*
 site/*
 src/metax_service/settings/local.py
+*.local
+local/*
 
 # Use uv.lock for dependencies, ignore poetry.lock
 poetry.lock
+

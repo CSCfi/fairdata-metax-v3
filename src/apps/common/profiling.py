@@ -241,7 +241,7 @@ class log_queries(ContextDecorator):
 
 
 @contextmanager
-def log_duration(log=False):
+def log_duration(log=False, label=""):
     """Log duration of context manager in seconds.
 
     Usage example:
@@ -256,4 +256,6 @@ def log_duration(log=False):
     yield times
     times["end"] = timezone.now()
     times["duration"] = (times["end"] - times["start"]).total_seconds()
-    logger.info(f"{line}: Duration {times['duration']:.2f} s")
+    if label:
+        label = f" ({label})"
+    logger.info(f"{line}{label}: Duration {times['duration']:.2f} s")

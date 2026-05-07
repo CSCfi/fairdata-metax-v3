@@ -4,7 +4,6 @@ from django.db import transaction
 from django.core.management.base import BaseCommand
 from apps.users.models import AdminOrganization
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -14,10 +13,14 @@ class Command(BaseCommand):
     def get_manual_rems_approval_organizations(self):
         from apps.core.models import Dataset, REMSApprovalType
 
-        return list(
+        return set(
             Dataset.objects.filter(
                 access_rights__rems_approval_type=REMSApprovalType.MANUAL
             ).values_list("metadata_owner__admin_organization", flat=True)
+        ) | set(
+            AdminOrganization.objects.filter(allow_manual_rems_approval=True).values_list(
+                "id", flat=True
+            )
         )
 
     @transaction.atomic

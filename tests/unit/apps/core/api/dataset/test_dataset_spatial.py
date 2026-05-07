@@ -595,6 +595,61 @@ def test_dataset_spatial_properties(admin_client, dataset_minimal_draft_json):
     }
 
 
+def test_dataset_spatial_3d_geometry_wkt(admin_client, dataset_minimal_draft_json):
+    dataset_json = dataset_minimal_draft_json
+    dataset_json["spatial"] = [{"custom_wkt": ["POINT(61 24 100)"]}]
+
+    res = admin_client.post("/v3/datasets", dataset_json, content_type="application/json")
+    assert res.status_code == 201
+    dataset = Dataset.objects.get(id=res.data["id"])
+    loc = dataset.spatial.first().geolocations.first()
+    assert loc.geometry_3d.geom_type == "Point"
+    assert loc.geometry_3d.coords == (61.0, 24.0, 100.0)
+    assert loc.geometry_2d.geom_type == "Point"
+    assert loc.geometry_2d.coords == (61.0, 24.0)
+
+
+def test_dataset_spatial_wkt_geolocation(
+    admin_client, dataset_minimal_draft_json, subtests: pytest.Subtests
+):
+    dataset_json = dataset_minimal_draft_json
+
+    geolocation = {
+        "type": "FeatureCollection",
+        "features": [
+            {"type": "Feature", "geometry": {"type": "Point", "coordinates": [61.1, 24.9]}}
+        ],
+    }
+    wkt = ["POINT (61.1 24.9)"]
+    wkt2 = ["POINT (61.1000001 24.9)"]
+
+    with subtests.test("gelocation -> wkt"):
+        dataset_json["spatial"] = [{"geolocations": geolocation}]
+        res = admin_client.post("/v3/datasets", dataset_json, content_type="application/json")
+        assert res.status_code == 201, res.data
+        assert res.data["spatial"][0]["custom_wkt"] == wkt
+
+    with subtests.test("wkt -> geolocation"):
+        dataset_json["spatial"] = [{"custom_wkt": wkt}]
+        res = admin_client.post("/v3/datasets", dataset_json, content_type="application/json")
+        assert res.status_code == 201, res.data
+        assert (
+            res.data["spatial"][0]["geolocations"]["features"][0]["geometry"]
+            == geolocation["features"][0]["geometry"]
+        )
+
+    with subtests.test("wkt + geolocation ok"):
+        dataset_json["spatial"] = [{"custom_wkt": wkt, "geolocations": geolocation}]
+        res = admin_client.post("/v3/datasets", dataset_json, content_type="application/json")
+        assert res.status_code == 201, res.data
+
+    with subtests.test("wkt + geolocation mismatch"):
+        dataset_json["spatial"] = [{"custom_wkt": wkt2, "geolocations": geolocation}]
+        res = admin_client.post("/v3/datasets", dataset_json, content_type="application/json")
+        assert res.status_code == 400, res.data
+        assert "both should have exactly the same geometry" in res.data["spatial"][0]["custom_wkt"]
+
+
 def test_dataset_spatial_wkt_antipodal(admin_client, dataset_minimal_draft_json):
     dataset_json = dataset_minimal_draft_json
     wkt = "POLYGON ((-180 -90, -180 90, 180 90, 180 -90, -180 -90))"

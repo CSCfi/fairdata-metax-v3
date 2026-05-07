@@ -201,3 +201,36 @@ class SpatialModelSerializer(CommonNestedModelSerializer):
                 ]
             )
         ]
+
+    def to_internal_value(self, data):
+        data = super().to_internal_value(data)
+
+        geolocations = data.get("geolocations")
+        wkts = data.get("custom_wkt")
+
+        if wkts and geolocations:
+            # When both wkt and geojson are provided, they should have the same geometry.
+            geolocation_geometries = [
+                shapely.wkt.loads(location["geometry"].wkt).normalize()
+                for location in geolocations
+            ]
+            wkt_geometries = [shapely.wkt.loads(wkt).normalize() for wkt in wkts]
+            for wkt1, wkt2 in zip(geolocation_geometries, wkt_geometries):
+                if not wkt1.equals_exact(wkt2, tolerance=1e-7):
+                    raise serializers.ValidationError(
+                        {
+                            "custom_wkt": (
+                                "When both custom_wkt and geolocations are specified, "
+                                "both should have exactly the same geometry."
+                            )
+                        }
+                    )
+        elif wkts and not geolocations:
+            geolocations = [{"geometry": GEOSGeometry(wkt)} for wkt in wkts]
+        elif geolocations and not wkts:
+            wkts = [location["geometry"].wkt for location in geolocations]
+
+        data["geolocations"] = geolocations
+        data["custom_wkt"] = wkts
+
+        return data

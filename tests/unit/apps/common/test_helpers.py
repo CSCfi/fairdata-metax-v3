@@ -2,8 +2,17 @@ import uuid
 
 import fastuuid
 import pytest
+import shapely
+from django.contrib.gis.geos import GEOSGeometry
 
-from apps.common.helpers import get_sql, merge_sets, normalize_doi, uuid7
+from apps.common.helpers import (
+    get_sql,
+    merge_sets,
+    normalize_doi,
+    uuid7,
+    get_geometry_bounds,
+    split_geometry_long_edges,
+)
 from apps.core.models.catalog_record.dataset import Dataset
 
 
@@ -78,3 +87,25 @@ def test_get_sql():
         Dataset.objects.order_by().values("id").filter(id="00000000-0000-0000-0000-000000001234")
     )
     assert "'00000000000000000000000000001234'" in sql
+
+
+def test_get_geometry_bounds():
+    wkt = "POLYGON ((-50 -50, 30 -70, 40 50, -50 -50))"
+
+    assert get_geometry_bounds(GEOSGeometry(wkt)) == [[-50, -70], [40, 50]]
+    assert get_geometry_bounds(shapely.from_wkt(wkt)) == [[-50, -70], [40, 50]]
+
+
+def test_split_geometry_long_edges():
+    wkt = "LINESTRING (-90 0, 90 0)" # len >= 180, should split
+    assert split_geometry_long_edges(GEOSGeometry(wkt)).wkt == "LINESTRING (-90 0, 0 0, 90 0)"
+    assert split_geometry_long_edges(shapely.from_wkt(wkt)).wkt == "LINESTRING (-90 0, 0 0, 90 0)"
+
+def test_split_geometry_long_edges_no_split():
+    wkt = "LINESTRING (-80 0, 80 0)" # len < 180, no need to split
+    assert split_geometry_long_edges(GEOSGeometry(wkt)).wkt == "LINESTRING (-80 0, 80 0)"
+    assert split_geometry_long_edges(shapely.from_wkt(wkt)).wkt == "LINESTRING (-80 0, 80 0)"
+
+
+
+
