@@ -551,3 +551,44 @@ def test_dataset_spatial_3d_geometry_geolocation(admin_client, dataset_minimal_d
     assert loc.geometry_3d.coords == (61.0, 24.0, 100.0)
     assert loc.geometry_2d.geom_type == "Point"
     assert loc.geometry_2d.coords == (61.0, 24.0)
+
+
+def test_dataset_spatial_properties(admin_client, dataset_minimal_draft_json):
+    dataset_json = dataset_minimal_draft_json
+    dataset_json["spatial"] = [
+        {
+            "geolocations": {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "geometry": {"type": "Point", "coordinates": [61, 24]},
+                        "properties": {
+                            "this": "is",
+                            "a": "json object",
+                            "value": 1,
+                            "subobject": {"works": "ok"},
+                        },
+                    },
+                    {
+                        "type": "Feature",
+                        "geometry": {"type": "Point", "coordinates": [12, 34]},
+                        "properties": {
+                            "another": "feature",
+                        },
+                    },
+                ],
+            }
+        }
+    ]
+    res = admin_client.post("/v3/datasets", dataset_json, content_type="application/json")
+    assert res.status_code == 201, res.data
+    assert res.data["spatial"][0]["geolocations"]["features"][0]["properties"] == {
+        "this": "is",
+        "a": "json object",
+        "value": 1,
+        "subobject": {"works": "ok"},
+    }
+    assert res.data["spatial"][0]["geolocations"]["features"][1]["properties"] == {
+        "another": "feature"
+    }

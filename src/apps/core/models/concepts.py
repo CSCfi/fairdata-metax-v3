@@ -193,6 +193,7 @@ class GeoLocation(AbstractBaseModel):
     )
     geometry_2d = models.GeometryField(geography=True)  # Used for both 2d and 3d geometries
     geometry_3d = models.GeometryField(geography=True, dim=3, null=True, blank=True)
+    properties = models.JSONField(null=True, blank=True)
 
     def __str__(self):
         return "GeoLocation"

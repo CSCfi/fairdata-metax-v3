@@ -10,6 +10,7 @@ from rest_framework_gis.serializers import (
     GeometryField,
 )
 
+
 from apps.common.serializers.fields import ListValidChoicesField, WKTField
 from apps.common.serializers.serializers import (
     CommonListSerializer,
@@ -80,7 +81,9 @@ class GeoFeatureCommonListSerializer(GeoFeatureModelListSerializer, CommonListSe
         converted = self.feature_collection_serializer.to_internal_value(data)
         geolocations = []
         for feature in converted["features"]:
-            geolocations.append({"geometry": feature["geometry"]})
+            geolocations.append(
+                {"geometry": feature["geometry"], "properties": feature.get("properties")}
+            )
         return geolocations
 
     def to_representation(self, data):
@@ -113,14 +116,14 @@ class GeoFeatureCommonListSerializer(GeoFeatureModelListSerializer, CommonListSe
 class GeoLocationSerializer(GeoFeatureModelSerializer, LazyableModelSerializer):
 
     # Which model fields are updated when doing lazy bulk create/update
-    lazy_update_model_fields = ["spatial", "geometry_2d", "geometry_3d"]  # TODO: add properties
+    lazy_update_model_fields = ["spatial", "geometry_2d", "geometry_3d", "properties"]
 
     geometry = GeometryField()
 
     class Meta:
         model = GeoLocation
         geo_field = "geometry"
-        fields = ("geometry",)
+        fields = ("geometry", "properties")
         list_serializer_class = GeoFeatureCommonListSerializer
 
         swagger_schema_fields = {
@@ -142,10 +145,19 @@ class GeoLocationSerializer(GeoFeatureModelSerializer, LazyableModelSerializer):
                         "Polygon, MultiPolygon, GeometryCollection"
                     ),
                 ),
+                "properties": openapi.Schema(
+                    title="Properties",
+                    type=openapi.TYPE_OBJECT,
+                    description="Additional properties of the feature.",
+                ),
             },
             "required": ["type", "geometry"],
         }
         auto_bbox = True
+
+    def get_properties(self, instance, fields) -> dict | None:
+        # Use instance.properties as the value of the "properties" object.
+        return instance.properties
 
 
 class SpatialModelSerializer(CommonNestedModelSerializer):
