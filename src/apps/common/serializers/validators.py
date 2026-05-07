@@ -62,3 +62,8 @@ class AllOf(RequiredFieldCombinationValidatorBase):
                     errors[field] = _("Field is required.")
         if errors:
             raise serializers.ValidationError(errors)
+
+
+def validate_dict(value):
+    if not isinstance(value, dict):
+        raise serializers.ValidationError("Value must be a dictionary")

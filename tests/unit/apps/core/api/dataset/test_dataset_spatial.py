@@ -308,14 +308,15 @@ def test_remove_dataset_geolocations_bulk(
     assert res.data["spatial"][0]["geolocations"]["features"][0]["geometry"]["type"] == "Point"
     assert len(res.data["spatial"][0]["geolocations"]["features"]) == 7
 
+    # Clear geolocations
     dataset_id = res.data["id"]
-    spatials[0]["geolocations"] = {}
+    spatials[0]["geolocations"] = None
     res = admin_client.patch(
         f"/v3/datasets/{dataset_id}",
         {"spatial": spatials, "provenance": provenances},
         content_type="application/json",
     )
-    assert res.status_code == 200
+    assert res.status_code == 200, res.data
     assert "geolocations" not in res.data["spatial"][0]
 
 
@@ -471,3 +472,60 @@ def test_create_dataset_geolocations_copy(
     d2 = res.data["results"][1]
     assert len(d1["spatial"][0]["geolocations"]["features"]) == 1
     assert len(d2["spatial"][0]["geolocations"]["features"]) == 1
+
+
+def test_dataset_spatial_validate_features(
+    admin_client, dataset_minimal_draft_json, data_catalog, reference_data, mocker
+):
+    dataset_json = dataset_minimal_draft_json
+    dataset_json["spatial"] = [{"geolocations": {"type": "jeejee"}}]
+    res = admin_client.post("/v3/datasets", dataset_json, content_type="application/json")
+    assert res.status_code == 400, res.data
+    assert "not a valid choice" in res.json()["spatial"][0]["geolocations"]["type"][0]
+    assert "field is required" in res.json()["spatial"][0]["geolocations"]["features"][0]
+
+    dataset_json["spatial"] = [{"geolocations": {"type": "FeatureCollection", "features": []}}]
+    res = admin_client.post("/v3/datasets", dataset_json, content_type="application/json")
+    assert res.status_code == 400, res.data
+    assert (
+        "Ensure this field has at least 1"
+        in res.json()["spatial"][0]["geolocations"]["features"]["non_field_errors"][0]
+    )
+
+
+def test_dataset_spatial_validate_geometry(admin_client, dataset_minimal_draft_json):
+    dataset_json = dataset_minimal_draft_json
+    geometry = {"type": "Poing", "coordinates": [61, 24]}
+    dataset_json["spatial"] = [
+        {
+            "geolocations": {
+                "type": "FeatureCollection",
+                "features": [{"type": "Feature", "geometry": geometry}],
+            }
+        }
+    ]
+    res = admin_client.post("/v3/datasets", dataset_json, content_type="application/json")
+    assert res.status_code == 400, res.data
+    assert (
+        res.json()["spatial"][0]["geolocations"]["features"][0]["geometry"][0]
+        == "Unknown geometry type"
+    )
+
+
+def test_dataset_spatial_validate_properties(admin_client, dataset_minimal_draft_json):
+    dataset_json = dataset_minimal_draft_json
+    geometry = {"type": "Point", "coordinates": [61, 24]}
+    dataset_json["spatial"] = [
+        {
+            "geolocations": {
+                "type": "FeatureCollection",
+                "features": [{"type": "Feature", "geometry": geometry, "properties": "someprop"}],
+            }
+        }
+    ]
+    res = admin_client.post("/v3/datasets", dataset_json, content_type="application/json")
+    assert res.status_code == 400, res.data
+    assert (
+        "must be a dict"
+        in res.json()["spatial"][0]["geolocations"]["features"][0]["properties"][0]
+    )

@@ -1,31 +1,109 @@
-import json
-
+import msgspec
+import shapely
 from django.contrib.gis.geos import GEOSGeometry
 from django.db.models import Manager
 from drf_yasg import openapi
 from rest_framework import serializers
 from rest_framework_gis.serializers import GeoFeatureModelListSerializer, GeoFeatureModelSerializer
 
-from apps.common.serializers.fields import WKTField
+from apps.common.serializers.fields import ListValidChoicesField, WKTField
 from apps.common.serializers.serializers import (
     CommonListSerializer,
     CommonNestedModelSerializer,
     LazyableModelSerializer,
+    StrictSerializer,
 )
-from apps.common.serializers.validators import AnyOf
+from apps.common.serializers.validators import AnyOf, validate_dict
 from apps.core.models import GeoLocation, Spatial, concepts
-from apps.core.models.concepts import GeoType
+
+WGS84_SRID = 4326
+
+
+def get_geos_exception_msg(error: shapely.errors.GEOSException):
+    """Convert GEOSException to a nicer format for end users.
+
+    ParseException: Unknown geometry type! -> "Unknown geometry type"
+    """
+    err_msg = str(error)
+    try:
+        err_msg = err_msg.split(":")[1].strip(" !")
+    except Exception:
+        pass
+    return err_msg
+
+
+class GeoJSONField(serializers.JSONField):
+    """Serializer for parsing GeoJSON Geometries."""
+
+    def to_internal_value(self, data):
+        validate_dict(data)
+
+        json_bytes = msgspec.json.encode(super().to_internal_value(data))
+
+        # GEOSGeometry is overly permissive, so use shapely to
+        # first validate the geometry object.
+        try:
+            shapely.from_geojson(json_bytes)
+        except shapely.errors.GEOSException as e:
+            raise serializers.ValidationError(get_geos_exception_msg(e))
+        return GEOSGeometry(json_bytes)
+
+
+class FeatureSerializer(StrictSerializer):
+    """Serializer for parsing GEOJSON Feature."""
+
+    type = ListValidChoicesField(choices=["Feature"])
+    geometry = GeoJSONField()
+    properties = serializers.JSONField(required=False, validators=[validate_dict])
+
+
+class FeatureCollectionSerializer(StrictSerializer):
+    """Serializer for parsing GeoJSON FeatureCollection."""
+
+    type = ListValidChoicesField(choices=["FeatureCollection"])
+    features = FeatureSerializer(many=True, min_length=1)
 
 
 class GeoFeatureCommonListSerializer(GeoFeatureModelListSerializer, CommonListSerializer):
     """CommonListSerializer that outputs features with GeoJSON formatting."""
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.feature_collection_serializer = FeatureCollectionSerializer()
+
+    def to_internal_value(self, data):
+        """Convert FeatureCollection dict to a list of GeoLocation dicts."""
+        converted = self.feature_collection_serializer.to_internal_value(data)
+        geolocations = []
+        for feature in converted["features"]:
+            geolocations.append({"geometry": feature["geometry"]})
+        return geolocations
+
     def to_representation(self, data):
+        """Convert of list of GeoLocations to a FeatureCollection dict."""
         if isinstance(data, Manager):
             data = data.all()
         if not data:
             return None
         return super().to_representation(data)
+
+    class Meta:
+        swagger_schema_fields = {
+            "type": openapi.TYPE_OBJECT,
+            "title": "FeatureCollection",
+            "properties": {
+                "type": openapi.Schema(
+                    title="Type",
+                    type=openapi.TYPE_STRING,
+                    default="FeatureCollection",
+                    enum=["FeatureCollection"],  # Only one supported value
+                ),
+                "features": openapi.Schema(
+                    **{"type": openapi.TYPE_OBJECT, "$ref": "#/definitions/GeoLocation"}
+                ),
+            },
+            "required": ["type", "geometry"],
+        }
 
 
 class GeoLocationSerializer(GeoFeatureModelSerializer, LazyableModelSerializer):
@@ -33,42 +111,32 @@ class GeoLocationSerializer(GeoFeatureModelSerializer, LazyableModelSerializer):
     class Meta:
         model = GeoLocation
         geo_field = "geometry"
-        fields = (
-            "id",
-            "geographic_type",
-        )
+        fields = ("geometry",)
         list_serializer_class = GeoFeatureCommonListSerializer
 
         swagger_schema_fields = {
             "type": openapi.TYPE_OBJECT,
             "title": "GeoLocation",
             "properties": {
-                "id": openapi.Schema(
-                    title="Geolocation identifier",
-                    type=openapi.FORMAT_UUID,
-                    description="The unique identifier of the geolocation",
-                ),
                 "type": openapi.Schema(
-                    title="GeoJSON feature",
+                    title="Type",
                     type=openapi.TYPE_STRING,
                     default="Feature",
+                    enum=["Feature"],  # Only one supported value
                 ),
                 "geometry": openapi.Schema(
                     title="Geometry",
                     type=openapi.TYPE_OBJECT,
-                    description="This field handles following fields: POINT, LINESTRING, POLYGON, MULTIPOINT, MULTILINESTRING, MULTIPOLYGON",
+                    description=(
+                        "This field supports the following geometry types: "
+                        "Point, MultiPoint, LineString, MultiLineString, "
+                        "Polygon, MultiPolygon, GeometryCollection"
+                    ),
                 ),
             },
-            "required": ["geometry"],
+            "required": ["type", "geometry"],
         }
         auto_bbox = True
-
-    def to_representation(self, instance):
-        ret = super().to_representation(instance)
-        if "properties" in ret:
-            ret["properties"].pop("geographic_type", None)
-
-        return ret
 
 
 class SpatialModelSerializer(CommonNestedModelSerializer):
@@ -101,24 +169,3 @@ class SpatialModelSerializer(CommonNestedModelSerializer):
                 ]
             )
         ]
-
-    def to_internal_value(self, data):
-        try:
-            if geolocations := data.pop("geolocations", None):
-                _geolocations = geolocations.get("features", [])
-                geo_data = []
-                for geolocation in _geolocations:
-                    geometry_id = geolocation.get("id", None)
-                    geom = GEOSGeometry(json.dumps(geolocation.get("geometry")), srid=4326)
-                    gtype = GeoType[geolocation.get("geometry").get("type").upper()].value
-
-                    if not geom.valid:
-                        raise serializers.ValidationError({"geolocations": geom.valid_reason})
-                    geo_data.append(
-                        {"geographic_type": gtype, "geometry": geom, "id": geometry_id}
-                    )
-                data["geolocations"] = geo_data
-        except Exception as e:
-            raise serializers.ValidationError({"geolocations": "Invalid geometry format"})
-        data = super().to_internal_value(data)
-        return data

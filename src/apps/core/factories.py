@@ -489,7 +489,6 @@ class GeoLocationFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.GeoLocation
 
-    geographic_type = 4
     geometry = Point(0, 0)
 
 

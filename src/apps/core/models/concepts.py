@@ -14,22 +14,6 @@ def not_implemented_function(*args, **kwargs):
     raise NotImplementedError()
 
 
-class GeoType(models.IntegerChoices):
-    POINT = 4, "POINT"
-    LINESTRING = 8, "LINESTRING"
-    POLYGON = 12, "POLYGON"
-    MULTIPOINT = 16, "MULTIPOINT"
-    MULTILINESTRING = 20, "MULTILINESTRING"
-    MULTIPOLYGON = 24, "MULTIPOLYGON"
-
-    @staticmethod
-    def area_choices(self):
-        return (
-            self.POLYGON,
-            self.MULTIPOLYGON,
-        )
-
-
 class AccessType(ConceptProxyMixin, refdata.AccessType):
     """Accessibility of the resource"""
 
@@ -206,7 +190,6 @@ class GeoLocation(AbstractBaseModel):
         "Spatial", on_delete=models.CASCADE, related_name="geolocations", null=True, blank=True
     )
     geometry = models.GeometryField(geography=True)
-    geographic_type = models.IntegerField(choices=GeoType.choices)
 
     def __str__(self):
         return "GeoLocation"
