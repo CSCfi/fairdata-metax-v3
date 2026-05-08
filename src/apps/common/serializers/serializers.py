@@ -371,12 +371,11 @@ class LazyInstanceSaver:
     def save(self):
         """Save added instances."""
         # Perform bulk upsert for each serializer instance
+        serializer: LazyableModelSerializer
         for serializer, instances in self.upserts_by_serializer.items():
             model: models.Model = serializer.Meta.model
-            concrete_fields = {
-                f.name for f in model._meta.get_fields() if f.concrete
-            }
-            update_fields = [
+            concrete_fields = {f.name for f in model._meta.get_fields() if f.concrete}
+            update_fields = serializer.lazy_update_model_fields or [
                 f.source
                 for f in serializer._writable_fields
                 if f.source in concrete_fields and f.source != "id"
@@ -408,6 +407,10 @@ class LazyableModelSerializer(serializers.ModelSerializer):
 
     Lazy serializers may contain non-lazy nested serializer fields.
     """
+
+    # Set to define which model fields are updated in lazy update,
+    # otherwise determined automatically from serializer fields
+    lazy_update_model_fields = None
 
     def __init__(self, *args, lazy=False, **kwargs):
         # Lazy serializer does not save the created or updated instance

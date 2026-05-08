@@ -1,6 +1,7 @@
 import logging
 
 import pytest
+from apps.core.models.catalog_record.dataset import Dataset
 from tests.utils import assert_nested_subdict
 
 from apps.core.models.concepts import Spatial
@@ -529,3 +530,24 @@ def test_dataset_spatial_validate_properties(admin_client, dataset_minimal_draft
         "must be a dict"
         in res.json()["spatial"][0]["geolocations"]["features"][0]["properties"][0]
     )
+
+
+def test_dataset_spatial_3d_geometry_geolocation(admin_client, dataset_minimal_draft_json):
+    dataset_json = dataset_minimal_draft_json
+    geometry = {"type": "Point", "coordinates": [61, 24, 100]}
+    dataset_json["spatial"] = [
+        {
+            "geolocations": {
+                "type": "FeatureCollection",
+                "features": [{"type": "Feature", "geometry": geometry}],
+            }
+        }
+    ]
+    res = admin_client.post("/v3/datasets", dataset_json, content_type="application/json")
+    assert res.status_code == 201
+    dataset = Dataset.objects.get(id=res.data["id"])
+    loc = dataset.spatial.first().geolocations.first()
+    assert loc.geometry_3d.geom_type == "Point"
+    assert loc.geometry_3d.coords == (61.0, 24.0, 100.0)
+    assert loc.geometry_2d.geom_type == "Point"
+    assert loc.geometry_2d.coords == (61.0, 24.0)

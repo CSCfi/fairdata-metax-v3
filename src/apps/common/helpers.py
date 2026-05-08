@@ -15,6 +15,9 @@ from itertools import islice
 from textwrap import dedent
 from typing import ContextManager, Dict, Generator, Iterable, List, Optional
 from urllib.parse import SplitResult, parse_qsl, quote, urlencode, urlsplit, urlunsplit
+from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis.geos.error import GEOSException
+from django.contrib.gis.geos.prototypes.io import wkb_w
 
 import fastuuid
 import shapely
@@ -428,6 +431,11 @@ def remove_wkt_point_duplicates(point: str, wkt_list: list) -> list:
             pass
         output.append(p2_wkt)
     return output
+
+
+def make_2d(geometry: GEOSGeometry):
+    """Recreate geometry as 2d, dropping any additional dimensions."""
+    return GEOSGeometry(wkb_w(dim=2).write(geometry))
 
 
 def is_field_value_provided(model, field_name: str, args: list, kwargs: dict):

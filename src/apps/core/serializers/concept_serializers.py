@@ -4,7 +4,11 @@ from django.contrib.gis.geos import GEOSGeometry
 from django.db.models import Manager
 from drf_yasg import openapi
 from rest_framework import serializers
-from rest_framework_gis.serializers import GeoFeatureModelListSerializer, GeoFeatureModelSerializer
+from rest_framework_gis.serializers import (
+    GeoFeatureModelListSerializer,
+    GeoFeatureModelSerializer,
+    GeometryField,
+)
 
 from apps.common.serializers.fields import ListValidChoicesField, WKTField
 from apps.common.serializers.serializers import (
@@ -107,6 +111,11 @@ class GeoFeatureCommonListSerializer(GeoFeatureModelListSerializer, CommonListSe
 
 
 class GeoLocationSerializer(GeoFeatureModelSerializer, LazyableModelSerializer):
+
+    # Which model fields are updated when doing lazy bulk create/update
+    lazy_update_model_fields = ["spatial", "geometry_2d", "geometry_3d"]  # TODO: add properties
+
+    geometry = GeometryField()
 
     class Meta:
         model = GeoLocation

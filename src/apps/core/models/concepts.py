@@ -1,10 +1,12 @@
 import uuid
 
+from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.contrib.gis.db import models
 from django.utils.translation import gettext as _
 
 from apps.common.copier import ModelCopier
+from apps.common.helpers import make_2d
 from apps.common.models import AbstractBaseModel
 from apps.refdata import models as refdata
 from apps.refdata.models import ConceptProxyMixin
@@ -189,10 +191,26 @@ class GeoLocation(AbstractBaseModel):
     spatial = models.ForeignKey(
         "Spatial", on_delete=models.CASCADE, related_name="geolocations", null=True, blank=True
     )
-    geometry = models.GeometryField(geography=True)
+    geometry_2d = models.GeometryField(geography=True)  # Used for both 2d and 3d geometries
+    geometry_3d = models.GeometryField(geography=True, dim=3, null=True, blank=True)
 
     def __str__(self):
         return "GeoLocation"
+
+    @property
+    def geometry(self):
+        """Return the highest dimensional version of the geometry."""
+        return self.geometry_3d or self.geometry_2d
+
+    @geometry.setter
+    def geometry(self, geometry: GEOSGeometry):
+        if geometry.hasz:
+            # Save 3d geometries as both 2d and 3d
+            self.geometry_3d = geometry
+            self.geometry_2d = make_2d(geometry)
+        else:
+            self.geometry_3d = None
+            self.geometry_2d = geometry
 
 
 class RelationType(ConceptProxyMixin, refdata.RelationType):

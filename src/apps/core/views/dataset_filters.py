@@ -539,11 +539,11 @@ class DatasetFilter(filters.FilterSet):
 
         if distance and geom:
             queryset = queryset.filter(
-                Q(spatial__geolocations__geometry__distance_lte=(geom, D(m=distance)))
+                Q(spatial__geolocations__geometry_2d__distance_lte=(geom, D(m=distance)))
             ).distinct()
         elif geom:
             queryset = queryset.filter(
-                Q(spatial__geolocations__geometry__intersects=geom)
+                Q(spatial__geolocations__geometry_2d__intersects=geom)
             ).distinct()
 
         return queryset
