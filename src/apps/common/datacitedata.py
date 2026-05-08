@@ -6,15 +6,11 @@ import shapely
 from django.db.models import Sum
 
 from apps.actors.models import Organization, Person
-from apps.common.helpers import deduplicate_list
+from apps.common.helpers import deduplicate_list, InvalidCoordinates
 from apps.core.models import Dataset, DatasetActor
 from apps.core.models.concepts import Spatial
 
 logger = logging.getLogger(__file__)
-
-
-class InvalidCoordinates(ValueError):
-    """Invalid latitude or longitude."""
 
 
 def remove_duplicates(lst: list) -> list:

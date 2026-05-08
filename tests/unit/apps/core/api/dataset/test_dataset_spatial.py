@@ -2,6 +2,7 @@ import logging
 
 import pytest
 from apps.core.models.catalog_record.dataset import Dataset
+import shapely
 from tests.utils import assert_nested_subdict
 
 from apps.core.models.concepts import Spatial
@@ -592,3 +593,80 @@ def test_dataset_spatial_properties(admin_client, dataset_minimal_draft_json):
     assert res.data["spatial"][0]["geolocations"]["features"][1]["properties"] == {
         "another": "feature"
     }
+
+
+def test_dataset_spatial_wkt_antipodal(admin_client, dataset_minimal_draft_json):
+    dataset_json = dataset_minimal_draft_json
+    wkt = "POLYGON ((-180 -90, -180 90, 180 90, 180 -90, -180 -90))"
+    dataset_json["spatial"] = [{"custom_wkt": [wkt]}]
+    res = admin_client.post("/v3/datasets", dataset_json, content_type="application/json")
+    assert res.status_code == 201
+
+    # Long edges in polygon should be split into smaller parts
+    fixed_wkt = shapely.from_wkt(res.data["spatial"][0]["custom_wkt"][0])
+    assert len(fixed_wkt.exterior.coords) > 5
+
+
+@pytest.mark.parametrize(
+    "wkt, ok",
+    [
+        ["POLYGON ((0 0, 180 0, 180 90, 0 90, 0 0))", True],
+        ["POLYGON ((0 0, 181 0, 181 90, 0 90, 0 0))", False],
+        ["POLYGON ((0 0, 180 0, 180 91, 0 91, 0 0))", False],
+    ],
+)
+def test_dataset_spatial_wkt_validate_coords(wkt, ok, admin_client, dataset_minimal_draft_json):
+    dataset_json = dataset_minimal_draft_json
+    dataset_json["spatial"] = [{"custom_wkt": [wkt]}]
+    res = admin_client.post("/v3/datasets", dataset_json, content_type="application/json")
+    if ok:
+        assert res.status_code == 201
+    else:
+        assert res.status_code == 400
+        assert "should be in range" in res.json()["spatial"][0]["custom_wkt"]["0"][0]
+
+
+@pytest.mark.parametrize(
+    "geometry, ok",
+    [
+        [
+            {"type": "Polygon", "coordinates": [[[0, 0], [180, 0], [180, 90], [0, 90], [0, 0]]]},
+            True,
+        ],
+        [
+            {"type": "Polygon", "coordinates": [[[0, 0], [280, 0], [180, 90], [0, 90], [0, 0]]]},
+            False,
+        ],
+    ],
+)
+def test_dataset_spatial_geojson_validate_coords(
+    geometry, ok, admin_client, dataset_minimal_draft_json
+):
+    dataset_json = dataset_minimal_draft_json
+    dataset_json["spatial"] = [
+        {
+            "geolocations": {
+                "type": "FeatureCollection",
+                "features": [{"type": "Feature", "geometry": geometry}],
+            }
+        }
+    ]
+    res = admin_client.post("/v3/datasets", dataset_json, content_type="application/json")
+    if ok:
+        assert res.status_code == 201, res.data
+    else:
+        assert res.status_code == 400
+        assert (
+            "should be in range"
+            in res.json()["spatial"][0]["geolocations"]["features"][0]["geometry"][0]
+        )
+
+
+def test_dataset_spatial_wkt_m_coordinate(admin_client, dataset_minimal_draft_json):
+    dataset_json = dataset_minimal_draft_json
+    dataset_json["spatial"] = [{"custom_wkt": ["POINT M (1 2 3)"]}]
+    res = admin_client.post("/v3/datasets", dataset_json, content_type="application/json")
+    assert res.status_code == 400
+    assert (
+        "M coordinate values are not supported" in res.json()["spatial"][0]["custom_wkt"]["0"][0]
+    )

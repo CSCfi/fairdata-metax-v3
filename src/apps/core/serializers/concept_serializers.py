@@ -11,6 +11,11 @@ from rest_framework_gis.serializers import (
 )
 
 
+from apps.common.helpers import (
+    InvalidCoordinates,
+    split_geometry_long_edges,
+    validate_geometry_coordinates,
+)
 from apps.common.serializers.fields import ListValidChoicesField, WKTField
 from apps.common.serializers.serializers import (
     CommonListSerializer,
@@ -51,7 +56,13 @@ class GeoJSONField(serializers.JSONField):
             shapely.from_geojson(json_bytes)
         except shapely.errors.GEOSException as e:
             raise serializers.ValidationError(get_geos_exception_msg(e))
-        return GEOSGeometry(json_bytes)
+        geometry = GEOSGeometry(json_bytes)
+        try:
+            validate_geometry_coordinates(geometry)
+        except InvalidCoordinates as e:
+            raise serializers.ValidationError(str(e))
+        geometry = split_geometry_long_edges(geometry)
+        return geometry
 
 
 class FeatureSerializer(StrictSerializer):

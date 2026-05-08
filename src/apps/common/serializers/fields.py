@@ -18,7 +18,7 @@ from rest_framework import serializers
 from rest_framework.fields import empty, to_choices_dict
 from rest_framework.utils import html
 
-from apps.common.helpers import parse_csv_string, to_csv_string
+from apps.common.helpers import InvalidCoordinates, normalize_wkt, parse_csv_string, to_csv_string
 from apps.common.models import MediaTypeValidator
 
 logger = logging.getLogger(__name__)
@@ -290,8 +290,8 @@ class WKTField(serializers.CharField):
 
     def to_internal_value(self, data):
         try:
-            return shapely.wkt.loads(data).wkt
-        except shapely.errors.GEOSException as error:
+            return normalize_wkt(data, validate_coords=True, split_long_edges=True)
+        except (shapely.errors.GEOSException, InvalidCoordinates) as error:
             if self.context.get("migrating"):
                 return data  # Preserve invalid wkt data when migrating
             else:

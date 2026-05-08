@@ -24,6 +24,7 @@ import shapely
 from cachalot.api import cachalot_disabled
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.gis.geos import GEOSGeometry
 from django.db import connection, models
 from django.utils.dateparse import parse_date, parse_datetime
 from django_filters import NumberFilter
@@ -413,6 +414,79 @@ def ensure_dict(dct) -> dict:
     if not isinstance(dct, dict):
         raise serializers.ValidationError(f"Value is not a dict: {dct}")
     return dct
+
+
+class InvalidCoordinates(ValueError):
+    """Invalid latitude or longitude."""
+
+
+def validate_coordinates(coords: list[list]):
+    for coord in coords:
+        long = coord[0]
+        lat = coord[1]
+        if not (-180 <= long <= 180 and -90 <= lat <= 90):
+            raise InvalidCoordinates(
+                "Longitudes should be in range [-180, 180], latitudes in range [-90, 90]."
+            )
+
+
+def get_geometry_bounds(geometry: GEOSGeometry | shapely.lib.Geometry) -> list[list]:
+    """Return coordinates of bounds for a geometry."""
+    # GEOSGeometry and shapely Geometry use different name for bounds
+    if isinstance(geometry, GEOSGeometry):
+        bounds = geometry.extent
+    else:
+        bounds = geometry.bounds
+    return [[bounds[0], bounds[1]], [bounds[2], bounds[3]]]
+
+
+def geometry_has_m(geometry: GEOSGeometry | shapely.lib.Geometry) -> bool:
+    """Does geometry have M coordinates?"""
+    has_m = False
+    if isinstance(geometry, GEOSGeometry):
+        try:
+            has_m = geometry.hasm
+        except GEOSException:
+            pass  # GEOSGeometry.hasm requires GEOS >= 3.12
+    elif isinstance(geometry, shapely.lib.Geometry):
+        has_m = geometry.has_m  # The GEOS version bundled with shapely supports M
+    return has_m
+
+
+def validate_geometry_coordinates(geometry: GEOSGeometry | shapely.lib.Geometry):
+    bounds = get_geometry_bounds(geometry)
+    validate_coordinates(bounds)
+
+    # For now we don't support M coordinates
+    if geometry_has_m(geometry):
+        raise InvalidCoordinates("M coordinate values are not supported")
+
+
+def split_geometry_long_edges(geometry: GEOSGeometry | shapely.lib.Geometry):
+    """Ensure there are no >= 180 degree edges by splitting them.
+    Does not take spherical coordinates into account.
+    Fixes PostGIS error caused by edges going from 90°S to 90°N.
+    """
+    # Check bounds first to see if segmentize may be needed
+    threshold = 179.9
+    bounds = get_geometry_bounds(geometry)
+    if shapely.LineString(bounds).length <= threshold:
+        return geometry
+
+    if isinstance(geometry, GEOSGeometry):
+        shapely_geom = shapely.from_wkt(geometry.wkt)
+        shapely_geom = shapely.segmentize(shapely_geom, max_segment_length=threshold)
+        return GEOSGeometry(shapely_geom.wkt)
+    return shapely.segmentize(geometry, max_segment_length=threshold)
+
+
+def normalize_wkt(wkt: str, validate_coords=False, split_long_edges=False) -> str:
+    geometry = shapely.wkt.loads(wkt)
+    if validate_coords:
+        validate_geometry_coordinates(geometry)
+    if split_long_edges:
+        geometry = split_geometry_long_edges(geometry)
+    return geometry.wkt
 
 
 def remove_wkt_point_duplicates(point: str, wkt_list: list) -> list:

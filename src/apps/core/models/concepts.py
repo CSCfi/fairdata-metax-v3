@@ -6,7 +6,7 @@ from django.contrib.gis.db import models
 from django.utils.translation import gettext as _
 
 from apps.common.copier import ModelCopier
-from apps.common.helpers import make_2d
+from apps.common.helpers import geometry_has_m, make_2d
 from apps.common.models import AbstractBaseModel
 from apps.refdata import models as refdata
 from apps.refdata.models import ConceptProxyMixin
@@ -205,6 +205,8 @@ class GeoLocation(AbstractBaseModel):
 
     @geometry.setter
     def geometry(self, geometry: GEOSGeometry):
+        if geometry_has_m(geometry):
+            raise ValueError("M coordinates not supported")
         if geometry.hasz:
             # Save 3d geometries as both 2d and 3d
             self.geometry_3d = geometry
