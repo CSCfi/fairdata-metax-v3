@@ -4,24 +4,24 @@ ansicon==1.89.0 ; sys_platform == 'win32'
 asgiref==3.11.1
 attrs==26.1.0
 babel==2.18.0
-backrefs==6.2
+backrefs==7.0
 black==26.3.1
-blessed==1.38.0
+blessed==1.39.0
 bpython==0.26
-cachetools==7.0.6
+cachetools==7.1.1
 certifi==2026.4.22
 cffi==2.0.0 ; platform_python_implementation != 'PyPy'
 charset-normalizer==3.4.7
 click==8.3.3
 colorama==0.4.6
-coverage==7.13.5
+coverage==7.14.0
 cryptography==46.0.7
 curtsies==0.4.3
 cwcwidth==0.1.12
 datacite==1.4.0
 deepdiff==8.6.2
 distlib==0.4.0
-django==6.0.4
+django==6.0.5
 django-cachalot==2.9.0
 django-cors-headers==4.9.0
 django-debug-toolbar==6.3.0
@@ -31,8 +31,8 @@ django-hijack==3.7.8
 django-json-widget==2.1.1
 django-model-utils==5.0.0
 django-picklefield==3.4.0
-django-polymorphic==4.11.2
-django-q2==1.9.0
+django-polymorphic==4.11.3
+django-q2==1.10.0
 django-rest-knox==5.0.4
 django-silk==5.5.0
 django-simple-history==3.11.0
@@ -40,8 +40,8 @@ django-split-settings==1.3.2
 django-test-migrations==1.5.0
 django-watchman==1.5.0
 django-watson==1.6.3
-djangorestframework==3.16.1
-djangorestframework-gis==1.2.0
+djangorestframework==3.17.1
+djangorestframework-gis==1.2.1
 dpres-file-formats @ git+https://github.com/Digital-Preservation-Finland/dpres-file-formats.git@9634b39a00c44660543ddabab7ce871bf09eb089
 drf-access-policy==1.5.0
 drf-nested-routers==0.95.0
@@ -50,17 +50,17 @@ elementpath==5.1.1
 environs==14.6.0
 execnet==2.1.2
 factory-boy==3.3.3
-faker==40.15.0
+faker==40.18.0
 fastuuid==0.14.0
 filelock==3.29.0
 ghp-import==2.1.0
 gprof2dot==2025.4.14
-greenlet==3.4.0
+greenlet==3.5.0
 griffe==2.0.2
 griffecli==2.0.2
 griffelib==2.0.2
 gunicorn==23.0.0
-idna==3.13
+idna==3.15
 idutils==1.6.0
 importlib-metadata==9.0.0
 inflection==0.5.1
@@ -68,7 +68,7 @@ iniconfig==2.3.0
 isbnlib==3.10.14
 isort==8.0.1
 jinja2==3.1.6
-jinxed==1.4.0 ; sys_platform == 'win32'
+jinxed==2.0.0 ; sys_platform == 'win32'
 jsonmodels==2.8.0
 jsonresolver==0.5.1
 jsonschema==4.26.0
@@ -92,19 +92,19 @@ msgspec==0.21.1
 mypy-extensions==1.1.0
 numpy==2.4.4
 orderly-set==5.5.0
-packaging==26.1
+packaging==26.2
 paginate==0.5.7
-pathspec==1.1.0
+pathspec==1.1.1
 platformdirs==4.9.6
 pluggy==1.6.0
 properdocs==1.6.7
-psycopg==3.3.3
-psycopg-binary==3.3.3 ; implementation_name != 'pypy'
+psycopg==3.3.4
+psycopg-binary==3.3.4 ; implementation_name != 'pypy'
 pyasn1==0.6.3
 pycparser==3.0 ; implementation_name != 'PyPy' and platform_python_implementation != 'PyPy'
 pygments==2.20.0
 pyjwt==2.12.1
-pymdown-extensions==10.21.2
+pymdown-extensions==10.21.3
 pymemcache==4.0.0
 pyopenssl==26.0.0
 pyparsing==3.3.2
@@ -115,29 +115,29 @@ pytest-django==4.12.0
 pytest-mock==3.15.1
 pytest-xdist==3.8.0
 python-dateutil==2.9.0.post0
-python-discovery==1.2.2
+python-discovery==1.3.1
 python-dotenv==1.2.2
 pytokens==0.4.1
-pytz==2026.1.post1
+pytz==2026.2
 pyxdg==0.28
 pyyaml==6.0.3
 pyyaml-env-tag==1.1
 rdflib==7.6.0
 referencing==0.37.0
-requests==2.33.1
+requests==2.34.2
 requests-mock==1.12.1
 rpds-py==0.30.0
 shapely==2.1.2
 six==1.17.0
 sqlparse==0.5.5
 tomli-w==1.2.0
-tox==4.53.0
+tox==4.54.0
 typing-extensions==4.15.0
-tzdata==2026.1 ; sys_platform == 'win32'
+tzdata==2026.2 ; sys_platform == 'win32'
 uritemplate==4.2.0
-urllib3==2.6.3
-virtualenv==21.2.4
+urllib3==2.7.0
+virtualenv==21.3.3
 watchdog==6.0.0
-wcwidth==0.6.0
+wcwidth==0.7.0
 werkzeug==3.1.8
 zipp==3.23.1
