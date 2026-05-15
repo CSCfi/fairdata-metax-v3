@@ -5,9 +5,10 @@
 # :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
 # :license: MIT
 
+from dataclasses import dataclass
 import logging
 from datetime import datetime, timezone
-from typing import List
+from typing import TYPE_CHECKING, List
 
 from django.conf import settings
 from django.core.cache import caches
@@ -28,12 +29,15 @@ from rest_framework.reverse import reverse
 
 from apps.common.helpers import ensure_dict, omit_empty
 from apps.common.serializers.serializers import (
+    CommonModelSerializer,
     FlushQueryParamsSerializer,
     IncludeRemovedQueryParamsSerializer,
 )
 from apps.common.views import CommonModelViewSet
 from apps.core.cache import DatasetSerializerCache
 from apps.core.models.catalog_record import Dataset, FileSet
+from apps.core.models.catalog_record.related import EntityRelation
+from apps.core.models.concepts import RelationType
 from apps.core.models.data_catalog import DataCatalog
 from apps.core.models.legacy_converter import LegacyDatasetConverter
 from apps.core.permissions import DataCatalogAccessPolicy, DatasetAccessPolicy
@@ -574,6 +578,15 @@ class DatasetViewSet(CommonModelViewSet):
         data = service.get_user_applications_for_dataset(request.user, dataset)
         return response.Response(data, status=status.HTTP_200_OK)
 
+    @action(detail=True, methods=["post"], url_path="references")
+    def references(self, request, pk=None):
+        """List datasets that reference this dataset."""
+        dataset: Dataset = self.get_object()
+
+        ###
+
+        return response.Response(data, status=status.HTTP_201_CREATED)
+
     @list_rems_applications.mapping.post
     def create_rems_application(self, request, pk=None):
         """Create and submit dataset REMS application for logged in user."""
@@ -667,6 +680,16 @@ class DatasetViewSet(CommonModelViewSet):
             instance=service.get_dataset_application_counts(dataset)
         )
         return response.Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(methods=["get"], detail=True)
+    def references(self, request, pk=None):
+        """List references from other datasets to this dataset."""
+        from apps.core.serializers import ReferenceSerializer
+
+        dataset = self.get_object()
+        references = dataset.get_references()
+        data = ReferenceSerializer(instance=references, many=True).data
+        return response.Response(data, status=status.HTTP_200_OK)
 
 
 class DatasetDirectoryViewSet(DirectoryViewSet):

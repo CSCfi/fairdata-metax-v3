@@ -583,6 +583,18 @@ def normalize_doi(identifier: str) -> Optional[str]:
     return None
 
 
+def get_identifier_variations(identifier: str) -> list[str] | None:
+    """List alternative ways to express the same identifier."""
+    if doi := normalize_doi(identifier):
+        suffix = doi[4:]
+        return [
+            f"doi:{suffix}",
+            f"http://doi.org/{suffix}",
+            f"https://doi.org/{suffix}",
+        ]
+    return [identifier]
+
+
 def format_exception(exception: BaseException) -> str:
     """Format exception as a string."""
     return "".join(traceback.format_exception(exception))

@@ -40,7 +40,6 @@ from apps.core.models.preservation import Preservation
 from apps.core.models.data_catalog import GeneratedPIDType
 from apps.core.serializers.common_serializers import (
     AccessRightsModelSerializer,
-    EntityRelationSerializer,
     OtherIdentifierModelSerializer,
     RemoteResourceSerializer,
     TemporalModelSerializer,
@@ -58,6 +57,7 @@ from apps.core.serializers.dataset_sensitivity_serializer import DatasetDataSens
 
 # for preventing circular import, using submodule instead of apps.core.serializers
 from apps.core.serializers.provenance_serializers import ProvenanceModelSerializer
+from apps.core.serializers.relation_serializers import EntityRelationSerializer
 from apps.users.models import MetaxUser
 
 from .dataset_files_serializer import FileSetSerializer

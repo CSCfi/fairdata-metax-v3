@@ -9,7 +9,7 @@ from apps.core.serializers import (
     SpatialModelSerializer,
     TemporalModelSerializer,
 )
-from apps.core.serializers.common_serializers import EntitySerializer
+from apps.core.serializers import EntitySerializer
 
 logger = logging.getLogger(__name__)
 

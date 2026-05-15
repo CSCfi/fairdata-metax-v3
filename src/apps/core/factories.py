@@ -299,6 +299,31 @@ class UseCategoryFactory(factory.django.DjangoModelFactory):
         return f"https://dataset-use-category-{self}.fi"
 
 
+class RelationTypeFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = refdata.RelationType
+        django_get_or_create = ("url",)
+
+    pref_label = factory.Dict({"en": "Relation"})
+    url = "http://purl.org/dc/terms/relation"
+    in_scheme = "http://uri.suomi.fi/codelist/fairdata/relation_type"
+
+
+class EntityFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.Entity
+
+    entity_identifier = factory.Faker("doi")
+
+
+class EntityRelationFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.EntityRelation
+
+    entity = factory.SubFactory(EntityFactory)
+    relation_type = factory.SubFactory(RelationTypeFactory)
+
+
 class AccessRightsFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.AccessRights
@@ -386,6 +411,20 @@ class DatasetFactory(factory.django.DjangoModelFactory):
     access_rights = factory.SubFactory(AccessRightsFactory)
     system_creator = factory.SubFactory(MetaxUserFactory)
     metadata_owner = factory.SubFactory(MetadataProviderFactory)
+
+    @factory.post_generation
+    def other_identifiers(self, create, extracted, **kwargs):
+        if not create:
+            return
+        if extracted:
+            self.other_identifiers.set(extracted)
+
+    @factory.post_generation
+    def relation(self, create, extracted, **kwargs):
+        if not create:
+            return
+        if extracted:
+            self.relation.set(extracted)
 
     @factory.post_generation
     def temporal(self, create, extracted, **kwargs):

@@ -1,9 +1,3 @@
-# This file is part of the Metax API service
-#
-# Copyright 2017-2022 Ministry of Education and Culture, Finland
-#
-# :author: CSC - IT Center for Science Ltd., Espoo Finland <servicedesk@csc.fi>
-# :license: MIT
 import logging
 
 from django.conf import settings
@@ -26,19 +20,16 @@ from apps.common.serializers.fields import (
 from apps.common.serializers.serializers import CommonModelSerializer, UpdatingListSerializer
 from apps.core.helpers import get_metax_identifiers_by_pid
 from apps.core.models import AccessRights, CatalogHomePage, DatasetPublisher, OtherIdentifier
-from apps.core.models.catalog_record import EntityRelation, RemoteResource, Temporal
+from apps.core.models.catalog_record import RemoteResource, Temporal
 from apps.core.models.concepts import (
     AccessType,
     DatasetLicense,
     FileType,
     IdentifierType,
     License,
-    RelationType,
-    ResourceType,
     RestrictionGrounds,
     UseCategory,
 )
-from apps.core.models.entity import Entity
 
 logger = logging.getLogger(__name__)
 
@@ -263,36 +254,3 @@ class RemoteResourceSerializer(CommonModelSerializer):
         ]
         list_serializer_class = CommonListSerializer
 
-
-class EntitySerializer(CommonModelSerializer):
-    type = ResourceType.get_serializer_field(required=False, allow_null=True)
-
-    class Meta:
-        model = Entity
-        fields = [
-            "title",
-            "description",
-            "entity_identifier",
-            "type",
-        ]
-        validators = [AnyOf(["title", "entity_identifier"])]
-        list_serializer_class = CommonListSerializer
-
-
-class EntityRelationSerializer(CommonNestedModelSerializer):
-    entity = EntitySerializer()
-    relation_type = RelationType.get_serializer_field()
-    metax_ids = serializers.SerializerMethodField()
-
-    class Meta:
-        model = EntityRelation
-        fields = [
-            "entity",
-            "relation_type",
-            "metax_ids",
-        ]
-        list_serializer_class = CommonListSerializer
-
-    def get_metax_ids(self, instance):
-        if instance.entity.entity_identifier:
-            return get_metax_identifiers_by_pid(instance.entity.entity_identifier, self.context)

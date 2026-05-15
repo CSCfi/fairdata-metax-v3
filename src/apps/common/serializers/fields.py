@@ -155,7 +155,8 @@ class URLReferencedModelField(serializers.RelatedField):
 
     def __init__(self, child: serializers.ModelSerializer, **kwargs):
         check_child_model_serializer(child)
-        self.queryset = child.Meta.model.objects.all()
+        if not kwargs.get("read_only"): # queryset is not allowed when read_only=True
+            self.queryset = child.Meta.model.objects.all()
         self.child = child
         # Always allow child to be null. Otherwise both parent and child would require allow_null,
         # e.g. `URLReferencedModelField(Child(allow_null=True), allow_null=True)`

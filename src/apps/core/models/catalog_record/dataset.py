@@ -8,7 +8,7 @@ from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import MinLengthValidator
 from django.db import models, transaction
-from django.db.models import prefetch_related_objects
+from django.db.models import Exists, OuterRef, prefetch_related_objects
 from django.db.models.signals import post_delete, pre_delete
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -20,7 +20,7 @@ from watson.search import skip_index_update
 
 from apps.common.copier import ModelCopier
 from apps.common.exceptions import TopLevelValidationError
-from apps.common.helpers import datetime_to_date, normalize_doi
+from apps.common.helpers import datetime_to_date, get_identifier_variations, normalize_doi
 from apps.common.history import SnapshotHistoricalRecords
 from apps.common.tasks import run_task
 from apps.core.models.access_rights import AccessRights, AccessTypeChoices, REMSApprovalType
@@ -28,6 +28,7 @@ from apps.core.models.catalog_record.dataset_index import DatasetIndexEntry
 from apps.core.models.catalog_record.dataset_permissions import DatasetPermissions
 from apps.core.models.catalog_record.dataset_versions import DatasetVersions
 from apps.core.models.catalog_record.managers import DatasetManager, SoftDeletableDatasetManager
+from apps.core.models.catalog_record.related import EntityRelation
 from apps.core.models.concepts import (
     FieldOfScience,
     IdentifierType,
@@ -38,6 +39,7 @@ from apps.core.models.concepts import (
 from apps.core.models.data_catalog import DataCatalog, GeneratedPIDType
 from apps.core.models.mixins import V2DatasetMixin
 from apps.core.models.preservation import Preservation
+from apps.core.permissions import DatasetAccessPolicy
 from apps.core.services.pid_ms_client import PIDMSClient, ServiceUnavailableError
 from apps.files.models import File
 from apps.rems.rems_service import REMSService
@@ -478,11 +480,7 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         """Determine if and why user is locked from modifying the dataset."""
         if user.is_superuser:
             return None
-        if (
-            self.preservation
-            and self.preservation.pas_process_running
-            and not user.is_pas_service
-        ):
+        if self.preservation and self.preservation.pas_process_running and not user.is_pas_service:
             return (
                 "Only PAS service is allowed to modify "
                 "the dataset while PAS process is running."
@@ -1427,3 +1425,27 @@ class Dataset(V2DatasetMixin, CatalogRecord):
             Dataset.all_objects.select_for_update(of=("self",)).filter(id=id).values("id").first()
         except DjangoValidationError:
             pass  # Invalid UUID
+
+    def get_references(self) -> list[EntityRelation]:
+        """Return relations that reference the current dataset."""
+        # Collect different identifier that may have been used to refer to the dataset
+        # - Metax id
+        # - Persistent id
+        # - Other identifiers
+        identifiers = [
+            str(self.id),
+            self.persistent_identifier,
+            *self.other_identifiers.values_list("notation", flat=True),
+        ]
+        identifier_variations = []
+        for identifier in identifiers:
+            identifier_variations.extend(get_identifier_variations(identifier))
+
+        # List only relations from published datasets
+        dataset_filter = Exists(
+            Dataset.objects.filter(id=OuterRef("dataset_id"), state="published", deprecated=None)
+        )
+        relations = EntityRelation.objects.filter(
+            dataset_filter, entity__entity_identifier__in=identifier_variations
+        ).prefetch_related("dataset", "entity")
+        return list(relations)

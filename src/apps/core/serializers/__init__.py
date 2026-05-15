@@ -6,6 +6,12 @@ from .common_serializers import (
     OtherIdentifierModelSerializer,
     TemporalModelSerializer,
 )
+from .relation_serializers import (
+    EntitySerializer,
+    EntityRelationSerializer,
+    ReferenceSerializer,
+    ReferencedBySerializer,
+)
 from .concept_serializers import SpatialModelSerializer
 from .contract_serializers import ContractModelSerializer
 from .data_catalog_serializer import DataCatalogModelSerializer

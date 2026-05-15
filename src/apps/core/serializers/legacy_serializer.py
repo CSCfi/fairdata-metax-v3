@@ -12,7 +12,6 @@ from apps.core.models.concepts import FieldOfScience, Language, ResearchInfra, T
 from apps.core.models.preservation import Preservation
 from apps.core.serializers.common_serializers import (
     AccessRightsModelSerializer,
-    EntityRelationSerializer,
     OtherIdentifierModelSerializer,
     RemoteResourceSerializer,
     TemporalModelSerializer,
@@ -23,12 +22,15 @@ from apps.core.serializers.dataset_actor_serializers.actor_serializer import Dat
 from apps.core.serializers.dataset_allowed_actions import DatasetAllowedActionsSerializer
 from apps.core.serializers.dataset_files_serializer import FileSetSerializer
 from apps.core.serializers.dataset_serializer import (
-    DatasetDataSensitivitySerializer, DatasetSerializer, LinkedDraftSerializer
+    DatasetDataSensitivitySerializer,
+    DatasetSerializer,
+    LinkedDraftSerializer,
 )
 from apps.core.serializers.metadata_provider_serializer import MetadataProviderModelSerializer
 from apps.core.serializers.preservation_serializers import PreservationModelSerializer
 from apps.core.serializers.project_serializer import ProjectModelSerializer
 from apps.core.serializers.provenance_serializers import ProvenanceModelSerializer
+from apps.core.serializers.relation_serializers import EntityRelationSerializer
 
 logger = logging.getLogger(__name__)
 
