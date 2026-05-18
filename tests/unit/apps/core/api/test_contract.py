@@ -159,3 +159,24 @@ def test_contract_hide_sensitivity_from_nonpas(pas_client, ida_client, user_clie
         resp = client.get(f"/v3/contracts/{contract_id}")
         assert "validity" in resp.data
         assert "data_sensitivity" not in resp.data
+
+
+def test_create_nonsensitive_contract(pas_client, ida_client, user_client, contract_a_json):
+    # Test creating a new contract with rationales but which is not
+    # sensitive initially; this is allowed and should not trigger
+    # validation.
+    rationale = SensitivityRationaleFactory()
+
+    new_contract = contract_a_json
+    new_contract["data_sensitivity"] = {
+        "is_sensitive": False,
+        "rationales": [
+            {"rationale": {"url": rationale.url}}
+        ]
+    }
+
+    resp = pas_client.post("/v3/contracts", new_contract, content_type="application/json")
+
+    assert resp.status_code == 201
+    assert resp.data["id"]
+    assert len(resp.data["data_sensitivity"]["rationales"]) == 1

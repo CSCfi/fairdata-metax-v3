@@ -168,12 +168,14 @@ class ContractModelSerializer(CommonNestedModelSerializer):
         * contract cannot be made non-sensitive if any datasets are sensitive
         * rationales cannot be removed if any datasets still use them
         """
-        if contract:
-            # For values not being updated, use their existing values
-            if new_is_sensitive is None:
-                new_is_sensitive = contract.is_sensitive
-            if new_rationales is None:
-                new_rationales = contract.rationales
+        if not contract:
+            return
+
+        # For values not being updated, use their existing values
+        if new_is_sensitive is None:
+            new_is_sensitive = contract.is_sensitive
+        if new_rationales is None:
+            new_rationales = contract.rationales
 
         # If 'is_sensitive' is being set to False, query for datasets that
         # are still sensitive
