@@ -195,6 +195,7 @@ class ContractModelSerializer(CommonNestedModelSerializer):
 
         # If rationales are changed, retrieve any that are being removed
         # and query for datasets still using them
+        removed_rationale_urls = set()
         if new_rationales is not None:
             try:
                 # Cast query set to list
@@ -212,22 +213,22 @@ class ContractModelSerializer(CommonNestedModelSerializer):
 
             removed_rationale_urls = old_rationale_urls - new_rationale_urls
 
-            if removed_rationale_urls:
-                dataset_ids = [
-                    str(dataset.id) for dataset
-                    in Dataset.objects.filter(
-                        preservation__contract=contract.id,
-                        is_sensitive=True, rationales__rationale__url__in=removed_rationale_urls
-                    ).only("id")
-                ]
+        if removed_rationale_urls:
+            dataset_ids = [
+                str(dataset.id) for dataset
+                in Dataset.objects.filter(
+                    preservation__contract=contract.id,
+                    is_sensitive=True, rationales__rationale__url__in=removed_rationale_urls
+                ).only("id")
+            ]
 
-                if dataset_ids:
-                    raise serializers.ValidationError({
-                        "rationales": (
-                            f"Following datasets still use rationales that are "
-                            f"being removed: {', '.join(dataset_ids)}"
-                        )
-                    })
+            if dataset_ids:
+                raise serializers.ValidationError({
+                    "rationales": (
+                        f"Following datasets still use rationales that are "
+                        f"being removed: {', '.join(dataset_ids)}"
+                    )
+                })
 
     def update(self, instance, validated_data):
         if "id" in validated_data and validated_data["id"] != instance.id:
