@@ -1,0 +1,5 @@
+
+.owner-change-form label {
+  width: 10rem; /* fixed width for alignment */
+  display: inline-block;
+}

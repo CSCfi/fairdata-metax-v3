@@ -1,9 +1,13 @@
 import logging
 
+from django import forms
 from django.conf import settings
 from django.contrib import admin, messages
-from django.db import models
+from django.contrib.admin.widgets import AutocompleteSelect
+from django.db import models, transaction
 from django.db.models.functions import Cast, Substr
+from django.shortcuts import redirect
+from django.template.response import TemplateResponse
 from django_json_widget.widgets import JSONEditorWidget
 from simple_history.admin import SimpleHistoryAdmin
 
@@ -37,12 +41,12 @@ from apps.core.models import (
     Temporal,
     Theme,
 )
-from apps.core.models.access_rights import AccessTypeChoices
 from apps.core.models.catalog_record.dataset import REMSStatus
 from apps.core.models.preservation import Preservation
 from apps.core.models.sync import SyncAction, V2SyncStatus
 from apps.core.signals import sync_dataset_to_rems, sync_dataset_to_v2
 from apps.rems.models import REMSCatalogueItem
+from apps.users.models import MetaxUser
 
 logger = logging.getLogger(__name__)
 
@@ -164,8 +168,75 @@ class REMSStatusFilter(admin.SimpleListFilter):
             raise ValueError(f"Invalid REMSStatus {value=}")
 
 
+class UpdateOwnerForm(forms.Form):
+    _selected_action = forms.CharField(widget=forms.MultipleHiddenInput)
+
+    user = forms.ModelChoiceField(
+        queryset=MetaxUser.objects.all(),
+        widget=AutocompleteSelect(
+            MetadataProvider.user.field,
+            admin.site,
+        ),
+        required=False,
+    )
+    organization = forms.CharField(required=False)
+    admin_organization = forms.CharField(required=False)
+    clear_admin_organization = forms.BooleanField(required=False)
+
+
+class DatasetAdminForm(forms.ModelForm):
+    """Dataset Admin form that exposes metadata owner fields."""
+
+    metadata_owner_user = forms.ModelChoiceField(
+        queryset=MetaxUser.objects.all(),
+        widget=AutocompleteSelect(
+            MetadataProvider.user.field,
+            admin.site,
+        ),
+    )
+    metadata_owner_organization = forms.CharField()
+    metadata_owner_admin_organization = forms.CharField(required=False)
+
+    class Meta:
+        model = Dataset
+        fields = "__all__"
+        exclude = ("metadata_owner",)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Populate initial values if editing existing instance
+        if self.instance:
+            self.initial.update(
+                metadata_owner_user=self.instance.metadata_owner.user,
+                metadata_owner_organization=self.instance.metadata_owner.organization,
+                metadata_owner_admin_organization=self.instance.metadata_owner.admin_organization,
+            )
+
+    def save(self, commit=True):
+        dataset = super().save(commit=False)
+
+        # Get or create metadata owner matching the field values, assign to dataset
+        metadata_owner_user = self.cleaned_data["metadata_owner_user"]
+        metadata_owner_organization = self.cleaned_data["metadata_owner_organization"]
+        metadata_owner_admin_organization = (
+            self.cleaned_data["metadata_owner_admin_organization"] or None
+        )
+        owner = dataset.metadata_owner.reassign(
+            user=metadata_owner_user,
+            organization=metadata_owner_organization,
+            admin_organization=metadata_owner_admin_organization,
+        )
+        dataset.metadata_owner = owner
+        if commit:
+            dataset.save()
+        return dataset
+
+
 @admin.register(Dataset)
 class DatasetAdmin(AbstractDatasetPropertyBaseAdmin, SimpleHistoryAdmin):
+    form = DatasetAdminForm
+
     list_display = (
         "title",
         "access_rights",
@@ -184,6 +255,8 @@ class DatasetAdmin(AbstractDatasetPropertyBaseAdmin, SimpleHistoryAdmin):
         REMSStatusFilter,
         "data_catalog",
     )
+
+    exclude = ("metadata_owner",)
     autocomplete_fields = ["language", "theme", "field_of_science"]
     readonly_fields = (
         "preservation",
@@ -195,11 +268,53 @@ class DatasetAdmin(AbstractDatasetPropertyBaseAdmin, SimpleHistoryAdmin):
         "permissions",
         "rems_status",
         "rems_check",
+        "rems_publish_error",
     )
     list_select_related = ("access_rights", "data_catalog", "metadata_owner")
     search_fields = ["id", "persistent_identifier", "title__values", "keyword"]
     inlines = [V2SyncStatusInline]
-    actions = ["sync_to_v2", "publish_to_rems"]
+    actions = ["sync_to_v2", "publish_to_rems", "update_owner"]
+
+    def get_fieldsets(self, request, obj=None):
+        """Organize fields into groups."""
+        owner_fields = (
+            "metadata_owner_user",
+            "metadata_owner_organization",
+            "metadata_owner_admin_organization",
+        )
+        rems_fields = (
+            "rems_status",
+            "rems_check",
+            "rems_publish_error",
+        )
+
+        # Get all admin fields for the model
+        all_fields = self.get_fields(request, obj)
+
+        # Compute remaining fields
+        used_fields = set(owner_fields) | set(rems_fields)
+        remaining_fields = [f for f in all_fields if f not in used_fields]
+
+        return (
+            (
+                "Metadata owner",
+                {
+                    "fields": owner_fields,
+                },
+            ),
+            (
+                "Dataset",
+                {
+                    "fields": remaining_fields,
+                },
+            ),
+            (
+                "REMS information",
+                {
+                    "fields": rems_fields,
+                },
+            ),
+        )
 
     def get_fields(self, request, obj=...):
         fields = super().get_fields(request, obj)
@@ -246,6 +361,63 @@ class DatasetAdmin(AbstractDatasetPropertyBaseAdmin, SimpleHistoryAdmin):
             f"Publish to REMS: {success=} {errors=} {not_rems=}",
             messages.SUCCESS,
         )
+
+    @admin.action(description="Update owner of selected datasets", permissions=["change"])
+    @transaction.atomic
+    def update_owner(self, request, queryset):
+        if request.POST.get("apply"):
+            # Apply new values for datasets metadata owners
+            form = UpdateOwnerForm(request.POST)
+            if form.is_valid():
+                new_values = {}
+                for field in ["user", "organization", "admin_organization"]:
+                    if value := form.cleaned_data.get(field):
+                        new_values[field] = value
+                if form.cleaned_data.get("clear_admin_organization"):
+                    new_values["admin_organization"] = None
+
+                changed, total = self._update_dataset_owners(queryset, new_values)
+                self.message_user(
+                    request,
+                    f"{changed} datasets updated out of {total} selected.",
+                    messages.SUCCESS,
+                )
+                return redirect(request.get_full_path())
+
+        # Render table of current values and form for new values
+        form = UpdateOwnerForm(initial={"_selected_action": queryset.values_list("id", flat=True)})
+        context = {
+            **self.admin_site.each_context(request),
+            "opts": self.model._meta,
+            "objects": queryset,
+            "form": form,
+            "title": "Update dataset owner",
+        }
+
+        return TemplateResponse(
+            request,
+            "admin/update_dataset_owner.html",
+            context,
+        )
+
+    def _update_dataset_owners(self, queryset, new_values) -> tuple[int, int]:
+        """Assign new metadata owner values to datasets."""
+        changed_datasets = []
+        if new_values:
+            for dataset in queryset:
+                new_owner = dataset.metadata_owner.reassign(**new_values)
+                if new_owner != dataset.metadata_owner:
+                    dataset.metadata_owner = new_owner
+                    changed_datasets.append(dataset)
+                    dataset.save()
+
+        for dataset in changed_datasets:
+            dataset.signal_update()
+
+        changed = len(changed_datasets)
+        total = len(queryset)
+        return changed, total
+
 
     def save_model(self, request, obj: Dataset, form, change):
         created = obj._state.adding
@@ -436,6 +608,7 @@ class V2SyncStatusAdmin(CommonAdmin):
             f"{len(queryset)} datasets set to sync to V2",
             messages.SUCCESS,
         )
+
 
 @admin.register(GeoLocation)
 class GeoLocationAdmin(CommonAdmin):

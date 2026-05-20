@@ -1,5 +1,6 @@
 import datetime
 import logging
+from typing import Self
 import uuid
 
 from django.conf import settings
@@ -9,6 +10,7 @@ from django.utils import timezone
 from model_utils import FieldTracker
 from model_utils.fields import AutoCreatedField, AutoLastModifiedField
 from rest_framework.exceptions import ValidationError
+from rest_framework.fields import empty
 
 from apps.common.copier import ModelCopier
 from apps.common.models import AbstractBaseModel
@@ -34,7 +36,13 @@ class MetadataProvider(AbstractBaseModel):
     tracker = FieldTracker(fields=["user", "organization", "admin_organization"])
 
     def __str__(self):
-        return self.user.username or self.organization
+        values = {
+            "user": self.user.username,
+            "org": self.organization,
+        }
+        if self.admin_organization:
+            values["admin_org"] = self.admin_organization
+        return ", ".join(f"{k}={v}" for k, v in values.items())
 
     def save(self, allow_change=False, *args, **kwargs):
         # MetadataProvider fields are normally immutable and are not allowed to be change
@@ -46,6 +54,30 @@ class MetadataProvider(AbstractBaseModel):
                 dict.fromkeys(changed, "Value should not be changed for an existing instance")
             )
         super().save(*args, **kwargs)
+
+    def reassign(self, user=empty, organization=empty, admin_organization=empty) -> Self:
+        """Return MetadataProvider that has new values for the specified fields.
+
+        If a matching MetadataProvider does not already exist, it is created.
+        """
+        if user is empty:
+            user = self.user
+        if organization is empty:
+            organization = self.organization
+        if admin_organization is empty:
+            admin_organization = self.admin_organization
+
+        # Get or create instance without using get_or_create.
+        # There's no uniqueness constraint so get_or_create would
+        # fail if there were more than one existing instance
+        instance = MetadataProvider.objects.filter(
+            user=user, organization=organization, admin_organization=admin_organization
+        ).first()
+        if not instance:
+            instance = MetadataProvider.objects.create(
+                user=user, organization=organization, admin_organization=admin_organization
+            )
+        return instance
 
 
 class OtherIdentifier(AbstractBaseModel):

@@ -1,0 +1,58 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% translate 'Home' %}</a> ›
+<a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a> ›
+<a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a> ›
+{{ title }}
+</div>
+{% endblock %}
+
+{% block content %}
+
+<form method="post">
+  {% csrf_token %}
+
+  <h2>Selected datasets</h2>
+  <table>
+    <tr>
+      <th>ID</th>
+      <th>Title</th>
+      <th>User</th>
+      <th>Organization</th>
+      <th>Admin Organization</th>
+    </tr>
+    {% for obj in objects %}
+    <tr>
+      <td>{{ obj.id }}</td>
+      <td>{{ obj.title }}</td>
+      <td>{{ obj.metadata_owner.user }}</td>
+      <td>{{ obj.metadata_owner.organization }}</td>
+      <td>{{ obj.metadata_owner.admin_organization }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <h2>New values</h2>
+  <p>
+  <small>Leave field empty to keep existing values.</small>
+  </p>
+  <div class="owner-change-form">
+    {{ form.media }}
+    {{ form.as_p }}
+    {% for obj in objects %}
+    <input type="hidden" name="_selected_action" value="{{ obj.pk }}" />
+    {% endfor %}
+  </div>
+
+  <input type="hidden" name="action" value="update_owner" />
+  <input type="submit" name="apply" value="Apply" />
+</form>
+
+{% endblock %}
+
+{% block extrastyle %}
+<link rel="stylesheet" type="text/css" href="{% static 'admin.css' %}" />
+{% endblock %}

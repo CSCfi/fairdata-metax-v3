@@ -36,3 +36,15 @@ def test_change_metadata_provider_values(user, user2):
         "user": "Value should not be changed for an existing instance",
         "admin_organization": "Value should not be changed for an existing instance",
     }
+
+
+def test_metadata_provider_str(user):
+    metadata_provider = MetadataProvider.objects.create(
+        user=user, organization="organization", admin_organization="admin_org"
+    )
+    assert str(metadata_provider) == "user=test_user, org=organization, admin_org=admin_org"
+
+    metadata_provider_no_admin = MetadataProvider.objects.create(
+        user=user, organization="organization"
+    )
+    assert str(metadata_provider_no_admin) == "user=test_user, org=organization"
