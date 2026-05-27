@@ -7,3 +7,4 @@
 |------------------------------|-----------------------|----------------------------------------------------|
 | initial_data_catalogs.json   | load_test_data.py     | Loads generic data catalogs in nonproduction       |
 | pas_contracts_demo.json.json | load_pas_test_data.py | Loads FDPAS contracts in metax-v3.demo.fairdata.fi |
+| data_services.json          | load_data_services.py | Loads DAAS "data services" controlled list entries |

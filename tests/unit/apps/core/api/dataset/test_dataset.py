@@ -598,9 +598,26 @@ def test_dataset_expanded_catalog(admin_client, dataset_a_json, data_catalog, re
     assert res2.status_code == 200
     assert isinstance(res2.data["data_catalog"], str)
 
+    # DataCatalog expansion should include data services controlled list
+    from apps.core.models import DataService
+
+    DataService.objects.create(
+        id="data-service-test",
+        catalog=data_catalog,
+        pref_label={"en": "Data service test", "fi": "Data service - testi"},
+    )
+
     res3 = admin_client.get(f"/v3/datasets/{res1.data['id']}?expand_catalog=true")
     assert res3.status_code == 200
     assert isinstance(res3.data["data_catalog"], dict)
+    assert "data_services" in res3.data["data_catalog"]
+    assert isinstance(res3.data["data_catalog"]["data_services"], list)
+    assert any(
+        ds.get("id") == "data-service-test"
+        and ds.get("pref_label", {}).get("fi") == "Data service - testi"
+        and ds.get("pref_label", {}).get("en") == "Data service test"
+        for ds in res3.data["data_catalog"]["data_services"]
+    )
 
 
 def test_dataset_expanded_catalog_missing_catalog(admin_client, reference_data):

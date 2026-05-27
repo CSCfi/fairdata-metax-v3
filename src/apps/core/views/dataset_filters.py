@@ -165,6 +165,11 @@ class DatasetFilter(filters.FilterSet):
         label="metadata owner organization",
     )
 
+    remote_resources__data_service = MultipleCharFilter(
+        method="filter_remote_resource_data_service",
+        label="remote resource data service",
+    )
+
     metadata_owner__user = filters.CharFilter(
         field_name="metadata_owner__user__username",
         max_length=512,
@@ -438,6 +443,13 @@ class DatasetFilter(filters.FilterSet):
             result = result.filter(union)
         return result.distinct()
 
+    def filter_remote_resource_data_service(self, queryset, name, value):
+        return self._filter_list(
+            queryset,
+            value,
+            filter_param="remote_resources__data_service__id__exact",
+        )
+
     def _filter_list(self, queryset: QuerySet, value: List[List[str]], filter_param: str):
         result = queryset
         for group in value:
@@ -552,6 +564,7 @@ class DatasetFilter(filters.FilterSet):
     facet_access_type = DatasetIndexEntryFilter(key="access_type")
     facet_creator = DatasetIndexEntryFilter(key="creator")
     facet_data_catalog = DatasetIndexEntryFilter(key="data_catalog")
+    facet_data_service = DatasetIndexEntryFilter(key="data_service")
     facet_field_of_science = DatasetIndexEntryFilter(key="field_of_science")
     facet_file_type = DatasetIndexEntryFilter(key="file_type")
     facet_infrastructure = DatasetIndexEntryFilter(key="infrastructure")

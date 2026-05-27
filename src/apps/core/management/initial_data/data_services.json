@@ -1,0 +1,19 @@
+[
+  {
+    "id": "LUMI-AIF",
+    "pref_label": {
+      "fi": "LUMI AI Factory",
+      "en": "LUMI AI Factory"
+    },
+    "catalog": "urn:nbn:fi:att:data-catalog-daas"
+  },
+  {
+    "id": "other",
+    "pref_label": {
+      "fi": "muu datapalvelu",
+      "en": "other data service"
+    },
+    "catalog": "urn:nbn:fi:att:data-catalog-daas"
+  }
+]
+

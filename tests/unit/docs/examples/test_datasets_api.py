@@ -5,7 +5,7 @@ from django.utils.dateparse import parse_datetime
 from tests.unit.docs.examples.conftest import load_test_json
 from tests.utils import assert_nested_subdict
 
-from apps.core.models import Dataset
+from apps.core.models import DataService, Dataset
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +70,11 @@ def test_dataset_snippets(
     remote_resources_json,
     metadata_owner_json,
 ):
+    DataService.objects.update_or_create(
+        id="Allas",
+        defaults={"catalog": data_catalog, "pref_label": {"en": "Allas", "fi": "Allas"}},
+    )
+
     data = {
         "title": {"fi": "datasetti"},
         "language": language_json["language"],

@@ -1,4 +1,5 @@
 import logging
+from urllib.parse import urlparse
 
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
@@ -19,7 +20,7 @@ from apps.common.serializers.fields import (
 )
 from apps.common.serializers.serializers import CommonModelSerializer, UpdatingListSerializer
 from apps.core.helpers import get_metax_identifiers_by_pid
-from apps.core.models import AccessRights, CatalogHomePage, DatasetPublisher, OtherIdentifier
+from apps.core.models import AccessRights, CatalogHomePage, DataService, DatasetPublisher, OtherIdentifier
 from apps.core.models.catalog_record import RemoteResource, Temporal
 from apps.core.models.concepts import (
     AccessType,
@@ -235,10 +236,33 @@ class TemporalModelSerializer(AbstractDatasetModelSerializer):
 
 
 class RemoteResourceSerializer(CommonModelSerializer):
+    DAAS_CATALOG_ID = "urn:nbn:fi:att:data-catalog-daas"
+
     use_category = UseCategory.get_serializer_field()
     file_type = FileType.get_serializer_field(required=False, allow_null=True)
     checksum = RemoteResourceChecksumField(required=False, allow_null=True)
     mediatype = MediaTypeField(required=False, allow_null=True)
+    access_url = serializers.CharField(
+        required=False, allow_null=True, allow_blank=True, max_length=2048, validators=[]
+    )
+    download_url = serializers.CharField(
+        required=False, allow_null=True, allow_blank=True, max_length=2048, validators=[]
+    )
+    byte_size = serializers.IntegerField(
+        required=False,
+        allow_null=True,
+        min_value=0,
+        error_messages={
+            "invalid": _("File size must be an integer number of bytes."),
+            "min_value": _("File size cannot be negative."),
+        },
+    )
+    data_service = serializers.SlugRelatedField(
+        slug_field="id",
+        queryset=DataService.objects.all(),
+        required=False,
+        allow_null=True,
+    )
 
     class Meta:
         model = RemoteResource
@@ -251,6 +275,84 @@ class RemoteResourceSerializer(CommonModelSerializer):
             "checksum",
             "file_type",
             "mediatype",
+            "byte_size",
+            "data_service",
         ]
         list_serializer_class = CommonListSerializer
 
+    def _get_catalog_id(self):
+        dataset = self.context.get("dataset")
+        if dataset and dataset.data_catalog_id:
+            return dataset.data_catalog_id
+
+        request = self.context.get("request")
+        request_data = getattr(request, "data", None)
+        if isinstance(request_data, dict) and request_data.get("data_catalog"):
+            return request_data.get("data_catalog")
+
+        current = self
+        while current:
+            data = getattr(current, "initial_data", None)
+            if isinstance(data, dict) and data.get("data_catalog"):
+                return data.get("data_catalog")
+            current = getattr(current, "parent", None)
+        return None
+
+    def _is_daas_catalog(self) -> bool:
+        return self._get_catalog_id() == self.DAAS_CATALOG_ID
+
+    @staticmethod
+    def _is_file_url(value: str) -> bool:
+        if not isinstance(value, str):
+            return False
+        parsed = urlparse(value)
+        return parsed.scheme == "file" and bool(parsed.path)
+
+    def _validate_url_or_file_path(self, value: str) -> str:
+        if value in (None, ""):
+            return value
+
+        if self._is_daas_catalog() and isinstance(value, str) and value.startswith("/"):
+            raise serializers.ValidationError(
+                "Use file URL format for local paths, e.g. file:///home/torvinen/data.csv."
+            )
+
+        url_validator = serializers.URLField(max_length=2048)
+        try:
+            url_validator.run_validation(value)
+        except serializers.ValidationError:
+            if self._is_daas_catalog() and self._is_file_url(value):
+                return value
+            raise
+        return value
+
+    def validate_access_url(self, value):
+        return self._validate_url_or_file_path(value)
+
+    def validate_download_url(self, value):
+        return self._validate_url_or_file_path(value)
+
+    def validate_data_service(self, value):
+        catalog_id = self._get_catalog_id()
+        if value is None:
+            return value
+
+        if not catalog_id:
+            raise serializers.ValidationError(
+                "Cannot assign data_service when dataset data_catalog is not set."
+            )
+
+        if value.catalog_id != catalog_id:
+            raise serializers.ValidationError(
+                f"Data service '{value.id}' is not allowed for catalog {catalog_id}."
+            )
+        return value
+
+    def validate(self, attrs):
+        if self._is_daas_catalog():
+            data_service = attrs.get("data_service")
+            if data_service is None and not getattr(self.instance, "data_service", None):
+                raise serializers.ValidationError(
+                    {"data_service": "This field is required for DAAS catalog remote resources."}
+                )
+        return super().validate(attrs)

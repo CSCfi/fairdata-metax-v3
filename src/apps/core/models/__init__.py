@@ -37,6 +37,7 @@ from .concepts import (
 )
 from .contract import Contract, ContractContact, ContractService
 from .data_catalog import CatalogHomePage, DataCatalog, DatasetPublisher
+from .data_services import DataService
 from .entity import Entity
 from .file_metadata import FileSetDirectoryMetadata, FileSetFileMetadata
 from .legacy import LegacyDataset

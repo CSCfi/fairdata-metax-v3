@@ -10,6 +10,7 @@
       },
       "download_url": "https://example.com/doc.txt",
       "access_url": null,
+      "data_service": "Allas",
       "file_type": {
         "url": "http://uri.suomi.fi/codelist/fairdata/file_type/code/text"
       },

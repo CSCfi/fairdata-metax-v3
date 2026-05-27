@@ -117,6 +117,15 @@ class DatasetIndexEntryManager(models.Manager):
         labels = dataset.projects.values_list(coalesce_translation("title", language), flat=True)
         return [EntryTuple(language, "project", label) for label in labels if label]
 
+    def _get_data_services(self, dataset: "Dataset", language: str) -> List[EntryTuple]:
+        labels = (
+            dataset.remote_resources.filter(data_service__isnull=False)
+            .values_list(coalesce_translation("data_service__pref_label", language), flat=True)
+            .order_by()
+            .distinct()
+        )
+        return [EntryTuple(language, "data_service", label) for label in labels if label]
+
     def _get_existing_instances(self, entries: Iterable[EntryTuple]) -> List["DatasetIndexEntry"]:
         filters = models.Q()
         for language, key, value in entries:
@@ -146,6 +155,7 @@ class DatasetIndexEntryManager(models.Manager):
             entries.update(self._get_reference_data(dataset, language, "infrastructure"))
             entries.update(self._get_file_types(dataset, language))
             entries.update(self._get_projects(dataset, language))
+            entries.update(self._get_data_services(dataset, language))
 
         if not entries:
             dataset.index_entries.clear()

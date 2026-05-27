@@ -233,6 +233,10 @@ The `relation` list allows describing other entities that a dataset is related t
 Remote resources allow associating dataset with data available on the Internet.
 Dataset files and remote resources are exclusive with each other, so a dataset cannot have both.
 
+Each remote resource can optionally include a `data_service` value (string id).
+For datasets in the DAAS catalog (`urn:nbn:fi:att:data-catalog-daas`), `data_service` is required.
+The value must be one of the configured `data_services` for the dataset's data catalog.
+
 !!! Example
 
     ``` json

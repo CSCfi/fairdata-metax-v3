@@ -336,8 +336,16 @@
     },
     "dataset_versioning_enabled": true,
     "is_external": false,
-    "dataset_groups_create": ["fairdata_users", "ida", "ida_catalog_service_users"],
-    "dataset_groups_update": ["fairdata_users", "ida", "ida_catalog_service_users"],
+    "dataset_groups_create": [
+      "fairdata_users",
+      "ida",
+      "ida_catalog_service_users"
+    ],
+    "dataset_groups_update": [
+      "fairdata_users",
+      "ida",
+      "ida_catalog_service_users"
+    ],
     "dataset_groups_admin": ["ida", "pas"],
     "allow_remote_resources": false,
     "rems_enabled": true,
@@ -529,6 +537,47 @@
     "allowed_pid_types": ["external"]
   },
   {
+    "id": "urn:nbn:fi:att:data-catalog-daas",
+    "title": {
+      "en": "Dataset as a Service datasets",
+      "fi": "Dataset as a Service-aineistot",
+      "sv": "Dataset as a Service forskningsdata"
+    },
+    "language": [
+      {
+        "url": "http://lexvo.org/id/iso639-3/eng"
+      },
+      {
+        "url": "http://lexvo.org/id/iso639-3/fin"
+      }
+    ],
+    "is_external": false,
+    "publisher": {
+      "name": {
+        "en": "Ministry of Education and Culture, Finland",
+        "fi": "Opetus- ja kulttuuriministeriö"
+      },
+      "homepage": [
+        {
+          "title": {
+            "en": "Fairdata.fi",
+            "fi": "Fairdata.fi"
+          },
+          "url": "https://www.fairdata.fi/"
+        }
+      ]
+    },
+    "dataset_versioning_enabled": true,
+    "dataset_groups_admin": ["daas"],
+    "dataset_groups_create": ["daas", "daas_catalog_service_users"],
+    "dataset_groups_update": ["daas", "daas_catalog_service_users"],
+    "allowed_pid_types": ["DOI"],
+    "allow_remote_resources": true,
+    "rems_enabled": false,
+    "storage_services": [],
+    "publishing_channels": ["default", "etsin", "ttv", "qvain"]
+  },
+  {
     "id": "urn:nbn:fi:att:data-catalog-pas",
     "title": {
       "en": "Fairdata PAS datasets",
@@ -691,10 +740,7 @@
     "dataset_groups_create": ["smartsmear"],
     "dataset_groups_admin": ["smartsmear"],
     "publishing_channels": ["default", "etsin", "ttv"],
-    "allowed_pid_types":
-    [
-      "DOI"
-    ]
+    "allowed_pid_types": ["DOI"]
   },
   {
     "id": "urn:nbn:fi:att:data-catalog-tuni",

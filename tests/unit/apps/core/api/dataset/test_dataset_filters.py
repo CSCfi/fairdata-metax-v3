@@ -6,6 +6,8 @@ from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory
 from django.utils.http import http_date
 from apps.core.models.catalog_record.related import DatasetActor
+from apps.core.models.catalog_record.related import RemoteResource
+from apps.core.models.data_services import DataService
 from apps.core.views.dataset_filters import DatasetFilter
 from tests.utils import assert_nested_subdict
 
@@ -520,6 +522,61 @@ def test_aggregation_query_params_invalid(user_client):
     assert res.json() == {"schtitle": "Unknown query parameter"}
 
 
+def test_aggregation_expand_data_services(admin_client):
+    daas_catalog = factories.DataCatalogFactory(
+        id="urn:nbn:fi:att:data-catalog-daas",
+        title={"en": "Dataset as a Service datasets", "fi": "Dataset as a Service datasets"},
+        allow_remote_resources=True,
+        storage_services=[],
+        allowed_pid_types=["DOI"],
+    )
+    other_catalog = factories.DataCatalogFactory(
+        id="urn:nbn:fi:att:data-catalog-other",
+        title={"en": "Other catalog", "fi": "Other catalog"},
+        allow_remote_resources=True,
+        storage_services=[],
+        allowed_pid_types=["DOI"],
+    )
+    data_service_a = DataService.objects.create(
+        id="LUMI-AIF",
+        catalog=daas_catalog,
+        pref_label={"en": "LUMI-AIF", "fi": "LUMI-AIF"},
+    )
+    data_service_b = DataService.objects.create(
+        id="Allas",
+        catalog=other_catalog,
+        pref_label={"en": "Allas", "fi": "Allas"},
+    )
+
+    use_category = factories.UseCategoryFactory()
+    dataset_a = factories.PublishedDatasetFactory(data_catalog=daas_catalog)
+    dataset_b = factories.PublishedDatasetFactory(data_catalog=other_catalog)
+    RemoteResource.objects.create(
+        dataset=dataset_a,
+        title={"en": "Resource A"},
+        use_category=use_category,
+        data_service=data_service_a,
+    )
+    RemoteResource.objects.create(
+        dataset=dataset_b,
+        title={"en": "Resource B"},
+        use_category=use_category,
+        data_service=data_service_b,
+    )
+    dataset_a.update_index()
+    dataset_b.update_index()
+
+    res = admin_client.get("/v3/datasets/aggregates?filter_language=en&expand_data_services=true")
+    assert res.status_code == 200
+    daas_catalog_hit = next(
+        hit
+        for hit in res.data["data_catalog"]["hits"]
+        if hit["value"]["en"] == "Dataset as a Service datasets"
+    )
+    assert {"value": {"en": "LUMI-AIF"}, "count": 1} in daas_catalog_hit["data_service"]
+    assert {"value": {"en": "Allas"}, "count": 1} not in daas_catalog_hit["data_service"]
+
+
 def test_list_datasets_with_ordering(
     admin_client, dataset_a_json, dataset_b_json, data_catalog, reference_data
 ):
@@ -838,6 +895,87 @@ def test_filter_by_metadata_owner_organization_multiple_groups(
     assert res.status_code == 200
     assert {d["id"] for d in res.data} == {str(dataset1.id)}
 
+
+def test_filter_by_remote_resource_data_service(admin_client):
+    daas_catalog = factories.DataCatalogFactory(
+        id="urn:nbn:fi:att:data-catalog-daas",
+        allow_remote_resources=True,
+        storage_services=[],
+        allowed_pid_types=["DOI"],
+    )
+    service_lumi = DataService.objects.create(
+        id="LUMI-AIF",
+        catalog=daas_catalog,
+        pref_label={"en": "LUMI-AIF", "fi": "LUMI-AIF"},
+    )
+    service_allas = DataService.objects.create(
+        id="Allas",
+        catalog=daas_catalog,
+        pref_label={"en": "Allas", "fi": "Allas"},
+    )
+    use_category = factories.UseCategoryFactory()
+    dataset_lumi = factories.PublishedDatasetFactory(data_catalog=daas_catalog)
+    dataset_allas = factories.PublishedDatasetFactory(data_catalog=daas_catalog)
+    RemoteResource.objects.create(
+        dataset=dataset_lumi,
+        title={"en": "LUMI resource"},
+        use_category=use_category,
+        data_service=service_lumi,
+    )
+    RemoteResource.objects.create(
+        dataset=dataset_allas,
+        title={"en": "Allas resource"},
+        use_category=use_category,
+        data_service=service_allas,
+    )
+
+    res = admin_client.get(
+        "/v3/datasets?remote_resources__data_service=LUMI-AIF&pagination=false",
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert {d["id"] for d in res.data} == {str(dataset_lumi.id)}
+
+
+def test_filter_by_remote_resource_data_service_multiple_values(admin_client):
+    daas_catalog = factories.DataCatalogFactory(
+        id="urn:nbn:fi:att:data-catalog-daas",
+        allow_remote_resources=True,
+        storage_services=[],
+        allowed_pid_types=["DOI"],
+    )
+    service_lumi = DataService.objects.create(
+        id="LUMI-AIF",
+        catalog=daas_catalog,
+        pref_label={"en": "LUMI-AIF", "fi": "LUMI-AIF"},
+    )
+    service_allas = DataService.objects.create(
+        id="Allas",
+        catalog=daas_catalog,
+        pref_label={"en": "Allas", "fi": "Allas"},
+    )
+    use_category = factories.UseCategoryFactory()
+    dataset_lumi = factories.PublishedDatasetFactory(data_catalog=daas_catalog)
+    dataset_allas = factories.PublishedDatasetFactory(data_catalog=daas_catalog)
+    RemoteResource.objects.create(
+        dataset=dataset_lumi,
+        title={"en": "LUMI resource"},
+        use_category=use_category,
+        data_service=service_lumi,
+    )
+    RemoteResource.objects.create(
+        dataset=dataset_allas,
+        title={"en": "Allas resource"},
+        use_category=use_category,
+        data_service=service_allas,
+    )
+
+    res = admin_client.get(
+        "/v3/datasets?remote_resources__data_service=LUMI-AIF,Allas&pagination=false",
+        content_type="application/json",
+    )
+    assert res.status_code == 200
+    assert {d["id"] for d in res.data} == {str(dataset_lumi.id), str(dataset_allas.id)}
 
 def test_filter_by_creator_organization(admin_client, data_catalog, reference_data):
     """Test filtering datasets by creator organization. Should find creator by organization and it's parent organization."""

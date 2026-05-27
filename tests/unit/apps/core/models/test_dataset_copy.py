@@ -165,6 +165,7 @@ def test_dataset_copied_fields():
         "dataset.rationales.rationale",
         "dataset.relation.entity.type",
         "dataset.relation.relation_type",
+        "dataset.remote_resources.data_service",
         "dataset.remote_resources.file_type",
         "dataset.remote_resources.use_category",
         "dataset.spatial.reference",

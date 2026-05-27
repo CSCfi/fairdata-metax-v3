@@ -871,6 +871,12 @@ class FacetLanguageQueryParamsSerializer(serializers.Serializer):
 
 
 class DatasetAggregationQueryParamsSerializer(serializers.Serializer):
+    expand_data_services = serializers.BooleanField(
+        help_text="Include aggregated data services under each data_catalog hit.",
+        required=False,
+        default=False,
+    )
+
     organization_facet_search = serializers.CharField(
         help_text="Filter dataset aggregation by organization", required=False
     )

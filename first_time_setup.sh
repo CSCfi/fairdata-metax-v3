@@ -2,6 +2,7 @@ docker exec -it $(docker ps -q -f name="metax-v3\.") python manage.py migrate
 docker exec -it $(docker ps -q -f name="metax-v3\.") python manage.py index_reference_data
 docker exec -it $(docker ps -q -f name="metax-v3\.") python manage.py index_organizations
 docker exec -it $(docker ps -q -f name="metax-v3\.") python manage.py load_test_data
+docker exec -it $(docker ps -q -f name="metax-v3\.") python manage.py load_data_services
 docker exec -it $(docker ps -q -f name="metax-v3\.") python manage.py load_admin_organizations
 docker exec -it -e AUTH_TOKEN_VALUE=smeartesttoken $(docker ps -q -f name="metax-v3\.") python manage.py create_api_user service_smartsmear --groups smartsmear service --token-override
 docker exec -it -e AUTH_TOKEN_VALUE=idatesttoken $(docker ps -q -f name="metax-v3\.") python manage.py create_api_user service_ida --groups ida service --token-override

@@ -9,6 +9,7 @@ from apps.actors.models import Actor, Organization
 from apps.common.copier import ModelCopier
 from apps.common.models import AbstractBaseModel, MediaTypeValidator
 from apps.core.models.concepts import FileType, RelationType, UseCategory
+from apps.core.models.data_services import DataService
 from apps.refdata import models as refdata
 
 
@@ -217,8 +218,12 @@ class RemoteResource(AbstractBaseModel):
         blank=True,
         null=True,
     )
+    byte_size = models.PositiveBigIntegerField(
+        blank=True, null=True, help_text=_("File size in bytes.")
+    )
     use_category = models.ForeignKey(UseCategory, on_delete=models.CASCADE)
     file_type = models.ForeignKey(FileType, on_delete=models.CASCADE, blank=True, null=True)
+    data_service = models.ForeignKey(DataService, on_delete=models.SET_NULL, blank=True, null=True)
 
     def save(self, *args, **kwargs):
         # Verify that dataset is allowed to have remote resources.

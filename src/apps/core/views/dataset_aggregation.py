@@ -5,6 +5,9 @@ from django.db.models.functions import RowNumber
 
 from apps.common.helpers import parse_csv_string
 from apps.core.models import DatasetIndexEntry
+from apps.common.helpers import single_translation
+from apps.core.models import DataService, DatasetIndexEntry
+from src.apps.common.helpers import parse_csv_string
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +26,7 @@ def _get_facet_search_params(request):
 def aggregate_queryset(queryset, request):
     dataset_ids = list(queryset.values_list("id", flat=True))
     language = request.query_params.get("filter_language")
+    expand_data_services = request.query_params.get("expand_data_services")
     facet_search_params = _get_facet_search_params(request)
     limit_hits = request.query_params.get("limit_hits", 20)
 
@@ -86,6 +90,31 @@ def aggregate_queryset(queryset, request):
             for entry in result.get(key, [])
         ]
 
+    def get_data_services_by_catalog_label():
+        if str(expand_data_services).lower() != "true":
+            return {}
+
+        services_by_catalog_label = {}
+        service_entries = (
+            DataService.objects.filter(
+                remoteresource__dataset_id__in=dataset_ids,
+            )
+            .annotate(dataset_count=Count("remoteresource__dataset_id", distinct=True))
+            .distinct()
+            .select_related("catalog")
+        )
+        for service in service_entries:
+            catalog_label = single_translation(service.catalog.title, language)
+            service_label = single_translation(service.pref_label, language)
+            if not catalog_label or not service_label:
+                continue
+            services = services_by_catalog_label.setdefault(catalog_label, [])
+            services.append({"value": {language: service_label}, "count": service.dataset_count})
+
+        return services_by_catalog_label
+
+    data_services_by_catalog_label = get_data_services_by_catalog_label()
+
     # If the query includes parameters related to aggregate facets, store
     # the parameters so that each facet is saved as its own key, and any
     # associated value or values are stored as a list under that key.
@@ -125,21 +154,39 @@ def aggregate_queryset(queryset, request):
         # even when no datasets match it anymore.
 
         # Otherwise, retrieve all aggregate items related to the facet.
-        return {
-            facet: {
-                "query_parameter": query_parameter,
-                "hits": (
-                    [
+        facets_response = {}
+        for facet, query_parameter in facet_query_params.items():
+            hits = get_hits(facet)
+
+            if (
+                query_parameter in existing_aggregate_query_params
+                and len(hits) == 0
+            ):
+                hits = []
+                for aggregate in existing_aggregate_query_params[query_parameter]:
+                    hits.append(
                         {
                             "value": {language: aggregate},
                             "count": 0,
                         }
-                        for aggregate in existing_aggregate_query_params[query_parameter]
-                    ]
-                    if query_parameter in existing_aggregate_query_params.keys()
-                    and len(get_hits(facet)) == 0
-                    else get_hits(facet)
-                ),
+                    )
+            elif facet == "data_catalog" and data_services_by_catalog_label:
+                hits_with_data_services = []
+                for hit in hits:
+                    catalog_label = hit["value"].get(language)
+                    hits_with_data_services.append(
+                        {
+                            **hit,
+                            "data_service": data_services_by_catalog_label.get(
+                                catalog_label, []
+                            ),
+                        }
+                    )
+                hits = hits_with_data_services
+
+            facets_response[facet] = {
+                "query_parameter": query_parameter,
+                "hits": hits,
             }
-            for facet, query_parameter in facet_query_params.items()
-        }
+
+        return facets_response

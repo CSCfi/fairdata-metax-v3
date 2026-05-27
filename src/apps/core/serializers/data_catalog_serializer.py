@@ -13,6 +13,7 @@ from apps.common.serializers import CommonNestedModelSerializer
 from apps.common.serializers.fields import NoopField
 from apps.core.models import DataCatalog, Language
 from apps.core.serializers import DatasetPublisherModelSerializer
+from apps.core.serializers.data_service_serializer import DataServiceModelSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,7 @@ class DataCatalogModelSerializer(CommonNestedModelSerializer):
     dataset_groups_update = GetOrCreateGroupField(required=False, many=True)
     dataset_groups_admin = GetOrCreateGroupField(required=False, many=True)
     harvested = NoopField(help_text="No longer in use. Replaced by is_external.")
+    data_services = DataServiceModelSerializer(many=True, required=False, read_only=True)
 
     class Meta:
         model = DataCatalog
@@ -64,6 +66,7 @@ class DataCatalogModelSerializer(CommonNestedModelSerializer):
             "publishing_channels",
             "allowed_pid_types",
             "rems_enabled",
+            "data_services",
         )
 
     def update(self, instance, validated_data):
