@@ -9,7 +9,6 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    help = "Normalize WKT data in spatials."
     help = "Normalize WKT data in spatials and fill missing WKT/geolocations from available data."
 
     def handle(self, *args, **options):

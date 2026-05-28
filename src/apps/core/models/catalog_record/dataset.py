@@ -1434,9 +1434,10 @@ class Dataset(V2DatasetMixin, CatalogRecord):
         # - Other identifiers
         identifiers = [
             str(self.id),
-            self.persistent_identifier,
             *self.other_identifiers.values_list("notation", flat=True),
         ]
+        if self.persistent_identifier:
+            identifiers.append(self.persistent_identifier)
         identifier_variations = []
         for identifier in identifiers:
             identifier_variations.extend(get_identifier_variations(identifier))

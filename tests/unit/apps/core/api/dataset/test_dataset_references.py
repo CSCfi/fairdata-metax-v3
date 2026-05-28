@@ -65,3 +65,11 @@ def test_dataset_references(admin_client, subtests):
         assert not any(
             reference for reference in data if reference["referenced_by"]["id"] == str(draft.id)
         )
+
+def test_dataset_draft_references(admin_client):
+    dataset = DatasetFactory(persistent_identifier=None)
+    resp = admin_client.get(
+        f"/v3/datasets/{dataset.id}/references", content_type="application/json"
+    )
+    assert resp.status_code == 200
+    assert resp.json() == []
