@@ -3,11 +3,8 @@ import logging
 from django.db.models import Count, F, Q, Window
 from django.db.models.functions import RowNumber
 
-from apps.common.helpers import parse_csv_string
-from apps.core.models import DatasetIndexEntry
-from apps.common.helpers import single_translation
+from apps.common.helpers import parse_csv_string, single_translation
 from apps.core.models import DataService, DatasetIndexEntry
-from src.apps.common.helpers import parse_csv_string
 
 logger = logging.getLogger(__name__)
 
@@ -158,10 +155,7 @@ def aggregate_queryset(queryset, request):
         for facet, query_parameter in facet_query_params.items():
             hits = get_hits(facet)
 
-            if (
-                query_parameter in existing_aggregate_query_params
-                and len(hits) == 0
-            ):
+            if query_parameter in existing_aggregate_query_params and len(hits) == 0:
                 hits = []
                 for aggregate in existing_aggregate_query_params[query_parameter]:
                     hits.append(
@@ -177,9 +171,7 @@ def aggregate_queryset(queryset, request):
                     hits_with_data_services.append(
                         {
                             **hit,
-                            "data_service": data_services_by_catalog_label.get(
-                                catalog_label, []
-                            ),
+                            "data_service": data_services_by_catalog_label.get(catalog_label, []),
                         }
                     )
                 hits = hits_with_data_services

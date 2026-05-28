@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Iterable
 import shapely
 from django.contrib.gis.geos import GEOSGeometry
 from django.db import transaction
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Q
 
 from apps.common.helpers import InvalidCoordinates, normalize_wkt, validate_geometry_coordinates
 
@@ -75,12 +75,16 @@ def convert_spatials_wkt_to_geolocations(spatials: Iterable["Spatial"], dry_run=
     spatials_updated = 0
     geolocations_to_create = []
     for spatial in spatials:
-        if not spatial.custom_wkt:
+        wkts = spatial.custom_wkt
+        if not wkts and spatial.reference and spatial.reference.as_wkt:
+            wkts = [spatial.reference.as_wkt]
+
+        if not wkts:
             continue
 
         try:
             spatial_geolocations = []
-            for wkt in spatial.custom_wkt:
+            for wkt in wkts:
                 geometry = GEOSGeometry(wkt)
                 validate_geometry_coordinates(geometry)
                 spatial_geolocations.append(GeoLocation(spatial=spatial, geometry=geometry))
@@ -125,10 +129,12 @@ def convert_spatials_geolocations_to_wkt(spatials: Iterable["Spatial"], dry_run=
 
 @transaction.atomic
 def fill_missing_geometry(queryset: QuerySet["Spatial"]):
-    queryset = queryset.prefetch_related("geolocations")
+    queryset = queryset.prefetch_related("geolocations", "reference")
 
     # custom_wkt to geolocations
-    missing_geolocations = queryset.filter(geolocations__isnull=True, custom_wkt__len__gt=0)
+    missing_geolocations = queryset.filter(geolocations__isnull=True).filter(
+        Q(custom_wkt__len__gt=0) | Q(reference__as_wkt__isnull=False)
+    )
     geolocation_created = convert_spatials_wkt_to_geolocations(missing_geolocations)
 
     # geolocations to custom_wkt

@@ -208,6 +208,10 @@ class SpatialModelSerializer(CommonNestedModelSerializer):
         geolocations = data.get("geolocations")
         wkts = data.get("custom_wkt")
 
+        reference_wkt = "" # Only used when custom_wkt is not set
+        if not wkts and data.get("reference") and data["reference"].as_wkt:
+            reference_wkt = data["reference"].as_wkt
+
         if wkts and geolocations:
             # When both wkt and geojson are provided, they should have the same geometry.
             geolocation_geometries = [
@@ -227,8 +231,17 @@ class SpatialModelSerializer(CommonNestedModelSerializer):
                     )
         elif wkts and not geolocations:
             geolocations = [{"geometry": GEOSGeometry(wkt)} for wkt in wkts]
+        elif reference_wkt and not geolocations:
+            geolocations = [{"geometry": GEOSGeometry(reference_wkt)}]
         elif geolocations and not wkts:
             wkts = [location["geometry"].wkt for location in geolocations]
+
+            # Don't fill custom_wkt from reference location wkt
+            if len(wkts) == 1 and reference_wkt:
+                wkt_geometry = shapely.wkt.loads(wkts[0]).normalize()
+                wkt_ref_geometry = shapely.wkt.loads(reference_wkt).normalize()
+                if wkt_geometry.equals_exact(wkt_ref_geometry, tolerance=1e-7):
+                    wkts = []
 
         data["geolocations"] = geolocations
         data["custom_wkt"] = wkts

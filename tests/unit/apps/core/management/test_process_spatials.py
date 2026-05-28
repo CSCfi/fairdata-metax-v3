@@ -3,6 +3,7 @@ from django.core.management import call_command
 from django.contrib.gis.geos import GEOSGeometry
 
 from apps.core.models import Spatial
+from apps.core.factories import LocationFactory
 
 import pytest
 
@@ -11,7 +12,13 @@ from apps.core.models.concepts import GeoLocation
 
 @pytest.mark.django_db
 def test_process_spatials():
-    s1 = Spatial.objects.create(custom_wkt=["POINT (1 2 3)", "POINT (4 5)"])
+    loc = LocationFactory(
+        url="http://www.yso.fi/onto/onto/yso/c_9908ce39",
+        pref_label={"fi": "Alppikylä (Helsinki)", "sv": "Alpbyn (Helsingfors)"},
+        as_wkt="POINT (60 25)",
+    )
+
+    s1 = Spatial.objects.create(custom_wkt=["POINT (1 2 3)", "POINT (4 5)"], reference=loc)
     s2 = Spatial.objects.create(custom_wkt=["POLYGON ((0 0, 180 0, 180 90, 0 90, 0 0))"])
     s3 = Spatial.objects.create()
     s3.geolocations.add(
@@ -20,6 +27,7 @@ def test_process_spatials():
         )
     )
     s4 = Spatial.objects.create(custom_wkt=["POÄNG )1337(", "POINT (0      0)"])
+    s5 = Spatial.objects.create(custom_wkt=[], reference=loc)
 
     call_command("process_spatial_geometries")
     for spatial in [s1, s2, s3, s4]:
@@ -39,3 +47,6 @@ def test_process_spatials():
     # Invalid WKT -> can't create geolocations
     assert s4.custom_wkt == ["POÄNG )1337(", "POINT (0      0)"]
     assert s4.geolocations.count() == 0
+
+    assert s5.geolocations.count() == 1
+    assert s5.geolocations.all()[0].geometry_2d.wkt == "POINT (60 25)"

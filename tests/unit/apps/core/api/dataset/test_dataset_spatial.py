@@ -1,6 +1,7 @@
 import logging
 
 import pytest
+from apps.core.factories import LocationFactory
 from apps.core.models.catalog_record.dataset import Dataset
 import shapely
 from tests.utils import assert_nested_subdict
@@ -725,3 +726,66 @@ def test_dataset_spatial_wkt_m_coordinate(admin_client, dataset_minimal_draft_js
     assert (
         "M coordinate values are not supported" in res.json()["spatial"][0]["custom_wkt"]["0"][0]
     )
+
+
+def test_dataset_geometry_from_reference(admin_client, dataset_minimal_draft_json):
+    LocationFactory(
+        url="http://www.yso.fi/onto/onto/yso/123",
+        pref_label={"fi": "Paikka)"},
+        as_wkt="POINT (60 25)",
+    )
+
+    dataset_json = dataset_minimal_draft_json
+    dataset_json["spatial"] = [{"reference": {"url": "http://www.yso.fi/onto/onto/yso/123"}}]
+    res = admin_client.post("/v3/datasets", dataset_json, content_type="application/json")
+    assert res.status_code == 201
+    geom = res.json()["spatial"][0]["geolocations"]["features"][0]["geometry"]
+    assert geom["type"] == "Point"
+    assert geom["coordinates"] == [60, 25]
+
+
+def test_dataset_geometry_from_reference_and_geolocation(admin_client, dataset_minimal_draft_json, subtests):
+    LocationFactory(
+        url="http://www.yso.fi/onto/onto/yso/123",
+        pref_label={"fi": "Paikka)"},
+        as_wkt="POINT (60 25)",
+    )
+    dataset_json = dataset_minimal_draft_json
+
+    with subtests.test("reference wkt and geolocations match -> no custom wkt"):
+        dataset_json["spatial"] = [
+            {
+                "reference": {"url": "http://www.yso.fi/onto/onto/yso/123"},
+                "geolocations": {
+                    "type": "FeatureCollection",
+                    "features": [
+                        {"type": "Feature", "geometry": {"type": "Point", "coordinates": [60, 25]}}
+                    ],
+                },
+            }
+        ]
+        res = admin_client.post("/v3/datasets", dataset_json, content_type="application/json")
+        assert res.status_code == 201, res.json()
+        geom = res.json()["spatial"][0]["geolocations"]["features"][0]["geometry"]
+        assert geom["type"] == "Point"
+        assert geom["coordinates"] == [60, 25]
+        assert res.json()["spatial"][0]["custom_wkt"] == []
+
+    with subtests.test("reference wkt and geolocations don't match -> convert to custom wkt"):
+        dataset_json["spatial"][0]["geolocations"]["features"][0]["geometry"]["coordinates"] = [60.1, 25]
+        res = admin_client.post("/v3/datasets", dataset_json, content_type="application/json")
+        assert res.status_code == 201, res.json()
+        geom = res.json()["spatial"][0]["geolocations"]["features"][0]["geometry"]
+        assert geom["type"] == "Point"
+        assert geom["coordinates"] == [60.1, 25]
+        assert res.json()["spatial"][0]["custom_wkt"] == ["POINT (60.1 25)"]
+
+    with subtests.test("no reference wkt -> convert to custom wkt"):
+        del dataset_json["spatial"][0]["reference"]
+        dataset_json["spatial"][0]["geolocations"]["features"][0]["geometry"]["coordinates"] = [60, 25]
+        res = admin_client.post("/v3/datasets", dataset_json, content_type="application/json")
+        assert res.status_code == 201, res.json()
+        geom = res.json()["spatial"][0]["geolocations"]["features"][0]["geometry"]
+        assert geom["type"] == "Point"
+        assert geom["coordinates"] == [60, 25]
+        assert res.json()["spatial"][0]["custom_wkt"] == ["POINT (60 25)"]
