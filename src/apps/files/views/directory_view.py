@@ -198,7 +198,11 @@ class DirectoryViewSet(CommonViewSet, AccessViewSetMixin, viewsets.ViewSet):
             files = files.values(*file_fields, "id", storage_service=F("storage__storage_service"))
 
         return files.order_by(*params["file_ordering"], "filename").prefetch_related(
-            "storage", "characteristics", "pas_compatible_file", "non_pas_compatible_file"
+            "storage",
+            "characteristics",
+            "characteristics__file_format_version",
+            "pas_compatible_file",
+            "non_pas_compatible_file",
         )
 
     def get_directories(self, params):
