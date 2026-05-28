@@ -571,7 +571,7 @@
     "dataset_groups_admin": ["daas"],
     "dataset_groups_create": ["daas", "daas_catalog_service_users"],
     "dataset_groups_update": ["daas", "daas_catalog_service_users"],
-    "allowed_pid_types": ["DOI"],
+    "allowed_pid_types": ["DOI", "URN"],
     "allow_remote_resources": true,
     "rems_enabled": false,
     "storage_services": [],

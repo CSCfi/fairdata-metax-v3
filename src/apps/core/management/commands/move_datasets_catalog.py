@@ -9,6 +9,8 @@ from rest_framework.exceptions import ValidationError as DRFValidationError
 
 from apps.common.exceptions import TopLevelValidationError
 from apps.core.models import DataCatalog, Dataset
+from apps.core.models.catalog_record.related import RemoteResource
+from apps.core.models.data_services import DataService
 
 
 class Command(BaseCommand):
@@ -88,9 +90,14 @@ class Command(BaseCommand):
             if target.id == self.DAAS_CATALOG_ID and remote_resources.filter(
                 data_service__isnull=True
             ).exists():
-                errors["remote_resources_data_service_required"] = (
-                    "Remote resources in DAAS catalog require data_service."
-                )
+                other_service = DataService.objects.filter(
+                    id="other", catalog_id=self.DAAS_CATALOG_ID
+                ).first()
+                if not other_service:
+                    errors["remote_resources_data_service_required"] = (
+                        "Remote resources in DAAS catalog require data_service, "
+                        "but the 'other' fallback data service was not found."
+                    )
         finally:
             dataset.data_catalog = old_catalog
             dataset.data_catalog_id = old_catalog_id
@@ -153,6 +160,14 @@ class Command(BaseCommand):
                 record_modified=now,
                 modified=now,
             )
+            if target.id == self.DAAS_CATALOG_ID:
+                other_service = DataService.objects.filter(
+                    id="other", catalog_id=self.DAAS_CATALOG_ID
+                ).first()
+                if other_service:
+                    RemoteResource.objects.filter(
+                        dataset_id__in=dataset_ids, data_service__isnull=True
+                    ).update(data_service=other_service)
             for dataset in datasets:
                 dataset.signal_update()
 
